@@ -1,5 +1,5 @@
 {
-  "name": "inu-dormitory-web",
+  "name": "student-management-system",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -10,12 +10,22 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@vitejs/plugin-react-swc": "^3.8.1",
+    "axios": "^1.8.4",
+    "intersection-observer": "^0.12.2",
+    "plugin": "^0.3.3",
+    "prettier": "^3.5.3",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^7.4.0",
+    "styled-components": "^6.1.16",
+    "vite-tsconfig-paths": "^5.1.4",
+    "zustand": "^5.0.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
-    "@types/react": "^19.0.10",
+    "@types/node": "^22.13.13",
+    "@types/react": "^19.0.12",
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^4.3.4",
     "eslint": "^9.21.0",
