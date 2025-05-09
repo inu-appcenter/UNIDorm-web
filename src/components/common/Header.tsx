@@ -1,80 +1,61 @@
 import styled from "styled-components";
-import useUserStore from "../../stores/useUserStore";
 import { useNavigate } from "react-router-dom";
 
-export default function Header() {
-  const { userInfo, setUserInfo, setTokenInfo } = useUserStore();
+import back from "../../assets/header/back.svg";
+import noti from "../../assets/header/noti.svg";
+
+interface HeaderProps {
+  title: string;
+  hasBack: boolean;
+}
+
+export default function Header({ title, hasBack }: HeaderProps) {
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    setUserInfo({ id: 0, nickname: "", role: "", fireId: 0 });
-    setTokenInfo({
-      accessToken: "",
-      accessTokenExpiredTime: "",
-      refreshToken: "",
-      refreshTokenExpiredTime: "",
-    });
-    localStorage.removeItem("tokenInfo");
-    navigate("/");
+  const handleBackClick = () => {
+    navigate(-1); // 👈 이전 페이지로 이동
   };
 
   return (
     <StyledHeader>
-      <div>
-        {userInfo.nickname ? (
-          <>
-            <button>{userInfo.nickname}</button>
-            <button onClick={handleLogout}>로그아웃</button>
-          </>
-        ) : (
-          <>
-            <button className="mobile" onClick={() => navigate("/m/login")}>
-              로그인
-            </button>
-            <button className="desktop" onClick={() => navigate("/login")}>
-              로그인
-            </button>
-          </>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        {hasBack && (
+          <img
+            src={back}
+            alt={"뒤로가기"}
+            onClick={handleBackClick}
+            style={{ cursor: "pointer" }}
+          />
         )}
+        <div className="Title">{title}</div>
       </div>
+      <img src={noti} alt="알림" />
     </StyledHeader>
   );
 }
 
 const StyledHeader = styled.header`
-  padding: 0 32px;
-  height: 32px;
-  background: linear-gradient(90deg, #9cafe2 0%, #aac9ee 100%);
+  width: 100%;
+  height: 70px;
+  padding: 0 20px;
+  box-sizing: border-box;
   display: flex;
+  flex-direction: row;
   justify-content: space-between;
+  align-items: center;
 
-  div {
-    height: 100%;
-    display: flex;
-    align-items: center;
-    gap: 32px;
+  .Title {
+    font-family: "Pretendard";
+    font-style: normal;
+    font-weight: 600;
+    font-size: 20px;
+    line-height: 24px;
+    letter-spacing: 0.38px;
+    color: #1c1c1e;
   }
 
   img {
-    height: 100%;
-  }
-
-  button {
-    font-size: 20px;
-    line-height: 20px;
-    background-color: transparent;
-    border: none;
-    color: white;
-    padding: 0;
-  }
-  .mobile {
-    @media (min-width: 1024px) {
-      display: none;
-    }
-  }
-  .desktop {
-    @media (max-width: 1024px) {
-      display: none;
-    }
+    width: 24px;
+    height: 24px;
   }
 `;
