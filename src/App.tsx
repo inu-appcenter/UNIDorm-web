@@ -6,6 +6,8 @@ import useUserStore from "./stores/useUserStore";
 import RootPage from "./pages/RootPage";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
+import ChatListPage from "./pages/ChatListPage.tsx";
+import ChatPage from "./pages/ChatPage.tsx";
 
 function App() {
   const location = useLocation();
@@ -58,9 +60,11 @@ function App() {
       {/*    <ScrollBarStyles />*/}
       {/*)}*/}
       <Routes>
+        <Route path="/login" element={<LoginPage />} />
         <Route path="/" element={<RootPage />}>
           <Route path="/" element={<HomePage />} />
-          <Route path="/login" element={<LoginPage />} />
+          <Route path="/chat" element={<ChatListPage />} />
+          <Route path="/chat/:chatType/:id" element={<ChatPage />} />
         </Route>
       </Routes>
     </>

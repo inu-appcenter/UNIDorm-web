@@ -1,23 +1,20 @@
-import Footer from "../components/common/Footer";
-import Header from "../components/common/Header";
-import Nav from "../components/common/Nav";
+import BottomBar from "../components/common/BottomBar.tsx";
+// import Header from "../components/common/Header";
 import { Outlet } from "react-router-dom";
 import styled from "styled-components";
 
 export default function RootPage() {
   return (
     <RootPageWrapper>
-      <Header />
-      <Nav />
-      <main style={{ minHeight: 1024 }}>
-        <Outlet />
-      </main>
-      <Footer />
+      {/*<Header />*/}
+      <Outlet />
+      <BottomBar />
     </RootPageWrapper>
   );
 }
 
 const RootPageWrapper = styled.div`
-  width: 1440px;
-  margin: auto;
+  width: 100vw;
+  height: 100vh;
+  //margin: auto;
 `;
