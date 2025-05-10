@@ -8,6 +8,9 @@ import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import ChatListPage from "./pages/ChatListPage.tsx";
 import ChatPage from "./pages/ChatPage.tsx";
+import GroupPurchasePage from "./pages/GroupPurchasePage.tsx";
+import RoomMatePage from "./pages/RoomMatePage.tsx";
+import MyPage from "./pages/MyPage.tsx";
 
 function App() {
   const location = useLocation();
@@ -63,8 +66,11 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/" element={<RootPage />}>
           <Route path="/" element={<HomePage />} />
+          <Route path="/roommate" element={<RoomMatePage />} />
+          <Route path="/groupPurchase" element={<GroupPurchasePage />} />
           <Route path="/chat" element={<ChatListPage />} />
           <Route path="/chat/:chatType/:id" element={<ChatPage />} />
+          <Route path="/mypage" element={<MyPage />} />
         </Route>
       </Routes>
     </>
