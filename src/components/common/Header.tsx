@@ -16,8 +16,16 @@ export default function Header({ title, hasBack }: HeaderProps) {
     navigate(-1); // 👈 이전 페이지로 이동
   };
 
+  const handleNotiBtnClick = () => {
+    navigate("/notification");
+  };
+  const shadowSelector = () => {
+    if (title === "알림") return true;
+    else return false;
+  };
+
   return (
-    <StyledHeader>
+    <StyledHeader $hasShadow={shadowSelector()}>
       <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
         {hasBack && (
           <img
@@ -29,12 +37,12 @@ export default function Header({ title, hasBack }: HeaderProps) {
         )}
         <div className="Title">{title}</div>
       </div>
-      <img src={noti} alt="알림" />
+      <img src={noti} alt="알림" onClick={handleNotiBtnClick} />
     </StyledHeader>
   );
 }
 
-const StyledHeader = styled.header`
+const StyledHeader = styled.header<{ $hasShadow: boolean }>`
   width: 100%;
   height: 70px;
   padding: 0 20px;
@@ -43,9 +51,10 @@ const StyledHeader = styled.header`
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
+  box-shadow: ${({ $hasShadow }) =>
+    $hasShadow ? "0 2px 4px rgba(0, 0, 0, 0.1)" : "none"};
 
   .Title {
-    font-family: "Pretendard";
     font-style: normal;
     font-weight: 600;
     font-size: 20px;

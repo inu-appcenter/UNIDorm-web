@@ -11,6 +11,7 @@ import ChatPage from "./pages/ChatPage.tsx";
 import GroupPurchasePage from "./pages/GroupPurchasePage.tsx";
 import RoomMatePage from "./pages/RoomMatePage.tsx";
 import MyPage from "./pages/MyPage.tsx";
+import NotificationPage from "./pages/NotificationPage.tsx";
 
 function App() {
   const location = useLocation();
@@ -71,6 +72,7 @@ function App() {
           <Route path="/chat" element={<ChatListPage />} />
           <Route path="/chat/:chatType/:id" element={<ChatPage />} />
           <Route path="/mypage" element={<MyPage />} />
+          <Route path="/notification" element={<NotificationPage />} />
         </Route>
       </Routes>
     </>
