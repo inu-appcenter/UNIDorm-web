@@ -59,10 +59,6 @@ function App() {
 
   return (
     <>
-      {/*{location.pathname.startsWith("/m/") ||*/}
-      {/*location.pathname.startsWith("/app/") ? null : (*/}
-      {/*    <ScrollBarStyles />*/}
-      {/*)}*/}
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/" element={<RootPage />}>

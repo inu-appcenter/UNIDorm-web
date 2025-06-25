@@ -1,5 +1,4 @@
 import styled from "styled-components";
-import Header from "../components/common/Header.tsx";
 import Tab from "../components/chat/Tab.tsx";
 import RoomMateItem from "../components/chat/ChatListItem.tsx";
 import { useState } from "react";
@@ -19,7 +18,6 @@ export default function ChatListPage() {
   };
   return (
     <ChatListPageWrapper>
-      <Header title={"채팅"} hasBack={false} />
       <ContentWrapper>
         <Tab
           tabItems={tabItems}

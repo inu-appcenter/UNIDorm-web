@@ -27,7 +27,7 @@ export default function ChatPage() {
   };
   return (
     <ChatPageWrapper>
-      <Header title={`${typeString} 채팅`} hasBack={true} />
+      <Header hasBack={true} />
       <ContentWrapper>
         <ChatInfo selectedTab={typeString} />
         <ChattingWrapper>

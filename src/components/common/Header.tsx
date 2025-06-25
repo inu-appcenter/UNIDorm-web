@@ -1,16 +1,31 @@
 import styled from "styled-components";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import back from "../../assets/header/back.svg";
 import noti from "../../assets/header/noti.svg";
 
 interface HeaderProps {
-  title: string;
-  hasBack: boolean;
+  hasBack?: boolean;
 }
 
-export default function Header({ title, hasBack }: HeaderProps) {
+export default function Header({ hasBack }: HeaderProps) {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const getCurrentPage = () => {
+    switch (location.pathname) {
+      case "/":
+        return "아이돔";
+      case "/roommate":
+        return "룸메이트";
+      case "/groupPurchase":
+        return "공동구매";
+      case "/chat":
+        return "채팅";
+      case "/mypage":
+        return "마이페이지";
+    }
+  };
 
   const handleBackClick = () => {
     navigate(-1); // 👈 이전 페이지로 이동
@@ -20,8 +35,12 @@ export default function Header({ title, hasBack }: HeaderProps) {
     navigate("/notification");
   };
   const shadowSelector = () => {
-    if (title === "알림") return true;
-    else return false;
+    switch (location.pathname) {
+      case "/notification":
+      case "/":
+        return true;
+    }
+    return false;
   };
 
   return (
@@ -35,7 +54,7 @@ export default function Header({ title, hasBack }: HeaderProps) {
             style={{ cursor: "pointer" }}
           />
         )}
-        <div className="Title">{title}</div>
+        <div className="Title">{getCurrentPage()}</div>
       </div>
       <img src={noti} alt="알림" onClick={handleNotiBtnClick} />
     </StyledHeader>
@@ -43,6 +62,11 @@ export default function Header({ title, hasBack }: HeaderProps) {
 }
 
 const StyledHeader = styled.header<{ $hasShadow: boolean }>`
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  background: white;
   width: 100%;
   height: 70px;
   padding: 0 20px;
