@@ -28,8 +28,8 @@ export default function WeeklyCalendar() {
             const isToday = isSameDay(date, today);
 
             return (
-              <DayCell key={idx} isToday={isToday}>
-                <DateNumber isToday={isToday}>{format(date, "d")}</DateNumber>
+              <DayCell key={idx} $isToday={isToday}>
+                <DateNumber $isToday={isToday}>{format(date, "d")}</DateNumber>
                 {event && <EventBox>{event}</EventBox>}
               </DayCell>
             );
@@ -63,20 +63,19 @@ const WeekRow = styled.div`
   //gap: 6px;
 `;
 
-const DayCell = styled.div<{ isToday: boolean }>`
+const DayCell = styled.div<{ $isToday: boolean }>`
   padding: 6px;
   min-height: 60px;
-  background-color: ${({ isToday }) => (isToday ? "#e0f0ff" : "#ffffff")};
-  //border-radius: 8px;
+  background-color: ${({ $isToday }) => ($isToday ? "#e0f0ff" : "#ffffff")};
   border: 1px solid #ddd;
   text-align: center;
   position: relative;
   overflow: hidden;
 `;
 
-const DateNumber = styled.div<{ isToday: boolean }>`
-  font-weight: ${({ isToday }) => (isToday ? "bold" : "normal")};
-  color: ${({ isToday }) => (isToday ? "#007aff" : "#000")};
+const DateNumber = styled.div<{ $isToday: boolean }>`
+  font-weight: ${({ $isToday }) => ($isToday ? "bold" : "normal")};
+  color: ${({ $isToday }) => ($isToday ? "#007aff" : "#000")};
 `;
 
 const EventBox = styled.div`
