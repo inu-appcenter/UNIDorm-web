@@ -60,9 +60,9 @@ function App() {
   return (
     <>
       <Routes>
-        <Route path="/login" element={<LoginPage />} />
+        <Route index element={<LoginPage />} />
         <Route path="/" element={<RootPage />}>
-          <Route path="/" element={<HomePage />} />
+          <Route path="/home" element={<HomePage />} />
           <Route path="/roommate" element={<RoomMatePage />} />
           <Route path="/groupPurchase" element={<GroupPurchasePage />} />
           <Route path="/chat" element={<ChatListPage />} />

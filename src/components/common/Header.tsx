@@ -14,7 +14,7 @@ export default function Header({ hasBack }: HeaderProps) {
 
   const getCurrentPage = () => {
     switch (location.pathname) {
-      case "/":
+      case "/home":
         return "아이돔";
       case "/roommate":
         return "룸메이트";
@@ -39,7 +39,7 @@ export default function Header({ hasBack }: HeaderProps) {
   const shadowSelector = () => {
     switch (location.pathname) {
       case "/notification":
-      case "/":
+      case "/home":
         return true;
     }
     return false;
