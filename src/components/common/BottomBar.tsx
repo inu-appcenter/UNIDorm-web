@@ -48,7 +48,7 @@ export default function BottomBar() {
     <></>
   ) : (
     <StyledFooter>
-      <Button imgsrc={home} buttonName={"홈"} path={"/"} />
+      <Button imgsrc={home} buttonName={"홈"} path={"/home"} />
       <Button imgsrc={roommate} buttonName={"룸메"} path={"/roommate"} />
       <Button imgsrc={buy} buttonName={"공구"} path={"/groupPurchase"} />
       <Button imgsrc={chat} buttonName={"채팅"} path={"/chat"} />

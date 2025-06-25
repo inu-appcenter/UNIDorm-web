@@ -33,7 +33,7 @@ export const dummyNotifications: Notification[] = [
 const NotificationPage = () => {
   return (
     <NotificationPageWrapper>
-      <Header title={"알림"} hasBack={true} />
+      <Header hasBack={true} />
       <ContentWrapper>
         {dummyNotifications.map((noti) => (
           <NotiItem key={noti.id} notidata={noti} />
