@@ -31,10 +31,17 @@ export default function ChatListPage() {
 }
 
 const ChatListPageWrapper = styled.div`
-  width: 100%;
-  height: 100%;
+  padding: 70px 0;
+
   display: flex;
   flex-direction: column;
+  gap: 20px;
+  box-sizing: border-box;
+
+  width: 100%;
+  height: 100%;
+
+  overflow-y: auto;
 `;
 
 const ContentWrapper = styled.div`

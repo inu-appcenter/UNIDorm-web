@@ -51,10 +51,16 @@ export default function ChatPage() {
 }
 
 const ChatPageWrapper = styled.div`
-  width: 100%;
-  height: 100%;
+  padding-top: 70px;
   display: flex;
   flex-direction: column;
+  gap: 20px;
+  box-sizing: border-box;
+
+  width: 100%;
+  height: 100%;
+
+  overflow-y: auto;
 `;
 
 const ContentWrapper = styled.div`
@@ -67,12 +73,19 @@ const ContentWrapper = styled.div`
 
 const ChattingWrapper = styled.div`
   flex: 1;
-  overflow-y: auto;
+  height: 100%;
+
+  overflow-y: scroll;
   display: flex;
   flex-direction: column;
   background: #f4f4f4;
+
+  padding-bottom: 56px;
 `;
 const InputArea = styled.div`
+  position: absolute;
+  bottom: 0;
+  left: 0;
   width: 100%;
   height: fit-content;
   background-color: #fafafa;
@@ -103,6 +116,7 @@ const Input = styled.textarea`
   border: none;
 
   font-family: "AppleSDGothicNeoM00";
+
   font-style: normal;
   font-weight: 400;
   font-size: 12px;
