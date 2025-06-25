@@ -24,6 +24,8 @@ export default function Header({ hasBack }: HeaderProps) {
         return "채팅";
       case "/mypage":
         return "마이페이지";
+      case "/notification":
+        return "알림";
     }
   };
 

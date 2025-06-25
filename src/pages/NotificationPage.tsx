@@ -46,11 +46,17 @@ const NotificationPage = () => {
 export default NotificationPage;
 
 const NotificationPageWrapper = styled.div`
-  width: 100%;
-  height: 100%;
-  background: #fafafa;
+  padding: 70px 0;
+
   display: flex;
   flex-direction: column;
+  gap: 20px;
+  box-sizing: border-box;
+
+  width: 100%;
+  height: 100%;
+
+  overflow-y: auto;
 `;
 
 const ContentWrapper = styled.div`
