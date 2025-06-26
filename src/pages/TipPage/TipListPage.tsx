@@ -23,7 +23,7 @@ export default function TipListPage() {
     <TipPageWrapper>
       <Header title="기숙사 꿀팁" hasBack={true} showAlarm={true} />
 
-      <BoardArea type="🍯꿀팁모음🍯">
+      <BoardArea type="🍯꿀팁모음">
         <CardList>
           {mockTips.map((tip, idx) => (
             <TipCard
