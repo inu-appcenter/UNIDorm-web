@@ -13,6 +13,8 @@ import RoomMatePage from "./pages/RoomMatePage.tsx";
 import MyPage from "./pages/MyPage.tsx";
 import NotificationPage from "./pages/NotificationPage.tsx";
 import TipListPage from "./pages/TipPage/TipListPage.tsx";
+import TipWritePage from "./pages/TipPage/TipWritePage";
+
 
 
 function App() {
@@ -72,6 +74,7 @@ function App() {
           <Route path="/mypage" element={<MyPage />} />
           <Route path="/notification" element={<NotificationPage />} />
           <Route path="/tips" element={<TipListPage />} />
+          <Route path="/tips/write" element={<TipWritePage />} />
         </Route>
       </Routes>
     </>
