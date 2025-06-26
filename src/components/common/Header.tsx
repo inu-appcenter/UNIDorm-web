@@ -6,9 +6,15 @@ import noti from "../../assets/header/noti.svg";
 
 interface HeaderProps {
   hasBack?: boolean;
+  title?: string;
+  showAlarm?: boolean;
 }
 
-export default function Header({ hasBack }: HeaderProps) {
+export default function Header({
+  hasBack,
+  title,
+  showAlarm = true,
+}: HeaderProps) {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -26,23 +32,27 @@ export default function Header({ hasBack }: HeaderProps) {
         return "마이페이지";
       case "/notification":
         return "알림";
+      default:
+        return ""; // fallback
     }
   };
 
   const handleBackClick = () => {
-    navigate(-1); // 👈 이전 페이지로 이동
+    navigate(-1);
   };
 
   const handleNotiBtnClick = () => {
     navigate("/notification");
   };
+
   const shadowSelector = () => {
     switch (location.pathname) {
       case "/notification":
       case "/home":
         return true;
+      default:
+        return false;
     }
-    return false;
   };
 
   return (
@@ -51,14 +61,16 @@ export default function Header({ hasBack }: HeaderProps) {
         {hasBack && (
           <img
             src={back}
-            alt={"뒤로가기"}
+            alt="뒤로가기"
             onClick={handleBackClick}
             style={{ cursor: "pointer" }}
           />
         )}
-        <div className="Title">{getCurrentPage()}</div>
+        <div className="Title">{title ?? getCurrentPage()}</div>
       </div>
-      <img src={noti} alt="알림" onClick={handleNotiBtnClick} />
+      {showAlarm && (
+        <img src={noti} alt="알림" onClick={handleNotiBtnClick} />
+      )}
     </StyledHeader>
   );
 }
