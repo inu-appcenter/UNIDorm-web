@@ -115,7 +115,7 @@ const Input = styled.input`
   padding: 12px;
   border-radius: 8px;
   border: none;
-  background: #f5f5f5;
+  background:rgb(255, 255, 255);
 `;
 
 const Textarea = styled.textarea`
@@ -123,7 +123,7 @@ const Textarea = styled.textarea`
   padding: 12px;
   border-radius: 8px;
   border: none;
-  background: #f5f5f5;
+  background:rgb(255, 255, 255);
   resize: none;
 `;
 
