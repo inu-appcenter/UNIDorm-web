@@ -6,7 +6,7 @@ import { FaRegHeart } from "react-icons/fa";
 import { useEffect } from "react";
 import { FaUserCircle } from "react-icons/fa";
 import Header from "../../components/common/Header";
-import BottomBar from "../../components/common/BottomBar";
+
 
 export default function TipDetailPage() {
   useEffect(() => {
