@@ -1,3 +1,5 @@
+// src/components/common/Header.tsx
+
 import styled from "styled-components";
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -33,7 +35,7 @@ export default function Header({
       case "/notification":
         return "알림";
       default:
-        return ""; // fallback
+        return "";
     }
   };
 
@@ -57,20 +59,25 @@ export default function Header({
 
   return (
     <StyledHeader $hasShadow={shadowSelector()}>
-      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-        {hasBack && (
-          <img
-            src={back}
-            alt="뒤로가기"
-            onClick={handleBackClick}
-            style={{ cursor: "pointer" }}
-          />
+      <Left>
+        {hasBack ? (
+          <img src={back} alt="뒤로가기" onClick={handleBackClick} />
+        ) : (
+          <Spacer />
         )}
+      </Left>
+
+      <TitleWrapper>
         <div className="Title">{title ?? getCurrentPage()}</div>
-      </div>
-      {showAlarm && (
-        <img src={noti} alt="알림" onClick={handleNotiBtnClick} />
-      )}
+      </TitleWrapper>
+
+      <Right>
+        {showAlarm ? (
+          <img src={noti} alt="알림" onClick={handleNotiBtnClick} />
+        ) : (
+          <Spacer />
+        )}
+      </Right>
     </StyledHeader>
   );
 }
@@ -86,23 +93,41 @@ const StyledHeader = styled.header<{ $hasShadow: boolean }>`
   padding: 0 20px;
   box-sizing: border-box;
   display: flex;
-  flex-direction: row;
   justify-content: space-between;
   align-items: center;
   box-shadow: ${({ $hasShadow }) =>
     $hasShadow ? "0 2px 4px rgba(0, 0, 0, 0.1)" : "none"};
 
+  img {
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+  }
+
   .Title {
-    font-style: normal;
     font-weight: 600;
     font-size: 20px;
     line-height: 24px;
     letter-spacing: 0.38px;
     color: #1c1c1e;
+    text-align: center;
   }
+`;
 
-  img {
-    width: 24px;
-    height: 24px;
-  }
+const Left = styled.div`
+  width: 24px;
+`;
+
+const Right = styled.div`
+  width: 24px;
+`;
+
+const Spacer = styled.div`
+  width: 24px;
+`;
+
+const TitleWrapper = styled.div`
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
 `;
