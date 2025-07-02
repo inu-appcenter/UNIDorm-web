@@ -6,17 +6,19 @@ import useUserStore from "./stores/useUserStore";
 import RootPage from "./pages/RootPage";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
-import ChatListPage from "./pages/ChatListPage.tsx";
-import ChatPage from "./pages/ChatPage.tsx";
+import ChatListPage from "./pages/Chat/ChatListPage.tsx";
+import ChattingPage from "./pages/Chat/ChattingPage.tsx";
 import GroupPurchasePage from "./pages/GroupPurchasePage.tsx";
-import RoomMatePage from "./pages/RoomMatePage.tsx";
+import RoomMatePage from "./pages/RoomMate/RoomMatePage.tsx";
 import MyPage from "./pages/MyPage.tsx";
 import NotificationPage from "./pages/NotificationPage.tsx";
-import TipListPage from "./pages/TipPage/TipListPage.tsx";
-import TipWritePage from "./pages/TipPage/TipWritePage.tsx";
-import TipDetailPage from "./pages/TipPage/TipDetailPage.tsx";
-
-
+import TipListPage from "./pages/Tip/TipListPage.tsx";
+import TipWritePage from "./pages/Tip/TipWritePage.tsx";
+import TipDetailPage from "./pages/Tip/TipDetailPage.tsx";
+import RoomMateListPage from "./pages/RoomMate/RoomMateListPage.tsx";
+import RoomMateDetailPage from "./pages/RoomMate/RoomMateDetailPage.tsx";
+import OutPage from "./pages/OutPage.tsx";
+import SubPage from "./pages/SubPage.tsx";
 
 function App() {
   const location = useLocation();
@@ -65,18 +67,28 @@ function App() {
   return (
     <>
       <Routes>
-        <Route index element={<LoginPage />} />
+        {/*로그인하기 전 페이지들*/}
+        <Route path="/" element={<OutPage />}>
+          <Route index element={<LoginPage />} />
+          <Route path={"/login"} element={<LoginPage />} />
+        </Route>
+        {/*바텀바가 필요한 루트 페이지들*/}
         <Route path="/" element={<RootPage />}>
           <Route path="/home" element={<HomePage />} />
           <Route path="/roommate" element={<RoomMatePage />} />
           <Route path="/groupPurchase" element={<GroupPurchasePage />} />
           <Route path="/chat" element={<ChatListPage />} />
-          <Route path="/chat/:chatType/:id" element={<ChatPage />} />
           <Route path="/mypage" element={<MyPage />} />
+        </Route>
+        {/*바텀바가 필요없는 2뎁스 이상 페이지들*/}
+        <Route path="/" element={<SubPage />}>
+          <Route path="/roommatelist" element={<RoomMateListPage />} />
+          <Route path="/roommatelist/:id" element={<RoomMateDetailPage />} />
           <Route path="/notification" element={<NotificationPage />} />
-          <Route path="/tips" element={<TipListPage />} />
+          <Route path="/chat/:chatType/:id" element={<ChattingPage />} />
           <Route path="/tips/write" element={<TipWritePage />} />
           <Route path="/tips/detail" element={<TipDetailPage />} />
+          <Route path="/tips" element={<TipListPage />} />
         </Route>
       </Routes>
     </>

@@ -1,4 +1,4 @@
-// src/pages/TipPage/TipDetailPage.tsx
+// src/pages/Tip/TipDetailPage.tsx
 
 import styled from "styled-components";
 import { BsThreeDotsVertical, BsSend } from "react-icons/bs";
@@ -6,7 +6,6 @@ import { FaRegHeart } from "react-icons/fa";
 import { useEffect } from "react";
 import { FaUserCircle } from "react-icons/fa";
 import Header from "../../components/common/Header";
-
 
 export default function TipDetailPage() {
   useEffect(() => {
@@ -17,7 +16,7 @@ export default function TipDetailPage() {
     <Wrapper>
       <Header title="기숙사 꿀팁" hasBack={true} showAlarm={true} />
       <Divider />
-    
+
       <Content>
         <Divider />
         <UserInfo>
@@ -30,18 +29,13 @@ export default function TipDetailPage() {
           <BsThreeDotsVertical size={18} />
         </UserInfo>
 
-
         <ImageSlider>
           <SliderItem />
           <SliderIndicator>● ○ ○</SliderIndicator>
         </ImageSlider>
 
-
-        
         <Title>기숙사 꿀팁</Title>
-        <BodyText>
-          기숙사 꾸꾸ㄱㄱ팀꾸ㄱㄱ팀꾸ㄱㄱ팀꾸ㄱㄱ팀꾸ㄱㄱ...
-        </BodyText>
+        <BodyText>기숙사 꾸꾸ㄱㄱ팀꾸ㄱㄱ팀꾸ㄱㄱ팀꾸ㄱㄱ팀꾸ㄱㄱ...</BodyText>
 
         <Divider />
 
@@ -55,39 +49,40 @@ export default function TipDetailPage() {
           <Comment>
             <FaUserCircle size={32} color="#ccc" />
             <CommentContent>
-                <CommentBody>
+              <CommentBody>
                 <Nickname>익명 1</Nickname>
                 <CommentText>햄프피햄피 해피</CommentText>
                 <Date>오후 6:20</Date>
-                </CommentBody>
-                <BsThreeDotsVertical size={18} />
+              </CommentBody>
+              <BsThreeDotsVertical size={18} />
             </CommentContent>
-        </Comment>  
+          </Comment>
 
           <Reply>
             <FaUserCircle size={28} color="#ccc" />
             <ReplyContent>
-                <ReplyBody>
+              <ReplyBody>
                 <Nickname>익명 1</Nickname>
                 <CommentText>
-                    아.. 언제 자지,,, 이젠 자야하는데,,, 살려줘
+                  아.. 언제 자지,,, 이젠 자야하는데,,, 살려줘
                 </CommentText>
                 <Date>오후 6:20</Date>
-                </ReplyBody>
-                <BsThreeDotsVertical size={16} />
+              </ReplyBody>
+              <BsThreeDotsVertical size={16} />
             </ReplyContent>
-        </Reply>
+          </Reply>
         </CommentList>
       </Content>
 
       <CommentInput>
         <input placeholder="댓글 입력" />
         <SendButton>
-          <BsSend size={18} style={{ color: "black", backgroundColor: "white", padding: "4px" }} />
-
+          <BsSend
+            size={18}
+            style={{ color: "black", backgroundColor: "white", padding: "4px" }}
+          />
         </SendButton>
       </CommentInput>
-
     </Wrapper>
   );
 }
@@ -197,13 +192,11 @@ const CommentBody = styled.div`
   gap: 4px;
 `;
 
-
 const CommentContent = styled.div`
   flex: 1;
   display: flex;
   justify-content: space-between;
 `;
-
 
 const CommentText = styled.div`
   font-size: 14px;
