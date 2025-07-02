@@ -1,6 +1,6 @@
 import styled from "styled-components";
-import Tab from "../components/chat/Tab.tsx";
-import RoomMateItem from "../components/chat/ChatListItem.tsx";
+import Tab from "../../components/chat/Tab.tsx";
+import RoomMateItem from "../../components/chat/ChatListItem.tsx";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 

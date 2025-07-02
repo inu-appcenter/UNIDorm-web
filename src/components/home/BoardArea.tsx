@@ -3,13 +3,14 @@ import TitleLine from "./TitleLine.tsx";
 
 interface BoardAreaProps {
   type: string; //공지사항, 기숙사 꿀팁
+  link?: string;
   children: React.ReactNode;
 }
 
-const BoardArea = ({ type, children }: BoardAreaProps) => {
+const BoardArea = ({ type, link, children }: BoardAreaProps) => {
   return (
     <BoardAreaWrapper>
-      <TitleLine title={type}></TitleLine>
+      <TitleLine title={type} link={link}></TitleLine>
       {children}
     </BoardAreaWrapper>
   );

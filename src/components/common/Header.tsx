@@ -34,6 +34,8 @@ export default function Header({
         return "마이페이지";
       case "/notification":
         return "알림";
+      case "/roommatelist/1":
+        return "게시글";
       default:
         return "";
     }

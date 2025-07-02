@@ -36,6 +36,7 @@ export default function HomePage() {
       />
       <BoardArea
         type={mockBoard[1].type}
+        link={"/tips"}
         children={
           <HomeCard
             title={mockBoard[1].title}
@@ -46,7 +47,11 @@ export default function HomePage() {
         }
       />
       <BoardArea type={"다가오는 이벤트"} children={<ThreeWeekCalendar />} />
-      <BoardArea type={"임박한 공구"} children={<GroupPurchaseList />} />
+      <BoardArea
+        type={"임박한 공구"}
+        link={"/groupPurchase"}
+        children={<GroupPurchaseList />}
+      />
     </HomePageWrapper>
   );
 }
