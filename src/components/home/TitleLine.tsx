@@ -1,15 +1,21 @@
 import styled from "styled-components";
+import { useNavigate } from "react-router-dom";
 
 interface TitleLineProps {
   title: string;
+  link?: string;
 }
 
-const TitleLine = ({ title }: TitleLineProps) => {
+const TitleLine = ({ title, link }: TitleLineProps) => {
+  const navigate = useNavigate();
   return (
     <TitleLineWrapper>
       <div className="title">{title}</div>
-
-      <div className="more">더보기 {`>`}</div>
+      {link && (
+        <div onClick={() => navigate(link)} className="more">
+          더보기 {`>`}
+        </div>
+      )}
     </TitleLineWrapper>
   );
 };

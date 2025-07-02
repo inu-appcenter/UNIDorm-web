@@ -47,10 +47,12 @@ const LeftArea = styled.div`
     letter-spacing: 0.38px;
 
     color: #1c1c1e;
+
     .name {
       font-weight: 700;
     }
-    .college {
+
+    .date {
       font-weight: 400;
     }
   }
