@@ -1,13 +1,13 @@
 import styled from "styled-components";
-import Header from "../components/common/Header.tsx";
+import Header from "../../components/common/Header.tsx";
 import { useParams } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
-import ChatInfo from "../components/chat/ChatInfo.tsx";
-import ChatItemOtherPerson from "../components/chat/ChatItemOtherPerson.tsx";
-import ChatItemMy from "../components/chat/ChatItemMy.tsx";
-import send from "../assets/chat/send.svg";
+import ChatInfo from "../../components/chat/ChatInfo.tsx";
+import ChatItemOtherPerson from "../../components/chat/ChatItemOtherPerson.tsx";
+import ChatItemMy from "../../components/chat/ChatItemMy.tsx";
+import send from "../../assets/chat/send.svg";
 
-export default function ChatPage() {
+export default function ChattingPage() {
   const { chatType } = useParams();
   const [typeString, setTypeString] = useState<string>("");
   useEffect(() => {

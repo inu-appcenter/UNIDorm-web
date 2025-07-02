@@ -1,4 +1,4 @@
-// src/pages/TipPage/TipListPage.tsx
+// src/pages/Tip/TipListPage.tsx
 
 import styled from "styled-components";
 import Header from "../../components/common/Header";
@@ -35,7 +35,9 @@ export default function TipListPage() {
         </CardList>
       </BoardArea>
 
-      <WriteButton onClick={() => navigate("/tips/write")}>✏️ 글쓰기</WriteButton>
+      <WriteButton onClick={() => navigate("/tips/write")}>
+        ✏️ 글쓰기
+      </WriteButton>
       <BottomBar />
     </TipPageWrapper>
   );
