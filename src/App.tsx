@@ -19,6 +19,7 @@ import RoomMateListPage from "./pages/RoomMate/RoomMateListPage.tsx";
 import RoomMateDetailPage from "./pages/RoomMate/RoomMateDetailPage.tsx";
 import OutPage from "./pages/OutPage.tsx";
 import SubPage from "./pages/SubPage.tsx";
+import NoticeBoardPage from "./pages/NoticeBoardPage.tsx";
 
 function App() {
   const location = useLocation();
@@ -79,6 +80,7 @@ function App() {
           <Route path="/groupPurchase" element={<GroupPurchasePage />} />
           <Route path="/chat" element={<ChatListPage />} />
           <Route path="/mypage" element={<MyPage />} />
+          <Route path="/noticeboard" element={<NoticeBoardPage />} /> 
         </Route>
         {/*바텀바가 필요없는 2뎁스 이상 페이지들*/}
         <Route path="/" element={<SubPage />}>
