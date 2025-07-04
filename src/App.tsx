@@ -8,7 +8,6 @@ import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import ChatListPage from "./pages/Chat/ChatListPage.tsx";
 import ChattingPage from "./pages/Chat/ChattingPage.tsx";
-import GroupPurchasePage from "./pages/GroupPurchasePage.tsx";
 import RoomMatePage from "./pages/RoomMate/RoomMatePage.tsx";
 import MyPage from "./pages/MyPage.tsx";
 import NotificationPage from "./pages/NotificationPage.tsx";
@@ -20,6 +19,7 @@ import RoomMateDetailPage from "./pages/RoomMate/RoomMateDetailPage.tsx";
 import OutPage from "./pages/OutPage.tsx";
 import SubPage from "./pages/SubPage.tsx";
 import NoticeBoardPage from "./pages/NoticeBoardPage.tsx";
+import GroupPurchaseMainPage from "./pages/GroupPurchase/GroupPurchaseMainPage.tsx";
 
 function App() {
   const location = useLocation();
@@ -77,7 +77,7 @@ function App() {
         <Route path="/" element={<RootPage />}>
           <Route path="/home" element={<HomePage />} />
           <Route path="/roommate" element={<RoomMatePage />} />
-          <Route path="/groupPurchase" element={<GroupPurchasePage />} />
+          <Route path="/groupPurchase" element={<GroupPurchaseMainPage />} />
           <Route path="/chat" element={<ChatListPage />} />
           <Route path="/mypage" element={<MyPage />} />
           <Route path="/noticeboard" element={<NoticeBoardPage />} /> 
