@@ -4,22 +4,29 @@ import Header from "../../components/common/Header";
 import BottomBar from "../../components/common/BottomBar";
 import GroupPurchaseList from "../../components/GroupPurchase/GroupPurchaseList";
 import { useNavigate } from "react-router-dom";
+import { FaSearch } from "react-icons/fa";
 
-// ✅ 카테고리 목록
 const CATEGORY_LIST = ["전체", "배달", "식자재", "생활용품", "기타"];
+const SORT_OPTIONS = ["마감 임박 순", "최신순", "좋아요 순"];
 
 export default function GroupPurchaseMainPage() {
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState("전체");
+  const [search, setSearch] = useState("");
+  const [recentSearches, setRecentSearches] = useState<string[]>(["휴지", "마라탕", "닭가슴살"]);
+  const [sortOption, setSortOption] = useState("마감 임박순");
 
   const handleCategoryClick = (category: string) => {
     setSelectedCategory(category);
-    // 👉 추후 category에 따라 필터링 로직 넣을 수 있음!
+  };
+
+  const handleDeleteRecent = (term: string) => {
+    setRecentSearches(recentSearches.filter((item) => item !== term));
   };
 
   return (
     <PageWrapper>
-      <TopSection>
+      <TopFixedSection>
         <Header title="공동구매" hasBack={true} showAlarm={true} />
         <CategoryWrapper>
           {CATEGORY_LIST.map((category) => (
@@ -32,12 +39,51 @@ export default function GroupPurchaseMainPage() {
             </CategoryItem>
           ))}
         </CategoryWrapper>
-      </TopSection>
+      </TopFixedSection>
 
       <ContentArea>
-        <GroupPurchaseList selectedCategory={selectedCategory} />
-        {/* 👆 지금은 필터링 안 하더라도 props 전달 준비해두면 좋아! */}
+        <SearchBar>
+          <FaSearch size={16} color="#999" />
+          <input
+            type="text"
+            placeholder="검색어를 입력하세요"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </SearchBar>
+
+        <RecentSearchWrapper>
+          <Label>최근 검색어</Label>
+          <TagList>
+            {recentSearches.map((term) => (
+              <Tag key={term}>
+                {term} <DeleteBtn onClick={() => handleDeleteRecent(term)}>×</DeleteBtn>
+              </Tag>
+            ))}
+          </TagList>
+        </RecentSearchWrapper>
+        
+        <SortFilterWrapper>
+          {SORT_OPTIONS.map((option) => (
+            <SortButton
+              key={option}
+              className={sortOption === option ? "active" : ""}
+              onClick={() => setSortOption(option)}
+            >
+              {option}
+            </SortButton>
+          ))}
+        </SortFilterWrapper>
+
+        <GroupPurchaseList
+          selectedCategory={selectedCategory}
+          searchQuery={search}
+        />
+
+        
+
       </ContentArea>
+
 
       <WriteButton onClick={() => navigate("/group/write")}>✏️ 글쓰기</WriteButton>
       <BottomBar />
@@ -45,33 +91,112 @@ export default function GroupPurchaseMainPage() {
   );
 }
 
-
 const PageWrapper = styled.div`
-  padding-top: 70px; /* 헤더 높이만큼 */
-  padding-bottom: 90px; /* 하단 버튼 영역 */
+  padding-top: 70px;
   background: #fafafa;
+  height: 100vh;
+  overflow-x: hidden;
+`;
+
+const TopFixedSection = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 100%;
-  height: 100%;
+  background-color: white;
+  z-index: 999;
+  padding: 70px 20px 8px 20px;
   box-sizing: border-box;
 `;
 
-const TopSection = styled.div`
-  background-color: white;
+const CategoryWrapper = styled.div`
   display: flex;
-  flex-direction: column;
+  gap: 16px;
+  background-color: white;
+`;
+
+const CategoryItem = styled.div`
+  font-size: 16px;
+  color: #aaa;
+  cursor: pointer;
+
+  &.active {
+    color: black;
+    font-weight: bold;
+    border-bottom: 2px solid black;
+    padding-bottom: 2px;
+  }
+`;
+
+const SearchBar = styled.div`
+  margin: 12px 12px 0 12px;
+  margin-bottom: 20px;
+  height: 40px;
+  background-color: #f4f4f4;
+  border-radius: 999px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  overflow: hidden;
+
+  input {
+    border: none;
+    background: none;
+    width: 100%;
+    font-size: 14px;
+    color: #333;
+
+    ::placeholder {
+      color: #999;
+    }
+
+    :focus {
+      outline: none;
+    }
+  }
+`;
+
+const RecentSearchWrapper = styled.div`
+  padding: 0 12px;
+  margin-bottom: 12px;
+`;
+
+const Label = styled.div`
+  font-size: 14px;
+  color: #444;
+  margin-bottom: 6px;
+`;
+
+const TagList = styled.div`
+  display: flex;
+  flex-wrap: wrap;
   gap: 8px;
-  padding: 0 20px 12px;
-  box-sizing: border-box;
-  z-index: 1;
+`;
+
+const Tag = styled.div`
+  background-color: #f0f0f0;
+  border-radius: 20px;
+  padding: 6px 10px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+`;
+
+const DeleteBtn = styled.button`
+  border: none;
+  background: none;
+  color: #aaa;
+  font-size: 14px;
+  cursor: pointer;
 `;
 
 const ContentArea = styled.div`
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding: 0 20px;
-  box-sizing: border-box;
+  padding-top: 32px;
+  padding-bottom: 10px;
+  padding-left: 20px;
+  padding-right: 20px;
 `;
 
 const WriteButton = styled.button`
@@ -88,24 +213,26 @@ const WriteButton = styled.button`
   box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.2);
   z-index: 100;
 `;
-
-/* 카테고리 탭 스타일 */
-const CategoryWrapper = styled.div`
+const SortFilterWrapper = styled.div`
   display: flex;
-  gap: 20px;
-  padding: 8px 0;
-  overflow-x: auto;
+  margin-bottom: 12px;
+  gap: 8px;
+  padding: 0px 12px 0 12px;
+  flex-wrap: wrap;
 `;
 
-const CategoryItem = styled.div`
-  font-weight: 500;
-  font-size: 16px;
-  color: #c1c1c1;
+const SortButton = styled.button`
+  background-color: #f4f4f4;
+  border: none;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 14px;
+  color: #333;
   cursor: pointer;
 
   &.active {
-    color: black;
+    background-color: #007bff;
+    color: white;
     font-weight: bold;
-    border-bottom: 2px solid black;
   }
 `;
