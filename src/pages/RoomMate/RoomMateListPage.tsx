@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
-import HomeCard from "../../components/home/HomeCard.tsx";
+import RoomMateCard from "../../components/roommate/RoomMateCard.tsx";
 
 const mockBoard = [
   {
@@ -11,11 +11,11 @@ const mockBoard = [
     scrapCount: 121,
   },
   {
-    type: "기숙사 꿀팁",
-    title: "기숙사 생활 꿀팁 공유합니다",
-    content: "세탁기는 이른 아침에 쓰는 게 제일 한가합니다!",
-    isEmergency: false,
-    scrapCount: 45,
+    type: "공지사항",
+    title: "21학번 2긱",
+    content: "기숙사 상주기간: 월, 화, 수/ 단과대: 법학부/ 엠비티아...",
+    isEmergency: true,
+    scrapCount: 121,
   },
 ];
 export default function RoomMateListPage() {
@@ -25,41 +25,47 @@ export default function RoomMateListPage() {
         type={"최신순"}
         children={
           <>
-            <HomeCard
-              title={mockBoard[0].title}
-              content={mockBoard[0].content}
-              isEmergency={mockBoard[0].isEmergency}
-              scrapCount={mockBoard[0].scrapCount}
+            <RoomMateCard
+              title={mockBoard[1].title}
+              content={mockBoard[1].content}
+              commentCount={10}
+              likeCount={11}
             />{" "}
-            <HomeCard
-              title={mockBoard[0].title}
-              content={mockBoard[0].content}
-              isEmergency={mockBoard[0].isEmergency}
-              scrapCount={mockBoard[0].scrapCount}
+            <RoomMateCard
+              title={mockBoard[1].title}
+              content={mockBoard[1].content}
+              commentCount={10}
+              likeCount={11}
             />{" "}
-            <HomeCard
-              title={mockBoard[0].title}
-              content={mockBoard[0].content}
-              isEmergency={mockBoard[0].isEmergency}
-              scrapCount={mockBoard[0].scrapCount}
+            <RoomMateCard
+              title={mockBoard[1].title}
+              content={mockBoard[1].content}
+              commentCount={10}
+              likeCount={11}
             />{" "}
-            <HomeCard
-              title={mockBoard[0].title}
-              content={mockBoard[0].content}
-              isEmergency={mockBoard[0].isEmergency}
-              scrapCount={mockBoard[0].scrapCount}
+            <RoomMateCard
+              title={mockBoard[1].title}
+              content={mockBoard[1].content}
+              commentCount={10}
+              likeCount={11}
             />{" "}
-            <HomeCard
-              title={mockBoard[0].title}
-              content={mockBoard[0].content}
-              isEmergency={mockBoard[0].isEmergency}
-              scrapCount={mockBoard[0].scrapCount}
+            <RoomMateCard
+              title={mockBoard[1].title}
+              content={mockBoard[1].content}
+              commentCount={10}
+              likeCount={11}
             />{" "}
-            <HomeCard
-              title={mockBoard[0].title}
-              content={mockBoard[0].content}
-              isEmergency={mockBoard[0].isEmergency}
-              scrapCount={mockBoard[0].scrapCount}
+            <RoomMateCard
+              title={mockBoard[1].title}
+              content={mockBoard[1].content}
+              commentCount={10}
+              likeCount={11}
+            />{" "}
+            <RoomMateCard
+              title={mockBoard[1].title}
+              content={mockBoard[1].content}
+              commentCount={10}
+              likeCount={11}
             />
           </>
         }

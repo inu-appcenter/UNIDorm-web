@@ -16,5 +16,4 @@ export default function RootPage() {
 const RootPageWrapper = styled.div`
   width: 100vw;
   height: 100vh;
-  //margin: auto;
 `;

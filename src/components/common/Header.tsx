@@ -110,7 +110,7 @@ const StyledHeader = styled.header<{ $hasShadow: boolean }>`
 
   .Title {
     font-weight: 600;
-    font-size: 20px;
+    font-size: 18px;
     line-height: 24px;
     letter-spacing: 0.38px;
     color: #1c1c1e;
