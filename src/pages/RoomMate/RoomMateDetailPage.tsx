@@ -1,6 +1,7 @@
 import styled from "styled-components";
 
 import profileimg from "../../assets/profileimg.svg";
+import RoomMateBottomBar from "../../components/roommate/RoomMateBottomBar.tsx";
 
 export default function RoomMateDetailPage() {
   return (
@@ -38,6 +39,7 @@ export default function RoomMateDetailPage() {
           <br />
         </div>
       </ContentArea>
+      <RoomMateBottomBar />
     </RoomMateDetailPageWrapper>
   );
 }
