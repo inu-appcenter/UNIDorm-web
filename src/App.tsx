@@ -19,6 +19,7 @@ import RoomMateListPage from "./pages/RoomMate/RoomMateListPage.tsx";
 import RoomMateDetailPage from "./pages/RoomMate/RoomMateDetailPage.tsx";
 import OutPage from "./pages/OutPage.tsx";
 import SubPage from "./pages/SubPage.tsx";
+import RoomMateChecklistPage from "./pages/RoomMate/RoomMateChecklistPage.tsx";
 
 function App() {
   const location = useLocation();
@@ -84,6 +85,11 @@ function App() {
         <Route path="/" element={<SubPage />}>
           <Route path="/roommatelist" element={<RoomMateListPage />} />
           <Route path="/roommatelist/:id" element={<RoomMateDetailPage />} />
+          <Route
+            path="/roommatechecklist"
+            element={<RoomMateChecklistPage />}
+          />
+
           <Route path="/notification" element={<NotificationPage />} />
           <Route path="/chat/:chatType/:id" element={<ChattingPage />} />
           <Route path="/tips/write" element={<TipWritePage />} />

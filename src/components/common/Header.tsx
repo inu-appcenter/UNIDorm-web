@@ -36,6 +36,8 @@ export default function Header({
         return "알림";
       case "/roommatelist/1":
         return "게시글";
+      case "/roommatechecklist":
+        return "사전 체크리스트";
       default:
         return "";
     }
