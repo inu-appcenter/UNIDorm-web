@@ -55,6 +55,7 @@ export default MyPage;
 
 const MyPageWrapper = styled.div`
   padding: 90px 20px;
+  padding-bottom: 120px;
 
   display: flex;
   flex-direction: column;

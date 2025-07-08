@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import CommentIcon from "../../assets/comment.svg";
 import HeartIcon from "../../assets/heart.svg";
+import { useNavigate } from "react-router-dom";
 
 interface HomeCardProps {
   title: string;
@@ -17,8 +18,13 @@ const RoomMateCard = ({
   commentCount,
   likeCount,
 }: HomeCardProps) => {
+  const navigate = useNavigate();
   return (
-    <RoomMateCardWrapper>
+    <RoomMateCardWrapper
+      onClick={() => {
+        navigate("/roommatelist/1");
+      }}
+    >
       {percentage && (
         <LeftCircle>
           <span>{percentage}%</span>

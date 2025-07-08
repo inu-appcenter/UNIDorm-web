@@ -15,5 +15,4 @@ export default function SubPage() {
 const SubPageWrapper = styled.div`
   width: 100vw;
   height: 100vh;
-  //margin: auto;
 `;
