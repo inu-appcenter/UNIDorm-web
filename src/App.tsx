@@ -20,6 +20,7 @@ import OutPage from "./pages/OutPage.tsx";
 import SubPage from "./pages/SubPage.tsx";
 import NoticeBoardPage from "./pages/NoticeBoardPage.tsx";
 import GroupPurchaseMainPage from "./pages/GroupPurchase/GroupPurchaseMainPage.tsx";
+import GroupPurchasePostPage from "./pages/GroupPurchase/GroupPurchasePostPage.tsx";
 
 function App() {
   const location = useLocation();
@@ -91,6 +92,7 @@ function App() {
           <Route path="/tips/write" element={<TipWritePage />} />
           <Route path="/tips/detail" element={<TipDetailPage />} />
           <Route path="/tips" element={<TipListPage />} />
+          <Route path="/groupPurchase/post" element={<GroupPurchasePostPage />} />
         </Route>
       </Routes>
     </>
