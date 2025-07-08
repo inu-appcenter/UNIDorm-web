@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import BoardArea from "../../components/home/BoardArea.tsx";
+import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import HomeCard from "../../components/home/HomeCard.tsx";
 
 const mockBoard = [
@@ -21,7 +21,7 @@ const mockBoard = [
 export default function RoomMateListPage() {
   return (
     <RoomMateListPageWrapper>
-      <BoardArea
+      <TitleContentArea
         type={"최신순"}
         children={
           <>

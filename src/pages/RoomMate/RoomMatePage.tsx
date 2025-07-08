@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import BoardArea from "../../components/home/BoardArea.tsx";
+import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import RoomMateCard from "../../components/roommate/RoomMateCard.tsx";
 
 const mockBoard = [
@@ -14,7 +14,7 @@ const mockBoard = [
 export default function RoomMatePage() {
   return (
     <RoomMatePageWrapper>
-      <BoardArea
+      <TitleContentArea
         type={"최신순"}
         link={"/roommatelist"}
         children={
@@ -34,7 +34,7 @@ export default function RoomMatePage() {
           </>
         }
       />{" "}
-      <BoardArea
+      <TitleContentArea
         type={"나와 비슷한 룸메"}
         children={
           <>
