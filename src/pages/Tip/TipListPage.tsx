@@ -3,7 +3,7 @@
 import styled from "styled-components";
 import Header from "../../components/common/Header";
 import BottomBar from "../../components/common/BottomBar";
-import BoardArea from "../../components/home/BoardArea";
+import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import TipCard from "../../components/tip/TipCard";
 import { useNavigate } from "react-router-dom";
 
@@ -23,7 +23,7 @@ export default function TipListPage() {
     <TipPageWrapper>
       <Header title="기숙사 꿀팁" hasBack={true} showAlarm={true} />
 
-      <BoardArea type="🍯꿀팁모음">
+      <TitleContentArea type="🍯꿀팁모음">
         <CardList>
           {mockTips.map((tip, idx) => (
             <TipCard
@@ -33,7 +33,7 @@ export default function TipListPage() {
             />
           ))}
         </CardList>
-      </BoardArea>
+      </TitleContentArea>
 
       <WriteButton onClick={() => navigate("/tips/write")}>
         ✏️ 글쓰기
