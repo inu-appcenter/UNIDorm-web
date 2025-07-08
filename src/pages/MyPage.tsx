@@ -8,7 +8,7 @@ const menuGroups = [
     title: "내 계정",
     menus: [
       { label: "프로필 수정", path: "/profile/edit" },
-      { label: "사전 체크리스트 수정", path: "/checklist/edit" },
+      { label: "사전 체크리스트 수정", path: "/roommatechecklist" },
     ],
   },
   {
