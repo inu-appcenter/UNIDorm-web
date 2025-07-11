@@ -14,7 +14,7 @@ const menuGroups = [
   {
     title: "커뮤니티",
     menus: [
-      { label: "내 게시글 보기", path: "/community/posts" },
+      { label: "내 게시글 보기", path: "/myposts" },
       { label: "스크랩한 글 보기", path: "/community/liked" },
       { label: "좋아요한 글 보기", path: "/community/liked" },
     ],
