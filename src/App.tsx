@@ -1,4 +1,4 @@
-import { Route, Routes, BrowserRouter, useLocation } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { getMembers } from "./apis/members";
 import useUserStore from "./stores/useUserStore";
@@ -23,6 +23,8 @@ import GroupPurchaseWritePage from "./pages/GroupPurchase/GroupPurchaseWritePage
 import RoomMateChecklistPage from "./pages/RoomMate/RoomMateChecklistPage.tsx";
 import MyPostsPage from "./pages/MyPostsPage.tsx";
 import GroupPurchaseMainPage from "./pages/GroupPurchase/GroupPurchaseMainPage.tsx";
+import MyScrapPage from "./pages/MyScrapPage.tsx";
+import MyLikesPage from "./pages/MyLikesPage.tsx";
 
 function App() {
   const location = useLocation();
@@ -99,6 +101,8 @@ function App() {
           <Route path="/tips/detail" element={<TipDetailPage />} />
           <Route path="/tips" element={<TipListPage />} />
           <Route path="/myposts" element={<MyPostsPage />} />
+          <Route path="/scrap" element={<MyScrapPage />} />
+          <Route path="/liked" element={<MyLikesPage />} />
           <Route
             path="/groupPurchase/post"
             element={<GroupPurchasePostPage />}
