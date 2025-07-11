@@ -25,7 +25,7 @@ export default function HomePage() {
     <HomePageWrapper>
       <TitleContentArea
         type={mockBoard[0].type}
-        link={"/noticeboard"}
+        link={"/notification"}
         children={
           <HomeCard
             title={mockBoard[0].title}
