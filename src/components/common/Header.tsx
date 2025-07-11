@@ -93,7 +93,6 @@ const StyledHeader = styled.header<{ $hasShadow: boolean }>`
   top: 0;
   left: 0;
   z-index: 1000;
-  background: white;
   width: 100%;
   height: 70px;
   padding: 0 20px;
@@ -101,6 +100,12 @@ const StyledHeader = styled.header<{ $hasShadow: boolean }>`
   display: flex;
   justify-content: space-between;
   align-items: center;
+
+  // ✅ 블러 효과 추가
+  background-color: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
   box-shadow: ${({ $hasShadow }) =>
     $hasShadow ? "0 2px 4px rgba(0, 0, 0, 0.1)" : "none"};
 
