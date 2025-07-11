@@ -1,8 +1,8 @@
 import styled from "styled-components";
 import Header from "../components/common/Header";
 import BottomBar from "../components/common/BottomBar";
-import BoardArea from "../components/home/BoardArea";
 import { BsBookmark } from "react-icons/bs";
+import TitleContentArea from "../components/common/TitleContentArea.tsx";
 
 const mockNotices = Array(6).fill({
   id: 1,
@@ -17,7 +17,7 @@ export default function NoticeBoardPage() {
     <NoticePageWrapper>
       <Header title="공지사항" hasBack={true} showAlarm={true} />
 
-      <BoardArea type="📢 공지사항">
+      <TitleContentArea type="📢 공지사항">
         <NoticeList>
           {mockNotices.map((notice, idx) => (
             <NoticeCard key={idx}>
@@ -32,7 +32,7 @@ export default function NoticeBoardPage() {
             </NoticeCard>
           ))}
         </NoticeList>
-      </BoardArea>
+      </TitleContentArea>
 
       <BottomBar />
     </NoticePageWrapper>
