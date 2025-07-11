@@ -15,12 +15,12 @@ const mockTips = Array(8).fill({
   comment: 5,
 });
 
-export default function MyPostsPage() {
+export default function MyScrapPage() {
   const navigate = useNavigate();
 
   return (
-    <MyPostsPageWrapper>
-      <Header title="내 게시글" hasBack={true} showAlarm={true} />
+    <MyScrapPageWrapper>
+      <Header title="스크랩한 글" hasBack={true} showAlarm={true} />
 
       <TitleContentArea type="">
         <CardList>
@@ -33,11 +33,11 @@ export default function MyPostsPage() {
           ))}
         </CardList>
       </TitleContentArea>
-    </MyPostsPageWrapper>
+    </MyScrapPageWrapper>
   );
 }
 
-const MyPostsPageWrapper = styled.div`
+const MyScrapPageWrapper = styled.div`
   padding: 90px 20px 90px 20px;
   display: flex;
   flex-direction: column;
