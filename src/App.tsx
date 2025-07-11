@@ -10,7 +10,7 @@ import ChatListPage from "./pages/Chat/ChatListPage.tsx";
 import ChattingPage from "./pages/Chat/ChattingPage.tsx";
 import RoomMatePage from "./pages/RoomMate/RoomMatePage.tsx";
 import MyPage from "./pages/MyPage.tsx";
-import NotificationPage from "./pages/NotificationPage.tsx";
+import NotificationBoardPage from "./pages/NoticeBoardPage.tsx";
 import TipListPage from "./pages/Tip/TipListPage.tsx";
 import TipWritePage from "./pages/Tip/TipWritePage.tsx";
 import TipDetailPage from "./pages/Tip/TipDetailPage.tsx";
@@ -95,7 +95,7 @@ function App() {
             element={<RoomMateChecklistPage />}
           />
 
-          <Route path="/notification" element={<NotificationPage />} />
+          <Route path="/notification" element={<NotificationBoardPage />} />
           <Route path="/chat/:chatType/:id" element={<ChattingPage />} />
           <Route path="/tips/write" element={<TipWritePage />} />
           <Route path="/tips/detail" element={<TipDetailPage />} />
