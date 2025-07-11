@@ -34,6 +34,10 @@ export default function Header({
         return "마이페이지";
       case "/notification":
         return "알림";
+      case "/roommatelist/1":
+        return "게시글";
+      case "/roommatechecklist":
+        return "사전 체크리스트";
       default:
         return "";
     }
@@ -108,7 +112,7 @@ const StyledHeader = styled.header<{ $hasShadow: boolean }>`
 
   .Title {
     font-weight: 600;
-    font-size: 20px;
+    font-size: 18px;
     line-height: 24px;
     letter-spacing: 0.38px;
     color: #1c1c1e;

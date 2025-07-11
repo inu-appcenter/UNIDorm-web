@@ -2,7 +2,7 @@ import axios from "axios";
 import useUserStore from "../stores/useUserStore";
 
 const refreshInstance = axios.create({
-  baseURL: "https://portal.inuappcenter.kr/",
+  baseURL: "https://",
 });
 
 // 요청 인터셉터 - 토큰 설정

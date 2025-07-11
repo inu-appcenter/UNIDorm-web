@@ -1,24 +1,24 @@
 import styled from "styled-components";
-import TitleLine from "./TitleLine.tsx";
+import TitleLine from "../home/TitleLine.tsx";
 
-interface BoardAreaProps {
+interface TitleContentAreaProps {
   type: string; //공지사항, 기숙사 꿀팁
   link?: string;
   children: React.ReactNode;
 }
 
-const BoardArea = ({ type, link, children }: BoardAreaProps) => {
+const TitleContentArea = ({ type, link, children }: TitleContentAreaProps) => {
   return (
-    <BoardAreaWrapper>
+    <TitleConentAreaWrapper>
       <TitleLine title={type} link={link}></TitleLine>
       {children}
-    </BoardAreaWrapper>
+    </TitleConentAreaWrapper>
   );
 };
 
-export default BoardArea;
+export default TitleContentArea;
 
-const BoardAreaWrapper = styled.div`
+const TitleConentAreaWrapper = styled.div`
   display: flex;
   flex-direction: column;
 
