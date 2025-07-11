@@ -1,7 +1,7 @@
 // src/components/tip/TipCard.tsx
 
 import styled from "styled-components";
-import { FaRegComment, FaRegBookmark } from "react-icons/fa";
+import { FaRegBookmark, FaRegComment } from "react-icons/fa";
 
 interface Post {
   title: string;
@@ -19,17 +19,22 @@ interface TipCardProps {
 export default function MyPostCard({ tip, onClick }: TipCardProps) {
   return (
     <CardWrapper onClick={onClick}>
-      <TopRow>
-        <Title>{tip.title}</Title>
-        <Time>{tip.time}</Time>
-      </TopRow>
-      <Content>{tip.content}</Content>
-      <BottomRow>
-        <FaRegBookmark size={14} />
-        <IconText>{tip.scrap}</IconText>
-        <FaRegComment size={14} style={{ marginLeft: "12px" }} />
-        <IconText>{tip.comment}</IconText>
-      </BottomRow>
+      <Left>
+        <ItemImage />
+      </Left>
+      <Right>
+        <TopRow>
+          <Title>{tip.title}</Title>
+          <Time>{tip.time}</Time>
+        </TopRow>
+        <Content>{tip.content}</Content>
+        <BottomRow>
+          <FaRegBookmark size={14} />
+          <IconText>{tip.scrap}</IconText>
+          <FaRegComment size={14} style={{ marginLeft: "12px" }} />
+          <IconText>{tip.comment}</IconText>
+        </BottomRow>
+      </Right>
     </CardWrapper>
   );
 }
@@ -39,10 +44,30 @@ const CardWrapper = styled.div`
   border-radius: 12px;
   padding: 14px 16px;
   box-shadow: 0px 1px 4px rgba(0, 0, 0, 0.05);
+
+  cursor: pointer;
+  width: 100%;
+  height: fit-content;
+
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  box-sizing: border-box;
+`;
+
+const Left = styled.div`
+  width: fit-content;
+  height: 100%;
+  justify-content: center;
+`;
+const Right = styled.div`
+  flex: 1;
+  height: 100%;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  cursor: pointer;
 `;
 
 const TopRow = styled.div`
@@ -65,7 +90,6 @@ const Time = styled.div`
 const Content = styled.div`
   font-size: 14px;
   color: #333;
-  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 `;
@@ -80,4 +104,11 @@ const BottomRow = styled.div`
 
 const IconText = styled.span`
   margin-left: 4px;
+`;
+
+const ItemImage = styled.div`
+  width: 50px;
+  height: 50px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
 `;
