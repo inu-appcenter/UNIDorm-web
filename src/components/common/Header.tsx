@@ -1,5 +1,3 @@
-// src/components/common/Header.tsx
-
 import styled from "styled-components";
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -10,12 +8,14 @@ interface HeaderProps {
   hasBack?: boolean;
   title?: string;
   showAlarm?: boolean;
+  rightContent?: React.ReactNode; // ✅ 추가: 오른쪽 사용자 정의 콘텐츠
 }
 
 export default function Header({
   hasBack,
   title,
   showAlarm = true,
+  rightContent,
 }: HeaderProps) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -34,8 +34,6 @@ export default function Header({
         return "마이페이지";
       case "/notification":
         return "알림";
-      case "/roommatelist/1":
-        return "게시글";
       default:
         return "";
     }
@@ -74,7 +72,9 @@ export default function Header({
       </TitleWrapper>
 
       <Right>
-        {showAlarm ? (
+        {rightContent !== undefined ? (
+          rightContent
+        ) : showAlarm ? (
           <img src={noti} alt="알림" onClick={handleNotiBtnClick} />
         ) : (
           <Spacer />
@@ -121,7 +121,10 @@ const Left = styled.div`
 `;
 
 const Right = styled.div`
-  width: 24px;
+  width: 100px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
 `;
 
 const Spacer = styled.div`
