@@ -8,7 +8,6 @@ import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import ChatListPage from "./pages/Chat/ChatListPage.tsx";
 import ChattingPage from "./pages/Chat/ChattingPage.tsx";
-import GroupPurchasePage from "./pages/GroupPurchasePage.tsx";
 import RoomMatePage from "./pages/RoomMate/RoomMatePage.tsx";
 import MyPage from "./pages/MyPage.tsx";
 import NotificationPage from "./pages/NotificationPage.tsx";
@@ -19,6 +18,10 @@ import RoomMateListPage from "./pages/RoomMate/RoomMateListPage.tsx";
 import RoomMateDetailPage from "./pages/RoomMate/RoomMateDetailPage.tsx";
 import OutPage from "./pages/OutPage.tsx";
 import SubPage from "./pages/SubPage.tsx";
+import NoticeBoardPage from "./pages/NoticeBoardPage.tsx";
+import GroupPurchaseMainPage from "./pages/GroupPurchase/GroupPurchaseMainPage.tsx";
+import GroupPurchasePostPage from "./pages/GroupPurchase/GroupPurchasePostPage.tsx";
+import GroupPurchaseWritePage from "./pages/GroupPurchase/GroupPurchaseWritePage.tsx";
 import RoomMateChecklistPage from "./pages/RoomMate/RoomMateChecklistPage.tsx";
 
 function App() {
@@ -77,9 +80,10 @@ function App() {
         <Route path="/" element={<RootPage />}>
           <Route path="/home" element={<HomePage />} />
           <Route path="/roommate" element={<RoomMatePage />} />
-          <Route path="/groupPurchase" element={<GroupPurchasePage />} />
+          <Route path="/groupPurchase" element={<GroupPurchaseMainPage />} />
           <Route path="/chat" element={<ChatListPage />} />
           <Route path="/mypage" element={<MyPage />} />
+          <Route path="/noticeboard" element={<NoticeBoardPage />} /> 
         </Route>
         {/*바텀바가 필요없는 2뎁스 이상 페이지들*/}
         <Route path="/" element={<SubPage />}>
@@ -95,6 +99,8 @@ function App() {
           <Route path="/tips/write" element={<TipWritePage />} />
           <Route path="/tips/detail" element={<TipDetailPage />} />
           <Route path="/tips" element={<TipListPage />} />
+          <Route path="/groupPurchase/post" element={<GroupPurchasePostPage />} />
+          <Route path="/groupPurchase/write" element={<GroupPurchaseWritePage />} />
         </Route>
       </Routes>
     </>
