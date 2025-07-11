@@ -1,46 +1,51 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
 import Header from "../../components/common/Header";
-import Picker from "react-mobile-picker";
+import { MdImage } from "react-icons/md";
 
 export default function GroupPurchaseWritePage() {
   const [category, setCategory] = useState("배달");
 
-  const [value, setValue] = useState({
+  const [deadline, setDeadline] = useState({
     year: "2025년",
     month: "7월",
-    day: "20일",
+    day: "1일",
     ampm: "오후",
-    hour: "8시",
+    hour: "1시",
     minute: "00분",
   });
 
-  const options = {
-    year: ["2025년", "2026년", "2027년"],
-    month: ["7월", "8월", "9월", "10월"],
-    day: ["20일", "21일", "22일", "23일"],
-    ampm: ["오전", "오후"],
-    hour: ["8시", "9시", "10시", "11시"],
-    minute: ["00분", "30분"],
+  const [dayOptions, setDayOptions] = useState<string[]>([]);
+
+  // 해당 월의 마지막 일 구하기
+  const getLastDay = (yearStr: string, monthStr: string) => {
+    const year = parseInt(yearStr.replace("년", ""));
+    const month = parseInt(monthStr.replace("월", ""));
+    return new Date(year, month, 0).getDate();
   };
 
-  const handleChange = (selectedValue: string, name: string) => {
-    setValue((prev) => ({
-        ...prev,
-        [name]: selectedValue,
-    }));
-    };
+  // 연도나 월이 바뀌면 day 옵션 다시 생성
+  useEffect(() => {
+    const lastDay = getLastDay(deadline.year, deadline.month);
+    const days = Array.from({ length: lastDay }, (_, i) => `${i + 1}일`);
+    setDayOptions(days);
 
+    if (!days.includes(deadline.day)) {
+      setDeadline((prev) => ({ ...prev, day: days[0] }));
+    }
+  }, [deadline.year, deadline.month]);
 
+  const handleTempSave = () => {
+    alert("임시 저장되었습니다.");
+  };
   return (
     <Wrapper>
-      <Header title="공동구매 글쓰기" hasBack={true} />
+      <Header title="공동구매 글쓰기" hasBack={true}  rightContent={<TempSaveButton onClick={handleTempSave}>임시저장</TempSaveButton>} />
       <Content>
-        <ImageUploadBox>
-          <ImagePlaceholder>
-            <span>0/10</span>
-          </ImagePlaceholder>
-        </ImageUploadBox>
+        <ImageBox style={{marginTop: 80}}>
+          <MdImage size={36} color="#888" />
+          <span>0/10</span>
+        </ImageBox>
 
         <SectionTitle>제목</SectionTitle>
         <InputField placeholder="글 제목" />
@@ -71,9 +76,58 @@ export default function GroupPurchaseWritePage() {
         <InputField placeholder="구매 인원을 입력해주세요" />
 
         <SectionTitle>마감 시간</SectionTitle>
-        <PickerWrapper>
-          <Picker value={value} options={options} onChange={handleChange} />
-        </PickerWrapper>
+        <DeadlineRow>
+          <Select value={deadline.year} onChange={(e) => setDeadline({ ...deadline, year: e.target.value })}>
+            <option>2025년</option>
+            <option>2026년</option>
+            <option>2027년</option>
+          </Select>
+          <Select value={deadline.month} onChange={(e) => setDeadline({ ...deadline, month: e.target.value })}>
+            <option>1월</option>
+            <option>2월</option>
+            <option>3월</option>
+            <option>4월</option>
+            <option>5월</option>
+            <option>6월</option>
+            <option>7월</option>
+            <option>8월</option>
+            <option>9월</option>
+            <option>10월</option>
+            <option>11월</option>
+            <option>12월</option>
+          </Select>
+          <Select value={deadline.day} onChange={(e) => setDeadline({ ...deadline, day: e.target.value })}>
+            {dayOptions.map((d) => (
+              <option key={d}>{d}</option>
+            ))}
+          </Select>
+        </DeadlineRow>
+
+        <DeadlineRow>
+          <Select value={deadline.ampm} onChange={(e) => setDeadline({ ...deadline, ampm: e.target.value })}>
+            <option>오전</option>
+            <option>오후</option>
+          </Select>
+          <Select value={deadline.hour} onChange={(e) => setDeadline({ ...deadline, hour: e.target.value })}>
+            <option>1시</option>
+            <option>2시</option>
+            <option>3시</option>
+            <option>4시</option>
+            <option>5시</option>
+            <option>6시</option>
+            <option>7시</option>
+            <option>8시</option>
+            <option>9시</option>
+            <option>10시</option>
+            <option>11시</option>
+            <option>12시</option>
+          </Select>
+          <Select value={deadline.minute} onChange={(e) => setDeadline({ ...deadline, minute: e.target.value })}>
+            <option>00분</option>
+            <option>30분</option>
+          </Select>
+        </DeadlineRow>
+
         <WarningText>
           설정한 마감 시간이 지나면 게시물은 삭제됩니다.
         </WarningText>
@@ -98,22 +152,19 @@ const Content = styled.div`
   padding-bottom: 140px;
 `;
 
-const ImageUploadBox = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
+const ImageBox = styled.div`
+  width: 100px;
   height: 100px;
-  background: #e0e0e0;
-  border-radius: 8px;
-  margin-bottom: 16px;
-`;
-
-const ImagePlaceholder = styled.div`
+  margin: 32px 0 16px 0;
+  background: #eee;
+  border-radius: 12px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
-  color: #777;
+  gap: 6px;
+  color: #555;
+  font-size: 13px;
 `;
 
 const InputField = styled.input`
@@ -157,15 +208,19 @@ const SectionTitle = styled.div`
   margin: 16px 0 8px;
 `;
 
-const PickerWrapper = styled.div`
-  background: #fff;
-  border-radius: 8px;
-  padding: 8px;
-  margin-bottom: 12px;
+const DeadlineRow = styled.div`
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+`;
 
-  .picker-column {
-    flex: 1;
-  }
+const Select = styled.select`
+  flex: 1;
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 14px;
+  border: 1px solid #fff;
+  background: white;
 `;
 
 const WarningText = styled.div`
@@ -193,4 +248,13 @@ const SubmitButton = styled.button`
   border-radius: 8px;
   font-size: 16px;
   font-weight: bold;
+`;
+
+const TempSaveButton = styled.button`
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
 `;

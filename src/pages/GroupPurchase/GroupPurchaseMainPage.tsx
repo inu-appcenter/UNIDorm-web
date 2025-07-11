@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import styled from "styled-components";
 import Header from "../../components/common/Header";
 import BottomBar from "../../components/common/BottomBar";
@@ -75,15 +75,9 @@ export default function GroupPurchaseMainPage() {
           ))}
         </SortFilterWrapper>
 
-        <GroupPurchaseList
-          selectedCategory={selectedCategory}
-          searchQuery={search}
-        />
-
-        
+        <GroupPurchaseList />
 
       </ContentArea>
-
 
       <WriteButton onClick={() => navigate("/group/write")}>✏️ 글쓰기</WriteButton>
       <BottomBar />
@@ -213,6 +207,7 @@ const WriteButton = styled.button`
   box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.2);
   z-index: 100;
 `;
+
 const SortFilterWrapper = styled.div`
   display: flex;
   margin-bottom: 12px;

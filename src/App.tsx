@@ -21,7 +21,7 @@ import SubPage from "./pages/SubPage.tsx";
 import NoticeBoardPage from "./pages/NoticeBoardPage.tsx";
 import GroupPurchaseMainPage from "./pages/GroupPurchase/GroupPurchaseMainPage.tsx";
 import GroupPurchasePostPage from "./pages/GroupPurchase/GroupPurchasePostPage.tsx";
-import GroupPurchaseWritePage from "./pages/GroupPurchase/GroupBuyWritePage.tsx";
+import GroupPurchaseWritePage from "./pages/GroupPurchase/GroupPurchaseWritePage.tsx";
 
 function App() {
   const location = useLocation();
