@@ -9,11 +9,12 @@ const RoundSquareButton = ({ btnName }: RoundSquareButtonProps) => {
 export default RoundSquareButton;
 
 const RoundSquareButtonWrapper = styled.div`
-  width: fit-content;
+  width: 100%;
   min-width: 80px;
   height: 100%;
-  max-height: 50px;
+  min-height: 50px;
   padding: 0 16px;
+  box-sizing: border-box;
 
   display: flex;
   flex-direction: column;

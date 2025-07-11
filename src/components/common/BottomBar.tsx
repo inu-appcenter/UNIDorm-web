@@ -7,19 +7,32 @@ import home from "../../assets/bottombar/home.svg";
 import roommate from "../../assets/bottombar/roommate.svg";
 import mypage from "../../assets/bottombar/mypage.svg";
 
+// 클릭된 이미지 import
+import buyClicked from "../../assets/bottombar/buy-clicked.svg";
+import chatClicked from "../../assets/bottombar/chat-clicked.svg";
+import homeClicked from "../../assets/bottombar/home-clicked.svg";
+import roommateClicked from "../../assets/bottombar/roommate-clicked.svg";
+import mypageClicked from "../../assets/bottombar/mypage-clicked.svg";
+
 interface ButtonProps {
-  imgsrc: string;
+  defaultImg: string;
+  clickedImg: string;
   buttonName: string;
-  path: string;
+  isActive: boolean;
+  onClick: () => void;
 }
 
-const Button = ({ imgsrc, buttonName, path }: ButtonProps) => {
-  const navigate = useNavigate();
-
+const Button = ({
+  defaultImg,
+  clickedImg,
+  buttonName,
+  isActive,
+  onClick,
+}: ButtonProps) => {
   return (
-    <ButtonWrapper onClick={() => navigate(path)}>
-      <img src={imgsrc} alt={buttonName} />
-      <div className="BtnName">{buttonName}</div>
+    <ButtonWrapper onClick={onClick}>
+      <img src={isActive ? clickedImg : defaultImg} alt={buttonName} />
+      <div className={`BtnName ${isActive ? "active" : ""}`}>{buttonName}</div>
     </ButtonWrapper>
   );
 };
@@ -29,30 +42,72 @@ const ButtonWrapper = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 40px;
+  width: 50px;
   height: 100%;
   gap: 5px;
   cursor: pointer;
 
   .BtnName {
-    font-size: 8px;
+    font-size: 10px;
+    color: #000;
+    min-width: fit-content;
+  }
+
+  .BtnName.active {
+    color: #0a84ff;
   }
 `;
 
 export default function BottomBar() {
   const location = useLocation();
-  console.log(location.pathname);
+  const navigate = useNavigate();
+  const pathname = location.pathname;
 
-  return location.pathname.includes("/chat/roommate") ||
-    location.pathname.includes("/chat/groupPurchase") ? (
-    <></>
-  ) : (
+  // 특정 경로에서는 BottomBar 숨김
+  if (
+    pathname.includes("/chat/roommate") ||
+    pathname.includes("/chat/groupPurchase")
+  ) {
+    return null;
+  }
+
+  return (
     <StyledFooter>
-      <Button imgsrc={home} buttonName={"홈"} path={"/home"} />
-      <Button imgsrc={roommate} buttonName={"룸메"} path={"/roommate"} />
-      <Button imgsrc={buy} buttonName={"공구"} path={"/groupPurchase"} />
-      <Button imgsrc={chat} buttonName={"채팅"} path={"/chat"} />
-      <Button imgsrc={mypage} buttonName={"마이페이지"} path={"/mypage"} />
+      <Button
+        defaultImg={home}
+        clickedImg={homeClicked}
+        buttonName="홈"
+        isActive={pathname === "/home"}
+        onClick={() => navigate("/home")}
+      />
+      <Button
+        defaultImg={roommate}
+        clickedImg={roommateClicked}
+        buttonName="룸메"
+        isActive={pathname === "/roommate"}
+        onClick={() => navigate("/roommate")}
+      />
+      <Button
+        defaultImg={buy}
+        clickedImg={buyClicked}
+        buttonName="공구"
+        isActive={pathname === "/groupPurchase"}
+        onClick={() => navigate("/groupPurchase")}
+      />
+      <Button
+        defaultImg={chat}
+        clickedImg={chatClicked}
+        buttonName="채팅"
+        isActive={pathname === "/chat"}
+        onClick={() => navigate("/chat")}
+      />
+      <Button
+        defaultImg={mypage}
+        clickedImg={mypageClicked}
+        buttonName="마이페이지"
+        isActive={pathname === "/mypage"}
+        onClick={() => navigate("/mypage")}
+      />
     </StyledFooter>
   );
 }

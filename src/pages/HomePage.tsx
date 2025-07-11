@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import BoardArea from "../components/home/BoardArea.tsx";
+import TitleContentArea from "../components/common/TitleContentArea.tsx";
 import HomeCard from "../components/home/HomeCard.tsx";
 import GroupPurchaseList from "../components/GroupPurchase/GroupPurchaseList.tsx";
 import ThreeWeekCalendar from "../components/home/ThreeWeekCalendar.tsx";
@@ -23,7 +23,7 @@ const mockBoard = [
 export default function HomePage() {
   return (
     <HomePageWrapper>
-      <BoardArea
+      <TitleContentArea
         type={mockBoard[0].type}
         link={"/noticeboard"}
         children={
@@ -35,7 +35,7 @@ export default function HomePage() {
           />
         }
       />
-      <BoardArea
+      <TitleContentArea
         type={mockBoard[1].type}
         link={"/tips"}
         children={
@@ -47,8 +47,11 @@ export default function HomePage() {
           />
         }
       />
-      <BoardArea type={"다가오는 이벤트"} children={<ThreeWeekCalendar />} />
-      <BoardArea
+      <TitleContentArea
+        type={"다가오는 이벤트"}
+        children={<ThreeWeekCalendar />}
+      />
+      <TitleContentArea
         type={"임박한 공구"}
         link={"/groupPurchase"}
         children={<GroupPurchaseList />}
