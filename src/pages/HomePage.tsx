@@ -3,6 +3,7 @@ import TitleContentArea from "../components/common/TitleContentArea.tsx";
 import HomeCard from "../components/home/HomeCard.tsx";
 import GroupPurchaseList from "../components/GroupPurchase/GroupPurchaseList.tsx";
 import ThreeWeekCalendar from "../components/home/ThreeWeekCalendar.tsx";
+import Header from "../components/common/Header.tsx";
 
 const mockBoard = [
   {
@@ -23,6 +24,7 @@ const mockBoard = [
 export default function HomePage() {
   return (
     <HomePageWrapper>
+      <Header title="아이돔" hasBack={false} showAlarm={true} />
       <TitleContentArea
         type={mockBoard[0].type}
         link={"/notification"}
@@ -61,7 +63,7 @@ export default function HomePage() {
 }
 
 const HomePageWrapper = styled.div`
-  padding: 90px 20px;
+  padding: 90px 16px;
 
   display: flex;
   flex-direction: column;

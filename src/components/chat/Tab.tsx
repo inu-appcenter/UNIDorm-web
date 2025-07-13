@@ -26,7 +26,7 @@ export default Tab;
 // Props 타입 정의
 const TabWrapper = styled.div`
   width: 100%;
-  height: 60px;
+  height: fit-content;
 
   display: flex;
   flex-direction: row;

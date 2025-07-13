@@ -1,12 +1,11 @@
 import BottomBar from "../components/common/BottomBar.tsx";
 import { Outlet } from "react-router-dom";
 import styled from "styled-components";
-import Header from "../components/common/Header.tsx";
 
 export default function RootPage() {
   return (
     <RootPageWrapper>
-      <Header />
+      {/*<Header />*/}
       <Outlet />
       <BottomBar />
     </RootPageWrapper>

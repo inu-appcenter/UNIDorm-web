@@ -9,6 +9,7 @@ interface HeaderProps {
   title?: string;
   showAlarm?: boolean;
   rightContent?: React.ReactNode; // ✅ 추가: 오른쪽 사용자 정의 콘텐츠
+  secondHeader?: React.ReactNode;
 }
 
 export default function Header({
@@ -16,6 +17,7 @@ export default function Header({
   title,
   showAlarm = true,
   rightContent,
+  secondHeader,
 }: HeaderProps) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -55,6 +57,9 @@ export default function Header({
     switch (location.pathname) {
       case "/notification":
       case "/home":
+      case "/roommate":
+      case "/roommatelist":
+      case "/roommatelist/1":
         return true;
       default:
         return false;
@@ -63,27 +68,30 @@ export default function Header({
 
   return (
     <StyledHeader $hasShadow={shadowSelector()}>
-      <Left>
-        {hasBack ? (
-          <img src={back} alt="뒤로가기" onClick={handleBackClick} />
-        ) : (
-          <Spacer />
-        )}
-      </Left>
+      <MainLine>
+        <Left>
+          {hasBack ? (
+            <img src={back} alt="뒤로가기" onClick={handleBackClick} />
+          ) : (
+            <Spacer />
+          )}
+        </Left>
 
-      <TitleWrapper>
-        <div className="Title">{title ?? getCurrentPage()}</div>
-      </TitleWrapper>
+        <TitleWrapper>
+          <div className="Title">{title ?? getCurrentPage()}</div>
+        </TitleWrapper>
 
-      <Right>
-        {rightContent !== undefined ? (
-          rightContent
-        ) : showAlarm ? (
-          <img src={noti} alt="알림" onClick={handleNotiBtnClick} />
-        ) : (
-          <Spacer />
-        )}
-      </Right>
+        <Right>
+          {rightContent !== undefined ? (
+            rightContent
+          ) : showAlarm ? (
+            <img src={noti} alt="알림" onClick={handleNotiBtnClick} />
+          ) : (
+            <Spacer />
+          )}
+        </Right>
+      </MainLine>
+      <SecondLine>{secondHeader}</SecondLine>
     </StyledHeader>
   );
 }
@@ -94,17 +102,11 @@ const StyledHeader = styled.header<{ $hasShadow: boolean }>`
   left: 0;
   z-index: 1000;
   width: 100%;
-  height: 70px;
-  padding: 0 20px;
-  box-sizing: border-box;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
 
-  // ✅ 블러 효과 추가
-  background-color: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  //✅ 블러 효과 추가
+  background: rgba(244, 244, 244, 0.6); /* 반투명 */
+  backdrop-filter: blur(10px); /* 블러 효과 */
+  -webkit-backdrop-filter: blur(10px); /* Safari 지원 */
 
   box-shadow: ${({ $hasShadow }) =>
     $hasShadow ? "0 2px 4px rgba(0, 0, 0, 0.1)" : "none"};
@@ -144,4 +146,20 @@ const TitleWrapper = styled.div`
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
+`;
+
+const MainLine = styled.div`
+  width: 100%;
+  height: 100%;
+
+  height: 70px;
+  padding: 0 20px;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+const SecondLine = styled.div`
+  width: 100%;
+  height: 100%;
 `;
