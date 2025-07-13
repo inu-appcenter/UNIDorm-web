@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import RoomMateCard from "../../components/roommate/RoomMateCard.tsx";
+import Header from "../../components/common/Header.tsx";
 
 const mockBoard = [
   {
@@ -14,6 +15,7 @@ const mockBoard = [
 export default function RoomMatePage() {
   return (
     <RoomMatePageWrapper>
+      <Header title="룸메이트" hasBack={false} showAlarm={true} />
       <TitleContentArea
         type={"최신순"}
         link={"/roommatelist"}
@@ -81,7 +83,7 @@ export default function RoomMatePage() {
 }
 
 const RoomMatePageWrapper = styled.div`
-  padding: 90px 20px;
+  padding: 90px 16px;
 
   display: flex;
   flex-direction: column;
