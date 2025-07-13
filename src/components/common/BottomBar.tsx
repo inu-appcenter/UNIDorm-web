@@ -125,9 +125,12 @@ const StyledFooter = styled.footer`
 
   width: 100%;
   height: 70px;
-  background: #f4f4f4;
   padding: 0 20px;
   box-sizing: border-box;
+
+  background: rgba(244, 244, 244, 0.6); /* 반투명 */
+  backdrop-filter: blur(10px); /* 블러 효과 */
+  -webkit-backdrop-filter: blur(10px); /* Safari 지원 */
 
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
 `;

@@ -2,10 +2,12 @@ import styled from "styled-components";
 
 import profileimg from "../../assets/profileimg.svg";
 import RoomMateBottomBar from "../../components/roommate/RoomMateBottomBar.tsx";
+import Header from "../../components/common/Header.tsx";
 
 export default function RoomMateDetailPage() {
   return (
     <RoomMateDetailPageWrapper>
+      <Header title={"게시글"} hasBack={true} />
       <UserArea>
         <img src={profileimg} />
         <div className="description">

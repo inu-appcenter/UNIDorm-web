@@ -1,10 +1,10 @@
 import { useState } from "react";
 import styled from "styled-components";
-import Header from "../../components/common/Header";
 import BottomBar from "../../components/common/BottomBar";
 import GroupPurchaseList from "../../components/GroupPurchase/GroupPurchaseList";
 import { useNavigate } from "react-router-dom";
 import { FaSearch } from "react-icons/fa";
+import Header from "../../components/common/Header.tsx";
 
 const CATEGORY_LIST = ["전체", "배달", "식자재", "생활용품", "기타"];
 const SORT_OPTIONS = ["마감 임박 순", "최신순", "좋아요 순"];
@@ -13,7 +13,11 @@ export default function GroupPurchaseMainPage() {
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState("전체");
   const [search, setSearch] = useState("");
-  const [recentSearches, setRecentSearches] = useState<string[]>(["휴지", "마라탕", "닭가슴살"]);
+  const [recentSearches, setRecentSearches] = useState<string[]>([
+    "휴지",
+    "마라탕",
+    "닭가슴살",
+  ]);
   const [sortOption, setSortOption] = useState("마감 임박순");
 
   const handleCategoryClick = (category: string) => {
@@ -26,20 +30,24 @@ export default function GroupPurchaseMainPage() {
 
   return (
     <PageWrapper>
-      <TopFixedSection>
-        <Header title="공동구매" hasBack={true} showAlarm={true} />
-        <CategoryWrapper>
-          {CATEGORY_LIST.map((category) => (
-            <CategoryItem
-              key={category}
-              className={selectedCategory === category ? "active" : ""}
-              onClick={() => handleCategoryClick(category)}
-            >
-              {category}
-            </CategoryItem>
-          ))}
-        </CategoryWrapper>
-      </TopFixedSection>
+      <Header
+        title="공동구매"
+        hasBack={false}
+        showAlarm={true}
+        secondHeader={
+          <CategoryWrapper>
+            {CATEGORY_LIST.map((category) => (
+              <CategoryItem
+                key={category}
+                className={selectedCategory === category ? "active" : ""}
+                onClick={() => handleCategoryClick(category)}
+              >
+                {category}
+              </CategoryItem>
+            ))}
+          </CategoryWrapper>
+        }
+      />
 
       <ContentArea>
         <SearchBar>
@@ -57,12 +65,15 @@ export default function GroupPurchaseMainPage() {
           <TagList>
             {recentSearches.map((term) => (
               <Tag key={term}>
-                {term} <DeleteBtn onClick={() => handleDeleteRecent(term)}>×</DeleteBtn>
+                {term}{" "}
+                <DeleteBtn onClick={() => handleDeleteRecent(term)}>
+                  ×
+                </DeleteBtn>
               </Tag>
             ))}
           </TagList>
         </RecentSearchWrapper>
-        
+
         <SortFilterWrapper>
           {SORT_OPTIONS.map((option) => (
             <SortButton
@@ -76,43 +87,49 @@ export default function GroupPurchaseMainPage() {
         </SortFilterWrapper>
 
         <GroupPurchaseList />
-
       </ContentArea>
 
-      <WriteButton onClick={() => navigate("/group/write")}>✏️ 글쓰기</WriteButton>
+      <WriteButton onClick={() => navigate("/group/write")}>
+        ✏️ 글쓰기
+      </WriteButton>
       <BottomBar />
     </PageWrapper>
   );
 }
 
 const PageWrapper = styled.div`
-  padding-top: 70px;
+  padding-top: 80px;
   background: #fafafa;
   height: 100vh;
   overflow-x: hidden;
 `;
 
-const TopFixedSection = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  background-color: white;
-  z-index: 999;
-  padding: 70px 20px 8px 20px;
-  box-sizing: border-box;
-`;
+// const TopFixedSection = styled.div`
+//   position: fixed;
+//   top: 40px;
+//   left: 0;
+//   width: 100%;
+//   background-color: white;
+//   z-index: 999;
+//   padding: 70px 20px 8px 20px;
+//   box-sizing: border-box;
+// `;
 
 const CategoryWrapper = styled.div`
   display: flex;
   gap: 16px;
-  background-color: white;
+  width: 100%;
+  //background-color: white;
+  border-bottom: 1px solid silver;
 `;
 
 const CategoryItem = styled.div`
+  flex: 1; /* 균등 너비 분배 */
+  text-align: center; /* 텍스트 가운데 정렬 */
   font-size: 16px;
   color: #aaa;
   cursor: pointer;
+  padding: 6px 0;
 
   &.active {
     color: black;
@@ -189,8 +206,8 @@ const DeleteBtn = styled.button`
 const ContentArea = styled.div`
   padding-top: 32px;
   padding-bottom: 10px;
-  padding-left: 20px;
-  padding-right: 20px;
+  padding-left: 16px;
+  padding-right: 16px;
 `;
 
 const WriteButton = styled.button`
