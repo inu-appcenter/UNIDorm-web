@@ -2,6 +2,7 @@ import styled from "styled-components";
 import MyInfoArea from "../components/mypage/MyInfoArea.tsx";
 import MenuGroup from "../components/mypage/MenuGroup.tsx";
 import React from "react";
+import Header from "../components/common/Header.tsx";
 
 const menuGroups = [
   {
@@ -39,6 +40,7 @@ const menuGroups = [
 const MyPage = () => {
   return (
     <MyPageWrapper>
+      <Header title={"마이페이지"} showAlarm={true} />
       <MyInfoArea />
       <Divider />
       {menuGroups.map((group, idx) => (
@@ -54,7 +56,7 @@ const MyPage = () => {
 export default MyPage;
 
 const MyPageWrapper = styled.div`
-  padding: 90px 20px;
+  padding: 90px 16px;
   padding-bottom: 120px;
 
   display: flex;

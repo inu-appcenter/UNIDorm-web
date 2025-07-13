@@ -2,7 +2,6 @@
 
 import styled from "styled-components";
 import Header from "../../components/common/Header";
-import BottomBar from "../../components/common/BottomBar";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import TipCard from "../../components/tip/TipCard";
 import { useNavigate } from "react-router-dom";
@@ -38,13 +37,12 @@ export default function TipListPage() {
       <WriteButton onClick={() => navigate("/tips/write")}>
         ✏️ 글쓰기
       </WriteButton>
-      <BottomBar />
     </TipPageWrapper>
   );
 }
 
 const TipPageWrapper = styled.div`
-  padding: 90px 20px 90px 20px;
+  padding: 90px 16px 40px 16px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -59,11 +57,12 @@ const CardList = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
+  width: 100%;
 `;
 
 const WriteButton = styled.button`
   position: fixed;
-  bottom: 90px;
+  bottom: 40px;
   right: 20px;
   background-color: #007bff;
   color: white;

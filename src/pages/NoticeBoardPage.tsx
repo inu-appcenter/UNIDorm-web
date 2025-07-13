@@ -40,7 +40,7 @@ export default function NoticeBoardPage() {
 }
 
 const NoticePageWrapper = styled.div`
-  padding: 90px 8px 90px 8px; // ✅ 좌우 여백 최소화
+  padding: 90px 16px 90px 16px; // ✅ 좌우 여백 최소화
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -49,12 +49,16 @@ const NoticePageWrapper = styled.div`
   height: 100%;
   overflow-y: auto;
   background: #fafafa;
+  width: 100%;
+  height: 100%;
 `;
 
 const NoticeList = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
+  width: 100%;
+  height: 100%;
 `;
 
 const NoticeCard = styled.div`
@@ -63,7 +67,7 @@ const NoticeCard = styled.div`
   border-radius: 12px;
   display: flex;
   flex-direction: column;
-  width: 420px; // ✅ 꽉 차게
+  width: 100%;
   box-sizing: border-box;
   gap: 8px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
