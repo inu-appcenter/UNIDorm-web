@@ -1,16 +1,21 @@
 import styled from "styled-components";
-import profileimg from "../../assets/profileimg.svg";
+import useUserStore from "../../stores/useUserStore.ts";
+
 const MyInfoArea = () => {
+  const userInfo = useUserStore((state) => state.userInfo);
+
   return (
     <MyInfoAreaWrapper>
       <LeftArea>
-        <img src={profileimg} />
+        <img src={""} alt="프로필 이미지" />
         <div className="description">
-          <div className="name">익명</div>
-          <div className="college">글로벌정경대</div>
+          <div className="name">{userInfo.name || "이름 정보 없음"}</div>
+          <div className="college">
+            {userInfo.college || "단과대 정보 없음"}
+          </div>
         </div>
       </LeftArea>
-      <Penalty>벌점 3점</Penalty>
+      <Penalty>벌점 {userInfo.penalty ?? 0}점</Penalty>
     </MyInfoAreaWrapper>
   );
 };
