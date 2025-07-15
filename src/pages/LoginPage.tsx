@@ -3,14 +3,37 @@ import { useNavigate } from "react-router-dom";
 import StyledInput from "../components/common/StyledInput.tsx";
 import SquareButton from "../components/common/SquareButton.tsx";
 import { useState } from "react";
+import { login } from "../apis/members.ts";
+import useUserStore from "../stores/useUserStore.ts";
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const [id, setId] = useState("");
   const [password, setPassword] = useState("");
+  const { setTokenInfo } = useUserStore(); // store에서 setTokenInfo 불러오기
 
   const isFilled = () => {
     return id.trim() !== "" && password.trim() !== "";
+  };
+
+  const handleLogin = async () => {
+    try {
+      const response = await login(id, password);
+      console.log(response);
+
+      if (response.status === 201) {
+        const tokenInfo = response.data;
+        console.log(tokenInfo);
+
+        setTokenInfo(tokenInfo);
+        navigate("/home");
+      } else {
+        alert("로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.");
+      }
+    } catch (error) {
+      alert("로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.");
+      console.error(error);
+    }
   };
 
   return (
@@ -37,7 +60,7 @@ export default function LoginPage() {
       <SquareButton
         text="로그인"
         disabled={!isFilled()}
-        onClick={() => navigate("/home")}
+        onClick={handleLogin}
       />
     </LoginPageWrapper>
   );
