@@ -11,17 +11,15 @@ interface UserState {
 const useUserStore = create<UserState>((set) => ({
   tokenInfo: {
     accessToken: "",
-    accessTokenExpiredTime: "",
     refreshToken: "",
-    refreshTokenExpiredTime: "",
   },
   userInfo: {
-    id: 0,
-    nickname: "",
-    fireId: 0,
-    role: "",
+    name: "",
+    studentNumber: "",
+    dormType: "",
+    college: "",
+    penalty: 0,
   },
-
   setTokenInfo: (tokenInfo) => {
     set(() => ({ tokenInfo }));
     localStorage.setItem("tokenInfo", JSON.stringify(tokenInfo));
