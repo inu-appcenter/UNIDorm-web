@@ -3,15 +3,16 @@ import useUserStore from "../stores/useUserStore";
 import { refresh } from "../apis/members";
 
 const tokenInstance = axios.create({
-  baseURL: "https://",
+  baseURL: "https://inu-dormitory-dev.inuappcenter.kr/",
 });
 
 // 요청 인터셉터 - 토큰 설정
 tokenInstance.interceptors.request.use(
   (config) => {
     const { accessToken } = useUserStore.getState().tokenInfo;
+    console.log(accessToken);
     if (accessToken) {
-      config.headers["Auth"] = accessToken;
+      config.headers["Authorization"] = `Bearer ${accessToken}`;
     }
     // else {
     //   alert("로그인이 필요합니다. 로그인해 주세요.");
@@ -52,9 +53,10 @@ tokenInstance.interceptors.response.use(
         useUserStore.getState().setTokenInfo(newTokenInfo);
 
         // 새로운 토큰을 요청 헤더에 추가하여 원래 요청을 재시도
-        tokenInstance.defaults.headers.common["Auth"] =
+        tokenInstance.defaults.headers.common["Authorization"] =
           newTokenInfo.accessToken;
-        originalRequest.headers["Auth"] = newTokenInfo.accessToken;
+        originalRequest.headers["Authorization"] =
+          `Bearer ${newTokenInfo.accessToken}`;
 
         return tokenInstance(originalRequest); // 기존 요청 재시도
       } catch (refreshError) {
@@ -62,9 +64,7 @@ tokenInstance.interceptors.response.use(
         alert("로그인 정보가 만료되었습니다. 다시 로그인해 주세요.");
         useUserStore.getState().setTokenInfo({
           accessToken: "",
-          accessTokenExpiredTime: "",
           refreshToken: "",
-          refreshTokenExpiredTime: "",
         });
         localStorage.removeItem("tokenInfo");
 
