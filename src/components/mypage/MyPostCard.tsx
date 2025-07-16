@@ -2,17 +2,10 @@
 
 import styled from "styled-components";
 import { FaRegBookmark, FaRegComment } from "react-icons/fa";
-
-interface Post {
-  title: string;
-  content: string;
-  time: string;
-  scrap: number;
-  comment: number;
-}
+import { MyPost } from "../../types/members.ts";
 
 interface TipCardProps {
-  tip: Post;
+  tip: MyPost;
   onClick?: () => void;
 }
 
@@ -25,14 +18,13 @@ export default function MyPostCard({ tip, onClick }: TipCardProps) {
       <Right>
         <TopRow>
           <Title>{tip.title}</Title>
-          <Time>{tip.time}</Time>
+          <Time>{tip.createDate}</Time>
         </TopRow>
-        <Content>{tip.content}</Content>
         <BottomRow>
           <FaRegBookmark size={14} />
-          <IconText>{tip.scrap}</IconText>
+          <IconText>{0}</IconText>
           <FaRegComment size={14} style={{ marginLeft: "12px" }} />
-          <IconText>{tip.comment}</IconText>
+          <IconText>{0}</IconText>
         </BottomRow>
       </Right>
     </CardWrapper>
@@ -85,13 +77,6 @@ const Title = styled.div`
 const Time = styled.div`
   font-size: 12px;
   color: #888;
-`;
-
-const Content = styled.div`
-  font-size: 14px;
-  color: #333;
-  overflow: hidden;
-  text-overflow: ellipsis;
 `;
 
 const BottomRow = styled.div`
