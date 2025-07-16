@@ -100,8 +100,16 @@ export default function GroupPurchaseMainPage() {
 const PageWrapper = styled.div`
   padding-top: 80px;
   background: #fafafa;
-  height: 100vh;
-  overflow-x: hidden;
+
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  //height: 100vh;
+  //overflow-x: hidden;
 `;
 
 // const TopFixedSection = styled.div`
@@ -205,7 +213,7 @@ const DeleteBtn = styled.button`
 
 const ContentArea = styled.div`
   padding-top: 32px;
-  padding-bottom: 10px;
+  padding-bottom: 100px;
   padding-left: 16px;
   padding-right: 16px;
 `;

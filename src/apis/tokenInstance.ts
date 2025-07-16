@@ -9,17 +9,11 @@ const tokenInstance = axios.create({
 // 요청 인터셉터 - 토큰 설정
 tokenInstance.interceptors.request.use(
   (config) => {
-    const { accessToken } = useUserStore.getState().tokenInfo;
-    console.log(accessToken);
+    const accessToken = localStorage.getItem("accessToken");
+    console.log("엑세스토큰", accessToken);
     if (accessToken) {
       config.headers["Authorization"] = `Bearer ${accessToken}`;
     }
-    // else {
-    //   alert("로그인이 필요합니다. 로그인해 주세요.");
-    //   return Promise.reject(
-    //     new axios.Cancel("토큰이 없어 요청이 취소되었습니다.")
-    //   );
-    // }
     return config;
   },
   (error) => {
@@ -27,7 +21,7 @@ tokenInstance.interceptors.request.use(
   },
 );
 
-// 응답 인터셉터 - 401 에러 시 토큰 재발급 및 요청 재시도
+// 응답 인터셉터 - 403 에러 시 토큰 재발급 및 요청 재시도
 tokenInstance.interceptors.response.use(
   (response) => {
     // 모든 응답의 response.data.msg 콘솔 출력
@@ -40,7 +34,7 @@ tokenInstance.interceptors.response.use(
     const originalRequest = error.config;
     if (
       error.response &&
-      error.response.status === 401 &&
+      error.response.status === 403 &&
       !originalRequest._retry
     ) {
       originalRequest._retry = true; // 재시도 방지 플래그 설정
@@ -66,7 +60,8 @@ tokenInstance.interceptors.response.use(
           accessToken: "",
           refreshToken: "",
         });
-        localStorage.removeItem("tokenInfo");
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
 
         (
           refreshError as AxiosError & { isRefreshError?: boolean }

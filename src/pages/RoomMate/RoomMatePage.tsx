@@ -2,79 +2,86 @@ import styled from "styled-components";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import RoomMateCard from "../../components/roommate/RoomMateCard.tsx";
 import Header from "../../components/common/Header.tsx";
+import { useEffect, useState } from "react";
+import { RoommatePost, SimilarRoommatePost } from "../../types/roommates.ts";
+import {
+  getRoomMateList,
+  getSimilarRoomMateList,
+} from "../../apis/roommate.ts";
 
-const mockBoard = [
-  {
-    type: "공지사항",
-    title: "21학번 2긱",
-    content: "기숙사 상주기간: 월, 화, 수/ 단과대: 법학부/ 엠비티아...",
-    isEmergency: true,
-    scrapCount: 121,
-  },
-];
 export default function RoomMatePage() {
+  const [roommates, setRoommates] = useState<RoommatePost[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await getRoomMateList();
+        setRoommates(response.data); // API에서 받은 데이터 저장
+      } catch (error) {
+        console.error("룸메이트 목록 가져오기 실패:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const [similarRoommates, setSimilarRoommates] = useState<
+    SimilarRoommatePost[]
+  >([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await getSimilarRoomMateList();
+        setSimilarRoommates(response.data);
+      } catch (error) {
+        console.error("유사한 룸메이트 목록 가져오기 실패:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   return (
     <RoomMatePageWrapper>
       <Header title="룸메이트" hasBack={false} showAlarm={true} />
+
       <TitleContentArea
         type={"최신순"}
         link={"/roommatelist"}
         children={
           <>
-            <RoomMateCard
-              title={mockBoard[0].title}
-              content={mockBoard[0].content}
-              commentCount={10}
-              likeCount={11}
-            />
-            <RoomMateCard
-              title={mockBoard[0].title}
-              content={mockBoard[0].content}
-              commentCount={10}
-              likeCount={11}
-            />
+            {roommates.slice(0, 1).map((post) => (
+              <RoomMateCard
+                key={post.boardId}
+                title={post.title}
+                content={post.comment}
+                commentCount={0} // 서버에서 제공되면 반영
+                likeCount={0} // 서버에서 제공되면 반영
+              />
+            ))}
           </>
         }
-      />{" "}
+      />
+
       <TitleContentArea
         type={"나와 비슷한 룸메"}
         children={
           <>
-            <RoomMateCard
-              title={mockBoard[0].title}
-              content={mockBoard[0].content}
-              percentage={100}
-              commentCount={10}
-              likeCount={11}
-            />{" "}
-            <RoomMateCard
-              title={mockBoard[0].title}
-              content={mockBoard[0].content}
-              percentage={100}
-              commentCount={10}
-              likeCount={11}
-            />{" "}
-            <RoomMateCard
-              title={mockBoard[0].title}
-              content={mockBoard[0].content}
-              percentage={100}
-              commentCount={10}
-              likeCount={11}
-            />{" "}
-            <RoomMateCard
-              title={mockBoard[0].title}
-              content={mockBoard[0].content}
-              percentage={100}
-              commentCount={10}
-              likeCount={11}
-            />{" "}
-            <RoomMateCard
-              title={mockBoard[0].title}
-              content={mockBoard[0].content}
-              percentage={100}
-              commentCount={10}
-              likeCount={11}
-            />
+            {similarRoommates.length > 0 ? (
+              similarRoommates.map((post) => (
+                <RoomMateCard
+                  key={post.boardId}
+                  title={post.title}
+                  content={post.comment}
+                  percentage={post.similarityPercentage}
+                  commentCount={0} // API에서 제공되면 수정
+                  likeCount={0} // API에서 제공되면 수정
+                />
+              ))
+            ) : (
+              <EmptyMessage>추천 게시글이 없습니다.</EmptyMessage>
+            )}
           </>
         }
       />
@@ -96,4 +103,11 @@ const RoomMatePageWrapper = styled.div`
   overflow-y: auto;
 
   background: #fafafa;
+`;
+
+const EmptyMessage = styled.div`
+  padding: 24px;
+  text-align: center;
+  color: #aaa;
+  font-size: 14px;
 `;

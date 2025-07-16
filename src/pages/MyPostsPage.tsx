@@ -1,22 +1,30 @@
 // src/pages/Tip/TipListPage.tsx
 
 import styled from "styled-components";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/common/Header.tsx";
 import TitleContentArea from "../components/common/TitleContentArea.tsx";
 import MyPostCard from "../components/mypage/MyPostCard.tsx";
-
-const mockTips = Array(8).fill({
-  id: 1,
-  title: "기숙비 내세요",
-  content: "기숙사비 내는 거 내일 모레까지인데 안내면 자동 탈락 돼...",
-  time: "오후 6:20",
-  scrap: 121,
-  comment: 5,
-});
+import { MyPost } from "../types/members.ts";
+import { getMemberPosts } from "../apis/members.ts";
 
 export default function MyPostsPage() {
   const navigate = useNavigate();
+  const [posts, setPosts] = useState<MyPost[]>([]);
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const response = await getMemberPosts();
+        setPosts(response.data);
+      } catch (error) {
+        console.error("게시글을 불러오는 데 실패했습니다.", error);
+      }
+    };
+
+    fetchPosts();
+  }, []);
 
   return (
     <MyPostsPageWrapper>
@@ -24,9 +32,9 @@ export default function MyPostsPage() {
 
       <TitleContentArea type="">
         <CardList>
-          {mockTips.map((tip, idx) => (
+          {posts.map((tip) => (
             <MyPostCard
-              key={idx}
+              key={tip.id}
               tip={tip}
               onClick={() => navigate(`/tips/${tip.id}`)}
             />
