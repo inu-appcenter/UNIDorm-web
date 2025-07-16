@@ -22,7 +22,8 @@ const useUserStore = create<UserState>((set) => ({
   },
   setTokenInfo: (tokenInfo) => {
     set(() => ({ tokenInfo }));
-    localStorage.setItem("tokenInfo", JSON.stringify(tokenInfo));
+    localStorage.setItem("accessToken", tokenInfo.accessToken);
+    localStorage.setItem("refreshToken", tokenInfo.refreshToken);
   },
   setUserInfo: (userInfo) => set(() => ({ userInfo })),
 }));

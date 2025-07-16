@@ -2,24 +2,26 @@ import styled from "styled-components";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import RoomMateCard from "../../components/roommate/RoomMateCard.tsx";
 import Header from "../../components/common/Header.tsx";
+import { getRoomMateList } from "../../apis/roommate.ts";
+import { useEffect, useState } from "react";
+import { RoommatePost } from "../../types/roommates.ts";
 
-const mockBoard = [
-  {
-    type: "공지사항",
-    title: "기숙사 공지사항입니다",
-    content: "기숙사 전쟁나썽요!!!!!",
-    isEmergency: true,
-    scrapCount: 121,
-  },
-  {
-    type: "공지사항",
-    title: "21학번 2긱",
-    content: "기숙사 상주기간: 월, 화, 수/ 단과대: 법학부/ 엠비티아...",
-    isEmergency: true,
-    scrapCount: 121,
-  },
-];
 export default function RoomMateListPage() {
+  const [roommates, setRoommates] = useState<RoommatePost[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await getRoomMateList();
+        setRoommates(response.data); // API에서 받은 데이터 저장
+      } catch (error) {
+        console.error("룸메이트 목록 가져오기 실패:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   return (
     <RoomMateListPageWrapper>
       <Header title={"룸메이트 둘러보기"} hasBack={true} />
@@ -27,48 +29,15 @@ export default function RoomMateListPage() {
         type={"최신순"}
         children={
           <>
-            <RoomMateCard
-              title={mockBoard[1].title}
-              content={mockBoard[1].content}
-              commentCount={10}
-              likeCount={11}
-            />{" "}
-            <RoomMateCard
-              title={mockBoard[1].title}
-              content={mockBoard[1].content}
-              commentCount={10}
-              likeCount={11}
-            />{" "}
-            <RoomMateCard
-              title={mockBoard[1].title}
-              content={mockBoard[1].content}
-              commentCount={10}
-              likeCount={11}
-            />{" "}
-            <RoomMateCard
-              title={mockBoard[1].title}
-              content={mockBoard[1].content}
-              commentCount={10}
-              likeCount={11}
-            />{" "}
-            <RoomMateCard
-              title={mockBoard[1].title}
-              content={mockBoard[1].content}
-              commentCount={10}
-              likeCount={11}
-            />{" "}
-            <RoomMateCard
-              title={mockBoard[1].title}
-              content={mockBoard[1].content}
-              commentCount={10}
-              likeCount={11}
-            />{" "}
-            <RoomMateCard
-              title={mockBoard[1].title}
-              content={mockBoard[1].content}
-              commentCount={10}
-              likeCount={11}
-            />
+            {roommates.map((post) => (
+              <RoomMateCard
+                key={post.boardId}
+                title={post.title}
+                content={post.comment}
+                commentCount={0} // 서버에서 제공되면 반영
+                likeCount={0} // 서버에서 제공되면 반영
+              />
+            ))}
           </>
         }
       />

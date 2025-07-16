@@ -25,6 +25,10 @@ export default function LoginPage() {
         const tokenInfo = response.data;
         console.log(tokenInfo);
 
+        // 토큰 로컬스토리지에 저장
+        localStorage.setItem("accessToken", tokenInfo.accessToken);
+        localStorage.setItem("refreshToken", tokenInfo.refreshToken);
+
         setTokenInfo(tokenInfo);
         navigate("/home");
       } else {
