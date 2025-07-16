@@ -2,9 +2,8 @@ import axiosInstance from "../apis/axiosInstance";
 import tokenInstance from "../apis/tokenInstance";
 import refreshInstance from "../apis/refreshInstance";
 import { ApiResponse } from "../types/common";
-import { TokenInfo, UserInfo } from "../types/members";
+import { MyPost, TokenInfo, UserInfo } from "../types/members";
 import { AxiosResponse } from "axios";
-// import {Post} from "types/posts";
 
 // 회원 가져오기
 export const getMemberInfo = async (): Promise<AxiosResponse<UserInfo>> => {
@@ -36,12 +35,36 @@ export const login = async (
     password,
   });
 
-  return response; // AxiosResponse 그대로 반환
+  return response;
+};
+
+// 회원정보 수정
+export const putMember = async (
+  name: string,
+  dormType: string,
+  college: string,
+  penalty: number,
+): Promise<AxiosResponse<TokenInfo>> => {
+  const response = await axiosInstance.put<TokenInfo>(`/users`, {
+    name,
+    dormType,
+    college,
+    penalty,
+  });
+
+  return response;
 };
 
 // 토큰 재발급
 export const refresh = async (): Promise<ApiResponse<TokenInfo>> => {
   const response =
-    await refreshInstance.post<ApiResponse<TokenInfo>>(`/api/members/refresh`);
+    await refreshInstance.post<ApiResponse<TokenInfo>>(`/users/refreshToken`);
   return response.data;
+};
+
+// 사용자가 작성한 게시글 조회
+export const getMemberPosts = async (): Promise<AxiosResponse<MyPost[]>> => {
+  const response = await tokenInstance.get<MyPost[]>(`/users/board`);
+  console.log(response);
+  return response;
 };

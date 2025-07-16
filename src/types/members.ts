@@ -10,3 +10,11 @@ export interface UserInfo {
   college: string;
   penalty: number;
 }
+
+export interface MyPost {
+  id: number;
+  title: string;
+  type: string;
+  createDate: string;
+  filePath: string;
+}

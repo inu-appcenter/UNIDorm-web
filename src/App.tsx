@@ -24,6 +24,7 @@ import MyPostsPage from "./pages/MyPostsPage.tsx";
 import GroupPurchaseMainPage from "./pages/GroupPurchase/GroupPurchaseMainPage.tsx";
 import MyScrapPage from "./pages/MyScrapPage.tsx";
 import MyLikesPage from "./pages/MyLikesPage.tsx";
+import MyInfoEditPage from "./pages/MyPage/MyInfoEditPage.tsx";
 
 function App() {
   const { tokenInfo, setUserInfo } = useUserStore();
@@ -68,6 +69,7 @@ function App() {
             path="/roommatechecklist"
             element={<RoomMateChecklistPage />}
           />
+          <Route path="/myinfoedit" element={<MyInfoEditPage />} />
 
           <Route path="/notification" element={<NotificationBoardPage />} />
           <Route path="/chat/:chatType/:id" element={<ChattingPage />} />

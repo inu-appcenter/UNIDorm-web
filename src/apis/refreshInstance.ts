@@ -1,16 +1,15 @@
 import axios from "axios";
-import useUserStore from "../stores/useUserStore";
 
 const refreshInstance = axios.create({
-  baseURL: "https://",
+  baseURL: "https://inu-dormitory-dev.inuappcenter.kr/",
 });
 
 // 요청 인터셉터 - 토큰 설정
 refreshInstance.interceptors.request.use(
   (config) => {
-    const { refreshToken } = useUserStore.getState().tokenInfo;
+    const refreshToken = localStorage.getItem("refreshToken");
     if (refreshToken) {
-      config.headers["refresh"] = refreshToken;
+      config.headers["Authorization"] = `Bearer ${refreshToken}`;
     }
     return config;
   },
