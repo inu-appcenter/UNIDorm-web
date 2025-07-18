@@ -57,11 +57,6 @@ export default function MyInfoEditPage() {
         alert("모든 값을 입력해주세요!");
         return;
       }
-      console.log(
-        name,
-        colleges[selectedCollegeIndex] + "학",
-        domitory[selectedDomitoryIndex],
-      );
 
       const response = await putMember(
         name,

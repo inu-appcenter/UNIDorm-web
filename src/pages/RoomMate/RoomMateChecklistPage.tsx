@@ -109,6 +109,7 @@ export default function RoomMateChecklistPage() {
       bedTime: bedtime[bedtimeIndex],
       arrangement: organizationLevel[organizationLevelIndex],
       comment: "저랑 같이 룸메 해주세요.", // 필요시 텍스트 입력 추가
+
     };
 
     try {
