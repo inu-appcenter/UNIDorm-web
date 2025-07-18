@@ -12,6 +12,7 @@ import Header from "../../components/common/Header.tsx";
 
 export default function MyInfoEditPage() {
   const { userInfo } = useUserStore();
+  console.log(userInfo);
 
   const navigate = useNavigate();
   const [name, setName] = useState(userInfo.name);
@@ -43,14 +44,15 @@ export default function MyInfoEditPage() {
   const domitory = ["2기숙사", "3기숙사"];
 
   const isFilled = () => {
-    return name.trim() !== "";
+    return typeof name === "string" && name.trim() !== "";
   };
 
-  const handleLogin = async () => {
+  const handleSubmit = async () => {
     try {
       if (!(name && selectedCollegeIndex && selectedDomitoryIndex)) {
         return;
       }
+      console.log(name, selectedCollegeIndex, selectedDomitoryIndex);
       const response = await putMember(
         name,
         domitory[selectedDomitoryIndex],
@@ -111,7 +113,7 @@ export default function MyInfoEditPage() {
       <SquareButton
         text="수정하기"
         disabled={!isFilled()}
-        onClick={handleLogin}
+        onClick={handleSubmit}
       />
     </LoginPageWrapper>
   );

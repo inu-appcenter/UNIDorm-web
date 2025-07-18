@@ -64,7 +64,10 @@ function App() {
         {/*바텀바가 필요없는 2뎁스 이상 페이지들*/}
         <Route path="/" element={<SubPage />}>
           <Route path="/roommatelist" element={<RoomMateListPage />} />
-          <Route path="/roommatelist/:id" element={<RoomMateDetailPage />} />
+          <Route
+            path="/roommatelist/:boardId"
+            element={<RoomMateDetailPage />}
+          />
           <Route
             path="/roommatechecklist"
             element={<RoomMateChecklistPage />}
