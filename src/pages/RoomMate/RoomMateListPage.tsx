@@ -14,6 +14,7 @@ export default function RoomMateListPage() {
       try {
         const response = await getRoomMateList();
         setRoommates(response.data); // API에서 받은 데이터 저장
+        console.log(response.data);
       } catch (error) {
         console.error("룸메이트 목록 가져오기 실패:", error);
       }
@@ -31,7 +32,7 @@ export default function RoomMateListPage() {
           <>
             {roommates.map((post) => (
               <RoomMateCard
-                key={post.boardId}
+                boardId={post.boardId}
                 title={post.title}
                 content={post.comment}
                 commentCount={0} // 서버에서 제공되면 반영

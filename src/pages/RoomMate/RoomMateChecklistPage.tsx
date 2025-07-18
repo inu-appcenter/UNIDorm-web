@@ -5,6 +5,7 @@ import SelectableChipGroup from "../../components/roommate/checklist/SelectableC
 import ToggleGroup from "../../components/roommate/checklist/ToggleGroup.tsx";
 import Header from "../../components/common/Header.tsx";
 import SquareButton from "../../components/common/SquareButton.tsx";
+import { createRoommatePost } from "../../apis/roommate.ts";
 
 export default function RoomMateChecklistPage() {
   const days = ["월", "화", "수", "목", "금", "토", "일"];
@@ -41,7 +42,7 @@ export default function RoomMateChecklistPage() {
   const organizationLevel = ["깔끔해요", "개방적이예요", "애매해요"];
 
   // 각 그룹별로 선택 인덱스를 useState로 관리
-  const [dayIndex, setDayIndex] = useState<number | null>(null);
+  const [dayIndices, setDayIndices] = useState<number[]>([]);
   const [domitoryIndex, setDomitoryIndex] = useState<number | null>(null);
   const [collegeIndex, setCollegeIndex] = useState<number | null>(null);
   const [mbtiIndex1, setMbtiIndex1] = useState<number | null>(null);
@@ -65,6 +66,61 @@ export default function RoomMateChecklistPage() {
     number | null
   >(null);
 
+  const handleSubmit = async () => {
+    if (
+      dayIndices.length === 0 || // ✅ 다중 선택 검사
+      domitoryIndex === null ||
+      collegeIndex === null ||
+      mbtiIndex1 === null ||
+      mbtiIndex2 === null ||
+      mbtiIndex3 === null ||
+      mbtiIndex4 === null ||
+      smokingIndex === null ||
+      snoringIndex === null ||
+      toothgrindingIndex === null ||
+      isLightSleeperIndex === null ||
+      showertimeIndex === null ||
+      showerDurationIndex === null ||
+      bedtimeIndex === null ||
+      organizationLevelIndex === null
+    ) {
+      alert("모든 항목을 선택해주세요.");
+      return;
+    }
+
+    const mbti =
+      mbti1[mbtiIndex1] +
+      mbti2[mbtiIndex2] +
+      mbti3[mbtiIndex3] +
+      mbti4[mbtiIndex4];
+
+    const requestBody = {
+      title: "룸메이트 구해요!", // 임시 제목
+      dormPeriod: dayIndices.map((i) => days[i] + "요일"), // ✅ 다중 선택 처리
+      dormType: domitory[domitoryIndex],
+      college: colleges[collegeIndex] + "학",
+      mbti,
+      smoking: smoking[smokingIndex],
+      snoring: snoring[snoringIndex],
+      toothGrind: toothgrinding[toothgrindingIndex],
+      sleeper: isLightSleeper[isLightSleeperIndex],
+      showerHour: showertime[showertimeIndex],
+      showerTime: showerDuration[showerDurationIndex],
+      bedTime: bedtime[bedtimeIndex],
+      arrangement: organizationLevel[organizationLevelIndex],
+      comment: "", // 필요시 텍스트 입력 추가
+    };
+
+    try {
+      const res = await createRoommatePost(requestBody);
+      alert("룸메이트 체크리스트 등록 완료!");
+      console.log(res.data);
+    } catch (err) {
+      alert("등록 실패");
+      console.error(err);
+    }
+  };
+
   return (
     <RoomMateChecklistPageWrapper>
       <Header title={"사전 체크리스트"} hasBack={true} showAlarm={false} />
@@ -73,8 +129,9 @@ export default function RoomMateChecklistPage() {
         children={
           <SelectableChipGroup
             Groups={days}
-            selectedIndex={dayIndex}
-            onSelect={setDayIndex}
+            selectedIndices={dayIndices}
+            onSelect={setDayIndices}
+            multi={true}
           />
         }
       />
@@ -206,7 +263,7 @@ export default function RoomMateChecklistPage() {
         }
       />
       <ButtonWrapper>
-        <SquareButton text={"저장하기"} />
+        <SquareButton text={"저장하기"} onClick={handleSubmit} />
       </ButtonWrapper>
     </RoomMateChecklistPageWrapper>
   );

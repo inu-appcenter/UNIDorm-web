@@ -16,6 +16,12 @@ const CommonStyles = createGlobalStyle`
   a, button, img {
     //cursor: url('/pointers/cursor-pointer.svg'), pointer;
   }
+
+  * {
+    -webkit-tap-highlight-color: rgba(128, 128, 128, 0.2); /* 옅은 회색 */
+  }
+
+
 `;
 
 export default CommonStyles;
