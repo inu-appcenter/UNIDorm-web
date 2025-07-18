@@ -41,14 +41,15 @@ export const login = async (
 // 회원정보 수정
 export const putMember = async (
   name: string,
-  dormType: string,
   college: string,
+  dormType: string,
   penalty: number,
 ): Promise<AxiosResponse<TokenInfo>> => {
-  const response = await axiosInstance.put<TokenInfo>(`/users`, {
+  console.log(name, college, dormType, penalty);
+  const response = await tokenInstance.put<TokenInfo>(`/users`, {
     name,
-    dormType,
     college,
+    dormType,
     penalty,
   });
 
