@@ -33,3 +33,38 @@ export interface SimilarRoommatePost {
   comment: string; // 본문 요약 or 한줄 코멘트
   similarityPercentage: number; // 유사도 (예: 85)
 }
+
+export interface RoommatePostRequest {
+  title: string;
+  dormPeriod: string[];
+  dormType: string;
+  college: string;
+  mbti: string;
+  smoking: string;
+  snoring: string;
+  toothGrind: string;
+  sleeper: string;
+  showerHour: string;
+  showerTime: string;
+  bedTime: string;
+  arrangement: string;
+  comment: string;
+}
+
+export interface RoommatePostResponse {
+  boardId: number;
+  title: string;
+  dormPeriod: string[];
+  dormType: string;
+  college: string;
+  mbti: string;
+  smoking: string;
+  snoring: string;
+  toothGrind: string;
+  sleeper: string;
+  showerHour: string;
+  showerTime: string;
+  bedTime: string;
+  arrangement: string;
+  comment: string;
+}

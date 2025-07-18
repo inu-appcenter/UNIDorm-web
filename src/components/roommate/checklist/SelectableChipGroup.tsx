@@ -1,29 +1,62 @@
-// SelectableChipGroup.tsx
-
 import styled from "styled-components";
 
-interface SelectableChipProps {
+interface BaseProps {
   Groups: string[];
-  selectedIndex: number | null;
-  onSelect: (index: number) => void;
+  multi?: boolean;
 }
 
-const SelectableChipGroup = ({
-  Groups,
-  selectedIndex,
-  onSelect,
-}: SelectableChipProps) => {
+type SingleSelectProps = BaseProps & {
+  selectedIndex: number | null;
+  onSelect: (index: number) => void;
+  selectedIndices?: never;
+};
+
+type MultiSelectProps = BaseProps & {
+  selectedIndices: number[];
+  onSelect: (indices: number[]) => void;
+  selectedIndex?: never;
+};
+
+type SelectableChipProps = SingleSelectProps | MultiSelectProps;
+
+const isMultiProps = (
+  props: SelectableChipProps,
+): props is MultiSelectProps => {
+  return Array.isArray((props as MultiSelectProps).selectedIndices);
+};
+
+const SelectableChipGroup = (props: SelectableChipProps) => {
+  const { Groups, selectedIndex, selectedIndices, multi = false } = props;
+
+  const handleClick = (index: number) => {
+    if (isMultiProps(props)) {
+      const newSelected = props.selectedIndices.includes(index)
+        ? props.selectedIndices.filter((i) => i !== index)
+        : [...props.selectedIndices, index];
+
+      props.onSelect(newSelected);
+    } else {
+      props.onSelect(index);
+    }
+  };
+
   return (
     <SelectableChipGroupWrapper>
-      {Groups.map((content, index) => (
-        <SelectableChip
-          key={index}
-          selected={selectedIndex === index}
-          onClick={() => onSelect(index)}
-        >
-          {content}
-        </SelectableChip>
-      ))}
+      {Groups.map((content, index) => {
+        const isSelected = multi
+          ? (selectedIndices?.includes(index) ?? false)
+          : selectedIndex === index;
+
+        return (
+          <SelectableChip
+            key={index}
+            selected={isSelected}
+            onClick={() => handleClick(index)}
+          >
+            {content}
+          </SelectableChip>
+        );
+      })}
     </SelectableChipGroupWrapper>
   );
 };

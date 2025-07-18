@@ -1,10 +1,33 @@
 import styled from "styled-components";
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 
 import profileimg from "../../assets/profileimg.svg";
-import RoomMateBottomBar from "../../components/roommate/RoomMateBottomBar.tsx";
-import Header from "../../components/common/Header.tsx";
+import RoomMateBottomBar from "../../components/roommate/RoomMateBottomBar";
+import Header from "../../components/common/Header";
+import { getRoomMateDetail } from "../../apis/roommate";
+import { RoommatePost } from "../../types/roommates.ts";
 
 export default function RoomMateDetailPage() {
+  const { boardId } = useParams<{ boardId: string }>();
+  const [data, setData] = useState<RoommatePost | null>(null);
+
+  useEffect(() => {
+    if (!boardId) return;
+    const fetchData = async () => {
+      try {
+        const response = await getRoomMateDetail(Number(boardId));
+        console.log(response);
+        setData(response.data);
+      } catch (error) {
+        console.error("게시글 데이터를 불러오지 못했습니다:", error);
+      }
+    };
+    fetchData();
+  }, [boardId]);
+
+  if (!data) return <div>로딩 중...</div>;
+
   return (
     <RoomMateDetailPageWrapper>
       <Header title={"게시글"} hasBack={true} />
@@ -16,29 +39,21 @@ export default function RoomMateDetailPage() {
         </div>
       </UserArea>
       <ContentArea>
-        <div className="title">21학번 2긱</div>
+        <div className="title">{data.title}</div>
         <div className="content">
-          기숙사 상주기간: 월, 화, 수<br />
-          단과대: 법학부
+          기숙사 상주기간: {data.dormPeriod.join(", ")} <br />
+          단과대: {data.college} <br />
+          MBTI: {data.mbti} <br />
+          흡연여부: {data.smoking} <br />
+          코골이 유무: {data.snoring} <br />
+          이갈이 유무: {data.toothGrind} <br />
+          잠귀: {data.sleeper} <br />
+          샤워시기: {data.showerHour} <br />
+          샤워시간: {data.showerTime} <br />
+          취침시기: {data.bedTime} <br />
+          정리정돈: {data.arrangement} <br />
           <br />
-          MBTI: ENTJ
-          <br />
-          흡연여부: 안피워요
-          <br />
-          코골이 유무: 안골아요
-          <br />
-          이갈이 유무: 갈아요
-          <br />
-          잠귀: 어두워요
-          <br />
-          샤워시기: 아침
-          <br />
-          샤워시간: 10분 이내
-          <br />
-          취침시기: 일찍 자요
-          <br />
-          정리정돈: 깔끔해요
-          <br />
+          기타사항: {data.comment}
         </div>
       </ContentArea>
       <RoomMateBottomBar />

@@ -51,9 +51,9 @@ export default function RoomMatePage() {
         link={"/roommatelist"}
         children={
           <>
-            {roommates.slice(0, 1).map((post) => (
+            {roommates.slice(0, 2).map((post) => (
               <RoomMateCard
-                key={post.boardId}
+                boardId={post.boardId}
                 title={post.title}
                 content={post.comment}
                 commentCount={0} // 서버에서 제공되면 반영
@@ -71,7 +71,7 @@ export default function RoomMatePage() {
             {similarRoommates.length > 0 ? (
               similarRoommates.map((post) => (
                 <RoomMateCard
-                  key={post.boardId}
+                  boardId={post.boardId}
                   title={post.title}
                   content={post.comment}
                   percentage={post.similarityPercentage}
