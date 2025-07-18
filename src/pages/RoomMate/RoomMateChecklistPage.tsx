@@ -33,13 +33,13 @@ export default function RoomMateChecklistPage() {
   const mbti4 = ["P", "J"];
 
   const smoking = ["피워요", "안피워요"];
-  const snoring = ["갈아요", "안갈아요"];
+  const snoring = ["골아요", "안골아요"];
   const toothgrinding = ["갈아요", "안갈아요"];
   const isLightSleeper = ["밝아요", "어두워요", "몰라요"];
   const showertime = ["아침", "저녁", "둘다"];
   const showerDuration = ["10분 이내", "30분 이내", "1시간 이내"];
   const bedtime = ["일찍 자요", "늦게 자요", "때마다 달라요"];
-  const organizationLevel = ["깔끔해요", "개방적이예요", "애매해요"];
+  const organizationLevel = ["깔끔해요", "개방적이에요", "애매해요"];
 
   // 각 그룹별로 선택 인덱스를 useState로 관리
   const [dayIndices, setDayIndices] = useState<number[]>([]);
@@ -108,7 +108,8 @@ export default function RoomMateChecklistPage() {
       showerTime: showerDuration[showerDurationIndex],
       bedTime: bedtime[bedtimeIndex],
       arrangement: organizationLevel[organizationLevelIndex],
-      comment: "", // 필요시 텍스트 입력 추가
+      comment: "저랑 같이 룸메 해주세요.", // 필요시 텍스트 입력 추가
+
     };
 
     try {

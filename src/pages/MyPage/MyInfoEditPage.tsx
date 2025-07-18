@@ -49,14 +49,19 @@ export default function MyInfoEditPage() {
 
   const handleSubmit = async () => {
     try {
-      if (!(name && selectedCollegeIndex && selectedDomitoryIndex)) {
+      if (
+        !name ||
+        selectedCollegeIndex == null ||
+        selectedDomitoryIndex == null
+      ) {
+        alert("모든 값을 입력해주세요!");
         return;
       }
-      console.log(name, selectedCollegeIndex, selectedDomitoryIndex);
+
       const response = await putMember(
         name,
+        colleges[selectedCollegeIndex] + "학",
         domitory[selectedDomitoryIndex],
-        colleges[selectedCollegeIndex],
         0,
       );
       console.log(response);
@@ -83,7 +88,9 @@ export default function MyInfoEditPage() {
             <StyledInput
               placeholder="아이디를 입력하세요."
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                setName(e.target.value);
+              }}
             />
           }
         />
