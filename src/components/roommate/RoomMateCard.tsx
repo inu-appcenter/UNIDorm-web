@@ -4,6 +4,7 @@ import HeartIcon from "../../assets/heart.svg";
 import { useNavigate } from "react-router-dom";
 
 interface HomeCardProps {
+  boardId: number;
   title: string;
   content: string;
   percentage?: number;
@@ -12,17 +13,19 @@ interface HomeCardProps {
 }
 
 const RoomMateCard = ({
+  boardId,
   title,
   content,
   percentage,
   commentCount,
   likeCount,
 }: HomeCardProps) => {
+  console.log(boardId);
   const navigate = useNavigate();
   return (
     <RoomMateCardWrapper
       onClick={() => {
-        navigate("/roommatelist/1");
+        navigate(`/roommatelist/${boardId}`);
       }}
     >
       {percentage && (
