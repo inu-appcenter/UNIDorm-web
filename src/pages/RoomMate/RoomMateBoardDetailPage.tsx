@@ -8,7 +8,7 @@ import Header from "../../components/common/Header";
 import { getRoomMateDetail } from "../../apis/roommate";
 import { RoommatePost } from "../../types/roommates.ts";
 
-export default function RoomMateDetailPage() {
+export default function RoomMateBoardDetailPage() {
   const { boardId } = useParams<{ boardId: string }>();
   const [data, setData] = useState<RoommatePost | null>(null);
 
