@@ -26,6 +26,7 @@ import MyScrapPage from "./pages/MyScrapPage.tsx";
 import MyLikesPage from "./pages/MyLikesPage.tsx";
 import MyInfoEditPage from "./pages/MyPage/MyInfoEditPage.tsx";
 import MyRoomMatePage from "./pages/RoomMate/MyRoomMatePage.tsx";
+import RoomMateAddPage from "./pages/RoomMate/RoomMateAddPage.tsx";
 
 function App() {
   const { tokenInfo, setUserInfo } = useUserStore();
@@ -92,6 +93,7 @@ function App() {
             element={<GroupPurchaseWritePage />}
           />
           <Route path="/myroommate" element={<MyRoomMatePage />} />
+          <Route path={"/roommateadd"} element={<RoomMateAddPage />} />
         </Route>
       </Routes>
     </>
