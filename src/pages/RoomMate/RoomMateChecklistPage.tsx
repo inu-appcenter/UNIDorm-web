@@ -6,41 +6,25 @@ import ToggleGroup from "../../components/roommate/checklist/ToggleGroup.tsx";
 import Header from "../../components/common/Header.tsx";
 import SquareButton from "../../components/common/SquareButton.tsx";
 import { createRoommatePost } from "../../apis/roommate.ts";
+import {
+  bedtime,
+  colleges,
+  days,
+  domitory,
+  isLightSleeper,
+  mbti1,
+  mbti2,
+  mbti3,
+  mbti4,
+  organizationLevel,
+  showerDuration,
+  showertime,
+  smoking,
+  snoring,
+  toothgrinding,
+} from "../../constants/constants.ts";
 
 export default function RoomMateChecklistPage() {
-  const days = ["월", "화", "수", "목", "금", "토", "일"];
-  const colleges = [
-    "사범대",
-    "예체대",
-    "공과대",
-    "자연과학대",
-    "법학부",
-    "계약학",
-    "사회과학대",
-    "글로벌정경대",
-    "경영대",
-    "생명과학기술대",
-    "융합자유전공대",
-    "동북아국제통상물류학부",
-    "도시과학대",
-    "정보기술대",
-    "인문대",
-  ];
-  const domitory = ["2기숙사", "3기숙사"];
-  const mbti1 = ["E", "I"];
-  const mbti2 = ["N", "S"];
-  const mbti3 = ["F", "T"];
-  const mbti4 = ["P", "J"];
-
-  const smoking = ["피워요", "안피워요"];
-  const snoring = ["골아요", "안골아요"];
-  const toothgrinding = ["갈아요", "안갈아요"];
-  const isLightSleeper = ["밝아요", "어두워요", "몰라요"];
-  const showertime = ["아침", "저녁", "둘다"];
-  const showerDuration = ["10분 이내", "30분 이내", "1시간 이내"];
-  const bedtime = ["일찍 자요", "늦게 자요", "때마다 달라요"];
-  const organizationLevel = ["깔끔해요", "개방적이에요", "애매해요"];
-
   // 각 그룹별로 선택 인덱스를 useState로 관리
   const [dayIndices, setDayIndices] = useState<number[]>([]);
   const [domitoryIndex, setDomitoryIndex] = useState<number | null>(null);
@@ -109,7 +93,6 @@ export default function RoomMateChecklistPage() {
       bedTime: bedtime[bedtimeIndex],
       arrangement: organizationLevel[organizationLevelIndex],
       comment: "저랑 같이 룸메 해주세요.", // 필요시 텍스트 입력 추가
-
     };
 
     try {

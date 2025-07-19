@@ -2,13 +2,14 @@ import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import StyledInput from "../../components/common/StyledInput.tsx";
 import SquareButton from "../../components/common/SquareButton.tsx";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { putMember } from "../../apis/members.ts";
 import useUserStore from "../../stores/useUserStore.ts";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import ToggleGroup from "../../components/roommate/checklist/ToggleGroup.tsx";
 import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
 import Header from "../../components/common/Header.tsx";
+import { colleges, domitory } from "../../constants/constants.ts";
 
 export default function MyInfoEditPage() {
   const { userInfo } = useUserStore();
@@ -23,25 +24,14 @@ export default function MyInfoEditPage() {
     number | null
   >(null);
 
-  const colleges = [
-    "사범대",
-    "예체대",
-    "공과대",
-    "자연과학대",
-    "법학부",
-    "계약학",
-    "사회과학대",
-    "글로벌정경대",
-    "경영대",
-    "생명과학기술대",
-    "융합자유전공대",
-    "동북아국제통상물류학부",
-    "도시과학대",
-    "정보기술대",
-    "인문대",
-  ];
+  function findIndex(datas: string[], findStr: string): number {
+    return datas.findIndex((data) => findStr.includes(data));
+  }
 
-  const domitory = ["2기숙사", "3기숙사"];
+  useEffect(() => {
+    setSelectedCollegeIndex(findIndex(colleges, userInfo.college));
+    setSelectedDomitoryIndex(findIndex(domitory, userInfo.dormType));
+  });
 
   const isFilled = () => {
     return typeof name === "string" && name.trim() !== "";
