@@ -2,9 +2,14 @@ import styled from "styled-components";
 
 interface RoundSquareButtonProps {
   btnName: string;
+  onClick?: () => void;
 }
-const RoundSquareButton = ({ btnName }: RoundSquareButtonProps) => {
-  return <RoundSquareButtonWrapper>{btnName}</RoundSquareButtonWrapper>;
+const RoundSquareButton = ({ btnName, onClick }: RoundSquareButtonProps) => {
+  return (
+    <RoundSquareButtonWrapper onClick={onClick}>
+      {btnName}
+    </RoundSquareButtonWrapper>
+  );
 };
 export default RoundSquareButton;
 

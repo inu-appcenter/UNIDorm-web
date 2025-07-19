@@ -14,7 +14,7 @@ import TipListPage from "./pages/Tip/TipListPage.tsx";
 import TipWritePage from "./pages/Tip/TipWritePage.tsx";
 import TipDetailPage from "./pages/Tip/TipDetailPage.tsx";
 import RoomMateListPage from "./pages/RoomMate/RoomMateListPage.tsx";
-import RoomMateDetailPage from "./pages/RoomMate/RoomMateDetailPage.tsx";
+import RoomMateBoardDetailPage from "./pages/RoomMate/RoomMateBoardDetailPage.tsx";
 import OutPage from "./pages/OutPage.tsx";
 import SubPage from "./pages/SubPage.tsx";
 import GroupPurchasePostPage from "./pages/GroupPurchase/GroupPurchasePostPage.tsx";
@@ -25,6 +25,8 @@ import GroupPurchaseMainPage from "./pages/GroupPurchase/GroupPurchaseMainPage.t
 import MyScrapPage from "./pages/MyScrapPage.tsx";
 import MyLikesPage from "./pages/MyLikesPage.tsx";
 import MyInfoEditPage from "./pages/MyPage/MyInfoEditPage.tsx";
+import MyRoomMatePage from "./pages/RoomMate/MyRoomMatePage.tsx";
+import RoomMateAddPage from "./pages/RoomMate/RoomMateAddPage.tsx";
 
 function App() {
   const { tokenInfo, setUserInfo } = useUserStore();
@@ -40,7 +42,7 @@ function App() {
       }
     };
 
-    if (tokenInfo.accessToken) {
+    if (tokenInfo?.accessToken) {
       initializeUser();
     }
   }, [tokenInfo, setUserInfo]);
@@ -66,7 +68,7 @@ function App() {
           <Route path="/roommatelist" element={<RoomMateListPage />} />
           <Route
             path="/roommatelist/:boardId"
-            element={<RoomMateDetailPage />}
+            element={<RoomMateBoardDetailPage />}
           />
           <Route
             path="/roommatechecklist"
@@ -90,6 +92,8 @@ function App() {
             path="/groupPurchase/write"
             element={<GroupPurchaseWritePage />}
           />
+          <Route path="/myroommate" element={<MyRoomMatePage />} />
+          <Route path={"/roommateadd"} element={<RoomMateAddPage />} />
         </Route>
       </Routes>
     </>

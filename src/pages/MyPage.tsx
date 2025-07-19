@@ -23,7 +23,7 @@ const menuGroups = [
   {
     title: "룸메이트",
     menus: [
-      { label: "룸메이트 등록하기", path: "/roommate/apply" },
+      { label: "룸메이트 등록하기", path: "/roommateadd" },
       { label: "룸메이트 해제하기", path: "/roommate/result" },
     ],
   },
