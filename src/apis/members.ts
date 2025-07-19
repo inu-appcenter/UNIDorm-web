@@ -69,3 +69,12 @@ export const getMemberPosts = async (): Promise<AxiosResponse<MyPost[]>> => {
   console.log(response);
   return response;
 };
+
+// 사용자가 좋아요한 게시글 조회
+export const getMemberLikePosts = async (): Promise<
+  AxiosResponse<MyPost[]>
+> => {
+  const response = await tokenInstance.get<MyPost[]>(`/users/like`);
+  console.log(response);
+  return response;
+};
