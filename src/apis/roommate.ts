@@ -2,11 +2,14 @@
 import { AxiosResponse } from "axios";
 import tokenInstance from "./tokenInstance.ts";
 import {
+  MyRoommateInfoResponse,
   RoommateMatchingRequest,
   RoommateMatchingResponse,
   RoommatePost,
   RoommatePostRequest,
   RoommatePostResponse,
+  RoommateRulesResponse,
+  RoommateRulesUpdateRequest,
   SimilarRoommatePost,
 } from "../types/roommates.ts";
 
@@ -61,4 +64,29 @@ export const requestRoommateMatching = async (
     data,
   );
   return response;
+};
+
+export const getMyRoommateInfo = async (): Promise<
+  AxiosResponse<MyRoommateInfoResponse>
+> => {
+  const response = await tokenInstance.get<MyRoommateInfoResponse>(
+    "/my-roommate/informations",
+  );
+  return response;
+};
+
+export const getMyRoommateRules = async (): Promise<
+  AxiosResponse<RoommateRulesResponse>
+> => {
+  return await tokenInstance.get<RoommateRulesResponse>("/my-roommate/rules");
+};
+
+export const updateMyRoommateRules = async (
+  data: RoommateRulesUpdateRequest,
+): Promise<AxiosResponse<void>> => {
+  return await tokenInstance.post("/my-roommate", data);
+};
+
+export const deleteMyRoommateRules = async (): Promise<AxiosResponse<void>> => {
+  return await tokenInstance.delete("/my-roommate");
 };

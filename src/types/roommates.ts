@@ -79,3 +79,17 @@ export interface RoommateMatchingResponse {
   status: "REQUEST";
   matchingId: number;
 }
+
+export interface MyRoommateInfoResponse {
+  name: string;
+  dormType: string;
+  college: string;
+  imagePath: string;
+}
+
+export interface RoommateRulesResponse {
+  rules: string[] | null;
+}
+export interface RoommateRulesUpdateRequest {
+  rules: string[];
+}
