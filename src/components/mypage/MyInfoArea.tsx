@@ -21,7 +21,9 @@ const MyInfoArea = () => {
   return (
     <MyInfoAreaWrapper>
       <LeftArea>
-        <img className="profile" src={userProfileImg} alt="프로필 이미지" />
+        <div className="profile">
+          <img src={userProfileImg} alt="profile image" />
+        </div>
         <div className="description">
           <div className="name">{userInfo.name || "이름 정보 없음"}</div>
           <div className="college">
@@ -46,11 +48,18 @@ const MyInfoAreaWrapper = styled.div`
   align-items: center;
 
   .profile {
-    border-radius: 100%;
+    max-width: 70px;
+    max-height: 70px;
+    border-radius: 50%;
     overflow: hidden;
-    height: 70px;
-    width: 70px;
+    display: inline-block;
+  }
+
+  .profile img {
+    width: 100%;
+    height: 100%;
     object-fit: cover;
+    display: block;
   }
 `;
 

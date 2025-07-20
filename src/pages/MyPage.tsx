@@ -9,7 +9,7 @@ const menuGroups = [
     title: "내 계정",
     menus: [
       { label: "내 정보 수정", path: "/myinfoedit" },
-      { label: "사전 체크리스트 수정", path: "/roommatechecklist" },
+      { label: "사전 체크리스트 등록/수정", path: "/roommatechecklist" },
     ],
   },
   {
