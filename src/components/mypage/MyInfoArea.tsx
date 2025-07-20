@@ -1,13 +1,27 @@
 import styled from "styled-components";
 import useUserStore from "../../stores/useUserStore.ts";
+import { useEffect, useState } from "react";
+import { getMemberImage } from "../../apis/members.ts";
 
 const MyInfoArea = () => {
   const userInfo = useUserStore((state) => state.userInfo);
+  const [userProfileImg, setUserProfileImg] = useState<string>("");
+
+  useEffect(() => {
+    const getUserProfileImg = async () => {
+      const result = await getMemberImage();
+      console.log(result.data.fileName);
+      setUserProfileImg(result.data.fileName);
+    };
+
+    getUserProfileImg();
+    // setUserProfileImg(result.data)
+  });
 
   return (
     <MyInfoAreaWrapper>
       <LeftArea>
-        <img src={""} alt="프로필 이미지" />
+        <img className="profile" src={userProfileImg} alt="프로필 이미지" />
         <div className="description">
           <div className="name">{userInfo.name || "이름 정보 없음"}</div>
           <div className="college">
@@ -30,6 +44,14 @@ const MyInfoAreaWrapper = styled.div`
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
+
+  .profile {
+    border-radius: 100%;
+    overflow: hidden;
+    height: 70px;
+    width: 70px;
+    object-fit: cover;
+  }
 `;
 
 const LeftArea = styled.div`

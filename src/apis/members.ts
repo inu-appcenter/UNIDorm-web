@@ -13,8 +13,8 @@ export const getMemberInfo = async (): Promise<AxiosResponse<UserInfo>> => {
 };
 
 // 회원 프로필이미지 가져오기
-export const getMemberImage = async (): Promise<AxiosResponse<UserInfo>> => {
-  const response = await tokenInstance.get<UserInfo>(`/users/image`);
+export const getMemberImage = async (): Promise<AxiosResponse> => {
+  const response = await tokenInstance.get<AxiosResponse>(`/users/image`);
   return response;
 };
 
