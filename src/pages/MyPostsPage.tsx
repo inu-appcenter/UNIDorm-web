@@ -32,13 +32,17 @@ export default function MyPostsPage() {
 
       <TitleContentArea type="">
         <CardList>
-          {posts.map((tip) => (
-            <MyPostCard
-              key={tip.id}
-              tip={tip}
-              onClick={() => navigate(`/tips/${tip.id}`)}
-            />
-          ))}
+          {posts.length > 0 ? (
+            posts.map((tip) => (
+              <MyPostCard
+                key={tip.id}
+                tip={tip}
+                onClick={() => navigate(`/tips/${tip.id}`)}
+              />
+            ))
+          ) : (
+            <EmptyMessage>내가 작성한 게시글이 없습니다.</EmptyMessage>
+          )}
         </CardList>
       </TitleContentArea>
     </MyPostsPageWrapper>
@@ -63,4 +67,11 @@ const CardList = styled.div`
   gap: 12px;
   width: 100%;
   height: 100%;
+`;
+
+const EmptyMessage = styled.div`
+  padding: 24px;
+  text-align: center;
+  color: #aaa;
+  font-size: 14px;
 `;

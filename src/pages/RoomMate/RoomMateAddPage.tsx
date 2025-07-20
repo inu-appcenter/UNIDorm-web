@@ -4,11 +4,43 @@ import RoundSquareButton from "../../components/button/RoundSquareButton.tsx";
 import friends from "../../assets/roommate/Friends.svg";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { RoommateMatchingRequest } from "../../types/roommates.ts";
+import { requestRoommateMatching } from "../../apis/roommate.ts";
 
 export default function RoomMateAddPage() {
   const navigate = useNavigate();
   const [isRegistering, setIsRegistering] = useState(false);
   const [studentId, setStudentId] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!studentId.trim()) {
+      alert("학번을 입력해주세요.");
+      return;
+    }
+
+    const requestData: RoommateMatchingRequest = {
+      receiverStudentNumber: studentId,
+    };
+
+    try {
+      setIsLoading(true);
+      const res = await requestRoommateMatching(requestData);
+      console.log(res);
+      alert("매칭 요청을 보냈습니다!");
+      navigate("/roommate");
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        alert("사용자를 찾을 수 없습니다.");
+      } else if (error.response?.status === 409) {
+        alert("이미 매칭 요청을 보낸 상태입니다.");
+      } else {
+        alert("알 수 없는 오류가 발생했습니다.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <RoomMateAddPageWrapper>
@@ -28,13 +60,22 @@ export default function RoomMateAddPage() {
               placeholder="학번 입력"
               value={studentId}
               onChange={(e) => setStudentId(e.target.value)}
+              disabled={isLoading}
             />
           )}
         </TopArea>
         <BottomArea>
           <RoundSquareButton
-            btnName={"룸메이트 등록하기"}
-            onClick={() => setIsRegistering(true)}
+            btnName={
+              isRegistering
+                ? isLoading
+                  ? "등록 중..."
+                  : "룸메이트 요청 보내기"
+                : "룸메이트 등록하기"
+            }
+            onClick={
+              isRegistering ? handleSubmit : () => setIsRegistering(true)
+            }
           />
           <a
             className="findbtn"

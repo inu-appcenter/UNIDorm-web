@@ -25,11 +25,11 @@ const buttonMeta: Record<ButtonType, { icon: React.ReactNode; text: string }> =
   {
     addtimetable: {
       icon: <img src={Date_range_light} />,
-      text: "시간표 추가하기",
+      text: "시간표",
     },
     createrules: {
       icon: <img src={Flag_light} />,
-      text: "우리 방 규칙 만들기",
+      text: "우리 방 규칙",
     },
     quickmessage: {
       icon: <img src={comment_light} />,
