@@ -46,23 +46,24 @@ export default function RoomMatePage() {
     <RoomMatePageWrapper>
       <Header title="룸메이트" hasBack={false} showAlarm={true} />
 
-      <TitleContentArea
-        type={"최신순"}
-        link={"/roommatelist"}
-        children={
-          <>
-            {roommates.slice(0, 2).map((post) => (
+      <TitleContentArea type={"최신순"} link={"/roommatelist"}>
+        <>
+          {roommates.length > 0 ? (
+            roommates.slice(0, 2).map((post) => (
               <RoomMateCard
+                key={post.boardId}
                 boardId={post.boardId}
                 title={post.title}
                 content={post.comment}
                 commentCount={0} // 서버에서 제공되면 반영
                 likeCount={0} // 서버에서 제공되면 반영
               />
-            ))}
-          </>
-        }
-      />
+            ))
+          ) : (
+            <EmptyMessage>게시글이 없습니다.</EmptyMessage>
+          )}
+        </>
+      </TitleContentArea>
 
       <TitleContentArea
         type={"나와 비슷한 룸메"}

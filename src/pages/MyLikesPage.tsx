@@ -33,13 +33,17 @@ export default function MyLikesPage() {
 
       <TitleContentArea type="">
         <CardList>
-          {posts.map((tip, idx) => (
-            <MyPostCard
-              key={idx}
-              tip={tip}
-              onClick={() => navigate(`/tips/${tip.id}`)}
-            />
-          ))}
+          {posts.length > 0 ? (
+            posts.map((tip, idx) => (
+              <MyPostCard
+                key={idx}
+                tip={tip}
+                onClick={() => navigate(`/tips/${tip.id}`)}
+              />
+            ))
+          ) : (
+            <EmptyMessage>내가 좋아요한 글이 없습니다.</EmptyMessage>
+          )}
         </CardList>
       </TitleContentArea>
     </MyScrapPageWrapper>
@@ -64,4 +68,11 @@ const CardList = styled.div`
   gap: 12px;
   width: 100%;
   height: 100%;
+`;
+
+const EmptyMessage = styled.div`
+  padding: 24px;
+  text-align: center;
+  color: #aaa;
+  font-size: 14px;
 `;

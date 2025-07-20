@@ -68,3 +68,28 @@ export interface RoommatePostResponse {
   arrangement: string;
   comment: string;
 }
+
+// types.ts (또는 적절한 타입 정의 파일에 추가)
+export interface RoommateMatchingRequest {
+  receiverStudentNumber: string;
+}
+
+export interface RoommateMatchingResponse {
+  reciverId: number; // 오타가 아니라면 그대로 사용
+  status: "REQUEST";
+  matchingId: number;
+}
+
+export interface MyRoommateInfoResponse {
+  name: string;
+  dormType: string;
+  college: string;
+  imagePath: string;
+}
+
+export interface RoommateRulesResponse {
+  rules: string[] | null;
+}
+export interface RoommateRulesUpdateRequest {
+  rules: string[];
+}

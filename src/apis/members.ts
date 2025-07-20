@@ -13,8 +13,20 @@ export const getMemberInfo = async (): Promise<AxiosResponse<UserInfo>> => {
 };
 
 // 회원 프로필이미지 가져오기
-export const getMemberImage = async (): Promise<AxiosResponse<UserInfo>> => {
-  const response = await tokenInstance.get<UserInfo>(`/users/image`);
+export const getMemberImage = async (): Promise<AxiosResponse> => {
+  const response = await tokenInstance.get<AxiosResponse>(`/users/image`);
+  return response;
+};
+
+export const putUserImage = async (imageFile: File): Promise<AxiosResponse> => {
+  const formData = new FormData();
+  formData.append("image", imageFile);
+
+  const response = await tokenInstance.put("/users/image", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
   return response;
 };
 
