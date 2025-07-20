@@ -8,7 +8,7 @@ const menuGroups = [
   {
     title: "내 계정",
     menus: [
-      { label: "프로필 수정", path: "/myinfoedit" },
+      { label: "내 정보 수정", path: "/myinfoedit" },
       { label: "사전 체크리스트 수정", path: "/roommatechecklist" },
     ],
   },
@@ -23,6 +23,7 @@ const menuGroups = [
   {
     title: "룸메이트",
     menus: [
+      { label: "내 룸메이트", path: "/myroommate" },
       { label: "룸메이트 등록하기", path: "/roommateadd" },
       { label: "룸메이트 해제하기", path: "/roommate/result" },
     ],

@@ -2,6 +2,8 @@
 import { AxiosResponse } from "axios";
 import tokenInstance from "./tokenInstance.ts";
 import {
+  RoommateMatchingRequest,
+  RoommateMatchingResponse,
   RoommatePost,
   RoommatePostRequest,
   RoommatePostResponse,
@@ -48,5 +50,15 @@ export const getRoomMateDetail = async (
     `/roommates/${boardId}`,
   );
   console.log(response);
+  return response;
+};
+
+export const requestRoommateMatching = async (
+  data: RoommateMatchingRequest,
+): Promise<AxiosResponse<RoommateMatchingResponse>> => {
+  const response = await tokenInstance.post<RoommateMatchingResponse>(
+    "/roommate-matching/request",
+    data,
+  );
   return response;
 };

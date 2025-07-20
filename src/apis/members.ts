@@ -18,6 +18,18 @@ export const getMemberImage = async (): Promise<AxiosResponse> => {
   return response;
 };
 
+export const putUserImage = async (imageFile: File): Promise<AxiosResponse> => {
+  const formData = new FormData();
+  formData.append("image", imageFile);
+
+  const response = await tokenInstance.put("/users/image", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return response;
+};
+
 // 회원 삭제
 export const deleteMembers = async (): Promise<ApiResponse<number>> => {
   const response =

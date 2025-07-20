@@ -31,7 +31,7 @@ export default function MyInfoEditPage() {
   useEffect(() => {
     setSelectedCollegeIndex(findIndex(colleges, userInfo.college));
     setSelectedDomitoryIndex(findIndex(domitory, userInfo.dormType));
-  });
+  }, []);
 
   const isFilled = () => {
     return typeof name === "string" && name.trim() !== "";
@@ -68,6 +68,34 @@ export default function MyInfoEditPage() {
     }
   };
 
+  // const [imageFile, setImageFile] = useState<File | null>(null);
+  // const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  //
+  // // 이미지 선택 핸들러
+  // const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = e.target.files?.[0];
+  //   if (file) {
+  //     setImageFile(file);
+  //     setPreviewUrl(URL.createObjectURL(file));
+  //   }
+  // };
+
+  // const handleUploadImage = async () => {
+  //   if (!imageFile) return;
+  //
+  //   try {
+  //     const response = await putUserImage(imageFile);
+  //     if (response.status === 200) {
+  //       alert("프로필 이미지가 변경되었습니다.");
+  //     } else {
+  //       alert("이미지 업로드에 실패했습니다.");
+  //     }
+  //   } catch (error) {
+  //     alert("이미지 업로드 중 오류가 발생했습니다.");
+  //     console.error(error);
+  //   }
+  // };
+
   return (
     <LoginPageWrapper>
       <Header title={"회원정보 수정"} hasBack={true} showAlarm={false} />
@@ -84,6 +112,41 @@ export default function MyInfoEditPage() {
             />
           }
         />
+
+        {/*/!* 프로필 이미지 업로드 *!/*/}
+        {/*<TitleContentArea*/}
+        {/*  type="프로필 사진"*/}
+        {/*  children={*/}
+        {/*    <div>*/}
+        {/*      {previewUrl ? (*/}
+        {/*        <img*/}
+        {/*          src={previewUrl}*/}
+        {/*          alt="미리보기"*/}
+        {/*          style={{*/}
+        {/*            width: "100px",*/}
+        {/*            height: "100px",*/}
+        {/*            objectFit: "cover",*/}
+        {/*            borderRadius: "50%",*/}
+        {/*          }}*/}
+        {/*        />*/}
+        {/*      ) : (*/}
+        {/*        <div*/}
+        {/*          style={{*/}
+        {/*            width: "100px",*/}
+        {/*            height: "100px",*/}
+        {/*            background: "#ddd",*/}
+        {/*            borderRadius: "50%",*/}
+        {/*          }}*/}
+        {/*        />*/}
+        {/*      )}*/}
+        {/*      <input*/}
+        {/*        type="file"*/}
+        {/*        accept="image/*"*/}
+        {/*        onChange={handleImageChange}*/}
+        {/*      />*/}
+        {/*    </div>*/}
+        {/*  }*/}
+        {/*/>*/}
 
         <TitleContentArea
           type={"기숙사 종류"}
@@ -107,11 +170,13 @@ export default function MyInfoEditPage() {
         />
       </ContentWrapper>
 
-      <SquareButton
-        text="수정하기"
-        disabled={!isFilled()}
-        onClick={handleSubmit}
-      />
+      <ButtonWrapper>
+        <SquareButton
+          text="수정하기"
+          disabled={!isFilled()}
+          onClick={handleSubmit}
+        />
+      </ButtonWrapper>
     </LoginPageWrapper>
   );
 }
@@ -136,4 +201,18 @@ const ContentWrapper = styled.div`
   display: flex;
   flex-direction: column;
   gap: 30px;
+
+  padding-bottom: 200px;
+`;
+
+const ButtonWrapper = styled.div`
+  width: 100%;
+  height: fit-content;
+  position: fixed;
+
+  padding: 12px 16px;
+  box-sizing: border-box;
+
+  bottom: 0;
+  left: 0;
 `;

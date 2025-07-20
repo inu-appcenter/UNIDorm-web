@@ -22,7 +22,7 @@ export default SquareButton;
 
 const SquareButtonWrapper = styled.button<{ disabled?: boolean }>`
   width: 100%;
-  height: 60px;
+  min-height: 60px;
   font-size: 16px;
   font-weight: 500;
   color: white;
