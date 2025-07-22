@@ -12,12 +12,15 @@ import {
   updateMyRoommateRules,
 } from "../../apis/roommate.ts";
 import RoundSquareButton from "../../components/button/RoundSquareButton.tsx";
+import QuickMessageModal from "../../components/roommate/QuickMessageModal.tsx";
 
 export default function MyRoomMatePage() {
   // const [rules, setRules] = useState<string[]>([]);
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
+
+  const [showQuickModal, setShowQuickModal] = useState(false);
 
   const menuItems = [
     {
@@ -119,8 +122,19 @@ export default function MyRoomMatePage() {
 
       <IconTextButton
         type="quickmessage"
-        onClick={() => console.log("퀵 메시지 클릭")}
+        onClick={() => setShowQuickModal(true)}
       />
+
+      {showQuickModal && (
+        <QuickMessageModal
+          onClose={() => setShowQuickModal(false)}
+          onSelect={(message) => {
+            console.log("선택된 메시지:", message);
+            // 여기에 메시지 전송 API 연동 가능
+            setShowQuickModal(false);
+          }}
+        />
+      )}
     </MyRoomMatePageWrapper>
   );
 }
