@@ -150,15 +150,14 @@ const Right = styled.div`
 
 const MainLine = styled.div`
   width: 100%;
-  //height: 100%;
-
   height: 70px;
-  padding: 0 20px;
+  padding: env(safe-area-inset-top, 0px) 20px 0 20px;
   box-sizing: border-box;
   display: flex;
   justify-content: space-between;
   align-items: center;
 `;
+
 const SecondLine = styled.div`
   width: 100%;
   height: 100%;
