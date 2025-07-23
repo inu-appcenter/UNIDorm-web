@@ -89,7 +89,7 @@ export default function GroupPurchaseMainPage() {
         <GroupPurchaseList />
       </ContentArea>
 
-      <WriteButton onClick={() => navigate("/group/write")}>
+      <WriteButton onClick={() => navigate("/groupPurchase/write")}>
         ✏️ 글쓰기
       </WriteButton>
       <BottomBar />

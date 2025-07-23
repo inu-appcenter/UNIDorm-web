@@ -1,9 +1,12 @@
 import styled from "styled-components";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 
 import back from "../../assets/header/back.svg";
 import TopRightDropdownMenu from "./TopRightDropdownMenu.tsx";
 import { Bell } from "lucide-react";
+
+import { getMobilePlatform } from "../../utils/getMobilePlatform";
 
 interface MenuItemType {
   label: string;
@@ -15,7 +18,7 @@ interface HeaderProps {
   title?: string;
   showAlarm?: boolean;
   menuItems?: MenuItemType[];
-  rightContent?: React.ReactNode; // 오른쪽 사용자 정의 콘텐츠
+  rightContent?: React.ReactNode;
   secondHeader?: React.ReactNode;
 }
 
@@ -28,6 +31,13 @@ export default function Header({
 }: HeaderProps) {
   const navigate = useNavigate();
   const location = useLocation();
+  const [platform, setPlatform] = useState<"ios" | "android" | "other">(
+    "other",
+  );
+
+  useEffect(() => {
+    setPlatform(getMobilePlatform());
+  }, []);
 
   const getCurrentPage = () => {
     switch (location.pathname) {
@@ -75,7 +85,7 @@ export default function Header({
 
   return (
     <StyledHeader $hasShadow={shadowSelector()}>
-      <MainLine>
+      <MainLine $platform={platform}>
         <Left>
           {hasBack && (
             <img src={back} alt="뒤로가기" onClick={handleBackClick} />
@@ -89,7 +99,6 @@ export default function Header({
               <Bell onClick={handleNotiBtnClick} size={22} />
             </div>
           )}
-
           {menuItems && <TopRightDropdownMenu items={menuItems} />}
         </Right>
       </MainLine>
@@ -105,10 +114,9 @@ const StyledHeader = styled.header<{ $hasShadow: boolean }>`
   z-index: 1000;
   width: 100%;
 
-  //✅ 블러 효과 추가
-  background: rgba(244, 244, 244, 0.6); /* 반투명 */
-  backdrop-filter: blur(10px); /* 블러 효과 */
-  -webkit-backdrop-filter: blur(10px); /* Safari 지원 */
+  background: rgba(244, 244, 244, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 
   box-shadow: ${({ $hasShadow }) =>
     $hasShadow ? "0 2px 4px rgba(0, 0, 0, 0.1)" : "none"};
@@ -148,10 +156,20 @@ const Right = styled.div`
   gap: 4px;
 `;
 
-const MainLine = styled.div`
+const MainLine = styled.div<{ $platform: string }>`
   width: 100%;
   height: 70px;
-  padding: env(safe-area-inset-top, 0px) 20px 0 20px;
+
+  padding-top: ${({ $platform }) =>
+    $platform === "ios"
+      ? "env(safe-area-inset-top, 44px)"
+      : $platform === "android"
+        ? "24px"
+        : "20px"};
+
+  padding-left: 20px;
+  padding-right: 20px;
+
   box-sizing: border-box;
   display: flex;
   justify-content: space-between;
