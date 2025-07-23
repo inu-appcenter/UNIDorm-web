@@ -91,6 +91,7 @@ export default function Header({
             <img src={back} alt="뒤로가기" onClick={handleBackClick} />
           )}
           <div className="Title">{title ?? getCurrentPage()}</div>
+          <span>{platform}</span>
         </Left>
 
         <Right>
