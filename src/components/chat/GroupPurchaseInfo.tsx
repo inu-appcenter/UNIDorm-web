@@ -1,19 +1,41 @@
 import human from "../../assets/chat/human.svg";
 import styled from "styled-components";
 
-const GroupPurchaseInfo = () => {
+interface GroupPurchaseInfoProps {
+  currentPeople?: number;
+  maxPeople?: number;
+  deadline?: string;
+}
+
+const GroupPurchaseInfo = ({
+  currentPeople,
+  maxPeople,
+  deadline,
+}: GroupPurchaseInfoProps) => {
+  const getDDay = (deadline?: string) => {
+    if (!deadline) return "D-?";
+    const today = new Date();
+    const end = new Date(deadline);
+    const diff = Math.ceil(
+      (end.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
+    );
+    return diff >= 0 ? `D-${diff}` : "마감";
+  };
+
   return (
     <GroupPurchaseInfoWrapper>
-      <div className="dDay">D-1</div>
+      <div className="dDay">{getDDay(deadline)}</div>
       <div className="people">
         |
-        <img src={human} />
-        3/4
+        <img src={human} alt="인원 아이콘" />
+        {currentPeople ?? 0}/{maxPeople ?? 0}
       </div>
     </GroupPurchaseInfoWrapper>
   );
 };
+
 export default GroupPurchaseInfo;
+
 const GroupPurchaseInfoWrapper = styled.div`
   display: flex;
   width: fit-content;
