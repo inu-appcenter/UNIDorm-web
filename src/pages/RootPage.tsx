@@ -29,5 +29,7 @@ const RootPageWrapper = styled.div<{ $platform: string }>`
   box-sizing: border-box;
 
   ${({ $platform }) =>
-    $platform === "ios" ? `padding-top: env(safe-area-inset-top, 0px);` : ""}
+    $platform === "ios"
+      ? `padding-top: calc(env(safe-area-inset-top, 0px) * 0.5);`
+      : ""}
 `;
