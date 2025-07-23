@@ -159,26 +159,23 @@ const Right = styled.div`
 
 const MainLine = styled.div<{ $platform: string }>`
   width: 100%;
-  padding-top: ${({ $platform }) =>
-    $platform === "ios"
-      ? "env(safe-area-inset-top, 0px)"
-      : $platform === "android"
-        ? "24px"
-        : "20px"};
-  padding-left: 20px;
-  padding-right: 20px;
-
   box-sizing: border-box;
   display: flex;
   justify-content: space-between;
   align-items: center;
 
-  height: ${({ $platform }) =>
+  padding-left: 20px;
+  padding-right: 20px;
+
+  ${({ $platform }) =>
     $platform === "ios"
-      ? "calc(44px + env(safe-area-inset-top, 0px))"
-      : $platform === "android"
-        ? "calc(44px + 24px)"
-        : "calc(44px + 20px)"};
+      ? `
+        padding-top: env(safe-area-inset-top, 0px);
+        height: calc(44px + env(safe-area-inset-top, 0px));
+      `
+      : `
+        height: 70px;
+      `}
 `;
 
 const SecondLine = styled.div`
