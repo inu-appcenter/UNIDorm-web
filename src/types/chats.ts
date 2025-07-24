@@ -9,3 +9,10 @@ export interface GroupOrderChatRoom {
   maxPeople: number;
   deadline: string; // ISO format
 }
+
+export interface RoommateChatRoom {
+  chatRoomId: number;
+  opponentNickname: string;
+  lastMessage: string;
+  lastMessageTime: string; // ISO8601 형식
+}
