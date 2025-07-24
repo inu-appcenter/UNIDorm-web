@@ -6,7 +6,6 @@ import RootPage from "./pages/RootPage";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import ChatListPage from "./pages/Chat/ChatListPage.tsx";
-import ChattingPage from "./pages/Chat/ChattingPage.tsx";
 import RoomMatePage from "./pages/RoomMate/RoomMatePage.tsx";
 import MyPage from "./pages/MyPage.tsx";
 import NotificationBoardPage from "./pages/NoticeBoardPage.tsx";
@@ -27,9 +26,13 @@ import MyLikesPage from "./pages/MyLikesPage.tsx";
 import MyInfoEditPage from "./pages/MyPage/MyInfoEditPage.tsx";
 import MyRoomMatePage from "./pages/RoomMate/MyRoomMatePage.tsx";
 import RoomMateAddPage from "./pages/RoomMate/RoomMateAddPage.tsx";
+import ChattingPage from "./pages/Chat/ChattingPage.tsx";
+import "./init";
+import ChatTest from "./pages/Chat/ChatTest.tsx";
+import LogoutPage from "./pages/LogoutPage.tsx";
 
 function App() {
-  const { tokenInfo, setUserInfo } = useUserStore();
+  const { tokenInfo, setUserInfo, userInfo } = useUserStore();
 
   useEffect(() => {
     const initializeUser = async () => {
@@ -52,11 +55,13 @@ function App() {
       <Routes>
         {/*로그인하기 전 페이지들*/}
         <Route path="/" element={<OutPage />}>
-          <Route index element={<LoginPage />} />
           <Route path={"/login"} element={<LoginPage />} />
+          <Route path="/logout" element={<LogoutPage />} />
         </Route>
         {/*바텀바가 필요한 루트 페이지들*/}
         <Route path="/" element={<RootPage />}>
+          <Route index element={<HomePage />} />
+
           <Route path="/home" element={<HomePage />} />
           <Route path="/roommate" element={<RoomMatePage />} />
           <Route path="/groupPurchase" element={<GroupPurchaseMainPage />} />
@@ -77,6 +82,12 @@ function App() {
           <Route path="/myinfoedit" element={<MyInfoEditPage />} />
 
           <Route path="/notification" element={<NotificationBoardPage />} />
+          <Route
+            path="/chattest"
+            element={
+              <ChatTest roomId={1} userId={Number(userInfo.studentNumber)} />
+            }
+          />
           <Route path="/chat/:chatType/:id" element={<ChattingPage />} />
           <Route path="/tips/write" element={<TipWritePage />} />
           <Route path="/tips/detail" element={<TipDetailPage />} />
