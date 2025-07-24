@@ -77,6 +77,8 @@ export default function Header({
       case "/roommate":
       case "/roommatelist":
       case "/roommatelist/1":
+      case "/":
+      case "/mypage":
         return true;
       default:
         return false;

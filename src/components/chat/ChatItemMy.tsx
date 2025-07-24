@@ -1,21 +1,24 @@
 import styled from "styled-components";
 
-const ChatItemMy = () => {
+type Props = {
+  content: string;
+  time: string;
+};
+
+const ChatItemMy = ({ content, time }: Props) => {
   return (
     <ChatItemMyWrapper>
       <ContentArea>
-        <div className="message">
-          늦은 시간에
-          죄송합니다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐
-        </div>
+        <div className="message">{content}</div>
       </ContentArea>
       <TimeArea>
-        <div className="time">오후 6:20</div>
+        <div className="time">{time}</div>
         <div className="isRead">1</div>
       </TimeArea>
     </ChatItemMyWrapper>
   );
 };
+
 export default ChatItemMy;
 
 const ChatItemMyWrapper = styled.div`

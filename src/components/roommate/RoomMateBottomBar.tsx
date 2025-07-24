@@ -2,18 +2,36 @@ import styled from "styled-components";
 import RoundSquareButton from "../button/RoundSquareButton.tsx";
 import { FaHeart, FaRegHeart } from "react-icons/fa";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { createRoommateChatRoom } from "../../apis/chat.ts";
 
 const RoomMateBottomBar = () => {
+  const { boardId } = useParams<{ boardId: string }>();
+
   const [liked, setLiked] = useState<boolean>(false);
   const navigate = useNavigate();
+
+  const handleChatClick = async () => {
+    if (!boardId) return;
+
+    try {
+      const res = await createRoommateChatRoom(Number(boardId));
+      const chatRoomId = res.data;
+
+      navigate(`/chat/roommate/${chatRoomId}`);
+    } catch (error) {
+      console.error("채팅방 생성 실패", error);
+      alert("채팅방을 생성할 수 없습니다.");
+    }
+  };
+
   return (
     <RoomMateBottomBarWrapper>
       <HeartIconWrapper onClick={() => setLiked(!liked)}>
         {liked ? <FaHeart color="red" size={24} /> : <FaRegHeart size={24} />}
       </HeartIconWrapper>
 
-      <ChatButtonWrapper onClick={() => navigate("/chat/roommate/1")}>
+      <ChatButtonWrapper onClick={handleChatClick}>
         <RoundSquareButton btnName={"채팅하기"} />
       </ChatButtonWrapper>
     </RoomMateBottomBarWrapper>
@@ -36,13 +54,13 @@ const RoomMateBottomBarWrapper = styled.div`
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 16px; /* 간격 조절 */
+  gap: 16px;
 `;
 
 const HeartIconWrapper = styled.div`
-  flex-shrink: 0; /* 아이콘 크기 고정 */
+  flex-shrink: 0;
 `;
 
 const ChatButtonWrapper = styled.div`
-  flex-grow: 1; /* 버튼이 남은 공간 모두 차지 */
+  flex-grow: 1;
 `;

@@ -1,23 +1,26 @@
 import styled from "styled-components";
 
-const ChatItemOtherPerson = () => {
+type Props = {
+  content: string;
+  time: string;
+};
+
+const ChatItemOtherPerson = ({ content, time }: Props) => {
   return (
     <ChatItemOtherPersonWrapper>
       <ImgArea>
-        <img alt={" "} />
+        <img alt="상대방" />
       </ImgArea>
       <ContentArea>
-        <div className="message">
-          늦은 시간에
-          죄송합니다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐다람쥐
-        </div>
+        <div className="message">{content}</div>
       </ContentArea>
       <TimeArea>
-        <div className="time">오후 6:20</div>
+        <div className="time">{time}</div>
       </TimeArea>
     </ChatItemOtherPersonWrapper>
   );
 };
+
 export default ChatItemOtherPerson;
 
 const ChatItemOtherPersonWrapper = styled.div`

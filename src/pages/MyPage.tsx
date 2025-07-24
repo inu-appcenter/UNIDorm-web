@@ -3,6 +3,8 @@ import MyInfoArea from "../components/mypage/MyInfoArea.tsx";
 import MenuGroup from "../components/mypage/MenuGroup.tsx";
 import React from "react";
 import Header from "../components/common/Header.tsx";
+import useUserStore from "../stores/useUserStore.ts";
+import { useNavigate } from "react-router-dom";
 
 const menuGroups = [
   {
@@ -33,27 +35,46 @@ const menuGroups = [
     menus: [
       { label: "1:1 문의", path: "/roommate/apply" },
       { label: "서비스 정보", path: "/roommate/result" },
-      { label: "로그아웃", path: "/login" },
+      { label: "로그아웃", path: "/logout" },
     ],
   },
 ];
 
 const MyPage = () => {
+  const { tokenInfo } = useUserStore();
+  const navigate = useNavigate();
+  const isLoggedIn = Boolean(tokenInfo.accessToken);
+
   return (
     <MyPageWrapper>
       <Header title={"마이페이지"} showAlarm={true} />
-      <MyInfoArea />
-      <Divider />
-      {menuGroups.map((group, idx) => (
-        <React.Fragment key={idx}>
-          <MenuGroup title={group.title} menus={group.menus} />
-          {idx < menuGroups.length - 1 && <Divider />}
-        </React.Fragment>
-      ))}
+      {isLoggedIn ? (
+        <InfoAreaWrapper>
+          <MyInfoArea />
+        </InfoAreaWrapper>
+      ) : (
+        <InfoAreaWrapper>
+          <LoginMessage
+            onClick={() => {
+              navigate("/login");
+            }}
+          >
+            로그인을 해주세요<span className={"go"}>{">"}</span>
+          </LoginMessage>
+        </InfoAreaWrapper>
+      )}
+
+      <MenuGroupsWrapper>
+        {menuGroups.map((group, idx) => (
+          <React.Fragment key={idx}>
+            <MenuGroup title={group.title} menus={group.menus} />
+            {idx < menuGroups.length - 1 && <Divider />}
+          </React.Fragment>
+        ))}
+      </MenuGroupsWrapper>
     </MyPageWrapper>
   );
 };
-
 export default MyPage;
 
 const MyPageWrapper = styled.div`
@@ -62,19 +83,39 @@ const MyPageWrapper = styled.div`
 
   display: flex;
   flex-direction: column;
-  gap: 20px;
   box-sizing: border-box;
 
   width: 100%;
   height: 100%;
 
   overflow-y: auto;
+`;
 
-  //background: #fafafa;
+const MenuGroupsWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 `;
 
 const Divider = styled.div`
   height: 1px;
   background-color: #e0e0e0; /* 연한 회색 */
   width: 100%;
+`;
+
+const LoginMessage = styled.div`
+  text-align: start;
+  font-size: 18px;
+  font-weight: 500;
+  color: black;
+  height: fit-content;
+  .go {
+    font-size: 16px;
+    margin-left: 5px;
+    font-weight: 300;
+  }
+`;
+
+const InfoAreaWrapper = styled.div`
+  margin-bottom: 24px; /* 원하는 여백 크기 */
 `;
