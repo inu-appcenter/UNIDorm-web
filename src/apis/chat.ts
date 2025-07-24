@@ -21,3 +21,13 @@ export const getRoommateChatRooms = async (): Promise<
   console.log(response);
   return response;
 };
+
+export const createRoommateChatRoom = async (
+  roommateBoardId: number,
+): Promise<AxiosResponse<number>> => {
+  const response = await tokenInstance.post<number>(
+    `/roommate-chatting-room/board/${roommateBoardId}`,
+  );
+  console.log(response);
+  return response;
+};
