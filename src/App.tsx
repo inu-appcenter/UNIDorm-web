@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { getMemberInfo } from "./apis/members";
 import useUserStore from "./stores/useUserStore";
@@ -30,9 +30,11 @@ import ChattingPage from "./pages/Chat/ChattingPage.tsx";
 import "./init";
 import ChatTest from "./pages/Chat/ChatTest.tsx";
 import LogoutPage from "./pages/LogoutPage.tsx";
+import OnboardingPage from "./pages/OnboardingPage.tsx";
 
 function App() {
   const { tokenInfo, setUserInfo, userInfo } = useUserStore();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const initializeUser = async () => {
@@ -50,6 +52,14 @@ function App() {
     }
   }, [tokenInfo, setUserInfo]);
 
+  useEffect(() => {
+    const isFirstVisit = localStorage.getItem("isFirstVisit");
+
+    if (!isFirstVisit) {
+      navigate("/onboarding");
+    }
+  }, []);
+
   return (
     <>
       <Routes>
@@ -57,6 +67,7 @@ function App() {
         <Route path="/" element={<OutPage />}>
           <Route path={"/login"} element={<LoginPage />} />
           <Route path="/logout" element={<LogoutPage />} />
+          <Route path="/onboarding" element={<OnboardingPage />} />
         </Route>
         {/*바텀바가 필요한 루트 페이지들*/}
         <Route path="/" element={<RootPage />}>
