@@ -34,7 +34,7 @@ const menuGroups = [
     title: undefined,
     menus: [
       { label: "1:1 문의", path: "/roommate/apply" },
-      { label: "서비스 정보", path: "/roommate/result" },
+      { label: "서비스 정보", path: "/onboarding" },
       { label: "로그아웃", path: "/logout" },
     ],
   },
