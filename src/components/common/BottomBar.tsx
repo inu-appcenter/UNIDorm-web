@@ -13,6 +13,8 @@ import chatClicked from "../../assets/bottombar/chat-clicked.svg";
 import homeClicked from "../../assets/bottombar/home-clicked.svg";
 import roommateClicked from "../../assets/bottombar/roommate-clicked.svg";
 import mypageClicked from "../../assets/bottombar/mypage-clicked.svg";
+import TooltipMessage from "./TooltipMessage.tsx";
+import { useState } from "react";
 
 interface ButtonProps {
   defaultImg: string;
@@ -20,6 +22,8 @@ interface ButtonProps {
   buttonName: string;
   isActive: boolean;
   onClick: () => void;
+  showTooltip?: boolean;
+  onTooltipClose?: () => void;
 }
 
 const Button = ({
@@ -28,9 +32,22 @@ const Button = ({
   buttonName,
   isActive,
   onClick,
+  showTooltip = false,
+  onTooltipClose,
 }: ButtonProps) => {
+  const handleClick = () => {
+    onClick();
+  };
+
   return (
-    <ButtonWrapper onClick={onClick}>
+    <ButtonWrapper onClick={handleClick}>
+      {showTooltip && onTooltipClose && (
+        <TooltipMessage
+          message="나와 가장 어울리는 룸메이트를 찾아보세요!"
+          onClose={onTooltipClose}
+        />
+      )}
+
       <img src={isActive ? clickedImg : defaultImg} alt={buttonName} />
       <div className={`BtnName ${isActive ? "active" : ""}`}>{buttonName}</div>
     </ButtonWrapper>
@@ -38,6 +55,7 @@ const Button = ({
 };
 
 const ButtonWrapper = styled.div`
+  position: relative; /* Tooltip 위치 기준 */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -63,7 +81,17 @@ export default function BottomBar() {
   const navigate = useNavigate();
   const pathname = location.pathname;
 
-  // 특정 경로에서는 BottomBar 숨김
+  const [showTooltip, setShowTooltip] = useState(() => {
+    const stored = localStorage.getItem("showRoommateTooltip");
+    return stored !== "false"; // 기본값 true
+  });
+
+  const hideTooltip = () => {
+    console.log("툴팁 숨김 처리");
+    setShowTooltip(false);
+    localStorage.setItem("showRoommateTooltip", "false");
+  };
+
   if (
     pathname.includes("/chat/roommate") ||
     pathname.includes("/chat/groupPurchase")
@@ -83,14 +111,18 @@ export default function BottomBar() {
       <Button
         defaultImg={roommate}
         clickedImg={roommateClicked}
-        buttonName="룸메"
+        buttonName="룸메이트"
         isActive={pathname === "/roommate"}
-        onClick={() => navigate("/roommate")}
+        onClick={() => {
+          navigate("/roommate");
+        }}
+        showTooltip={showTooltip}
+        onTooltipClose={hideTooltip}
       />
       <Button
         defaultImg={buy}
         clickedImg={buyClicked}
-        buttonName="공구"
+        buttonName="공동구매"
         isActive={pathname === "/groupPurchase"}
         onClick={() => navigate("/groupPurchase")}
       />

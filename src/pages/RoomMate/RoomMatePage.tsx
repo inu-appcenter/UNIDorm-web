@@ -9,14 +9,25 @@ import {
   getSimilarRoomMateList,
 } from "../../apis/roommate.ts";
 
+import { useNavigate } from "react-router-dom";
+import useUserStore from "../../stores/useUserStore.ts"; // 추가 필요
+
 export default function RoomMatePage() {
+  const { tokenInfo } = useUserStore();
+  const isLoggedIn = Boolean(tokenInfo.accessToken);
+  const hasChecklist = false;
+
   const [roommates, setRoommates] = useState<RoommatePost[]>([]);
+  const [similarRoommates, setSimilarRoommates] = useState<
+    SimilarRoommatePost[]
+  >([]);
+  const navigate = useNavigate(); // 페이지 이동을 위한 hook
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await getRoomMateList();
-        setRoommates(response.data); // API에서 받은 데이터 저장
+        setRoommates(response.data);
       } catch (error) {
         console.error("룸메이트 목록 가져오기 실패:", error);
       }
@@ -25,13 +36,10 @@ export default function RoomMatePage() {
     fetchData();
   }, []);
 
-  const [similarRoommates, setSimilarRoommates] = useState<
-    SimilarRoommatePost[]
-  >([]);
-
   useEffect(() => {
     const fetchData = async () => {
       try {
+        if (!isLoggedIn) return;
         const response = await getSimilarRoomMateList();
         setSimilarRoommates(response.data);
       } catch (error) {
@@ -49,16 +57,18 @@ export default function RoomMatePage() {
       <TitleContentArea type={"최신순"} link={"/roommatelist"}>
         <>
           {roommates.length > 0 ? (
-            roommates.slice(0, 2).map((post) => (
-              <RoomMateCard
-                key={post.boardId}
-                boardId={post.boardId}
-                title={post.title}
-                content={post.comment}
-                commentCount={0} // 서버에서 제공되면 반영
-                likeCount={0} // 서버에서 제공되면 반영
-              />
-            ))
+            roommates
+              .slice(0, 2)
+              .map((post) => (
+                <RoomMateCard
+                  key={post.boardId}
+                  boardId={post.boardId}
+                  title={post.title}
+                  content={post.comment}
+                  commentCount={0}
+                  likeCount={0}
+                />
+              ))
           ) : (
             <EmptyMessage>게시글이 없습니다.</EmptyMessage>
           )}
@@ -69,15 +79,33 @@ export default function RoomMatePage() {
         type={"나와 비슷한 룸메"}
         children={
           <>
+            {/*로그인했는데 체크리스트를 작성하지 않은 경우*/}
+            {isLoggedIn && !hasChecklist && (
+              <ChecklistBanner onClick={() => navigate("/roommatechecklist")}>
+                아직 사전 체크리스트를 작성하지 않으셨네요! <br /> 체크리스트를
+                작성하면 나와 생활패턴이 비슷한 룸메이트를 추천받을 수 있어요.
+                <strong>지금 바로 체크리스트 작성하러 가기 →</strong>
+              </ChecklistBanner>
+            )}
+            {/*로그인하지 않은 경우*/}
+            {!isLoggedIn && (
+              <ChecklistBanner onClick={() => navigate("/login")}>
+                로그인하시면 나와 생활패턴이 비슷한 룸메이트를 추천받을 수
+                있어요.
+                <strong>지금 바로 로그인하러 가기 →</strong>
+              </ChecklistBanner>
+            )}
+
             {similarRoommates.length > 0 ? (
               similarRoommates.map((post) => (
                 <RoomMateCard
+                  key={post.boardId}
                   boardId={post.boardId}
                   title={post.title}
                   content={post.comment}
                   percentage={post.similarityPercentage}
-                  commentCount={0} // API에서 제공되면 수정
-                  likeCount={0} // API에서 제공되면 수정
+                  commentCount={0}
+                  likeCount={0}
                 />
               ))
             ) : (
@@ -111,4 +139,28 @@ const EmptyMessage = styled.div`
   text-align: center;
   color: #aaa;
   font-size: 14px;
+`;
+
+// styled-components 부분에 아래 스타일을 추가하세요
+
+const ChecklistBanner = styled.div`
+  background-color: #fff3cd;
+  color: #856404;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid #ffeeba;
+  font-size: 14px;
+  line-height: 1.5;
+  cursor: pointer;
+
+  strong {
+    display: block;
+    margin-top: 6px;
+    font-weight: 600;
+    color: #8a6d3b;
+  }
+
+  &:hover {
+    background-color: #ffe8a1;
+  }
 `;
