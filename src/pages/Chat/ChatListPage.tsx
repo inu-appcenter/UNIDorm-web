@@ -9,9 +9,13 @@ import Header from "../../components/common/Header.tsx";
 import Tab from "../../components/chat/Tab.tsx";
 import ChatListItem from "../../components/chat/ChatListItem.tsx";
 import styled from "styled-components";
+import useUserStore from "../../stores/useUserStore.ts";
 
 export default function ChatListPage() {
   const navigate = useNavigate();
+  const { tokenInfo } = useUserStore();
+  const isLoggedIn = Boolean(tokenInfo.accessToken);
+
   const tabItems = ["룸메이트", "공동구매"];
   const [selectedTab, setSelectedTab] = useState("룸메이트");
 
@@ -23,6 +27,8 @@ export default function ChatListPage() {
   >([]);
 
   useEffect(() => {
+    if (!isLoggedIn) return;
+
     if (selectedTab === "공동구매") {
       getGroupOrderChatRooms()
         .then((res) => {
@@ -40,7 +46,7 @@ export default function ChatListPage() {
           console.error("룸메이트 채팅방 목록 조회 실패", err);
         });
     }
-  }, [selectedTab]);
+  }, [selectedTab, isLoggedIn]); // isLoggedIn도 dependency에 추가
 
   const handleChatClick = (chatRoomId: number) => {
     if (selectedTab === "룸메이트") {
@@ -83,10 +89,22 @@ export default function ChatListPage() {
             ))
           ) : (
             <EmptyMessage>
-              아직 공동구매 채팅이 없습니다. <br />
-              <br /> 지금 바로 공동구매 탭으로 이동해서
-              <br />
-              같이 살 물건을 찾아보세요!
+              {isLoggedIn ? (
+                <>
+                  아직 공동구매 채팅이 없습니다. <br />
+                  <br /> 지금 바로 공동구매 탭으로 이동해서
+                  <br />
+                  같이 살 물건을 찾아보세요!
+                </>
+              ) : (
+                <>
+                  공동구매 채팅 목록을 확인하려면 <br />
+                  로그인이 필요합니다.
+                  <br />
+                  <br />
+                  <span className="login">로그인하러 가기</span>
+                </>
+              )}
             </EmptyMessage>
           )
         ) : roommateChatRooms.length > 0 ? (
@@ -102,12 +120,31 @@ export default function ChatListPage() {
           ))
         ) : (
           <EmptyMessage>
-            아직 룸메이트 채팅이 없습니다.
-            <br />
-            <br />
-            지금 바로 룸메이트 탭으로 이동해서
-            <br />
-            룸메이트를 찾아보세요!
+            {isLoggedIn ? (
+              <>
+                아직 룸메이트 채팅이 없습니다.
+                <br />
+                <br />
+                지금 바로 룸메이트 탭으로 이동해서
+                <br />
+                룸메이트를 찾아보세요!
+              </>
+            ) : (
+              <>
+                룸메이트 채팅 목록을 확인하려면 <br />
+                로그인이 필요합니다.
+                <br />
+                <br />
+                <span
+                  className="login"
+                  onClick={() => {
+                    navigate("/login");
+                  }}
+                >
+                  로그인하러 가기
+                </span>
+              </>
+            )}
           </EmptyMessage>
         )}
       </ContentWrapper>
@@ -142,6 +179,13 @@ const ContentWrapper = styled.div`
 const EmptyMessage = styled.div`
   padding: 24px;
   text-align: center;
-  color: #aaa;
-  font-size: 14px;
+  color: #777;
+  font-size: 15px;
+  line-height: 1.6;
+
+  .login {
+    color: #0070f3;
+    cursor: pointer;
+    text-decoration: underline;
+  }
 `;
