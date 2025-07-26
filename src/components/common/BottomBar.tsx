@@ -103,14 +103,14 @@ export default function BottomBar() {
       <Button
         defaultImg={roommate}
         clickedImg={roommateClicked}
-        buttonName="룸메"
+        buttonName="룸메이트"
         isActive={pathname === "/roommate"}
         onClick={() => navigate("/roommate")}
       />
       <Button
         defaultImg={buy}
         clickedImg={buyClicked}
-        buttonName="공구"
+        buttonName="공동구매"
         isActive={pathname === "/groupPurchase"}
         onClick={() => navigate("/groupPurchase")}
       />
