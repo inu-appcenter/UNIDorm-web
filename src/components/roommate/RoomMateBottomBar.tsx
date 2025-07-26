@@ -4,14 +4,23 @@ import { FaHeart, FaRegHeart } from "react-icons/fa";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { createRoommateChatRoom } from "../../apis/chat.ts";
+import useUserStore from "../../stores/useUserStore.ts";
 
 const RoomMateBottomBar = () => {
   const { boardId } = useParams<{ boardId: string }>();
+
+  const { tokenInfo } = useUserStore();
+  const isLoggedIn = Boolean(tokenInfo.accessToken);
 
   const [liked, setLiked] = useState<boolean>(false);
   const navigate = useNavigate();
 
   const handleChatClick = async () => {
+    if (!isLoggedIn) {
+      alert("로그인 후 이용해주세요.");
+      navigate("/login");
+      return;
+    }
     if (!boardId) return;
 
     try {
