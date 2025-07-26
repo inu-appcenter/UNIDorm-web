@@ -22,6 +22,8 @@ interface ButtonProps {
   buttonName: string;
   isActive: boolean;
   onClick: () => void;
+  showTooltip?: boolean;
+  onTooltipClose?: () => void;
 }
 
 const Button = ({
@@ -30,26 +32,22 @@ const Button = ({
   buttonName,
   isActive,
   onClick,
+  showTooltip = false,
+  onTooltipClose,
 }: ButtonProps) => {
-  const [showTooltip, setShowTooltip] = useState(buttonName === "룸메");
-
   const handleClick = () => {
-    // 버튼 동작 먼저 수행
     onClick();
-    // 말풍선 닫기 (룸메 버튼인 경우만)
-    if (buttonName === "룸메") {
-      setShowTooltip(false);
-    }
   };
 
   return (
     <ButtonWrapper onClick={handleClick}>
-      {buttonName === "룸메" && showTooltip && (
+      {showTooltip && onTooltipClose && (
         <TooltipMessage
           message="나와 가장 어울리는 룸메이트를 찾아보세요!"
-          onClose={() => setShowTooltip(false)}
+          onClose={onTooltipClose}
         />
       )}
+
       <img src={isActive ? clickedImg : defaultImg} alt={buttonName} />
       <div className={`BtnName ${isActive ? "active" : ""}`}>{buttonName}</div>
     </ButtonWrapper>
@@ -83,7 +81,17 @@ export default function BottomBar() {
   const navigate = useNavigate();
   const pathname = location.pathname;
 
-  // 특정 경로에서는 BottomBar 숨김
+  const [showTooltip, setShowTooltip] = useState(() => {
+    const stored = localStorage.getItem("showRoommateTooltip");
+    return stored !== "false"; // 기본값 true
+  });
+
+  const hideTooltip = () => {
+    console.log("툴팁 숨김 처리");
+    setShowTooltip(false);
+    localStorage.setItem("showRoommateTooltip", "false");
+  };
+
   if (
     pathname.includes("/chat/roommate") ||
     pathname.includes("/chat/groupPurchase")
@@ -105,7 +113,11 @@ export default function BottomBar() {
         clickedImg={roommateClicked}
         buttonName="룸메이트"
         isActive={pathname === "/roommate"}
-        onClick={() => navigate("/roommate")}
+        onClick={() => {
+          navigate("/roommate");
+        }}
+        showTooltip={showTooltip}
+        onTooltipClose={hideTooltip}
       />
       <Button
         defaultImg={buy}
