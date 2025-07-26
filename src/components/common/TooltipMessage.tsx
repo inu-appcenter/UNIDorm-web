@@ -38,7 +38,7 @@ const Tooltip = styled.div`
   border-radius: 8px;
   font-size: 12px;
   z-index: 2000;
-  width: 120px;
+  width: 100px;
   text-align: center;
   cursor: pointer;
 `;
