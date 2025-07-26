@@ -18,7 +18,7 @@ const LogoutPage = () => {
         refreshToken: "",
       };
       setTokenInfo(emptyTokenInfo);
-      navigate("/login");
+      navigate("/home");
     }, 500);
 
     return () => clearTimeout(timeout);
