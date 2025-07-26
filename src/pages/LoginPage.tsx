@@ -5,6 +5,7 @@ import SquareButton from "../components/common/SquareButton.tsx";
 import { useState } from "react";
 import { login } from "../apis/members.ts";
 import useUserStore from "../stores/useUserStore.ts";
+import Header from "../components/common/Header.tsx";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -42,8 +43,12 @@ export default function LoginPage() {
 
   return (
     <LoginPageWrapper>
+      <Header title={"로그인"} hasBack={true} />
       <div>
-        <h1>로그인</h1>
+        {/*<h1>로그인</h1>*/}
+        <span className="description">
+          인천대학교 포털 아이디, 비밀번호로 간편하게 로그인할 수 있어요.
+        </span>
 
         <h3>아이디</h3>
         <StyledInput
@@ -51,7 +56,6 @@ export default function LoginPage() {
           value={id}
           onChange={(e) => setId(e.target.value)}
         />
-
         <h3>비밀번호</h3>
         <StyledInput
           type="password"
@@ -71,6 +75,7 @@ export default function LoginPage() {
 }
 const LoginPageWrapper = styled.div`
   padding: 20px;
+  padding-top: 80px;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -82,4 +87,8 @@ const LoginPageWrapper = styled.div`
   justify-content: space-between;
 
   background: #f4f4f4;
+
+  .description {
+    font-size: 14px;
+  }
 `;

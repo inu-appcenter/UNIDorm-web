@@ -104,7 +104,7 @@ export default function MyInfoEditPage() {
           type={"닉네임"}
           children={
             <StyledInput
-              placeholder="아이디를 입력하세요."
+              placeholder="닉네임을 입력하세요."
               value={name}
               onChange={(e) => {
                 setName(e.target.value);

@@ -27,7 +27,7 @@ const TitleLineWrapper = styled.div`
 
   .title {
     font-weight: 600;
-    font-size: 16px;
+    font-size: 18px;
     line-height: 24px;
     /* 상자 높이와 동일 또는 150% */
     display: flex;

@@ -1,27 +1,25 @@
 // src/pages/LogoutPage.tsx
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import useUserStore from "../stores/useUserStore.ts"; // react-router-dom 사용 시
+import useUserStore from "../stores/useUserStore.ts";
 import { TokenInfo } from "../types/members.ts";
 
 const LogoutPage = () => {
   const navigate = useNavigate();
-  const { setTokenInfo } = useUserStore(); // store에서 setTokenInfo 불러오기
+  const { setTokenInfo } = useUserStore();
 
   useEffect(() => {
-    // 0.5초 딜레이 후 로그아웃 처리
-    const timeout = setTimeout(() => {
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-      const emptyTokenInfo: TokenInfo = {
-        accessToken: "",
-        refreshToken: "",
-      };
-      setTokenInfo(emptyTokenInfo);
-      navigate("/login");
-    }, 500);
-
-    return () => clearTimeout(timeout);
+    // 로그아웃 처리
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    const emptyTokenInfo: TokenInfo = {
+      accessToken: "",
+      refreshToken: "",
+    };
+    setTokenInfo(emptyTokenInfo);
+    alert("로그아웃되었습니다.");
+    // 처리 완료 즉시 이동
+    navigate("/home");
   }, [navigate, setTokenInfo]);
 
   return (

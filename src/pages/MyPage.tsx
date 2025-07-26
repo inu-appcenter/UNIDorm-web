@@ -45,6 +45,20 @@ const MyPage = () => {
   const navigate = useNavigate();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
 
+  // ✅ 로그인 상태에 따라 logout 메뉴를 조건부로 포함
+  const filteredMenuGroups = menuGroups.map((group) => {
+    const filteredMenus = group.menus.filter((menu) => {
+      // 로그아웃은 로그인 상태일 때만 보여줌
+      if (menu.label === "로그아웃" && !isLoggedIn) return false;
+      return true;
+    });
+
+    return {
+      ...group,
+      menus: filteredMenus,
+    };
+  });
+
   return (
     <MyPageWrapper>
       <Header title={"마이페이지"} showAlarm={true} />
@@ -65,12 +79,26 @@ const MyPage = () => {
       )}
 
       <MenuGroupsWrapper>
-        {menuGroups.map((group, idx) => (
-          <React.Fragment key={idx}>
-            <MenuGroup title={group.title} menus={group.menus} />
-            {idx < menuGroups.length - 1 && <Divider />}
-          </React.Fragment>
-        ))}
+        {filteredMenuGroups.map((group, idx) => {
+          const requiresLogin = ["내 계정", "커뮤니티", "룸메이트"].includes(
+            group.title ?? "",
+          );
+          const isProtected = !isLoggedIn && requiresLogin;
+
+          return (
+            <React.Fragment key={idx}>
+              {group.menus.length > 0 && ( // ✅ 메뉴가 존재할 때만 렌더링
+                <ProtectedMenuWrapper disabled={isProtected}>
+                  <MenuGroup title={group.title} menus={group.menus} />
+                  {isProtected && (
+                    <OverlayMessage>로그인 후 사용 가능해요.</OverlayMessage>
+                  )}
+                </ProtectedMenuWrapper>
+              )}
+              {idx < filteredMenuGroups.length - 1 && <Divider />}
+            </React.Fragment>
+          );
+        })}
       </MenuGroupsWrapper>
     </MyPageWrapper>
   );
@@ -118,4 +146,30 @@ const LoginMessage = styled.div`
 
 const InfoAreaWrapper = styled.div`
   margin-bottom: 24px; /* 원하는 여백 크기 */
+`;
+
+const ProtectedMenuWrapper = styled.div<{ disabled: boolean }>`
+  position: relative;
+  opacity: ${(props) => (props.disabled ? 0.4 : 1)};
+  pointer-events: ${(props) => (props.disabled ? "none" : "auto")};
+`;
+
+const OverlayMessage = styled.div`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  font-size: 15px;
+  font-weight: 600;
+  color: #333; /* 더 진한 글자색 */
+  background: rgba(255, 255, 255, 0.9); /* 밝은 배경 유지 */
+
+  padding: 8px 14px;
+  border-radius: 10px;
+
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); /* 부드러운 그림자 */
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 1;
 `;
