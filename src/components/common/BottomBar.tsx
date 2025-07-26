@@ -13,6 +13,8 @@ import chatClicked from "../../assets/bottombar/chat-clicked.svg";
 import homeClicked from "../../assets/bottombar/home-clicked.svg";
 import roommateClicked from "../../assets/bottombar/roommate-clicked.svg";
 import mypageClicked from "../../assets/bottombar/mypage-clicked.svg";
+import TooltipMessage from "./TooltipMessage.tsx";
+import { useState } from "react";
 
 interface ButtonProps {
   defaultImg: string;
@@ -29,8 +31,25 @@ const Button = ({
   isActive,
   onClick,
 }: ButtonProps) => {
+  const [showTooltip, setShowTooltip] = useState(buttonName === "룸메");
+
+  const handleClick = () => {
+    // 버튼 동작 먼저 수행
+    onClick();
+    // 말풍선 닫기 (룸메 버튼인 경우만)
+    if (buttonName === "룸메") {
+      setShowTooltip(false);
+    }
+  };
+
   return (
-    <ButtonWrapper onClick={onClick}>
+    <ButtonWrapper onClick={handleClick}>
+      {buttonName === "룸메" && showTooltip && (
+        <TooltipMessage
+          message="나와 가장 어울리는 룸메이트를 찾아보세요!"
+          onClose={() => setShowTooltip(false)}
+        />
+      )}
       <img src={isActive ? clickedImg : defaultImg} alt={buttonName} />
       <div className={`BtnName ${isActive ? "active" : ""}`}>{buttonName}</div>
     </ButtonWrapper>
@@ -38,6 +57,7 @@ const Button = ({
 };
 
 const ButtonWrapper = styled.div`
+  position: relative; /* Tooltip 위치 기준 */
   display: flex;
   flex-direction: column;
   align-items: center;
