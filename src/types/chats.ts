@@ -16,3 +16,11 @@ export interface RoommateChatRoom {
   lastMessage: string;
   lastMessageTime: string; // ISO8601 형식
 }
+
+export interface RoommateChat {
+  roommateChattingRoomId: number;
+  roommateChatId: number;
+  userId: number;
+  content: string;
+  read: boolean;
+}

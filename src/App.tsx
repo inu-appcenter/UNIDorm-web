@@ -28,12 +28,11 @@ import MyRoomMatePage from "./pages/RoomMate/MyRoomMatePage.tsx";
 import RoomMateAddPage from "./pages/RoomMate/RoomMateAddPage.tsx";
 import ChattingPage from "./pages/Chat/ChattingPage.tsx";
 import "./init";
-import ChatTest from "./pages/Chat/ChatTest.tsx";
 import LogoutPage from "./pages/LogoutPage.tsx";
 import OnboardingPage from "./pages/OnboardingPage.tsx";
 
 function App() {
-  const { tokenInfo, setUserInfo, userInfo } = useUserStore();
+  const { tokenInfo, setUserInfo } = useUserStore();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -93,12 +92,6 @@ function App() {
           <Route path="/myinfoedit" element={<MyInfoEditPage />} />
 
           <Route path="/notification" element={<NotificationBoardPage />} />
-          <Route
-            path="/chattest"
-            element={
-              <ChatTest roomId={1} userId={Number(userInfo.studentNumber)} />
-            }
-          />
           <Route path="/chat/:chatType/:id" element={<ChattingPage />} />
           <Route path="/tips/write" element={<TipWritePage />} />
           <Route path="/tips/detail" element={<TipDetailPage />} />
