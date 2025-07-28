@@ -1,4 +1,8 @@
-import { GroupOrderChatRoom, RoommateChatRoom } from "../types/chats.ts";
+import {
+  GroupOrderChatRoom,
+  RoommateChat,
+  RoommateChatRoom,
+} from "../types/chats.ts";
 import { AxiosResponse } from "axios";
 import tokenInstance from "./tokenInstance.ts";
 
@@ -29,5 +33,15 @@ export const createRoommateChatRoom = async (
     `/roommate-chatting-room/board/${roommateBoardId}`,
   );
   console.log(response);
+  return response;
+};
+
+export const getRoommateChatHistory = async (
+  roomId: number,
+): Promise<AxiosResponse<RoommateChat[]>> => {
+  const response = await tokenInstance.get<RoommateChat[]>(
+    `/roommate/chat/${roomId}`,
+  );
+  console.log(response); // 디버깅용
   return response;
 };

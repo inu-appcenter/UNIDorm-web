@@ -6,6 +6,9 @@ import ChatInfo from "../../components/chat/ChatInfo.tsx";
 import ChatItemOtherPerson from "../../components/chat/ChatItemOtherPerson.tsx";
 import ChatItemMy from "../../components/chat/ChatItemMy.tsx";
 import send from "../../assets/chat/send.svg";
+import { useRoommateChat } from "./useRoommateChat.ts";
+import useUserStore from "../../stores/useUserStore.ts";
+import { getRoommateChatHistory } from "../../apis/chat.ts";
 
 type MessageType = {
   id: number;
@@ -15,28 +18,88 @@ type MessageType = {
 };
 
 export default function ChattingPage() {
-  const { chatType } = useParams();
+  const { chatType, id } = useParams();
   const [typeString, setTypeString] = useState<string>("");
   const [messageList, setMessageList] = useState<MessageType[]>([]);
   const [inputValue, setInputValue] = useState<string>("");
+  const { tokenInfo } = useUserStore();
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (chatType === "roommate") setTypeString("룸메");
-    else if (chatType === "groupPurchase") setTypeString("공구");
+  const roomId = Number(id);
+  const userId = 2; // userId는 뭘로???
+  const token = tokenInfo.accessToken;
 
-    // 예시 초기 메시지
-    setMessageList([
-      {
-        id: 1,
-        sender: "other",
-        content: "안녕하세요, 먼저 연락드려서 죄송해요.",
-        time: "오후 6:20",
-      },
-    ]);
-  }, []);
+  const { connect, disconnect, sendMessage, isConnected } = useRoommateChat({
+    roomId,
+    userId,
+    token,
+    onMessage: (msg) => {
+      setMessageList((prev) => [
+        ...prev,
+        {
+          id: Date.now(),
+          sender: "other",
+          content: msg.content,
+          time: new Date().toLocaleTimeString("ko-KR", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+          }),
+        },
+      ]);
+      scrollToBottom();
+    },
+    onConnect: () => {
+      console.log("✅ WebSocket 연결됨");
+    },
+    onDisconnect: () => {
+      console.log("🛑 WebSocket 연결 해제됨");
+    },
+  });
+
+  useEffect(() => {
+    const init = async () => {
+      if (chatType === "roommate") {
+        setTypeString("룸메");
+
+        try {
+          const response = await getRoommateChatHistory(roomId);
+          const chats = response.data;
+
+          const formattedMessages: MessageType[] = chats.map((chat) => ({
+            id: chat.roommateChatId,
+            sender: chat.userId === userId ? "me" : "other",
+            content: chat.content,
+            time: new Date().toLocaleTimeString("ko-KR", {
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: true,
+            }),
+          }));
+
+          setMessageList(formattedMessages);
+          scrollToBottom();
+        } catch (error) {
+          console.error("채팅 내역 불러오기 실패:", error);
+        }
+
+        connect(); // WebSocket 연결
+      } else if (chatType === "groupPurchase") {
+        setTypeString("공구");
+        // 추후 WebSocket 연결
+      }
+    };
+
+    init();
+
+    return () => {
+      if (isConnected) {
+        disconnect();
+      }
+    };
+  }, [chatType]);
 
   const handleInput = () => {
     const el = inputRef.current;
@@ -50,31 +113,38 @@ export default function ChattingPage() {
   const handleSendMessage = () => {
     if (!inputValue.trim()) return;
 
+    const now = new Date().toLocaleTimeString("ko-KR", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+
     const newMessage: MessageType = {
       id: Date.now(),
       sender: "me",
       content: inputValue.trim(),
-      time: new Date().toLocaleTimeString("ko-KR", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      }),
+      time: now,
     };
 
     setMessageList((prev) => [...prev, newMessage]);
+    sendMessage(inputValue.trim()); // ✅ WebSocket 전송
     setInputValue("");
 
-    // 높이 초기화
-    if (inputRef.current) {
-      inputRef.current.style.height = "auto";
-    }
+    if (inputRef.current) inputRef.current.style.height = "auto";
 
-    // 스크롤 하단으로 이동
+    scrollToBottom();
+  };
+
+  const scrollToBottom = () => {
     setTimeout(() => {
-      scrollRef.current?.scrollTo({
-        top: scrollRef.current.scrollHeight,
-        behavior: "smooth",
-      });
+      if (scrollRef.current) {
+        scrollRef.current.scrollTo?.({
+          top: scrollRef.current.scrollHeight,
+          behavior: "smooth",
+        });
+        // fallback
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      }
     }, 50);
   };
 
