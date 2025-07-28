@@ -43,7 +43,7 @@ const menuGroups = [
 const MyPage = () => {
   const { tokenInfo } = useUserStore();
   const navigate = useNavigate();
-  const isLoggedIn = Boolean(tokenInfo.accessToken);
+  const isLoggedIn = Boolean(tokenInfo?.accessToken ?? "");
 
   // ✅ 로그인 상태에 따라 logout 메뉴를 조건부로 포함
   const filteredMenuGroups = menuGroups.map((group) => {

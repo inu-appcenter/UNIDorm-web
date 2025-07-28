@@ -1,84 +1,176 @@
-// hooks/useRoommateChat.ts
-import { useEffect, useRef } from "react";
-import SockJS from "sockjs-client";
-import { Client, IMessage } from "@stomp/stompjs";
+import { useEffect, useRef, useState } from "react";
 
-const SOCKET_URL = "https://inu-dormitory-dev.inuappcenter.kr"; // 백엔드에서 제공한 WebSocket 접속 URL로 교체 필요
+interface ChatMessage {
+  roommateChattingRoomId: number;
+  content: string;
+}
 
 interface UseRoommateChatProps {
   roomId: number;
   userId: number;
-  onMessageReceive: (message: any) => void;
-  onReadUpdate?: (readMessageIds: number[]) => void;
+  token?: string;
+  onMessage: (msg: any) => void;
+  onRead?: (readMessageIds: string[]) => void;
+  onConnect?: () => void;
+  onDisconnect?: () => void;
 }
 
 export const useRoommateChat = ({
   roomId,
   userId,
-  onMessageReceive,
-  onReadUpdate,
+  token,
+  onMessage,
+  onRead,
+  onConnect,
+  onDisconnect,
 }: UseRoommateChatProps) => {
-  const clientRef = useRef<Client | null>(null);
+  const wsRef = useRef<WebSocket | null>(null);
+  const [connected, setConnected] = useState(false);
+  const subscriptions = useRef<string[]>([]);
+  const callbacks = useRef<Record<string, (msg: any) => void>>({});
+  const pendingSubscriptions = useRef<string[]>([]);
 
-  useEffect(() => {
-    const socket = new SockJS(SOCKET_URL);
-
-    const client = new Client({
-      webSocketFactory: () => socket,
-      debug: (str) => console.log("[STOMP]", str),
-      reconnectDelay: 5000,
-    });
-
-    client.onConnect = () => {
-      console.log("✅ WebSocket 연결 완료");
-
-      // 채팅 수신 구독
-      client.subscribe(`/sub/roommate/chat/${roomId}`, (message: IMessage) => {
-        const parsed = JSON.parse(message.body);
-        onMessageReceive(parsed);
-      });
-
-      // 읽음 처리 구독 (옵션)
-      if (onReadUpdate) {
-        client.subscribe(
-          `/sub/roommate/chat/read/${roomId}/user/${userId}`,
-          (message: IMessage) => {
-            const readMessageIds: number[] = JSON.parse(message.body);
-            onReadUpdate(readMessageIds);
-          },
-        );
-      }
-    };
-
-    client.onStompError = (frame) => {
-      console.error("❌ WebSocket STOMP 에러", frame);
-    };
-
-    client.activate();
-    clientRef.current = client;
-
-    return () => {
-      client.deactivate();
-      console.log("🛑 WebSocket 연결 해제");
-    };
-  }, [roomId, userId]);
-
-  const sendMessage = (content: string) => {
-    if (!clientRef.current?.connected) {
-      console.warn("WebSocket 연결되지 않음");
+  const stompSend = (destination: string, body: any) => {
+    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+      console.warn("❌ WebSocket is not connected.");
       return;
     }
 
-    clientRef.current.publish({
-      destination: "/pub/roommate/socketchat",
-      body: JSON.stringify({
-        roommateChattingRoomId: roomId,
-        content,
-      }),
-    });
+    const frame =
+      `SEND\n` +
+      `destination:${destination}\n` +
+      (token ? `Authorization:Bearer ${token}\n` : ``) +
+      `content-type:application/json\n\n` +
+      `${JSON.stringify(body)}\u0000`;
+
+    console.log("📡 [STOMP SEND FRAME]:", frame); // 로그 추가
+    wsRef.current.send(frame);
   };
 
+  const connect = () => {
+    if (connected || wsRef.current?.readyState === WebSocket.OPEN) return;
+
+    const socket = new WebSocket(
+      "wss://inu-dormitory-dev.inuappcenter.kr/ws-stomp",
+    );
+    wsRef.current = socket;
+
+    socket.onopen = () => {
+      const connectFrame =
+        `CONNECT\naccept-version:1.2\nheart-beat:10000,10000\n` +
+        (token ? `Authorization:Bearer ${token}\n` : ``) +
+        `\n\u0000`;
+      socket.send(connectFrame);
+    };
+
+    socket.onmessage = (event) => {
+      const data = event.data;
+
+      if (data.startsWith("CONNECTED")) {
+        setConnected(true);
+        onConnect?.();
+
+        // 연결 완료 후 구독 처리
+        pendingSubscriptions.current.forEach((dest) => {
+          doSubscribe(dest);
+        });
+        pendingSubscriptions.current = [];
+      } else if (data.startsWith("MESSAGE")) {
+        const headersEnd = data.indexOf("\n\n");
+        const headersStr = data.substring(0, headersEnd);
+        const body = data.substring(headersEnd + 2, data.length - 1); // \u0000 제거
+
+        const destination = (headersStr.match(/destination:(.+)/) ||
+          [])[1]?.trim();
+        if (!destination) return;
+
+        try {
+          const parsed = JSON.parse(body);
+          console.log("📩 [RECEIVED MESSAGE]:", parsed); // 로그 추가
+
+          const callback = callbacks.current[destination];
+
+          if (callback) {
+            callback(parsed);
+          }
+        } catch (e) {
+          console.error("메시지 파싱 실패:", e);
+        }
+      } else if (data.startsWith("ERROR")) {
+        console.error("STOMP ERROR", data);
+      }
+    };
+
+    socket.onclose = () => {
+      setConnected(false);
+      onDisconnect?.();
+    };
+
+    socket.onerror = (e) => {
+      console.error("WebSocket error", e);
+    };
+  };
+
+  const doSubscribe = (destination: string) => {
+    const id = Math.random().toString(36).substring(2, 10);
+    const frame =
+      `SUBSCRIBE\nid:${id}\ndestination:${destination}\n` +
+      (token ? `Authorization:Bearer ${token}\n` : ``) +
+      `\n\u0000`;
+    wsRef.current?.send(frame);
+    subscriptions.current.push(destination);
+  };
+
+  const subscribe = (destination: string, callback: (msg: any) => void) => {
+    if (subscriptions.current.includes(destination)) return;
+
+    callbacks.current[destination] = callback;
+
+    if (connected && wsRef.current?.readyState === WebSocket.OPEN) {
+      doSubscribe(destination);
+    } else {
+      pendingSubscriptions.current.push(destination);
+    }
+  };
+
+  const sendMessage = (content: string) => {
+    const message: ChatMessage = {
+      roommateChattingRoomId: roomId,
+      content,
+    };
+
+    console.log("📤 [SEND] 메시지 전송:", message); // 로그 추가
+    console.log(roomId, userId, token);
+    stompSend("/pub/roommate/socketchat", message);
+  };
+
+  const disconnect = () => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send("DISCONNECT\n\n\u0000");
+      wsRef.current.close();
+    }
+    subscriptions.current = [];
+    pendingSubscriptions.current = [];
+    callbacks.current = {};
+    setConnected(false);
+  };
+
+  useEffect(() => {
+    // 자동 구독 등록
+    subscribe(`/sub/roommate/chat/${roomId}`, onMessage);
+    if (onRead) {
+      subscribe(`/sub/roommate/chat/read/${roomId}/user/${userId}`, onRead);
+    }
+
+    return () => {
+      disconnect();
+    };
+  }, [roomId, userId]);
+
   return {
+    connect,
+    disconnect,
     sendMessage,
+    isConnected: connected,
   };
 };

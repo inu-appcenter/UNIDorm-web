@@ -14,7 +14,7 @@ import useUserStore from "../../stores/useUserStore.ts";
 export default function ChatListPage() {
   const navigate = useNavigate();
   const { tokenInfo } = useUserStore();
-  const isLoggedIn = Boolean(tokenInfo.accessToken);
+  const isLoggedIn = Boolean(tokenInfo?.accessToken ?? "");
 
   const tabItems = ["룸메이트", "공동구매"];
   const [selectedTab, setSelectedTab] = useState("룸메이트");
