@@ -8,6 +8,28 @@ import Header from "../../components/common/Header";
 import { getRoomMateDetail } from "../../apis/roommate";
 import { RoommatePost } from "../../types/roommates.ts";
 
+const InfoCard = ({
+  color,
+  icon,
+  title,
+  description,
+}: {
+  color: string;
+  icon: string;
+  title: string;
+  description: string;
+}) => {
+  return (
+    <CardItem style={{ backgroundColor: color }}>
+      <div className="icon-title">
+        <div className="icon">{icon}</div>
+        <div className="title">{title}</div>
+      </div>
+      <div className="description">{description}</div>
+    </CardItem>
+  );
+};
+
 export default function RoomMateBoardDetailPage() {
   const { boardId } = useParams<{ boardId: string }>();
   const [data, setData] = useState<RoommatePost | null>(null);
@@ -40,21 +62,76 @@ export default function RoomMateBoardDetailPage() {
       </UserArea>
       <ContentArea>
         <div className="title">{data.title}</div>
-        <div className="content">
-          기숙사 상주기간: {data.dormPeriod.join(", ")} <br />
-          단과대: {data.college} <br />
-          MBTI: {data.mbti} <br />
-          흡연여부: {data.smoking} <br />
-          코골이 유무: {data.snoring} <br />
-          이갈이 유무: {data.toothGrind} <br />
-          잠귀: {data.sleeper} <br />
-          샤워시기: {data.showerHour} <br />
-          샤워시간: {data.showerTime} <br />
-          취침시기: {data.bedTime} <br />
-          정리정돈: {data.arrangement} <br />
-          <br />
-          기타사항: {data.comment}
-        </div>
+        <div className="content">기타사항: {data.comment}</div>
+
+        <CardGrid>
+          <InfoCard
+            color="#EAF4FF"
+            icon="🏠"
+            title="상주요일"
+            description={data.dormPeriod.join(", ")}
+          />
+          <InfoCard
+            color="#FCEEF3"
+            icon="🎓"
+            title="단과대"
+            description={data.college}
+          />
+          <InfoCard
+            color="#E4F6ED"
+            icon="🧬"
+            title="MBTI"
+            description={data.mbti}
+          />
+          <InfoCard
+            color="#E8F0FE"
+            icon="🚭"
+            title="흡연여부"
+            description={data.smoking}
+          />
+          <InfoCard
+            color="#F3F4F6"
+            icon="😴"
+            title="코골이 유무"
+            description={data.snoring}
+          />
+          <InfoCard
+            color="#FFF6E9"
+            icon="😬"
+            title="이갈이 유무"
+            description={data.toothGrind}
+          />
+          <InfoCard
+            color="#EAF4FF"
+            icon="🛏️"
+            title="잠귀"
+            description={data.sleeper}
+          />
+          <InfoCard
+            color="#FCEEF3"
+            icon="🚿"
+            title="샤워 시기"
+            description={data.showerHour}
+          />
+          <InfoCard
+            color="#E4F6ED"
+            icon="⏰"
+            title="샤워 시간"
+            description={data.showerTime}
+          />
+          <InfoCard
+            color="#E8F0FE"
+            icon="🛌"
+            title="취침 시기"
+            description={data.bedTime}
+          />
+          <InfoCard
+            color="#F3F4F6"
+            icon="🧼"
+            title="정리정돈"
+            description={data.arrangement}
+          />
+        </CardGrid>
       </ContentArea>
       <RoomMateBottomBar />
     </RoomMateDetailPageWrapper>
@@ -143,5 +220,46 @@ const ContentArea = styled.div`
     letter-spacing: 0.38px;
 
     color: #1c1c1e;
+    margin-bottom: 16px;
+  }
+`;
+
+const CardGrid = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+`;
+
+const CardItem = styled.div`
+  flex: 1 1 calc(50% - 12px);
+  border-radius: 16px;
+  padding: 16px;
+  box-sizing: border-box;
+  min-width: 140px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  .icon-title {
+    display: flex;
+    //align-items: center; /* 상하 중앙 정렬 */
+    gap: 6px;
+  }
+
+  .icon {
+    font-size: 20px;
+    line-height: 1; /* 아이콘 높이 조절 가능 */
+  }
+
+  .title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1c1c1e;
+  }
+
+  .description {
+    font-size: 12px;
+    color: #3a3a3c;
   }
 `;

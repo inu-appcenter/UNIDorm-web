@@ -19,6 +19,7 @@ export interface RoommatePost {
 export interface SimilarRoommatePost {
   boardId: number;
   title: string;
+  dormPeriod: string[]; // 예: ["월요일", "화요일"]
   dormType: string; // 예: "2기숙사"
   college: string; // 예: "인문대학"
   mbti: string; // 예: "INFP"
