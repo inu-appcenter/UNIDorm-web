@@ -71,6 +71,9 @@ export default function Header({
   };
 
   const shadowSelector = () => {
+    return false;
+
+    //헤더 쉐도우 제거
     switch (location.pathname) {
       case "/notification":
       case "/home":
@@ -93,7 +96,7 @@ export default function Header({
             <img src={back} alt="뒤로가기" onClick={handleBackClick} />
           )}
           <div className="Title">{title ?? getCurrentPage()}</div>
-          <span>{platform}</span>
+          {/*<span>{platform}</span>*/}
         </Left>
 
         <Right>
@@ -132,7 +135,7 @@ const StyledHeader = styled.header<{ $hasShadow: boolean }>`
 
   .Title {
     font-weight: 600;
-    font-size: 18px;
+    font-size: 20px;
     line-height: 24px;
     letter-spacing: 0.38px;
     color: #1c1c1e;
