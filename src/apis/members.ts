@@ -72,6 +72,7 @@ export const putMember = async (
 export const refresh = async (): Promise<ApiResponse<TokenInfo>> => {
   const response =
     await refreshInstance.post<ApiResponse<TokenInfo>>(`/users/refreshToken`);
+  console.log(response);
   return response.data;
 };
 
