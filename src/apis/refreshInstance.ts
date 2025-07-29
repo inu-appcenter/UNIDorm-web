@@ -4,12 +4,13 @@ const refreshInstance = axios.create({
   baseURL: "https://inu-dormitory-dev.inuappcenter.kr/",
 });
 
-// 요청 인터셉터 - 토큰 설정
+// 요청 인터셉터 - 리프레시 토큰을 POST 바디에 자동 삽입
 refreshInstance.interceptors.request.use(
   (config) => {
-    const refreshToken = localStorage.getItem("refreshToken");
-    if (refreshToken) {
-      config.headers["Authorization"] = `Bearer ${refreshToken}`;
+    const accessToken = localStorage.getItem("accessToken");
+    console.log("엑세스토큰", accessToken);
+    if (accessToken) {
+      config.headers["Authorization"] = `Bearer ${accessToken}`;
     }
     return config;
   },
@@ -20,7 +21,6 @@ refreshInstance.interceptors.request.use(
 
 // 응답 인터셉터
 refreshInstance.interceptors.response.use((response) => {
-  // 모든 응답의 response.data.msg 콘솔 출력
   if (response.data && response.data.msg) {
     console.log("리프레시응답");
     console.log(response.data.msg);

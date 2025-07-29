@@ -2,26 +2,32 @@ import styled from "styled-components";
 import TitleLine from "../home/TitleLine.tsx";
 
 interface TitleContentAreaProps {
-  type: string; //공지사항, 기숙사 꿀팁
+  title: string; // 공지사항, 기숙사 꿀팁 등
   link?: string;
+  description?: string;
   children: React.ReactNode;
 }
 
-const TitleContentArea = ({ type, link, children }: TitleContentAreaProps) => {
+const TitleContentArea = ({
+  title,
+  link,
+  description,
+  children,
+}: TitleContentAreaProps) => {
   return (
-    <TitleConentAreaWrapper>
-      <TitleLine title={type} link={link}></TitleLine>
+    <TitleContentAreaWrapper>
+      <TitleLine title={title} link={link} />
+      {description && <DescriptionText>{description}</DescriptionText>}
       {children}
-    </TitleConentAreaWrapper>
+    </TitleContentAreaWrapper>
   );
 };
 
 export default TitleContentArea;
 
-const TitleConentAreaWrapper = styled.div`
+const TitleContentAreaWrapper = styled.div`
   display: flex;
   flex-direction: column;
-
   align-items: center;
   justify-content: center;
 
@@ -29,4 +35,12 @@ const TitleConentAreaWrapper = styled.div`
   height: fit-content;
 
   gap: 8px;
+`;
+
+const DescriptionText = styled.p`
+  font-size: 14px;
+  color: #666;
+  margin: 0 8px;
+  text-align: start;
+  width: 100%;
 `;

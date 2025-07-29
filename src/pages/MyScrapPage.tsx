@@ -22,7 +22,7 @@ export default function MyScrapPage() {
     <MyScrapPageWrapper>
       <Header title="스크랩한 글" hasBack={true} showAlarm={true} />
 
-      <TitleContentArea type="">
+      <TitleContentArea title="">
         <CardList>
           {mockTips.length > 0 ? (
             mockTips.map((tip, idx) => (

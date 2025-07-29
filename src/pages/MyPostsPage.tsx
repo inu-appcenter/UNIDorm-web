@@ -30,7 +30,7 @@ export default function MyPostsPage() {
     <MyPostsPageWrapper>
       <Header title="내 게시글" hasBack={true} showAlarm={true} />
 
-      <TitleContentArea type="">
+      <TitleContentArea title="">
         <CardList>
           {posts.length > 0 ? (
             posts.map((tip) => (

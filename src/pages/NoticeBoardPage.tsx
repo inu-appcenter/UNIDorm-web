@@ -17,7 +17,7 @@ export default function NoticeBoardPage() {
     <NoticePageWrapper>
       <Header title="공지사항" hasBack={true} showAlarm={true} />
 
-      <TitleContentArea type="📢 공지사항">
+      <TitleContentArea title="📢 공지사항">
         <NoticeList>
           {mockNotices.map((notice, idx) => (
             <NoticeCard key={idx}>
