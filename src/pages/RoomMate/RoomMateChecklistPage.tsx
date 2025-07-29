@@ -23,8 +23,14 @@ import {
   snoring,
   toothgrinding,
 } from "../../constants/constants.ts";
+import { getMemberInfo } from "../../apis/members.ts";
+import useUserStore from "../../stores/useUserStore.ts";
+import { useNavigate } from "react-router-dom";
 
 export default function RoomMateChecklistPage() {
+  const { setUserInfo } = useUserStore();
+  const navigate = useNavigate();
+
   // 각 그룹별로 선택 인덱스를 useState로 관리
   const [dayIndices, setDayIndices] = useState<number[]>([]);
   const [domitoryIndex, setDomitoryIndex] = useState<number | null>(null);
@@ -97,7 +103,18 @@ export default function RoomMateChecklistPage() {
 
     try {
       const res = await createRoommatePost(requestBody);
-      alert("룸메이트 체크리스트 등록 완료!");
+
+      try {
+        const response = await getMemberInfo();
+        console.log(response);
+        setUserInfo(response.data);
+      } catch (error) {
+        console.error("회원 가져오기 실패", error);
+      }
+      alert(
+        "룸메이트 체크리스트 등록을 성공했어요. 룸메이트 탭에서 나와 맞는 룸메이트를 찾아보세요!",
+      );
+      navigate("/roommate");
       console.log(res.data);
     } catch (err) {
       alert("등록 실패");
@@ -109,7 +126,7 @@ export default function RoomMateChecklistPage() {
     <RoomMateChecklistPageWrapper>
       <Header title={"사전 체크리스트"} hasBack={true} showAlarm={false} />
       <TitleContentArea
-        type={"기숙사 상주기간"}
+        title={"기숙사 상주기간"}
         children={
           <SelectableChipGroup
             Groups={days}
@@ -120,7 +137,7 @@ export default function RoomMateChecklistPage() {
         }
       />
       <TitleContentArea
-        type={"기숙사 종류"}
+        title={"기숙사 종류"}
         children={
           <ToggleGroup
             Groups={domitory}
@@ -130,7 +147,7 @@ export default function RoomMateChecklistPage() {
         }
       />
       <TitleContentArea
-        type={"단과대"}
+        title={"단과대"}
         children={
           <SelectableChipGroup
             Groups={colleges}
@@ -140,7 +157,7 @@ export default function RoomMateChecklistPage() {
         }
       />
       <TitleContentArea
-        type={"MBTI"}
+        title={"MBTI"}
         children={
           <>
             <ToggleGroup
@@ -167,7 +184,7 @@ export default function RoomMateChecklistPage() {
         }
       />
       <TitleContentArea
-        type={"흡연 여부"}
+        title={"흡연 여부"}
         children={
           <ToggleGroup
             Groups={smoking}
@@ -177,7 +194,7 @@ export default function RoomMateChecklistPage() {
         }
       />
       <TitleContentArea
-        type={"코골이 여부"}
+        title={"코골이 여부"}
         children={
           <ToggleGroup
             Groups={snoring}
@@ -187,7 +204,7 @@ export default function RoomMateChecklistPage() {
         }
       />
       <TitleContentArea
-        type={"이갈이 여부"}
+        title={"이갈이 여부"}
         children={
           <ToggleGroup
             Groups={toothgrinding}
@@ -197,7 +214,7 @@ export default function RoomMateChecklistPage() {
         }
       />
       <TitleContentArea
-        type={"잠귀"}
+        title={"잠귀"}
         children={
           <ToggleGroup
             Groups={isLightSleeper}
@@ -207,7 +224,7 @@ export default function RoomMateChecklistPage() {
         }
       />
       <TitleContentArea
-        type={"샤워 시기"}
+        title={"샤워 시기"}
         children={
           <ToggleGroup
             Groups={showertime}
@@ -217,7 +234,7 @@ export default function RoomMateChecklistPage() {
         }
       />
       <TitleContentArea
-        type={"샤워 시간"}
+        title={"샤워 시간"}
         children={
           <ToggleGroup
             Groups={showerDuration}
@@ -227,7 +244,7 @@ export default function RoomMateChecklistPage() {
         }
       />
       <TitleContentArea
-        type={"취침 시기"}
+        title={"취침 시기"}
         children={
           <ToggleGroup
             Groups={bedtime}
@@ -237,7 +254,7 @@ export default function RoomMateChecklistPage() {
         }
       />
       <TitleContentArea
-        type={"정리 정돈"}
+        title={"정리 정돈"}
         children={
           <ToggleGroup
             Groups={organizationLevel}

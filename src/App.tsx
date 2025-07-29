@@ -41,6 +41,14 @@ function App() {
         const response = await getMemberInfo();
         console.log(response);
         setUserInfo(response.data);
+
+        if (tokenInfo.accessToken && response.data.name === "") {
+          alert("처음 방문하셨네요! 먼저 회원 정보를 입력해주세요.");
+          navigate(
+            { pathname: "/myinfoedit", search: "?firstvisit=true" },
+            { replace: true },
+          );
+        }
       } catch (error) {
         console.error("회원 가져오기 실패", error);
       }
@@ -50,14 +58,6 @@ function App() {
       initializeUser();
     }
   }, [tokenInfo, setUserInfo]);
-
-  useEffect(() => {
-    const isFirstVisit = localStorage.getItem("isFirstVisit");
-
-    if (!isFirstVisit) {
-      navigate("/onboarding");
-    }
-  }, []);
 
   return (
     <>

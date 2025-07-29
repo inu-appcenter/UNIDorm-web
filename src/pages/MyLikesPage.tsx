@@ -31,7 +31,7 @@ export default function MyLikesPage() {
     <MyScrapPageWrapper>
       <Header title="좋아요한 글" hasBack={true} showAlarm={true} />
 
-      <TitleContentArea type="">
+      <TitleContentArea title="">
         <CardList>
           {posts.length > 0 ? (
             posts.map((tip, idx) => (

@@ -13,9 +13,9 @@ import { useNavigate } from "react-router-dom";
 import useUserStore from "../../stores/useUserStore.ts"; // 추가 필요
 
 export default function RoomMatePage() {
-  const { tokenInfo } = useUserStore();
+  const { tokenInfo, userInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
-  const hasChecklist = false;
+  const hasChecklist = userInfo.roommateCheckList;
 
   const [roommates, setRoommates] = useState<RoommatePost[]>([]);
   const [similarRoommates, setSimilarRoommates] = useState<
@@ -54,7 +54,11 @@ export default function RoomMatePage() {
     <RoomMatePageWrapper>
       <Header title="룸메이트" hasBack={false} showAlarm={true} />
 
-      <TitleContentArea type={"최신순"} link={"/roommatelist"}>
+      <TitleContentArea
+        title={"최신순"}
+        description={"룸메이트를 구하고 있는 다양한 UNI들을 찾아보세요!"}
+        link={"/roommatelist"}
+      >
         <>
           {roommates.length > 0 ? (
             roommates
@@ -76,7 +80,10 @@ export default function RoomMatePage() {
       </TitleContentArea>
 
       <TitleContentArea
-        type={"나와 비슷한 룸메"}
+        title={"나와 비슷한 룸메이트"}
+        description={
+          "작성한 사전 체크리스트를 바탕으로 생활 패턴이 비슷한 룸메이트를 추천해드려요."
+        }
         children={
           <>
             {/*로그인했는데 체크리스트를 작성하지 않은 경우*/}

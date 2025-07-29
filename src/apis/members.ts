@@ -1,9 +1,9 @@
 import axiosInstance from "../apis/axiosInstance";
 import tokenInstance from "../apis/tokenInstance";
-import refreshInstance from "../apis/refreshInstance";
 import { ApiResponse } from "../types/common";
 import { MyPost, TokenInfo, UserInfo } from "../types/members";
 import { AxiosResponse } from "axios";
+import refreshInstance from "./refreshInstance.ts";
 
 // 회원 가져오기
 export const getMemberInfo = async (): Promise<AxiosResponse<UserInfo>> => {
@@ -70,9 +70,21 @@ export const putMember = async (
 
 // 토큰 재발급
 export const refresh = async (): Promise<ApiResponse<TokenInfo>> => {
-  const response =
-    await refreshInstance.post<ApiResponse<TokenInfo>>(`/users/refreshToken`);
-  console.log(response);
+  const refreshToken = localStorage.getItem("refreshToken"); // 필요에 따라 위치 변경 가능
+  if (!refreshToken) {
+    throw new Error("리프레시 토큰이 없습니다.");
+  }
+
+  const response = await refreshInstance.post<ApiResponse<TokenInfo>>(
+    "/users/refreshToken",
+    { refreshToken },
+  );
+
+  if (response.data) {
+    console.log("리프레시응답");
+    console.log(response.data);
+  }
+
   return response.data;
 };
 
