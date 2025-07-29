@@ -22,6 +22,7 @@ refreshInstance.interceptors.request.use(
 refreshInstance.interceptors.response.use((response) => {
   // 모든 응답의 response.data.msg 콘솔 출력
   if (response.data && response.data.msg) {
+    console.log("리프레시응답");
     console.log(response.data.msg);
   }
   return response;
