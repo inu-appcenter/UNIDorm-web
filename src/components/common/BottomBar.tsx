@@ -156,7 +156,7 @@ const StyledFooter = styled.footer`
   align-items: center;
 
   width: 100%;
-  height: 70px;
+  height: 74px;
   padding: 0 20px;
   box-sizing: border-box;
 
