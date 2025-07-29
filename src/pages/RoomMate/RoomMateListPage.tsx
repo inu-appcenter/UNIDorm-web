@@ -30,15 +30,24 @@ export default function RoomMateListPage() {
         title={"최신순"}
         children={
           <>
-            {roommates.map((post) => (
-              <RoomMateCard
-                boardId={post.boardId}
-                title={post.title}
-                content={post.comment}
-                commentCount={0} // 서버에서 제공되면 반영
-                likeCount={0} // 서버에서 제공되면 반영
-              />
-            ))}
+            {roommates.length > 0 ? (
+              roommates.map((post) => (
+                <RoomMateCard
+                  boardId={post.boardId}
+                  dormType={post.dormType}
+                  mbti={post.mbti}
+                  college={post.college}
+                  isSmoker={true}
+                  isClean={true}
+                  stayDays={post.dormPeriod}
+                  description={post.comment}
+                  commentCount={12}
+                  likeCount={8}
+                />
+              ))
+            ) : (
+              <EmptyMessage>게시글이 없습니다.</EmptyMessage>
+            )}
           </>
         }
       />
@@ -60,4 +69,11 @@ const RoomMateListPageWrapper = styled.div`
   overflow-y: auto;
 
   background: #fafafa;
+`;
+
+const EmptyMessage = styled.div`
+  padding: 24px;
+  text-align: center;
+  color: #aaa;
+  font-size: 14px;
 `;
