@@ -40,7 +40,9 @@ tokenInstance.interceptors.response.use(
       originalRequest._retry = true; // 재시도 방지 플래그 설정
 
       try {
+        console.log("리프레시 발급 시도");
         const { data } = await refresh(); // refresh API로 토큰 재발급
+        console.log(data);
         const newTokenInfo = data; // 새로운 토큰 정보
 
         // 스토어에 새로운 토큰 정보 저장 (로컬스토리지에도 저장됨)
@@ -55,7 +57,8 @@ tokenInstance.interceptors.response.use(
         return tokenInstance(originalRequest); // 기존 요청 재시도
       } catch (refreshError) {
         // 리프레시 토큰 재발급 실패 시
-        // alert("로그인 정보가 만료되었습니다. 다시 로그인해 주세요.");
+        alert("로그인 정보가 만료되었습니다. 다시 로그인해 주세요.");
+        window.location.href = "/logout";
         // useUserStore.getState().setTokenInfo({
         //   accessToken: "",
         //   refreshToken: "",

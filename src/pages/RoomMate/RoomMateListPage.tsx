@@ -27,7 +27,7 @@ export default function RoomMateListPage() {
     <RoomMateListPageWrapper>
       <Header title={"룸메이트 둘러보기"} hasBack={true} />
       <TitleContentArea
-        type={"최신순"}
+        title={"최신순"}
         children={
           <>
             {roommates.map((post) => (

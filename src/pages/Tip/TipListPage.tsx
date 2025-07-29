@@ -29,7 +29,7 @@ export default function TipListPage() {
     <TipPageWrapper>
       <Header title="기숙사 꿀팁" hasBack={true} showAlarm={true} />
 
-      <TitleContentArea type="🍯꿀팁모음">
+      <TitleContentArea title="🍯꿀팁모음">
         <CardList>
           {tips.map((tip) => (
             <TipCard
@@ -51,7 +51,9 @@ export default function TipListPage() {
         </CardList>
       </TitleContentArea>
 
-      <WriteButton onClick={() => navigate("/tips/write")}>✏️ 글쓰기</WriteButton>
+      <WriteButton onClick={() => navigate("/tips/write")}>
+        ✏️ 글쓰기
+      </WriteButton>
     </TipPageWrapper>
   );
 }

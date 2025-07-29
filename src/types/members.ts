@@ -9,6 +9,8 @@ export interface UserInfo {
   dormType: string;
   college: string;
   penalty: number;
+  hasTimeTableImage: boolean;
+  roommateCheckList: boolean;
 }
 
 export interface MyPost {

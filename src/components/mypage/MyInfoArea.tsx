@@ -16,7 +16,7 @@ const MyInfoArea = () => {
 
     getUserProfileImg();
     // setUserProfileImg(result.data)
-  }, []);
+  }, [userInfo]);
 
   return (
     <MyInfoAreaWrapper>
