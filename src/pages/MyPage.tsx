@@ -117,6 +117,7 @@ const MyPageWrapper = styled.div`
   height: 100%;
 
   overflow-y: auto;
+  background: #fafafa;
 `;
 
 const MenuGroupsWrapper = styled.div`
