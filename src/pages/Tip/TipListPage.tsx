@@ -5,18 +5,25 @@ import Header from "../../components/common/Header";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import TipCard from "../../components/tip/TipCard";
 import { useNavigate } from "react-router-dom";
-
-const mockTips = Array(8).fill({
-  id: 1,
-  title: "기숙비 내세요",
-  content: "기숙사비 내는 거 내일 모레까지인데 안내면 자동 탈락 돼...",
-  time: "오후 6:20",
-  scrap: 121,
-  comment: 5,
-});
+import { useEffect, useState } from "react";
+import { fetchTips, Tip } from "../../apis/tips"; // ✅ 실제 API 가져오기
 
 export default function TipListPage() {
   const navigate = useNavigate();
+  const [tips, setTips] = useState<Tip[]>([]); // ✅ 상태 추가
+
+  useEffect(() => {
+    const loadTips = async () => {
+      try {
+        const data = await fetchTips();
+        setTips(data);
+      } catch (error) {
+        console.error("팁 리스트 불러오기 실패:", error);
+      }
+    };
+
+    loadTips();
+  }, []);
 
   return (
     <TipPageWrapper>
@@ -24,19 +31,27 @@ export default function TipListPage() {
 
       <TitleContentArea type="🍯꿀팁모음">
         <CardList>
-          {mockTips.map((tip, idx) => (
+          {tips.map((tip) => (
             <TipCard
-              key={idx}
-              tip={tip}
+              key={tip.id}
+              tip={{
+                id: tip.id,
+                title: tip.title,
+                content: tip.content,
+                time: new Date(tip.createDate).toLocaleTimeString("ko-KR", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }), // ✅ 시간 표시 포맷
+                scrap: tip.tipLikeCount,
+                comment: tip.tipCommentCount,
+              }}
               onClick={() => navigate(`/tips/${tip.id}`)}
             />
           ))}
         </CardList>
       </TitleContentArea>
 
-      <WriteButton onClick={() => navigate("/tips/write")}>
-        ✏️ 글쓰기
-      </WriteButton>
+      <WriteButton onClick={() => navigate("/tips/write")}>✏️ 글쓰기</WriteButton>
     </TipPageWrapper>
   );
 }
