@@ -81,8 +81,8 @@ const LoginPageWrapper = styled.div`
   gap: 20px;
   box-sizing: border-box;
 
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   overflow-y: auto;
   justify-content: space-between;
 
