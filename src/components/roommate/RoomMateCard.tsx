@@ -1,65 +1,100 @@
-import styled from "styled-components";
 import CommentIcon from "../../assets/comment.svg";
 import HeartIcon from "../../assets/heart.svg";
 import { useNavigate } from "react-router-dom";
+import styled from "styled-components";
 
-interface HomeCardProps {
+interface RoomMateCardProps {
   boardId: number;
-  title: string;
-  content: string;
-  percentage?: number;
+  dormType: string;
+  mbti: string;
+  college: string;
+  isSmoker: boolean;
+  isClean: boolean;
+  stayDays: string[];
+  description: string;
   commentCount: number;
   likeCount: number;
+  percentage?: number;
 }
 
 const RoomMateCard = ({
   boardId,
-  title,
-  content,
-  percentage,
+  dormType,
+  mbti,
+  college,
+  isSmoker,
+  isClean,
+  stayDays,
+  description,
   commentCount,
   likeCount,
-}: HomeCardProps) => {
-  console.log(boardId);
+  percentage,
+}: RoomMateCardProps) => {
   const navigate = useNavigate();
+
   return (
-    <RoomMateCardWrapper
-      onClick={() => {
-        navigate(`/roommatelist/${boardId}`);
-      }}
-    >
-      {percentage && (
+    <CardWrapper onClick={() => navigate(`/roommatelist/${boardId}`)}>
+      {percentage !== undefined && (
         <LeftCircle>
           <span>{percentage}%</span>
         </LeftCircle>
       )}
 
-      <ContentSection>
-        <Title>{title}</Title>
-        <SubText>{content}</SubText>
+      {/* dormType 배지를 원래 위치인 우측 상단에 독립적으로 배치 */}
+      <TopRightBadge>{dormType}</TopRightBadge>
+
+      <ContentContainer isPercentageVisible={percentage !== undefined}>
+        {/* 태그들은 콘텐츠 영역 내에 배치 */}
+        <TagRow>
+          <Tag category="mbti">{mbti}</Tag>
+          <Tag category="college">{college}</Tag>
+          <Tag category="smoker">{isSmoker ? "흡연⭕" : "흡연❌"}</Tag>
+          <Tag category="clean">{isClean ? "🧼깔끔" : "정돈보통"}</Tag>
+        </TagRow>
+
+        <StayInfo>상주 요일: {stayDays.join(", ")}</StayInfo>
+        <Description>"{description}"</Description>
+
         <BottomLine>
-          <img src={CommentIcon} />
+          <img src={CommentIcon} alt="댓글 아이콘" />
           <span>{commentCount}</span>
-          <img src={HeartIcon} />
+          <img src={HeartIcon} alt="좋아요 아이콘" />
           <span>{likeCount}</span>
         </BottomLine>
-      </ContentSection>
-    </RoomMateCardWrapper>
+      </ContentContainer>
+    </CardWrapper>
   );
 };
 
 export default RoomMateCard;
 
-const RoomMateCardWrapper = styled.div`
+const CardWrapper = styled.div`
+  position: relative;
   display: flex;
-  flex-direction: row;
-  align-items: center;
-  background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 12px;
+  flex-direction: row; /* 좌측 원형과 콘텐츠를 가로로 배치 */
+  align-items: center; /* 세로 중앙 정렬 */
+  gap: 12px; /* 좌측 원형과 콘텐츠 사이 간격 */
   padding: 16px;
+  background: #fff;
+  border: 1px solid #dcdcdc;
+  border-radius: 12px;
   width: 100%;
+  cursor: pointer;
   box-sizing: border-box;
+`;
+
+// TopRightBadge (기숙사 타입) 원래 위치 및 스타일 복원
+const TopRightBadge = styled.div`
+  position: absolute; /* 절대 위치로 우측 상단에 고정 */
+  top: 12px;
+  right: 12px;
+  font-size: 12px;
+  background: #0a84ff;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-weight: 600;
+  z-index: 1; /* 다른 요소 위에 표시되도록 z-index 설정 */
 `;
 
 const LeftCircle = styled.div`
@@ -75,29 +110,65 @@ const LeftCircle = styled.div`
   font-weight: 600;
   color: #0a84ff;
   font-size: 14px;
-  margin-right: 12px;
+  margin-right: 0;
 `;
 
-const ContentSection = styled.div`
+interface ContentContainerProps {
+  isPercentageVisible: boolean;
+}
+
+const ContentContainer = styled.div<ContentContainerProps>`
   display: flex;
   flex-direction: column;
   flex-grow: 1;
+  gap: 6px;
+  /* TopRightBadge가 다시 absolute로 위치하므로, 콘텐츠 자체의 패딩은 영향을 덜 받음 */
+  /* 필요하다면 TopRightBadge가 콘텐츠를 가리지 않도록 이 곳에 padding-top을 추가할 수 있습니다. */
+  padding-top: 0; /* 기본값으로 설정 */
 `;
 
-const Title = styled.div`
-  font-weight: 700;
-  font-size: 16px;
-  line-height: 24px;
-  color: #1c1c1e;
-  margin-bottom: 4px;
+const TagRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-right: 60px;
 `;
 
-const SubText = styled.div`
-  font-weight: 500;
+interface TagProps {
+  category: string;
+}
+
+const Tag = styled.div<TagProps>`
   font-size: 12px;
-  line-height: 16px;
   color: #1c1c1e;
-  margin-bottom: 8px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: 500;
+  background: ${({ category }) => {
+    switch (category) {
+      case "mbti":
+        return "#E4F6ED";
+      case "college":
+        return "#FCEEF3";
+      case "smoker":
+        return "#E8F0FE";
+      case "clean":
+        return "#F3F4F6";
+      default:
+        return "#f1f1f1";
+    }
+  }};
+  color: #1c1c1e; /* Tag 텍스트 색상 기본값으로 유지 */
+`;
+
+const StayInfo = styled.div`
+  font-size: 12px;
+  color: #3a3a3c;
+`;
+
+const Description = styled.div`
+  font-size: 13px;
+  color: #1c1c1e;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -109,7 +180,7 @@ const BottomLine = styled.div`
   font-size: 12px;
   color: #1c1c1e;
 
-  svg {
+  img {
     width: 16px;
     height: 16px;
     margin-right: 4px;

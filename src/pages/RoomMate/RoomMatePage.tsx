@@ -65,12 +65,16 @@ export default function RoomMatePage() {
               .slice(0, 2)
               .map((post) => (
                 <RoomMateCard
-                  key={post.boardId}
                   boardId={post.boardId}
-                  title={post.title}
-                  content={post.comment}
-                  commentCount={0}
-                  likeCount={0}
+                  dormType={post.dormType}
+                  mbti={post.mbti}
+                  college={post.college}
+                  isSmoker={true}
+                  isClean={true}
+                  stayDays={post.dormPeriod}
+                  description={post.comment}
+                  commentCount={12}
+                  likeCount={8}
                 />
               ))
           ) : (
@@ -108,11 +112,16 @@ export default function RoomMatePage() {
                 <RoomMateCard
                   key={post.boardId}
                   boardId={post.boardId}
-                  title={post.title}
-                  content={post.comment}
-                  percentage={post.similarityPercentage}
+                  dormType={post.dormType}
+                  mbti={post.mbti}
+                  college={post.college}
+                  isSmoker={post.smoking === "피워요"}
+                  isClean={post.arrangement === "깔끔해요"}
+                  stayDays={["월요일"]}
+                  description={post.comment}
                   commentCount={0}
                   likeCount={0}
+                  percentage={post.similarityPercentage}
                 />
               ))
             ) : (

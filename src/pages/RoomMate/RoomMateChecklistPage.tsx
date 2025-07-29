@@ -26,6 +26,7 @@ import {
 import { getMemberInfo } from "../../apis/members.ts";
 import useUserStore from "../../stores/useUserStore.ts";
 import { useNavigate } from "react-router-dom";
+import StyledTextArea from "../../components/roommate/StyledTextArea.tsx";
 
 export default function RoomMateChecklistPage() {
   const { setUserInfo } = useUserStore();
@@ -55,6 +56,8 @@ export default function RoomMateChecklistPage() {
   const [organizationLevelIndex, setOrganizationLevelIndex] = useState<
     number | null
   >(null);
+
+  const [comment, setComment] = useState("");
 
   const handleSubmit = async () => {
     if (
@@ -98,7 +101,7 @@ export default function RoomMateChecklistPage() {
       showerTime: showerDuration[showerDurationIndex],
       bedTime: bedtime[bedtimeIndex],
       arrangement: organizationLevel[organizationLevelIndex],
-      comment: "저랑 같이 룸메 해주세요.", // 필요시 텍스트 입력 추가
+      comment,
     };
 
     try {
@@ -260,6 +263,16 @@ export default function RoomMateChecklistPage() {
             Groups={organizationLevel}
             selectedIndex={organizationLevelIndex}
             onSelect={setOrganizationLevelIndex}
+          />
+        }
+      />
+      <TitleContentArea
+        title={"하고 싶은 말"}
+        children={
+          <StyledTextArea
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder={"추가로 자신을 어필해보세요!"}
           />
         }
       />
