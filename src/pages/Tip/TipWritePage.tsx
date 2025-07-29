@@ -3,16 +3,71 @@ import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { IoCloseSharp } from "react-icons/io5";
 import { MdImage } from "react-icons/md";
-
-import { useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
+import axiosInstance from "../../apis/axiosInstance";
 
 export default function TipWritePage() {
   const navigate = useNavigate();
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [images, setImages] = useState<File[]>([]);
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
-  // 스크롤 복구 방지
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const fileList = Array.from(e.target.files);
+      setImages(fileList.slice(0, 10)); // 최대 10장 제한
+    }
+  };
+
+  const handleSubmit = async () => {
+    try {
+      if (!title.trim() || !content.trim()) {
+        alert("제목과 내용을 모두 입력해주세요.");
+        return;
+      }
+
+      const formData = new FormData();
+
+      const tipDto = new Blob(
+        [
+          JSON.stringify({
+            title: title,
+            content: content,
+          }),
+        ],
+        { type: "application/json" }
+      );
+
+      formData.append("requestTipDto", tipDto);
+
+      // 이미지 배열 추가 (images[] 형태로 보내야 한다면 여기만 수정)
+      for (let i = 0; i < images.length; i++) {
+        formData.append("images", images[i]);
+      }
+
+      const res = await axiosInstance.post("/tips", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      console.log("등록 성공", res.data);
+      alert("팁이 등록되었습니다!");
+      navigate("/tips"); // 등록 후 이동 (필요시 경로 수정)
+    } catch (err: any) {
+      console.error("등록 실패", err);
+      if (err.response?.data?.message) {
+        alert(`[서버 응답] ${err.response.data.message}`);
+      } else {
+        alert("등록 중 오류가 발생했습니다.");
+      }
+    }
+  };
 
   return (
     <Wrapper>
@@ -25,19 +80,35 @@ export default function TipWritePage() {
       </TopBar>
 
       <Content>
-        <ImageBox>
-            <MdImage size={36} color="#888" />
-            <span>0/10</span>
+        <ImageBox onClick={() => inputRef.current?.click()}>
+          <MdImage size={36} color="#888" />
+          <span>{images.length}/10</span>
+          <input
+            ref={inputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            hidden
+            onChange={handleImageChange}
+          />
         </ImageBox>
 
         <Label>제목</Label>
-        <Input placeholder="글 제목" />
+        <Input
+          placeholder="글 제목"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
 
         <Label>내용</Label>
-        <Textarea placeholder="내용을 입력해주세요" />
+        <Textarea
+          placeholder="내용을 입력해주세요"
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+        />
       </Content>
 
-      <SubmitButton>등록하기</SubmitButton>
+      <SubmitButton onClick={handleSubmit}>등록하기</SubmitButton>
     </Wrapper>
   );
 }
@@ -115,7 +186,7 @@ const Input = styled.input`
   padding: 12px;
   border-radius: 8px;
   border: none;
-  background:rgb(255, 255, 255);
+  background: rgb(255, 255, 255);
 `;
 
 const Textarea = styled.textarea`
@@ -123,13 +194,13 @@ const Textarea = styled.textarea`
   padding: 12px;
   border-radius: 8px;
   border: none;
-  background:rgb(255, 255, 255);
+  background: rgb(255, 255, 255);
   resize: none;
 `;
 
 const SubmitButton = styled.button`
   position: fixed;
-  bottom: 90px; /* ← BottomBar 피해서 위로 띄움 */
+  bottom: 90px;
   left: 16px;
   right: 16px;
   background: #007bff;
@@ -142,5 +213,3 @@ const SubmitButton = styled.button`
   cursor: pointer;
   z-index: 1001;
 `;
-
-

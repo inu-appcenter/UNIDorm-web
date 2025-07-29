@@ -3,18 +3,19 @@
 import styled from "styled-components";
 import { FaRegComment, FaRegBookmark } from "react-icons/fa";
 
-interface Tip {
-  title: string;
-  content: string;
-  time: string;
-  scrap: number;
-  comment: number;
+interface TipCardProps {
+  tip: {
+    id: number;
+    title: string;
+    content: string;
+    time: string;
+    scrap: number;
+    comment: number;
+  }
+  onClick: () => void;
+  
 }
 
-interface TipCardProps {
-  tip: Tip;
-  onClick?: () => void;
-}
 
 export default function TipCard({ tip, onClick }: TipCardProps) {
   return (
