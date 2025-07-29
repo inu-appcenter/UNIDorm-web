@@ -12,6 +12,7 @@ const LogoutPage = () => {
     // 로그아웃 처리
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
+    localStorage.removeItem("userInfo");
     const emptyTokenInfo: TokenInfo = {
       accessToken: "",
       refreshToken: "",

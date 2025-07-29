@@ -26,7 +26,7 @@ export default function HomePage() {
     <HomePageWrapper>
       <Header title="아이돔" hasBack={false} showAlarm={true} />
       <TitleContentArea
-        type={mockBoard[0].type}
+        title={mockBoard[0].type}
         link={"/notification"}
         children={
           <HomeCard
@@ -38,7 +38,7 @@ export default function HomePage() {
         }
       />
       <TitleContentArea
-        type={mockBoard[1].type}
+        title={mockBoard[1].type}
         link={"/tips"}
         children={
           <HomeCard
@@ -50,11 +50,11 @@ export default function HomePage() {
         }
       />
       <TitleContentArea
-        type={"다가오는 이벤트"}
+        title={"다가오는 이벤트"}
         children={<ThreeWeekCalendar />}
       />
       <TitleContentArea
-        type={"임박한 공구"}
+        title={"임박한 공구"}
         link={"/groupPurchase"}
         children={<GroupPurchaseList />}
       />

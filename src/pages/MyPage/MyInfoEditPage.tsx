@@ -1,9 +1,9 @@
 import styled from "styled-components";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import StyledInput from "../../components/common/StyledInput.tsx";
 import SquareButton from "../../components/common/SquareButton.tsx";
 import { useEffect, useState } from "react";
-import { putMember } from "../../apis/members.ts";
+import { getMemberInfo, putMember } from "../../apis/members.ts";
 import useUserStore from "../../stores/useUserStore.ts";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import ToggleGroup from "../../components/roommate/checklist/ToggleGroup.tsx";
@@ -12,10 +12,15 @@ import Header from "../../components/common/Header.tsx";
 import { colleges, domitory } from "../../constants/constants.ts";
 
 export default function MyInfoEditPage() {
-  const { userInfo } = useUserStore();
+  const { userInfo, setUserInfo } = useUserStore();
   console.log(userInfo);
 
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const isFirstVisit = queryParams.get("firstvisit") === "true";
+
   const navigate = useNavigate();
+  const [studentNumber] = useState(userInfo.studentNumber);
   const [name, setName] = useState(userInfo.name);
   const [selectedDomitoryIndex, setSelectedDomitoryIndex] = useState<
     number | null
@@ -58,6 +63,13 @@ export default function MyInfoEditPage() {
 
       if (response.status === 200) {
         alert("회원정보 수정을 성공하였습니다.");
+        try {
+          const response = await getMemberInfo();
+          console.log(response);
+          setUserInfo(response.data);
+        } catch (error) {
+          console.error("회원 가져오기 실패", error);
+        }
         navigate("/mypage");
       } else {
         alert("회원정보 수정 중 오류가 발생하였습니다.");
@@ -98,10 +110,24 @@ export default function MyInfoEditPage() {
 
   return (
     <LoginPageWrapper>
-      <Header title={"회원정보 수정"} hasBack={true} showAlarm={false} />
+      <Header
+        title={"회원정보 수정"}
+        hasBack={!isFirstVisit}
+        showAlarm={false}
+      />
       <ContentWrapper>
         <TitleContentArea
-          type={"닉네임"}
+          title={"학번 정보"}
+          children={
+            <StyledInput
+              placeholder="학번이 표시되는 자리입니다."
+              value={studentNumber}
+              disabled={true}
+            />
+          }
+        />
+        <TitleContentArea
+          title={"닉네임"}
           children={
             <StyledInput
               placeholder="닉네임을 입력하세요."
@@ -149,7 +175,7 @@ export default function MyInfoEditPage() {
         {/*/>*/}
 
         <TitleContentArea
-          type={"기숙사 종류"}
+          title={"기숙사 종류"}
           children={
             <ToggleGroup
               Groups={domitory}
@@ -159,7 +185,7 @@ export default function MyInfoEditPage() {
           }
         />
         <TitleContentArea
-          type={"단과대"}
+          title={"단과대"}
           children={
             <SelectableChipGroup
               Groups={colleges}
