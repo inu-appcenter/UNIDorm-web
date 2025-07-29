@@ -15,7 +15,7 @@ export default function OutPage() {
 const OutPageWrapper = styled.div<{ $isIOS: boolean }>`
   width: 100vw;
   height: 100vh;
-  //margin: auto;
+  box-sizing: border-box;
 
   ${({ $isIOS }) =>
     $isIOS &&
