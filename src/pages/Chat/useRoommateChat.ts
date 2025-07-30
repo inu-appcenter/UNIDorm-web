@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import useUserStore from "../../stores/useUserStore.ts";
 
 interface ChatMessage {
   roommateChattingRoomId: number;
@@ -24,6 +25,8 @@ export const useRoommateChat = ({
   onConnect,
   onDisconnect,
 }: UseRoommateChatProps) => {
+  const { userInfo } = useUserStore();
+
   const wsRef = useRef<WebSocket | null>(null);
   const [connected, setConnected] = useState(false);
   const subscriptions = useRef<string[]>([]);
@@ -87,7 +90,9 @@ export const useRoommateChat = ({
         try {
           const parsed = JSON.parse(body);
           console.log("📩 [RECEIVED MESSAGE]:", parsed); // 로그 추가
-
+          if (parsed.userId === userInfo.id) {
+            return;
+          }
           const callback = callbacks.current[destination];
 
           if (callback) {
