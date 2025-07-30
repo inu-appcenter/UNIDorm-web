@@ -22,13 +22,13 @@ export default function ChattingPage() {
   const [typeString, setTypeString] = useState<string>("");
   const [messageList, setMessageList] = useState<MessageType[]>([]);
   const [inputValue, setInputValue] = useState<string>("");
-  const { tokenInfo } = useUserStore();
+  const { tokenInfo, userInfo } = useUserStore();
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const roomId = Number(id);
-  const userId = 2; // userId는 뭘로???
+  const userId = userInfo.id;
   const token = tokenInfo.accessToken;
 
   const { connect, disconnect, sendMessage, isConnected } = useRoommateChat({
