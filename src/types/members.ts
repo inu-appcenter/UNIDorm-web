@@ -11,6 +11,7 @@ export interface UserInfo {
   penalty: number;
   hasTimeTableImage: boolean;
   roommateCheckList: boolean;
+  id: number;
 }
 
 export interface MyPost {
