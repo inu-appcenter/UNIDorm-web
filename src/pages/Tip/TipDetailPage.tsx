@@ -1,78 +1,116 @@
-// src/pages/Tip/TipDetailPage.tsx
-
+import { useParams } from "react-router-dom";
+import { useState, useEffect } from "react";
+import axiosInstance from "../../apis/axiosInstance";
 import styled from "styled-components";
 import { BsThreeDotsVertical, BsSend } from "react-icons/bs";
-import { FaRegHeart } from "react-icons/fa";
-import { useEffect } from "react";
-import { FaUserCircle } from "react-icons/fa";
+import { FaRegHeart, FaUserCircle } from "react-icons/fa";
 import Header from "../../components/common/Header";
 
+interface TipComment {
+  tipCommentId: number;
+  userId: number;
+  reply: string;
+  parentId: number;
+  isDeleted: boolean;
+}
+
+interface TipDetail {
+  id: number;
+  title: string;
+  content: string;
+  tipLikeCount: number;
+  tipLikeUserList: number[];
+  createDate: string;
+  tipCommentDtoList: TipComment[];
+}
+
 export default function TipDetailPage() {
+  const { id } = useParams<{ id: string }>();
+  const [tip, setTip] = useState<TipDetail | null>(null);
+
+  const fetchTipDetail = async (id: string) => {
+    try {
+      const res = await axiosInstance.get(`/tips/${id}`);
+      setTip(res.data);
+    } catch (err) {
+      console.error("게시글 불러오기 실패", err);
+    }
+  };
+
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, []);
+    if (id) {
+      fetchTipDetail(id);
+    }
+  }, [id]);
 
   return (
     <Wrapper>
       <Header title="기숙사 꿀팁" hasBack={true} showAlarm={true} />
-      <Divider />
 
-      <Content>
-        <Divider />
-        <UserInfo>
-          <FaUserCircle size={36} color="#ccc" />
-          <UserText>
-            <Nickname>익명</Nickname>
-            <Date>03/01 18:07</Date>
-          </UserText>
-          <Spacer />
-          <BsThreeDotsVertical size={18} />
-        </UserInfo>
+      <ScrollArea>
+        <Content>
+          <UserInfo>
+            <FaUserCircle size={36} color="#ccc" />
+            <UserText>
+              <Nickname>익명</Nickname>
+              <Date>{tip?.createDate || "날짜 불러오는 중..."}</Date>
+            </UserText>
+            <Spacer />
+            <BsThreeDotsVertical size={18} />
+          </UserInfo>
 
-        <ImageSlider>
-          <SliderItem />
-          <SliderIndicator>● ○ ○</SliderIndicator>
-        </ImageSlider>
+          <ImageSlider>
+            <SliderItem />
+            <SliderIndicator>● ○ ○</SliderIndicator>
+          </ImageSlider>
 
-        <Title>기숙사 꿀팁</Title>
-        <BodyText>기숙사 꾸꾸ㄱㄱ팀꾸ㄱㄱ팀꾸ㄱㄱ팀꾸ㄱㄱ팀꾸ㄱㄱ...</BodyText>
+          <Title>{tip?.title || "제목 로딩 중..."}</Title>
+          <BodyText>{tip?.content || "내용을 불러오는 중입니다..."}</BodyText>
 
-        <Divider />
+          <Divider />
 
-        <LikeBox>
-          <FaRegHeart /> 좋아요 2
-        </LikeBox>
+          <LikeBox>
+            <FaRegHeart /> 좋아요 {tip?.tipLikeCount ?? 0}
+          </LikeBox>
 
-        <Divider />
+          <Divider />
 
-        <CommentList>
-          <Comment>
-            <FaUserCircle size={32} color="#ccc" />
-            <CommentContent>
-              <CommentBody>
-                <Nickname>익명 1</Nickname>
-                <CommentText>햄프피햄피 해피</CommentText>
-                <Date>오후 6:20</Date>
-              </CommentBody>
-              <BsThreeDotsVertical size={18} />
-            </CommentContent>
-          </Comment>
+          <CommentList>
+            {tip?.tipCommentDtoList
+              ?.filter((c) => c.parentId === 0)
+              .map((comment) => (
+                <Comment key={comment.tipCommentId}>
+                  <FaUserCircle size={32} color="#ccc" />
+                  <CommentContent>
+                    <CommentBody>
+                      <Nickname>익명 {comment.userId}</Nickname>
+                      <CommentText>{comment.reply}</CommentText>
+                      <Date>댓글 날짜 없음</Date>
+                    </CommentBody>
+                    <BsThreeDotsVertical size={18} />
+                  </CommentContent>
+                </Comment>
+              ))}
 
-          <Reply>
-            <FaUserCircle size={28} color="#ccc" />
-            <ReplyContent>
-              <ReplyBody>
-                <Nickname>익명 1</Nickname>
-                <CommentText>
-                  아.. 언제 자지,,, 이젠 자야하는데,,, 살려줘
-                </CommentText>
-                <Date>오후 6:20</Date>
-              </ReplyBody>
-              <BsThreeDotsVertical size={16} />
-            </ReplyContent>
-          </Reply>
-        </CommentList>
-      </Content>
+            {tip?.tipCommentDtoList
+              ?.filter((c) => c.parentId !== 0)
+              .map((reply) => (
+                <Reply key={reply.tipCommentId}>
+                  <FaUserCircle size={28} color="#ccc" />
+                  <ReplyContent>
+                    <ReplyBody>
+                      <Nickname>익명 {reply.userId}</Nickname>
+                      <CommentText>{reply.reply}</CommentText>
+                      <Date>댓글 날짜 없음</Date>
+                    </ReplyBody>
+                    <BsThreeDotsVertical size={16} />
+                  </ReplyContent>
+                </Reply>
+              ))}
+          </CommentList>
+        </Content>
+      </ScrollArea>
 
       <CommentInput>
         <input placeholder="댓글 입력" />
@@ -87,17 +125,59 @@ export default function TipDetailPage() {
   );
 }
 
+// --- styled-components 생략 없이 그대로 유지 ---
+
+// --- styled-components
+
 const Wrapper = styled.div`
+  position: relative;
+  height: 100vh;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  background: #fff;
+  background: white;
+`;
+
+const ScrollArea = styled.div`
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 16px 100px; /* 댓글창 고려 */
 `;
 
 const Content = styled.div`
-  flex: 1;
-  padding: 26px 16px 80px;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+`;
+
+const CommentInput = styled.div`
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  padding: 8px 16px;
+  background: white;
+  border-top: 1px solid #eee;
+  z-index: 999;
+
+  input {
+    flex: 1;
+    border: none;
+    padding: 10px 12px;
+    border-radius: 20px;
+    background: #f5f5f5;
+    font-size: 14px;
+    outline: none;
+  }
+`;
+
+const SendButton = styled.button`
+  background: none;
+  border: none;
+  padding-left: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
 `;
 
 const UserInfo = styled.div`
@@ -127,13 +207,13 @@ const Spacer = styled.div`
 `;
 
 const ImageSlider = styled.div`
-  width: calc(100% + 32px); // 16px + 16px = 32px
-  margin-left: -16px;
+  width: 100%;
   height: 200px;
   background: #ccc;
   position: relative;
   overflow: hidden;
   margin-bottom: 24px;
+  border-radius: 10px;
 `;
 
 const SliderItem = styled.div`
@@ -219,36 +299,4 @@ const ReplyContent = styled.div`
   flex: 1;
   display: flex;
   justify-content: space-between;
-`;
-
-const CommentInput = styled.div`
-  display: flex;
-  position: fixed;
-  bottom: 74px; /* BottomBar 높이 고려 */
-  left: 0;
-  right: 0;
-  background: white;
-  padding: 8px 16px;
-  border-top: 1px solid #eee;
-
-  input {
-    flex: 1;
-    border: none;
-    padding: 10px;
-    border-radius: 20px;
-    background: #f5f5f5;
-    font-size: 14px;
-    outline: none;
-  }
-`;
-
-const SendButton = styled.button`
-  background: none;
-  border: none;
-  padding: 0 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: #007bff;
 `;
