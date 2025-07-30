@@ -1,18 +1,43 @@
 import styled from "styled-components";
 import human from "../../assets/chat/human.svg";
 
-const GroupPurchaseItem = () => {
+interface Props {
+  title: string;
+  price: number;
+  deadline: string;
+  currentPeople: number;
+  maxPeople: number;
+  thumbnailUrl: string;
+}
+
+const GroupPurchaseItem = ({
+  title,
+  price,
+  deadline,
+  currentPeople,
+  maxPeople,
+  thumbnailUrl,
+}: Props) => {
+  const getDDay = (deadline: string) => {
+    const today = new Date();
+    const end = new Date(deadline);
+    const diff = Math.ceil(
+      (end.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+    );
+    return diff >= 0 ? `D-${diff}` : "마감";
+  };
+
   return (
     <GroupPurchaseItemWrapper>
-      <ItemImage />
-      <TitleLine>휴지 공동구매 인원 구해요</TitleLine>
-      <Price>24,000원</Price>
+      <ItemImage style={{ backgroundImage: `url(${thumbnailUrl})` }} />
+      <TitleLine>{title}</TitleLine>
+      <Price>{price.toLocaleString()}원</Price>
       <AdditionalLine>
-        <span className="dDay">D-1</span>
+        <span className="dDay">{getDDay(deadline)}</span>
         <span className="divider">|</span>
         <span className="people">
           <img src={human} alt="인원 아이콘" />
-          3/4
+          {currentPeople}/{maxPeople}
         </span>
       </AdditionalLine>
     </GroupPurchaseItemWrapper>
@@ -34,7 +59,9 @@ const GroupPurchaseItemWrapper = styled.div`
 const ItemImage = styled.div`
   width: 100%;
   height: 150px;
-  background: rgba(0, 0, 0, 0.2);
+  background-size: cover;
+  background-position: center;
+  background-color: #eee;
   border-radius: 10px;
 `;
 
