@@ -1,26 +1,60 @@
-// TipDetailPage.tsx
-
+import { useParams } from "react-router-dom";
+import { useState, useEffect } from "react";
+import axiosInstance from "../../apis/axiosInstance";
 import styled from "styled-components";
 import { BsThreeDotsVertical, BsSend } from "react-icons/bs";
 import { FaRegHeart, FaUserCircle } from "react-icons/fa";
-import { useEffect } from "react";
 import Header from "../../components/common/Header";
 
+interface TipComment {
+  tipCommentId: number;
+  userId: number;
+  reply: string;
+  parentId: number;
+  isDeleted: boolean;
+}
+
+interface TipDetail {
+  id: number;
+  title: string;
+  content: string;
+  tipLikeCount: number;
+  tipLikeUserList: number[];
+  createDate: string;
+  tipCommentDtoList: TipComment[];
+}
+
 export default function TipDetailPage() {
+  const { id } = useParams<{ id: string }>();
+  const [tip, setTip] = useState<TipDetail | null>(null);
+
+  const fetchTipDetail = async (id: string) => {
+    try {
+      const res = await axiosInstance.get(`/tips/${id}`);
+      setTip(res.data);
+    } catch (err) {
+      console.error("게시글 불러오기 실패", err);
+    }
+  };
+
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, []);
+    if (id) {
+      fetchTipDetail(id);
+    }
+  }, [id]);
 
   return (
     <Wrapper>
       <Header title="기숙사 꿀팁" hasBack={true} showAlarm={true} />
+
       <ScrollArea>
         <Content>
           <UserInfo>
             <FaUserCircle size={36} color="#ccc" />
             <UserText>
               <Nickname>익명</Nickname>
-              <Date>03/01 18:07</Date>
+              <Date>{tip?.createDate || "날짜 불러오는 중..."}</Date>
             </UserText>
             <Spacer />
             <BsThreeDotsVertical size={18} />
@@ -31,41 +65,49 @@ export default function TipDetailPage() {
             <SliderIndicator>● ○ ○</SliderIndicator>
           </ImageSlider>
 
-          <Title>기숙사 꿀팁</Title>
-          <BodyText>기숙사 꿀팁 내용이 여기에 들어갑니다...</BodyText>
+          <Title>{tip?.title || "제목 로딩 중..."}</Title>
+          <BodyText>{tip?.content || "내용을 불러오는 중입니다..."}</BodyText>
 
           <Divider />
 
           <LikeBox>
-            <FaRegHeart /> 좋아요 2
+            <FaRegHeart /> 좋아요 {tip?.tipLikeCount ?? 0}
           </LikeBox>
 
           <Divider />
 
           <CommentList>
-            <Comment>
-              <FaUserCircle size={32} color="#ccc" />
-              <CommentContent>
-                <CommentBody>
-                  <Nickname>익명 1</Nickname>
-                  <CommentText>진짜 꿀팁이네요 감사합니다!</CommentText>
-                  <Date>오후 6:20</Date>
-                </CommentBody>
-                <BsThreeDotsVertical size={18} />
-              </CommentContent>
-            </Comment>
+            {tip?.tipCommentDtoList
+              ?.filter((c) => c.parentId === 0)
+              .map((comment) => (
+                <Comment key={comment.tipCommentId}>
+                  <FaUserCircle size={32} color="#ccc" />
+                  <CommentContent>
+                    <CommentBody>
+                      <Nickname>익명 {comment.userId}</Nickname>
+                      <CommentText>{comment.reply}</CommentText>
+                      <Date>댓글 날짜 없음</Date>
+                    </CommentBody>
+                    <BsThreeDotsVertical size={18} />
+                  </CommentContent>
+                </Comment>
+              ))}
 
-            <Reply>
-              <FaUserCircle size={28} color="#ccc" />
-              <ReplyContent>
-                <ReplyBody>
-                  <Nickname>익명 2</Nickname>
-                  <CommentText>헐 대박 꿀팁...!</CommentText>
-                  <Date>오후 6:25</Date>
-                </ReplyBody>
-                <BsThreeDotsVertical size={16} />
-              </ReplyContent>
-            </Reply>
+            {tip?.tipCommentDtoList
+              ?.filter((c) => c.parentId !== 0)
+              .map((reply) => (
+                <Reply key={reply.tipCommentId}>
+                  <FaUserCircle size={28} color="#ccc" />
+                  <ReplyContent>
+                    <ReplyBody>
+                      <Nickname>익명 {reply.userId}</Nickname>
+                      <CommentText>{reply.reply}</CommentText>
+                      <Date>댓글 날짜 없음</Date>
+                    </ReplyBody>
+                    <BsThreeDotsVertical size={16} />
+                  </ReplyContent>
+                </Reply>
+              ))}
           </CommentList>
         </Content>
       </ScrollArea>
@@ -83,6 +125,9 @@ export default function TipDetailPage() {
   );
 }
 
+// --- styled-components 생략 없이 그대로 유지 ---
+
+// --- styled-components
 
 const Wrapper = styled.div`
   position: relative;
@@ -95,7 +140,7 @@ const Wrapper = styled.div`
 const ScrollArea = styled.div`
   flex: 1;
   overflow-y: auto;
-  padding: 24px 16px 100px; /* 하단 댓글창 공간 확보 */
+  padding: 24px 16px 100px; /* 댓글창 고려 */
 `;
 
 const Content = styled.div`
