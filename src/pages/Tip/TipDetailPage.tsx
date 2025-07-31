@@ -50,66 +50,71 @@ export default function TipDetailPage() {
 
       <ScrollArea>
         <Content>
-          <UserInfo>
-            <FaUserCircle size={36} color="#ccc" />
-            <UserText>
-              <Nickname>익명</Nickname>
-              <Date>{tip?.createDate || "날짜 불러오는 중..."}</Date>
-            </UserText>
-            <Spacer />
-            <BsThreeDotsVertical size={18} />
-          </UserInfo>
+          {tip && (
+            <>
+              <UserInfo>
+                <FaUserCircle size={36} color="#ccc" />
+                <UserText>
+                  <Nickname>익명</Nickname>
+                  <Date>{tip.createDate}</Date>
+                </UserText>
+                <Spacer />
+                <BsThreeDotsVertical size={18} />
+              </UserInfo>
 
-          <ImageSlider>
-            <SliderItem />
-            <SliderIndicator>● ○ ○</SliderIndicator>
-          </ImageSlider>
+              <ImageSlider>
+                <SliderItem />
+                <SliderIndicator>● ○ ○</SliderIndicator>
+              </ImageSlider>
 
-          <Title>{tip?.title || "제목 로딩 중..."}</Title>
-          <BodyText>{tip?.content || "내용을 불러오는 중입니다..."}</BodyText>
+              <Title>{tip.title}</Title>
+              <BodyText>{tip.content}</BodyText>
 
-          <Divider />
+              <Divider />
 
-          <LikeBox>
-            <FaRegHeart /> 좋아요 {tip?.tipLikeCount ?? 0}
-          </LikeBox>
+              <LikeBox>
+                <FaRegHeart /> 좋아요 {tip.tipLikeCount ?? 0}
+              </LikeBox>
 
-          <Divider />
+              <Divider />
 
-          <CommentList>
-            {tip?.tipCommentDtoList
-              ?.filter((c) => c.parentId === 0)
-              .map((comment) => (
-                <Comment key={comment.tipCommentId}>
-                  <FaUserCircle size={32} color="#ccc" />
-                  <CommentContent>
-                    <CommentBody>
-                      <Nickname>익명 {comment.userId}</Nickname>
-                      <CommentText>{comment.reply}</CommentText>
-                      <Date>댓글 날짜 없음</Date>
-                    </CommentBody>
-                    <BsThreeDotsVertical size={18} />
-                  </CommentContent>
-                </Comment>
-              ))}
+              <CommentList>
+                {tip.tipCommentDtoList
+                  ?.filter((c) => c.parentId === 0)
+                  .map((comment) => (
+                    <Comment key={comment.tipCommentId}>
+                      <FaUserCircle size={32} color="#ccc" />
+                      <CommentContent>
+                        <CommentBody>
+                          <Nickname>익명 {comment.userId}</Nickname>
+                          <CommentText>{comment.reply}</CommentText>
+                          <Date>댓글 날짜 없음</Date>
+                        </CommentBody>
+                        <BsThreeDotsVertical size={18} />
+                      </CommentContent>
+                    </Comment>
+                  ))}
 
-            {tip?.tipCommentDtoList
-              ?.filter((c) => c.parentId !== 0)
-              .map((reply) => (
-                <Reply key={reply.tipCommentId}>
-                  <FaUserCircle size={28} color="#ccc" />
-                  <ReplyContent>
-                    <ReplyBody>
-                      <Nickname>익명 {reply.userId}</Nickname>
-                      <CommentText>{reply.reply}</CommentText>
-                      <Date>댓글 날짜 없음</Date>
-                    </ReplyBody>
-                    <BsThreeDotsVertical size={16} />
-                  </ReplyContent>
-                </Reply>
-              ))}
-          </CommentList>
+                {tip.tipCommentDtoList
+                  ?.filter((c) => c.parentId !== 0)
+                  .map((reply) => (
+                    <Reply key={reply.tipCommentId}>
+                      <FaUserCircle size={28} color="#ccc" />
+                      <ReplyContent>
+                        <ReplyBody>
+                          <Nickname>익명 {reply.userId}</Nickname>
+                          <CommentText>{reply.reply}</CommentText>
+                          <Date>댓글 날짜 없음</Date>
+                        </ReplyBody>
+                        <BsThreeDotsVertical size={16} />
+                      </ReplyContent>
+                    </Reply>
+                  ))}
+              </CommentList>
+            </>
+          )}
         </Content>
+
       </ScrollArea>
 
       <CommentInput>
@@ -125,8 +130,6 @@ export default function TipDetailPage() {
   );
 }
 
-// --- styled-components 생략 없이 그대로 유지 ---
-
 // --- styled-components
 
 const Wrapper = styled.div`
@@ -135,6 +138,7 @@ const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
   background: white;
+  padding-top: 56px;
 `;
 
 const ScrollArea = styled.div`
