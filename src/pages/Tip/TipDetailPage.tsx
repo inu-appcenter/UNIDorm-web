@@ -5,6 +5,7 @@ import styled from "styled-components";
 import { BsThreeDotsVertical, BsSend } from "react-icons/bs";
 import { FaRegHeart, FaUserCircle } from "react-icons/fa";
 import Header from "../../components/common/Header";
+import { useNavigate } from "react-router-dom"
 
 interface TipComment {
   tipCommentId: number;
@@ -89,9 +90,26 @@ const fetchTipImages = async (id: string) => {
   }
 };
 
+const [menuOpen, setMenuOpen] = useState(false);
 
+//게시물 삭제 함수 구현
+const navigate = useNavigate();
 
+const handleDelete = async () => {
+  if (!id) return;
 
+  const confirmed = window.confirm("정말 삭제하시겠습니까?");
+  if (!confirmed) return;
+
+  try {
+    await axiosInstance.delete(`/tips/${id}`);
+    alert("삭제되었습니다.");
+    navigate(-1); // 이전 페이지로 이동
+  } catch (err) {
+    console.error("삭제 실패", err);
+    alert("삭제에 실패했습니다.");
+  }
+};
 
   return (
     <Wrapper>
@@ -116,7 +134,14 @@ const fetchTipImages = async (id: string) => {
                 <Date>{tip?.createDate || "날짜 불러오는 중..."}</Date>
               </UserText>
               <Spacer />
-              <BsThreeDotsVertical size={18} />
+              <BsThreeDotsVertical size={18} onClick={() => setMenuOpen(!menuOpen)} />
+                {menuOpen && (
+                  <Menu>
+                    <MenuItem onClick={() => alert("수정하기는 아직 구현 안됨!")}>수정하기</MenuItem>
+                    <MenuItem onClick={handleDelete}>삭제하기</MenuItem>
+                  </Menu>
+                )}
+
             </UserInfo>
 
 
@@ -263,6 +288,9 @@ const UserInfo = styled.div`
   align-items: center;
   gap: 12px;
   margin-bottom: 16px;
+
+  position: relative; /* ✅ 메뉴 absolute 기준점으로 */
+  overflow: visible;   /* ✅ 안 짤리게 */
 `;
 
 const UserText = styled.div`
@@ -377,4 +405,23 @@ const ReplyContent = styled.div`
   flex: 1;
   display: flex;
   justify-content: space-between;
+`;
+
+const Menu = styled.div`
+  position: absolute;
+  top: 40px;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  z-index: 10;
+`;
+
+const MenuItem = styled.div`
+  padding: 10px 16px;
+  cursor: pointer;
+  &:hover {
+    background-color: #f8f8f8;
+  }
 `;
