@@ -94,7 +94,7 @@ function App() {
           <Route path="/notification" element={<NotificationBoardPage />} />
           <Route path="/chat/:chatType/:id" element={<ChattingPage />} />
           <Route path="/tips/write" element={<TipWritePage />} />
-          <Route path="/tips/detail" element={<TipDetailPage />} />
+          <Route path="/tips/:id" element={<TipDetailPage />} />
           <Route path="/tips" element={<TipListPage />} />
           <Route path="/myposts" element={<MyPostsPage />} />
           <Route path="/scrap" element={<MyScrapPage />} />
