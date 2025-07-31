@@ -1,10 +1,9 @@
 import styled from "styled-components";
 import TitleLine from "./TitleLine.tsx";
-import { useNavigate } from "react-router-dom";
 
 interface MenuItem {
   label: string;
-  path: string;
+  onClick: () => void;
 }
 
 interface MenuGroupProps {
@@ -13,20 +12,17 @@ interface MenuGroupProps {
 }
 
 const MenuGroup = ({ title, menus }: MenuGroupProps) => {
-  const navigate = useNavigate();
-
   return (
     <MenuGroupWrapper>
       {title && <TitleLine title={title} />}
       {menus.map((menu, index) => (
-        <MenuItem key={index} onClick={() => navigate(menu.path)}>
+        <MenuItem key={index} onClick={menu.onClick}>
           {menu.label}
         </MenuItem>
       ))}
     </MenuGroupWrapper>
   );
 };
-
 export default MenuGroup;
 
 const MenuGroupWrapper = styled.div`
@@ -41,8 +37,10 @@ const MenuGroupWrapper = styled.div`
 
   gap: 20px;
 `;
+
 const MenuItem = styled.div`
   width: 100%;
   height: fit-content;
   font-size: 16px;
+  cursor: pointer;
 `;
