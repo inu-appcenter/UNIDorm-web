@@ -41,8 +41,57 @@ export default function TipDetailPage() {
     window.scrollTo(0, 0);
     if (id) {
       fetchTipDetail(id);
+      fetchTipImages(id);
     }
   }, [id]);
+
+  const [userInfo, setUserInfo] = useState<{
+  name: string;
+  profileImageUrl: string;
+} | null>(null);
+
+const fetchUserInfo = async () => {
+  try {
+    const userRes = await axiosInstance.get("/users");
+    const imageRes = await axiosInstance.get("/users/image", {
+      responseType: "blob",
+    });
+
+    const imageUrl = URL.createObjectURL(imageRes.data);
+
+    setUserInfo({
+      name: userRes.data.name,
+      profileImageUrl: imageUrl,
+    });
+  } catch (err) {
+    console.error("유저 정보 가져오기 실패", err);
+  }
+};
+
+useEffect(() => {
+  fetchUserInfo();
+}, []);
+
+const [images, setImages] = useState<string[]>([]);
+
+const fetchTipImages = async (id: string) => {
+  try {
+    const token = localStorage.getItem("accessToken");
+    const res = await axiosInstance.get(`/tips/${id}/image`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    const urls = res.data.map((img: any) => img.imageUrl);
+    setImages(urls);
+  } catch (err) {
+    console.error("이미지 불러오기 실패", err);
+  }
+};
+
+
+
+
 
   return (
     <Wrapper>
@@ -53,19 +102,44 @@ export default function TipDetailPage() {
           {tip && (
             <>
               <UserInfo>
+              {userInfo?.profileImageUrl ? (
+                <img
+                  src={userInfo.profileImageUrl}
+                  alt="프사"
+                  style={{ width: 36, height: 36, borderRadius: "50%" }}
+                />
+              ) : (
                 <FaUserCircle size={36} color="#ccc" />
-                <UserText>
-                  <Nickname>익명</Nickname>
-                  <Date>{tip.createDate}</Date>
-                </UserText>
-                <Spacer />
-                <BsThreeDotsVertical size={18} />
-              </UserInfo>
+              )}
+              <UserText>
+                <Nickname>{userInfo?.name || "익명"}</Nickname>
+                <Date>{tip?.createDate || "날짜 불러오는 중..."}</Date>
+              </UserText>
+              <Spacer />
+              <BsThreeDotsVertical size={18} />
+            </UserInfo>
+
 
               <ImageSlider>
-                <SliderItem />
-                <SliderIndicator>● ○ ○</SliderIndicator>
+                {images.length > 0 ? (
+                  images.map((url, idx) => (
+                    <SliderItem
+                      key={idx}
+                      style={{
+                        backgroundImage: `url(${url})`,
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
+                      }}
+                    />
+                  ))
+                ) : (
+                  <SliderItem />
+                )}
+                <SliderIndicator>
+                  {images.map((_, i) => (i === 0 ? "●" : "○")).join(" ")}
+                </SliderIndicator>
               </ImageSlider>
+
 
               <Title>{tip.title}</Title>
               <BodyText>{tip.content}</BodyText>
