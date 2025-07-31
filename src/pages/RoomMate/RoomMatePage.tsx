@@ -130,6 +130,12 @@ export default function RoomMatePage() {
           </>
         }
       />
+      {isLoggedIn && (
+        <WriteButton onClick={() => navigate("/roommatechecklist")}>
+          ✏️ 사전 체크리스트 {!hasChecklist ? <>작성</> : <>수정</>}
+          하기
+        </WriteButton>
+      )}
     </RoomMatePageWrapper>
   );
 }
@@ -177,4 +183,19 @@ const ChecklistBanner = styled.div`
   &:hover {
     background-color: #ffe8a1;
   }
+`;
+
+const WriteButton = styled.button`
+  position: fixed;
+  bottom: 90px;
+  right: 20px;
+  background-color: #007bff;
+  color: white;
+  border-radius: 24px;
+  padding: 12px 16px;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.2);
+  z-index: 100;
 `;
