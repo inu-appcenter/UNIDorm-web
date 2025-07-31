@@ -35,7 +35,7 @@ const RoomMateCard = ({
   return (
     <CardWrapper onClick={() => navigate(`/roommatelist/${boardId}`)}>
       {percentage !== undefined && (
-        <LeftCircle>
+        <LeftCircle percentage={percentage}>
           <span>{percentage}%</span>
         </LeftCircle>
       )}
@@ -97,20 +97,43 @@ const TopRightBadge = styled.div`
   z-index: 1; /* 다른 요소 위에 표시되도록 z-index 설정 */
 `;
 
-const LeftCircle = styled.div`
+const LeftCircle = styled.div<{ percentage: number }>`
   width: 48px;
   height: 48px;
   min-width: 48px;
   min-height: 48px;
   border-radius: 50%;
-  border: 4px solid #0a84ff;
+  background: conic-gradient(
+    #0a84ff ${({ percentage }) => percentage * 3.6}deg,
+    #e0e0e0 0deg
+  );
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
   color: #0a84ff;
   font-size: 14px;
-  margin-right: 0;
+  position: relative;
+  font-weight: 700;
+
+  /* 원 안쪽에 하얀색 작은 원을 만들어서 비율 텍스트가 돋보이게 함 */
+  &::before {
+    content: "";
+    position: absolute;
+    width: 36px;
+    height: 36px;
+    background: #fff;
+    border-radius: 50%;
+    top: 6px;
+    left: 6px;
+    z-index: 1;
+  }
+
+  /* percentage 텍스트가 위에 표시되도록 */
+  span {
+    position: relative;
+    z-index: 2;
+  }
 `;
 
 interface ContentContainerProps {
