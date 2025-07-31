@@ -1,8 +1,8 @@
-import { useParams, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
 import axiosInstance from "../../apis/axiosInstance";
 import styled from "styled-components";
-import { BsThreeDotsVertical, BsSend } from "react-icons/bs";
+import { BsSend, BsThreeDotsVertical } from "react-icons/bs";
 import { FaRegHeart, FaUserCircle } from "react-icons/fa";
 import Header from "../../components/common/Header";
 
@@ -40,7 +40,10 @@ export default function TipDetailPage() {
   const [replyOpen, setReplyOpen] = useState<{ [key: number]: boolean }>({});
 
   // 유저 정보
-  const [userInfo, setUserInfo] = useState<{ name: string; profileImageUrl: string } | null>(null);
+  const [userInfo, setUserInfo] = useState<{
+    name: string;
+    profileImageUrl: string;
+  } | null>(null);
 
   // 이미지(현재 미사용)
   const [images, setImages] = useState<string[]>([]);
@@ -67,21 +70,26 @@ export default function TipDetailPage() {
 
   const fetchTipImages = async (id: string) => {
     try {
-      const token = localStorage.getItem("accessToken");
+      console.log("이미지 불러오기 시도");
+      // const token = localStorage.getItem("accessToken");
       const res = await axiosInstance.get(`/tips/${id}/image`, {
-        headers: { Authorization: `Bearer ${token}` },
+        // headers: { Authorization: `Bearer ${token}` },
       });
-      const urls = res.data.map((img: any) => img.imageUrl);
+      console.log(res);
+
+      const urls = res.data.map((img: any) => img.fileName);
       setImages(urls);
     } catch (err) {
-      // console.error("이미지 불러오기 실패", err);
+      console.error("이미지 불러오기 실패", err);
     }
   };
 
   const fetchUserInfo = async () => {
     try {
       const userRes = await axiosInstance.get("/users");
-      const imageRes = await axiosInstance.get("/users/image", { responseType: "blob" });
+      const imageRes = await axiosInstance.get("/users/image", {
+        responseType: "blob",
+      });
       const imageUrl = URL.createObjectURL(imageRes.data);
       setUserInfo({ name: userRes.data.name, profileImageUrl: imageUrl });
     } catch (err) {
@@ -159,10 +167,17 @@ export default function TipDetailPage() {
                   <Date>{tip?.createDate || "날짜 불러오는 중..."}</Date>
                 </UserText>
                 <Spacer />
-                <BsThreeDotsVertical size={18} onClick={() => setMenuOpen(!menuOpen)} />
+                <BsThreeDotsVertical
+                  size={18}
+                  onClick={() => setMenuOpen(!menuOpen)}
+                />
                 {menuOpen && (
                   <Menu>
-                    <MenuItem onClick={() => alert("수정하기는 아직 구현 안됨!")}>수정하기</MenuItem>
+                    <MenuItem
+                      onClick={() => alert("수정하기는 아직 구현 안됨!")}
+                    >
+                      수정하기
+                    </MenuItem>
                     <MenuItem onClick={handleDelete}>삭제하기</MenuItem>
                   </Menu>
                 )}
@@ -217,7 +232,8 @@ export default function TipDetailPage() {
                               onClick={() =>
                                 setReplyOpen((prev) => ({
                                   ...prev,
-                                  [comment.tipCommentId]: !prev[comment.tipCommentId],
+                                  [comment.tipCommentId]:
+                                    !prev[comment.tipCommentId],
                                 }))
                               }
                             >
@@ -239,10 +255,15 @@ export default function TipDetailPage() {
                               }))
                             }
                             onKeyDown={(e) =>
-                              e.key === "Enter" && handleReplySubmit(comment.tipCommentId)
+                              e.key === "Enter" &&
+                              handleReplySubmit(comment.tipCommentId)
                             }
                           />
-                          <ReplySendButton onClick={() => handleReplySubmit(comment.tipCommentId)}>
+                          <ReplySendButton
+                            onClick={() =>
+                              handleReplySubmit(comment.tipCommentId)
+                            }
+                          >
                             <BsSend size={16} />
                           </ReplySendButton>
                         </ReplyInputArea>
@@ -275,16 +296,18 @@ export default function TipDetailPage() {
           placeholder="댓글 입력"
           value={commentInput}
           onChange={(e) => setCommentInput(e.target.value)}
-          onKeyDown={e => e.key === "Enter" && handleCommentSubmit()}
+          onKeyDown={(e) => e.key === "Enter" && handleCommentSubmit()}
         />
         <SendButton onClick={handleCommentSubmit}>
-          <BsSend size={18} style={{ color: "black", backgroundColor: "white", padding: "4px" }} />
+          <BsSend
+            size={18}
+            style={{ color: "black", backgroundColor: "white", padding: "4px" }}
+          />
         </SendButton>
       </CommentInput>
     </Wrapper>
   );
 }
-
 
 // --- styled-components
 
@@ -347,7 +370,7 @@ const UserInfo = styled.div`
   margin-bottom: 16px;
 
   position: relative; /* ✅ 메뉴 absolute 기준점으로 */
-  overflow: visible;   /* ✅ 안 짤리게 */
+  overflow: visible; /* ✅ 안 짤리게 */
 `;
 
 const UserText = styled.div`
@@ -471,7 +494,7 @@ const Menu = styled.div`
   background: white;
   border: 1px solid #ddd;
   border-radius: 6px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   z-index: 10;
 `;
 
