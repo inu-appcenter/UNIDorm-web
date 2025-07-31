@@ -157,8 +157,6 @@ const EmptyMessage = styled.div`
   font-size: 14px;
 `;
 
-// styled-components 부분에 아래 스타일을 추가하세요
-
 const ChecklistBanner = styled.div`
   background-color: #fff3cd;
   color: #856404;

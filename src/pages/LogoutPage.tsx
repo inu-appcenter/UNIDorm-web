@@ -18,7 +18,8 @@ const LogoutPage = () => {
       refreshToken: "",
     };
     setTokenInfo(emptyTokenInfo);
-    alert("로그아웃되었습니다.");
+    console.log("로그아웃 성공");
+    // alert("로그아웃되었습니다.");
     // 처리 완료 즉시 이동
     navigate("/home");
   }, [navigate, setTokenInfo]);
