@@ -43,16 +43,21 @@ tokenInstance.interceptors.response.use(
         console.log("리프레시 발급 시도");
         const { data } = await refresh(); // refresh API로 토큰 재발급
         console.log(data);
-        const newTokenInfo = data; // 새로운 토큰 정보
+        const newTokenInfo = data.accessToken; // 새로운 토큰 정보
 
         // 스토어에 새로운 토큰 정보 저장 (로컬스토리지에도 저장됨)
-        useUserStore.getState().setTokenInfo(newTokenInfo);
+        const { tokenInfo, setTokenInfo } = useUserStore.getState();
+
+        setTokenInfo({
+          ...tokenInfo,
+          accessToken: newTokenInfo,
+        });
+
+        // useUserStore.getState().setTokenInfo(newTokenInfo);
 
         // 새로운 토큰을 요청 헤더에 추가하여 원래 요청을 재시도
-        tokenInstance.defaults.headers.common["Authorization"] =
-          newTokenInfo.accessToken;
-        originalRequest.headers["Authorization"] =
-          `Bearer ${newTokenInfo.accessToken}`;
+        tokenInstance.defaults.headers.common["Authorization"] = newTokenInfo;
+        originalRequest.headers["Authorization"] = `Bearer ${newTokenInfo}`;
 
         return tokenInstance(originalRequest); // 기존 요청 재시도
       } catch (refreshError) {
