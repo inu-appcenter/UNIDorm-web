@@ -28,6 +28,7 @@ export default function RoomMateListPage() {
       <Header title={"룸메이트 둘러보기"} hasBack={true} />
       <TitleContentArea
         title={"최신순"}
+        description={"룸메이트를 구하고 있는 다양한 UNI들을 찾아보세요!"}
         children={
           <>
             {roommates.length > 0 ? (

@@ -3,13 +3,14 @@ import { useLocation, useNavigate } from "react-router-dom";
 import StyledInput from "../../components/common/StyledInput.tsx";
 import SquareButton from "../../components/common/SquareButton.tsx";
 import { useEffect, useState } from "react";
-import { getMemberInfo, putMember } from "../../apis/members.ts";
+import { getMemberInfo, putMember, putUserImage } from "../../apis/members.ts";
 import useUserStore from "../../stores/useUserStore.ts";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import ToggleGroup from "../../components/roommate/checklist/ToggleGroup.tsx";
 import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
 import Header from "../../components/common/Header.tsx";
 import { colleges, domitory } from "../../constants/constants.ts";
+import RoundSquareButton from "../../components/button/RoundSquareButton.tsx";
 
 export default function MyInfoEditPage() {
   const { userInfo, setUserInfo } = useUserStore();
@@ -80,33 +81,33 @@ export default function MyInfoEditPage() {
     }
   };
 
-  // const [imageFile, setImageFile] = useState<File | null>(null);
-  // const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  //
-  // // 이미지 선택 핸들러
-  // const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   const file = e.target.files?.[0];
-  //   if (file) {
-  //     setImageFile(file);
-  //     setPreviewUrl(URL.createObjectURL(file));
-  //   }
-  // };
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-  // const handleUploadImage = async () => {
-  //   if (!imageFile) return;
-  //
-  //   try {
-  //     const response = await putUserImage(imageFile);
-  //     if (response.status === 200) {
-  //       alert("프로필 이미지가 변경되었습니다.");
-  //     } else {
-  //       alert("이미지 업로드에 실패했습니다.");
-  //     }
-  //   } catch (error) {
-  //     alert("이미지 업로드 중 오류가 발생했습니다.");
-  //     console.error(error);
-  //   }
-  // };
+  // 이미지 선택 핸들러
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+    }
+  };
+
+  const handleUploadImage = async () => {
+    if (!imageFile) return;
+
+    try {
+      const response = await putUserImage(imageFile);
+      if (response.status === 200) {
+        alert("프로필 이미지가 변경되었습니다.");
+      } else {
+        alert("이미지 업로드에 실패했습니다.");
+      }
+    } catch (error) {
+      alert("이미지 업로드 중 오류가 발생했습니다.");
+      console.error(error);
+    }
+  };
 
   return (
     <LoginPageWrapper>
@@ -116,6 +117,45 @@ export default function MyInfoEditPage() {
         showAlarm={false}
       />
       <ContentWrapper>
+        {/* 프로필 이미지 업로드 */}
+        <TitleContentArea
+          title={"프로필 사진"}
+          description={
+            "프로필 이미지 변경을 원하시는 경우에만 이미지 선택 후 변경하기 버튼을 눌러주세요."
+          }
+          children={
+            <ImageUploadContainer>
+              <ImageSelectRow>
+                <ProfileImageWrapper>
+                  {previewUrl ? (
+                    <ProfileImage src={previewUrl} alt="프로필 미리보기" />
+                  ) : (
+                    <DefaultProfileImage />
+                  )}
+                </ProfileImageWrapper>
+
+                <FileInputLabel htmlFor="profileImageInput">
+                  이미지 선택
+                </FileInputLabel>
+                <HiddenFileInput
+                  id="profileImageInput"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                />
+              </ImageSelectRow>
+
+              {imageFile && (
+                <UploadButtonWrapper>
+                  <RoundSquareButton
+                    btnName="이미지 변경하기"
+                    onClick={handleUploadImage}
+                  />
+                </UploadButtonWrapper>
+              )}
+            </ImageUploadContainer>
+          }
+        />
         <TitleContentArea
           title={"학번 정보"}
           children={
@@ -126,6 +166,7 @@ export default function MyInfoEditPage() {
             />
           }
         />
+
         <TitleContentArea
           title={"닉네임"}
           children={
@@ -138,41 +179,6 @@ export default function MyInfoEditPage() {
             />
           }
         />
-
-        {/*/!* 프로필 이미지 업로드 *!/*/}
-        {/*<TitleContentArea*/}
-        {/*  type="프로필 사진"*/}
-        {/*  children={*/}
-        {/*    <div>*/}
-        {/*      {previewUrl ? (*/}
-        {/*        <img*/}
-        {/*          src={previewUrl}*/}
-        {/*          alt="미리보기"*/}
-        {/*          style={{*/}
-        {/*            width: "100px",*/}
-        {/*            height: "100px",*/}
-        {/*            objectFit: "cover",*/}
-        {/*            borderRadius: "50%",*/}
-        {/*          }}*/}
-        {/*        />*/}
-        {/*      ) : (*/}
-        {/*        <div*/}
-        {/*          style={{*/}
-        {/*            width: "100px",*/}
-        {/*            height: "100px",*/}
-        {/*            background: "#ddd",*/}
-        {/*            borderRadius: "50%",*/}
-        {/*          }}*/}
-        {/*        />*/}
-        {/*      )}*/}
-        {/*      <input*/}
-        {/*        type="file"*/}
-        {/*        accept="image/*"*/}
-        {/*        onChange={handleImageChange}*/}
-        {/*      />*/}
-        {/*    </div>*/}
-        {/*  }*/}
-        {/*/>*/}
 
         <TitleContentArea
           title={"기숙사 종류"}
@@ -241,4 +247,62 @@ const ButtonWrapper = styled.div`
 
   bottom: 0;
   left: 0;
+`;
+
+const ProfileImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+`;
+
+const DefaultProfileImage = styled.div`
+  width: 100%;
+  height: 100%;
+  background: #bbb;
+`;
+
+const HiddenFileInput = styled.input`
+  display: none;
+`;
+
+const ImageUploadContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+`;
+
+const ImageSelectRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 20px;
+`;
+
+const ProfileImageWrapper = styled.div`
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #ddd;
+  border: 2px solid #ccc;
+  flex-shrink: 0;
+`;
+
+const FileInputLabel = styled.label`
+  cursor: pointer;
+  padding: 10px 24px;
+  background-color: #4a90e2;
+  color: white;
+  border-radius: 6px;
+  font-weight: 600;
+  user-select: none;
+  transition: background-color 0.3s ease;
+  white-space: nowrap;
+
+  &:hover {
+    background-color: #357abd;
+  }
+`;
+
+const UploadButtonWrapper = styled.div`
+  width: 100%;
 `;
