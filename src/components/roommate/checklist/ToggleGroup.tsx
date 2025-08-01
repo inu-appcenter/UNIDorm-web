@@ -6,16 +6,27 @@ interface ToggleGroupProps {
   Groups: string[];
   selectedIndex: number | null;
   onSelect: (index: number) => void;
+  disabled?: boolean; // 추가
 }
 
-const ToggleGroup = ({ Groups, selectedIndex, onSelect }: ToggleGroupProps) => {
+const ToggleGroup = ({
+  Groups,
+  selectedIndex,
+  onSelect,
+  disabled = false,
+}: ToggleGroupProps) => {
   return (
     <ToggleGroupWrapper>
       {Groups.map((content, index) => (
         <ToggleItem
           key={index}
           selected={selectedIndex === index}
-          onClick={() => onSelect(index)}
+          onClick={() => {
+            if (!disabled) {
+              onSelect(index);
+            }
+          }}
+          disabled={disabled} // styled-component에 넘겨서 스타일 적용도 가능
         >
           {content}
         </ToggleItem>
@@ -35,7 +46,7 @@ const ToggleGroupWrapper = styled.div`
   overflow: hidden;
 `;
 
-const ToggleItem = styled.div<{ selected: boolean }>`
+const ToggleItem = styled.div<{ selected: boolean; disabled?: boolean }>`
   box-sizing: border-box;
   display: flex;
   justify-content: center;
@@ -51,7 +62,7 @@ const ToggleItem = styled.div<{ selected: boolean }>`
 
   font-size: 12px;
   text-align: center;
-  cursor: pointer;
+  cursor: ${({ disabled }) => (disabled ? "not-allowed" : "pointer")};
 
   transition:
     background 0.2s ease,
@@ -61,4 +72,11 @@ const ToggleItem = styled.div<{ selected: boolean }>`
   &:last-child {
     border-right: none;
   }
+
+  ${({ disabled }) =>
+    disabled &&
+    `
+    opacity: 0.6;
+    pointer-events: none;  // 클릭 자체를 막음
+  `}
 `;

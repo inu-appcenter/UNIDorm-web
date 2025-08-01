@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import Header from "../../components/common/Header.tsx";
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import ChatInfo from "../../components/chat/ChatInfo.tsx";
 import ChatItemOtherPerson from "../../components/chat/ChatItemOtherPerson.tsx";
@@ -23,6 +23,10 @@ export default function ChattingPage() {
   const [messageList, setMessageList] = useState<MessageType[]>([]);
   const [inputValue, setInputValue] = useState<string>("");
   const { tokenInfo, userInfo } = useUserStore();
+
+  const location = useLocation();
+  // navigate 시 넘긴 state 객체에서 partnerName 꺼내기
+  const partnerName = location.state?.partnerName ?? undefined;
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -62,7 +66,7 @@ export default function ChattingPage() {
   useEffect(() => {
     const init = async () => {
       if (chatType === "roommate") {
-        setTypeString("룸메");
+        setTypeString("룸메이트");
 
         try {
           const response = await getRoommateChatHistory(roomId);
@@ -87,7 +91,7 @@ export default function ChattingPage() {
 
         connect(); // WebSocket 연결
       } else if (chatType === "groupPurchase") {
-        setTypeString("공구");
+        setTypeString("공동구매");
         // 추후 WebSocket 연결
       }
     };
@@ -150,9 +154,13 @@ export default function ChattingPage() {
 
   return (
     <ChatPageWrapper>
-      <Header hasBack={true} />
+      <Header hasBack={true} title={typeString + " 채팅"} />
       <ContentWrapper>
-        <ChatInfo selectedTab={typeString} />
+        <ChatInfo
+          selectedTab={typeString}
+          partnerName={partnerName}
+          roomId={roomId}
+        />
         <ChattingWrapper ref={scrollRef}>
           {messageList.map((msg) =>
             msg.sender === "me" ? (

@@ -15,6 +15,8 @@ export interface RoommateChatRoom {
   opponentNickname: string;
   lastMessage: string;
   lastMessageTime: string; // ISO8601 형식
+  partnerId: number;
+  partnerName: string;
 }
 
 export interface RoommateChat {
