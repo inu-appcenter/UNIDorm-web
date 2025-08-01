@@ -1,18 +1,13 @@
 // src/apis/tips.ts
 import axiosInstance from "./axiosInstance";
-
-export interface Tip {
-  id: number;
-  title: string;
-  type: string;
-  createDate: string;
-  filePath: string;
-  content: string;
-  tipLikeCount: number;
-  tipCommentCount: number;
-}
+import { Tip } from "../types/tips.ts";
 
 export const fetchTips = async (): Promise<Tip[]> => {
   const response = await axiosInstance.get("/tips");
+  return response.data;
+};
+
+export const fetchDailyRandomTips = async (): Promise<Tip[]> => {
+  const response = await axiosInstance.get<Tip[]>("/tips/daily-random");
   return response.data;
 };

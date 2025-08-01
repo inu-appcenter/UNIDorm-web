@@ -1,13 +1,20 @@
 import styled from "styled-components";
+import { useNavigate } from "react-router-dom";
 
 interface HomeCardProps {
   index: number;
+  id: number;
   content: string;
 }
 
-const HomeTipsCard = ({ index, content }: HomeCardProps) => {
+const HomeTipsCard = ({ index, id, content }: HomeCardProps) => {
+  const navigate = useNavigate();
+  const handleClickCard = () => {
+    navigate(`/tips/${id}`);
+  };
+
   return (
-    <HomeCardWrapper>
+    <HomeCardWrapper onClick={handleClickCard}>
       <span className="title">Tip {index}</span>
       <span className="content">{content}</span>
     </HomeCardWrapper>

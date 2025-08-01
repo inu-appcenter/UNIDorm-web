@@ -6,6 +6,9 @@ import ThreeWeekCalendar from "../components/home/ThreeWeekCalendar.tsx";
 import Header from "../components/common/Header.tsx";
 import 배너1 from "../assets/banner/포스터1.svg";
 import HomeTipsCard from "../components/home/HomeTipsCard.tsx";
+import { useEffect, useState } from "react";
+import { fetchDailyRandomTips } from "../apis/tips.ts";
+import { Tip } from "../types/tips.ts";
 
 const mockBoard = [
   {
@@ -24,6 +27,22 @@ const mockBoard = [
   },
 ];
 export default function HomePage() {
+  const [tips, setTips] = useState<Tip[]>([]);
+
+  useEffect(() => {
+    const getTips = async () => {
+      try {
+        const data = await fetchDailyRandomTips();
+        setTips(data);
+      } catch (err: any) {
+        if (err.response?.status === 204) {
+          setTips([]); // 팁이 3개 미만인 경우 빈 배열
+        }
+      }
+    };
+
+    getTips();
+  }, []);
   return (
     <HomePageWrapper>
       <Header title="아이돔" hasBack={false} showAlarm={true} />
@@ -60,12 +79,17 @@ export default function HomePage() {
         link={"/tips"}
         children={
           <>
-            <HomeTipsCard index={1} content={"재활용 시간 꿀팁"} />
-            <HomeTipsCard index={2} content={"통금시간 정보"} />
-            <HomeTipsCard index={3} content={"천원의 아침밥 먹는 법"} />
+            {tips.length > 0 ? (
+              tips.map((tip, key) => (
+                <HomeTipsCard index={key + 1} id={tip.id} content={tip.title} />
+              ))
+            ) : (
+              <p>오늘의 꿀팁이 없습니다.</p>
+            )}
           </>
         }
       />
+
       <TitleContentArea
         title={"캘린더 이벤트"}
         children={<ThreeWeekCalendar />}

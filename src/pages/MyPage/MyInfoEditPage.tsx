@@ -3,7 +3,12 @@ import { useLocation, useNavigate } from "react-router-dom";
 import StyledInput from "../../components/common/StyledInput.tsx";
 import SquareButton from "../../components/common/SquareButton.tsx";
 import { useEffect, useState } from "react";
-import { getMemberInfo, putMember, putUserImage } from "../../apis/members.ts";
+import {
+  deleteMembers,
+  getMemberInfo,
+  putMember,
+  putUserImage,
+} from "../../apis/members.ts";
 import useUserStore from "../../stores/useUserStore.ts";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import ToggleGroup from "../../components/roommate/checklist/ToggleGroup.tsx";
@@ -11,6 +16,39 @@ import SelectableChipGroup from "../../components/roommate/checklist/SelectableC
 import Header from "../../components/common/Header.tsx";
 import { colleges, domitory } from "../../constants/constants.ts";
 import RoundSquareButton from "../../components/button/RoundSquareButton.tsx";
+
+const menuItems = [
+  {
+    label: "회원탈퇴",
+    onClick: async () => {
+      try {
+        const confirmed = window.confirm(
+          "정말 탈퇴하시겠어요? 탈퇴 후에는 모든 회원 정보를 되돌릴 수 없어요.",
+        );
+        if (!confirmed) return;
+
+        const status = await deleteMembers();
+
+        switch (status) {
+          case 204:
+            alert("회원 탈퇴에 성공했어요.");
+            break;
+          case 403:
+            alert("인증되지 않은 사용자입니다. 다시 로그인해 주세요.");
+            break;
+          case 404:
+            alert("사용자를 찾을 수 없습니다. 이미 탈퇴되었을 수 있어요.");
+            break;
+          default:
+            alert("알 수 없는 오류가 발생했습니다.");
+        }
+      } catch (error) {
+        console.error("회원 탈퇴 중 예외 발생:", error);
+        alert("회원 탈퇴 중 네트워크 오류가 발생했습니다.");
+      }
+    },
+  },
+];
 
 export default function MyInfoEditPage() {
   const { userInfo, setUserInfo } = useUserStore();
@@ -56,7 +94,7 @@ export default function MyInfoEditPage() {
 
       const response = await putMember(
         name,
-        colleges[selectedCollegeIndex] + "학",
+        colleges[selectedCollegeIndex],
         domitory[selectedDomitoryIndex],
         0,
       );
@@ -115,6 +153,7 @@ export default function MyInfoEditPage() {
         title={"회원정보 수정"}
         hasBack={!isFirstVisit}
         showAlarm={false}
+        menuItems={menuItems}
       />
       <ContentWrapper>
         {/* 프로필 이미지 업로드 */}
