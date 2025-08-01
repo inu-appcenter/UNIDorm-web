@@ -63,6 +63,7 @@ export default function TipDetailPage() {
     try {
       const res = await axiosInstance.get(`/tips/${id}`);
       setTip(res.data);
+      console.log(res);
     } catch (err) {
       console.error("게시글 불러오기 실패", err);
     }
@@ -114,8 +115,8 @@ export default function TipDetailPage() {
   const handleCommentSubmit = async () => {
     if (!commentInput.trim()) return;
     try {
-      await axiosInstance.post("/api/tip-comments", {
-        parentCommentId: 0,
+      await axiosInstance.post("/tip-comments", {
+        parentCommentId: null,
         tipId: Number(id),
         reply: commentInput,
       });
@@ -131,7 +132,7 @@ export default function TipDetailPage() {
     const replyInput = replyInputs[parentCommentId];
     if (!replyInput?.trim()) return;
     try {
-      await axiosInstance.post("/api/tip-comments", {
+      await axiosInstance.post("/tip-comments", {
         parentCommentId,
         tipId: Number(id),
         reply: replyInput,
