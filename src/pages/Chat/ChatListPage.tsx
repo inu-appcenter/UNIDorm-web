@@ -48,9 +48,11 @@ export default function ChatListPage() {
     }
   }, [selectedTab, isLoggedIn]); // isLoggedIn도 dependency에 추가
 
-  const handleChatClick = (chatRoomId: number) => {
+  const handleChatClick = (chatRoomId: number, partnerName?: string) => {
     if (selectedTab === "룸메이트") {
-      navigate(`/chat/roommate/${chatRoomId}`);
+      // partnerName을 쿼리 파라미터나 state로 넘길 수도 있고, URL 경로에 포함할 수도 있습니다.
+      // 예시: state로 넘기기
+      navigate(`/chat/roommate/${chatRoomId}`, { state: { partnerName } });
     } else if (selectedTab === "공동구매") {
       navigate(`/chat/groupPurchase/${chatRoomId}`);
     }
@@ -112,8 +114,8 @@ export default function ChatListPage() {
             <ChatListItem
               key={room.chatRoomId}
               selectedTab={selectedTab}
-              onClick={() => handleChatClick(room.chatRoomId)}
-              title={room.opponentNickname}
+              onClick={() => handleChatClick(room.chatRoomId, room.partnerName)}
+              title={room.partnerName}
               message={room.lastMessage}
               time={room.lastMessageTime}
             />

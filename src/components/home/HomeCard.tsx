@@ -22,7 +22,7 @@ const EmergencyIconWrapper = styled.div`
 
   margin: 0 auto;
 
-  border: 1px solid #0a84ff;
+  //border: 1px solid #0a84ff;
   border-radius: 16px;
 
   /* 내부 오토레이아웃 */
@@ -36,7 +36,9 @@ const EmergencyIconWrapper = styled.div`
   line-height: 24px;
   letter-spacing: 0.38px;
 
-  color: #0a84ff;
+  color: white;
+
+  background: #0a84ff;
 `;
 
 interface HomeCardProps {
@@ -54,9 +56,10 @@ const HomeCard = ({
 }: HomeCardProps) => {
   return (
     <HomeCardWrapper>
+      <div className="emergency">{isEmergency && <EmergencyIcon />}</div>
+
       <FirstLine>
         <div className="title">{title}</div>
-        <div className="emergency">{isEmergency && <EmergencyIcon />}</div>
       </FirstLine>
       <SecondLine>{content}</SecondLine>
       <LastLine>
@@ -120,7 +123,7 @@ const SecondLine = styled.div`
 
   font-style: normal;
   font-weight: 500;
-  font-size: 12px;
+  font-size: 14px;
   line-height: 24px;
   letter-spacing: 0.38px;
 
