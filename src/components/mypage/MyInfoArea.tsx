@@ -22,7 +22,10 @@ const MyInfoArea = () => {
     <MyInfoAreaWrapper>
       <LeftArea>
         <div className="profile">
-          <img src={userProfileImg} alt="profile image" />
+          <img
+            src={userProfileImg || "/default-profile.png"}
+            alt="profile image"
+          />
         </div>
         <div className="description">
           <div className="name">{userInfo.name || "이름 정보 없음"}</div>
