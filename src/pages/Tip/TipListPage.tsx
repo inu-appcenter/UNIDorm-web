@@ -6,11 +6,12 @@ import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import TipCard from "../../components/tip/TipCard";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { fetchTips, Tip } from "../../apis/tips"; // ✅ 실제 API 가져오기
+import { fetchTips } from "../../apis/tips";
+import { Tip } from "../../types/tips.ts";
 
 export default function TipListPage() {
   const navigate = useNavigate();
-  const [tips, setTips] = useState<Tip[]>([]); // ✅ 상태 추가
+  const [tips, setTips] = useState<Tip[]>([]);
 
   useEffect(() => {
     const loadTips = async () => {
