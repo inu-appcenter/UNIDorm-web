@@ -36,7 +36,7 @@ const TitleLineWrapper = styled.div`
   .title {
     font-style: normal;
     font-weight: 600;
-    font-size: 18px;
+    font-size: 20px;
     line-height: 28px;
     /* 상자 높이와 동일 또는 175% */
 

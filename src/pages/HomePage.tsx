@@ -4,6 +4,8 @@ import HomeCard from "../components/home/HomeCard.tsx";
 import GroupPurchaseList from "../components/GroupPurchase/GroupPurchaseList.tsx";
 import ThreeWeekCalendar from "../components/home/ThreeWeekCalendar.tsx";
 import Header from "../components/common/Header.tsx";
+import 배너1 from "../assets/banner/포스터1.svg";
+import HomeTipsCard from "../components/home/HomeTipsCard.tsx";
 
 const mockBoard = [
   {
@@ -25,32 +27,47 @@ export default function HomePage() {
   return (
     <HomePageWrapper>
       <Header title="아이돔" hasBack={false} showAlarm={true} />
+      <img
+        src={배너1}
+        style={{
+          width: "100%",
+          height: "250px",
+          objectFit: "cover", // 넘치는 부분 잘라냄
+        }}
+      />
       <TitleContentArea
         title={mockBoard[0].type}
         link={"/notification"}
         children={
-          <HomeCard
-            title={mockBoard[0].title}
-            content={mockBoard[0].content}
-            isEmergency={mockBoard[0].isEmergency}
-            scrapCount={mockBoard[0].scrapCount}
-          />
+          <NotiWrapper>
+            <HomeCard
+              title={mockBoard[0].title}
+              content={mockBoard[0].content}
+              isEmergency={mockBoard[0].isEmergency}
+              scrapCount={mockBoard[0].scrapCount}
+            />
+            <HomeCard
+              title={mockBoard[0].title}
+              content={mockBoard[0].content}
+              isEmergency={mockBoard[0].isEmergency}
+              scrapCount={mockBoard[0].scrapCount}
+            />
+          </NotiWrapper>
         }
       />
       <TitleContentArea
-        title={mockBoard[1].type}
+        title="오늘의 Best 꿀팁"
         link={"/tips"}
         children={
-          <HomeCard
-            title={mockBoard[1].title}
-            content={mockBoard[1].content}
-            isEmergency={mockBoard[1].isEmergency}
-            scrapCount={mockBoard[1].scrapCount}
-          />
+          <>
+            <HomeTipsCard index={1} content={"재활용 시간 꿀팁"} />
+            <HomeTipsCard index={2} content={"통금시간 정보"} />
+            <HomeTipsCard index={3} content={"천원의 아침밥 먹는 법"} />
+          </>
         }
       />
       <TitleContentArea
-        title={"다가오는 이벤트"}
+        title={"캘린더 이벤트"}
         children={<ThreeWeekCalendar />}
       />
       <TitleContentArea
@@ -64,6 +81,7 @@ export default function HomePage() {
 
 const HomePageWrapper = styled.div`
   padding: 90px 16px;
+  padding-top: 30px;
 
   display: flex;
   flex-direction: column;
@@ -76,4 +94,11 @@ const HomePageWrapper = styled.div`
   overflow-y: auto;
 
   background: #fafafa;
+`;
+
+const NotiWrapper = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  width: 100%;
 `;
