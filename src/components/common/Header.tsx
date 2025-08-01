@@ -160,7 +160,7 @@ const StyledHeader = styled.header<{ $hasShadow: boolean; $isHome: boolean }>`
     line-height: 24px;
     letter-spacing: 0.38px;
     color: #1c1c1e;
-    text-align: center;
+    text-align: left;
     display: flex;
     align-items: center;
     justify-content: center;

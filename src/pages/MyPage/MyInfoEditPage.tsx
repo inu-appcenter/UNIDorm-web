@@ -14,7 +14,7 @@ import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import ToggleGroup from "../../components/roommate/checklist/ToggleGroup.tsx";
 import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
 import Header from "../../components/common/Header.tsx";
-import { colleges, domitory } from "../../constants/constants.ts";
+import { colleges, dormitory } from "../../constants/constants.ts";
 import RoundSquareButton from "../../components/button/RoundSquareButton.tsx";
 
 const menuItems = [
@@ -74,7 +74,7 @@ export default function MyInfoEditPage() {
 
   useEffect(() => {
     setSelectedCollegeIndex(findIndex(colleges, userInfo.college));
-    setSelectedDomitoryIndex(findIndex(domitory, userInfo.dormType));
+    setSelectedDomitoryIndex(findIndex(dormitory, userInfo.dormType));
   }, []);
 
   const isFilled = () => {
@@ -95,7 +95,7 @@ export default function MyInfoEditPage() {
       const response = await putMember(
         name,
         colleges[selectedCollegeIndex],
-        domitory[selectedDomitoryIndex],
+        dormitory[selectedDomitoryIndex],
         0,
       );
       console.log(response);
@@ -223,7 +223,7 @@ export default function MyInfoEditPage() {
           title={"기숙사 종류"}
           children={
             <ToggleGroup
-              Groups={domitory}
+              Groups={dormitory}
               selectedIndex={selectedDomitoryIndex}
               onSelect={setSelectedDomitoryIndex}
             />
