@@ -6,6 +6,8 @@ import back from "../../assets/header/back.svg";
 import TopRightDropdownMenu from "./TopRightDropdownMenu.tsx";
 import { Bell } from "lucide-react";
 
+import logo from "../../assets/unidorm-logo.svg";
+
 import { getMobilePlatform } from "../../utils/getMobilePlatform";
 
 interface MenuItemType {
@@ -89,13 +91,22 @@ export default function Header({
   };
 
   return (
-    <StyledHeader $hasShadow={shadowSelector()}>
+    <StyledHeader
+      $hasShadow={shadowSelector()}
+      $isHome={location.pathname === "/home"}
+    >
       <MainLine $platform={platform}>
         <Left>
           {hasBack && (
             <img src={back} alt="뒤로가기" onClick={handleBackClick} />
           )}
-          <div className="Title">{title ?? getCurrentPage()}</div>
+          <div className="Title">
+            {location.pathname === "/home" ? (
+              <img className="logo" src={logo} />
+            ) : (
+              (title ?? getCurrentPage())
+            )}
+          </div>
           {/*<span>{platform}</span>*/}
         </Left>
 
@@ -113,16 +124,21 @@ export default function Header({
   );
 }
 
-const StyledHeader = styled.header<{ $hasShadow: boolean }>`
+const StyledHeader = styled.header<{ $hasShadow: boolean; $isHome: boolean }>`
   position: absolute;
   top: 0;
   left: 0;
   z-index: 1000;
   width: 100%;
 
-  background: rgba(244, 244, 244, 0.6);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: ${({ $isHome }) =>
+    $isHome
+      ? "linear-gradient(360deg, rgba(255, 255, 255, 0) 0%, #FFFFFF 80.71%)"
+      : "rgba(244, 244, 244, 0.6)"};
+
+  backdrop-filter: ${({ $isHome }) => ($isHome ? "none" : "blur(10px)")};
+  -webkit-backdrop-filter: ${({ $isHome }) =>
+    $isHome ? "none" : "blur(10px)"};
 
   box-shadow: ${({ $hasShadow }) =>
     $hasShadow ? "0 2px 4px rgba(0, 0, 0, 0.1)" : "none"};
@@ -133,13 +149,18 @@ const StyledHeader = styled.header<{ $hasShadow: boolean }>`
     cursor: pointer;
   }
 
+  .logo {
+    width: 60px;
+    height: 100%;
+  }
+
   .Title {
     font-weight: 600;
     font-size: 20px;
     line-height: 24px;
     letter-spacing: 0.38px;
     color: #1c1c1e;
-    text-align: center;
+    text-align: left;
     display: flex;
     align-items: center;
     justify-content: center;

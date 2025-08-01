@@ -90,3 +90,18 @@ export const updateMyRoommateRules = async (
 export const deleteMyRoommateRules = async (): Promise<AxiosResponse<void>> => {
   return await tokenInstance.delete("/my-roommate");
 };
+
+export const getOpponentChecklist = async (
+  chatRoomId: number,
+): Promise<AxiosResponse<RoommatePost>> => {
+  const response = await tokenInstance.get<RoommatePost>(
+    `/roommate-chatting-room/roommate-chatrooms/${chatRoomId}/opponent-checklist`,
+  );
+  return response;
+};
+
+export const deleteRoommateChatRoom = async (
+  chatRoomId: number,
+): Promise<AxiosResponse<void>> => {
+  return await tokenInstance.delete(`/roommate-chatting-room/${chatRoomId}`);
+};

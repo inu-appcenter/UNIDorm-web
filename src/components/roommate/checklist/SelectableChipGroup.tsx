@@ -3,6 +3,7 @@ import styled from "styled-components";
 interface BaseProps {
   Groups: string[];
   multi?: boolean;
+  disabled?: boolean; // disabled 추가
 }
 
 type SingleSelectProps = BaseProps & {
@@ -26,9 +27,17 @@ const isMultiProps = (
 };
 
 const SelectableChipGroup = (props: SelectableChipProps) => {
-  const { Groups, selectedIndex, selectedIndices, multi = false } = props;
+  const {
+    Groups,
+    selectedIndex,
+    selectedIndices,
+    multi = false,
+    disabled = false,
+  } = props;
 
   const handleClick = (index: number) => {
+    if (disabled) return; // 클릭 무력화
+
     if (isMultiProps(props)) {
       const newSelected = props.selectedIndices.includes(index)
         ? props.selectedIndices.filter((i) => i !== index)
@@ -52,6 +61,7 @@ const SelectableChipGroup = (props: SelectableChipProps) => {
             key={index}
             selected={isSelected}
             onClick={() => handleClick(index)}
+            disabled={disabled} // 스타일용 prop 전달
           >
             {content}
           </SelectableChip>
@@ -70,7 +80,7 @@ const SelectableChipGroupWrapper = styled.div`
   width: 100%;
 `;
 
-const SelectableChip = styled.div<{ selected: boolean }>`
+const SelectableChip = styled.div<{ selected: boolean; disabled?: boolean }>`
   box-sizing: border-box;
   display: flex;
   justify-content: center;
@@ -83,9 +93,16 @@ const SelectableChip = styled.div<{ selected: boolean }>`
 
   font-size: 12px;
   color: ${({ selected }) => (selected ? "#ffffff" : "#8e8e93")};
-  cursor: pointer;
+  cursor: ${({ disabled }) => (disabled ? "not-allowed" : "pointer")};
 
   transition:
     background 0.2s ease,
     color 0.2s ease;
+
+  ${({ disabled }) =>
+    disabled &&
+    `
+    opacity: 0.6;
+    pointer-events: none;
+  `}
 `;

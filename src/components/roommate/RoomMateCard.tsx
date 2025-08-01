@@ -41,7 +41,7 @@ const RoomMateCard = ({
       )}
 
       {/* dormType 배지를 원래 위치인 우측 상단에 독립적으로 배치 */}
-      <TopRightBadge>{dormType}</TopRightBadge>
+      <TopRightBadge dormType={dormType}>{dormType}</TopRightBadge>
 
       <ContentContainer isPercentageVisible={percentage !== undefined}>
         {/* 태그들은 콘텐츠 영역 내에 배치 */}
@@ -84,20 +84,33 @@ const CardWrapper = styled.div`
 `;
 
 // TopRightBadge (기숙사 타입) 원래 위치 및 스타일 복원
-const TopRightBadge = styled.div`
-  position: absolute; /* 절대 위치로 우측 상단에 고정 */
+const TopRightBadge = styled.div.withConfig({
+  shouldForwardProp: (prop) => prop !== "dormType",
+})<{ dormType: string }>`
+  position: absolute;
   top: 12px;
   right: 12px;
   font-size: 12px;
-  background: #0a84ff;
   color: white;
   padding: 4px 8px;
   border-radius: 8px;
   font-weight: 600;
-  z-index: 1; /* 다른 요소 위에 표시되도록 z-index 설정 */
-`;
+  z-index: 1;
 
-const LeftCircle = styled.div<{ percentage: number }>`
+  background: ${({ dormType }) => {
+    switch (dormType) {
+      case "2기숙사":
+        return "#0a84ff";
+      case "3기숙사":
+        return "#ff6b6b";
+      default:
+        return "#0a84ff";
+    }
+  }};
+`;
+const LeftCircle = styled.div.withConfig({
+  shouldForwardProp: (prop) => prop !== "percentage",
+})<{ percentage: number }>`
   width: 48px;
   height: 48px;
   min-width: 48px;
@@ -140,14 +153,11 @@ interface ContentContainerProps {
   isPercentageVisible: boolean;
 }
 
-const ContentContainer = styled.div<ContentContainerProps>`
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-  gap: 6px;
-  /* TopRightBadge가 다시 absolute로 위치하므로, 콘텐츠 자체의 패딩은 영향을 덜 받음 */
-  /* 필요하다면 TopRightBadge가 콘텐츠를 가리지 않도록 이 곳에 padding-top을 추가할 수 있습니다. */
-  padding-top: 0; /* 기본값으로 설정 */
+const ContentContainer = styled.div.withConfig({
+  shouldForwardProp: (prop) => prop !== "isPercentageVisible",
+})<ContentContainerProps>`
+  padding-top: ${({ isPercentageVisible }) =>
+    isPercentageVisible ? "10px" : "0"};
 `;
 
 const TagRow = styled.div`
@@ -157,11 +167,9 @@ const TagRow = styled.div`
   margin-right: 60px;
 `;
 
-interface TagProps {
-  category: string;
-}
-
-const Tag = styled.div<TagProps>`
+const Tag = styled.div.withConfig({
+  shouldForwardProp: (prop) => prop !== "category",
+})<{ category: string }>`
   font-size: 12px;
   color: #1c1c1e;
   padding: 4px 8px;
@@ -181,7 +189,6 @@ const Tag = styled.div<TagProps>`
         return "#f1f1f1";
     }
   }};
-  color: #1c1c1e; /* Tag 텍스트 색상 기본값으로 유지 */
 `;
 
 const StayInfo = styled.div`

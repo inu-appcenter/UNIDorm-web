@@ -31,10 +31,9 @@ export const putUserImage = async (imageFile: File): Promise<AxiosResponse> => {
 };
 
 // 회원 삭제
-export const deleteMembers = async (): Promise<ApiResponse<number>> => {
-  const response =
-    await tokenInstance.delete<ApiResponse<number>>(`/api/members`);
-  return response.data;
+export const deleteMembers = async (): Promise<number> => {
+  const response = await tokenInstance.delete(`/users`);
+  return response.status;
 };
 
 // 로그인
