@@ -3,8 +3,9 @@ import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { IoCloseSharp } from "react-icons/io5";
 import { MdImage } from "react-icons/md";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import axiosInstance from "../../apis/axiosInstance";
+import SquareButton from "../../components/common/SquareButton.tsx";
 
 export default function TipWritePage() {
   const navigate = useNavigate();
@@ -40,7 +41,7 @@ export default function TipWritePage() {
             content: content,
           }),
         ],
-        { type: "application/json" }
+        { type: "application/json" },
       );
 
       formData.append("requestTipDto", tipDto);
@@ -108,7 +109,10 @@ export default function TipWritePage() {
         />
       </Content>
 
-      <SubmitButton onClick={handleSubmit}>등록하기</SubmitButton>
+      {/*<SubmitButton onClick={handleSubmit}>등록하기</SubmitButton>*/}
+      <ButtonWrapper>
+        <SquareButton text="등록하기" onClick={handleSubmit} />
+      </ButtonWrapper>
     </Wrapper>
   );
 }
@@ -198,18 +202,30 @@ const Textarea = styled.textarea`
   resize: none;
 `;
 
-const SubmitButton = styled.button`
+// const SubmitButton = styled.button`
+//   position: fixed;
+//   bottom: 90px;
+//   left: 16px;
+//   right: 16px;
+//   background: #007bff;
+//   color: white;
+//   border: none;
+//   border-radius: 12px;
+//   padding: 16px;
+//   font-weight: bold;
+//   font-size: 16px;
+//   cursor: pointer;
+//   z-index: 1001;
+// `;
+
+const ButtonWrapper = styled.div`
+  width: 100%;
+  height: fit-content;
   position: fixed;
-  bottom: 90px;
-  left: 16px;
-  right: 16px;
-  background: #007bff;
-  color: white;
-  border: none;
-  border-radius: 12px;
-  padding: 16px;
-  font-weight: bold;
-  font-size: 16px;
-  cursor: pointer;
-  z-index: 1001;
+
+  padding: 12px 16px;
+  box-sizing: border-box;
+
+  bottom: 0;
+  left: 0;
 `;
