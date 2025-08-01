@@ -81,7 +81,12 @@ export default function HomePage() {
           <>
             {tips.length > 0 ? (
               tips.map((tip, key) => (
-                <HomeTipsCard index={key + 1} id={tip.id} content={tip.title} />
+                <HomeTipsCard
+                  key={key}
+                  index={key + 1}
+                  id={tip.id}
+                  content={tip.title}
+                />
               ))
             ) : (
               <p>오늘의 꿀팁이 없습니다.</p>
