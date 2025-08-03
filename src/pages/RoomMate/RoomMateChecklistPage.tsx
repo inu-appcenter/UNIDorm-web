@@ -186,7 +186,7 @@ export default function RoomMateChecklistPage() {
       }
 
       alert(
-        "룸메이트 체크리스트 등록을 성공했어요. 룸메이트 탭에서 나와 맞는 룸메이트를 찾아보세요!",
+        `룸메이트 체크리스트 ${userInfo.roommateCheckList ? "수정" : "등록"}을 성공했어요. 룸메이트 탭에서 나와 맞는 룸메이트를 찾아보세요!`,
       );
       navigate("/roommate");
       console.log(res.data);
