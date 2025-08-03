@@ -8,6 +8,7 @@ import SquareButton from "../../components/common/SquareButton.tsx";
 import {
   createRoommatePost,
   getOpponentChecklist,
+  putRoommatePost,
 } from "../../apis/roommate.ts";
 import {
   bedtime,
@@ -172,15 +173,18 @@ export default function RoomMateChecklistPage() {
     };
 
     try {
-      const res = await createRoommatePost(requestBody);
+      const res = userInfo.roommateCheckList
+        ? await putRoommatePost(requestBody)
+        : await createRoommatePost(requestBody);
 
       try {
         const response = await getMemberInfo();
-        console.log(response);
         setUserInfo(response.data);
+        console.log(response);
       } catch (error) {
-        console.error("회원 가져오기 실패", error);
+        console.error("회원 정보 불러오기 실패", error);
       }
+
       alert(
         "룸메이트 체크리스트 등록을 성공했어요. 룸메이트 탭에서 나와 맞는 룸메이트를 찾아보세요!",
       );
@@ -440,7 +444,10 @@ export default function RoomMateChecklistPage() {
 
       {!isViewerMode && (
         <ButtonWrapper>
-          <SquareButton text={"저장하기"} onClick={handleSubmit} />
+          <SquareButton
+            text={userInfo.roommateCheckList ? "수정하기" : "저장하기"}
+            onClick={handleSubmit}
+          />
         </ButtonWrapper>
       )}
     </RoomMateChecklistPageWrapper>
