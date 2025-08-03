@@ -84,7 +84,7 @@ const LeftArea = styled.div`
   display: flex;
   flex-direction: row;
   justify-content: center;
-  min-width: fit-content;
+  max-width: 100%;
   height: fit-content;
   gap: 8px;
 
@@ -92,6 +92,7 @@ const LeftArea = styled.div`
     display: flex;
     flex-direction: column;
     width: 100%;
+    overflow-x: hidden;
     font-style: normal;
     font-size: 16px;
     line-height: 24px;

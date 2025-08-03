@@ -6,7 +6,7 @@ import ThreeWeekCalendar from "../components/home/ThreeWeekCalendar.tsx";
 import Header from "../components/common/Header.tsx";
 import 배너1 from "../assets/banner/포스터1.svg";
 import HomeTipsCard from "../components/home/HomeTipsCard.tsx";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { fetchDailyRandomTips } from "../apis/tips.ts";
 import { Tip } from "../types/tips.ts";
 
@@ -43,78 +43,146 @@ export default function HomePage() {
 
     getTips();
   }, []);
+
+  const sliderRef = useRef<HTMLDivElement>(null);
+  const indexRef = useRef(0);
+  const totalSlides = 3;
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const autoSlideTimerRef = useRef<NodeJS.Timeout | null>(null); // 🔹 타이머를 ref로
+
+  useEffect(() => {
+    const slider = sliderRef.current;
+    if (!slider) return;
+
+    const startAutoSlide = () => {
+      if (autoSlideTimerRef.current) clearInterval(autoSlideTimerRef.current);
+      autoSlideTimerRef.current = setInterval(() => {
+        if (!slider) return;
+        indexRef.current = (indexRef.current + 1) % totalSlides;
+        slider.scrollTo({
+          left: slider.clientWidth * indexRef.current,
+          behavior: "smooth",
+        });
+        setCurrentIndex(indexRef.current);
+      }, 4000);
+    };
+
+    const delayTimer = setTimeout(startAutoSlide, 300); // 처음 mount 이후 300ms 지연
+
+    const handleManualScroll = () => {
+      if (!slider) return;
+
+      // 현재 인덱스 계산
+      const newIndex = Math.round(slider.scrollLeft / slider.clientWidth);
+      indexRef.current = newIndex;
+      setCurrentIndex(newIndex);
+
+      // 🔹 기존 타이머 클리어 및 일정 시간 후 재시작
+      if (autoSlideTimerRef.current) {
+        clearInterval(autoSlideTimerRef.current);
+        autoSlideTimerRef.current = null;
+      }
+
+      // 5초 뒤에 다시 자동 슬라이드 시작
+      setTimeout(startAutoSlide, 5000);
+    };
+
+    slider.addEventListener("scroll", handleManualScroll);
+
+    return () => {
+      clearTimeout(delayTimer);
+      if (autoSlideTimerRef.current) clearInterval(autoSlideTimerRef.current);
+      slider.removeEventListener("scroll", handleManualScroll);
+    };
+  }, []);
+
   return (
     <HomePageWrapper>
       <Header title="아이돔" hasBack={false} showAlarm={true} />
-      <img
-        src={배너1}
-        style={{
-          width: "100%",
-          height: "250px",
-          objectFit: "cover", // 넘치는 부분 잘라냄
-        }}
-      />
-      <TitleContentArea
-        title={mockBoard[0].type}
-        link={"/notification"}
-        children={
-          <NotiWrapper>
-            <HomeCard
-              title={mockBoard[0].title}
-              content={mockBoard[0].content}
-              isEmergency={mockBoard[0].isEmergency}
-              scrapCount={mockBoard[0].scrapCount}
-            />
-            <HomeCard
-              title={mockBoard[0].title}
-              content={mockBoard[0].content}
-              isEmergency={mockBoard[0].isEmergency}
-              scrapCount={mockBoard[0].scrapCount}
-            />
-          </NotiWrapper>
-        }
-      />
-      <TitleContentArea
-        title="오늘의 Best 꿀팁"
-        link={"/tips"}
-        children={
-          <>
-            {tips.length > 0 ? (
-              tips.map((tip, key) => (
-                <HomeTipsCard
-                  key={key}
-                  index={key + 1}
-                  id={tip.id}
-                  content={tip.title}
-                />
-              ))
-            ) : (
-              <p>오늘의 꿀팁이 없습니다.</p>
-            )}
-          </>
-        }
-      />
 
-      <TitleContentArea
-        title={"캘린더 이벤트"}
-        children={<ThreeWeekCalendar />}
-      />
-      <TitleContentArea
-        title={"임박한 공구"}
-        link={"/groupPurchase"}
-        children={<GroupPurchaseList />}
-      />
+      <BannerWrapper>
+        <FullWidthSlider ref={sliderRef}>
+          <FullWidthSlide>
+            <img src={배너1} />
+          </FullWidthSlide>
+          <FullWidthSlide>
+            <img src={배너1} />
+          </FullWidthSlide>
+          <FullWidthSlide>
+            <img src={배너1} />
+          </FullWidthSlide>
+        </FullWidthSlider>
+        {/* 인디케이터 */}
+        <IndicatorWrapper>
+          {Array.from({ length: totalSlides }).map((_, idx) => (
+            <Dot key={idx} active={idx === currentIndex} />
+          ))}
+        </IndicatorWrapper>
+      </BannerWrapper>
+
+      <ContentWrapper>
+        <TitleContentArea
+          title={mockBoard[0].type}
+          link={"/notification"}
+          children={
+            <NotiWrapper>
+              <HomeCard
+                title={mockBoard[0].title}
+                content={mockBoard[0].content}
+                isEmergency={mockBoard[0].isEmergency}
+                scrapCount={mockBoard[0].scrapCount}
+              />
+              <HomeCard
+                title={mockBoard[0].title}
+                content={mockBoard[0].content}
+                isEmergency={mockBoard[0].isEmergency}
+                scrapCount={mockBoard[0].scrapCount}
+              />
+            </NotiWrapper>
+          }
+        />
+        <TitleContentArea
+          title="오늘의 Best 꿀팁"
+          link={"/tips"}
+          children={
+            <>
+              {tips.length > 0 ? (
+                tips.map((tip, key) => (
+                  <HomeTipsCard
+                    key={key}
+                    index={key + 1}
+                    id={tip.id}
+                    content={tip.title}
+                  />
+                ))
+              ) : (
+                <p>오늘의 꿀팁이 없습니다.</p>
+              )}
+            </>
+          }
+        />
+
+        <TitleContentArea
+          title={"캘린더 이벤트"}
+          children={<ThreeWeekCalendar />}
+        />
+        <TitleContentArea
+          title={"임박한 공구"}
+          link={"/groupPurchase"}
+          children={<GroupPurchaseList />}
+        />
+      </ContentWrapper>
     </HomePageWrapper>
   );
 }
 
 const HomePageWrapper = styled.div`
-  padding: 90px 16px;
-  padding-top: 30px;
-
   display: flex;
   flex-direction: column;
   gap: 16px;
+  padding-top: 16px;
+  padding-bottom: 120px;
   box-sizing: border-box;
 
   width: 100%;
@@ -125,9 +193,75 @@ const HomePageWrapper = styled.div`
   background: #fafafa;
 `;
 
+const ContentWrapper = styled.div`
+  padding: 0 16px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-sizing: border-box;
+`;
 const NotiWrapper = styled.div`
   display: flex;
   flex-direction: row;
   gap: 12px;
   width: 100%;
+`;
+
+const FullWidthSlider = styled.div`
+  display: flex;
+  overflow-x: scroll;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  width: 100%;
+  position: relative; /* ← 플로팅을 위한 설정 */
+  -ms-overflow-style: none; /* IE */
+  scrollbar-width: none; /* Firefox */
+  min-height: fit-content;
+
+  &::-webkit-scrollbar {
+    display: none; /* Chrome */
+  }
+`;
+
+const FullWidthSlide = styled.div`
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+
+  img {
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
+  }
+`;
+
+const BannerWrapper = styled.div`
+  position: relative;
+  width: 100%;
+`;
+
+const IndicatorWrapper = styled.div`
+  position: absolute;
+  bottom: 12px; /* 이미지 하단에서 약간 위 */
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  //padding: 0 16px;
+  pointer-events: none;
+`;
+
+const Dot = styled.div<{ active: boolean }>`
+  height: 3px;
+  flex: 1;
+  background-color: ${({ active }) => (active ? "#FFD600" : "#ccc")};
+  transition: background-color 0.3s ease;
+  border-radius: 2px;
+  &:not(:last-child) {
+    margin-right: 6px;
+  }
 `;

@@ -15,7 +15,7 @@ import ToggleGroup from "../../components/roommate/checklist/ToggleGroup.tsx";
 import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
 import Header from "../../components/common/Header.tsx";
 import { colleges, dormitory } from "../../constants/constants.ts";
-import RoundSquareButton from "../../components/button/RoundSquareButton.tsx";
+import RoundSquareBlueButton from "../../components/button/RoundSquareBlueButton.tsx";
 
 const menuItems = [
   {
@@ -186,7 +186,7 @@ export default function MyInfoEditPage() {
 
               {imageFile && (
                 <UploadButtonWrapper>
-                  <RoundSquareButton
+                  <RoundSquareBlueButton
                     btnName="이미지 변경하기"
                     onClick={handleUploadImage}
                   />
