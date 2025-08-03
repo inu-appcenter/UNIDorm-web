@@ -2,23 +2,11 @@ import CommentIcon from "../../assets/comment.svg";
 import HeartIcon from "../../assets/heart.svg";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-
-interface RoomMateCardProps {
-  boardId: number;
-  dormType: string;
-  mbti: string;
-  college: string;
-  isSmoker: boolean;
-  isClean: boolean;
-  stayDays: string[];
-  description: string;
-  commentCount: number;
-  likeCount: number;
-  percentage?: number;
-}
+import { RoomMateCardProps } from "../../types/roommates.ts";
 
 const RoomMateCard = ({
   boardId,
+  title,
   dormType,
   mbti,
   college,
@@ -44,6 +32,9 @@ const RoomMateCard = ({
       <TopRightBadge dormType={dormType}>{dormType}</TopRightBadge>
 
       <ContentContainer isPercentageVisible={percentage !== undefined}>
+        <span className="title">{title}</span>
+        {description && <Description>{description}</Description>}
+
         {/* 태그들은 콘텐츠 영역 내에 배치 */}
         <TagRow>
           <Tag category="mbti">{mbti}</Tag>
@@ -51,10 +42,7 @@ const RoomMateCard = ({
           <Tag category="smoker">{isSmoker ? "흡연⭕" : "흡연❌"}</Tag>
           <Tag category="clean">{isClean ? "🧼깔끔" : "정돈보통"}</Tag>
         </TagRow>
-
         <StayInfo>상주 요일: {stayDays.join(", ")}</StayInfo>
-        <Description>"{description}"</Description>
-
         <BottomLine>
           <img src={CommentIcon} alt="댓글 아이콘" />
           <span>{commentCount}</span>
@@ -158,13 +146,27 @@ const ContentContainer = styled.div.withConfig({
 })<ContentContainerProps>`
   padding-top: ${({ isPercentageVisible }) =>
     isPercentageVisible ? "10px" : "0"};
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 6px;
+
+  .title {
+    font-style: normal;
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 24px;
+    letter-spacing: 0.38px;
+
+    color: #1c1c1e;
+  }
 `;
 
 const TagRow = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-right: 60px;
+  //margin-right: 60px;
 `;
 
 const Tag = styled.div.withConfig({
