@@ -1,8 +1,7 @@
 import styled from "styled-components";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import Header from "../../components/common/Header";
-import GrayDivider from "../../components/common/GrayDivider.tsx";
 import IconTextButton from "../../components/button/IconTextButton.tsx";
 import StyledTextArea from "../../components/roommate/StyledTextArea.tsx";
 import RoomMateInfoArea from "../../components/roommate/RoomMateInfoArea.tsx";
@@ -12,9 +11,14 @@ import {
   getMyRoommateRules,
   updateMyRoommateRules,
 } from "../../apis/roommate.ts";
-import RoundSquareButton from "../../components/button/RoundSquareButton.tsx";
+import RoundSquareBlueButton from "../../components/button/RoundSquareBlueButton.tsx";
 import QuickMessageModal from "../../components/roommate/QuickMessageModal.tsx";
 import { MyRoommateInfoResponse } from "../../types/roommates.ts";
+import {
+  getUserTimetableImage,
+  putUserTimetableImage,
+} from "../../apis/members.ts";
+import RoundSquareWhiteButton from "../../components/button/RoundSquareWhiteButton.tsx";
 
 export default function MyRoomMatePage() {
   const [roommateInfo, setRoommateInfo] =
@@ -25,6 +29,11 @@ export default function MyRoomMatePage() {
   const [isEditing, setIsEditing] = useState(false);
 
   const [showQuickModal, setShowQuickModal] = useState(false);
+
+  const [showImgConfirmModal, setShowImgConfirmModal] = useState(false); //모달창 열림 여부
+
+  // 룸메이트 없을 때 overlay 표시 및 클릭 막기
+  const isDisabled = notFound;
 
   // 룸메이트 없으면 빈 배열로 처리
   const menuItems = notFound
@@ -83,12 +92,93 @@ export default function MyRoomMatePage() {
       }
     };
 
+    const fetchUserTimetable = async () => {
+      try {
+        const res = await getUserTimetableImage();
+        // 초기 구조: fileName 하나만 오더라도 배열로 처리
+        const urls = res.data.fileNames
+          ? res.data.fileNames
+          : [res.data.fileName].filter(Boolean);
+        setTimetableImageUrls(urls);
+      } catch (error: any) {
+        console.log("시간표 이미지 불러오기 실패:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchRules();
     fetchRoommateInfo();
+    fetchUserTimetable();
   }, []);
 
-  // 룸메이트 없을 때 overlay 표시 및 클릭 막기
-  const isDisabled = notFound;
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  const [timetableImageUrls, setTimetableImageUrls] = useState<string[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const handleUploadImage = async () => {
+    console.log("이미지 업로드 시도");
+
+    if (!imageFile) return;
+
+    try {
+      console.log("이미지 업로드 시도");
+      const response = await putUserTimetableImage(imageFile);
+      console.log("이미지 업로드 완료");
+
+      if (response.status === 200) {
+        alert("시간표 이미지가 업로드되었습니다.");
+        const newImageUrl = response.data.fileName;
+        setTimetableImageUrls((prev) => [...prev, newImageUrl]);
+        // setCurrentIndex(timetableImageUrls.length); // 새 이미지로 슬라이드 이동
+        setShowImgConfirmModal(false);
+      } else {
+        alert("이미지 업로드 실패");
+      }
+    } catch (error) {
+      alert("이미지 업로드 오류 발생");
+      console.error(error);
+    }
+  };
+
+  // 이미지 선택 핸들러
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+      setShowImgConfirmModal(true);
+      // if (window.confirm("이 이미지로 업로드하시겠어요?")) {
+      //   handleUploadImage();
+      // }
+    }
+  };
+
+  const sliderRef = useRef<HTMLDivElement>(null);
+  const indexRef = useRef(0);
+  const totalSlides = 2;
+
+  useEffect(() => {
+    const slider = sliderRef.current;
+    if (!slider) return;
+
+    const handleManualScroll = () => {
+      if (!slider) return;
+      const newIndex = Math.round(slider.scrollLeft / slider.clientWidth);
+      indexRef.current = newIndex;
+      setCurrentIndex(newIndex); // ← 상태 업데이트
+    };
+
+    slider.addEventListener("scroll", handleManualScroll);
+
+    return () => {
+      // clearInterval(autoSlideTimer);
+      // clearTimeout(delayTimer);
+      slider.removeEventListener("scroll", handleManualScroll);
+    };
+  }, []);
 
   return (
     <MyRoomMatePageWrapper>
@@ -98,18 +188,127 @@ export default function MyRoomMatePage() {
         showAlarm={false}
         menuItems={menuItems}
       />
+      {showImgConfirmModal && previewUrl && (
+        <ModalBackGround>
+          <Modal>
+            이 이미지로 시간표를 업로드할까요?
+            <img src={previewUrl} />
+            <ButtonGroupWrapper>
+              <RoundSquareWhiteButton
+                btnName={"취소"}
+                onClick={() => setShowImgConfirmModal(false)}
+              />
+              <RoundSquareBlueButton
+                btnName={"업로드"}
+                onClick={handleUploadImage}
+              />
+            </ButtonGroupWrapper>
+          </Modal>
+        </ModalBackGround>
+      )}
 
       <RoomMateInfoArea roommateInfo={roommateInfo} notFound={notFound} />
-      <GrayDivider />
 
       <DisabledWrapper disabled={isDisabled}>
+        <DisabledWrapper disabled={isDisabled}>
+          <IconTextButton
+            type="quickmessage"
+            onClick={() => {
+              if (isDisabled) return;
+              setShowQuickModal(true);
+            }}
+          />
+        </DisabledWrapper>
+
+        {showQuickModal && (
+          <QuickMessageModal
+            onClose={() => setShowQuickModal(false)}
+            onSelect={(message) => {
+              console.log("선택된 메시지:", message);
+              // 메시지 전송 API 연동 가능
+              setShowQuickModal(false);
+            }}
+          />
+        )}
+        {/*<GrayDivider />*/}
+
+        <input
+          type="file"
+          accept="image/*"
+          id="timetable-upload"
+          style={{ display: "none" }}
+          onChange={(e) => {
+            handleImageChange(e);
+            e.target.value = ""; // 이거 추가해서 input 초기화
+          }}
+        />
+
+        {/* 시간표 추가 버튼 (input 트리거) */}
         <IconTextButton
           type="addtimetable"
           onClick={() => {
             if (isDisabled) return;
-            console.log("시간표 추가 클릭");
+            document.getElementById("timetable-upload")?.click();
           }}
         />
+
+        <div
+          style={{ position: "relative", width: "100%", overflow: "hidden" }}
+        >
+          <FullWidthSlider ref={sliderRef}>
+            <FullWidthSlide>
+              <div className="timetableTitle">룸메이트 시간표</div>
+              {timetableImageUrls[1] ? (
+                <img
+                  src={timetableImageUrls[0]}
+                  alt="룸메이트 시간표"
+                  style={{
+                    width: "100%",
+                    height: "250px",
+                    objectFit: "cover",
+                    borderRadius: "8px",
+                  }}
+                />
+              ) : (
+                <Placeholder>
+                  룸메이트가 시간표를 등록하지 않았어요.
+                  <br />
+                  룸메이트에게 시간표 등록을 요청해보세요!
+                </Placeholder>
+              )}
+            </FullWidthSlide>
+
+            <FullWidthSlide>
+              <div className="timetableTitle">내 시간표</div>
+              {timetableImageUrls[1] ? (
+                <img
+                  src={timetableImageUrls[0]}
+                  alt={`내 시간표`}
+                  style={{
+                    width: "100%",
+                    height: "250px",
+                    objectFit: "cover",
+                    borderRadius: "8px",
+                  }}
+                />
+              ) : (
+                <Placeholder>
+                  아직 내 시간표가 등록되지 않았어요.
+                  <br />
+                  지금 바로 내 시간표를 등록해 보세요!
+                </Placeholder>
+              )}
+            </FullWidthSlide>
+          </FullWidthSlider>
+
+          {/* 인디케이터 */}
+          <IndicatorWrapper>
+            {Array.from({ length: totalSlides }).map((_, idx) => (
+              <Dot key={idx} active={idx === currentIndex} />
+            ))}
+          </IndicatorWrapper>
+        </div>
+
         {/* 규칙 편집 관련 버튼 기능 제거 */}
         <IconTextButton
           type="createrules"
@@ -133,7 +332,7 @@ export default function MyRoomMatePage() {
         />
         {isEditing && !isDisabled && (
           <div>
-            <RoundSquareButton
+            <RoundSquareBlueButton
               btnName={"저장하기"}
               onClick={async () => {
                 try {
@@ -153,29 +352,6 @@ export default function MyRoomMatePage() {
           </div>
         )}
       </DisabledWrapper>
-
-      <GrayDivider />
-
-      <DisabledWrapper disabled={isDisabled}>
-        <IconTextButton
-          type="quickmessage"
-          onClick={() => {
-            if (isDisabled) return;
-            setShowQuickModal(true);
-          }}
-        />
-      </DisabledWrapper>
-
-      {showQuickModal && (
-        <QuickMessageModal
-          onClose={() => setShowQuickModal(false)}
-          onSelect={(message) => {
-            console.log("선택된 메시지:", message);
-            // 메시지 전송 API 연동 가능
-            setShowQuickModal(false);
-          }}
-        />
-      )}
     </MyRoomMatePageWrapper>
   );
 }
@@ -214,4 +390,107 @@ const DisabledWrapper = styled.div<{ disabled: boolean }>`
     pointer-events: auto;
     opacity: 1;
   `}
+`;
+
+const FullWidthSlider = styled.div`
+  display: flex;
+  overflow-x: scroll;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  width: 100%;
+  position: relative; /* ← 플로팅을 위한 설정 */
+  -ms-overflow-style: none; /* IE */
+  scrollbar-width: none; /* Firefox */
+
+  &::-webkit-scrollbar {
+    display: none; /* Chrome */
+  }
+`;
+
+const FullWidthSlide = styled.div`
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+
+  .timetableTitle {
+    font-weight: 500;
+    font-size: 14px;
+  }
+`;
+
+const IndicatorWrapper = styled.div`
+  width: 100%;
+  display: flex;
+  pointer-events: none;
+`;
+
+const Dot = styled.div<{ active: boolean }>`
+  height: 4px;
+  flex: 1;
+  background-color: ${({ active }) => (active ? "#FFD600" : "#ccc")};
+  transition: background-color 0.3s ease;
+  border-radius: 2px;
+  &:not(:last-child) {
+    margin-right: 6px;
+  }
+`;
+
+const Placeholder = styled.div`
+  width: 100%;
+  height: 250px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f0f0f0;
+  color: #888;
+  border-radius: 8px;
+  font-size: 16px;
+  text-align: center;
+`;
+
+const ModalBackGround = styled.div`
+  position: fixed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.5);
+  inset: 0 0 0 0;
+  z-index: 9999;
+`;
+
+const Modal = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  box-sizing: border-box;
+  padding: 32px 20px;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 420px;
+  height: fit-content;
+  max-height: 80%;
+  background: white;
+  color: #333366;
+  font-weight: 500;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  animation: fadeIn 0.3s ease-out;
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+`;
+
+const ButtonGroupWrapper = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: 6px;
 `;

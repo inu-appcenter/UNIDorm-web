@@ -43,6 +43,7 @@ export default function HomePage() {
 
     getTips();
   }, []);
+
   return (
     <HomePageWrapper>
       <Header title="아이돔" hasBack={false} showAlarm={true} />

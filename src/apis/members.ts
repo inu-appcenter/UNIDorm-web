@@ -30,6 +30,32 @@ export const putUserImage = async (imageFile: File): Promise<AxiosResponse> => {
   return response;
 };
 
+// 회원 시간표이미지 가져오기
+export const getUserTimetableImage = async (): Promise<AxiosResponse> => {
+  const response = await tokenInstance.get<AxiosResponse>(
+    `/users/time-table-image`,
+  );
+  return response;
+};
+
+export const putUserTimetableImage = async (
+  imageFile: File,
+): Promise<AxiosResponse> => {
+  const formData = new FormData();
+  formData.append("image", imageFile);
+
+  const response = await tokenInstance.put(
+    "/users/time-table-image",
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    },
+  );
+  return response;
+};
+
 // 회원 삭제
 export const deleteMembers = async (): Promise<number> => {
   const response = await tokenInstance.delete(`/users`);

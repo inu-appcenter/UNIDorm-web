@@ -4,16 +4,20 @@ interface RoundSquareButtonProps {
   btnName: string;
   onClick?: () => void;
 }
-const RoundSquareButton = ({ btnName, onClick }: RoundSquareButtonProps) => {
+
+const RoundSquareWhiteButton = ({
+  btnName,
+  onClick,
+}: RoundSquareButtonProps) => {
   return (
-    <RoundSquareButtonWrapper onClick={onClick}>
+    <RoundSquareWhiteButtonWrapper onClick={onClick}>
       {btnName}
-    </RoundSquareButtonWrapper>
+    </RoundSquareWhiteButtonWrapper>
   );
 };
-export default RoundSquareButton;
+export default RoundSquareWhiteButton;
 
-const RoundSquareButtonWrapper = styled.div`
+const RoundSquareWhiteButtonWrapper = styled.div`
   width: 100%;
   min-width: 80px;
   height: 100%;
@@ -26,7 +30,8 @@ const RoundSquareButtonWrapper = styled.div`
   justify-content: center;
   align-items: center;
 
-  background: #0a84ff;
+  background: transparent;
+  border: 2px solid #0a84ff;
   border-radius: 8px;
 
   font-family: "Pretendard";
@@ -37,5 +42,7 @@ const RoundSquareButtonWrapper = styled.div`
 
   letter-spacing: 0.38px;
 
-  color: #f4f4f4;
+  color: #0a84ff;
+
+  cursor: pointer;
 `;
