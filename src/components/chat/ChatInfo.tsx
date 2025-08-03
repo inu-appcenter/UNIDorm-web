@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import profile from "../../assets/chat/profile.svg";
 import GroupPurchaseInfo from "./GroupPurchaseInfo.tsx";
-import RoundSquareButton from "../button/RoundSquareButton.tsx";
+import RoundSquareBlueButton from "../button/RoundSquareBlueButton.tsx";
 import TopRightDropdownMenu from "../common/TopRightDropdownMenu.tsx";
 import { useNavigate } from "react-router-dom";
 import { deleteRoommateChatRoom } from "../../apis/roommate.ts";
@@ -74,7 +74,7 @@ const ChatInfo = ({ selectedTab, partnerName, roomId }: ChatInfoProps) => {
       </ContentWrapper>
       <FunctionWrapper>
         {selectedTab === "룸메이트" && (
-          <RoundSquareButton btnName={"룸메 신청"} />
+          <RoundSquareBlueButton btnName={"룸메 신청"} />
         )}
         {menuItems && <TopRightDropdownMenu items={menuItems} />}
       </FunctionWrapper>
