@@ -93,7 +93,7 @@ export default function Header({
   return (
     <StyledHeader
       $hasShadow={shadowSelector()}
-      $isHome={location.pathname === "/home"}
+      $isHome={location.pathname === "/home" || location.pathname === "/"}
     >
       <MainLine $platform={platform}>
         <Left>
@@ -101,7 +101,7 @@ export default function Header({
             <img src={back} alt="뒤로가기" onClick={handleBackClick} />
           )}
           <div className="Title">
-            {location.pathname === "/home" ? (
+            {location.pathname === "/home" || location.pathname === "/" ? (
               <img className="logo" src={logo} />
             ) : (
               (title ?? getCurrentPage())
