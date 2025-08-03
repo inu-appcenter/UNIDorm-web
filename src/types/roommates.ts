@@ -35,6 +35,21 @@ export interface SimilarRoommatePost {
   similarityPercentage: number; // 유사도 (예: 85)
 }
 
+export interface RoomMateCardProps {
+  boardId: number;
+  title: string;
+  dormType: string;
+  mbti: string;
+  college: string;
+  isSmoker: boolean;
+  isClean: boolean;
+  stayDays: string[];
+  description: string;
+  commentCount: number;
+  likeCount: number;
+  percentage?: number;
+}
+
 export interface RoommatePostRequest {
   title: string;
   dormPeriod: string[];

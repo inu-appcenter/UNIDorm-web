@@ -62,7 +62,7 @@ export default function RoomMateBoardDetailPage() {
       </UserArea>
       <ContentArea>
         <div className="title">{data.title}</div>
-        <div className="content">기타사항: {data.comment}</div>
+        <div className="content">{data.comment}</div>
 
         <CardGrid>
           <InfoCard

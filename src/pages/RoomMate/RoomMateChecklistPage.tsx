@@ -8,6 +8,7 @@ import SquareButton from "../../components/common/SquareButton.tsx";
 import {
   createRoommatePost,
   getOpponentChecklist,
+  putRoommatePost,
 } from "../../apis/roommate.ts";
 import {
   bedtime,
@@ -30,6 +31,7 @@ import { getMemberInfo } from "../../apis/members.ts";
 import useUserStore from "../../stores/useUserStore.ts";
 import { useLocation, useNavigate } from "react-router-dom";
 import StyledTextArea from "../../components/roommate/StyledTextArea.tsx";
+import StyledTextInput from "../../components/roommate/StyledTextInput.tsx";
 
 export default function RoomMateChecklistPage() {
   const { setUserInfo, userInfo } = useUserStore();
@@ -83,6 +85,18 @@ export default function RoomMateChecklistPage() {
     fetchOpponentChecklist();
   }, [roomId]);
   // 각 그룹별로 선택 인덱스를 useState로 관리
+  const [title, setTitle] = useState("");
+  const getRandomTitles = (count: number, options: string[]) => {
+    const shuffled = [...options].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, count);
+  };
+  const [randomTitles, setRandomTitles] = useState<string[]>([]);
+
+  useEffect(() => {
+    const titles = getRandomTitles(6, ROOMMATE_POST_TITLES);
+    setRandomTitles(titles);
+  }, []);
+
   const [dayIndices, setDayIndices] = useState<number[]>([]);
   const [domitoryIndex, setDomitoryIndex] = useState<number | null>(
     dormitory.indexOf(userInfo.dormType),
@@ -142,7 +156,7 @@ export default function RoomMateChecklistPage() {
       mbti4[mbtiIndex4];
 
     const requestBody = {
-      title: "룸메이트 구해요!", // 임시 제목
+      title,
       dormPeriod: dayIndices.map((i) => days[i] + "요일"), // ✅ 다중 선택 처리
       dormType: dormitory[domitoryIndex],
       college: colleges[collegeIndex],
@@ -159,15 +173,18 @@ export default function RoomMateChecklistPage() {
     };
 
     try {
-      const res = await createRoommatePost(requestBody);
+      const res = userInfo.roommateCheckList
+        ? await putRoommatePost(requestBody)
+        : await createRoommatePost(requestBody);
 
       try {
         const response = await getMemberInfo();
-        console.log(response);
         setUserInfo(response.data);
+        console.log(response);
       } catch (error) {
-        console.error("회원 가져오기 실패", error);
+        console.error("회원 정보 불러오기 실패", error);
       }
+
       alert(
         "룸메이트 체크리스트 등록을 성공했어요. 룸메이트 탭에서 나와 맞는 룸메이트를 찾아보세요!",
       );
@@ -178,6 +195,39 @@ export default function RoomMateChecklistPage() {
       console.error(err);
     }
   };
+
+  const ROOMMATE_POST_TITLES = [
+    "룸메 급구!",
+    "기숙사 구해요",
+    "조용한 분 환영",
+    "함께 지낼 룸메",
+    "룸메 구합니다",
+    "생활 깔끔한 분",
+    "방 있어요!",
+    "착한 룸메 찾음",
+    "룸메 꼭 필요해",
+    "함께 살 사람!",
+    "깨끗한 방 있어요",
+    "조용한 사람 좋아요",
+    "빨리 결정 원해요",
+    "생활 패턴 맞는 분",
+    "편하게 지낼 룸메",
+    "배려심 있는 분 환영",
+    "잠버릇 없어야 해요",
+    "MBTI 안 따짐!",
+    "장기 룸메 구해요",
+    "기숙사 혼자 쓰기 아까워요",
+    "내향인 환영!",
+    "외향인 좋아요!",
+    "밤늦게 자는 사람 찾음",
+    "아침형 인간 환영",
+    "흡연 ❌ 코골이 ❌",
+    "공부 집중 잘 되는 환경",
+    "깔끔한 분만 연락주세요",
+    "룸메끼리 친하게 지내요",
+    "개인 시간 존중해요",
+    "기숙사 나눠쓸 분!",
+  ];
 
   return (
     <RoomMateChecklistPageWrapper>
@@ -192,7 +242,9 @@ export default function RoomMateChecklistPage() {
       <TitleContentArea
         title={"기숙사 종류"}
         description={
-          !isViewerMode ? "기숙사 종류는 내 정보 수정에서 변경해주세요." : ""
+          !isViewerMode
+            ? "기숙사 종류는 내 정보 수정에서 변경할 수 있어요."
+            : ""
         }
         children={
           <ToggleGroup
@@ -206,7 +258,7 @@ export default function RoomMateChecklistPage() {
       <TitleContentArea
         title={"단과대학"}
         description={
-          !isViewerMode ? "단과대학은 내 정보 수정에서 변경해주세요." : ""
+          !isViewerMode ? "단과대학은 내 정보 수정에서 변경할 수 있어요." : ""
         }
         children={
           <SelectableChipGroup
@@ -215,6 +267,35 @@ export default function RoomMateChecklistPage() {
             onSelect={setCollegeIndex}
             disabled={true} // 원래부터 비활성화
           />
+        }
+      />
+      <TitleContentArea
+        title={"제목"}
+        description={
+          "체크리스트를 작성한 내용은 룸메이트를 구하는 게시글로 자동 작성되며, 나와 비슷한 생활패턴을 가진 룸메이트를 추천받을 수 있어요."
+        }
+        children={
+          <>
+            <StyledTextInput
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder={"눈길을 사로잡을 제목을 작성해보세요!"}
+              disabled={isViewerMode}
+            />
+            {!title && (
+              <SortFilterWrapper>
+                {randomTitles.map((option) => (
+                  <SortButton
+                    key={option}
+                    className={title === option ? "active" : ""}
+                    onClick={() => setTitle(option)}
+                  >
+                    {option}
+                  </SortButton>
+                ))}
+              </SortFilterWrapper>
+            )}
+          </>
         }
       />
       <TitleContentArea
@@ -360,9 +441,13 @@ export default function RoomMateChecklistPage() {
           />
         }
       />
+
       {!isViewerMode && (
         <ButtonWrapper>
-          <SquareButton text={"저장하기"} onClick={handleSubmit} />
+          <SquareButton
+            text={userInfo.roommateCheckList ? "수정하기" : "저장하기"}
+            onClick={handleSubmit}
+          />
         </ButtonWrapper>
       )}
     </RoomMateChecklistPageWrapper>
@@ -370,7 +455,7 @@ export default function RoomMateChecklistPage() {
 }
 
 const RoomMateChecklistPageWrapper = styled.div`
-  padding: 90px 20px;
+  padding: 80px 16px;
   padding-bottom: 150px;
   display: flex;
   flex-direction: column;
@@ -393,4 +478,38 @@ const ButtonWrapper = styled.div`
   background: rgba(244, 244, 244, 0.6);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+`;
+
+const SortFilterWrapper = styled.div`
+  display: flex;
+  width: 100%;
+  height: fit-content;
+  overflow-x: scroll;
+  -ms-overflow-style: none; /* IE, Edge */
+  scrollbar-width: none; /* Firefox */
+
+  &::-webkit-scrollbar {
+    display: none; /* Chrome, Safari */
+  }
+  margin-bottom: 12px;
+  gap: 8px;
+  padding: 0px 12px 0 12px;
+  //flex-wrap: wrap;
+`;
+
+const SortButton = styled.button`
+  background-color: #f4f4f4;
+  border: none;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+  min-width: fit-content;
+
+  &.active {
+    background-color: #007bff;
+    color: white;
+    font-weight: bold;
+  }
 `;

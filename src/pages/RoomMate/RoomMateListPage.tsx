@@ -5,9 +5,61 @@ import Header from "../../components/common/Header.tsx";
 import { getRoomMateList } from "../../apis/roommate.ts";
 import { useEffect, useState } from "react";
 import { RoommatePost } from "../../types/roommates.ts";
+import { useLocation, useNavigate } from "react-router-dom";
+import FilterButton from "../../components/button/FilterButton.tsx";
+
+function FilterTags({ filters }: { filters: Record<string, any> }) {
+  const filteredTags = Object.values(filters).filter((value) => {
+    if (value == null) return false;
+    if (Array.isArray(value)) return value.length > 0;
+    if (typeof value === "string") return value.trim() !== "";
+    return true;
+  });
+
+  if (filteredTags.length === 0) return null;
+
+  return (
+    <TagsWrapper>
+      <div className="filtertitle">적용된 필터</div>
+
+      {filteredTags.map((value, idx) => {
+        if (idx < 0) {
+          return null;
+        }
+        const displayValue = Array.isArray(value) ? value.join(", ") : value;
+        return <Tag key={idx}>#{displayValue}</Tag>;
+      })}
+    </TagsWrapper>
+  );
+}
+
+const TagsWrapper = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+  .filtertitle {
+    font-size: 14px;
+    font-weight: 600;
+  }
+`;
+
+const Tag = styled.div`
+  background-color: #e0e0e0;
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-size: 13px;
+  color: #333;
+`;
 
 export default function RoomMateListPage() {
   const [roommates, setRoommates] = useState<RoommatePost[]>([]);
+  const [filteredRoommates, setFilteredRoommates] = useState<RoommatePost[]>(
+    [],
+  );
+  const location = useLocation();
+  const filters = location.state?.filters || {};
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -23,6 +75,63 @@ export default function RoomMateListPage() {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    // roommates가 있고 필터 조건이 있을 때 필터 적용
+    if (roommates.length === 0) return;
+
+    const filtered = roommates.filter((post) => {
+      // dormType 필터
+      if (filters.dormType && post.dormType !== filters.dormType) return false;
+
+      // college 필터
+      if (filters.college && post.college !== filters.college) return false;
+
+      // dormPeriod 필터 (배열 포함여부 체크)
+      if (filters.dormPeriod && filters.dormPeriod.length > 0) {
+        // 필터 중 적어도 한 요일이 post.dormPeriod에 있어야 함
+        const matchDay = filters.dormPeriod.some((day: string) =>
+          post.dormPeriod.includes(day),
+        );
+        if (!matchDay) return false;
+      }
+
+      // mbti 필터 (문자열 일치)
+      if (filters.mbti && post.mbti !== filters.mbti) return false;
+
+      // smoking 필터 (문자열 일치)
+      if (filters.smoking && post.smoking !== filters.smoking) return false;
+
+      // snoring 필터
+      if (filters.snoring && post.snoring !== filters.snoring) return false;
+
+      // toothGrind 필터
+      if (filters.toothGrind && post.toothGrind !== filters.toothGrind)
+        return false;
+
+      // sleeper 필터
+      if (filters.sleeper && post.sleeper !== filters.sleeper) return false;
+
+      // showerHour 필터
+      if (filters.showerHour && post.showerHour !== filters.showerHour)
+        return false;
+
+      // showerTime 필터
+      if (filters.showerTime && post.showerTime !== filters.showerTime)
+        return false;
+
+      // bedTime 필터
+      if (filters.bedTime && post.bedTime !== filters.bedTime) return false;
+
+      // arrangement 필터
+      if (filters.arrangement && post.arrangement !== filters.arrangement)
+        return false;
+
+      return true;
+    });
+
+    setFilteredRoommates(filtered);
+  }, [roommates, filters]);
+
   return (
     <RoomMateListPageWrapper>
       <Header title={"룸메이트 둘러보기"} hasBack={true} />
@@ -31,15 +140,29 @@ export default function RoomMateListPage() {
         description={"룸메이트를 구하고 있는 다양한 UNI들을 찾아보세요!"}
         children={
           <>
-            {roommates.length > 0 ? (
-              roommates.map((post) => (
+            <FilterArea>
+              <FilterButton
+                onClick={() => {
+                  navigate("/roommatelist/filter");
+                }}
+              />
+              <FilterTags filters={filters} />
+            </FilterArea>
+            {(filteredRoommates.length > 0 ? filteredRoommates : roommates)
+              .length > 0 ? (
+              (filteredRoommates.length > 0
+                ? filteredRoommates
+                : roommates
+              ).map((post) => (
                 <RoomMateCard
+                  key={post.boardId}
+                  title={post.title}
                   boardId={post.boardId}
                   dormType={post.dormType}
                   mbti={post.mbti}
                   college={post.college}
-                  isSmoker={true}
-                  isClean={true}
+                  isSmoker={post.smoking === "피워요"}
+                  isClean={post.arrangement === "깔끔해요"}
                   stayDays={post.dormPeriod}
                   description={post.comment}
                   commentCount={12}
@@ -77,4 +200,10 @@ const EmptyMessage = styled.div`
   text-align: center;
   color: #aaa;
   font-size: 14px;
+`;
+
+const FilterArea = styled.div`
+  width: 100%;
+  display: flex;
+  flex-direction: column;
 `;

@@ -64,6 +64,10 @@ const RoomMateBottomBarWrapper = styled.div`
   flex-direction: row;
   align-items: center;
   gap: 16px;
+
+  background: rgba(244, 244, 244, 0.6); /* 반투명 */
+  backdrop-filter: blur(10px); /* 블러 효과 */
+  -webkit-backdrop-filter: blur(10px); /* Safari 지원 */
 `;
 
 const HeartIconWrapper = styled.div`
