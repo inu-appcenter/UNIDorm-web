@@ -66,6 +66,7 @@ export default function RoomMatePage() {
               .map((post, key) => (
                 <RoomMateCard
                   key={key}
+                  title={post.title}
                   boardId={post.boardId}
                   dormType={post.dormType}
                   mbti={post.mbti}
@@ -112,6 +113,7 @@ export default function RoomMatePage() {
               similarRoommates.map((post, key) => (
                 <RoomMateCard
                   key={key}
+                  title={post.title}
                   boardId={post.boardId}
                   dormType={post.dormType}
                   mbti={post.mbti}

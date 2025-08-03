@@ -30,6 +30,7 @@ import ChattingPage from "./pages/Chat/ChattingPage.tsx";
 import "./init";
 import LogoutPage from "./pages/LogoutPage.tsx";
 import OnboardingPage from "./pages/OnboardingPage.tsx";
+import RoomMateFilterPage from "./pages/RoomMate/RoomMateFilterPage.tsx";
 
 function App() {
   const { tokenInfo, setUserInfo } = useUserStore();
@@ -84,6 +85,10 @@ function App() {
           <Route
             path="/roommatelist/:boardId"
             element={<RoomMateBoardDetailPage />}
+          />
+          <Route
+            path={"/roommatelist/filter"}
+            element={<RoomMateFilterPage />}
           />
           <Route
             path="/roommatechecklist"

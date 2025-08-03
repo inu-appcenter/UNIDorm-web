@@ -41,6 +41,17 @@ export const createRoommatePost = async (
   return response;
 };
 
+export const putRoommatePost = async (
+  data: RoommatePostRequest,
+): Promise<AxiosResponse<RoommatePostResponse>> => {
+  console.log(data);
+  const response = await tokenInstance.put<RoommatePostResponse>(
+    "/roommates",
+    data,
+  );
+  return response;
+};
+
 /**
  * 룸메이트 게시글 단일 조회 API
  * @param boardId 조회할 게시글 ID

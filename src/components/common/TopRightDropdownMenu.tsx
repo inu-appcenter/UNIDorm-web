@@ -76,8 +76,9 @@ const Dropdown = styled.div`
   border-radius: 16px;
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
   padding: 16px;
-  padding-right: 32px;
-  min-width: 130px;
+  //padding-right: 32px;
+  box-sizing: border-box;
+  min-width: 160px;
 
   display: flex;
   flex-direction: column;
@@ -86,15 +87,17 @@ const Dropdown = styled.div`
 `;
 
 const MenuItem = styled.button`
-  min-width: fit-content;
   all: unset;
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
   cursor: pointer;
   color: black;
   font-size: 14px;
+  padding: 4px 0;
+  word-break: keep-all;
+
   &:hover {
     font-weight: 500;
   }
-  padding: 4px 0;
-  box-sizing: border-box;
-  word-break: keep-all;
 `;
