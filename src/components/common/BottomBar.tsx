@@ -105,7 +105,7 @@ export default function BottomBar() {
         defaultImg={home}
         clickedImg={homeClicked}
         buttonName="홈"
-        isActive={pathname === "/home"}
+        isActive={pathname === "/home" || pathname === "/"}
         onClick={() => navigate("/home")}
       />
       <Button
