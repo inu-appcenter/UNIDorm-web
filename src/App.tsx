@@ -1,3 +1,4 @@
+import "./index.css";
 import { BrowserRouter, Route, Routes, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { getMemberInfo } from "./apis/members";
