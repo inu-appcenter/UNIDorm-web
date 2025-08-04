@@ -114,26 +114,13 @@ const ContentWrapper = styled.div`
   align-items: center;
 
   .title {
-    font-family: "Pretendard";
     font-style: normal;
-    font-weight: 600;
-    font-size: 12px;
+    font-weight: 500;
+    font-size: 16px;
     line-height: 24px;
     letter-spacing: 0.38px;
 
     color: #1c1c1e;
-  }
-
-  .message {
-    font-family: "Pretendard";
-    font-style: normal;
-    font-weight: 600;
-    font-size: 10px;
-    line-height: 24px;
-
-    letter-spacing: 0.38px;
-
-    color: #636366;
   }
 `;
 
