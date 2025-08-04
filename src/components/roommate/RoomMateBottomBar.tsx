@@ -9,7 +9,7 @@ import useUserStore from "../../stores/useUserStore.ts";
 const RoomMateBottomBar = () => {
   const { boardId } = useParams<{ boardId: string }>();
 
-  const { tokenInfo } = useUserStore();
+  const { tokenInfo, userInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
 
   const [liked, setLiked] = useState<boolean>(false);
@@ -19,6 +19,11 @@ const RoomMateBottomBar = () => {
     if (!isLoggedIn) {
       alert("로그인 후 이용해주세요.");
       navigate("/login");
+      return;
+    }
+    if (!userInfo.roommateCheckList) {
+      alert("먼저 체크리스트를 작성해주세요!");
+      navigate("/roommatechecklist");
       return;
     }
     if (!boardId) return;

@@ -123,8 +123,8 @@ export default function BottomBar() {
         defaultImg={buy}
         clickedImg={buyClicked}
         buttonName="공동구매"
-        isActive={pathname === "/groupPurchase"}
-        onClick={() => navigate("/groupPurchase")}
+        isActive={pathname === "/groupPurchase/comingsoon"}
+        onClick={() => navigate("/groupPurchase/comingsoon")}
       />
       <Button
         defaultImg={chat}
