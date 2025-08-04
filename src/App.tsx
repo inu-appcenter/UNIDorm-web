@@ -32,6 +32,7 @@ import "./init";
 import LogoutPage from "./pages/LogoutPage.tsx";
 import OnboardingPage from "./pages/OnboardingPage.tsx";
 import RoomMateFilterPage from "./pages/RoomMate/RoomMateFilterPage.tsx";
+import GroupPurchaseComingSoonPage from "./pages/GroupPurchase/GroupPurchaseComingSoonPage.tsx";
 
 function App() {
   const { tokenInfo, setUserInfo } = useUserStore();
@@ -88,6 +89,11 @@ function App() {
           <Route path="/home" element={<HomePage />} />
           <Route path="/roommate" element={<RoomMatePage />} />
           <Route path="/groupPurchase" element={<GroupPurchaseMainPage />} />
+          <Route
+            path="/groupPurchase/comingsoon"
+            element={<GroupPurchaseComingSoonPage />}
+          />
+
           <Route path="/chat" element={<ChatListPage />} />
           <Route path="/mypage" element={<MyPage />} />
         </Route>

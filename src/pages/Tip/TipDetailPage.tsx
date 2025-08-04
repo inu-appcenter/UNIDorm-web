@@ -76,9 +76,10 @@ export default function TipDetailPage() {
       const res = await axiosInstance.get(`/tips/${id}/image`, {
         // headers: { Authorization: `Bearer ${token}` },
       });
-      console.log(res);
+      console.log("res", res);
 
       const urls = res.data.map((img: any) => img.fileName);
+      console.log("urls", urls);
       setImages(urls);
     } catch (err) {
       console.error("이미지 불러오기 실패", err);

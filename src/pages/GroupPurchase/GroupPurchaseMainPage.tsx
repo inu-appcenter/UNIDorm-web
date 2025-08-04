@@ -1,6 +1,5 @@
 import { useState } from "react";
 import styled from "styled-components";
-import BottomBar from "../../components/common/BottomBar";
 import GroupPurchaseList from "../../components/GroupPurchase/GroupPurchaseList";
 import { useNavigate } from "react-router-dom";
 import { FaSearch } from "react-icons/fa";
@@ -92,7 +91,6 @@ export default function GroupPurchaseMainPage() {
       <WriteButton onClick={() => navigate("/groupPurchase/write")}>
         ✏️ 글쓰기
       </WriteButton>
-      <BottomBar />
     </PageWrapper>
   );
 }
