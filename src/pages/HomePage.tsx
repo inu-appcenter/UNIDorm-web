@@ -9,6 +9,9 @@ import HomeTipsCard from "../components/home/HomeTipsCard.tsx";
 import { useEffect, useRef, useState } from "react";
 import { fetchDailyRandomTips } from "../apis/tips.ts";
 import { Tip } from "../types/tips.ts";
+import RoomMateCard from "../components/roommate/RoomMateCard.tsx";
+import { getRoomMateList } from "../apis/roommate.ts";
+import { RoommatePost } from "../types/roommates.ts";
 
 const mockBoard = [
   {
@@ -97,6 +100,20 @@ export default function HomePage() {
     };
   }, []);
 
+  const [roommates, setRoommates] = useState<RoommatePost[]>([]);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await getRoomMateList();
+        setRoommates(response.data);
+      } catch (error) {
+        console.error("룸메이트 목록 가져오기 실패:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   return (
     <HomePageWrapper>
       <Header title="아이돔" hasBack={false} showAlarm={true} />
@@ -123,25 +140,35 @@ export default function HomePage() {
 
       <ContentWrapper>
         <TitleContentArea
-          title={mockBoard[0].type}
-          link={"/notification"}
-          children={
-            <NotiWrapper>
-              <HomeCard
-                title={mockBoard[0].title}
-                content={mockBoard[0].content}
-                isEmergency={mockBoard[0].isEmergency}
-                scrapCount={mockBoard[0].scrapCount}
-              />
-              <HomeCard
-                title={mockBoard[0].title}
-                content={mockBoard[0].content}
-                isEmergency={mockBoard[0].isEmergency}
-                scrapCount={mockBoard[0].scrapCount}
-              />
-            </NotiWrapper>
-          }
-        />
+          title={"룸메이트 매칭 진행 중!"}
+          description={"룸메이트를 구하고 있는 다양한 UNI들을 찾아보세요!"}
+          link={"/roommatelist"}
+        >
+          <>
+            {roommates.length > 0 ? (
+              roommates
+                .slice(0, 1)
+                .map((post, key) => (
+                  <RoomMateCard
+                    key={key}
+                    title={post.title}
+                    boardId={post.boardId}
+                    dormType={post.dormType}
+                    mbti={post.mbti}
+                    college={post.college}
+                    isSmoker={true}
+                    isClean={true}
+                    stayDays={post.dormPeriod}
+                    description={post.comment}
+                    commentCount={12}
+                    likeCount={8}
+                  />
+                ))
+            ) : (
+              <EmptyMessage>게시글이 없습니다.</EmptyMessage>
+            )}
+          </>
+        </TitleContentArea>
         <TitleContentArea
           title="오늘의 Best 꿀팁"
           link={"/tips"}
@@ -162,13 +189,33 @@ export default function HomePage() {
             </>
           }
         />
+        <TitleContentArea
+          title={mockBoard[0].type}
+          link={"/notification"}
+          children={
+            <NotiWrapper>
+              <HomeCard
+                title={mockBoard[0].title}
+                content={mockBoard[0].content}
+                isEmergency={mockBoard[0].isEmergency}
+                scrapCount={mockBoard[0].scrapCount}
+              />
+              <HomeCard
+                title={mockBoard[0].title}
+                content={mockBoard[0].content}
+                isEmergency={mockBoard[0].isEmergency}
+                scrapCount={mockBoard[0].scrapCount}
+              />
+            </NotiWrapper>
+          }
+        />
 
         <TitleContentArea
           title={"캘린더 이벤트"}
           children={<ThreeWeekCalendar />}
         />
         <TitleContentArea
-          title={"임박한 공구"}
+          title={"임박한 공동구매"}
           link={"/groupPurchase"}
           children={<GroupPurchaseList />}
         />
@@ -264,4 +311,11 @@ const Dot = styled.div<{ active: boolean }>`
   &:not(:last-child) {
     margin-right: 6px;
   }
+`;
+
+const EmptyMessage = styled.div`
+  padding: 24px;
+  text-align: center;
+  color: #aaa;
+  font-size: 14px;
 `;

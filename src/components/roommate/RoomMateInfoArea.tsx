@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { MyRoommateInfoResponse } from "../../types/roommates.ts";
+import default_profile_img from "../../assets/profileimg.svg";
 
 interface RoomMateInfoAreaProps {
   roommateInfo: MyRoommateInfoResponse | null;
@@ -19,7 +20,7 @@ const RoomMateInfoArea = ({
         등록된 내 룸메이트가 없어요! 😢 <br />
         룸메이트 탭에서 룸메이트를 찾아보세요.
         <div className="button-group">
-          <button onClick={() => navigate("/roommatechecklist")}>
+          <button onClick={() => navigate("/roommate")}>
             지금 바로 룸메이트 찾으러 가기 →
           </button>
         </div>
@@ -34,28 +35,39 @@ const RoomMateInfoArea = ({
     );
   }
 
-  if (!roommateInfo) {
-    return <div>룸메이트 정보를 불러오는 중입니다...</div>;
-  }
+  // if (!roommateInfo) {
+  //   return <div>룸메이트 정보를 불러오는 중입니다...</div>;
+  // }
 
   return (
-    <RoomMateInfoAreaWrapperr>
+    <RoomMateInfoAreaWrapper
+      onClick={() => {
+        if (location.pathname === "/mypage") {
+          navigate("/myroommate");
+        }
+      }}
+    >
       <LeftArea>
         <div className="profile">
-          <img src={roommateInfo.imagePath} alt="profile image" />
+          <img
+            src={roommateInfo?.imagePath || default_profile_img}
+            alt="profile image"
+          />
         </div>
         <div className="description">
-          <div className="name">{roommateInfo.name}</div>
-          <div className="college">{roommateInfo.college}</div>
+          <div className="name">{roommateInfo?.name || "횃불이"}</div>
+          <div className="college">
+            {roommateInfo?.college || "정보기술대학"}
+          </div>
         </div>
       </LeftArea>
-    </RoomMateInfoAreaWrapperr>
+    </RoomMateInfoAreaWrapper>
   );
 };
 
 export default RoomMateInfoArea;
 
-const RoomMateInfoAreaWrapperr = styled.div`
+const RoomMateInfoAreaWrapper = styled.div`
   width: 100%;
   height: fit-content;
 
@@ -65,17 +77,22 @@ const RoomMateInfoAreaWrapperr = styled.div`
   align-items: center;
 
   .profile {
-    max-width: 70px;
-    max-height: 70px;
+    width: 70px;
+    height: 70px;
     border-radius: 50%;
     overflow: hidden;
-    display: inline-block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background-color: #f0f0f0;
   }
 
   .profile img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    aspect-ratio: 1 / 1;
     display: block;
   }
 `;
@@ -121,6 +138,8 @@ const ChecklistBanner = styled.div`
   font-size: 14px;
   line-height: 1.5;
   cursor: pointer;
+  width: 100%;
+  box-sizing: border-box;
 
   strong {
     display: block;

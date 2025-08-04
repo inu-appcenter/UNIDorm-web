@@ -5,6 +5,7 @@ import SquareButton from "../../components/common/SquareButton.tsx";
 import { useEffect, useState } from "react";
 import {
   deleteMembers,
+  getMemberImage,
   getMemberInfo,
   putMember,
   putUserImage,
@@ -122,13 +123,39 @@ export default function MyInfoEditPage() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
+  useEffect(() => {
+    const getUserProfileImg = async () => {
+      const result = await getMemberImage();
+      console.log(result.data);
+      setPreviewUrl(result.data.fileName);
+    };
+
+    getUserProfileImg();
+    // setUserProfileImg(result.data)
+  }, [userInfo]);
+
   // 이미지 선택 핸들러
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setImageFile(file);
-      setPreviewUrl(URL.createObjectURL(file));
+    if (!file) return;
+
+    // 1. 허용된 이미지 형식
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    if (!allowedTypes.includes(file.type)) {
+      alert("이미지 파일(jpeg, png, webp, gif)만 업로드 가능합니다.");
+      return;
     }
+
+    // 2. 3MB 이하 용량 제한
+    const maxSizeInBytes = 2 * 1024 * 1024; // 3MB
+    if (file.size > maxSizeInBytes) {
+      alert("파일 크기는 2MB 이하만 업로드 가능합니다.");
+      return;
+    }
+
+    // 3. 상태 업데이트
+    setImageFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
   };
 
   const handleUploadImage = async () => {
