@@ -71,8 +71,8 @@ export default function RoomMatePage() {
                   dormType={post.dormType}
                   mbti={post.mbti}
                   college={post.college}
-                  isSmoker={true}
-                  isClean={true}
+                  isSmoker={post.smoking === "피워요"}
+                  isClean={post.arrangement === "깔끔해요"}
                   stayDays={post.dormPeriod}
                   description={post.comment}
                   commentCount={12}
