@@ -45,7 +45,7 @@ function App() {
         setUserInfo(response.data);
 
         if (tokenInfo.accessToken && response.data.name === "") {
-          alert("처음 방문하셨네요! 먼저 회원 정보를 입력해주세요.");
+          alert("처음 로그인하셨네요! 먼저 회원 정보를 입력해주세요.");
           navigate(
             { pathname: "/myinfoedit", search: "?firstvisit=true" },
             { replace: true },
@@ -60,6 +60,17 @@ function App() {
       initializeUser();
     }
   }, [tokenInfo, setUserInfo]);
+
+  useEffect(() => {
+    const firstVisit = localStorage.getItem("isFirstVisit");
+
+    if (firstVisit === null) {
+      // 첫 방문이면 onboarding으로 이동
+      navigate("/onboarding");
+    }
+
+    // firstVisit이 존재하고 false일 경우 아무것도 하지 않음
+  }, []);
 
   return (
     <>

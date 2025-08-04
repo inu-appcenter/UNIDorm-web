@@ -61,6 +61,18 @@ export default function MyRoomMatePage() {
             }
           },
         },
+        {
+          label: "룸메이트 끊기",
+          onClick: () => {
+            if (
+              window.confirm(
+                `정말 ${roommateInfo?.name}님과의 룸메이트 관계를 끊으시겠어요?`,
+              )
+            ) {
+              alert("룸메이트 끊기 기능 구현 예정");
+            }
+          },
+        },
       ];
 
   useEffect(() => {

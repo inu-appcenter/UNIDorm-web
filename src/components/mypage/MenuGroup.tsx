@@ -41,6 +41,6 @@ const MenuGroupWrapper = styled.div`
 const MenuItem = styled.div`
   width: 100%;
   height: fit-content;
-  font-size: 16px;
+  font-size: 18px;
   cursor: pointer;
 `;

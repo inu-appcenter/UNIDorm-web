@@ -51,17 +51,22 @@ const MyInfoAreaWrapper = styled.div`
   align-items: center;
 
   .profile {
-    max-width: 70px;
-    max-height: 70px;
+    width: 70px;
+    height: 70px;
     border-radius: 50%;
     overflow: hidden;
-    display: inline-block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background-color: #f0f0f0;
   }
 
   .profile img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    aspect-ratio: 1 / 1;
     display: block;
   }
 `;
