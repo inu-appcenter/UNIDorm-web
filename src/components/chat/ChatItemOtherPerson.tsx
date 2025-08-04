@@ -58,7 +58,7 @@ const ContentArea = styled.div`
     font-family: "Pretendard";
     font-style: normal;
     font-weight: 600;
-    font-size: 12px;
+    font-size: 14px;
     line-height: 24px;
     letter-spacing: 0.38px;
 
@@ -69,7 +69,7 @@ const ContentArea = styled.div`
     font-family: "Pretendard";
     font-style: normal;
     font-weight: 400;
-    font-size: 12px;
+    font-size: 14px;
     line-height: 14px;
     text-align: start;
 

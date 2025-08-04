@@ -90,10 +90,9 @@ const ContentWrapper = styled.div`
   }
 
   .title {
-    font-family: "Pretendard";
     font-style: normal;
-    font-weight: 600;
-    font-size: 12px;
+    font-weight: 500;
+    font-size: 16px;
     line-height: 24px;
     letter-spacing: 0.38px;
 
@@ -102,10 +101,9 @@ const ContentWrapper = styled.div`
   }
 
   .message {
-    font-family: "Pretendard";
     font-style: normal;
-    font-weight: 600;
-    font-size: 10px;
+    font-weight: 400;
+    font-size: 14px;
     line-height: 24px;
 
     letter-spacing: 0.38px;
