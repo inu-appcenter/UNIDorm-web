@@ -7,13 +7,14 @@ import onboarding1 from "../assets/onboarding/onboarding1.svg";
 import onboarding2 from "../assets/onboarding/onboarding2.svg";
 import onboarding3 from "../assets/onboarding/onboarding3.svg";
 import { useNavigate } from "react-router-dom";
+import 로고 from "../assets/unidorm-logo-no-background.svg";
 
 const SLIDE_DURATION = 5000;
 
 const slides = [
   {
     id: 0,
-    title: "Unidom에서 할 수 있는 다양한 경험을 알아보세요!",
+    title: "UNI Dorm에서 할 수 있는 다양한 경험을 알아보세요!",
     content: "",
     image: null,
   },
@@ -21,14 +22,14 @@ const slides = [
     id: 1,
     title: "룸메이트 매칭",
     content:
-      "Unidom은 개인별 생활 패턴 체크리스트를 기반으로, 나와 가장 비슷한 룸메이트를 추천해줍니다.",
+      "UNI Dorm은 개인별 생활 패턴 체크리스트를 기반으로, 나와 가장 비슷한 룸메이트를 추천해줍니다.",
     image: onboarding1,
   },
   {
     id: 2,
     title: "공동구매",
     content:
-      "기숙사 Uni들과 배달음식, 식자재, 생활용품 등 함께 공동구매해서 절약해보세요!",
+      "기숙사 UNI들과 배달음식, 식자재, 생활용품 등 함께 공동구매해서 절약해보세요!\n(9월 중 공개 예정)",
     image: onboarding2,
   },
   {
@@ -41,7 +42,17 @@ const slides = [
 ];
 
 const FirstSlide = ({ title }: { title: string }) => {
-  return <FirstSlideWrapper>{title}</FirstSlideWrapper>;
+  const parts = title.split("UNI Dorm");
+
+  return (
+    <FirstSlideWrapper>
+      <FirstSlideText>
+        {parts[0]}
+        <LogoInText src={로고} alt="Unidorm 로고" />
+        {parts[1]}
+      </FirstSlideText>
+    </FirstSlideWrapper>
+  );
 };
 
 const FirstSlideWrapper = styled.div`
@@ -57,6 +68,22 @@ const FirstSlideWrapper = styled.div`
   font-weight: 700;
   color: #000;
   text-align: center;
+`;
+
+const FirstSlideText = styled.div`
+  color: #000;
+  text-align: center;
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 1.4;
+  display: inline;
+  word-break: keep-all;
+`;
+
+const LogoInText = styled.img`
+  height: 70px;
+  vertical-align: -0.1em; // 살짝 아래로 내림 (기본은 baseline)
+  display: inline;
 `;
 
 const OnboardingPage: React.FC = () => {

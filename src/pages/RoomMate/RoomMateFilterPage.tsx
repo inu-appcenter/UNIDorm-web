@@ -32,31 +32,84 @@ export default function RoomMateFilterPage() {
   const roomId = location.state?.roomId;
   const isViewerMode = !!roomId; // roomId 있으면 뷰어 모드
 
-  const [dayIndices, setDayIndices] = useState<number[]>([]);
+  const getIndex = (
+    arr: string[],
+    value: string | undefined | null,
+  ): number | null => {
+    if (!value) return null;
+    const idx = arr.indexOf(value);
+    return idx === -1 ? null : idx;
+  };
+
+  const getIndices = (
+    arr: string[],
+    values: string[] | undefined | null,
+  ): number[] => {
+    if (!values) return [];
+    return values.map((v) => arr.indexOf(v)).filter((i) => i !== -1);
+  };
+
+  const filters = location.state?.filters;
+
+  const [dayIndices, setDayIndices] = useState<number[]>(() =>
+    getIndices(days, filters?.dormPeriod),
+  );
+
   const [domitoryIndex, setDomitoryIndex] = useState<number | null>(
-    dormitory.indexOf(userInfo.dormType),
+    () =>
+      getIndex(dormitory, filters?.dormType) ??
+      dormitory.indexOf(userInfo.dormType),
   );
-  const [collegeIndex, setCollegeIndex] = useState<number | null>(null);
-  const [mbtiIndex1, setMbtiIndex1] = useState<number | null>(null);
-  const [mbtiIndex2, setMbtiIndex2] = useState<number | null>(null);
-  const [mbtiIndex3, setMbtiIndex3] = useState<number | null>(null);
-  const [mbtiIndex4, setMbtiIndex4] = useState<number | null>(null);
-  const [smokingIndex, setSmokingIndex] = useState<number | null>(null);
-  const [snoringIndex, setSnoringIndex] = useState<number | null>(null);
+
+  const [collegeIndex, setCollegeIndex] = useState<number | null>(() =>
+    getIndex(colleges, filters?.college),
+  );
+
+  // MBTI는 문자열이 4글자로 온다고 가정
+  const [mbtiIndex1, setMbtiIndex1] = useState<number | null>(() =>
+    filters?.mbti ? getIndex(mbti1, filters.mbti[0]) : null,
+  );
+  const [mbtiIndex2, setMbtiIndex2] = useState<number | null>(() =>
+    filters?.mbti ? getIndex(mbti2, filters.mbti[1]) : null,
+  );
+  const [mbtiIndex3, setMbtiIndex3] = useState<number | null>(() =>
+    filters?.mbti ? getIndex(mbti3, filters.mbti[2]) : null,
+  );
+  const [mbtiIndex4, setMbtiIndex4] = useState<number | null>(() =>
+    filters?.mbti ? getIndex(mbti4, filters.mbti[3]) : null,
+  );
+
+  const [smokingIndex, setSmokingIndex] = useState<number | null>(() =>
+    getIndex(smoking, filters?.smoking),
+  );
+
+  const [snoringIndex, setSnoringIndex] = useState<number | null>(() =>
+    getIndex(snoring, filters?.snoring),
+  );
+
   const [toothgrindingIndex, setToothgrindingIndex] = useState<number | null>(
-    null,
+    () => getIndex(toothgrinding, filters?.toothGrind),
   );
+
   const [isLightSleeperIndex, setIsLightSleeperIndex] = useState<number | null>(
-    null,
+    () => getIndex(isLightSleeper, filters?.sleeper),
   );
-  const [showertimeIndex, setShowertimeIndex] = useState<number | null>(null);
+
+  const [showertimeIndex, setShowertimeIndex] = useState<number | null>(() =>
+    getIndex(showertime, filters?.showerHour),
+  );
+
   const [showerDurationIndex, setShowerDurationIndex] = useState<number | null>(
-    null,
+    () => getIndex(showerDuration, filters?.showerTime),
   );
-  const [bedtimeIndex, setBedtimeIndex] = useState<number | null>(null);
+
+  const [bedtimeIndex, setBedtimeIndex] = useState<number | null>(() =>
+    getIndex(bedtime, filters?.bedTime),
+  );
+
   const [organizationLevelIndex, setOrganizationLevelIndex] = useState<
     number | null
-  >(null);
+  >(() => getIndex(organizationLevel, filters?.arrangement));
 
   const handleSubmit = () => {
     const filters = {
@@ -114,7 +167,7 @@ export default function RoomMateFilterPage() {
             Groups={dormitory}
             selectedIndex={domitoryIndex}
             onSelect={setDomitoryIndex}
-            disabled={true} // 원래부터 비활성화
+            disabled={true}
           />
         }
       />
