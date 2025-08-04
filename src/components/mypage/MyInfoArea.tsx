@@ -25,6 +25,9 @@ const MyInfoArea = () => {
           <img
             src={userProfileImg || "/default-profile.png"}
             alt="profile image"
+            onError={(e) => {
+              e.currentTarget.src = "/default-profile.png";
+            }}
           />
         </div>
         <div className="description">
