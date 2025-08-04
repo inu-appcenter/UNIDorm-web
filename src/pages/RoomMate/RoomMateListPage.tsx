@@ -58,8 +58,19 @@ export default function RoomMateListPage() {
     [],
   );
   const location = useLocation();
-  const filters = location.state?.filters || {};
   const navigate = useNavigate();
+
+  // filters를 상태로 관리
+  const [filters, setFilters] = useState<Record<string, any>>(
+    location.state?.filters || {},
+  );
+
+  // location.state.filters가 바뀌면 filters 업데이트
+  useEffect(() => {
+    if (location.state?.filters) {
+      setFilters(location.state.filters);
+    }
+  }, [location.state?.filters]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -134,7 +145,11 @@ export default function RoomMateListPage() {
 
   return (
     <RoomMateListPageWrapper>
-      <Header title={"룸메이트 둘러보기"} hasBack={true} />
+      <Header
+        title={"룸메이트 둘러보기"}
+        hasBack={true}
+        backPath={"/roommate"}
+      />
       <TitleContentArea
         title={"최신순"}
         description={"룸메이트를 구하고 있는 다양한 UNI들을 찾아보세요!"}
@@ -143,7 +158,9 @@ export default function RoomMateListPage() {
             <FilterArea>
               <FilterButton
                 onClick={() => {
-                  navigate("/roommatelist/filter");
+                  navigate("/roommatelist/filter", {
+                    state: { filters: filters },
+                  });
                 }}
               />
               <FilterTags filters={filters} />

@@ -20,7 +20,7 @@ export const createMenuGroups = (
     title: "커뮤니티",
     menus: [
       { label: "내 게시글 보기", onClick: () => navigate("/myposts") },
-      { label: "스크랩한 글 보기", onClick: () => navigate("/scrap") },
+      // { label: "스크랩한 글 보기", onClick: () => navigate("/scrap") },
       { label: "좋아요한 글 보기", onClick: () => navigate("/liked") },
     ],
   },

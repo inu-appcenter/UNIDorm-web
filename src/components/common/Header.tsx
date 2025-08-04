@@ -14,9 +14,9 @@ interface MenuItemType {
   label: string;
   onClick: () => void;
 }
-
 interface HeaderProps {
-  hasBack?: boolean;
+  hasBack?: boolean; // 뒤로가기 버튼 노출 여부
+  backPath?: string; // 뒤로가기 경로 (없으면 -1)
   title?: string;
   showAlarm?: boolean;
   menuItems?: MenuItemType[];
@@ -25,7 +25,8 @@ interface HeaderProps {
 }
 
 export default function Header({
-  hasBack,
+  hasBack = false,
+  backPath,
   title,
   showAlarm = false,
   menuItems,
@@ -65,7 +66,11 @@ export default function Header({
   };
 
   const handleBackClick = () => {
-    navigate(-1);
+    if (backPath) {
+      navigate(backPath);
+    } else {
+      navigate(-1);
+    }
   };
 
   const handleNotiBtnClick = () => {
