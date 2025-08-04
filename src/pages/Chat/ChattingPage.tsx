@@ -199,14 +199,13 @@ export default function ChattingPage() {
 }
 
 const ChatPageWrapper = styled.div`
+  width: 100%;
+  height: 100vh;
   padding-top: 70px;
   display: flex;
   flex-direction: column;
   gap: 20px;
   box-sizing: border-box;
-
-  width: 100%;
-  height: 100%;
 
   overflow-y: auto;
 `;
@@ -220,7 +219,7 @@ const ContentWrapper = styled.div`
 `;
 
 const ChattingWrapper = styled.div`
-  flex: 1;
+  //flex: 1;
   height: 100%;
 
   overflow-y: scroll;
@@ -231,7 +230,7 @@ const ChattingWrapper = styled.div`
   padding-bottom: 56px;
 `;
 const InputArea = styled.div`
-  position: absolute;
+  position: fixed;
   bottom: 0;
   left: 0;
   width: 100%;
@@ -267,7 +266,7 @@ const Input = styled.textarea`
 
   font-style: normal;
   font-weight: 400;
-  font-size: 12px;
+  font-size: 14px;
   line-height: 24px;
 
   letter-spacing: 0.38px;
