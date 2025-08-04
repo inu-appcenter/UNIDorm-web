@@ -5,7 +5,7 @@ import styled from "styled-components";
 interface ToggleGroupProps {
   Groups: string[];
   selectedIndex: number | null;
-  onSelect: (index: number) => void;
+  onSelect: (index: any) => void;
   disabled?: boolean; // 추가
 }
 
@@ -23,7 +23,11 @@ const ToggleGroup = ({
           selected={selectedIndex === index}
           onClick={() => {
             if (!disabled) {
-              onSelect(index);
+              if (selectedIndex === index) {
+                onSelect(null); // 이미 선택된 아이템 클릭 시 해제
+              } else {
+                onSelect(index);
+              }
             }
           }}
           disabled={disabled} // styled-component에 넘겨서 스타일 적용도 가능

@@ -1,18 +1,47 @@
 import styled from "styled-components";
 import MyInfoArea from "../components/mypage/MyInfoArea.tsx";
 import MenuGroup from "../components/mypage/MenuGroup.tsx";
-import React from "react";
+import { useEffect, useState } from "react";
 import Header from "../components/common/Header.tsx";
 import useUserStore from "../stores/useUserStore.ts";
 import { useNavigate } from "react-router-dom";
 import { createMenuGroups } from "../stores/menuGroupsFactory.ts";
+import RoomMateInfoArea from "../components/roommate/RoomMateInfoArea.tsx";
+import { getMyRoommateInfo } from "../apis/roommate.ts";
+import { MyRoommateInfoResponse } from "../types/roommates.ts";
+import TitleContentArea from "../components/common/TitleContentArea.tsx";
 
 const MyPage = () => {
   const { tokenInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo?.accessToken ?? "");
   const navigate = useNavigate();
+  const [roommateInfo, setRoommateInfo] =
+    useState<MyRoommateInfoResponse | null>(null);
+  const [notFound, setNotFound] = useState(false);
 
   const menuGroups = createMenuGroups(isLoggedIn, navigate);
+
+  useEffect(() => {
+    const fetchRoommateInfo = async () => {
+      if (!isLoggedIn) return;
+
+      try {
+        const res = await getMyRoommateInfo();
+        setRoommateInfo(res.data);
+      } catch (err: any) {
+        if (err.response?.status === 404) {
+          // alert(
+          //   "등록된 내 룸메이트가 없어요!\n룸메이트 탭에서 룸메이트를 찾아보거나, 이미 같이 하기로 한 친구가 있다면 등록해주세요.",
+          // );
+          setNotFound(true);
+        } else {
+          alert("룸메이트 정보를 불러오는 데 실패했습니다." + err);
+        }
+      }
+    };
+    fetchRoommateInfo();
+  }, []);
+  const isProtected = !isLoggedIn;
 
   return (
     <MyPageWrapper>
@@ -28,26 +57,39 @@ const MyPage = () => {
       </InfoAreaWrapper>
 
       <MenuGroupsWrapper>
-        {menuGroups.map((group, idx) => {
-          const requiresLogin = ["내 계정", "커뮤니티", "룸메이트"].includes(
-            group.title ?? "",
-          );
-          const isProtected = !isLoggedIn && requiresLogin;
+        <ProtectedMenuWrapper disabled={isProtected}>
+          <MenuGroup title={menuGroups[0].title} menus={menuGroups[0].menus} />
+          {isProtected && (
+            <OverlayMessage>로그인 후 사용 가능해요.</OverlayMessage>
+          )}
+        </ProtectedMenuWrapper>
+        <Divider />
 
-          return (
-            <React.Fragment key={idx}>
-              {group.menus.length > 0 && (
-                <ProtectedMenuWrapper disabled={isProtected}>
-                  <MenuGroup title={group.title} menus={group.menus} />
-                  {isProtected && (
-                    <OverlayMessage>로그인 후 사용 가능해요.</OverlayMessage>
-                  )}
-                </ProtectedMenuWrapper>
-              )}
-              {idx < menuGroups.length - 1 && <Divider />}
-            </React.Fragment>
-          );
-        })}
+        <ProtectedMenuWrapper disabled={isProtected}>
+          <TitleContentArea
+            title={"내 룸메이트"}
+            children={
+              <RoomMateInfoArea
+                roommateInfo={roommateInfo}
+                notFound={notFound}
+              />
+            }
+          />
+          {isProtected && (
+            <OverlayMessage>로그인 후 사용 가능해요.</OverlayMessage>
+          )}
+        </ProtectedMenuWrapper>
+        <Divider />
+
+        <ProtectedMenuWrapper disabled={isProtected}>
+          <MenuGroup title={menuGroups[1].title} menus={menuGroups[1].menus} />
+          {isProtected && (
+            <OverlayMessage>로그인 후 사용 가능해요.</OverlayMessage>
+          )}
+        </ProtectedMenuWrapper>
+        <Divider />
+
+        <MenuGroup title={menuGroups[3].title} menus={menuGroups[3].menus} />
       </MenuGroupsWrapper>
     </MyPageWrapper>
   );
