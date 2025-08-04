@@ -24,7 +24,7 @@ export default function RootPage() {
 
 const RootPageWrapper = styled.div<{ $platform: string }>`
   width: 100vw;
-  height: 100vh;
+  height: 100%;
 
   box-sizing: border-box;
 

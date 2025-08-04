@@ -100,7 +100,7 @@ export default function BottomBar() {
   }
 
   return (
-    <StyledFooter>
+    <StyledBottomBar>
       <Button
         defaultImg={home}
         clickedImg={homeClicked}
@@ -140,11 +140,11 @@ export default function BottomBar() {
         isActive={pathname === "/mypage"}
         onClick={() => navigate("/mypage")}
       />
-    </StyledFooter>
+    </StyledBottomBar>
   );
 }
 
-const StyledFooter = styled.footer`
+const StyledBottomBar = styled.footer`
   position: fixed;
   bottom: 0;
   left: 0;

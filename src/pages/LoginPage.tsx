@@ -65,11 +65,13 @@ export default function LoginPage() {
         />
       </div>
 
-      <SquareButton
-        text="로그인"
-        disabled={!isFilled()}
-        onClick={handleLogin}
-      />
+      <ButtonWrapper>
+        <SquareButton
+          text="로그인"
+          disabled={!isFilled()}
+          onClick={handleLogin}
+        />
+      </ButtonWrapper>
     </LoginPageWrapper>
   );
 }
@@ -91,4 +93,17 @@ const LoginPageWrapper = styled.div`
   .description {
     font-size: 14px;
   }
+`;
+
+const ButtonWrapper = styled.div`
+  width: 100%;
+  height: fit-content;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  padding: 16px;
+  box-sizing: border-box;
+  background: rgba(244, 244, 244, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 `;
