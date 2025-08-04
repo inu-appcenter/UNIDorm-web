@@ -61,7 +61,7 @@ export default function MyInfoEditPage() {
 
   const navigate = useNavigate();
   const [studentNumber] = useState(userInfo.studentNumber);
-  const [name, setName] = useState(userInfo.name);
+  const [nickname, setNickname] = useState(userInfo.name);
   const [selectedDomitoryIndex, setSelectedDomitoryIndex] = useState<
     number | null
   >(null);
@@ -79,13 +79,13 @@ export default function MyInfoEditPage() {
   }, []);
 
   const isFilled = () => {
-    return typeof name === "string" && name.trim() !== "";
+    return typeof nickname === "string" && nickname.trim() !== "";
   };
 
   const handleSubmit = async () => {
     try {
       if (
-        !name ||
+        !nickname ||
         selectedCollegeIndex == null ||
         selectedDomitoryIndex == null
       ) {
@@ -93,8 +93,13 @@ export default function MyInfoEditPage() {
         return;
       }
 
+      if (nickname.length < 2 || nickname.length > 8) {
+        alert("닉네임은 2자 이상 8자 이하로 입력해주세요!");
+        return;
+      }
+
       const response = await putMember(
-        name,
+        nickname,
         colleges[selectedCollegeIndex],
         dormitory[selectedDomitoryIndex],
         0,
@@ -237,10 +242,10 @@ export default function MyInfoEditPage() {
           title={"닉네임"}
           children={
             <StyledInput
-              placeholder="닉네임을 입력하세요."
-              value={name}
+              placeholder="닉네임은 2자~8자 이내로 입력해주세요."
+              value={nickname}
               onChange={(e) => {
-                setName(e.target.value);
+                setNickname(e.target.value);
               }}
             />
           }
