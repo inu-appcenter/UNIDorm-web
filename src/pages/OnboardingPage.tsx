@@ -153,7 +153,7 @@ const OnboardingPage: React.FC = () => {
       <Bottom>
         {isLastSlide && (
           <RoundSquareBlueButton
-            btnName={"Unidom 시작하기"}
+            btnName={"UNI Dorm 시작하기"}
             onClick={handleStart}
           />
         )}

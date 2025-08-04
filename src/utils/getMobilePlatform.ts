@@ -1,8 +1,11 @@
-// src/utils/getMobilePlatform.ts
 export const getMobilePlatform = (): "ios" | "android" | "other" => {
   const ua = navigator.userAgent.toLowerCase();
 
-  if (/iphone|ipad|ipod/.test(ua)) return "ios";
-  if (/android/.test(ua)) return "android";
+  const isIOS = /iphone|ipad|ipod/.test(ua);
+  const isIOSWebView = isIOS && !/safari/.test(ua);
+
+  if (isIOSWebView) return "ios";
+  if (/android/.test(ua) && /wv/.test(ua)) return "android"; // android 웹뷰도 구분 가능
+
   return "other";
 };

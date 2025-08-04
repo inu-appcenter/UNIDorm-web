@@ -34,7 +34,6 @@ const RoundSquareWhiteButtonWrapper = styled.div`
   border: 2px solid #0a84ff;
   border-radius: 8px;
 
-  font-family: "Pretendard";
   font-style: normal;
   font-weight: 500;
   font-size: 16px;

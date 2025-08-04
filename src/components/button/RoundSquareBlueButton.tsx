@@ -32,7 +32,6 @@ const RoundSquareBlueButtonWrapper = styled.div`
   background: #0a84ff;
   border-radius: 8px;
 
-  font-family: "Pretendard";
   font-style: normal;
   font-weight: 500;
   font-size: 16px;

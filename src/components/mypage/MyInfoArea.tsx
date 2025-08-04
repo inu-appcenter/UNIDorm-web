@@ -10,7 +10,7 @@ const MyInfoArea = () => {
   useEffect(() => {
     const getUserProfileImg = async () => {
       const result = await getMemberImage();
-      console.log(result.data.fileName);
+      console.log(result.data);
       setUserProfileImg(result.data.fileName);
     };
 
