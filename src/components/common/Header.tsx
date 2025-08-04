@@ -125,7 +125,7 @@ export default function Header({
 }
 
 const StyledHeader = styled.header<{ $hasShadow: boolean; $isHome: boolean }>`
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   z-index: 1000;

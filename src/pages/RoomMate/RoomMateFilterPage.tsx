@@ -287,7 +287,7 @@ const RoomMateChecklistPageWrapper = styled.div`
 const ButtonWrapper = styled.div`
   width: 100%;
   height: fit-content;
-  position: absolute;
+  position: fixed;
   bottom: 0;
   left: 0;
   padding: 16px;
