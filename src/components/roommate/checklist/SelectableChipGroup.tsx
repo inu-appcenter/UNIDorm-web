@@ -8,7 +8,7 @@ interface BaseProps {
 
 type SingleSelectProps = BaseProps & {
   selectedIndex: number | null;
-  onSelect: (index: number) => void;
+  onSelect: (index: any) => void;
   selectedIndices?: never;
 };
 
@@ -45,7 +45,12 @@ const SelectableChipGroup = (props: SelectableChipProps) => {
 
       props.onSelect(newSelected);
     } else {
-      props.onSelect(index);
+      // 싱글 선택 모드에서 이미 선택된 인덱스를 클릭하면 해제(null)
+      if (props.selectedIndex === index) {
+        props.onSelect(null);
+      } else {
+        props.onSelect(index);
+      }
     }
   };
 
