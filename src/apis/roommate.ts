@@ -66,6 +66,15 @@ export const getRoomMateDetail = async (
   console.log(response);
   return response;
 };
+export const getRoommateLiked = async (
+  boardId: number,
+): Promise<AxiosResponse<boolean>> => {
+  const response = await tokenInstance.get<boolean>(
+    `/roommates/${boardId}/liked`,
+  );
+  console.log(response);
+  return response;
+};
 
 export const requestRoommateMatching = async (
   data: RoommateMatchingRequest,
