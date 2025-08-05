@@ -71,15 +71,17 @@ export default function RoomMateBoardDetailPage() {
       }
     };
     const fetchMyData = async () => {
+      return;
       try {
         const response = await getRoomMateDetail(Number(boardId));
         console.log(response);
-        setBoardData(response.data);
+        setMyData(response.data);
       } catch (error) {
         console.error("내 체크리스트를 불러오지 못했습니다:", error);
       }
     };
     fetchBoardData();
+    fetchMyData();
   }, [boardId]);
 
   useEffect(() => {
