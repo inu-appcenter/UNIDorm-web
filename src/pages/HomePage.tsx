@@ -1,7 +1,6 @@
 import styled from "styled-components";
 import TitleContentArea from "../components/common/TitleContentArea.tsx";
 import HomeCard from "../components/home/HomeCard.tsx";
-import GroupPurchaseList from "../components/GroupPurchase/GroupPurchaseList.tsx";
 import ThreeWeekCalendar from "../components/home/ThreeWeekCalendar.tsx";
 import Header from "../components/common/Header.tsx";
 import 배너1 from "../assets/banner/포스터1.svg";
@@ -216,11 +215,11 @@ export default function HomePage() {
           title={"캘린더 이벤트"}
           children={<ThreeWeekCalendar />}
         />
-        <TitleContentArea
-          title={"임박한 공동구매"}
-          link={"/groupPurchase"}
-          children={<GroupPurchaseList />}
-        />
+        {/*<TitleContentArea*/}
+        {/*  title={"임박한 공동구매"}*/}
+        {/*  link={"/groupPurchase"}*/}
+        {/*  children={<GroupPurchaseList />}*/}
+        {/*/>*/}
       </ContentWrapper>
     </HomePageWrapper>
   );
