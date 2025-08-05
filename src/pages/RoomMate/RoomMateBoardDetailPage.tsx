@@ -7,6 +7,7 @@ import RoomMateBottomBar from "../../components/roommate/RoomMateBottomBar";
 import Header from "../../components/common/Header";
 import { getOpponentChecklist, getRoomMateDetail } from "../../apis/roommate";
 import { RoommatePost } from "../../types/roommates.ts";
+import UseUserStore from "../../stores/useUserStore.ts";
 
 const InfoCard = ({
   color,
@@ -47,6 +48,7 @@ export default function RoomMateBoardDetailPage() {
   const location = useLocation();
   const partnerName = location.state?.partnerName;
   const roomId = location.state?.roomId;
+  const { userInfo } = UseUserStore();
 
   useEffect(() => {
     if (!boardId || boardId === "opponent") return;
@@ -170,7 +172,9 @@ export default function RoomMateBoardDetailPage() {
           />
         </CardGrid>
       </ContentArea>
-      {!roomId && <RoomMateBottomBar />}
+      <ProtectedMenuWrapper disabled={userInfo.dormType !== data.dormType}>
+        {!roomId && <RoomMateBottomBar />}
+      </ProtectedMenuWrapper>
     </RoomMateDetailPageWrapper>
   );
 }
@@ -299,4 +303,10 @@ const CardItem = styled.div`
     font-size: 12px;
     color: #3a3a3c;
   }
+`;
+
+const ProtectedMenuWrapper = styled.div<{ disabled: boolean }>`
+  position: relative;
+  opacity: ${(props) => (props.disabled ? 0.4 : 1)};
+  pointer-events: ${(props) => (props.disabled ? "none" : "auto")};
 `;
