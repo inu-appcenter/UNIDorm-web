@@ -4,8 +4,9 @@ import { useNavigate } from "react-router-dom";
 import { IoCloseSharp } from "react-icons/io5";
 import { MdImage } from "react-icons/md";
 import { useEffect, useRef, useState } from "react";
-import axiosInstance from "../../apis/axiosInstance";
+
 import SquareButton from "../../components/common/SquareButton.tsx";
+import tokenInstance from "../../apis/tokenInstance.ts";
 
 export default function TipWritePage() {
   const navigate = useNavigate();
@@ -51,7 +52,7 @@ export default function TipWritePage() {
         formData.append("images", images[i]);
       }
 
-      const res = await axiosInstance.post("/tips", formData, {
+      const res = await tokenInstance.post("/tips", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },

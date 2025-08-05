@@ -185,25 +185,27 @@ export default function TipDetailPage() {
                 )}
               </UserInfo>
 
-              <ImageSlider>
-                {images.length > 0 ? (
-                  images.map((url, idx) => (
-                    <SliderItem
-                      key={idx}
+            <ImageSlider>
+              {images.length > 0 ? (
+                images.map((url, idx) => (
+                  <SliderItem key={idx}>
+                    <img
+                      src={url}
+                      alt={`업로드 이미지 ${idx + 1}`}
                       style={{
-                        backgroundImage: `url(${url})`,
-                        backgroundSize: "cover",
-                        backgroundPosition: "center",
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        borderRadius: "10px",
                       }}
                     />
-                  ))
-                ) : (
-                  <SliderItem />
-                )}
-                <SliderIndicator>
-                  {images.map((_, i) => (i === 0 ? "●" : "○")).join(" ")}
-                </SliderIndicator>
-              </ImageSlider>
+                  </SliderItem>
+                ))
+              ) : (
+                <SliderItem />
+              )}
+            </ImageSlider>
+
 
               <Title>{tip.title}</Title>
               <BodyText>{tip.content}</BodyText>
