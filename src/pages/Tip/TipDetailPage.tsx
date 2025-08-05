@@ -5,6 +5,7 @@ import { BsSend, BsThreeDotsVertical } from "react-icons/bs";
 import { FaRegHeart, FaUserCircle } from "react-icons/fa";
 import Header from "../../components/common/Header";
 import tokenInstance from "../../apis/tokenInstance"; // ← 반드시 tokenInstance로!
+import { useSwipeable } from "react-swipeable";
 
 interface TipComment {
   tipCommentId: number;
@@ -132,6 +133,13 @@ export default function TipDetailPage() {
   //이미지 넘기기
   const [currentImage, setCurrentImage] = useState(0);
 
+  // 슬라이드 핸들러 세팅
+  const handlers = useSwipeable({
+    onSwipedLeft: () => setCurrentImage(idx => Math.min(images.length - 1, idx + 1)),
+    onSwipedRight: () => setCurrentImage(idx => Math.max(0, idx - 1)),
+    trackMouse: true // PC에서 마우스 드래그도 허용하려면
+  });
+
   return (
     <Wrapper>
       <Header title="기숙사 꿀팁" hasBack={true} showAlarm={true} />
@@ -172,39 +180,35 @@ export default function TipDetailPage() {
               </UserInfo>
 
               {/* 이미지 여러장 보여주기 */}
-              <ImageSlider>
-                {images.length > 0 ? (
-                  <>
-                    <SliderItem>
-                      <img
-                        src={images[currentImage]}
-                        alt={`팁 이미지 ${currentImage + 1}`}
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                          borderRadius: "10px",
-                        }}
-                      />
-                    </SliderItem>
-                    <SliderNav>
-                      <NavButton
-                        disabled={currentImage === 0}
-                        onClick={() => setCurrentImage(idx => Math.max(0, idx - 1))}
-                      >◀</NavButton>
+              
+                <ImageSlider {...handlers} style={{touchAction: "pan-y"}}>
+                  {images.length > 0 ? (
+                    <>
+                      <SliderItem>
+                        <img
+                          src={images[currentImage]}
+                          alt={`팁 이미지 ${currentImage + 1}`}
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                            borderRadius: "10px",
+                            userSelect: "none",
+                            pointerEvents: "none"
+                          }}
+                          draggable={false}
+                        />
+                      </SliderItem>
                       <SliderIndicator>
-                        {currentImage + 1} / {images.length}
+                        {images.map((_, idx) => (
+                          <Dot key={idx} $active={idx === currentImage} />
+                        ))}
                       </SliderIndicator>
-                      <NavButton
-                        disabled={currentImage === images.length - 1}
-                        onClick={() => setCurrentImage(idx => Math.min(images.length - 1, idx + 1))}
-                      >▶</NavButton>
-                    </SliderNav>
-                  </>
-                ) : (
-                  <SliderItem />
-                )}
-              </ImageSlider>
+                    </>
+                  ) : (
+                    <SliderItem />
+                  )}
+                </ImageSlider>
 
 
               <Title>{tip.title}</Title>
@@ -560,26 +564,12 @@ const ReplyButton = styled.button`
   }
 `;
 
-const SliderNav = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  position: absolute;
-  bottom: 8px;
-  left: 0;
-  width: 100%;
-`;
-
-const NavButton = styled.button`
-  background: rgba(255,255,255,0.8);
-  border: none;
-  font-size: 18px;
+const Dot = styled.span<{ $active: boolean }>`
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin: 0 4px;
   border-radius: 50%;
-  width: 28px; height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  &:disabled { opacity: 0.3; cursor: default;}
+  background: ${({ $active }) => ($active ? "#222" : "#ddd")};
+  transition: background 0.2s;
 `;
