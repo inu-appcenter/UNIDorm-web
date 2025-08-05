@@ -1,10 +1,12 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import axiosInstance from "../../apis/axiosInstance";
 import styled from "styled-components";
 import { BsSend, BsThreeDotsVertical } from "react-icons/bs";
 import { FaRegHeart, FaUserCircle } from "react-icons/fa";
 import Header from "../../components/common/Header";
+import tokenInstance from "../../apis/tokenInstance"; // ← 반드시 tokenInstance로!
+import { useSwipeable } from "react-swipeable";
+import axiosInstance from "../../apis/axiosInstance.ts";
 
 interface TipComment {
   tipCommentId: number;
@@ -12,6 +14,7 @@ interface TipComment {
   reply: string;
   parentId: number;
   isDeleted: boolean;
+  createDate?: string;
 }
 
 interface TipDetail {
@@ -27,43 +30,35 @@ interface TipDetail {
 export default function TipDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [tip, setTip] = useState<TipDetail | null>(null);
-
-  // 메뉴(점3개)
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   // 댓글 입력 상태
   const [commentInput, setCommentInput] = useState("");
-  // 대댓글 입력 상태 { [commentId]: value }
   const [replyInputs, setReplyInputs] = useState<{ [key: number]: string }>({});
-  // 대댓글 입력창 열림 여부
   const [replyOpen, setReplyOpen] = useState<{ [key: number]: boolean }>({});
-
-  // 유저 정보
   const [userInfo, setUserInfo] = useState<{
     name: string;
     profileImageUrl: string;
   } | null>(null);
-
-  // 이미지(현재 미사용)
   const [images, setImages] = useState<string[]>([]);
 
-  // 팁 상세/이미지/유저 fetch
   useEffect(() => {
     window.scrollTo(0, 0);
     if (id) {
       fetchTipDetail(id);
       fetchTipImages(id);
     }
-    fetchUserInfo();
+    // fetchUserInfo();
     // eslint-disable-next-line
   }, [id]);
 
+  // ----------- 여기가 핵심 수정!
   const fetchTipDetail = async (id: string) => {
     try {
       const res = await axiosInstance.get(`/tips/${id}`);
+      console.log(res.data);
       setTip(res.data);
-      console.log(res);
     } catch (err) {
       console.error("게시글 불러오기 실패", err);
     }
@@ -71,40 +66,32 @@ export default function TipDetailPage() {
 
   const fetchTipImages = async (id: string) => {
     try {
-      console.log("이미지 불러오기 시도");
-      // const token = localStorage.getItem("accessToken");
-      const res = await axiosInstance.get(`/tips/${id}/image`, {
-        // headers: { Authorization: `Bearer ${token}` },
-      });
-      console.log("res", res);
-
+      const res = await axiosInstance.get(`/tips/${id}/image`);
+      // fileName이 진짜 이미지 url임!
       const urls = res.data.map((img: any) => img.fileName);
-      console.log("urls", urls);
       setImages(urls);
     } catch (err) {
       console.error("이미지 불러오기 실패", err);
     }
   };
 
-  const fetchUserInfo = async () => {
-    try {
-      const userRes = await axiosInstance.get("/users");
-      const imageRes = await axiosInstance.get("/users/image", {
-        responseType: "blob",
-      });
-      const imageUrl = URL.createObjectURL(imageRes.data);
-      setUserInfo({ name: userRes.data.name, profileImageUrl: imageUrl });
-    } catch (err) {
-      // console.error("유저 정보 가져오기 실패", err);
-    }
-  };
+  // const fetchUserInfo = async () => {
+  //   try {
+  //     const userRes = await tokenInstance.get("/users");
+  //     const imageRes = await tokenInstance.get("/users/image", {
+  //       responseType: "blob",
+  //     });
+  //     const imageUrl = URL.createObjectURL(imageRes.data);
+  //     setUserInfo({ name: userRes.data.name, profileImageUrl: imageUrl });
+  //   } catch (err) {}
+  // };
 
   // 게시글 삭제
   const handleDelete = async () => {
     if (!id) return;
     if (!window.confirm("정말 삭제하시겠습니까?")) return;
     try {
-      await axiosInstance.delete(`/tips/${id}`);
+      await tokenInstance.delete(`/tips/${id}`);
       alert("삭제되었습니다.");
       navigate(-1);
     } catch (err) {
@@ -116,7 +103,7 @@ export default function TipDetailPage() {
   const handleCommentSubmit = async () => {
     if (!commentInput.trim()) return;
     try {
-      await axiosInstance.post("/tip-comments", {
+      await tokenInstance.post("/tip-comments", {
         parentCommentId: null,
         tipId: Number(id),
         reply: commentInput,
@@ -133,7 +120,7 @@ export default function TipDetailPage() {
     const replyInput = replyInputs[parentCommentId];
     if (!replyInput?.trim()) return;
     try {
-      await axiosInstance.post("/tip-comments", {
+      await tokenInstance.post("/tip-comments", {
         parentCommentId,
         tipId: Number(id),
         reply: replyInput,
@@ -145,6 +132,17 @@ export default function TipDetailPage() {
       alert("대댓글 등록 실패");
     }
   };
+
+  //이미지 넘기기
+  const [currentImage, setCurrentImage] = useState(0);
+
+  // 슬라이드 핸들러 세팅
+  const handlers = useSwipeable({
+    onSwipedLeft: () =>
+      setCurrentImage((idx) => Math.min(images.length - 1, idx + 1)),
+    onSwipedRight: () => setCurrentImage((idx) => Math.max(0, idx - 1)),
+    trackMouse: true, // PC에서 마우스 드래그도 허용하려면
+  });
 
   return (
     <Wrapper>
@@ -185,25 +183,32 @@ export default function TipDetailPage() {
                 )}
               </UserInfo>
 
-              <ImageSlider>
-                {images.length > 0 ? (
-                  images.map((url, idx) => (
-                    <SliderItem
-                      key={idx}
+              {/* 이미지가 하나 이상 있을 때만 보여줌 */}
+              {images.length > 0 && (
+                <ImageSlider {...handlers} style={{ touchAction: "pan-y" }}>
+                  {/* ...이하 슬라이더 내부 동일 */}
+                  <SliderItem>
+                    <img
+                      src={images[currentImage]}
+                      alt={`팁 이미지 ${currentImage + 1}`}
                       style={{
-                        backgroundImage: `url(${url})`,
-                        backgroundSize: "cover",
-                        backgroundPosition: "center",
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        borderRadius: "10px",
+                        userSelect: "none",
+                        pointerEvents: "none",
                       }}
+                      draggable={false}
                     />
-                  ))
-                ) : (
-                  <SliderItem />
-                )}
-                <SliderIndicator>
-                  {images.map((_, i) => (i === 0 ? "●" : "○")).join(" ")}
-                </SliderIndicator>
-              </ImageSlider>
+                  </SliderItem>
+                  <SliderIndicator>
+                    {images.map((_, idx) => (
+                      <Dot key={idx} $active={idx === currentImage} />
+                    ))}
+                  </SliderIndicator>
+                </ImageSlider>
+              )}
 
               <Title>{tip.title}</Title>
               <BodyText>{tip.content}</BodyText>
@@ -218,7 +223,7 @@ export default function TipDetailPage() {
 
               <CommentList>
                 {tip.tipCommentDtoList
-                  ?.filter((c) => c.parentId === 0)
+                  ?.filter((c) => c.parentId === 0 || c.parentId === null)
                   .map((comment) => (
                     <div key={comment.tipCommentId}>
                       <Comment>
@@ -227,7 +232,16 @@ export default function TipDetailPage() {
                           <CommentBody>
                             <Nickname>익명 {comment.userId}</Nickname>
                             <CommentText>{comment.reply}</CommentText>
-                            <Date>댓글 날짜 없음</Date>
+                            <Date>
+                              {comment.createDate
+                                ? new Date(
+                                    comment.createDate,
+                                  ).toLocaleTimeString([], {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })
+                                : "방금"}
+                            </Date>
                           </CommentBody>
                           <CommentActionArea>
                             <ReplyButton
@@ -280,7 +294,16 @@ export default function TipDetailPage() {
                               <ReplyBody>
                                 <Nickname>익명 {reply.userId}</Nickname>
                                 <CommentText>{reply.reply}</CommentText>
-                                <Date>댓글 날짜 없음</Date>
+                                <Date>
+                                  {reply.createDate
+                                    ? new Date(
+                                        reply.createDate,
+                                      ).toLocaleTimeString([], {
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      })
+                                    : "방금"}
+                                </Date>
                               </ReplyBody>
                             </ReplyContent>
                           </Reply>
@@ -311,7 +334,7 @@ export default function TipDetailPage() {
   );
 }
 
-// --- styled-components
+// --- styled-components (이 아래는 그대로!)
 
 const Wrapper = styled.div`
   position: relative;
@@ -370,9 +393,8 @@ const UserInfo = styled.div`
   align-items: center;
   gap: 12px;
   margin-bottom: 16px;
-
-  position: relative; /* ✅ 메뉴 absolute 기준점으로 */
-  overflow: visible; /* ✅ 안 짤리게 */
+  position: relative;
+  overflow: visible;
 `;
 
 const UserText = styled.div`
@@ -557,4 +579,14 @@ const ReplyButton = styled.button`
   &:hover {
     background: #f3f3f3;
   }
+`;
+
+const Dot = styled.span<{ $active: boolean }>`
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin: 0 4px;
+  border-radius: 50%;
+  background: ${({ $active }) => ($active ? "#222" : "#ddd")};
+  transition: background 0.2s;
 `;
