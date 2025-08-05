@@ -37,6 +37,7 @@ import CalendarAdminPage from "./pages/Admin/CalendarAdminPage.tsx";
 import AdminMainPage from "./pages/Admin/AdminMainPage.tsx";
 import AnnounceDetailPage from "./pages/Announcement/AnnounceDetailPage.tsx";
 import AnnounceWritePage from "./pages/Admin/AnnounceWritePage.tsx";
+import NotificationPage from "./pages/NotificationPage.tsx";
 
 function App() {
   const { tokenInfo, setUserInfo, userInfo } = useUserStore();
@@ -122,7 +123,7 @@ function App() {
             element={<RoomMateChecklistPage />}
           />
           <Route path="/myinfoedit" element={<MyInfoEditPage />} />
-
+          <Route path={"/notification"} element={<NotificationPage />} />
           <Route path="/announcements" element={<NotificationBoardPage />} />
           <Route path="/announcements/:id" element={<AnnounceDetailPage />} />
           <Route path="/announcements/write" element={<AnnounceWritePage />} />

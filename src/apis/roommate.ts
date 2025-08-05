@@ -3,6 +3,7 @@ import { AxiosResponse } from "axios";
 import tokenInstance from "./tokenInstance.ts";
 import {
   MyRoommateInfoResponse,
+  ReceivedMatchingRequest,
   RoommateMatchingRequest,
   RoommateMatchingResponse,
   RoommatePost,
@@ -62,6 +63,15 @@ export const getRoomMateDetail = async (
 ): Promise<AxiosResponse<RoommatePost>> => {
   const response = await tokenInstance.get<RoommatePost>(
     `/roommates/${boardId}`,
+  );
+  console.log(response);
+  return response;
+};
+export const getRoommateLiked = async (
+  boardId: number,
+): Promise<AxiosResponse<boolean>> => {
+  const response = await tokenInstance.get<boolean>(
+    `/roommates/${boardId}/liked`,
   );
   console.log(response);
   return response;
@@ -126,4 +136,32 @@ export const unlikeRoommateBoard = async (
   boardId: number,
 ): Promise<AxiosResponse<number>> => {
   return await tokenInstance.delete(`/roommates/${boardId}/like`);
+};
+
+export const getReceivedRoommateRequests = async (): Promise<
+  AxiosResponse<ReceivedMatchingRequest[]>
+> => {
+  const response = await tokenInstance.get<ReceivedMatchingRequest[]>(
+    "/roommate-matching/received",
+  );
+  console.log(response);
+  return response;
+};
+
+export const rejectRoommateMatching = async (
+  matchingId: number,
+): Promise<AxiosResponse<void>> => {
+  const response = await tokenInstance.patch<void>(
+    `/roommate-matching/${matchingId}/reject`,
+  );
+  return response;
+};
+
+export const acceptRoommateMatching = async (
+  matchingId: number,
+): Promise<AxiosResponse<void>> => {
+  const response = await tokenInstance.patch<void>(
+    `/roommate-matching/${matchingId}/accept`,
+  );
+  return response;
 };

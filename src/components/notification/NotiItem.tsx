@@ -11,7 +11,7 @@ interface NotiItemProps {
 
 const NotiItem = ({ notidata }: NotiItemProps) => {
   const NotiIconSelector = () => {
-    if (notidata.category === "룸메") {
+    if (notidata.category === "룸메이트") {
       return roommate;
     } else if (notidata.category === "공동구매") {
       return purchase;
@@ -22,7 +22,7 @@ const NotiItem = ({ notidata }: NotiItemProps) => {
     }
   };
   return (
-    <NotiItemWrapper>
+    <NotiItemWrapper onClick={notidata.onClick}>
       <IconWrapper>
         <img src={NotiIconSelector()} alt={"공지아이콘"} />
       </IconWrapper>

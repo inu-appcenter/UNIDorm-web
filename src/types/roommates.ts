@@ -14,6 +14,8 @@ export interface RoommatePost {
   bedTime: string; // 예: "일찍 자요"
   arrangement: string; // 예: "깔끔해요"
   religion: string;
+  matched: boolean;
+  roommateBoardLike: number;
 
   comment: string; // 추가 설명
 }
@@ -34,6 +36,8 @@ export interface SimilarRoommatePost {
   bedTime: string; // 예: "일찍 자요"
   arrangement: string; // 예: "깔끔해요"
   religion: string;
+  matched: boolean;
+  roommateBoardLike: number;
 
   comment: string; // 본문 요약 or 한줄 코멘트
   similarityPercentage: number; // 유사도 (예: 85)
@@ -49,8 +53,8 @@ export interface RoomMateCardProps {
   isClean: boolean;
   stayDays: string[];
   description: string;
-  commentCount: number;
-  likeCount: number;
+  roommateBoardLike: number;
+  matched: boolean;
   percentage?: number;
 }
 
@@ -88,6 +92,8 @@ export interface RoommatePostResponse {
   bedTime: string;
   arrangement: string;
   religion: string;
+  matched: boolean;
+  roommateBoardLike: number;
 
   comment: string;
 }
@@ -115,4 +121,11 @@ export interface RoommateRulesResponse {
 }
 export interface RoommateRulesUpdateRequest {
   rules: string[];
+}
+
+export interface ReceivedMatchingRequest {
+  matchingId: number;
+  senderId: number;
+  senderName: string;
+  status: string;
 }
