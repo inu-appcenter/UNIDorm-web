@@ -131,7 +131,7 @@ function App() {
             element={<GroupPurchaseWritePage />}
           />
           <Route path="/myroommate" element={<MyRoomMatePage />} />
-          <Route path={"/roommateadd"} element={<RoomMateAddPage />} />
+          <Route path="/roommateadd" element={<RoomMateAddPage />} />
         </Route>
       </Routes>
     </>

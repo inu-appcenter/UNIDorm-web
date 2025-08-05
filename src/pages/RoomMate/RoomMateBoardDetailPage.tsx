@@ -1,11 +1,11 @@
 import styled from "styled-components";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 
 import profileimg from "../../assets/profileimg.svg";
 import RoomMateBottomBar from "../../components/roommate/RoomMateBottomBar";
 import Header from "../../components/common/Header";
-import { getRoomMateDetail } from "../../apis/roommate";
+import { getOpponentChecklist, getRoomMateDetail } from "../../apis/roommate";
 import { RoommatePost } from "../../types/roommates.ts";
 
 const InfoCard = ({
@@ -33,9 +33,12 @@ const InfoCard = ({
 export default function RoomMateBoardDetailPage() {
   const { boardId } = useParams<{ boardId: string }>();
   const [data, setData] = useState<RoommatePost | null>(null);
+  const location = useLocation();
+  const partnerName = location.state?.partnerName;
+  const roomId = location.state?.roomId;
 
   useEffect(() => {
-    if (!boardId) return;
+    if (!boardId || boardId === "opponent") return;
     const fetchData = async () => {
       try {
         const response = await getRoomMateDetail(Number(boardId));
@@ -48,6 +51,23 @@ export default function RoomMateBoardDetailPage() {
     fetchData();
   }, [boardId]);
 
+  useEffect(() => {
+    console.log(roomId);
+    if (!roomId) return;
+
+    const fetchOpponentChecklist = async () => {
+      try {
+        const response = await getOpponentChecklist(roomId);
+        setData(response.data);
+        console.log(response);
+      } catch (error) {
+        console.error("상대방 체크리스트 불러오기 실패", error);
+      }
+    };
+
+    fetchOpponentChecklist();
+  }, [roomId]);
+
   if (!data) return <div>로딩 중...</div>;
 
   return (
@@ -56,7 +76,7 @@ export default function RoomMateBoardDetailPage() {
       <UserArea>
         <img src={profileimg} />
         <div className="description">
-          <div className="name">익명</div>
+          <div className="name">{partnerName}</div>
           <div className="date">03/01 18:07</div>
         </div>
       </UserArea>
@@ -133,7 +153,7 @@ export default function RoomMateBoardDetailPage() {
           />
         </CardGrid>
       </ContentArea>
-      <RoomMateBottomBar />
+      {!roomId && <RoomMateBottomBar />}
     </RoomMateDetailPageWrapper>
   );
 }
