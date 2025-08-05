@@ -30,6 +30,17 @@ const InfoCard = ({
   );
 };
 
+const religionEmojiMap: Record<string, string> = {
+  기독교: "✝️",
+  천주교: "✝️",
+  불교: "🪷",
+  이슬람교: "☪️",
+  힌두교: "🕉️",
+  유대교: "✡️",
+  무교: "🙏",
+  기타: "🙏",
+};
+
 export default function RoomMateBoardDetailPage() {
   const { boardId } = useParams<{ boardId: string }>();
   const [data, setData] = useState<RoommatePost | null>(null);
@@ -150,6 +161,12 @@ export default function RoomMateBoardDetailPage() {
             icon="🧼"
             title="정리정돈"
             description={data.arrangement}
+          />
+          <InfoCard
+            color="#F3F4F6"
+            icon={religionEmojiMap[data.religion] || "🙏"}
+            title="종교"
+            description={data.religion}
           />
         </CardGrid>
       </ContentArea>
