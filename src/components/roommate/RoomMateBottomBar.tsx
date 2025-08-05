@@ -26,6 +26,7 @@ const RoomMateBottomBar = () => {
       navigate("/roommatechecklist");
       return;
     }
+
     if (!boardId) return;
 
     try {

@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { RoommatePost } from "../../types/roommates.ts";
 import { useLocation, useNavigate } from "react-router-dom";
 import FilterButton from "../../components/button/FilterButton.tsx";
+import useUserStore from "../../stores/useUserStore.ts";
 
 function FilterTags({ filters }: { filters: Record<string, any> }) {
   const filteredTags = Object.values(filters).filter((value) => {
@@ -53,6 +54,7 @@ const Tag = styled.div`
 `;
 
 export default function RoomMateListPage() {
+  const { userInfo } = useUserStore();
   const [roommates, setRoommates] = useState<RoommatePost[]>([]);
   const [filteredRoommates, setFilteredRoommates] = useState<RoommatePost[]>(
     [],
@@ -61,16 +63,20 @@ export default function RoomMateListPage() {
   const navigate = useNavigate();
 
   // filters를 상태로 관리
-  const [filters, setFilters] = useState<Record<string, any>>(
-    location.state?.filters || {},
-  );
+  const [filters, setFilters] = useState<Record<string, any>>({
+    ...(location.state?.filters || {}),
+    dormType: userInfo.dormType,
+  });
 
   // location.state.filters가 바뀌면 filters 업데이트
   useEffect(() => {
     if (location.state?.filters) {
-      setFilters(location.state.filters);
+      setFilters({
+        ...location.state.filters,
+        dormType: userInfo.dormType, // 항상 고정
+      });
     }
-  }, [location.state?.filters]);
+  }, [location.state?.filters, userInfo.dormType]);
 
   useEffect(() => {
     const fetchData = async () => {
