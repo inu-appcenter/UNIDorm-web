@@ -54,7 +54,7 @@ export const useRoommateChat = ({
     if (connected || wsRef.current?.readyState === WebSocket.OPEN) return;
 
     const socket = new WebSocket(
-      "wss://inu-dormitory-dev.inuappcenter.kr/ws-stomp",
+      "wss://unidorm-server.inuappcenter.kr/ws-stomp",
     );
     wsRef.current = socket;
 
