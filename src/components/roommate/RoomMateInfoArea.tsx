@@ -2,6 +2,7 @@ import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { MyRoommateInfoResponse } from "../../types/roommates.ts";
 import default_profile_img from "../../assets/profileimg.svg";
+import { MdKeyboardArrowRight } from "react-icons/md";
 
 interface RoomMateInfoAreaProps {
   roommateInfo: MyRoommateInfoResponse | null;
@@ -61,6 +62,11 @@ const RoomMateInfoArea = ({
           </div>
         </div>
       </LeftArea>
+      {location.pathname === "/mypage" && (
+        <Penalty>
+          <MdKeyboardArrowRight />
+        </Penalty>
+      )}
     </RoomMateInfoAreaWrapper>
   );
 };
@@ -180,4 +186,17 @@ const ChecklistBanner = styled.div`
     justify-content: flex-end;
     gap: 12px;
   }
+`;
+
+const Penalty = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+
+  min-width: fit-content;
+  height: fit-content;
+  font-style: normal;
+  font-weight: 600;
+  font-size: 26px;
 `;

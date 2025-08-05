@@ -15,6 +15,7 @@ import RoundSquareBlueButton from "../../components/button/RoundSquareBlueButton
 import QuickMessageModal from "../../components/roommate/QuickMessageModal.tsx";
 import { MyRoommateInfoResponse } from "../../types/roommates.ts";
 import {
+  getMyRoommateTimeTableImage,
   getUserTimetableImage,
   putUserTimetableImage,
 } from "../../apis/members.ts";
@@ -31,22 +32,39 @@ export default function MyRoomMatePage() {
   const [showQuickModal, setShowQuickModal] = useState(false);
 
   const [showImgConfirmModal, setShowImgConfirmModal] = useState(false); //모달창 열림 여부
-
+  const [myTimetableImageUrl, setMyTimetableImageUrl] = useState<string>();
+  const [roommateTimetableImageUrl, setRoommateTimetableImageUrl] =
+    useState<string>();
   // 룸메이트 없을 때 overlay 표시 및 클릭 막기
   const isDisabled = notFound;
 
+  const headerMenuItems = [
+    {
+      label: "룸메이트 끊기",
+      onClick: () => {
+        if (
+          window.confirm(
+            `정말 ${roommateInfo?.name}님과의 룸메이트 관계를 끊으시겠어요?`,
+          )
+        ) {
+          alert("룸메이트 끊기 기능 구현 예정");
+        }
+      },
+    },
+  ];
+
   // 룸메이트 없으면 빈 배열로 처리
-  const menuItems = notFound
+  const ruleMenuItems = notFound
     ? []
     : [
         {
-          label: "규칙 추가/편집하기",
+          label: "규칙 추가/편집",
           onClick: () => {
             setIsEditing(true);
           },
         },
         {
-          label: "규칙 삭제하기",
+          label: "규칙 삭제",
           onClick: () => {
             if (window.confirm("정말 방 규칙을 삭제하시겠습니까?")) {
               deleteMyRoommateRules()
@@ -61,19 +79,17 @@ export default function MyRoomMatePage() {
             }
           },
         },
-        {
-          label: "룸메이트 끊기",
-          onClick: () => {
-            if (
-              window.confirm(
-                `정말 ${roommateInfo?.name}님과의 룸메이트 관계를 끊으시겠어요?`,
-              )
-            ) {
-              alert("룸메이트 끊기 기능 구현 예정");
-            }
-          },
-        },
       ];
+
+  const timetableMenuItems = [
+    {
+      label: "내 시간표 등록",
+      onClick: () => {
+        if (isDisabled) return;
+        document.getElementById("timetable-upload")?.click();
+      },
+    },
+  ];
 
   useEffect(() => {
     const fetchRoommateInfo = async () => {
@@ -107,13 +123,20 @@ export default function MyRoomMatePage() {
     const fetchUserTimetable = async () => {
       try {
         const res = await getUserTimetableImage();
-        // 초기 구조: fileName 하나만 오더라도 배열로 처리
-        const urls = res.data.fileNames
-          ? res.data.fileNames
-          : [res.data.fileName].filter(Boolean);
-        setTimetableImageUrls(urls);
+        setMyTimetableImageUrl(res.data.fileName);
       } catch (error: any) {
-        console.log("시간표 이미지 불러오기 실패:", error);
+        console.log("내 시간표 이미지 불러오기 실패:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const fetchRoommateTimetable = async () => {
+      try {
+        const res = await getMyRoommateTimeTableImage();
+        setRoommateTimetableImageUrl(res.data.fileName);
+      } catch (error: any) {
+        console.log("룸메이트 시간표 이미지 불러오기 실패:", error);
       } finally {
         setLoading(false);
       }
@@ -121,13 +144,13 @@ export default function MyRoomMatePage() {
 
     fetchRules();
     fetchRoommateInfo();
+    fetchRoommateTimetable();
     fetchUserTimetable();
   }, []);
 
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-  const [timetableImageUrls, setTimetableImageUrls] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const handleUploadImage = async () => {
@@ -143,8 +166,7 @@ export default function MyRoomMatePage() {
       if (response.status === 200) {
         alert("시간표 이미지가 업로드되었습니다.");
         const newImageUrl = response.data.fileName;
-        setTimetableImageUrls((prev) => [...prev, newImageUrl]);
-        // setCurrentIndex(timetableImageUrls.length); // 새 이미지로 슬라이드 이동
+        setMyTimetableImageUrl(newImageUrl);
         setShowImgConfirmModal(false);
       } else {
         alert("이미지 업로드 실패");
@@ -198,7 +220,7 @@ export default function MyRoomMatePage() {
         title={"내 룸메이트"}
         hasBack={true}
         showAlarm={false}
-        menuItems={menuItems}
+        menuItems={headerMenuItems}
       />
       {showImgConfirmModal && previewUrl && (
         <ModalBackGround>
@@ -256,13 +278,7 @@ export default function MyRoomMatePage() {
         />
 
         {/* 시간표 추가 버튼 (input 트리거) */}
-        <IconTextButton
-          type="addtimetable"
-          onClick={() => {
-            if (isDisabled) return;
-            document.getElementById("timetable-upload")?.click();
-          }}
-        />
+        <IconTextButton type="addtimetable" menuItems={timetableMenuItems} />
 
         <div
           style={{ position: "relative", width: "100%", overflow: "hidden" }}
@@ -270,9 +286,9 @@ export default function MyRoomMatePage() {
           <FullWidthSlider ref={sliderRef}>
             <FullWidthSlide>
               <div className="timetableTitle">룸메이트 시간표</div>
-              {timetableImageUrls[1] ? (
+              {roommateTimetableImageUrl ? (
                 <img
-                  src={timetableImageUrls[0]}
+                  src={roommateTimetableImageUrl}
                   alt="룸메이트 시간표"
                   style={{
                     width: "100%",
@@ -292,9 +308,9 @@ export default function MyRoomMatePage() {
 
             <FullWidthSlide>
               <div className="timetableTitle">내 시간표</div>
-              {timetableImageUrls[1] ? (
+              {myTimetableImageUrl ? (
                 <img
-                  src={timetableImageUrls[0]}
+                  src={myTimetableImageUrl}
                   alt={`내 시간표`}
                   style={{
                     width: "100%",
@@ -327,6 +343,7 @@ export default function MyRoomMatePage() {
           onClick={() => {
             if (isDisabled) return;
           }}
+          menuItems={ruleMenuItems}
         />
 
         <StyledTextArea
@@ -345,7 +362,7 @@ export default function MyRoomMatePage() {
         {isEditing && !isDisabled && (
           <div>
             <RoundSquareBlueButton
-              btnName={"저장하기"}
+              btnName={"저장"}
               onClick={async () => {
                 try {
                   const newRules = text

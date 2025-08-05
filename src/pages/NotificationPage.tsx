@@ -2,42 +2,80 @@ import styled from "styled-components";
 import Header from "../components/common/Header.tsx";
 import { Notification } from "../types/notifications.ts";
 import NotiItem from "../components/notification/NotiItem.tsx";
-export const dummyNotifications: Notification[] = [
-  {
-    id: 1,
-    category: "룸메",
-    content: "시스템 점검이 6월 15일 오전 2시에 진행됩니다.",
-  },
-  {
-    id: 2,
-    category: "채팅",
-    content: "신규 가입 회원 대상 웰컴 이벤트가 시작되었습니다!",
-  },
-  {
-    id: 3,
-    category: "공동구매",
-    content: "회원님의 비밀번호가 30일 후 만료됩니다.",
-  },
-  {
-    id: 4,
-    category: "공지사항",
-    content: "앱 버전 2.1.0이 출시되었습니다. 지금 업데이트하세요.",
-  },
-  {
-    id: 5,
-    category: "룸메",
-    content: "의심스러운 로그인 시도가 감지되었습니다.",
-  },
-];
+import { useEffect, useState } from "react";
+import {
+  acceptRoommateMatching,
+  getReceivedRoommateRequests,
+  rejectRoommateMatching,
+} from "../apis/roommate.ts";
+import axios from "axios";
 
 const NotificationPage = () => {
+  const [matchRequests, setMatchRequests] = useState<Notification[]>([]);
+
+  const handleRoommateRequest = async (
+    matchingId: number,
+    senderName: string,
+  ) => {
+    try {
+      if (
+        window.confirm(`${senderName}님이 보낸 룸메이트 요청을 수락할까요?`)
+      ) {
+        await acceptRoommateMatching(matchingId);
+        alert("매칭 요청이 수락되었습니다.");
+      } else {
+        if (
+          window.confirm(`${senderName}님이 보낸 룸메이트 요청을 거절할까요?`)
+        ) {
+          await rejectRoommateMatching(matchingId);
+          alert("매칭 요청이 거절되었습니다.");
+        }
+      }
+    } catch (e: any) {
+      if (axios.isAxiosError(e) && e.response) {
+        if (e.response.status === 409) {
+          alert("이미 처리된 매칭 요청입니다.");
+          return;
+        }
+      }
+      console.error(e.message);
+      alert("처리 중 오류가 발생했습니다.");
+    }
+  };
+
+  useEffect(() => {
+    const fetchMatchingRequests = async () => {
+      try {
+        const response = await getReceivedRoommateRequests();
+        const formatted = response.data.map((item) => ({
+          id: item.matchingId,
+          category: "룸메이트",
+          content: `${item.senderName}님이 룸메 신청을 보냈어요!`,
+          onClick: () =>
+            handleRoommateRequest(item.matchingId, item.senderName),
+        }));
+        setMatchRequests(formatted);
+      } catch (error) {
+        console.error("매칭 요청 조회 실패:", error);
+      }
+    };
+
+    fetchMatchingRequests();
+  }, []);
+
+  const allNotifications = [...matchRequests];
+
   return (
     <NotificationPageWrapper>
       <Header hasBack={true} />
       <ContentWrapper>
-        {dummyNotifications.map((noti) => (
-          <NotiItem key={noti.id} notidata={noti} />
-        ))}{" "}
+        {allNotifications.length > 0 ? (
+          allNotifications.map((noti) => (
+            <NotiItem key={noti.id} notidata={noti} />
+          ))
+        ) : (
+          <EmptyMessage>알림이 없습니다.</EmptyMessage>
+        )}
       </ContentWrapper>
     </NotificationPageWrapper>
   );
@@ -67,4 +105,11 @@ const ContentWrapper = styled.div`
   box-sizing: border-box;
 
   overflow-y: auto;
+`;
+
+const EmptyMessage = styled.div`
+  padding: 24px;
+  text-align: center;
+  color: #aaa;
+  font-size: 14px;
 `;

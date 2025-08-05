@@ -1,8 +1,8 @@
-import CommentIcon from "../../assets/comment.svg";
 import HeartIcon from "../../assets/heart.svg";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { RoomMateCardProps } from "../../types/roommates.ts";
+import 매칭완료 from "../../assets/roommate/매칭완료.png";
 
 const RoomMateCard = ({
   boardId,
@@ -14,26 +14,29 @@ const RoomMateCard = ({
   isClean,
   stayDays,
   description,
-  commentCount,
-  likeCount,
+  roommateBoardLike,
   percentage,
+  matched,
 }: RoomMateCardProps) => {
   const navigate = useNavigate();
 
   return (
-    <CardWrapper onClick={() => navigate(`/roommatelist/${boardId}`)}>
+    <CardWrapper
+      onClick={() => !matched && navigate(`/roommatelist/${boardId}`)}
+      matched={matched}
+    >
+      {matched && <DisabledOverlay />}
       {percentage !== undefined && (
         <LeftCircle percentage={percentage}>
           <span>{percentage}%</span>
         </LeftCircle>
       )}
       <TopRightBadge dormType={dormType}>{dormType}</TopRightBadge>
+      {matched && <RightBottomBadge src={매칭완료} />}
 
       <ContentContainer isPercentageVisible={percentage !== undefined}>
         <span className="title">{title}</span>
         {description && <Description>{description}</Description>}
-
-        {/* 태그들은 콘텐츠 영역 내에 배치 */}
         <TagRow>
           <Tag category="mbti">{mbti}</Tag>
           <Tag category="college">{college}</Tag>
@@ -42,10 +45,8 @@ const RoomMateCard = ({
         </TagRow>
         <StayInfo>상주 요일: {stayDays.join(", ")}</StayInfo>
         <BottomLine>
-          <img src={CommentIcon} alt="댓글 아이콘" />
-          <span>{commentCount}</span>
           <img src={HeartIcon} alt="좋아요 아이콘" />
-          <span>{likeCount}</span>
+          <span>{roommateBoardLike}</span>
         </BottomLine>
       </ContentContainer>
     </CardWrapper>
@@ -54,19 +55,34 @@ const RoomMateCard = ({
 
 export default RoomMateCard;
 
-const CardWrapper = styled.div`
+const CardWrapper = styled.div.withConfig({
+  shouldForwardProp: (prop) => prop !== "matched",
+})<{ matched?: boolean }>`
   position: relative;
   display: flex;
-  flex-direction: row; /* 좌측 원형과 콘텐츠를 가로로 배치 */
-  align-items: center; /* 세로 중앙 정렬 */
-  gap: 12px; /* 좌측 원형과 콘텐츠 사이 간격 */
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
   padding: 16px;
   background: #fff;
   border: 1px solid #dcdcdc;
   border-radius: 12px;
   width: 100%;
-  cursor: pointer;
+  cursor: ${({ matched }) => (matched ? "not-allowed" : "pointer")};
   box-sizing: border-box;
+  overflow: hidden;
+
+  ${({ matched }) =>
+    matched &&
+    `
+    pointer-events: none;
+  `}
+`;
+const DisabledOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  background-color: rgba(255, 255, 255, 0.6); /* 흐림 효과 */
+  z-index: 1;
 `;
 
 // TopRightBadge (기숙사 타입) 원래 위치 및 스타일 복원
@@ -81,19 +97,36 @@ const TopRightBadge = styled.div.withConfig({
   padding: 4px 8px;
   border-radius: 8px;
   font-weight: 600;
-  z-index: 1;
+  z-index: 0;
 
   background: ${({ dormType }) => {
     switch (dormType) {
+      case "1기숙사":
+        return "#8e8e93"; // 회색 계열
       case "2기숙사":
-        return "#0a84ff";
+        return "#0a84ff"; // 파랑
       case "3기숙사":
-        return "#ff6b6b";
+        return "#ff6b6b"; // 빨강
       default:
-        return "#0a84ff";
+        return "#0a84ff"; // 기본값
     }
   }};
 `;
+
+const RightBottomBadge = styled.img.attrs({
+  className: "matched-stamp",
+})`
+  position: absolute;
+  top: 25%;
+  right: 12px;
+  width: 80px;
+  height: 80px;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 1;
+  transform: rotate(25deg);
+`;
+
 const LeftCircle = styled.div.withConfig({
   shouldForwardProp: (prop) => prop !== "percentage",
 })<{ percentage: number }>`
