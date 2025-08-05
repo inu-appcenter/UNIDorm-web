@@ -185,7 +185,7 @@ export default function HomePage() {
                   />
                 ))
               ) : (
-                <p>오늘의 꿀팁이 없습니다.</p>
+                <EmptyMessage>오늘의 꿀팁이 없습니다.</EmptyMessage>
               )}
             </>
           }
