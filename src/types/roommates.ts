@@ -122,3 +122,10 @@ export interface RoommateRulesResponse {
 export interface RoommateRulesUpdateRequest {
   rules: string[];
 }
+
+export interface ReceivedMatchingRequest {
+  matchingId: number;
+  senderId: number;
+  senderName: string;
+  status: string;
+}

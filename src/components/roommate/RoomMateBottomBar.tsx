@@ -5,7 +5,11 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { createRoommateChatRoom } from "../../apis/chat.ts";
 import useUserStore from "../../stores/useUserStore.ts";
-import { getRoommateLiked, likeRoommateBoard, unlikeRoommateBoard } from "../../apis/roommate.ts";
+import {
+  getRoommateLiked,
+  likeRoommateBoard,
+  unlikeRoommateBoard,
+} from "../../apis/roommate.ts";
 
 const RoomMateBottomBar = () => {
   const { boardId } = useParams<{ boardId: string }>();
