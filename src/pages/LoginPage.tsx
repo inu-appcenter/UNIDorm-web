@@ -11,7 +11,7 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const [id, setId] = useState("");
   const [password, setPassword] = useState("");
-  const { setTokenInfo } = useUserStore(); // store에서 setTokenInfo 불러오기
+  const { setTokenInfo, setUserInfo, userInfo } = useUserStore(); // store에서 setTokenInfo 불러오기
 
   const isFilled = () => {
     return id.trim() !== "" && password.trim() !== "";
@@ -31,6 +31,7 @@ export default function LoginPage() {
         localStorage.setItem("refreshToken", tokenInfo.refreshToken);
 
         setTokenInfo(tokenInfo);
+        setUserInfo({ ...userInfo, isAdmin: true });
         navigate("/home");
       } else {
         alert("로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.");

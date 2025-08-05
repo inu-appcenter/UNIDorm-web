@@ -6,7 +6,7 @@ import { TokenInfo } from "../types/members.ts";
 
 const LogoutPage = () => {
   const navigate = useNavigate();
-  const { setTokenInfo } = useUserStore();
+  const { setTokenInfo, setUserInfo } = useUserStore();
 
   useEffect(() => {
     // 로그아웃 처리
@@ -18,6 +18,18 @@ const LogoutPage = () => {
       refreshToken: "",
     };
     setTokenInfo(emptyTokenInfo);
+    const emptyUserInfo = {
+      name: "",
+      studentNumber: "",
+      dormType: "",
+      college: "",
+      penalty: 0,
+      hasTimeTableImage: false,
+      roommateCheckList: false,
+      id: 0,
+      isAdmin: false,
+    };
+    setUserInfo(emptyUserInfo);
     console.log("로그아웃 성공");
     // alert("로그아웃되었습니다.");
     // 처리 완료 즉시 이동
