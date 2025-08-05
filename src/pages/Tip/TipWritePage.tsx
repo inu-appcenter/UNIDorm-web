@@ -21,7 +21,7 @@ export default function TipWritePage() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const fileList = Array.from(e.target.files);
-      setImages(fileList.slice(0, 10)); // 최대 10장 제한
+      setImages(prev => [...prev, ...fileList].slice(0, 10));
     }
   };
 
