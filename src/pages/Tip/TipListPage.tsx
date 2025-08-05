@@ -30,7 +30,12 @@ export default function TipListPage() {
     <TipPageWrapper>
       <Header title="기숙사 꿀팁" hasBack={true} showAlarm={true} />
 
-      <TitleContentArea title="🍯꿀팁모음">
+      <TitleContentArea
+        title="기숙사 꿀팁"
+        description={
+          "기숙사에 사는 UNI들이 공유하는 다양한 기숙사 꿀팁을 자유롭게 공유해주세요!"
+        }
+      >
         <CardList>
           {tips.map((tip) => (
             <TipCard

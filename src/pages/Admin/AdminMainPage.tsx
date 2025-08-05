@@ -1,9 +1,19 @@
 import Header from "../../components/common/Header.tsx";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import useUserStore from "../../stores/useUserStore.ts";
+import { useEffect } from "react";
 
 const AdminMainPage: React.FC = () => {
   const navigate = useNavigate();
+  const { tokenInfo, userInfo } = useUserStore();
+
+  useEffect(() => {
+    console.log(userInfo.isAdmin);
+    if (!tokenInfo.accessToken || !userInfo.isAdmin) {
+      navigate("/home");
+    }
+  }, [tokenInfo, navigate, userInfo]);
 
   const menuItems = [
     {
@@ -23,13 +33,8 @@ const AdminMainPage: React.FC = () => {
     },
     {
       label: "공지사항 관리자 페이지",
-      path: "/admin/notice",
+      path: "/announcements",
       description: "공지사항 등록 및 수정",
-    },
-    {
-      label: "사용자 관리",
-      path: "/admin/users",
-      description: "사용자 계정 및 권한 관리",
     },
   ];
 

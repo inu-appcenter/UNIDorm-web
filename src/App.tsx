@@ -9,7 +9,7 @@ import LoginPage from "./pages/LoginPage";
 import ChatListPage from "./pages/Chat/ChatListPage.tsx";
 import RoomMatePage from "./pages/RoomMate/RoomMatePage.tsx";
 import MyPage from "./pages/MyPage.tsx";
-import NotificationBoardPage from "./pages/NoticeBoardPage.tsx";
+import NotificationBoardPage from "./pages/Announcement/AnnouncementPage.tsx";
 import TipListPage from "./pages/Tip/TipListPage.tsx";
 import TipWritePage from "./pages/Tip/TipWritePage.tsx";
 import TipDetailPage from "./pages/Tip/TipDetailPage.tsx";
@@ -35,6 +35,8 @@ import RoomMateFilterPage from "./pages/RoomMate/RoomMateFilterPage.tsx";
 import GroupPurchaseComingSoonPage from "./pages/GroupPurchase/GroupPurchaseComingSoonPage.tsx";
 import CalendarAdminPage from "./pages/Admin/CalendarAdminPage.tsx";
 import AdminMainPage from "./pages/Admin/AdminMainPage.tsx";
+import AnnounceDetailPage from "./pages/Announcement/AnnounceDetailPage.tsx";
+import AnnounceWritePage from "./pages/Admin/AnnounceWritePage.tsx";
 
 function App() {
   const { tokenInfo, setUserInfo, userInfo } = useUserStore();
@@ -43,7 +45,7 @@ function App() {
   useEffect(() => {
     if (userInfo.isAdmin) {
       console.log("admin모드로 이동합니다");
-      navigate("/admin/calendar");
+      navigate("/admin");
       return;
     }
     const initializeUser = async () => {
@@ -121,7 +123,9 @@ function App() {
           />
           <Route path="/myinfoedit" element={<MyInfoEditPage />} />
 
-          <Route path="/notification" element={<NotificationBoardPage />} />
+          <Route path="/announcements" element={<NotificationBoardPage />} />
+          <Route path="/announcements/:id" element={<AnnounceDetailPage />} />
+          <Route path="/announcements/write" element={<AnnounceWritePage />} />
           <Route path="/chat/:chatType/:id" element={<ChattingPage />} />
           <Route path="/tips/write" element={<TipWritePage />} />
           <Route path="/tips/:id" element={<TipDetailPage />} />
