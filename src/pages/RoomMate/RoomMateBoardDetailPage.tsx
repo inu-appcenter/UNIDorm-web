@@ -57,7 +57,8 @@ export default function RoomMateBoardDetailPage() {
   const location = useLocation();
   const partnerName = location.state?.partnerName;
   const roomId = location.state?.roomId;
-  const { userInfo } = UseUserStore();
+  const { userInfo, tokenInfo } = UseUserStore();
+  const isLoggedIn = Boolean(tokenInfo.accessToken);
 
   useEffect(() => {
     if (!boardId || boardId === "opponent") return;
@@ -216,6 +217,7 @@ export default function RoomMateBoardDetailPage() {
       {!roomId && userInfo.dormType === boardData.dormType && (
         <RoomMateBottomBar />
       )}
+      {!isLoggedIn && <RoomMateBottomBar />}
     </RoomMateDetailPageWrapper>
   );
 }
