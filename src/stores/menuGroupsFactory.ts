@@ -40,7 +40,11 @@ export const createMenuGroups = (
   {
     title: undefined,
     menus: [
-      { label: "1:1 문의", onClick: () => navigate("/roommate/apply") },
+      {
+        label: "1:1 문의",
+        onClick: () =>
+          window.open("https://forms.gle/PGkiDutmmT8gzddF7", "_blank"),
+      },
       {
         label: "서비스 정보",
         onClick: () => {

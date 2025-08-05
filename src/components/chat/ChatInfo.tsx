@@ -19,7 +19,7 @@ const ChatInfo = ({ selectedTab, partnerName, roomId }: ChatInfoProps) => {
     {
       label: "사전 체크리스트 보기",
       onClick: async () => {
-        navigate("/roommatechecklist", { state: { partnerName, roomId } });
+        navigate("/roommatelist/opponent", { state: { partnerName, roomId } });
       },
     },
     {

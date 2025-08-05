@@ -38,6 +38,7 @@ const TagsWrapper = styled.div`
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 8px;
+
   .filtertitle {
     font-size: 14px;
     font-weight: 600;
@@ -91,49 +92,34 @@ export default function RoomMateListPage() {
     if (roommates.length === 0) return;
 
     const filtered = roommates.filter((post) => {
-      // dormType 필터
       if (filters.dormType && post.dormType !== filters.dormType) return false;
-
-      // college 필터
       if (filters.college && post.college !== filters.college) return false;
 
-      // dormPeriod 필터 (배열 포함여부 체크)
       if (filters.dormPeriod && filters.dormPeriod.length > 0) {
-        // 필터 중 적어도 한 요일이 post.dormPeriod에 있어야 함
-        const matchDay = filters.dormPeriod.some((day: string) =>
+        const matchAllDays = filters.dormPeriod.every((day: string) =>
           post.dormPeriod.includes(day),
         );
-        if (!matchDay) return false;
+        if (!matchAllDays) return false;
       }
 
-      // mbti 필터 (문자열 일치)
-      if (filters.mbti && post.mbti !== filters.mbti) return false;
+      if (filters.mbti) {
+        const filterLetters = filters.mbti.split("");
+        const matchesAll = filterLetters.every((letter: string) =>
+          post.mbti.includes(letter),
+        );
+        if (!matchesAll) return false;
+      }
 
-      // smoking 필터 (문자열 일치)
       if (filters.smoking && post.smoking !== filters.smoking) return false;
-
-      // snoring 필터
       if (filters.snoring && post.snoring !== filters.snoring) return false;
-
-      // toothGrind 필터
       if (filters.toothGrind && post.toothGrind !== filters.toothGrind)
         return false;
-
-      // sleeper 필터
       if (filters.sleeper && post.sleeper !== filters.sleeper) return false;
-
-      // showerHour 필터
       if (filters.showerHour && post.showerHour !== filters.showerHour)
         return false;
-
-      // showerTime 필터
       if (filters.showerTime && post.showerTime !== filters.showerTime)
         return false;
-
-      // bedTime 필터
       if (filters.bedTime && post.bedTime !== filters.bedTime) return false;
-
-      // arrangement 필터
       if (filters.arrangement && post.arrangement !== filters.arrangement)
         return false;
 

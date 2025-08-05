@@ -13,6 +13,8 @@ export interface RoommatePost {
   showerTime: string; // 예: "10분 이내"
   bedTime: string; // 예: "일찍 자요"
   arrangement: string; // 예: "깔끔해요"
+  religion: string;
+
   comment: string; // 추가 설명
 }
 
@@ -31,6 +33,8 @@ export interface SimilarRoommatePost {
   showerTime: string; // 예: "10분 이내"
   bedTime: string; // 예: "일찍 자요"
   arrangement: string; // 예: "깔끔해요"
+  religion: string;
+
   comment: string; // 본문 요약 or 한줄 코멘트
   similarityPercentage: number; // 유사도 (예: 85)
 }
@@ -64,6 +68,7 @@ export interface RoommatePostRequest {
   showerTime: string;
   bedTime: string;
   arrangement: string;
+  religion: string;
   comment: string;
 }
 
@@ -82,6 +87,8 @@ export interface RoommatePostResponse {
   showerTime: string;
   bedTime: string;
   arrangement: string;
+  religion: string;
+
   comment: string;
 }
 

@@ -1,12 +1,11 @@
 import styled from "styled-components";
 import TitleContentArea from "../components/common/TitleContentArea.tsx";
 import HomeCard from "../components/home/HomeCard.tsx";
-import GroupPurchaseList from "../components/GroupPurchase/GroupPurchaseList.tsx";
 import ThreeWeekCalendar from "../components/home/ThreeWeekCalendar.tsx";
 import Header from "../components/common/Header.tsx";
 import 배너1 from "../assets/banner/포스터1.svg";
 import HomeTipsCard from "../components/home/HomeTipsCard.tsx";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { fetchDailyRandomTips } from "../apis/tips.ts";
 import { Tip } from "../types/tips.ts";
 import RoomMateCard from "../components/roommate/RoomMateCard.tsx";
@@ -114,6 +113,12 @@ export default function HomePage() {
     fetchData();
   }, []);
 
+  const randomRoommate = useMemo(() => {
+    if (!roommates || roommates.length === 0) return null;
+    const index = Math.floor(Math.random() * roommates.length);
+    return roommates[index];
+  }, [roommates]);
+
   return (
     <HomePageWrapper>
       <Header title="아이돔" hasBack={false} showAlarm={true} />
@@ -145,25 +150,21 @@ export default function HomePage() {
           link={"/roommatelist"}
         >
           <>
-            {roommates.length > 0 ? (
-              roommates
-                .slice(0, 1)
-                .map((post, key) => (
-                  <RoomMateCard
-                    key={key}
-                    title={post.title}
-                    boardId={post.boardId}
-                    dormType={post.dormType}
-                    mbti={post.mbti}
-                    college={post.college}
-                    isSmoker={true}
-                    isClean={true}
-                    stayDays={post.dormPeriod}
-                    description={post.comment}
-                    commentCount={12}
-                    likeCount={8}
-                  />
-                ))
+            {randomRoommate ? (
+              <RoomMateCard
+                key={randomRoommate.boardId}
+                title={randomRoommate.title}
+                boardId={randomRoommate.boardId}
+                dormType={randomRoommate.dormType}
+                mbti={randomRoommate.mbti}
+                college={randomRoommate.college}
+                isSmoker={true}
+                isClean={true}
+                stayDays={randomRoommate.dormPeriod}
+                description={randomRoommate.comment}
+                commentCount={12}
+                likeCount={8}
+              />
             ) : (
               <EmptyMessage>게시글이 없습니다.</EmptyMessage>
             )}
@@ -214,11 +215,11 @@ export default function HomePage() {
           title={"캘린더 이벤트"}
           children={<ThreeWeekCalendar />}
         />
-        <TitleContentArea
-          title={"임박한 공동구매"}
-          link={"/groupPurchase"}
-          children={<GroupPurchaseList />}
-        />
+        {/*<TitleContentArea*/}
+        {/*  title={"임박한 공동구매"}*/}
+        {/*  link={"/groupPurchase"}*/}
+        {/*  children={<GroupPurchaseList />}*/}
+        {/*/>*/}
       </ContentWrapper>
     </HomePageWrapper>
   );
