@@ -129,6 +129,9 @@ export default function TipDetailPage() {
     }
   };
 
+  //이미지 넘기기
+  const [currentImage, setCurrentImage] = useState(0);
+
   return (
     <Wrapper>
       <Header title="기숙사 꿀팁" hasBack={true} showAlarm={true} />
@@ -171,11 +174,11 @@ export default function TipDetailPage() {
               {/* 이미지 여러장 보여주기 */}
               <ImageSlider>
                 {images.length > 0 ? (
-                  images.map((url, idx) => (
-                    <SliderItem key={idx}>
+                  <>
+                    <SliderItem>
                       <img
-                        src={url}
-                        alt={`팁 이미지 ${idx + 1}`}
+                        src={images[currentImage]}
+                        alt={`팁 이미지 ${currentImage + 1}`}
                         style={{
                           width: "100%",
                           height: "100%",
@@ -184,14 +187,25 @@ export default function TipDetailPage() {
                         }}
                       />
                     </SliderItem>
-                  ))
+                    <SliderNav>
+                      <NavButton
+                        disabled={currentImage === 0}
+                        onClick={() => setCurrentImage(idx => Math.max(0, idx - 1))}
+                      >◀</NavButton>
+                      <SliderIndicator>
+                        {currentImage + 1} / {images.length}
+                      </SliderIndicator>
+                      <NavButton
+                        disabled={currentImage === images.length - 1}
+                        onClick={() => setCurrentImage(idx => Math.min(images.length - 1, idx + 1))}
+                      >▶</NavButton>
+                    </SliderNav>
+                  </>
                 ) : (
                   <SliderItem />
                 )}
-                <SliderIndicator>
-                  {images.length > 0 && `1/${images.length}`}
-                </SliderIndicator>
               </ImageSlider>
+
 
               <Title>{tip.title}</Title>
               <BodyText>{tip.content}</BodyText>
@@ -544,4 +558,28 @@ const ReplyButton = styled.button`
   &:hover {
     background: #f3f3f3;
   }
+`;
+
+const SliderNav = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  position: absolute;
+  bottom: 8px;
+  left: 0;
+  width: 100%;
+`;
+
+const NavButton = styled.button`
+  background: rgba(255,255,255,0.8);
+  border: none;
+  font-size: 18px;
+  border-radius: 50%;
+  width: 28px; height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  &:disabled { opacity: 0.3; cursor: default;}
 `;
