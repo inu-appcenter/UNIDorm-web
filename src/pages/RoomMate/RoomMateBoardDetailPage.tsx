@@ -81,6 +81,7 @@ export default function RoomMateBoardDetailPage() {
         console.error("내 체크리스트를 불러오지 못했습니다:", error);
       }
     };
+
     fetchBoardData();
     fetchMyData();
   }, [boardId]);

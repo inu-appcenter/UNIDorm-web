@@ -1,11 +1,11 @@
 import styled from "styled-components";
 import RoundSquareBlueButton from "../button/RoundSquareBlueButton.tsx";
 import { FaHeart, FaRegHeart } from "react-icons/fa";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { createRoommateChatRoom } from "../../apis/chat.ts";
 import useUserStore from "../../stores/useUserStore.ts";
-import { likeRoommateBoard, unlikeRoommateBoard } from "../../apis/roommate.ts";
+import { getRoommateLiked, likeRoommateBoard, unlikeRoommateBoard } from "../../apis/roommate.ts";
 
 const RoomMateBottomBar = () => {
   const { boardId } = useParams<{ boardId: string }>();
@@ -17,9 +17,20 @@ const RoomMateBottomBar = () => {
   const navigate = useNavigate();
 
   // 좋아요 상태 초기값 세팅이 필요하면 API로 받아오는 로직 추가 가능
-  // useEffect(() => {
-  //   // 예) 좋아요 여부 조회 API 호출 후 setLiked 호출
-  // }, [boardId]);
+  useEffect(() => {
+    const fetchisLiked = async () => {
+      try {
+        const response = await getRoommateLiked(Number(boardId));
+        console.log(response);
+        setLiked(response.data);
+      } catch (error: any) {
+        console.log("좋아요 정보를 가져오는 중 오류가 발생했습니다.", error);
+      }
+    };
+    if (isLoggedIn && boardId) {
+      fetchisLiked();
+    }
+  }, [boardId]);
 
   const handleLikeClick = async () => {
     if (!isLoggedIn) {
