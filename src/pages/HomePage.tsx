@@ -191,9 +191,9 @@ export default function HomePage() {
           link={"/announcements"}
           children={
             <NotiWrapper>
-              {notices.map((notice, key) => (
+              {notices.slice(0, 2).map((notice) => (
                 <HomeNoticeCard
-                  key={key} // 고유 키 넣기 (id가 없으면 title로 대체)
+                  key={notice.id ?? notice.title}
                   id={notice.id}
                   title={notice.title}
                   content={
