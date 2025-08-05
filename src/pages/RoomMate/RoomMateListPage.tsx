@@ -168,8 +168,8 @@ export default function RoomMateListPage() {
                   isClean={post.arrangement === "깔끔해요"}
                   stayDays={post.dormPeriod}
                   description={post.comment}
-                  commentCount={12}
-                  likeCount={8}
+                  roommateBoardLike={post.roommateBoardLike}
+                  matched={post.matched}
                 />
               ))
             ) : (
