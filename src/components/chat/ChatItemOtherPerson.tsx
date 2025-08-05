@@ -55,7 +55,6 @@ const ContentArea = styled.div`
   max-width: 60%;
 
   .title {
-    font-family: "Pretendard";
     font-style: normal;
     font-weight: 600;
     font-size: 14px;
@@ -66,7 +65,6 @@ const ContentArea = styled.div`
   }
 
   .message {
-    font-family: "Pretendard";
     font-style: normal;
     font-weight: 400;
     font-size: 14px;
@@ -84,7 +82,6 @@ const TimeArea = styled.div`
   display: flex;
   align-items: flex-end;
   .time {
-    font-family: "Pretendard";
     font-style: normal;
     font-weight: 400;
     font-size: 8px;
