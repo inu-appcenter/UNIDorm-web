@@ -27,8 +27,6 @@ const RoomMateCard = ({
           <span>{percentage}%</span>
         </LeftCircle>
       )}
-
-      {/* dormType 배지를 원래 위치인 우측 상단에 독립적으로 배치 */}
       <TopRightBadge dormType={dormType}>{dormType}</TopRightBadge>
 
       <ContentContainer isPercentageVisible={percentage !== undefined}>

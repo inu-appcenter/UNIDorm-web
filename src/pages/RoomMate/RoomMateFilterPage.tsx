@@ -113,19 +113,21 @@ export default function RoomMateFilterPage() {
 
   const handleSubmit = () => {
     const filters = {
-      dormType: dormitory[domitoryIndex ?? 0],
+      dormType: domitoryIndex !== null ? dormitory[domitoryIndex] : null,
       college: collegeIndex !== null ? colleges[collegeIndex] : null,
       dormPeriod: dayIndices.map((i) => days[i]),
       mbti:
-        mbtiIndex1 !== null &&
-        mbtiIndex2 !== null &&
-        mbtiIndex3 !== null &&
-        mbtiIndex4 !== null
-          ? mbti1[mbtiIndex1] +
-            mbti2[mbtiIndex2] +
-            mbti3[mbtiIndex3] +
-            mbti4[mbtiIndex4]
-          : null,
+        [mbtiIndex1, mbtiIndex2, mbtiIndex3, mbtiIndex4]
+          .map((idx, i) => {
+            if (idx === null) return null;
+            if (i === 0) return mbti1[idx];
+            if (i === 1) return mbti2[idx];
+            if (i === 2) return mbti3[idx];
+            if (i === 3) return mbti4[idx];
+          })
+          .filter((v) => v !== null)
+          .join("") || null,
+
       smoking: smokingIndex !== null ? smoking[smokingIndex] : null,
       snoring: snoringIndex !== null ? snoring[snoringIndex] : null,
       toothGrind:
@@ -159,15 +161,11 @@ export default function RoomMateFilterPage() {
 
       <TitleContentArea
         title={"기숙사 종류"}
-        description={
-          !isViewerMode ? "내가 소속된 기숙사의 UNI만 볼 수 있어요." : ""
-        }
         children={
           <ToggleGroup
             Groups={dormitory}
             selectedIndex={domitoryIndex}
             onSelect={setDomitoryIndex}
-            disabled={true}
           />
         }
       />

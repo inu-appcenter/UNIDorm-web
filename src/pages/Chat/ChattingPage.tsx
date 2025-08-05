@@ -200,7 +200,7 @@ export default function ChattingPage() {
 
 const ChatPageWrapper = styled.div`
   width: 100%;
-  height: 100vh;
+  height: 100%;
   padding-top: 70px;
   display: flex;
   flex-direction: column;

@@ -21,6 +21,7 @@ import {
   mbti3,
   mbti4,
   organizationLevel,
+  religion,
   showerDuration,
   showertime,
   smoking,
@@ -75,6 +76,7 @@ export default function RoomMateChecklistPage() {
         setShowerDurationIndex(showerDuration.indexOf(data.showerTime));
         setBedtimeIndex(bedtime.indexOf(data.bedTime));
         setOrganizationLevelIndex(organizationLevel.indexOf(data.arrangement));
+        setReligionIndex(religion.indexOf(data.religion));
 
         setComment(data.comment || "");
       } catch (error) {
@@ -124,12 +126,14 @@ export default function RoomMateChecklistPage() {
   const [organizationLevelIndex, setOrganizationLevelIndex] = useState<
     number | null
   >(null);
+  const [religionIndex, setReligionIndex] = useState<number | null>(null);
 
   const [comment, setComment] = useState("");
 
   const handleSubmit = async () => {
     if (
-      dayIndices.length === 0 || // ✅ 다중 선택 검사
+      title.length === 0 ||
+      dayIndices.length === 0 ||
       domitoryIndex === null ||
       collegeIndex === null ||
       mbtiIndex1 === null ||
@@ -143,7 +147,8 @@ export default function RoomMateChecklistPage() {
       showertimeIndex === null ||
       showerDurationIndex === null ||
       bedtimeIndex === null ||
-      organizationLevelIndex === null
+      organizationLevelIndex === null ||
+      religionIndex === null
     ) {
       alert("모든 항목을 선택해주세요.");
       return;
@@ -169,6 +174,7 @@ export default function RoomMateChecklistPage() {
       showerTime: showerDuration[showerDurationIndex],
       bedTime: bedtime[bedtimeIndex],
       arrangement: organizationLevel[organizationLevelIndex],
+      religion: religion[religionIndex],
       comment,
     };
 
@@ -426,6 +432,17 @@ export default function RoomMateChecklistPage() {
             Groups={organizationLevel}
             selectedIndex={organizationLevelIndex}
             onSelect={setOrganizationLevelIndex}
+            disabled={isViewerMode}
+          />
+        }
+      />
+      <TitleContentArea
+        title={"종교"}
+        children={
+          <SelectableChipGroup
+            Groups={religion}
+            selectedIndex={religionIndex}
+            onSelect={setReligionIndex}
             disabled={isViewerMode}
           />
         }
