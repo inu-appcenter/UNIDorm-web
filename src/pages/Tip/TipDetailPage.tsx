@@ -37,7 +37,7 @@ export default function TipDetailPage() {
   const [commentInput, setCommentInput] = useState("");
   const [replyInputs, setReplyInputs] = useState<{ [key: number]: string }>({});
   const [replyOpen, setReplyOpen] = useState<{ [key: number]: boolean }>({});
-  const [userInfo, setUserInfo] = useState<{
+  const [userInfo] = useState<{
     name: string;
     profileImageUrl: string;
   } | null>(null);
@@ -164,7 +164,9 @@ export default function TipDetailPage() {
                 )}
                 <UserText>
                   <Nickname>{userInfo?.name || "익명"}</Nickname>
-                  <Date>{tip?.createDate || "날짜 불러오는 중..."}</Date>
+                  <DateText>
+                    {tip?.createDate || "날짜 불러오는 중..."}
+                  </DateText>
                 </UserText>
                 <Spacer />
                 <BsThreeDotsVertical
@@ -232,7 +234,7 @@ export default function TipDetailPage() {
                           <CommentBody>
                             <Nickname>익명 {comment.userId}</Nickname>
                             <CommentText>{comment.reply}</CommentText>
-                            <Date>
+                            <DateText>
                               {comment.createDate
                                 ? new Date(
                                     comment.createDate,
@@ -241,7 +243,7 @@ export default function TipDetailPage() {
                                     minute: "2-digit",
                                   })
                                 : "방금"}
-                            </Date>
+                            </DateText>
                           </CommentBody>
                           <CommentActionArea>
                             <ReplyButton
@@ -294,7 +296,7 @@ export default function TipDetailPage() {
                               <ReplyBody>
                                 <Nickname>익명 {reply.userId}</Nickname>
                                 <CommentText>{reply.reply}</CommentText>
-                                <Date>
+                                <DateText>
                                   {reply.createDate
                                     ? new Date(
                                         reply.createDate,
@@ -303,7 +305,7 @@ export default function TipDetailPage() {
                                         minute: "2-digit",
                                       })
                                     : "방금"}
-                                </Date>
+                                </DateText>
                               </ReplyBody>
                             </ReplyContent>
                           </Reply>
@@ -407,7 +409,7 @@ const Nickname = styled.div`
   font-size: 14px;
 `;
 
-const Date = styled.div`
+const DateText = styled.div`
   font-size: 12px;
   color: gray;
 `;
