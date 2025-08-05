@@ -219,7 +219,7 @@ const ContentWrapper = styled.div`
 `;
 
 const ChattingWrapper = styled.div`
-  //flex: 1;
+  flex: 1;
   height: 100%;
 
   overflow-y: scroll;
@@ -235,6 +235,8 @@ const InputArea = styled.div`
   left: 0;
   width: 100%;
   height: fit-content;
+  min-height: 56px;
+
   background-color: #fafafa;
   display: flex;
   flex-direction: row;
@@ -262,11 +264,9 @@ const Input = styled.textarea`
   border-radius: 4px;
   border: none;
 
-  font-family: "AppleSDGothicNeoM00";
-
   font-style: normal;
   font-weight: 400;
-  font-size: 14px;
+  font-size: 16px;
   line-height: 24px;
 
   letter-spacing: 0.38px;
