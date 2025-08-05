@@ -75,8 +75,8 @@ export default function RoomMatePage() {
                   isClean={post.arrangement === "깔끔해요"}
                   stayDays={post.dormPeriod}
                   description={post.comment}
-                  commentCount={12}
-                  likeCount={8}
+                  roommateBoardLike={post.roommateBoardLike}
+                  matched={post.matched}
                 />
               ))
           ) : (
@@ -122,9 +122,9 @@ export default function RoomMatePage() {
                   isClean={post.arrangement === "깔끔해요"}
                   stayDays={["월요일"]}
                   description={post.comment}
-                  commentCount={0}
-                  likeCount={0}
+                  roommateBoardLike={post.roommateBoardLike}
                   percentage={post.similarityPercentage}
+                  matched={post.matched}
                 />
               ))
             ) : (
