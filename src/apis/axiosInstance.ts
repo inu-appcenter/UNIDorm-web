@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const axiosInstance = axios.create({
-  baseURL: "https://unidorm-server.inuappcenter.kr/",
+  baseURL: "https://inu-dormitory-dev.inuappcenter.kr/",
 });
 
 // 응답 인터셉터
