@@ -179,36 +179,32 @@ export default function TipDetailPage() {
                 )}
               </UserInfo>
 
-              {/* 이미지 여러장 보여주기 */}
-              
-                <ImageSlider {...handlers} style={{touchAction: "pan-y"}}>
-                  {images.length > 0 ? (
-                    <>
-                      <SliderItem>
-                        <img
-                          src={images[currentImage]}
-                          alt={`팁 이미지 ${currentImage + 1}`}
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                            borderRadius: "10px",
-                            userSelect: "none",
-                            pointerEvents: "none"
-                          }}
-                          draggable={false}
-                        />
-                      </SliderItem>
-                      <SliderIndicator>
-                        {images.map((_, idx) => (
-                          <Dot key={idx} $active={idx === currentImage} />
-                        ))}
-                      </SliderIndicator>
-                    </>
-                  ) : (
-                    <SliderItem />
-                  )}
+              {/* 이미지가 하나 이상 있을 때만 보여줌 */}
+              {images.length > 0 && (
+                <ImageSlider {...handlers} style={{ touchAction: "pan-y" }}>
+                  {/* ...이하 슬라이더 내부 동일 */}
+                  <SliderItem>
+                    <img
+                      src={images[currentImage]}
+                      alt={`팁 이미지 ${currentImage + 1}`}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        borderRadius: "10px",
+                        userSelect: "none",
+                        pointerEvents: "none"
+                      }}
+                      draggable={false}
+                    />
+                  </SliderItem>
+                  <SliderIndicator>
+                    {images.map((_, idx) => (
+                      <Dot key={idx} $active={idx === currentImage} />
+                    ))}
+                  </SliderIndicator>
                 </ImageSlider>
+              )}
 
 
               <Title>{tip.title}</Title>

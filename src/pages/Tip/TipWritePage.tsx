@@ -14,6 +14,8 @@ export default function TipWritePage() {
   const [images, setImages] = useState<File[]>([]);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
+
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -69,6 +71,7 @@ export default function TipWritePage() {
       }
     }
   };
+
 
   return (
     <Wrapper>
