@@ -10,6 +10,7 @@ import logo from "../../assets/unidorm-logo.svg";
 import { getMobilePlatform } from "../../utils/getMobilePlatform";
 import { getReceivedRoommateRequests } from "../../apis/roommate.ts";
 import { Bell } from "lucide-react";
+import useUserStore from "../../stores/useUserStore.ts";
 
 interface MenuItemType {
   label: string;
@@ -38,6 +39,7 @@ export default function Header({
   const [platform, setPlatform] = useState<"ios" | "android" | "other">(
     "other",
   );
+  const { tokenInfo } = useUserStore();
 
   useEffect(() => {
     setPlatform(getMobilePlatform());
@@ -60,8 +62,9 @@ export default function Header({
         console.error("매칭 요청 조회 실패:", error);
       }
     };
+    const isLoggedIn = Boolean(tokenInfo.accessToken);
 
-    if (showAlarm) fetchMatchingRequests();
+    if (showAlarm && isLoggedIn) fetchMatchingRequests();
   }, []);
 
   const getCurrentPage = () => {
