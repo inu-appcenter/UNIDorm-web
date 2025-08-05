@@ -162,7 +162,7 @@ export default function RoomMateChecklistPage() {
 
     const requestBody = {
       title,
-      dormPeriod: dayIndices.map((i) => days[i] + "요일"), // ✅ 다중 선택 처리
+      dormPeriod: dayIndices.map((i) => days[i]),
       dormType: dormitory[domitoryIndex],
       college: colleges[collegeIndex],
       mbti,

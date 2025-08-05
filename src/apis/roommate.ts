@@ -116,3 +116,14 @@ export const deleteRoommateChatRoom = async (
 ): Promise<AxiosResponse<void>> => {
   return await tokenInstance.delete(`/roommate-chatting-room/${chatRoomId}`);
 };
+
+export const likeRoommateBoard = async (
+  boardId: number,
+): Promise<AxiosResponse<number>> => {
+  return await tokenInstance.post(`/roommates/${boardId}/like`);
+};
+export const unlikeRoommateBoard = async (
+  boardId: number,
+): Promise<AxiosResponse<number>> => {
+  return await tokenInstance.delete(`/roommates/${boardId}/like`);
+};
