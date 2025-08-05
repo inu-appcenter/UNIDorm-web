@@ -9,10 +9,12 @@ type MenuItemType = {
 
 interface TopRightDropdownMenuProps {
   items: MenuItemType[];
+  color?: string;
 }
 
 const TopRightDropdownMenu: React.FC<TopRightDropdownMenuProps> = ({
   items,
+  color,
 }) => {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -30,7 +32,7 @@ const TopRightDropdownMenu: React.FC<TopRightDropdownMenuProps> = ({
   return (
     <Container ref={menuRef}>
       <MenuButton onClick={() => setOpen((prev) => !prev)}>
-        <MoreVertical size={24} color="black" />
+        <MoreVertical size={24} color={color || "black"} />
       </MenuButton>
 
       {open && (

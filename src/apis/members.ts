@@ -38,6 +38,14 @@ export const getUserTimetableImage = async (): Promise<AxiosResponse> => {
   return response;
 };
 
+//룸메이트의 시간표 이미지 가져오기
+export const getMyRoommateTimeTableImage = async (): Promise<AxiosResponse> => {
+  const response = await tokenInstance.get<AxiosResponse>(
+    "/my-roommate/time-table-image",
+  );
+  return response;
+};
+
 export const putUserTimetableImage = async (
   imageFile: File,
 ): Promise<AxiosResponse> => {

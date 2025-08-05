@@ -9,15 +9,12 @@ import {
   deleteMyRoommateRules,
   getMyRoommateInfo,
   getMyRoommateRules,
-  updateMyRoommateRules,
+  updateMyRoommateRules
 } from "../../apis/roommate.ts";
 import RoundSquareBlueButton from "../../components/button/RoundSquareBlueButton.tsx";
 import QuickMessageModal from "../../components/roommate/QuickMessageModal.tsx";
 import { MyRoommateInfoResponse } from "../../types/roommates.ts";
-import {
-  getUserTimetableImage,
-  putUserTimetableImage,
-} from "../../apis/members.ts";
+import { getMyRoommateTimeTableImage, getUserTimetableImage, putUserTimetableImage } from "../../apis/members.ts";
 import RoundSquareWhiteButton from "../../components/button/RoundSquareWhiteButton.tsx";
 
 export default function MyRoomMatePage() {
@@ -31,7 +28,9 @@ export default function MyRoomMatePage() {
   const [showQuickModal, setShowQuickModal] = useState(false);
 
   const [showImgConfirmModal, setShowImgConfirmModal] = useState(false); //모달창 열림 여부
-
+  const [myTimetableImageUrl, setMyTimetableImageUrl] = useState<string>();
+  const [roommateTimetableImageUrl, setRoommateTimetableImageUrl] =
+    useState<string>();
   // 룸메이트 없을 때 overlay 표시 및 클릭 막기
   const isDisabled = notFound;
 
@@ -75,6 +74,16 @@ export default function MyRoomMatePage() {
         },
       ];
 
+  const timetableMenuItems = [
+    {
+      label: "내 시간표 등록",
+      onClick: () => {
+        if (isDisabled) return;
+        document.getElementById("timetable-upload")?.click();
+      },
+    },
+  ];
+
   useEffect(() => {
     const fetchRoommateInfo = async () => {
       try {
@@ -107,13 +116,20 @@ export default function MyRoomMatePage() {
     const fetchUserTimetable = async () => {
       try {
         const res = await getUserTimetableImage();
-        // 초기 구조: fileName 하나만 오더라도 배열로 처리
-        const urls = res.data.fileNames
-          ? res.data.fileNames
-          : [res.data.fileName].filter(Boolean);
-        setTimetableImageUrls(urls);
+        setMyTimetableImageUrl(res.data.fileName);
       } catch (error: any) {
-        console.log("시간표 이미지 불러오기 실패:", error);
+        console.log("내 시간표 이미지 불러오기 실패:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const fetchRoommateTimetable = async () => {
+      try {
+        const res = await getMyRoommateTimeTableImage();
+        setRoommateTimetableImageUrl(res.data.fileName);
+      } catch (error: any) {
+        console.log("룸메이트 시간표 이미지 불러오기 실패:", error);
       } finally {
         setLoading(false);
       }
@@ -121,13 +137,13 @@ export default function MyRoomMatePage() {
 
     fetchRules();
     fetchRoommateInfo();
+    fetchRoommateTimetable();
     fetchUserTimetable();
   }, []);
 
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-  const [timetableImageUrls, setTimetableImageUrls] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const handleUploadImage = async () => {
@@ -143,8 +159,7 @@ export default function MyRoomMatePage() {
       if (response.status === 200) {
         alert("시간표 이미지가 업로드되었습니다.");
         const newImageUrl = response.data.fileName;
-        setTimetableImageUrls((prev) => [...prev, newImageUrl]);
-        // setCurrentIndex(timetableImageUrls.length); // 새 이미지로 슬라이드 이동
+        setMyTimetableImageUrl(newImageUrl);
         setShowImgConfirmModal(false);
       } else {
         alert("이미지 업로드 실패");
@@ -256,13 +271,7 @@ export default function MyRoomMatePage() {
         />
 
         {/* 시간표 추가 버튼 (input 트리거) */}
-        <IconTextButton
-          type="addtimetable"
-          onClick={() => {
-            if (isDisabled) return;
-            document.getElementById("timetable-upload")?.click();
-          }}
-        />
+        <IconTextButton type="addtimetable" menuItems={timetableMenuItems} />
 
         <div
           style={{ position: "relative", width: "100%", overflow: "hidden" }}
@@ -270,9 +279,9 @@ export default function MyRoomMatePage() {
           <FullWidthSlider ref={sliderRef}>
             <FullWidthSlide>
               <div className="timetableTitle">룸메이트 시간표</div>
-              {timetableImageUrls[1] ? (
+              {roommateTimetableImageUrl ? (
                 <img
-                  src={timetableImageUrls[0]}
+                  src={roommateTimetableImageUrl}
                   alt="룸메이트 시간표"
                   style={{
                     width: "100%",
@@ -292,9 +301,9 @@ export default function MyRoomMatePage() {
 
             <FullWidthSlide>
               <div className="timetableTitle">내 시간표</div>
-              {timetableImageUrls[1] ? (
+              {myTimetableImageUrl ? (
                 <img
-                  src={timetableImageUrls[0]}
+                  src={myTimetableImageUrl}
                   alt={`내 시간표`}
                   style={{
                     width: "100%",

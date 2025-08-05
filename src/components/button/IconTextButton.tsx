@@ -48,10 +48,12 @@ const IconTextButton: React.FC<IconTextButtonProps> = ({
 
   return (
     <ButtonContainer onClick={onClick}>
-      <IconWrapper>{meta.icon}</IconWrapper>
-      <TextWrapper>{meta.text}</TextWrapper>
+      <LeftContainer>
+        <IconWrapper>{meta.icon}</IconWrapper>
+        <TextWrapper>{meta.text}</TextWrapper>
+      </LeftContainer>
       {menuItems && menuItems.length > 0 && (
-        <TopRightDropdownMenu items={menuItems} />
+        <TopRightDropdownMenu items={menuItems} color={"#636366"} />
       )}
     </ButtonContainer>
   );
@@ -60,10 +62,10 @@ const IconTextButton: React.FC<IconTextButtonProps> = ({
 export default IconTextButton;
 
 // 스타일 정의
-const ButtonContainer = styled.button`
+const ButtonContainer = styled.div`
   display: flex;
   align-items: center;
-  gap: 16px;
+  justify-content: space-between;
   width: 100%;
   border: none;
   padding: 6px 0;
@@ -72,7 +74,11 @@ const ButtonContainer = styled.button`
   transition: background-color 0.2s ease;
   background: transparent;
 `;
-
+const LeftContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 16px;
+`;
 const IconWrapper = styled.div`
   display: flex;
   align-items: center;
