@@ -213,9 +213,9 @@ export default function RoomMateBoardDetailPage() {
           />
         </CardGrid>
       </ContentArea>
-      <ProtectedMenuWrapper disabled={userInfo.dormType !== boardData.dormType}>
-        {!roomId && <RoomMateBottomBar />}
-      </ProtectedMenuWrapper>
+      {!roomId && userInfo.dormType === boardData.dormType && (
+        <RoomMateBottomBar />
+      )}
     </RoomMateDetailPageWrapper>
   );
 }
@@ -352,12 +352,6 @@ const CardItem = styled.div`
     right: 8px;
     font-size: 16px;
   }
-`;
-
-const ProtectedMenuWrapper = styled.div<{ disabled: boolean }>`
-  position: relative;
-  opacity: ${(props) => (props.disabled ? 0.4 : 1)};
-  pointer-events: ${(props) => (props.disabled ? "none" : "auto")};
 `;
 
 const TitleArea = styled.div`
