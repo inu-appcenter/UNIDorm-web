@@ -4,11 +4,12 @@ import { useEffect, useState } from "react";
 
 import back from "../../assets/header/back.svg";
 import TopRightDropdownMenu from "./TopRightDropdownMenu.tsx";
-import { Bell } from "lucide-react";
 
 import logo from "../../assets/unidorm-logo.svg";
 
 import { getMobilePlatform } from "../../utils/getMobilePlatform";
+import { getReceivedRoommateRequests } from "../../apis/roommate.ts";
+import { Bell } from "lucide-react";
 
 interface MenuItemType {
   label: string;
@@ -42,6 +43,27 @@ export default function Header({
     setPlatform(getMobilePlatform());
   }, []);
 
+  const [hasMatchingRequests, setHasMatchingRequests] = useState(false);
+  useEffect(() => {
+    const fetchMatchingRequests = async () => {
+      console.log("알림이 있는지 확인합니다");
+      try {
+        const response = await getReceivedRoommateRequests();
+
+        // 매칭 요청이 하나라도 있으면 true
+        if (Array.isArray(response.data) && response.data.length > 0) {
+          setHasMatchingRequests(true);
+        } else {
+          setHasMatchingRequests(false);
+        }
+      } catch (error) {
+        console.error("매칭 요청 조회 실패:", error);
+      }
+    };
+
+    if (showAlarm) fetchMatchingRequests();
+  }, []);
+
   const getCurrentPage = () => {
     switch (location.pathname) {
       case "/home":
@@ -71,10 +93,6 @@ export default function Header({
     } else {
       navigate(-1);
     }
-  };
-
-  const handleNotiBtnClick = () => {
-    navigate("/notification");
   };
 
   const shadowSelector = () => {
@@ -116,11 +134,8 @@ export default function Header({
         </Left>
 
         <Right>
-          {showAlarm && (
-            <div>
-              <Bell onClick={handleNotiBtnClick} size={22} />
-            </div>
-          )}
+          {showAlarm && <NotificationBell hasNew={hasMatchingRequests} />}
+
           {menuItems && <TopRightDropdownMenu items={menuItems} />}
         </Right>
       </MainLine>
@@ -212,4 +227,36 @@ const MainLine = styled.div<{ $platform: string }>`
 const SecondLine = styled.div`
   width: 100%;
   height: 100%;
+`;
+
+// 알림 여부를 prop으로 전달받아서 표시 여부 결정
+const NotificationBell = ({ hasNew }: { hasNew: boolean }) => {
+  const navigate = useNavigate();
+
+  const handleNotiBtnClick = () => {
+    navigate("/notification");
+  };
+
+  return (
+    <BellWrapper>
+      <Bell size={22} onClick={handleNotiBtnClick} />
+      {hasNew && <Badge />}
+    </BellWrapper>
+  );
+};
+
+const BellWrapper = styled.div`
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+`;
+
+const Badge = styled.div`
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  width: 8px;
+  height: 8px;
+  background-color: #ffd60a;
+  border-radius: 50%;
 `;
