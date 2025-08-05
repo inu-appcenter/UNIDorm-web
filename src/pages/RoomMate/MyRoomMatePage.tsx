@@ -34,18 +34,33 @@ export default function MyRoomMatePage() {
   // 룸메이트 없을 때 overlay 표시 및 클릭 막기
   const isDisabled = notFound;
 
+  const headerMenuItems = [
+    {
+      label: "룸메이트 끊기",
+      onClick: () => {
+        if (
+          window.confirm(
+            `정말 ${roommateInfo?.name}님과의 룸메이트 관계를 끊으시겠어요?`,
+          )
+        ) {
+          alert("룸메이트 끊기 기능 구현 예정");
+        }
+      },
+    },
+  ];
+
   // 룸메이트 없으면 빈 배열로 처리
-  const menuItems = notFound
+  const ruleMenuItems = notFound
     ? []
     : [
         {
-          label: "규칙 추가/편집하기",
+          label: "규칙 추가/편집",
           onClick: () => {
             setIsEditing(true);
           },
         },
         {
-          label: "규칙 삭제하기",
+          label: "규칙 삭제",
           onClick: () => {
             if (window.confirm("정말 방 규칙을 삭제하시겠습니까?")) {
               deleteMyRoommateRules()
@@ -57,18 +72,6 @@ export default function MyRoomMatePage() {
                   alert("규칙 삭제에 실패했습니다.");
                   console.error(error);
                 });
-            }
-          },
-        },
-        {
-          label: "룸메이트 끊기",
-          onClick: () => {
-            if (
-              window.confirm(
-                `정말 ${roommateInfo?.name}님과의 룸메이트 관계를 끊으시겠어요?`,
-              )
-            ) {
-              alert("룸메이트 끊기 기능 구현 예정");
             }
           },
         },
@@ -213,7 +216,7 @@ export default function MyRoomMatePage() {
         title={"내 룸메이트"}
         hasBack={true}
         showAlarm={false}
-        menuItems={menuItems}
+        menuItems={headerMenuItems}
       />
       {showImgConfirmModal && previewUrl && (
         <ModalBackGround>
@@ -336,6 +339,7 @@ export default function MyRoomMatePage() {
           onClick={() => {
             if (isDisabled) return;
           }}
+          menuItems={ruleMenuItems}
         />
 
         <StyledTextArea
@@ -354,7 +358,7 @@ export default function MyRoomMatePage() {
         {isEditing && !isDisabled && (
           <div>
             <RoundSquareBlueButton
-              btnName={"저장하기"}
+              btnName={"저장"}
               onClick={async () => {
                 try {
                   const newRules = text
