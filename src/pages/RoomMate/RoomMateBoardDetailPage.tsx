@@ -86,13 +86,18 @@ export default function RoomMateBoardDetailPage() {
   return (
     <RoomMateDetailPageWrapper>
       <Header title={"게시글"} hasBack={true} />
-      <UserArea>
-        <img src={profileimg} />
-        <div className="description">
-          <div className="name">{partnerName}</div>
-          <div className="date">03/01 18:07</div>
-        </div>
-      </UserArea>
+
+      <TitleArea>
+        <UserArea>
+          <img src={profileimg} />
+          <div className="description">
+            <div className="name">{partnerName}</div>
+            <div className="date">03/01 18:07</div>
+          </div>
+        </UserArea>
+        <TopRightBadge dormType={data.dormType}>{data.dormType}</TopRightBadge>
+      </TitleArea>
+
       <ContentArea>
         <div className="title">{data.title}</div>
         <div className="content">{data.comment}</div>
@@ -309,4 +314,34 @@ const ProtectedMenuWrapper = styled.div<{ disabled: boolean }>`
   position: relative;
   opacity: ${(props) => (props.disabled ? 0.4 : 1)};
   pointer-events: ${(props) => (props.disabled ? "none" : "auto")};
+`;
+
+const TitleArea = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+`;
+const TopRightBadge = styled.div.withConfig({
+  shouldForwardProp: (prop) => prop !== "dormType",
+})<{ dormType: string }>`
+  font-size: 12px;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-weight: 600;
+  z-index: 1;
+  height: fit-content;
+
+  background: ${({ dormType }) => {
+    switch (dormType) {
+      case "2기숙사":
+        return "#0a84ff";
+      case "3기숙사":
+        return "#ff6b6b";
+      default:
+        return "#0a84ff";
+    }
+  }};
 `;
