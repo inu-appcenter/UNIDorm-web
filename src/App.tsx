@@ -33,12 +33,19 @@ import LogoutPage from "./pages/LogoutPage.tsx";
 import OnboardingPage from "./pages/OnboardingPage.tsx";
 import RoomMateFilterPage from "./pages/RoomMate/RoomMateFilterPage.tsx";
 import GroupPurchaseComingSoonPage from "./pages/GroupPurchase/GroupPurchaseComingSoonPage.tsx";
+import CalendarAdminPage from "./pages/Admin/CalendarAdminPage.tsx";
+import AdminMainPage from "./pages/Admin/AdminMainPage.tsx";
 
 function App() {
-  const { tokenInfo, setUserInfo } = useUserStore();
+  const { tokenInfo, setUserInfo, userInfo } = useUserStore();
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (userInfo.isAdmin) {
+      console.log("admin모드로 이동합니다");
+      navigate("/admin/calendar");
+      return;
+    }
     const initializeUser = async () => {
       try {
         const response = await getMemberInfo();
@@ -132,6 +139,8 @@ function App() {
           />
           <Route path="/myroommate" element={<MyRoomMatePage />} />
           <Route path="/roommateadd" element={<RoomMateAddPage />} />
+          <Route path="/admin" element={<AdminMainPage />} />
+          <Route path="/admin/calendar" element={<CalendarAdminPage />} />
         </Route>
       </Routes>
     </>

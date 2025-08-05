@@ -1,17 +1,66 @@
-// components/home/WeeklyCalendar.tsx
 import styled from "styled-components";
-import { startOfWeek, addDays, format, isSameDay } from "date-fns";
-
-const mockEvents: { [key: string]: string } = {
-  "2025-06-18": "모의고사 이틀치 비...",
-};
+import {
+  addDays,
+  format,
+  isAfter,
+  isBefore,
+  isSameDay,
+  parseISO,
+  startOfWeek,
+} from "date-fns";
+import { useEffect, useState } from "react";
+import { getCalendarByMonth } from "../../apis/calendar.ts";
+import { CalendarItem } from "../../types/calendar.ts";
 
 export default function WeeklyCalendar() {
   const today = new Date();
-  const weekStart = startOfWeek(today, { weekStartsOn: 0 }); // 일요일 시작
+  const weekStart = startOfWeek(today, { weekStartsOn: 0 });
   const startDate = addDays(weekStart, -7); // 앞 주 일요일
-
   const dates = Array.from({ length: 21 }, (_, i) => addDays(startDate, i));
+  // const endDate = dates[dates.length - 1];
+
+  const [eventMap, setEventMap] = useState<{ [key: string]: string }>({});
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      const months = new Set<string>();
+
+      dates.forEach((date) => {
+        const y = date.getFullYear();
+        const m = date.getMonth() + 1;
+        months.add(`${y}-${m}`);
+      });
+
+      const resultMap: { [key: string]: string } = {};
+
+      await Promise.all(
+        Array.from(months).map(async (ym) => {
+          const [year, month] = ym.split("-").map(Number);
+          const res = await getCalendarByMonth(year, month);
+          console.log(res.data);
+          res.data.forEach((item: CalendarItem) => {
+            const start = parseISO(item.startDate);
+            const end = parseISO(item.endDate);
+
+            // 일정 범위가 현재 달력 범위 안에 있는지 체크
+            dates.forEach((date) => {
+              if (
+                (isAfter(date, start) || isSameDay(date, start)) &&
+                (isBefore(date, end) || isSameDay(date, end))
+              ) {
+                const dateStr = format(date, "yyyy-MM-dd");
+                resultMap[dateStr] = item.title;
+              }
+            });
+          });
+        }),
+      );
+
+      setEventMap(resultMap);
+    };
+
+    fetchEvents();
+  }, []);
 
   return (
     <CalendarContainer>
@@ -24,7 +73,7 @@ export default function WeeklyCalendar() {
         <WeekRow key={weekIdx}>
           {dates.slice(weekIdx * 7, weekIdx * 7 + 7).map((date, idx) => {
             const dateStr = format(date, "yyyy-MM-dd");
-            const event = mockEvents[dateStr];
+            const event = eventMap[dateStr];
             const isToday = isSameDay(date, today);
 
             return (

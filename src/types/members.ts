@@ -12,6 +12,7 @@ export interface UserInfo {
   hasTimeTableImage: boolean;
   roommateCheckList: boolean;
   id: number;
+  isAdmin: boolean;
 }
 
 export interface MyPost {
