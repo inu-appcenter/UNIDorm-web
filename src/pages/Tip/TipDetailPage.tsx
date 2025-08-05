@@ -13,6 +13,7 @@ interface TipComment {
   reply: string;
   parentId: number;
   isDeleted: boolean;
+  createDate? : string;
 }
 
 interface TipDetail {
@@ -219,77 +220,84 @@ export default function TipDetailPage() {
               <Divider />
 
               <CommentList>
-                {tip.tipCommentDtoList
-                  ?.filter((c) => c.parentId === 0)
-                  .map((comment) => (
-                    <div key={comment.tipCommentId}>
-                      <Comment>
-                        <FaUserCircle size={32} color="#ccc" />
-                        <CommentContent>
-                          <CommentBody>
-                            <Nickname>익명 {comment.userId}</Nickname>
-                            <CommentText>{comment.reply}</CommentText>
-                            <Date>댓글 날짜 없음</Date>
-                          </CommentBody>
-                          <CommentActionArea>
-                            <ReplyButton
-                              onClick={() =>
-                                setReplyOpen((prev) => ({
-                                  ...prev,
-                                  [comment.tipCommentId]:
-                                    !prev[comment.tipCommentId],
-                                }))
-                              }
-                            >
-                              답글
-                            </ReplyButton>
-                          </CommentActionArea>
-                        </CommentContent>
-                      </Comment>
-                      {/* 대댓글 입력창 */}
-                      {replyOpen[comment.tipCommentId] && (
-                        <ReplyInputArea>
-                          <ReplyInput
-                            placeholder="답글 입력"
-                            value={replyInputs[comment.tipCommentId] || ""}
-                            onChange={(e) =>
-                              setReplyInputs((prev) => ({
+              {tip.tipCommentDtoList
+                ?.filter((c) => c.parentId === 0 || c.parentId === null)
+                .map((comment) => (
+                  <div key={comment.tipCommentId}>
+                    <Comment>
+                      <FaUserCircle size={32} color="#ccc" />
+                      <CommentContent>
+                        <CommentBody>
+                          <Nickname>익명 {comment.userId}</Nickname>
+                          <CommentText>{comment.reply}</CommentText>
+                          <Date>
+                          {comment.createDate
+                            ? new Date(comment.createDate).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                            : "방금"}
+                          
+                        </Date>
+
+                        </CommentBody>
+                        <CommentActionArea>
+                          <ReplyButton
+                            onClick={() =>
+                              setReplyOpen((prev) => ({
                                 ...prev,
-                                [comment.tipCommentId]: e.target.value,
+                                [comment.tipCommentId]: !prev[comment.tipCommentId],
                               }))
                             }
-                            onKeyDown={(e) =>
-                              e.key === "Enter" &&
-                              handleReplySubmit(comment.tipCommentId)
-                            }
-                          />
-                          <ReplySendButton
-                            onClick={() =>
-                              handleReplySubmit(comment.tipCommentId)
-                            }
                           >
-                            <BsSend size={16} />
-                          </ReplySendButton>
-                        </ReplyInputArea>
-                      )}
-                      {/* 대댓글 목록 */}
-                      {tip.tipCommentDtoList
-                        .filter((r) => r.parentId === comment.tipCommentId)
-                        .map((reply) => (
-                          <Reply key={reply.tipCommentId}>
-                            <FaUserCircle size={28} color="#ccc" />
-                            <ReplyContent>
-                              <ReplyBody>
-                                <Nickname>익명 {reply.userId}</Nickname>
-                                <CommentText>{reply.reply}</CommentText>
-                                <Date>댓글 날짜 없음</Date>
-                              </ReplyBody>
-                            </ReplyContent>
-                          </Reply>
-                        ))}
-                    </div>
-                  ))}
-              </CommentList>
+                            답글
+                          </ReplyButton>
+                        </CommentActionArea>
+                      </CommentContent>
+                    </Comment>
+                    {/* 대댓글 입력창 */}
+                    {replyOpen[comment.tipCommentId] && (
+                      <ReplyInputArea>
+                        <ReplyInput
+                          placeholder="답글 입력"
+                          value={replyInputs[comment.tipCommentId] || ""}
+                          onChange={(e) =>
+                            setReplyInputs((prev) => ({
+                              ...prev,
+                              [comment.tipCommentId]: e.target.value,
+                            }))
+                          }
+                          onKeyDown={(e) =>
+                            e.key === "Enter" && handleReplySubmit(comment.tipCommentId)
+                          }
+                        />
+                        <ReplySendButton
+                          onClick={() => handleReplySubmit(comment.tipCommentId)}
+                        >
+                          <BsSend size={16} />
+                        </ReplySendButton>
+                      </ReplyInputArea>
+                    )}
+                    {/* 대댓글 목록 */}
+                    {tip.tipCommentDtoList
+                      .filter((r) => r.parentId === comment.tipCommentId)
+                      .map((reply) => (
+                        <Reply key={reply.tipCommentId}>
+                          <FaUserCircle size={28} color="#ccc" />
+                          <ReplyContent>
+                            <ReplyBody>
+                              <Nickname>익명 {reply.userId}</Nickname>
+                              <CommentText>{reply.reply}</CommentText>
+                              <Date>
+                              {reply.createDate
+                                ? new Date(reply.createDate).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                                : "방금"}
+                            </Date>
+                            </ReplyBody>
+                          </ReplyContent>
+                        </Reply>
+                      ))}
+                  </div>
+                ))}
+            </CommentList>
+
             </>
           )}
         </Content>
