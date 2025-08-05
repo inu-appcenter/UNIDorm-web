@@ -1,5 +1,6 @@
 import styled from "styled-components";
-import BookMark from "../../assets/bookmark.svg";
+import { AiOutlineClockCircle } from "react-icons/ai";
+import { useNavigate } from "react-router-dom";
 
 const EmergencyIcon = () => {
   return <EmergencyIconWrapper>긴급</EmergencyIconWrapper>;
@@ -42,20 +43,27 @@ const EmergencyIconWrapper = styled.div`
 `;
 
 interface HomeCardProps {
+  id: number;
   title: string;
   content: string;
   isEmergency: boolean;
-  scrapCount: number;
+  createdDate: string;
 }
 
-const HomeCard = ({
+const HomeNoticeCard = ({
+  id,
   title,
   content,
   isEmergency,
-  scrapCount,
+  createdDate,
 }: HomeCardProps) => {
+  const navigate = useNavigate();
   return (
-    <HomeCardWrapper>
+    <HomeCardWrapper
+      onClick={() => {
+        navigate("/announcements/" + id);
+      }}
+    >
       <div className="emergency">{isEmergency && <EmergencyIcon />}</div>
 
       <FirstLine>
@@ -63,13 +71,14 @@ const HomeCard = ({
       </FirstLine>
       <SecondLine>{content}</SecondLine>
       <LastLine>
-        <img src={BookMark} /> {scrapCount}
+        <AiOutlineClockCircle style={{ marginRight: "4px" }} />
+        {createdDate}
       </LastLine>
     </HomeCardWrapper>
   );
 };
 
-export default HomeCard;
+export default HomeNoticeCard;
 
 const HomeCardWrapper = styled.div`
   box-sizing: border-box;
@@ -77,13 +86,13 @@ const HomeCardWrapper = styled.div`
   /* 오토레이아웃 */
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: space-between;
   align-items: flex-start;
   padding: 8px 16px;
   gap: 5px;
 
   width: 100%;
-  height: fit-content;
+  height: 160px;
 
   background: #ffffff;
   border: 1px solid rgba(0, 0, 0, 0.1);
@@ -104,9 +113,11 @@ const FirstLine = styled.div`
     font-weight: 700;
     font-size: 16px;
     line-height: 24px;
-    /* 상자 높이와 동일 또는 150% */
-    display: flex;
-    align-items: center;
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /* 최대 두 줄 */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
     letter-spacing: 0.38px;
 
     color: #1c1c1e;
@@ -114,13 +125,14 @@ const FirstLine = styled.div`
 `;
 
 const SecondLine = styled.div`
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* 최대 두 줄 */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
   width: 100%;
   height: fit-content;
-  align-items: center;
-
   font-style: normal;
   font-weight: 500;
   font-size: 14px;

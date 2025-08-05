@@ -27,6 +27,10 @@ const getUserInfoFromStorage = (): UserInfo => {
         dormType: "",
         college: "",
         penalty: 0,
+        hasTimeTableImage: false,
+        roommateCheckList: false,
+        id: 0,
+        isAdmin: false,
       };
 };
 

@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import TitleContentArea from "../components/common/TitleContentArea.tsx";
-import HomeCard from "../components/home/HomeCard.tsx";
+import HomeNoticeCard from "../components/home/HomeNoticeCard.tsx";
 import ThreeWeekCalendar from "../components/home/ThreeWeekCalendar.tsx";
 import Header from "../components/common/Header.tsx";
 import 배너1 from "../assets/banner/포스터1.svg";
@@ -11,6 +11,8 @@ import { Tip } from "../types/tips.ts";
 import RoomMateCard from "../components/roommate/RoomMateCard.tsx";
 import { getRoomMateList } from "../apis/roommate.ts";
 import { RoommatePost } from "../types/roommates.ts";
+import { getAnnouncements } from "../apis/announcements.ts";
+import { Announcement } from "../types/announcements.ts";
 
 const mockBoard = [
   {
@@ -30,6 +32,7 @@ const mockBoard = [
 ];
 export default function HomePage() {
   const [tips, setTips] = useState<Tip[]>([]);
+  const [notices, setNotices] = useState<Announcement[]>([]);
 
   useEffect(() => {
     const getTips = async () => {
@@ -42,8 +45,17 @@ export default function HomePage() {
         }
       }
     };
+    async function fetchAnnouncements() {
+      try {
+        const response = await getAnnouncements();
+        setNotices(response.data);
+      } catch (error) {
+        console.error("공지사항 불러오기 실패", error);
+      }
+    }
 
     getTips();
+    fetchAnnouncements();
   }, []);
 
   const sliderRef = useRef<HTMLDivElement>(null);
@@ -170,8 +182,37 @@ export default function HomePage() {
             )}
           </>
         </TitleContentArea>
+
+        <TitleContentArea
+          title={mockBoard[0].type}
+          description={
+            "인천대학교 생활원에서 알려드리는 공지사항을 확인해보세요."
+          }
+          link={"/announcements"}
+          children={
+            <NotiWrapper>
+              {notices.map((notice, key) => (
+                <HomeNoticeCard
+                  key={key} // 고유 키 넣기 (id가 없으면 title로 대체)
+                  id={notice.id}
+                  title={notice.title}
+                  content={
+                    // notice.content || "공지사항 내용이 들어갈 자리입니다"
+                    "공지사항 내용이 들어갈 자리입니다"
+                  }
+                  isEmergency={false}
+                  createdDate={notice.createdDate}
+                />
+              ))}
+            </NotiWrapper>
+          }
+        />
+
         <TitleContentArea
           title="오늘의 Best 꿀팁"
+          description={
+            "기숙사에 사는 UNI들이 공유하는 다양한 기숙사 꿀팁을 찾아보세요!"
+          }
           link={"/tips"}
           children={
             <>
@@ -188,26 +229,6 @@ export default function HomePage() {
                 <EmptyMessage>오늘의 꿀팁이 없습니다.</EmptyMessage>
               )}
             </>
-          }
-        />
-        <TitleContentArea
-          title={mockBoard[0].type}
-          link={"/notification"}
-          children={
-            <NotiWrapper>
-              <HomeCard
-                title={mockBoard[0].title}
-                content={mockBoard[0].content}
-                isEmergency={mockBoard[0].isEmergency}
-                scrapCount={mockBoard[0].scrapCount}
-              />
-              <HomeCard
-                title={mockBoard[0].title}
-                content={mockBoard[0].content}
-                isEmergency={mockBoard[0].isEmergency}
-                scrapCount={mockBoard[0].scrapCount}
-              />
-            </NotiWrapper>
           }
         />
 
