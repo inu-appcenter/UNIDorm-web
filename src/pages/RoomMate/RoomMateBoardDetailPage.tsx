@@ -14,19 +14,26 @@ const InfoCard = ({
   icon,
   title,
   description,
+  matched = false,
 }: {
   color: string;
   icon: string;
   title: string;
   description: string;
+  matched?: boolean;
 }) => {
   return (
-    <CardItem style={{ backgroundColor: color }}>
+    <CardItem
+      style={{
+        backgroundColor: color,
+      }}
+    >
       <div className="icon-title">
         <div className="icon">{icon}</div>
         <div className="title">{title}</div>
       </div>
       <div className="description">{description}</div>
+      {matched && <div className="match-icon">✅</div>}
     </CardItem>
   );
 };
@@ -44,7 +51,9 @@ const religionEmojiMap: Record<string, string> = {
 
 export default function RoomMateBoardDetailPage() {
   const { boardId } = useParams<{ boardId: string }>();
-  const [data, setData] = useState<RoommatePost | null>(null);
+  const [boardData, setBoardData] = useState<RoommatePost | null>(null);
+  const [myData, setMyData] = useState<RoommatePost | null>(null);
+
   const location = useLocation();
   const partnerName = location.state?.partnerName;
   const roomId = location.state?.roomId;
@@ -52,16 +61,25 @@ export default function RoomMateBoardDetailPage() {
 
   useEffect(() => {
     if (!boardId || boardId === "opponent") return;
-    const fetchData = async () => {
+    const fetchBoardData = async () => {
       try {
         const response = await getRoomMateDetail(Number(boardId));
         console.log(response);
-        setData(response.data);
+        setBoardData(response.data);
       } catch (error) {
         console.error("게시글 데이터를 불러오지 못했습니다:", error);
       }
     };
-    fetchData();
+    const fetchMyData = async () => {
+      try {
+        const response = await getRoomMateDetail(Number(boardId));
+        console.log(response);
+        setBoardData(response.data);
+      } catch (error) {
+        console.error("내 체크리스트를 불러오지 못했습니다:", error);
+      }
+    };
+    fetchBoardData();
   }, [boardId]);
 
   useEffect(() => {
@@ -71,7 +89,7 @@ export default function RoomMateBoardDetailPage() {
     const fetchOpponentChecklist = async () => {
       try {
         const response = await getOpponentChecklist(roomId);
-        setData(response.data);
+        setBoardData(response.data);
         console.log(response);
       } catch (error) {
         console.error("상대방 체크리스트 불러오기 실패", error);
@@ -81,7 +99,7 @@ export default function RoomMateBoardDetailPage() {
     fetchOpponentChecklist();
   }, [roomId]);
 
-  if (!data) return <div>로딩 중...</div>;
+  if (!boardData) return <div>로딩 중...</div>;
 
   return (
     <RoomMateDetailPageWrapper>
@@ -95,89 +113,105 @@ export default function RoomMateBoardDetailPage() {
             <div className="date">03/01 18:07</div>
           </div>
         </UserArea>
-        <TopRightBadge dormType={data.dormType}>{data.dormType}</TopRightBadge>
+        <TopRightBadge dormType={boardData.dormType}>
+          {boardData.dormType}
+        </TopRightBadge>
       </TitleArea>
 
       <ContentArea>
-        <div className="title">{data.title}</div>
-        <div className="content">{data.comment}</div>
+        <div className="title">{boardData.title}</div>
+        <div className="content">{boardData.comment}</div>
 
         <CardGrid>
           <InfoCard
             color="#EAF4FF"
             icon="🏠"
             title="상주요일"
-            description={data.dormPeriod.join(", ")}
+            description={boardData.dormPeriod.join(", ")}
+            matched={
+              myData?.dormPeriod?.join(",") === boardData.dormPeriod?.join(",")
+            }
           />
           <InfoCard
             color="#FCEEF3"
             icon="🎓"
             title="단과대"
-            description={data.college}
+            description={boardData.college}
+            matched={myData?.college === boardData.college}
           />
           <InfoCard
             color="#E4F6ED"
             icon="🧬"
             title="MBTI"
-            description={data.mbti}
+            description={boardData.mbti}
+            matched={myData?.mbti === boardData.mbti}
           />
           <InfoCard
             color="#E8F0FE"
             icon="🚭"
             title="흡연여부"
-            description={data.smoking}
+            description={boardData.smoking}
+            matched={myData?.smoking === boardData.smoking}
           />
           <InfoCard
             color="#F3F4F6"
             icon="😴"
             title="코골이 유무"
-            description={data.snoring}
+            description={boardData.snoring}
+            matched={myData?.snoring === boardData.snoring}
           />
           <InfoCard
             color="#FFF6E9"
             icon="😬"
             title="이갈이 유무"
-            description={data.toothGrind}
+            description={boardData.toothGrind}
+            matched={myData?.toothGrind === boardData.toothGrind}
           />
           <InfoCard
             color="#EAF4FF"
             icon="🛏️"
             title="잠귀"
-            description={data.sleeper}
+            description={boardData.sleeper}
+            matched={myData?.sleeper === boardData.sleeper}
           />
           <InfoCard
             color="#FCEEF3"
             icon="🚿"
             title="샤워 시기"
-            description={data.showerHour}
+            description={boardData.showerHour}
+            matched={myData?.showerHour === boardData.showerHour}
           />
           <InfoCard
             color="#E4F6ED"
             icon="⏰"
             title="샤워 시간"
-            description={data.showerTime}
+            description={boardData.showerTime}
+            matched={myData?.showerTime === boardData.showerTime}
           />
           <InfoCard
             color="#E8F0FE"
             icon="🛌"
             title="취침 시기"
-            description={data.bedTime}
+            description={boardData.bedTime}
+            matched={myData?.bedTime === boardData.bedTime}
           />
           <InfoCard
             color="#F3F4F6"
             icon="🧼"
             title="정리정돈"
-            description={data.arrangement}
+            description={boardData.arrangement}
+            matched={myData?.arrangement === boardData.arrangement}
           />
           <InfoCard
             color="#F3F4F6"
-            icon={religionEmojiMap[data.religion] || "🙏"}
+            icon={religionEmojiMap[boardData.religion] || "🙏"}
             title="종교"
-            description={data.religion}
+            description={boardData.religion}
+            matched={myData?.religion === boardData.religion}
           />
         </CardGrid>
       </ContentArea>
-      <ProtectedMenuWrapper disabled={userInfo.dormType !== data.dormType}>
+      <ProtectedMenuWrapper disabled={userInfo.dormType !== boardData.dormType}>
         {!roomId && <RoomMateBottomBar />}
       </ProtectedMenuWrapper>
     </RoomMateDetailPageWrapper>
@@ -286,6 +320,7 @@ const CardItem = styled.div`
   display: flex;
   flex-direction: column;
   gap: 6px;
+  position: relative;
 
   .icon-title {
     display: flex;
@@ -307,6 +342,13 @@ const CardItem = styled.div`
   .description {
     font-size: 12px;
     color: #3a3a3c;
+  }
+
+  .match-icon {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 16px;
   }
 `;
 
