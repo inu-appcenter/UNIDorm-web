@@ -14,22 +14,6 @@ import { RoommatePost } from "../types/roommates.ts";
 import { getAnnouncements } from "../apis/announcements.ts";
 import { Announcement } from "../types/announcements.ts";
 
-const mockBoard = [
-  {
-    type: "공지사항",
-    title: "기숙사 공지사항입니다",
-    content: "기숙사 전쟁나썽요!!!!!",
-    isEmergency: true,
-    scrapCount: 121,
-  },
-  {
-    type: "기숙사 꿀팁",
-    title: "기숙사 생활 꿀팁 공유합니다",
-    content: "세탁기는 이른 아침에 쓰는 게 제일 한가합니다!",
-    isEmergency: false,
-    scrapCount: 45,
-  },
-];
 export default function HomePage() {
   const [tips, setTips] = useState<Tip[]>([]);
   const [notices, setNotices] = useState<Announcement[]>([]);
@@ -127,8 +111,12 @@ export default function HomePage() {
 
   const randomRoommate = useMemo(() => {
     if (!roommates || roommates.length === 0) return null;
-    const index = Math.floor(Math.random() * roommates.length);
-    return roommates[index];
+
+    const unmatchedRoommates = roommates.filter((r) => !r.matched);
+    if (unmatchedRoommates.length === 0) return null;
+
+    const index = Math.floor(Math.random() * unmatchedRoommates.length);
+    return unmatchedRoommates[index];
   }, [roommates]);
 
   return (
@@ -174,8 +162,8 @@ export default function HomePage() {
                 isClean={true}
                 stayDays={randomRoommate.dormPeriod}
                 description={randomRoommate.comment}
-                commentCount={12}
-                likeCount={8}
+                roommateBoardLike={randomRoommate.roommateBoardLike}
+                matched={randomRoommate.matched}
               />
             ) : (
               <EmptyMessage>게시글이 없습니다.</EmptyMessage>
@@ -184,7 +172,7 @@ export default function HomePage() {
         </TitleContentArea>
 
         <TitleContentArea
-          title={mockBoard[0].type}
+          title={"공지사항"}
           description={
             "인천대학교 생활원에서 알려드리는 공지사항을 확인해보세요."
           }
