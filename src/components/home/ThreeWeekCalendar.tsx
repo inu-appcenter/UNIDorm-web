@@ -1,13 +1,5 @@
 import styled from "styled-components";
-import {
-  addDays,
-  format,
-  isAfter,
-  isBefore,
-  isSameDay,
-  parseISO,
-  startOfWeek,
-} from "date-fns";
+import { addDays, format, isAfter, isBefore, isSameDay, parseISO, startOfWeek } from "date-fns";
 import { useEffect, useState } from "react";
 import { getCalendarByMonth } from "../../apis/calendar.ts";
 import { CalendarItem } from "../../types/calendar.ts";
@@ -243,7 +235,7 @@ const EventBar = styled.div<{ $start: number; $end: number; $row: number }>`
   width: ${({ $start, $end }) => `calc(100% / 7 * (${$end - $start + 1}))`};
 
   height: 20px;
-  background-color: #ffe500;
+  background-color: #ffd60a;
   font-size: 11px;
   padding: 2px 6px;
   box-sizing: border-box;
@@ -254,4 +246,6 @@ const EventBar = styled.div<{ $start: number; $end: number; $row: number }>`
   text-overflow: ellipsis;
   display: flex;
   align-items: center;
+
+  color: #636366;
 `;
