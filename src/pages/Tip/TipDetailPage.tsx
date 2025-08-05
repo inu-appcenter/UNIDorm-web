@@ -1,10 +1,10 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import axiosInstance from "../../apis/axiosInstance";
 import styled from "styled-components";
 import { BsSend, BsThreeDotsVertical } from "react-icons/bs";
 import { FaRegHeart, FaUserCircle } from "react-icons/fa";
 import Header from "../../components/common/Header";
+import tokenInstance from "../../apis/tokenInstance"; // ← 반드시 tokenInstance로!
 
 interface TipComment {
   tipCommentId: number;
@@ -27,28 +27,19 @@ interface TipDetail {
 export default function TipDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [tip, setTip] = useState<TipDetail | null>(null);
-
-  // 메뉴(점3개)
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   // 댓글 입력 상태
   const [commentInput, setCommentInput] = useState("");
-  // 대댓글 입력 상태 { [commentId]: value }
   const [replyInputs, setReplyInputs] = useState<{ [key: number]: string }>({});
-  // 대댓글 입력창 열림 여부
   const [replyOpen, setReplyOpen] = useState<{ [key: number]: boolean }>({});
-
-  // 유저 정보
   const [userInfo, setUserInfo] = useState<{
     name: string;
     profileImageUrl: string;
   } | null>(null);
-
-  // 이미지(현재 미사용)
   const [images, setImages] = useState<string[]>([]);
 
-  // 팁 상세/이미지/유저 fetch
   useEffect(() => {
     window.scrollTo(0, 0);
     if (id) {
@@ -59,11 +50,11 @@ export default function TipDetailPage() {
     // eslint-disable-next-line
   }, [id]);
 
+  // ----------- 여기가 핵심 수정!
   const fetchTipDetail = async (id: string) => {
     try {
-      const res = await axiosInstance.get(`/tips/${id}`);
+      const res = await tokenInstance.get(`/tips/${id}`);
       setTip(res.data);
-      console.log(res);
     } catch (err) {
       console.error("게시글 불러오기 실패", err);
     }
@@ -71,15 +62,9 @@ export default function TipDetailPage() {
 
   const fetchTipImages = async (id: string) => {
     try {
-      console.log("이미지 불러오기 시도");
-      // const token = localStorage.getItem("accessToken");
-      const res = await axiosInstance.get(`/tips/${id}/image`, {
-        // headers: { Authorization: `Bearer ${token}` },
-      });
-      console.log("res", res);
-
+      const res = await tokenInstance.get(`/tips/${id}/image`);
+      // fileName이 진짜 이미지 url임!
       const urls = res.data.map((img: any) => img.fileName);
-      console.log("urls", urls);
       setImages(urls);
     } catch (err) {
       console.error("이미지 불러오기 실패", err);
@@ -88,15 +73,13 @@ export default function TipDetailPage() {
 
   const fetchUserInfo = async () => {
     try {
-      const userRes = await axiosInstance.get("/users");
-      const imageRes = await axiosInstance.get("/users/image", {
+      const userRes = await tokenInstance.get("/users");
+      const imageRes = await tokenInstance.get("/users/image", {
         responseType: "blob",
       });
       const imageUrl = URL.createObjectURL(imageRes.data);
       setUserInfo({ name: userRes.data.name, profileImageUrl: imageUrl });
-    } catch (err) {
-      // console.error("유저 정보 가져오기 실패", err);
-    }
+    } catch (err) {}
   };
 
   // 게시글 삭제
@@ -104,7 +87,7 @@ export default function TipDetailPage() {
     if (!id) return;
     if (!window.confirm("정말 삭제하시겠습니까?")) return;
     try {
-      await axiosInstance.delete(`/tips/${id}`);
+      await tokenInstance.delete(`/tips/${id}`);
       alert("삭제되었습니다.");
       navigate(-1);
     } catch (err) {
@@ -116,7 +99,7 @@ export default function TipDetailPage() {
   const handleCommentSubmit = async () => {
     if (!commentInput.trim()) return;
     try {
-      await axiosInstance.post("/tip-comments", {
+      await tokenInstance.post("/tip-comments", {
         parentCommentId: null,
         tipId: Number(id),
         reply: commentInput,
@@ -133,7 +116,7 @@ export default function TipDetailPage() {
     const replyInput = replyInputs[parentCommentId];
     if (!replyInput?.trim()) return;
     try {
-      await axiosInstance.post("/tip-comments", {
+      await tokenInstance.post("/tip-comments", {
         parentCommentId,
         tipId: Number(id),
         reply: replyInput,
@@ -185,27 +168,30 @@ export default function TipDetailPage() {
                 )}
               </UserInfo>
 
-            <ImageSlider>
-              {images.length > 0 ? (
-                images.map((url, idx) => (
-                  <SliderItem key={idx}>
-                    <img
-                      src={url}
-                      alt={`업로드 이미지 ${idx + 1}`}
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                        borderRadius: "10px",
-                      }}
-                    />
-                  </SliderItem>
-                ))
-              ) : (
-                <SliderItem />
-              )}
-            </ImageSlider>
-
+              {/* 이미지 여러장 보여주기 */}
+              <ImageSlider>
+                {images.length > 0 ? (
+                  images.map((url, idx) => (
+                    <SliderItem key={idx}>
+                      <img
+                        src={url}
+                        alt={`팁 이미지 ${idx + 1}`}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                          borderRadius: "10px",
+                        }}
+                      />
+                    </SliderItem>
+                  ))
+                ) : (
+                  <SliderItem />
+                )}
+                <SliderIndicator>
+                  {images.length > 0 && `1/${images.length}`}
+                </SliderIndicator>
+              </ImageSlider>
 
               <Title>{tip.title}</Title>
               <BodyText>{tip.content}</BodyText>
@@ -313,7 +299,7 @@ export default function TipDetailPage() {
   );
 }
 
-// --- styled-components
+// --- styled-components (이 아래는 그대로!)
 
 const Wrapper = styled.div`
   position: relative;
@@ -372,9 +358,8 @@ const UserInfo = styled.div`
   align-items: center;
   gap: 12px;
   margin-bottom: 16px;
-
-  position: relative; /* ✅ 메뉴 absolute 기준점으로 */
-  overflow: visible; /* ✅ 안 짤리게 */
+  position: relative;
+  overflow: visible;
 `;
 
 const UserText = styled.div`

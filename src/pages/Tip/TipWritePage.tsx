@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { IoCloseSharp } from "react-icons/io5";
 import { MdImage } from "react-icons/md";
 import { useEffect, useRef, useState } from "react";
-
 import SquareButton from "../../components/common/SquareButton.tsx";
 import tokenInstance from "../../apis/tokenInstance.ts";
 
@@ -85,6 +84,15 @@ export default function TipWritePage() {
         <ImageBox onClick={() => inputRef.current?.click()}>
           <MdImage size={36} color="#888" />
           <span>{images.length}/10</span>
+          {/* 여러 장 미리보기 */}
+          {images.map((file, idx) => (
+            <img
+              key={idx}
+              src={URL.createObjectURL(file)}
+              alt={`업로드 이미지${idx + 1}`}
+              style={{ width: 36, height: 36, borderRadius: 8, marginLeft: 4 }}
+            />
+          ))}
           <input
             ref={inputRef}
             type="file"
