@@ -129,7 +129,8 @@ export default function RoomMateChecklistPage() {
 
   const handleSubmit = async () => {
     if (
-      dayIndices.length === 0 || // ✅ 다중 선택 검사
+      title.length === 0 ||
+      dayIndices.length === 0 ||
       domitoryIndex === null ||
       collegeIndex === null ||
       mbtiIndex1 === null ||
