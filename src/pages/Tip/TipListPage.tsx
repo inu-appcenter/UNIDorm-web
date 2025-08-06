@@ -17,6 +17,7 @@ export default function TipListPage() {
     const loadTips = async () => {
       try {
         const data = await fetchTips();
+        console.log(data);
         setTips(data);
       } catch (error) {
         console.error("팁 리스트 불러오기 실패:", error);
@@ -39,9 +40,9 @@ export default function TipListPage() {
         <CardList>
           {tips.map((tip) => (
             <TipCard
-              key={tip.id}
+              key={tip.boardId}
               tip={{
-                boardId: tip.id,
+                id: tip.boardId,
                 title: tip.title,
                 content: tip.content,
                 time: new Date(tip.createDate).toLocaleTimeString("ko-KR", {
