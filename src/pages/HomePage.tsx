@@ -332,4 +332,5 @@ const EmptyMessage = styled.div`
   color: #aaa;
   font-size: 14px;
   width: 100%;
+  box-sizing: border-box;
 `;
