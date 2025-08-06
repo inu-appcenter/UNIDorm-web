@@ -18,7 +18,7 @@ interface TipComment {
 }
 
 interface TipDetail {
-  id: number;
+  boardId: number;
   title: string;
   content: string;
   tipLikeCount: number;
@@ -28,7 +28,7 @@ interface TipDetail {
 }
 
 export default function TipDetailPage() {
-  const { id } = useParams<{ id: string }>();
+  const { boardId } = useParams<{ boardId: string }>();
   const [tip, setTip] = useState<TipDetail | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
@@ -45,18 +45,18 @@ export default function TipDetailPage() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    if (id) {
-      fetchTipDetail(id);
-      fetchTipImages(id);
+    if (boardId) {
+      fetchTipDetail(boardId);
+      fetchTipImages(boardId);
     }
     // fetchUserInfo();
     // eslint-disable-next-line
-  }, [id]);
+  }, [boardId]);
 
   // ----------- 여기가 핵심 수정!
-  const fetchTipDetail = async (id: string) => {
+  const fetchTipDetail = async (boardId: string) => {
     try {
-      const res = await axiosInstance.get(`/tips/${id}`);
+      const res = await axiosInstance.get(`/tips/${boardId}`);
       console.log(res.data);
       setTip(res.data);
     } catch (err) {
@@ -64,9 +64,9 @@ export default function TipDetailPage() {
     }
   };
 
-  const fetchTipImages = async (id: string) => {
+  const fetchTipImages = async (boardId: string) => {
     try {
-      const res = await axiosInstance.get(`/tips/${id}/image`);
+      const res = await axiosInstance.get(`/tips/${boardId}/image`);
       // fileName이 진짜 이미지 url임!
       const urls = res.data.map((img: any) => img.fileName);
       setImages(urls);
@@ -88,10 +88,10 @@ export default function TipDetailPage() {
 
   // 게시글 삭제
   const handleDelete = async () => {
-    if (!id) return;
+    if (!boardId) return;
     if (!window.confirm("정말 삭제하시겠습니까?")) return;
     try {
-      await tokenInstance.delete(`/tips/${id}`);
+      await tokenInstance.delete(`/tips/${boardId}`);
       alert("삭제되었습니다.");
       navigate(-1);
     } catch (err) {
@@ -105,11 +105,11 @@ export default function TipDetailPage() {
     try {
       await tokenInstance.post("/tip-comments", {
         parentCommentId: null,
-        tipId: Number(id),
+        tipId: Number(boardId),
         reply: commentInput,
       });
       setCommentInput("");
-      fetchTipDetail(id!);
+      fetchTipDetail(boardId!);
     } catch (err) {
       alert("댓글 등록 실패");
     }
@@ -122,12 +122,12 @@ export default function TipDetailPage() {
     try {
       await tokenInstance.post("/tip-comments", {
         parentCommentId,
-        tipId: Number(id),
+        tipId: Number(boardId),
         reply: replyInput,
       });
       setReplyInputs((prev) => ({ ...prev, [parentCommentId]: "" }));
       setReplyOpen((prev) => ({ ...prev, [parentCommentId]: false }));
-      fetchTipDetail(id!);
+      fetchTipDetail(boardId!);
     } catch (err) {
       alert("대댓글 등록 실패");
     }
