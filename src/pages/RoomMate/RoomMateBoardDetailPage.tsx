@@ -114,7 +114,15 @@ export default function RoomMateBoardDetailPage() {
           <img src={profileimg} />
           <div className="description">
             <div className="name">{partnerName || boardData.userName}</div>
-            <div className="date">{boardData.createDate}</div>
+            <div className="date">
+              {new Date(boardData.createDate).toLocaleTimeString("ko-KR", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </div>
           </div>
         </UserArea>
         <TopRightBadge dormType={boardData.dormType}>
@@ -216,9 +224,9 @@ export default function RoomMateBoardDetailPage() {
         </CardGrid>
       </ContentArea>
       {!roomId && userInfo.dormType === boardData.dormType && (
-        <RoomMateBottomBar />
+        <RoomMateBottomBar partnerName={boardData.userName} />
       )}
-      {!isLoggedIn && <RoomMateBottomBar />}
+      {!isLoggedIn && <RoomMateBottomBar partnerName={boardData.userName} />}
     </RoomMateDetailPageWrapper>
   );
 }

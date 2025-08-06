@@ -1,6 +1,6 @@
 // TipWritePage.tsx
 import styled from "styled-components";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { IoCloseSharp } from "react-icons/io5";
 import { MdImage } from "react-icons/md";
 import { useEffect, useRef, useState } from "react";
@@ -14,16 +14,24 @@ export default function TipWritePage() {
   const [images, setImages] = useState<File[]>([]);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-
+  const location = useLocation();
+  const { tip } = location.state || {};
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
+  useEffect(() => {
+    if (tip) {
+      setTitle(tip.title);
+      setContent(tip.content);
+    }
+  }, [tip]);
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const fileList = Array.from(e.target.files);
-      setImages(prev => [...prev, ...fileList].slice(0, 10));
+      setImages((prev) => [...prev, ...fileList].slice(0, 10));
     }
   };
 
@@ -71,7 +79,6 @@ export default function TipWritePage() {
       }
     }
   };
-
 
   return (
     <Wrapper>

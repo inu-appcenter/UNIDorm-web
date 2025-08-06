@@ -2,7 +2,7 @@ import HeartIcon from "../../assets/heart.svg";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { RoomMateCardProps } from "../../types/roommates.ts";
-import 매칭완료 from "../../assets/roommate/매칭완료.png";
+import 매칭완료 from "../../assets/roommate/매칭완료2.svg";
 
 const RoomMateCard = ({
   boardId,
@@ -124,7 +124,7 @@ const RightBottomBadge = styled.img.attrs({
   z-index: 2;
   pointer-events: none;
   opacity: 1;
-  transform: rotate(25deg);
+  //transform: rotate(25deg);
 `;
 
 const LeftCircle = styled.div.withConfig({

@@ -98,6 +98,8 @@ function App() {
 
           <Route path="/home" element={<HomePage />} />
           <Route path="/roommate" element={<RoomMatePage />} />
+          <Route path="/myroommate" element={<MyRoomMatePage />} />
+
           <Route path="/groupPurchase" element={<GroupPurchaseMainPage />} />
           <Route
             path="/groupPurchase/comingsoon"
@@ -142,7 +144,6 @@ function App() {
             path="/groupPurchase/write"
             element={<GroupPurchaseWritePage />}
           />
-          <Route path="/myroommate" element={<MyRoomMatePage />} />
           <Route path="/roommateadd" element={<RoomMateAddPage />} />
           <Route path="/admin" element={<AdminMainPage />} />
           <Route path="/admin/calendar" element={<CalendarAdminPage />} />
