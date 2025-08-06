@@ -43,7 +43,7 @@ const Button = ({
   const handleClick = () => {
     onClick();
   };
-
+  console.log(badgeCount);
   return (
     <ButtonWrapper onClick={handleClick}>
       {showTooltip && onTooltipClose && (
@@ -55,11 +55,11 @@ const Button = ({
 
       <BadgeWrapper>
         <img src={isActive ? clickedImg : defaultImg} alt={buttonName} />
-        {badgeCount && badgeCount > 0 ? (
-          <Badge>{badgeCount > 9 ? "9+" : badgeCount}</Badge>
-        ) : (
-          <></>
-        )}
+        {/*{badgeCount && badgeCount > 0 ? (*/}
+        {/*  <Badge>{badgeCount > 9 ? "9+" : badgeCount}</Badge>*/}
+        {/*) : (*/}
+        {/*  <></>*/}
+        {/*)}*/}
       </BadgeWrapper>
 
       <div className={`BtnName ${isActive ? "active" : ""}`}>{buttonName}</div>
@@ -94,26 +94,26 @@ const BadgeWrapper = styled.div`
   display: inline-block;
 `;
 
-const Badge = styled.div`
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  min-width: 16px;
-  height: 16px;
-  //padding: 0 4px;
-
-  background-color: #ffc400; /* 노란색 */
-  color: black; /* 검정 글자 */
-  font-size: 10px;
-  font-weight: 500;
-  border-radius: 50%;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  //box-shadow: 0 0 0 1px white; /* 흰색 외곽선으로 뱃지가 더 잘 보이게 */
-`;
+// const Badge = styled.div`
+//   position: absolute;
+//   top: -8px;
+//   right: -8px;
+//   min-width: 16px;
+//   height: 16px;
+//   //padding: 0 4px;
+//
+//   background-color: #ffc400; /* 노란색 */
+//   color: black; /* 검정 글자 */
+//   font-size: 10px;
+//   font-weight: 500;
+//   border-radius: 50%;
+//
+//   display: flex;
+//   align-items: center;
+//   justify-content: center;
+//
+//   //box-shadow: 0 0 0 1px white; /* 흰색 외곽선으로 뱃지가 더 잘 보이게 */
+// `;
 
 export default function BottomBar() {
   const location = useLocation();
