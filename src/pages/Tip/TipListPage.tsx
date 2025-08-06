@@ -48,7 +48,7 @@ export default function TipListPage() {
                   hour: "2-digit",
                   minute: "2-digit",
                 }), // ✅ 시간 표시 포맷
-                scrap: tip.tipLikeCount,
+                like: tip.tipLikeCount,
                 comment: tip.tipCommentCount,
               }}
               onClick={() => navigate(`/tips/${tip.boardId}`)}

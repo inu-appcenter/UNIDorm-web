@@ -4,7 +4,7 @@ import styled from "styled-components";
 import { BsSend, BsThreeDotsVertical } from "react-icons/bs";
 import { FaRegHeart, FaUserCircle } from "react-icons/fa";
 import Header from "../../components/common/Header";
-import tokenInstance from "../../apis/tokenInstance"; // ← 반드시 tokenInstance로!
+import tokenInstance from "../../apis/tokenInstance";
 import { useSwipeable } from "react-swipeable";
 import axiosInstance from "../../apis/axiosInstance.ts";
 
@@ -25,6 +25,7 @@ interface TipDetail {
   tipLikeUserList: number[];
   createDate: string;
   tipCommentDtoList: TipComment[];
+  checkLikeCurrentUser: boolean; // ← 서버 응답에 포함
 }
 
 export default function TipDetailPage() {
@@ -37,11 +38,12 @@ export default function TipDetailPage() {
   const [commentInput, setCommentInput] = useState("");
   const [replyInputs, setReplyInputs] = useState<{ [key: number]: string }>({});
   const [replyOpen, setReplyOpen] = useState<{ [key: number]: boolean }>({});
-  const [userInfo] = useState<{
-    name: string;
-    profileImageUrl: string;
-  } | null>(null);
+  const [userInfo] = useState<{ name: string; profileImageUrl: string } | null>(null);
   const [images, setImages] = useState<string[]>([]);
+
+  // 좋아요 상태
+  const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -49,25 +51,25 @@ export default function TipDetailPage() {
       fetchTipDetail(boardId);
       fetchTipImages(boardId);
     }
-    // fetchUserInfo();
     // eslint-disable-next-line
   }, [boardId]);
 
-  // ----------- 여기가 핵심 수정!
+  // --- 게시글 불러오기 및 좋아요 반영
   const fetchTipDetail = async (boardId: string) => {
     try {
       const res = await axiosInstance.get(`/tips/${boardId}`);
-      console.log(res.data);
       setTip(res.data);
+      setLikeCount(res.data.tipLikeCount);
+      setLiked(res.data.checkLikeCurrentUser ?? false);
     } catch (err) {
       console.error("게시글 불러오기 실패", err);
     }
   };
 
+  // --- 이미지 불러오기
   const fetchTipImages = async (boardId: string) => {
     try {
       const res = await axiosInstance.get(`/tips/${boardId}/image`);
-      // fileName이 진짜 이미지 url임!
       const urls = res.data.map((img: any) => img.fileName);
       setImages(urls);
     } catch (err) {
@@ -75,18 +77,7 @@ export default function TipDetailPage() {
     }
   };
 
-  // const fetchUserInfo = async () => {
-  //   try {
-  //     const userRes = await tokenInstance.get("/users");
-  //     const imageRes = await tokenInstance.get("/users/image", {
-  //       responseType: "blob",
-  //     });
-  //     const imageUrl = URL.createObjectURL(imageRes.data);
-  //     setUserInfo({ name: userRes.data.name, profileImageUrl: imageUrl });
-  //   } catch (err) {}
-  // };
-
-  // 게시글 삭제
+  // --- 게시글 삭제
   const handleDelete = async () => {
     if (!boardId) return;
     if (!window.confirm("정말 삭제하시겠습니까?")) return;
@@ -99,7 +90,19 @@ export default function TipDetailPage() {
     }
   };
 
-  // 댓글 등록
+  // --- 좋아요 토글 (POST 요청)
+  const handleLike = async () => {
+    if (!boardId) return;
+    try {
+      await tokenInstance.post(`/tips/${boardId}/like`);
+      setLiked((prev) => !prev);
+      setLikeCount((prev) => prev + (liked ? -1 : 1));
+    } catch (err) {
+      alert("좋아요 실패!");
+    }
+  };
+
+  // --- 댓글 등록
   const handleCommentSubmit = async () => {
     if (!commentInput.trim()) return;
     try {
@@ -115,7 +118,7 @@ export default function TipDetailPage() {
     }
   };
 
-  // 대댓글 등록
+  // --- 대댓글 등록
   const handleReplySubmit = async (parentCommentId: number) => {
     const replyInput = replyInputs[parentCommentId];
     if (!replyInput?.trim()) return;
@@ -133,62 +136,43 @@ export default function TipDetailPage() {
     }
   };
 
-  //이미지 넘기기
+  // --- 이미지 슬라이더
   const [currentImage, setCurrentImage] = useState(0);
-
-  // 슬라이드 핸들러 세팅
   const handlers = useSwipeable({
-    onSwipedLeft: () =>
-      setCurrentImage((idx) => Math.min(images.length - 1, idx + 1)),
+    onSwipedLeft: () => setCurrentImage((idx) => Math.min(images.length - 1, idx + 1)),
     onSwipedRight: () => setCurrentImage((idx) => Math.max(0, idx - 1)),
-    trackMouse: true, // PC에서 마우스 드래그도 허용하려면
+    trackMouse: true,
   });
 
   return (
     <Wrapper>
       <Header title="기숙사 꿀팁" hasBack={true} showAlarm={true} />
-
       <ScrollArea>
         <Content>
           {tip && (
             <>
               <UserInfo>
                 {userInfo?.profileImageUrl ? (
-                  <img
-                    src={userInfo.profileImageUrl}
-                    alt="프사"
-                    style={{ width: 36, height: 36, borderRadius: "50%" }}
-                  />
+                  <img src={userInfo.profileImageUrl} alt="프사" style={{ width: 36, height: 36, borderRadius: "50%" }} />
                 ) : (
                   <FaUserCircle size={36} color="#ccc" />
                 )}
                 <UserText>
                   <Nickname>{userInfo?.name || "익명"}</Nickname>
-                  <DateText>
-                    {tip?.createDate || "날짜 불러오는 중..."}
-                  </DateText>
+                  <DateText>{tip?.createDate || "날짜 불러오는 중..."}</DateText>
                 </UserText>
                 <Spacer />
-                <BsThreeDotsVertical
-                  size={18}
-                  onClick={() => setMenuOpen(!menuOpen)}
-                />
+                <BsThreeDotsVertical size={18} onClick={() => setMenuOpen(!menuOpen)} />
                 {menuOpen && (
                   <Menu>
-                    <MenuItem
-                      onClick={() => alert("수정하기는 아직 구현 안됨!")}
-                    >
-                      수정하기
-                    </MenuItem>
+                    <MenuItem onClick={() => alert("수정하기는 아직 구현 안됨!")}>수정하기</MenuItem>
                     <MenuItem onClick={handleDelete}>삭제하기</MenuItem>
                   </Menu>
                 )}
               </UserInfo>
 
-              {/* 이미지가 하나 이상 있을 때만 보여줌 */}
               {images.length > 0 && (
                 <ImageSlider {...handlers} style={{ touchAction: "pan-y" }}>
-                  {/* ...이하 슬라이더 내부 동일 */}
                   <SliderItem>
                     <img
                       src={images[currentImage]}
@@ -214,15 +198,16 @@ export default function TipDetailPage() {
 
               <Title>{tip.title}</Title>
               <BodyText>{tip.content}</BodyText>
-
               <Divider />
 
-              <LikeBox>
-                <FaRegHeart /> 좋아요 {tip.tipLikeCount ?? 0}
+              {/* 좋아요 영역 */}
+              <LikeBox onClick={handleLike} style={{ cursor: "pointer" }}>
+                <FaRegHeart style={{ color: liked ? "#e25555" : "#bbb" }} size={18} />
+                좋아요 {likeCount}
               </LikeBox>
-
               <Divider />
 
+              {/* 댓글 리스트 */}
               <CommentList>
                 {tip.tipCommentDtoList
                   ?.filter((c) => c.parentId === 0 || c.parentId === null)
@@ -236,12 +221,7 @@ export default function TipDetailPage() {
                             <CommentText>{comment.reply}</CommentText>
                             <DateText>
                               {comment.createdDate
-                                ? new Date(
-                                    comment.createdDate,
-                                  ).toLocaleTimeString([], {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  })
+                                ? new Date(comment.createdDate).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
                                 : "방금"}
                             </DateText>
                           </CommentBody>
@@ -250,8 +230,7 @@ export default function TipDetailPage() {
                               onClick={() =>
                                 setReplyOpen((prev) => ({
                                   ...prev,
-                                  [comment.tipCommentId]:
-                                    !prev[comment.tipCommentId],
+                                  [comment.tipCommentId]: !prev[comment.tipCommentId],
                                 }))
                               }
                             >
@@ -272,16 +251,9 @@ export default function TipDetailPage() {
                                 [comment.tipCommentId]: e.target.value,
                               }))
                             }
-                            onKeyDown={(e) =>
-                              e.key === "Enter" &&
-                              handleReplySubmit(comment.tipCommentId)
-                            }
+                            onKeyDown={(e) => e.key === "Enter" && handleReplySubmit(comment.tipCommentId)}
                           />
-                          <ReplySendButton
-                            onClick={() =>
-                              handleReplySubmit(comment.tipCommentId)
-                            }
-                          >
+                          <ReplySendButton onClick={() => handleReplySubmit(comment.tipCommentId)}>
                             <BsSend size={16} />
                           </ReplySendButton>
                         </ReplyInputArea>
@@ -298,9 +270,7 @@ export default function TipDetailPage() {
                                 <CommentText>{reply.reply}</CommentText>
                                 <DateText>
                                   {reply.createdDate
-                                    ? new Date(
-                                        reply.createdDate,
-                                      ).toLocaleTimeString([], {
+                                    ? new Date(reply.createdDate).toLocaleTimeString([], {
                                         hour: "2-digit",
                                         minute: "2-digit",
                                       })
@@ -318,6 +288,7 @@ export default function TipDetailPage() {
         </Content>
       </ScrollArea>
 
+      {/* 댓글 입력창 */}
       <CommentInput>
         <input
           placeholder="댓글 입력"
@@ -325,16 +296,13 @@ export default function TipDetailPage() {
           onChange={(e) => setCommentInput(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
-              e.preventDefault(); // <- 이거 추가!
+              e.preventDefault();
               handleCommentSubmit();
             }
           }}
         />
         <SendButton onClick={handleCommentSubmit}>
-          <BsSend
-            size={18}
-            style={{ color: "black", backgroundColor: "white", padding: "4px" }}
-          />
+          <BsSend size={18} style={{ color: "black", backgroundColor: "white", padding: "4px" }} />
         </SendButton>
       </CommentInput>
     </Wrapper>
