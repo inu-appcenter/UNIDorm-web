@@ -117,6 +117,16 @@ export default function ChattingPage() {
   const handleSendMessage = () => {
     if (!inputValue.trim()) return;
 
+    // ✅ 웹소켓 연결 상태 확인
+    if (!isConnected) {
+      console.error("웹소켓이 연결되지 않았습니다. 메시지를 보낼 수 없습니다.");
+      alert(
+        "메시지 전송 실패!\n채팅방을 나갔다가 다시 들어와서 시도해 보세요.",
+      );
+      // 사용자에게 메시지 전송 실패를 알리는 추가 로직 (예: 알림창)
+      return;
+    }
+
     const now = new Date().toLocaleTimeString("ko-KR", {
       hour: "2-digit",
       minute: "2-digit",

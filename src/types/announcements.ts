@@ -1,4 +1,6 @@
 export interface Announcement {
+  emergency: boolean;
+  content: string;
   id: number;
   title: string;
   createdDate: string;
@@ -26,6 +28,7 @@ export interface RequestAnnouncementDto {
   title: string;
   writer: string;
   content: string;
+  isEmergency: boolean;
 }
 
 export interface AnnouncementUpdateRequest {

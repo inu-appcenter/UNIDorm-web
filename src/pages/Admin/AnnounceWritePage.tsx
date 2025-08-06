@@ -16,6 +16,8 @@ export default function AnnounceWritePage() {
   const { announce } = location.state || {};
   const [title, setTitle] = useState(announce?.title || "");
   const [content, setContent] = useState(announce?.content || "");
+  const [writer, setWriter] = useState(announce?.writer || "관리자");
+  const [isEmergency, setIsEmergency] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -33,8 +35,9 @@ export default function AnnounceWritePage() {
   const handleSubmit = async () => {
     const data: RequestAnnouncementDto = {
       title,
-      writer: "관리자",
+      writer,
       content,
+      isEmergency,
     };
 
     try {
@@ -71,7 +74,12 @@ export default function AnnounceWritePage() {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
-
+        <Label>작성자</Label>
+        <Input
+          placeholder="입력하지 않으면 기본값은 '관리자'입니다."
+          value={writer}
+          onChange={(e) => setWriter(e.target.value)}
+        />
         <Label>내용</Label>
         <Textarea
           placeholder="내용을 입력해주세요"
@@ -91,6 +99,17 @@ export default function AnnounceWritePage() {
             onChange={handleFileChange}
           />
         </FileBox>
+
+        <Label>긴급 여부</Label>
+        <CheckBoxWrapper>
+          <input
+            type="checkbox"
+            id="emergency"
+            checked={isEmergency}
+            onChange={(e) => setIsEmergency(e.target.checked)}
+          />
+          <label htmlFor="emergency">긴급 공지로 설정</label>
+        </CheckBoxWrapper>
       </Content>
 
       {/*<SubmitButton onClick={handleSubmit}>등록하기</SubmitButton>*/}
@@ -196,4 +215,21 @@ const ButtonWrapper = styled.div`
 
   bottom: 0;
   left: 0;
+`;
+
+const CheckBoxWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  input {
+    width: 18px;
+    height: 18px;
+    accent-color: #ff5555; /* 빨간색 강조 (긴급 느낌) */
+  }
+
+  label {
+    font-size: 14px;
+    color: #333;
+  }
 `;

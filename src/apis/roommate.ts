@@ -121,6 +121,15 @@ export const getOpponentChecklist = async (
   return response;
 };
 
+export const getMyChecklist = async (): Promise<
+  AxiosResponse<RoommatePost>
+> => {
+  const response = await tokenInstance.get<RoommatePost>(
+    `/roommates/my-checklist`,
+  );
+  return response;
+};
+
 export const deleteRoommateChatRoom = async (
   chatRoomId: number,
 ): Promise<AxiosResponse<void>> => {
