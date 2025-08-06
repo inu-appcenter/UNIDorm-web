@@ -15,6 +15,8 @@ import roommateClicked from "../../assets/bottombar/roommate-clicked.svg";
 import mypageClicked from "../../assets/bottombar/mypage-clicked.svg";
 import TooltipMessage from "./TooltipMessage.tsx";
 import { useState } from "react";
+import useUserStore from "../../stores/useUserStore.ts";
+import { getMyRoommateInfo } from "../../apis/roommate.ts";
 
 interface ButtonProps {
   defaultImg: string;
@@ -80,6 +82,8 @@ export default function BottomBar() {
   const location = useLocation();
   const navigate = useNavigate();
   const pathname = location.pathname;
+  const { tokenInfo } = useUserStore();
+  const isLoggedIn = Boolean(tokenInfo.accessToken);
 
   const [showTooltip, setShowTooltip] = useState(() => {
     const stored = localStorage.getItem("showRoommateTooltip");
@@ -112,9 +116,22 @@ export default function BottomBar() {
         defaultImg={roommate}
         clickedImg={roommateClicked}
         buttonName="룸메이트"
-        isActive={pathname === "/roommate"}
+        isActive={pathname === "/roommate" || pathname === "/myroommate"}
         onClick={() => {
-          navigate("/roommate");
+          const fetchRoommateInfo = async () => {
+            if (!isLoggedIn) {
+              navigate("/roommate");
+              return;
+            }
+            try {
+              await getMyRoommateInfo();
+              navigate("/myroommate");
+            } catch (err: any) {
+              navigate("/roommate");
+              console.log(err);
+            }
+          };
+          fetchRoommateInfo();
         }}
         showTooltip={showTooltip}
         onTooltipClose={hideTooltip}

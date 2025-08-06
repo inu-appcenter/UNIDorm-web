@@ -38,23 +38,39 @@ export default function TipListPage() {
         }
       >
         <CardList>
-          {tips.map((tip) => (
-            <TipCard
-              key={tip.boardId}
-              tip={{
-                id: tip.boardId,
-                title: tip.title,
-                content: tip.content,
-                time: new Date(tip.createDate).toLocaleTimeString("ko-KR", {
+          {tips.map((tip) => {
+            const createDate = new Date(tip.createDate);
+            const today = new Date();
+            const isToday =
+              createDate.getFullYear() === today.getFullYear() &&
+              createDate.getMonth() === today.getMonth() &&
+              createDate.getDate() === today.getDate();
+
+            const time = isToday
+              ? createDate.toLocaleTimeString("ko-KR", {
                   hour: "2-digit",
                   minute: "2-digit",
-                }), // ✅ 시간 표시 포맷
-                like: tip.tipLikeCount,
-                comment: tip.tipCommentCount,
-              }}
-              onClick={() => navigate(`/tips/${tip.boardId}`)}
-            />
-          ))}
+                })
+              : createDate.toLocaleDateString("ko-KR", {
+                  month: "2-digit",
+                  day: "2-digit",
+                });
+
+            return (
+              <TipCard
+                key={tip.boardId}
+                tip={{
+                  boardId: tip.boardId,
+                  title: tip.title,
+                  content: tip.content,
+                  time: time,
+                  like: tip.tipLikeCount,
+                  comment: tip.tipCommentCount,
+                }}
+                onClick={() => navigate(`/tips/${tip.boardId}`)}
+              />
+            );
+          })}
         </CardList>
       </TitleContentArea>
 

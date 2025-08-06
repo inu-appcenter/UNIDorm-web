@@ -11,7 +11,7 @@ import {
   unlikeRoommateBoard,
 } from "../../apis/roommate.ts";
 
-const RoomMateBottomBar = () => {
+const RoomMateBottomBar = ({ partnerName }: { partnerName: string }) => {
   const { boardId } = useParams<{ boardId: string }>();
 
   const { tokenInfo, userInfo } = useUserStore();
@@ -94,7 +94,7 @@ const RoomMateBottomBar = () => {
       const res = await createRoommateChatRoom(Number(boardId));
       const chatRoomId = res.data;
 
-      navigate(`/chat/roommate/${chatRoomId}`);
+      navigate(`/chat/roommate/${chatRoomId}`, { state: { partnerName } });
     } catch (error) {
       console.error("채팅방 생성 실패", error);
       alert("채팅방을 생성할 수 없습니다.");
