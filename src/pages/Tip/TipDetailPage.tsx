@@ -287,7 +287,7 @@ export default function TipDetailPage() {
                       <Comment>
                         {/*<FaUserCircle size={32} color="#ccc" />*/}
                         <img
-                          src={tip.writerImageFile}
+                          src={comment.writerImageFile}
                           alt="프사"
                           style={{
                             width: 32,

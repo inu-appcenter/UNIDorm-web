@@ -4,7 +4,10 @@ import RoomMateCard from "../../components/roommate/RoomMateCard.tsx";
 import Header from "../../components/common/Header.tsx";
 import { useEffect, useState } from "react";
 import { RoommatePost, SimilarRoommatePost } from "../../types/roommates.ts";
-import { getRoomMateList, getSimilarRoomMateList } from "../../apis/roommate.ts";
+import {
+  getRoomMateList,
+  getSimilarRoomMateList,
+} from "../../apis/roommate.ts";
 
 import { useNavigate } from "react-router-dom";
 import useUserStore from "../../stores/useUserStore.ts"; // 추가 필요
