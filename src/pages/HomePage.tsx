@@ -180,19 +180,18 @@ export default function HomePage() {
           children={
             <NotiWrapper>
               {notices.length > 0 ? (
-                notices.slice(0, 2).map((notice) => (
-                  <HomeNoticeCard
-                    key={notice.id ?? notice.title}
-                    id={notice.id}
-                    title={notice.title}
-                    content={
-                      // notice.content || "공지사항 내용이 들어갈 자리입니다"
-                      "공지사항 내용이 들어갈 자리입니다"
-                    }
-                    isEmergency={false}
-                    createdDate={notice.createdDate}
-                  />
-                ))
+                notices
+                  .slice(0, 2)
+                  .map((notice) => (
+                    <HomeNoticeCard
+                      key={notice.id ?? notice.title}
+                      id={notice.id}
+                      title={notice.title}
+                      content={notice.content}
+                      isEmergency={notice.emergency}
+                      createdDate={notice.createdDate}
+                    />
+                  ))
               ) : (
                 <EmptyMessage>공지사항이 없습니다.</EmptyMessage>
               )}

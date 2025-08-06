@@ -74,7 +74,18 @@ const ChatInfo = ({ selectedTab, partnerName, roomId }: ChatInfoProps) => {
       </ContentWrapper>
       <FunctionWrapper>
         {selectedTab === "룸메이트" && (
-          <RoundSquareBlueButton btnName={"룸메 신청"} />
+          <RoundSquareBlueButton
+            btnName={"룸메 신청"}
+            onClick={() => {
+              if (
+                window.confirm(
+                  "상대방의 학번을 확인하셨나요?\n룸메이트 신청은 상대방의 학번 정보를 통해 이루어집니다.\n확인 버튼을 누르면 룸메이트 등록 화면으로 이동합니다.",
+                )
+              ) {
+                navigate("/roommateadd");
+              }
+            }}
+          />
         )}
         {menuItems && <TopRightDropdownMenu items={menuItems} />}
       </FunctionWrapper>

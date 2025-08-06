@@ -6,6 +6,7 @@ import IconTextButton from "../../components/button/IconTextButton.tsx";
 import StyledTextArea from "../../components/roommate/StyledTextArea.tsx";
 import RoomMateInfoArea from "../../components/roommate/RoomMateInfoArea.tsx";
 import {
+  cancelRoommateMatching,
   deleteMyRoommateRules,
   getMyRoommateInfo,
   getMyRoommateRules,
@@ -20,6 +21,7 @@ import {
   putUserTimetableImage,
 } from "../../apis/members.ts";
 import RoundSquareWhiteButton from "../../components/button/RoundSquareWhiteButton.tsx";
+import { useNavigate } from "react-router-dom";
 
 export default function MyRoomMatePage() {
   const [roommateInfo, setRoommateInfo] =
@@ -28,6 +30,7 @@ export default function MyRoomMatePage() {
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
+  const navigate = useNavigate();
 
   const [showQuickModal, setShowQuickModal] = useState(false);
 
@@ -47,7 +50,23 @@ export default function MyRoomMatePage() {
             `정말 ${roommateInfo?.name}님과의 룸메이트 관계를 끊으시겠어요?`,
           )
         ) {
-          alert("룸메이트 끊기 기능 구현 예정");
+          const matchingId = roommateInfo?.matchingId;
+          if (!matchingId) {
+            alert("룸메이트 관계 끊기를 실패했습니다.");
+
+            return;
+          }
+          cancelRoommateMatching(matchingId)
+            .then(() => {
+              alert(
+                `${roommateInfo?.name}님과의 룸메이트 관계가 해제되었습니다.`,
+              );
+              navigate("/home");
+            })
+            .catch((error) => {
+              alert("룸메이트 관계 끊기를 실패했습니다.");
+              console.error(error);
+            });
         }
       },
     },

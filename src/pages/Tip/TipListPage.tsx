@@ -29,7 +29,12 @@ export default function TipListPage() {
 
   return (
     <TipPageWrapper>
-      <Header title="기숙사 꿀팁" hasBack={true} showAlarm={true} />
+      <Header
+        title="기숙사 꿀팁"
+        hasBack={true}
+        backPath={"/home"}
+        showAlarm={true}
+      />
 
       <TitleContentArea
         title="기숙사 꿀팁"
