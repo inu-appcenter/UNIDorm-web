@@ -32,6 +32,10 @@ tokenInstance.interceptors.response.use(
   },
   async (error) => {
     const originalRequest = error.config;
+    if (error.response && error.response.status === 502) {
+      alert("네트워크 연결이 불안정하거나, 서버 점검 중입니다.");
+      return Promise.reject(error);
+    }
     if (
       error.response &&
       error.response.status === 403 &&

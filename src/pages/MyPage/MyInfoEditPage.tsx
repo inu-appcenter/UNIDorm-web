@@ -107,7 +107,13 @@ export default function MyInfoEditPage() {
       console.log(response);
 
       if (response.status === 200) {
-        alert("회원정보 수정을 성공하였습니다.");
+        if (isFirstVisit) {
+          alert(
+            "회원정보 저장을 성공하였습니다.\nUNI Dorm에 오신 것을 환영합니다!",
+          );
+        } else {
+          alert("회원정보 수정을 성공하였습니다.");
+        }
         try {
           const response = await getMemberInfo();
           console.log(response);
@@ -182,51 +188,65 @@ export default function MyInfoEditPage() {
   return (
     <LoginPageWrapper>
       <Header
-        title={"회원정보 수정"}
+        title={isFirstVisit ? "회원정보 입력" : "회원정보 수정"}
         hasBack={!isFirstVisit}
         showAlarm={false}
-        menuItems={menuItems}
+        menuItems={!isFirstVisit ? menuItems : undefined}
       />
+
       <ContentWrapper>
         {/* 프로필 이미지 업로드 */}
-        <TitleContentArea
-          title={"프로필 사진"}
-          description={
-            "프로필 이미지 변경을 원하시는 경우에만 이미지 선택 후 변경하기 버튼을 눌러주세요."
-          }
-          children={
-            <ImageUploadContainer>
-              <ImageSelectRow>
-                <ProfileImageWrapper>
-                  {previewUrl ? (
-                    <ProfileImage src={previewUrl} alt="프로필 미리보기" />
-                  ) : (
-                    <DefaultProfileImage />
-                  )}
-                </ProfileImageWrapper>
+        {!isFirstVisit && (
+          <TitleContentArea
+            title={"프로필 사진"}
+            description={
+              "프로필 이미지 변경을 원하시는 경우에만 이미지 선택 후 변경하기 버튼을 눌러주세요."
+            }
+            children={
+              <ImageUploadContainer>
+                <ImageSelectRow>
+                  <ProfileImageWrapper>
+                    {previewUrl ? (
+                      <ProfileImage src={previewUrl} alt="프로필 미리보기" />
+                    ) : (
+                      <DefaultProfileImage />
+                    )}
+                  </ProfileImageWrapper>
 
-                <FileInputLabel htmlFor="profileImageInput">
-                  이미지 선택
-                </FileInputLabel>
-                <HiddenFileInput
-                  id="profileImageInput"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                />
-              </ImageSelectRow>
-
-              {imageFile && (
-                <UploadButtonWrapper>
-                  <RoundSquareBlueButton
-                    btnName="이미지 변경하기"
-                    onClick={handleUploadImage}
+                  <FileInputLabel htmlFor="profileImageInput">
+                    이미지 선택
+                  </FileInputLabel>
+                  <HiddenFileInput
+                    id="profileImageInput"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
                   />
-                </UploadButtonWrapper>
-              )}
-            </ImageUploadContainer>
-          }
-        />
+                </ImageSelectRow>
+
+                {imageFile && (
+                  <UploadButtonWrapper>
+                    <RoundSquareBlueButton
+                      btnName="이미지 변경하기"
+                      onClick={handleUploadImage}
+                    />
+                  </UploadButtonWrapper>
+                )}
+              </ImageUploadContainer>
+            }
+          />
+        )}
+        {isFirstVisit && (
+          <TitleContentArea
+            title={""}
+            description={
+              "서비스 이용에 반드시 필요한 정보입니다! " +
+              "이 페이지를 나가지 마시고 아래 정보를 꼭 입력해주세요."
+            }
+            children={<></>}
+          />
+        )}
+
         <TitleContentArea
           title={"학번 정보"}
           children={
@@ -253,6 +273,11 @@ export default function MyInfoEditPage() {
 
         <TitleContentArea
           title={"기숙사 종류"}
+          description={
+            !isFirstVisit
+              ? "기숙사 종류 또는 단과대학을 변경하시는 경우, 체크리스트를 다시 한 번 작성해주셔야 새로운 정보가 반영됩니다."
+              : ""
+          }
           children={
             <ToggleGroup
               Groups={dormitory}
@@ -275,7 +300,7 @@ export default function MyInfoEditPage() {
 
       <ButtonWrapper>
         <SquareButton
-          text="수정하기"
+          text={isFirstVisit ? "저장하기" : "수정하기"}
           disabled={!isFilled()}
           onClick={handleSubmit}
         />

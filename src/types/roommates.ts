@@ -116,6 +116,7 @@ export interface MyRoommateInfoResponse {
   dormType: string;
   college: string;
   imagePath: string;
+  matchingId: number;
 }
 
 export interface RoommateRulesResponse {

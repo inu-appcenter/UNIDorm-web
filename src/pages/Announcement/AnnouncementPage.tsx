@@ -20,6 +20,7 @@ export default function AnnouncementPage() {
     async function fetchAnnouncements() {
       try {
         const response = await getAnnouncements();
+        console.log(response.data);
         setNotices(response.data);
       } catch (error) {
         console.error("공지사항 불러오기 실패", error);
@@ -55,14 +56,9 @@ export default function AnnouncementPage() {
             >
               <NoticeTop>
                 <NoticeTitle>{notice.title}</NoticeTitle>
-                {/*{notice.isUrgent && <UrgentBadge>긴급</UrgentBadge>}*/}
-                {<UrgentBadge>긴급</UrgentBadge>}
+                {notice.emergency && <UrgentBadge>긴급</UrgentBadge>}
               </NoticeTop>
-              <NoticeContent>
-                {/*{notice.content ||*/}
-                {/*  "공지사항 내용입니다공지사항 내용입니다공지사항 내용입니다"}*/}
-                {"공지사항 내용입니다공지사항 내용입니다공지사항 내용입니다"}
-              </NoticeContent>
+              <NoticeContent>{notice.content}</NoticeContent>
               <NoticeBottom>
                 <BsEye size={16} /> {0}
                 {/*{notice.scrap || 0}*/}

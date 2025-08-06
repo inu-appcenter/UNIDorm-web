@@ -14,9 +14,10 @@ import homeClicked from "../../assets/bottombar/home-clicked.svg";
 import roommateClicked from "../../assets/bottombar/roommate-clicked.svg";
 import mypageClicked from "../../assets/bottombar/mypage-clicked.svg";
 import TooltipMessage from "./TooltipMessage.tsx";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import useUserStore from "../../stores/useUserStore.ts";
 import { getMyRoommateInfo } from "../../apis/roommate.ts";
+import { getRoommateChatRooms } from "../../apis/chat.ts";
 
 interface ButtonProps {
   defaultImg: string;
@@ -26,6 +27,7 @@ interface ButtonProps {
   onClick: () => void;
   showTooltip?: boolean;
   onTooltipClose?: () => void;
+  badgeCount?: number;
 }
 
 const Button = ({
@@ -36,6 +38,7 @@ const Button = ({
   onClick,
   showTooltip = false,
   onTooltipClose,
+  badgeCount,
 }: ButtonProps) => {
   const handleClick = () => {
     onClick();
@@ -50,7 +53,15 @@ const Button = ({
         />
       )}
 
-      <img src={isActive ? clickedImg : defaultImg} alt={buttonName} />
+      <BadgeWrapper>
+        <img src={isActive ? clickedImg : defaultImg} alt={buttonName} />
+        {badgeCount && badgeCount > 0 ? (
+          <Badge>{badgeCount > 9 ? "9+" : badgeCount}</Badge>
+        ) : (
+          <></>
+        )}
+      </BadgeWrapper>
+
       <div className={`BtnName ${isActive ? "active" : ""}`}>{buttonName}</div>
     </ButtonWrapper>
   );
@@ -78,12 +89,52 @@ const ButtonWrapper = styled.div`
   }
 `;
 
+const BadgeWrapper = styled.div`
+  position: relative;
+  display: inline-block;
+`;
+
+const Badge = styled.div`
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  min-width: 16px;
+  height: 16px;
+  //padding: 0 4px;
+
+  background-color: #ffc400; /* 노란색 */
+  color: black; /* 검정 글자 */
+  font-size: 10px;
+  font-weight: 500;
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  //box-shadow: 0 0 0 1px white; /* 흰색 외곽선으로 뱃지가 더 잘 보이게 */
+`;
+
 export default function BottomBar() {
   const location = useLocation();
   const navigate = useNavigate();
   const pathname = location.pathname;
   const { tokenInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
+  const [roommateChatCount, setRoommateChatCount] = useState<number>(0);
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    console.log("채팅방 수 받아오기 시도");
+
+    getRoommateChatRooms()
+      .then((res) => {
+        setRoommateChatCount(res.data.length);
+      })
+      .catch((err) => {
+        console.error("룸메이트 채팅방 목록 조회 실패", err);
+      });
+  }, [pathname]);
 
   const [showTooltip, setShowTooltip] = useState(() => {
     const stored = localStorage.getItem("showRoommateTooltip");
@@ -149,7 +200,9 @@ export default function BottomBar() {
         buttonName="채팅"
         isActive={pathname === "/chat"}
         onClick={() => navigate("/chat")}
+        badgeCount={roommateChatCount}
       />
+
       <Button
         defaultImg={mypage}
         clickedImg={mypageClicked}
