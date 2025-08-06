@@ -1,15 +1,15 @@
 // src/components/tip/TipCard.tsx
 
 import styled from "styled-components";
-import { FaRegComment, FaRegBookmark } from "react-icons/fa";
+import { FaRegComment, FaRegHeart} from "react-icons/fa";
 
 interface TipCardProps {
   tip: {
-    id: number;
+    boardId: number;
     title: string;
     content: string;
     time: string;
-    scrap: number;
+    like: number;
     comment: number;
   }
   onClick: () => void;
@@ -26,8 +26,8 @@ export default function TipCard({ tip, onClick }: TipCardProps) {
       </TopRow>
       <Content>{tip.content}</Content>
       <BottomRow>
-        <FaRegBookmark size={14} />
-        <IconText>{tip.scrap}</IconText>
+        <FaRegHeart size={14} />
+        <IconText>{tip.like}</IconText>
         <FaRegComment size={14} style={{ marginLeft: "12px" }} />
         <IconText>{tip.comment}</IconText>
       </BottomRow>
