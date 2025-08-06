@@ -18,9 +18,11 @@ interface TipComment {
   createdDate?: string;
   name: string;
   profileImageUrl: string;
+  writerImageFile: string;
 }
 
 interface TipDetail {
+  writerImageFile: string;
   boardId: number;
   title: string;
   content: string;
@@ -50,8 +52,35 @@ export default function TipDetailPage() {
   const [likeCount, setLikeCount] = useState(0);
   const [ismypost, setismypost] = useState(false);
 
+  const [isneedupdate, setisneedupdate] = useState(false);
+
   useEffect(() => {
     window.scrollTo(0, 0);
+
+    // --- 게시글 불러오기 및 좋아요 반영
+    const fetchTipDetail = async (boardId: string) => {
+      try {
+        const res = await axiosInstance.get(`/tips/${boardId}`);
+        console.log(res);
+        setTip(res.data);
+        setLikeCount(res.data.tipLikeCount);
+        setLiked(res.data.checkLikeCurrentUser ?? false);
+      } catch (err) {
+        console.error("게시글 불러오기 실패", err);
+      }
+    };
+
+    // --- 이미지 불러오기
+    const fetchTipImages = async (boardId: string) => {
+      try {
+        const res = await axiosInstance.get(`/tips/${boardId}/image`);
+        const urls = res.data.map((img: any) => img.fileName);
+        setImages(urls);
+      } catch (err) {
+        console.error("이미지 불러오기 실패", err);
+      }
+    };
+
     if (boardId) {
       fetchTipDetail(boardId);
       fetchTipImages(boardId);
@@ -61,31 +90,7 @@ export default function TipDetailPage() {
     if (userInfo.name && tip?.name === userInfo?.name) {
       setismypost(true);
     }
-  }, [boardId]);
-
-  // --- 게시글 불러오기 및 좋아요 반영
-  const fetchTipDetail = async (boardId: string) => {
-    try {
-      const res = await axiosInstance.get(`/tips/${boardId}`);
-      console.log(res);
-      setTip(res.data);
-      setLikeCount(res.data.tipLikeCount);
-      setLiked(res.data.checkLikeCurrentUser ?? false);
-    } catch (err) {
-      console.error("게시글 불러오기 실패", err);
-    }
-  };
-
-  // --- 이미지 불러오기
-  const fetchTipImages = async (boardId: string) => {
-    try {
-      const res = await axiosInstance.get(`/tips/${boardId}/image`);
-      const urls = res.data.map((img: any) => img.fileName);
-      setImages(urls);
-    } catch (err) {
-      console.error("이미지 불러오기 실패", err);
-    }
-  };
+  }, [boardId, isneedupdate]);
 
   // --- 게시글 삭제
   const handleDelete = async () => {
@@ -138,7 +143,7 @@ export default function TipDetailPage() {
         reply: commentInput,
       });
       setCommentInput("");
-      fetchTipDetail(boardId!);
+      setisneedupdate(!isneedupdate);
     } catch (err) {
       alert("댓글 등록 실패");
     }
@@ -161,7 +166,7 @@ export default function TipDetailPage() {
       console.log(res);
       setReplyInputs((prev) => ({ ...prev, [parentCommentId]: "" }));
       setReplyInputOpen((prev) => ({ ...prev, [parentCommentId]: false }));
-      fetchTipDetail(boardId!); // 이거!!!
+      setisneedupdate(!isneedupdate);
     } catch (err) {
       alert("대댓글 등록 실패");
     }
@@ -196,6 +201,7 @@ export default function TipDetailPage() {
       <Header
         title="기숙사 꿀팁"
         hasBack={true}
+        backPath={"/tips"}
         menuItems={ismypost ? menuItems : undefined}
       />
       <ScrollArea>
@@ -203,17 +209,22 @@ export default function TipDetailPage() {
           {tip && (
             <>
               <UserInfo>
-                {tip.profileImageUrl ? (
+                {tip.writerImageFile ? (
                   <img
-                    src={tip.profileImageUrl}
+                    src={tip.writerImageFile}
                     alt="프사"
-                    style={{ width: 36, height: 36, borderRadius: "50%" }}
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: "50%",
+                      objectFit: "cover",
+                    }}
                   />
                 ) : (
                   <FaUserCircle size={36} color="#ccc" />
                 )}
                 <UserText>
-                  <Nickname>{userInfo?.name || "익명"}</Nickname>
+                  <Nickname>{tip?.name || "횃불이"}</Nickname>
                   <DateText>
                     {tip?.createDate
                       ? new Date(tip.createDate).toLocaleString("ko-KR", {
@@ -274,10 +285,20 @@ export default function TipDetailPage() {
                   .map((comment) => (
                     <div key={comment.tipCommentId}>
                       <Comment>
-                        <FaUserCircle size={32} color="#ccc" />
+                        {/*<FaUserCircle size={32} color="#ccc" />*/}
+                        <img
+                          src={tip.writerImageFile}
+                          alt="프사"
+                          style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: "50%",
+                            objectFit: "cover",
+                          }}
+                        />
                         <CommentContent>
                           <CommentBody>
-                            <Nickname>익명 {comment.userId}</Nickname>
+                            <Nickname>{comment.name}</Nickname>
                             <CommentText>{comment.reply}</CommentText>
                             <DateText>
                               {comment.createdDate
@@ -292,38 +313,36 @@ export default function TipDetailPage() {
                           </CommentBody>
                           <CommentActionArea>
                             {/* 세로 점 3개 아이콘 */}
-                            {comment.name === userInfo.name && (
-                              <BsThreeDotsVertical
-                                size={18}
-                                style={{ cursor: "pointer" }}
-                                onClick={() =>
-                                  setReplyMenuOpen((prev) => ({
-                                    ...prev,
-                                    [comment.tipCommentId]:
-                                      !prev[comment.tipCommentId],
-                                  }))
-                                }
-                              />
-                            )}
+                            <BsThreeDotsVertical
+                              size={18}
+                              style={{ cursor: "pointer" }}
+                              onClick={() =>
+                                setReplyMenuOpen((prev) => ({
+                                  ...prev,
+                                  [comment.tipCommentId]:
+                                    !prev[comment.tipCommentId],
+                                }))
+                              }
+                            />
 
                             {/* 메뉴: replyMenuOpen일 때만 노출 */}
                             {replyMenuOpen[comment.tipCommentId] && (
                               <ReplyMenu>
-                                <ReplyMenuItem
-                                  onClick={() => {
-                                    // 메뉴 닫고, 입력창 열기
-                                    setReplyMenuOpen((prev) => ({
-                                      ...prev,
-                                      [comment.tipCommentId]: false,
-                                    }));
-                                    setReplyInputOpen((prev) => ({
-                                      ...prev,
-                                      [comment.tipCommentId]: true,
-                                    }));
-                                  }}
-                                >
-                                  답글
-                                </ReplyMenuItem>
+                                {/*<ReplyMenuItem*/}
+                                {/*  onClick={() => {*/}
+                                {/*    // 메뉴 닫고, 입력창 열기*/}
+                                {/*    setReplyMenuOpen((prev) => ({*/}
+                                {/*      ...prev,*/}
+                                {/*      [comment.tipCommentId]: false,*/}
+                                {/*    }));*/}
+                                {/*    setReplyInputOpen((prev) => ({*/}
+                                {/*      ...prev,*/}
+                                {/*      [comment.tipCommentId]: true,*/}
+                                {/*    }));*/}
+                                {/*  }}*/}
+                                {/*>*/}
+                                {/*  답글*/}
+                                {/*</ReplyMenuItem>*/}
                                 <ReplyMenuItem
                                   onClick={() => {
                                     setReplyMenuOpen((prev) => ({

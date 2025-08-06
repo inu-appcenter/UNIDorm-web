@@ -7,7 +7,7 @@ import Header from "../../components/common/Header.tsx";
 import SquareButton from "../../components/common/SquareButton.tsx";
 import {
   createRoommatePost,
-  getOpponentChecklist,
+  getMyChecklist,
   putRoommatePost,
 } from "../../apis/roommate.ts";
 import {
@@ -43,12 +43,15 @@ export default function RoomMateChecklistPage() {
   const isViewerMode = !!roomId; // roomId 있으면 뷰어 모드
 
   useEffect(() => {
-    if (!roomId) return;
+    // if (!roomId) return;
 
     const fetchOpponentChecklist = async () => {
       try {
-        const response = await getOpponentChecklist(roomId);
+        const response = await getMyChecklist();
         const data = response.data;
+        console.log(data);
+
+        setTitle(data.title);
 
         // dormPeriod: ["월요일", ...] → days 배열에서 인덱스 찾기
         const dayIdxs = data.dormPeriod
