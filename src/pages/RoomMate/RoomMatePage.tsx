@@ -4,10 +4,7 @@ import RoomMateCard from "../../components/roommate/RoomMateCard.tsx";
 import Header from "../../components/common/Header.tsx";
 import { useEffect, useState } from "react";
 import { RoommatePost, SimilarRoommatePost } from "../../types/roommates.ts";
-import {
-  getRoomMateList,
-  getSimilarRoomMateList,
-} from "../../apis/roommate.ts";
+import { getRoomMateList, getSimilarRoomMateList } from "../../apis/roommate.ts";
 
 import { useNavigate } from "react-router-dom";
 import useUserStore from "../../stores/useUserStore.ts"; // 추가 필요
@@ -120,7 +117,7 @@ export default function RoomMatePage() {
                   college={post.college}
                   isSmoker={post.smoking === "피워요"}
                   isClean={post.arrangement === "깔끔해요"}
-                  stayDays={["월요일"]}
+                  stayDays={post.dormPeriod}
                   description={post.comment}
                   roommateBoardLike={post.roommateBoardLike}
                   percentage={post.similarityPercentage}
