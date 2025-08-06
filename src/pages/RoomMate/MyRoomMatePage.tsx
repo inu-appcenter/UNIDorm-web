@@ -95,6 +95,7 @@ export default function MyRoomMatePage() {
     const fetchRoommateInfo = async () => {
       try {
         const res = await getMyRoommateInfo();
+        console.log(res);
         setRoommateInfo(res.data);
       } catch (err: any) {
         if (err.response?.status === 404) {
@@ -218,7 +219,6 @@ export default function MyRoomMatePage() {
     <MyRoomMatePageWrapper>
       <Header
         title={"내 룸메이트"}
-        hasBack={true}
         showAlarm={false}
         menuItems={headerMenuItems}
       />

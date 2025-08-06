@@ -165,3 +165,12 @@ export const acceptRoommateMatching = async (
   );
   return response;
 };
+
+export const cancelRoommateMatching = async (
+  matchingId: number,
+): Promise<AxiosResponse<void>> => {
+  const response = await tokenInstance.patch<void>(
+    `/roommate-matching/${matchingId}/cancel`,
+  );
+  return response;
+};

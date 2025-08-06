@@ -7,7 +7,7 @@ import Header from "../../components/common/Header";
 import tokenInstance from "../../apis/tokenInstance";
 import { useSwipeable } from "react-swipeable";
 import axiosInstance from "../../apis/axiosInstance.ts";
-
+import useUserStore from "../../stores/useUserStore.ts";
 
 interface TipComment {
   tipCommentId: number;
@@ -16,6 +16,8 @@ interface TipComment {
   parentId: number;
   isDeleted: boolean;
   createdDate?: string;
+  name: string;
+  profileImageUrl: string;
 }
 
 interface TipDetail {
@@ -27,24 +29,26 @@ interface TipDetail {
   createDate: string;
   tipCommentDtoList: TipComment[];
   checkLikeCurrentUser: boolean; // ← 서버 응답에 포함
+  name: string;
+  profileImageUrl: string;
 }
 
 export default function TipDetailPage() {
   const { boardId } = useParams<{ boardId: string }>();
   const [tip, setTip] = useState<TipDetail | null>(null);
-  const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   // 댓글 입력 상태
   const [commentInput, setCommentInput] = useState("");
   const [replyInputs, setReplyInputs] = useState<{ [key: number]: string }>({});
-  const [replyOpen, setReplyOpen] = useState<{ [key: number]: boolean }>({});
-  const [userInfo] = useState<{ name: string; profileImageUrl: string } | null>(null);
+  // const [replyOpen, setReplyOpen] = useState<{ [key: number]: boolean }>({});
+  const { userInfo } = useUserStore();
   const [images, setImages] = useState<string[]>([]);
 
   // 좋아요 상태
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
+  const [ismypost, setismypost] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -52,13 +56,18 @@ export default function TipDetailPage() {
       fetchTipDetail(boardId);
       fetchTipImages(boardId);
     }
-    // eslint-disable-next-line
+    console.log(tip?.name, userInfo?.name);
+
+    if (userInfo.name && tip?.name === userInfo?.name) {
+      setismypost(true);
+    }
   }, [boardId]);
 
   // --- 게시글 불러오기 및 좋아요 반영
   const fetchTipDetail = async (boardId: string) => {
     try {
       const res = await axiosInstance.get(`/tips/${boardId}`);
+      console.log(res);
       setTip(res.data);
       setLikeCount(res.data.tipLikeCount);
       setLiked(res.data.checkLikeCurrentUser ?? false);
@@ -94,8 +103,16 @@ export default function TipDetailPage() {
   // --- 좋아요 토글 (POST 요청)
   const handleLike = async () => {
     if (!boardId) return;
+    console.log(boardId);
     try {
-      await tokenInstance.post(`/tips/${boardId}/like`);
+      if (!liked) {
+        const res = await tokenInstance.patch(`/tips/${boardId}/like`);
+        console.log(res);
+      } else {
+        const res = await tokenInstance.patch(`/tips/${boardId}/unlike`);
+        console.log(res);
+      }
+
       setLiked((prev) => !prev);
       setLikeCount((prev) => prev + (liked ? -1 : 1));
     } catch (err) {
@@ -104,9 +121,12 @@ export default function TipDetailPage() {
   };
 
   //댓글 및 대댓글 관련 action
- const [replyMenuOpen, setReplyMenuOpen] = useState<{ [key: number]: boolean }>({});
- const [replyInputOpen, setReplyInputOpen] = useState<{ [key: number]: boolean }>({});
-
+  const [replyMenuOpen, setReplyMenuOpen] = useState<{
+    [key: number]: boolean;
+  }>({});
+  const [replyInputOpen, setReplyInputOpen] = useState<{
+    [key: number]: boolean;
+  }>({});
 
   // --- 댓글 등록
   const handleCommentSubmit = async () => {
@@ -128,12 +148,17 @@ export default function TipDetailPage() {
   const handleReplySubmit = async (parentCommentId: number) => {
     const replyInput = replyInputs[parentCommentId];
     if (!replyInput?.trim()) return;
+    console.log(replyInput);
+    console.log(parentCommentId);
+    console.log(boardId);
     try {
-      await tokenInstance.post("/tip-comments", {
+      const res = await tokenInstance.post("/tip-comments", {
         parentCommentId,
         tipId: Number(boardId),
         reply: replyInput,
       });
+
+      console.log(res);
       setReplyInputs((prev) => ({ ...prev, [parentCommentId]: "" }));
       setReplyInputOpen((prev) => ({ ...prev, [parentCommentId]: false }));
       fetchTipDetail(boardId!); // 이거!!!
@@ -145,36 +170,62 @@ export default function TipDetailPage() {
   // --- 이미지 슬라이더
   const [currentImage, setCurrentImage] = useState(0);
   const handlers = useSwipeable({
-    onSwipedLeft: () => setCurrentImage((idx) => Math.min(images.length - 1, idx + 1)),
+    onSwipedLeft: () =>
+      setCurrentImage((idx) => Math.min(images.length - 1, idx + 1)),
     onSwipedRight: () => setCurrentImage((idx) => Math.max(0, idx - 1)),
     trackMouse: true,
   });
 
+  const menuItems = [
+    {
+      label: "수정하기",
+      onClick: () => {
+        navigate("/tips/write", { state: { tip: tip } });
+      },
+    },
+    {
+      label: "삭제하기",
+      onClick: () => {
+        handleDelete();
+      },
+    },
+  ];
+
   return (
     <Wrapper>
-      <Header title="기숙사 꿀팁" hasBack={true} showAlarm={true} />
+      <Header
+        title="기숙사 꿀팁"
+        hasBack={true}
+        menuItems={ismypost ? menuItems : undefined}
+      />
       <ScrollArea>
         <Content>
           {tip && (
             <>
               <UserInfo>
-                {userInfo?.profileImageUrl ? (
-                  <img src={userInfo.profileImageUrl} alt="프사" style={{ width: 36, height: 36, borderRadius: "50%" }} />
+                {tip.profileImageUrl ? (
+                  <img
+                    src={tip.profileImageUrl}
+                    alt="프사"
+                    style={{ width: 36, height: 36, borderRadius: "50%" }}
+                  />
                 ) : (
                   <FaUserCircle size={36} color="#ccc" />
                 )}
                 <UserText>
                   <Nickname>{userInfo?.name || "익명"}</Nickname>
-                  <DateText>{tip?.createDate || "날짜 불러오는 중..."}</DateText>
+                  <DateText>
+                    {tip?.createDate
+                      ? new Date(tip.createDate).toLocaleString("ko-KR", {
+                          year: "numeric",
+                          month: "2-digit",
+                          day: "2-digit",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
+                      : "날짜 불러오는 중..."}
+                  </DateText>
                 </UserText>
-                <Spacer />
-                <BsThreeDotsVertical size={18} onClick={() => setMenuOpen(!menuOpen)} />
-                {menuOpen && (
-                  <Menu>
-                    <MenuItem onClick={() => alert("수정하기는 아직 구현 안됨!")}>수정하기</MenuItem>
-                    <MenuItem onClick={handleDelete}>삭제하기</MenuItem>
-                  </Menu>
-                )}
               </UserInfo>
 
               {images.length > 0 && (
@@ -208,126 +259,142 @@ export default function TipDetailPage() {
 
               {/* 좋아요 영역 */}
               <LikeBox onClick={handleLike} style={{ cursor: "pointer" }}>
-                <FaRegHeart style={{ color: liked ? "#e25555" : "#bbb" }} size={18} />
+                <FaRegHeart
+                  style={{ color: liked ? "#e25555" : "#bbb" }}
+                  size={18}
+                />
                 좋아요 {likeCount}
               </LikeBox>
               <Divider />
 
               {/* 댓글 리스트 */}
               <CommentList>
-              {tip.tipCommentDtoList
-                ?.filter((c) => c.parentId === 0 || c.parentId === null)
-                .map((comment) => (
-                  <div key={comment.tipCommentId}>
-                    <Comment>
-                      <FaUserCircle size={32} color="#ccc" />
-                      <CommentContent>
-                        <CommentBody>
-                          <Nickname>익명 {comment.userId}</Nickname>
-                          <CommentText>{comment.reply}</CommentText>
-                          <DateText>
-                            {comment.createdDate
-                              ? new Date(comment.createdDate).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-                              : "방금"}
-                          </DateText>
-                        </CommentBody>
-                        <CommentActionArea>
-                          {/* 세로 점 3개 아이콘 */}
-                          <BsThreeDotsVertical
-                            size={18}
-                            style={{ cursor: "pointer" }}
-                            onClick={() =>
-                              setReplyMenuOpen((prev) => ({
+                {tip.tipCommentDtoList
+                  ?.filter((c) => c.parentId === 0 || c.parentId === null)
+                  .map((comment) => (
+                    <div key={comment.tipCommentId}>
+                      <Comment>
+                        <FaUserCircle size={32} color="#ccc" />
+                        <CommentContent>
+                          <CommentBody>
+                            <Nickname>익명 {comment.userId}</Nickname>
+                            <CommentText>{comment.reply}</CommentText>
+                            <DateText>
+                              {comment.createdDate
+                                ? new Date(
+                                    comment.createdDate,
+                                  ).toLocaleTimeString([], {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })
+                                : "방금"}
+                            </DateText>
+                          </CommentBody>
+                          <CommentActionArea>
+                            {/* 세로 점 3개 아이콘 */}
+                            {comment.name === userInfo.name && (
+                              <BsThreeDotsVertical
+                                size={18}
+                                style={{ cursor: "pointer" }}
+                                onClick={() =>
+                                  setReplyMenuOpen((prev) => ({
+                                    ...prev,
+                                    [comment.tipCommentId]:
+                                      !prev[comment.tipCommentId],
+                                  }))
+                                }
+                              />
+                            )}
+
+                            {/* 메뉴: replyMenuOpen일 때만 노출 */}
+                            {replyMenuOpen[comment.tipCommentId] && (
+                              <ReplyMenu>
+                                <ReplyMenuItem
+                                  onClick={() => {
+                                    // 메뉴 닫고, 입력창 열기
+                                    setReplyMenuOpen((prev) => ({
+                                      ...prev,
+                                      [comment.tipCommentId]: false,
+                                    }));
+                                    setReplyInputOpen((prev) => ({
+                                      ...prev,
+                                      [comment.tipCommentId]: true,
+                                    }));
+                                  }}
+                                >
+                                  답글
+                                </ReplyMenuItem>
+                                <ReplyMenuItem
+                                  onClick={() => {
+                                    setReplyMenuOpen((prev) => ({
+                                      ...prev,
+                                      [comment.tipCommentId]: false,
+                                    }));
+                                    alert("신고가 접수되었습니다!");
+                                  }}
+                                >
+                                  신고
+                                </ReplyMenuItem>
+                              </ReplyMenu>
+                            )}
+                          </CommentActionArea>
+                        </CommentContent>
+                      </Comment>
+
+                      {/* 대댓글 입력창 */}
+                      {replyInputOpen[comment.tipCommentId] && (
+                        <ReplyInputArea>
+                          <ReplyInput
+                            placeholder="답글 입력"
+                            value={replyInputs[comment.tipCommentId] || ""}
+                            onChange={(e) =>
+                              setReplyInputs((prev) => ({
                                 ...prev,
-                                [comment.tipCommentId]: !prev[comment.tipCommentId],
+                                [comment.tipCommentId]: e.target.value,
                               }))
                             }
+                            onKeyDown={(e) =>
+                              e.key === "Enter" &&
+                              handleReplySubmit(comment.tipCommentId)
+                            }
                           />
-                          {/* 메뉴: replyMenuOpen일 때만 노출 */}
-                          {replyMenuOpen[comment.tipCommentId] && (
-                            <ReplyMenu>
-                              <ReplyMenuItem
-                                onClick={() => {
-                                  // 메뉴 닫고, 입력창 열기
-                                  setReplyMenuOpen((prev) => ({
-                                    ...prev,
-                                    [comment.tipCommentId]: false,
-                                  }));
-                                  setReplyInputOpen((prev) => ({
-                                    ...prev,
-                                    [comment.tipCommentId]: true,
-                                  }));
-                                }}
-                              >
-                                답글
-                              </ReplyMenuItem>
-                              <ReplyMenuItem
-                                onClick={() => {
-                                  setReplyMenuOpen((prev) => ({
-                                    ...prev,
-                                    [comment.tipCommentId]: false,
-                                  }));
-                                  alert("신고가 접수되었습니다!");
-                                }}
-                              >
-                                신고
-                              </ReplyMenuItem>
-                            </ReplyMenu>
-                          )}
-                        </CommentActionArea>
-                      </CommentContent>
-                    </Comment>
+                          <ReplySendButton
+                            onClick={() =>
+                              handleReplySubmit(comment.tipCommentId)
+                            }
+                          >
+                            <BsSend size={16} />
+                          </ReplySendButton>
+                        </ReplyInputArea>
+                      )}
 
-                    {/* 대댓글 입력창 */}
-                    {replyInputOpen[comment.tipCommentId] && (
-                      <ReplyInputArea>
-                        <ReplyInput
-                          placeholder="답글 입력"
-                          value={replyInputs[comment.tipCommentId] || ""}
-                          onChange={(e) =>
-                            setReplyInputs((prev) => ({
-                              ...prev,
-                              [comment.tipCommentId]: e.target.value,
-                            }))
-                          }
-                          onKeyDown={(e) =>
-                            e.key === "Enter" && handleReplySubmit(comment.tipCommentId)
-                          }
-                        />
-                        <ReplySendButton
-                          onClick={() => handleReplySubmit(comment.tipCommentId)}
-                        >
-                          <BsSend size={16} />
-                        </ReplySendButton>
-                      </ReplyInputArea>
-                    )}
-
-                    {/* === 대댓글 리스트 === */}
-                    {tip.tipCommentDtoList
-                      .filter((r) => r.parentId === comment.tipCommentId)
-                      .map((reply) => (
-                        <Reply key={reply.tipCommentId}>
-                          <FaUserCircle size={28} color="#ccc" />
-                          <ReplyContent>
-                            <ReplyBody>
-                              <Nickname>익명 {reply.userId}</Nickname>
-                              <CommentText>{reply.reply}</CommentText>
-                              <DateText>
-                                {reply.createdDate
-                                  ? new Date(reply.createdDate).toLocaleTimeString([], {
-                                      hour: "2-digit",
-                                      minute: "2-digit",
-                                    })
-                                  : "방금"}
-                              </DateText>
-                            </ReplyBody>
-                          </ReplyContent>
-                        </Reply>
-                      ))}
-                  </div>
-                ))}
-            </CommentList>
-
+                      {/* === 대댓글 리스트 === */}
+                      {tip.tipCommentDtoList
+                        .filter((r) => r.parentId === comment.tipCommentId)
+                        .map((reply) => (
+                          <Reply key={reply.tipCommentId}>
+                            <FaUserCircle size={28} color="#ccc" />
+                            <ReplyContent>
+                              <ReplyBody>
+                                <Nickname>익명 {reply.userId}</Nickname>
+                                <CommentText>{reply.reply}</CommentText>
+                                <DateText>
+                                  {reply.createdDate
+                                    ? new Date(
+                                        reply.createdDate,
+                                      ).toLocaleTimeString([], {
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      })
+                                    : "방금"}
+                                </DateText>
+                              </ReplyBody>
+                            </ReplyContent>
+                          </Reply>
+                        ))}
+                    </div>
+                  ))}
+              </CommentList>
             </>
           )}
         </Content>
@@ -347,7 +414,10 @@ export default function TipDetailPage() {
           }}
         />
         <SendButton onClick={handleCommentSubmit}>
-          <BsSend size={18} style={{ color: "black", backgroundColor: "white", padding: "4px" }} />
+          <BsSend
+            size={18}
+            style={{ color: "black", backgroundColor: "white", padding: "4px" }}
+          />
         </SendButton>
       </CommentInput>
     </Wrapper>
@@ -432,9 +502,9 @@ const DateText = styled.div`
   color: gray;
 `;
 
-const Spacer = styled.div`
-  flex-grow: 1;
-`;
+// const Spacer = styled.div`
+//   flex-grow: 1;
+// `;
 
 const ImageSlider = styled.div`
   width: 100%;
@@ -531,24 +601,24 @@ const ReplyContent = styled.div`
   justify-content: space-between;
 `;
 
-const Menu = styled.div`
-  position: absolute;
-  top: 40px;
-  right: 0;
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  z-index: 10;
-`;
-
-const MenuItem = styled.div`
-  padding: 10px 16px;
-  cursor: pointer;
-  &:hover {
-    background-color: #f8f8f8;
-  }
-`;
+// const Menu = styled.div`
+//   position: absolute;
+//   top: 40px;
+//   right: 0;
+//   background: white;
+//   border: 1px solid #ddd;
+//   border-radius: 6px;
+//   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+//   z-index: 10;
+// `;
+//
+// const MenuItem = styled.div`
+//   padding: 10px 16px;
+//   cursor: pointer;
+//   &:hover {
+//     background-color: #f8f8f8;
+//   }
+// `;
 
 // 답글(대댓글) 입력 영역
 const ReplyInputArea = styled.div`
@@ -589,18 +659,18 @@ const CommentActionArea = styled.div`
   position: relative;
 `;
 
-const ReplyButton = styled.button`
-  border: none;
-  background: none;
-  color: #666;
-  font-size: 13px;
-  cursor: pointer;
-  padding: 0 8px;
-  border-radius: 6px;
-  &:hover {
-    background: #f3f3f3;
-  }
-`;
+// const ReplyButton = styled.button`
+//   border: none;
+//   background: none;
+//   color: #666;
+//   font-size: 13px;
+//   cursor: pointer;
+//   padding: 0 8px;
+//   border-radius: 6px;
+//   &:hover {
+//     background: #f3f3f3;
+//   }
+// `;
 
 const Dot = styled.span<{ $active: boolean }>`
   display: inline-block;
@@ -619,7 +689,7 @@ const ReplyMenu = styled.div`
   background: white;
   border: 1px solid #ddd;
   border-radius: 6px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.07);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.07);
   z-index: 100;
   min-width: 80px;
 `;

@@ -213,7 +213,7 @@ export default function HomePage() {
                   <HomeTipsCard
                     key={key}
                     index={key + 1}
-                    id={tip.id}
+                    id={tip.boardId}
                     content={tip.title}
                   />
                 ))

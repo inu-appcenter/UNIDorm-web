@@ -24,10 +24,22 @@ const ChatListItem = ({
 }: ChatItemProps) => {
   const formatTime = (isoString: string) => {
     const date = new Date(isoString);
-    return date.toLocaleTimeString("ko-KR", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    const today = new Date();
+
+    const isToday =
+      date.getFullYear() === today.getFullYear() &&
+      date.getMonth() === today.getMonth() &&
+      date.getDate() === today.getDate();
+
+    return isToday
+      ? date.toLocaleTimeString("ko-KR", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : date.toLocaleDateString("ko-KR", {
+          month: "2-digit",
+          day: "2-digit",
+        });
   };
 
   return (
@@ -51,7 +63,7 @@ const ChatListItem = ({
         </div>
       </ContentWrapper>
       <TimeWrapper>
-        <div className="time">{time ? formatTime(time) : "오후 6:20"}</div>
+        <div className="time">{time ? formatTime(time) : ""}</div>
       </TimeWrapper>
     </ChatItemWrapper>
   );
