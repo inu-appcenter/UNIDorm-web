@@ -50,7 +50,7 @@ export default function RoomMateAddPage() {
           <img src={friends} />
           <div className="ment">
             {isRegistering
-              ? "등록하실 룸메이트의 학번을 입력해주세요!"
+              ? "등록하실 룸메이트의\n학번을 입력해주세요!\n\nUNI Dorm에 한 번이라도 로그인한 이력이 있는 유저만 검색이 가능해요."
               : `현재 매칭된 룸메이트가 있으신가요?\n룸메이트를 등록해서 다양한 서비스를 이용해 보세요!`}
           </div>
           {isRegistering && (
@@ -133,7 +133,7 @@ const TopArea = styled.div`
 
   .ment {
     text-align: center;
-    width: 250px;
+    width: 260px;
 
     font-style: normal;
     font-weight: 400;
