@@ -92,6 +92,7 @@ const HomeCardWrapper = styled.div`
   gap: 5px;
 
   width: 100%;
+  max-width: 200px;
   height: 175px;
 
   background: #ffffff;
