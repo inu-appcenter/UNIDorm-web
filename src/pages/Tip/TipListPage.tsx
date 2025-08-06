@@ -41,7 +41,7 @@ export default function TipListPage() {
             <TipCard
               key={tip.id}
               tip={{
-                id: tip.id,
+                boardId: tip.id,
                 title: tip.title,
                 content: tip.content,
                 time: new Date(tip.createDate).toLocaleTimeString("ko-KR", {
@@ -51,7 +51,7 @@ export default function TipListPage() {
                 scrap: tip.tipLikeCount,
                 comment: tip.tipCommentCount,
               }}
-              onClick={() => navigate(`/tips/${tip.id}`)}
+              onClick={() => navigate(`/tips/${tip.boardId}`)}
             />
           ))}
         </CardList>

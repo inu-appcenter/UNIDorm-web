@@ -5,7 +5,7 @@ import { FaRegComment, FaRegBookmark } from "react-icons/fa";
 
 interface TipCardProps {
   tip: {
-    id: number;
+    boardId: number;
     title: string;
     content: string;
     time: string;
