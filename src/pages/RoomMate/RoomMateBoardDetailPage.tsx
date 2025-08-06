@@ -113,8 +113,8 @@ export default function RoomMateBoardDetailPage() {
         <UserArea>
           <img src={profileimg} />
           <div className="description">
-            <div className="name">{partnerName}</div>
-            <div className="date">03/01 18:07</div>
+            <div className="name">{partnerName || boardData.userName}</div>
+            <div className="date">{boardData.createDate}</div>
           </div>
         </UserArea>
         <TopRightBadge dormType={boardData.dormType}>
