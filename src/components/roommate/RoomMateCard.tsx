@@ -203,6 +203,9 @@ const TagRow = styled.div`
 const Tag = styled.div.withConfig({
   shouldForwardProp: (prop) => prop !== "category",
 })<{ category: string }>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 12px;
   color: #1c1c1e;
   padding: 4px 8px;
