@@ -129,7 +129,7 @@ function App() {
           <Route path="/announcements/write" element={<AnnounceWritePage />} />
           <Route path="/chat/:chatType/:id" element={<ChattingPage />} />
           <Route path="/tips/write" element={<TipWritePage />} />
-          <Route path="/tips/:id" element={<TipDetailPage />} />
+          <Route path="/tips/:boardId" element={<TipDetailPage />} />
           <Route path="/tips" element={<TipListPage />} />
           <Route path="/myposts" element={<MyPostsPage />} />
           <Route path="/scrap" element={<MyScrapPage />} />
