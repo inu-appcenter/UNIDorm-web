@@ -14,7 +14,7 @@ interface TipComment {
   reply: string;
   parentId: number;
   isDeleted: boolean;
-  createDate?: string;
+  createdDate?: string;
 }
 
 interface TipDetail {
@@ -235,9 +235,9 @@ export default function TipDetailPage() {
                             <Nickname>익명 {comment.userId}</Nickname>
                             <CommentText>{comment.reply}</CommentText>
                             <DateText>
-                              {comment.createDate
+                              {comment.createdDate
                                 ? new Date(
-                                    comment.createDate,
+                                    comment.createdDate,
                                   ).toLocaleTimeString([], {
                                     hour: "2-digit",
                                     minute: "2-digit",
@@ -297,9 +297,9 @@ export default function TipDetailPage() {
                                 <Nickname>익명 {reply.userId}</Nickname>
                                 <CommentText>{reply.reply}</CommentText>
                                 <DateText>
-                                  {reply.createDate
+                                  {reply.createdDate
                                     ? new Date(
-                                        reply.createDate,
+                                        reply.createdDate,
                                       ).toLocaleTimeString([], {
                                         hour: "2-digit",
                                         minute: "2-digit",
@@ -323,7 +323,12 @@ export default function TipDetailPage() {
           placeholder="댓글 입력"
           value={commentInput}
           onChange={(e) => setCommentInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleCommentSubmit()}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault(); // <- 이거 추가!
+              handleCommentSubmit();
+            }
+          }}
         />
         <SendButton onClick={handleCommentSubmit}>
           <BsSend
