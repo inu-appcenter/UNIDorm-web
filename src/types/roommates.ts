@@ -16,6 +16,8 @@ export interface RoommatePost {
   religion: string;
   matched: boolean;
   roommateBoardLike: number;
+  userName: string;
+  createDate: string;
 
   comment: string; // 추가 설명
 }

@@ -147,7 +147,7 @@ export default function HomePage() {
         <TitleContentArea
           title={"룸메이트 매칭 진행 중!"}
           description={"룸메이트를 구하고 있는 다양한 UNI들을 찾아보세요!"}
-          link={"/roommatelist"}
+          link={"/roommate"}
         >
           <>
             {randomRoommate ? (
@@ -179,19 +179,23 @@ export default function HomePage() {
           link={"/announcements"}
           children={
             <NotiWrapper>
-              {notices.slice(0, 2).map((notice) => (
-                <HomeNoticeCard
-                  key={notice.id ?? notice.title}
-                  id={notice.id}
-                  title={notice.title}
-                  content={
-                    // notice.content || "공지사항 내용이 들어갈 자리입니다"
-                    "공지사항 내용이 들어갈 자리입니다"
-                  }
-                  isEmergency={false}
-                  createdDate={notice.createdDate}
-                />
-              ))}
+              {notices.length > 0 ? (
+                notices.slice(0, 2).map((notice) => (
+                  <HomeNoticeCard
+                    key={notice.id ?? notice.title}
+                    id={notice.id}
+                    title={notice.title}
+                    content={
+                      // notice.content || "공지사항 내용이 들어갈 자리입니다"
+                      "공지사항 내용이 들어갈 자리입니다"
+                    }
+                    isEmergency={false}
+                    createdDate={notice.createdDate}
+                  />
+                ))
+              ) : (
+                <EmptyMessage>공지사항이 없습니다.</EmptyMessage>
+              )}
             </NotiWrapper>
           }
         />
@@ -328,4 +332,5 @@ const EmptyMessage = styled.div`
   text-align: center;
   color: #aaa;
   font-size: 14px;
+  width: 100%;
 `;
