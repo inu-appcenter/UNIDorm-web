@@ -8,10 +8,13 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { fetchTips } from "../../apis/tips";
 import { Tip } from "../../types/tips.ts";
+import useUserStore from "../../stores/useUserStore.ts";
 
 export default function TipListPage() {
   const navigate = useNavigate();
   const [tips, setTips] = useState<Tip[]>([]);
+  const { tokenInfo } = useUserStore();
+  const isLoggedIn = Boolean(tokenInfo.accessToken);
 
   useEffect(() => {
     const loadTips = async () => {
@@ -79,9 +82,11 @@ export default function TipListPage() {
         </CardList>
       </TitleContentArea>
 
-      <WriteButton onClick={() => navigate("/tips/write")}>
-        ✏️ 글쓰기
-      </WriteButton>
+      {isLoggedIn && (
+        <WriteButton onClick={() => navigate("/tips/write")}>
+          ✏️ 글쓰기
+        </WriteButton>
+      )}
     </TipPageWrapper>
   );
 }

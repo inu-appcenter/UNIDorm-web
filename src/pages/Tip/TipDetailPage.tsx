@@ -44,8 +44,9 @@ export default function TipDetailPage() {
   const [commentInput, setCommentInput] = useState("");
   const [replyInputs, setReplyInputs] = useState<{ [key: number]: string }>({});
   // const [replyOpen, setReplyOpen] = useState<{ [key: number]: boolean }>({});
-  const { userInfo } = useUserStore();
+  const { userInfo, tokenInfo } = useUserStore();
   const [images, setImages] = useState<string[]>([]);
+  const isLoggedIn = Boolean(tokenInfo.accessToken);
 
   // 좋아요 상태
   const [liked, setLiked] = useState(false);
@@ -136,6 +137,10 @@ export default function TipDetailPage() {
   // --- 댓글 등록
   const handleCommentSubmit = async () => {
     if (!commentInput.trim()) return;
+    if (!isLoggedIn) {
+      alert("로그인 후 사용해주세요.");
+      return;
+    }
     try {
       await tokenInstance.post("/tip-comments", {
         parentCommentId: null,
@@ -313,17 +318,19 @@ export default function TipDetailPage() {
                           </CommentBody>
                           <CommentActionArea>
                             {/* 세로 점 3개 아이콘 */}
-                            <BsThreeDotsVertical
-                              size={18}
-                              style={{ cursor: "pointer" }}
-                              onClick={() =>
-                                setReplyMenuOpen((prev) => ({
-                                  ...prev,
-                                  [comment.tipCommentId]:
-                                    !prev[comment.tipCommentId],
-                                }))
-                              }
-                            />
+                            {isLoggedIn && (
+                              <BsThreeDotsVertical
+                                size={18}
+                                style={{ cursor: "pointer" }}
+                                onClick={() =>
+                                  setReplyMenuOpen((prev) => ({
+                                    ...prev,
+                                    [comment.tipCommentId]:
+                                      !prev[comment.tipCommentId],
+                                  }))
+                                }
+                              />
+                            )}
 
                             {/* 메뉴: replyMenuOpen일 때만 노출 */}
                             {replyMenuOpen[comment.tipCommentId] && (

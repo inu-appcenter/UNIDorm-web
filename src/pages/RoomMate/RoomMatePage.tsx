@@ -38,6 +38,7 @@ export default function RoomMatePage() {
       try {
         if (!isLoggedIn) return;
         const response = await getSimilarRoomMateList();
+        console.log(response.data);
         setSimilarRoommates(response.data);
       } catch (error) {
         console.error("유사한 룸메이트 목록 가져오기 실패:", error);
@@ -117,7 +118,7 @@ export default function RoomMatePage() {
                   college={post.college}
                   isSmoker={post.smoking === "피워요"}
                   isClean={post.arrangement === "깔끔해요"}
-                  stayDays={post.dormPeriod}
+                  stayDays={post.dormPeriod || ["요일 정보가 없어요."]}
                   description={post.comment}
                   roommateBoardLike={post.roommateBoardLike}
                   percentage={post.similarityPercentage}
