@@ -120,7 +120,7 @@ export default function RoomMatePage() {
                   college={post.college}
                   isSmoker={post.smoking === "피워요"}
                   isClean={post.arrangement === "깔끔해요"}
-                  stayDays={["월요일"]}
+                  stayDays={post.dormPeriod}
                   description={post.comment}
                   roommateBoardLike={post.roommateBoardLike}
                   percentage={post.similarityPercentage}
