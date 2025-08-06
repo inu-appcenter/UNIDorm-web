@@ -1,5 +1,5 @@
 export interface Tip {
-  id: number;
+  boardId: number;
   title: string;
   type: string;
   createDate: string;
