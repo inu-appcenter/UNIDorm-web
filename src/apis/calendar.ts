@@ -31,3 +31,10 @@ export const updateCalendar = async (
   const response = await tokenInstance.put(`/calenders/${calenderId}`, data);
   return response;
 };
+
+export const deleteCalendar = async (
+  calenderId: number,
+): Promise<AxiosResponse<void>> => {
+  const response = await tokenInstance.delete(`/calenders/${calenderId}`);
+  return response;
+};

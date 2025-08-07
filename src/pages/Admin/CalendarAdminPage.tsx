@@ -2,11 +2,7 @@ import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 
 import { CalendarItem, CreateCalendarDto } from "../../types/calendar.ts";
-import {
-  createCalendar,
-  getCalendarByMonth,
-  updateCalendar,
-} from "../../apis/calendar.ts";
+import { createCalendar, deleteCalendar, getCalendarByMonth, updateCalendar } from "../../apis/calendar.ts";
 import Header from "../../components/common/Header.tsx";
 import { useNavigate } from "react-router-dom";
 
@@ -53,6 +49,22 @@ const CalendarAdminPage: React.FC = () => {
       fetchCalendar();
     } catch (err) {
       console.error("저장 실패", err);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!selectedItem) return;
+
+    const confirmed = window.confirm("정말 삭제하시겠습니까?");
+    if (!confirmed) return;
+
+    try {
+      await deleteCalendar(selectedItem.id);
+      alert("삭제 완료");
+      resetForm();
+      fetchCalendar();
+    } catch (err) {
+      console.error("삭제 실패", err);
     }
   };
 
@@ -143,9 +155,14 @@ const CalendarAdminPage: React.FC = () => {
             {selectedItem ? "수정하기" : "생성하기"}
           </Button>
           {selectedItem && (
-            <CancelButton type="button" onClick={handleCancel}>
-              취소
-            </CancelButton>
+            <>
+              <DeleteButton type="button" onClick={handleDelete}>
+                삭제
+              </DeleteButton>
+              <CancelButton type="button" onClick={handleCancel}>
+                취소
+              </CancelButton>
+            </>
           )}
         </Form>
       </Section>
@@ -224,6 +241,13 @@ export const Button = styled.button`
 `;
 
 export const CancelButton = styled(Button)`
+  background-color: #9e9e9e;
+
+  &:hover {
+    background-color: #757575;
+  }
+`;
+export const DeleteButton = styled(Button)`
   background-color: #f44336;
 
   &:hover {
