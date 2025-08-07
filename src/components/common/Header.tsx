@@ -40,6 +40,7 @@ export default function Header({
     "other",
   );
   const { tokenInfo } = useUserStore();
+  const isLoggedIn = Boolean(tokenInfo.accessToken);
 
   useEffect(() => {
     setPlatform(getMobilePlatform());
@@ -52,19 +53,30 @@ export default function Header({
       try {
         const response = await getReceivedRoommateRequests();
 
-        // 매칭 요청이 하나라도 있으면 true
         if (Array.isArray(response.data) && response.data.length > 0) {
           setHasMatchingRequests(true);
+
+          // 로컬스토리지에 'roommate_alert_shown' 값이 없으면 alert 띄우기
+          const alertShown = localStorage.getItem("roommate_alert_shown");
+          if (!alertShown) {
+            alert(
+              "룸메이트 매칭 요청이 도착했습니다!\n알림 페이지로 이동해서 매칭 요청을 수락해 주세요!",
+            );
+            localStorage.setItem("roommate_alert_shown", "true");
+          }
         } else {
           setHasMatchingRequests(false);
+          // 알림 없으면 로컬스토리지 값도 제거 (원하면 유지 가능)
+          localStorage.removeItem("roommate_alert_shown");
         }
       } catch (error) {
         console.error("매칭 요청 조회 실패:", error);
       }
     };
-    const isLoggedIn = Boolean(tokenInfo.accessToken);
 
-    if (showAlarm && isLoggedIn) fetchMatchingRequests();
+    if (showAlarm && isLoggedIn) {
+      fetchMatchingRequests();
+    }
   }, []);
 
   const getCurrentPage = () => {
