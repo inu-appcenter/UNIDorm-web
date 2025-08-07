@@ -86,12 +86,16 @@ export default function TipDetailPage() {
       fetchTipDetail(boardId);
       fetchTipImages(boardId);
     }
-    console.log(tip?.name, userInfo?.name);
+  }, [boardId, isneedupdate]);
 
-    if (userInfo.name && tip?.name === userInfo?.name) {
+  // 2차: tip이 변경된 이후 실행되는 useEffect
+  useEffect(() => {
+    if (tip && userInfo?.name && tip.name === userInfo.name) {
       setismypost(true);
     }
-  }, [boardId, isneedupdate]);
+
+    console.log(tip?.name, userInfo?.name);
+  }, [tip, userInfo]);
 
   // --- 게시글 삭제
   const handleDelete = async () => {
@@ -285,7 +289,11 @@ export default function TipDetailPage() {
               {/* 댓글 리스트 */}
               <CommentList>
                 {tip.tipCommentDtoList
-                  ?.filter((c) => c.parentId === 0 || c.parentId === null)
+                  ?.filter(
+                    (c) =>
+                      (c.parentId === 0 || c.parentId === null) &&
+                      c.isDeleted === false,
+                  )
                   .map((comment) => (
                     <div key={comment.tipCommentId}>
                       <Comment>
@@ -349,6 +357,26 @@ export default function TipDetailPage() {
                                 {/*>*/}
                                 {/*  답글*/}
                                 {/*</ReplyMenuItem>*/}
+                                <ReplyMenuItem
+                                  onClick={async () => {
+                                    if (!comment.tipCommentId) return;
+                                    if (
+                                      !window.confirm("정말 삭제하시겠습니까?")
+                                    )
+                                      return;
+                                    try {
+                                      await tokenInstance.delete(
+                                        `/tip-comments/${comment.tipCommentId}`,
+                                      );
+                                      setisneedupdate(!isneedupdate);
+                                      alert("삭제되었습니다.");
+                                    } catch (err) {
+                                      alert("삭제에 실패했습니다.");
+                                    }
+                                  }}
+                                >
+                                  삭제
+                                </ReplyMenuItem>
                                 <ReplyMenuItem
                                   onClick={() => {
                                     setReplyMenuOpen((prev) => ({
