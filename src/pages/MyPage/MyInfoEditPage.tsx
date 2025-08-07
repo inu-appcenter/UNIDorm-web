@@ -186,7 +186,7 @@ export default function MyInfoEditPage() {
   };
 
   return (
-    <LoginPageWrapper>
+    <MyInfoEditPageWrapper>
       <Header
         title={isFirstVisit ? "회원정보 입력" : "회원정보 수정"}
         hasBack={!isFirstVisit}
@@ -305,10 +305,10 @@ export default function MyInfoEditPage() {
           onClick={handleSubmit}
         />
       </ButtonWrapper>
-    </LoginPageWrapper>
+    </MyInfoEditPageWrapper>
   );
 }
-const LoginPageWrapper = styled.div`
+const MyInfoEditPageWrapper = styled.div`
   padding: 20px;
   padding-top: 90px;
   display: flex;
@@ -330,7 +330,8 @@ const ContentWrapper = styled.div`
   flex-direction: column;
   gap: 30px;
 
-  padding-bottom: 200px;
+  margin-bottom: 200px;
+  box-sizing: border-box;
 `;
 
 const ButtonWrapper = styled.div`
