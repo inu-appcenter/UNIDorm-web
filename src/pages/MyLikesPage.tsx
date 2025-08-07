@@ -4,10 +4,11 @@ import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/common/Header.tsx";
 import TitleContentArea from "../components/common/TitleContentArea.tsx";
-import MyPostCard from "../components/mypage/MyPostCard.tsx";
+import MyPostLikeCard from "../components/mypage/MyPostLikeCard.tsx";
 import { useEffect, useState } from "react";
 import { MyPost } from "../types/members.ts";
 import { getMemberLikePosts } from "../apis/members.ts";
+import RoomMateCard from "../components/roommate/RoomMateCard.tsx";
 
 export default function MyLikesPage() {
   const navigate = useNavigate();
@@ -34,13 +35,31 @@ export default function MyLikesPage() {
       <TitleContentArea title="">
         <CardList>
           {posts.length > 0 ? (
-            posts.map((tip, idx) => (
-              <MyPostCard
-                key={idx}
-                tip={tip}
-                onClick={() => navigate(`/tips/${tip.id}`)}
-              />
-            ))
+            posts.map((post) =>
+              post.type === "ROOMMATE" ? (
+                <RoomMateCard
+                  key={post.boardId}
+                  title={post.title}
+                  boardId={post.boardId}
+                  dormType={post.dormType}
+                  mbti={post.mbti}
+                  college={post.college}
+                  isSmoker={post.smoking === "피워요"}
+                  isClean={post.arrangement === "깔끔해요"}
+                  stayDays={post.dormPeriod}
+                  description={post.comment}
+                  roommateBoardLike={post.roommateBoardLike}
+                  matched={post.matched}
+                />
+              ) : post.type === "TIP" ? (
+                <MyPostLikeCard
+                  key={post.boardId}
+                  post={post}
+                  isLike={true}
+                  onClick={() => navigate(`/tips/${post.boardId}`)}
+                />
+              ) : null,
+            )
           ) : (
             <EmptyMessage>내가 좋아요한 글이 없습니다.</EmptyMessage>
           )}
@@ -65,7 +84,7 @@ const MyScrapPageWrapper = styled.div`
 const CardList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 24px;
   width: 100%;
   height: 100%;
 `;

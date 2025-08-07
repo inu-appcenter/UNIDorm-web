@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/common/Header.tsx";
 import TitleContentArea from "../components/common/TitleContentArea.tsx";
-import MyPostCard from "../components/mypage/MyPostCard.tsx";
+import MyPostLikeCard from "../components/mypage/MyPostLikeCard.tsx";
 import { MyPost } from "../types/members.ts";
 import { getMemberPosts } from "../apis/members.ts";
 
@@ -33,11 +33,11 @@ export default function MyPostsPage() {
       <TitleContentArea title="">
         <CardList>
           {posts.length > 0 ? (
-            posts.map((tip) => (
-              <MyPostCard
-                key={tip.id}
-                tip={tip}
-                onClick={() => navigate(`/tips/${tip.id}`)}
+            posts.map((post) => (
+              <MyPostLikeCard
+                key={post.boardId}
+                post={post}
+                onClick={() => navigate(`/tips/${post.boardId}`)}
               />
             ))
           ) : (
@@ -50,7 +50,7 @@ export default function MyPostsPage() {
 }
 
 const MyPostsPageWrapper = styled.div`
-  padding: 90px 20px 90px 20px;
+  padding: 90px 16px 90px 16px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -64,7 +64,7 @@ const MyPostsPageWrapper = styled.div`
 const CardList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 24px;
   width: 100%;
   height: 100%;
 `;

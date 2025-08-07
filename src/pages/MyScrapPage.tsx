@@ -4,7 +4,7 @@ import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/common/Header.tsx";
 import TitleContentArea from "../components/common/TitleContentArea.tsx";
-import MyPostCard from "../components/mypage/MyPostCard.tsx";
+import MyPostLikeCard from "../components/mypage/MyPostLikeCard.tsx";
 
 const mockTips = Array(8).fill({
   id: 1,
@@ -26,7 +26,7 @@ export default function MyScrapPage() {
         <CardList>
           {mockTips.length > 0 ? (
             mockTips.map((tip, idx) => (
-              <MyPostCard
+              <MyPostLikeCard
                 key={idx}
                 tip={tip}
                 onClick={() => navigate(`/tips/${tip.id}`)}

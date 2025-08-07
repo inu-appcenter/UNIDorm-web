@@ -15,10 +15,34 @@ export interface UserInfo {
   isAdmin: boolean;
 }
 
+type Weekday = "월" | "화" | "수" | "목" | "금" | "토" | "일";
+
 export interface MyPost {
-  id: number;
+  boardId: number;
+  content: string;
+  createDate: string; // "2025-08-07T17:56:25.348745"
+  filePath: string | null;
+  tipCommentCount: number;
+  tipLikeCount: number;
   title: string;
-  type: string;
-  createDate: string;
-  filePath: string;
+  type: "TIP" | "ROOMMATE" | "GROUP";
+
+  arrangement: string;
+  bedTime: string;
+  college: string;
+  comment: string;
+  dormPeriod: Weekday[];
+  dormType: string;
+  matched: boolean;
+  mbti: string;
+  religion: string;
+  roommateBoardLike: number;
+  showerHour: string;
+  showerTime: string;
+  sleeper: string;
+  smoking: string;
+  snoring: string;
+  toothGrind: string;
+  userId: number;
+  userName: string;
 }
