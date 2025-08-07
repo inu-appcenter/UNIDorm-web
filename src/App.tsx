@@ -22,7 +22,6 @@ import GroupPurchaseWritePage from "./pages/GroupPurchase/GroupPurchaseWritePage
 import RoomMateChecklistPage from "./pages/RoomMate/RoomMateChecklistPage.tsx";
 import MyPostsPage from "./pages/MyPostsPage.tsx";
 import GroupPurchaseMainPage from "./pages/GroupPurchase/GroupPurchaseMainPage.tsx";
-import MyScrapPage from "./pages/MyScrapPage.tsx";
 import MyLikesPage from "./pages/MyLikesPage.tsx";
 import MyInfoEditPage from "./pages/MyPage/MyInfoEditPage.tsx";
 import MyRoomMatePage from "./pages/RoomMate/MyRoomMatePage.tsx";
@@ -134,7 +133,6 @@ function App() {
           <Route path="/tips/:boardId" element={<TipDetailPage />} />
           <Route path="/tips" element={<TipListPage />} />
           <Route path="/myposts" element={<MyPostsPage />} />
-          <Route path="/scrap" element={<MyScrapPage />} />
           <Route path="/liked" element={<MyLikesPage />} />
           <Route
             path="/groupPurchase/post"
