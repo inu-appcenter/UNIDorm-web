@@ -9,9 +9,12 @@ import {
   rejectRoommateMatching,
 } from "../apis/roommate.ts";
 import axios from "axios";
+import useUserStore from "../stores/useUserStore.ts";
 
 const NotificationPage = () => {
   const [matchRequests, setMatchRequests] = useState<Notification[]>([]);
+  const { tokenInfo } = useUserStore();
+  const isLoggedIn = Boolean(tokenInfo.accessToken);
 
   const handleRoommateRequest = async (
     matchingId: number,
@@ -59,8 +62,9 @@ const NotificationPage = () => {
         console.error("매칭 요청 조회 실패:", error);
       }
     };
-
-    fetchMatchingRequests();
+    if (isLoggedIn) {
+      fetchMatchingRequests();
+    }
   }, []);
 
   const allNotifications = [...matchRequests];
