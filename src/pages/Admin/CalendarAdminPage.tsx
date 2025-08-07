@@ -2,11 +2,7 @@ import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 
 import { CalendarItem, CreateCalendarDto } from "../../types/calendar.ts";
-import {
-  createCalendar,
-  getCalendarByMonth,
-  updateCalendar,
-} from "../../apis/calendar.ts";
+import { createCalendar, getCalendarByMonth, updateCalendar } from "../../apis/calendar.ts";
 import Header from "../../components/common/Header.tsx";
 import { useNavigate } from "react-router-dom";
 
@@ -41,6 +37,7 @@ const CalendarAdminPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      console.log("formData", formData);
       if (selectedItem) {
         await updateCalendar(selectedItem.id, formData);
         alert("수정 완료");
