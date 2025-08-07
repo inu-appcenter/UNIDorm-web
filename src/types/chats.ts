@@ -20,6 +20,7 @@ export interface RoommateChatRoom {
 }
 
 export interface RoommateChat {
+  createdDate: string;
   roommateChattingRoomId: number;
   roommateChatId: number;
   userId: number;

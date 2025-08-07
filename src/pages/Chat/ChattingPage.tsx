@@ -76,7 +76,7 @@ export default function ChattingPage() {
             id: chat.roommateChatId,
             sender: chat.userId === userId ? "me" : "other",
             content: chat.content,
-            time: new Date().toLocaleTimeString("ko-KR", {
+            time: new Date(chat.createdDate).toLocaleTimeString("ko-KR", {
               hour: "2-digit",
               minute: "2-digit",
               hour12: true,
