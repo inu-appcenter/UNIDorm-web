@@ -4,10 +4,7 @@ import GroupPurchaseInfo from "./GroupPurchaseInfo.tsx";
 import RoundSquareBlueButton from "../button/RoundSquareBlueButton.tsx";
 import TopRightDropdownMenu from "../common/TopRightDropdownMenu.tsx";
 import { useNavigate } from "react-router-dom";
-import {
-  deleteRoommateChatRoom,
-  requestRoommateMatchingByChatRoom,
-} from "../../apis/roommate.ts";
+import { deleteRoommateChatRoom, requestRoommateMatchingByChatRoom } from "../../apis/roommate.ts";
 
 interface ChatInfoProps {
   selectedTab: string;
@@ -86,6 +83,13 @@ const ChatInfo = ({ selectedTab, partnerName, roomId }: ChatInfoProps) => {
                 // )
                 window.confirm(`${partnerName}님에게 룸메이트 요청을 보낼까요?`)
               ) {
+                if (
+                  !window.confirm(
+                    "UNI Dorm에서의 룸메이트 매칭 요청은 실제 기숙사 룸메이트 지정과 무관하며, 룸메이트와의 편리한 생활을 위한 서비스를 제공하기 위함입니다.\n반드시 룸메이트 사전 지정 기간에 인천대학교 포털에서 신청해주세요!!!!\n이 점 꼭 인지하시고 확인 버튼을 눌러주세요.",
+                  )
+                ) {
+                  return;
+                }
                 const handleMatchingRequest = async () => {
                   if (!roomId) {
                     alert("요청을 보내는 중 오류가 발생했습니다.");

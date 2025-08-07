@@ -19,6 +19,14 @@ export default function RoomMateAddPage() {
       return;
     }
 
+    if (
+      !window.confirm(
+        "UNI Dorm에서의 룸메이트 매칭 요청은 실제 기숙사 룸메이트 지정과 무관하며, 룸메이트와의 편리한 생활을 위한 서비스를 제공하기 위함입니다.\n반드시 룸메이트 사전 지정 기간에 인천대학교 포털에서 신청해주세요!!!!\n이 점 꼭 인지하시고 확인 버튼을 눌러주세요.",
+      )
+    ) {
+      return;
+    }
+
     const requestData: RoommateMatchingRequest = {
       receiverStudentNumber: studentId,
     };
