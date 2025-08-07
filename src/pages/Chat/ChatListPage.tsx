@@ -161,9 +161,10 @@ const ChatListPageWrapper = styled.div`
   flex-direction: column;
   gap: 20px;
   box-sizing: border-box;
+  //padding-bottom: 500px;
 
-  width: 100%;
-  height: 100%;
+  //width: 100%;
+  //height: 100%;
 
   overflow-y: auto;
 `;

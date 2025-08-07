@@ -146,14 +146,15 @@ export default function RoomMatePage() {
 
 const RoomMatePageWrapper = styled.div`
   padding: 90px 16px;
+  padding-bottom: 300px;
 
   display: flex;
   flex-direction: column;
   gap: 16px;
   box-sizing: border-box;
-
-  width: 100%;
-  height: 100%;
+  //
+  //width: 100%;
+  //height: 100%;
 
   overflow-y: auto;
 
