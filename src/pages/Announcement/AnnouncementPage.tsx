@@ -60,7 +60,7 @@ export default function AnnouncementPage() {
               </NoticeTop>
               <NoticeContent>{notice.content}</NoticeContent>
               <NoticeBottom>
-                <BsEye size={16} /> {0}
+                <BsEye size={16} /> {notice.viewCount}
                 {/*{notice.scrap || 0}*/}
               </NoticeBottom>
             </NoticeCard>

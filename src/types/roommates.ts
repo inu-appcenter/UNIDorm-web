@@ -132,3 +132,7 @@ export interface ReceivedMatchingRequest {
   senderName: string;
   status: string;
 }
+
+export interface RoommateMatchingByChatRoomRequest {
+  chatRoomId: number;
+}

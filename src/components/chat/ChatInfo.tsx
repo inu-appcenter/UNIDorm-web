@@ -4,7 +4,7 @@ import GroupPurchaseInfo from "./GroupPurchaseInfo.tsx";
 import RoundSquareBlueButton from "../button/RoundSquareBlueButton.tsx";
 import TopRightDropdownMenu from "../common/TopRightDropdownMenu.tsx";
 import { useNavigate } from "react-router-dom";
-import { deleteRoommateChatRoom } from "../../apis/roommate.ts";
+import { deleteRoommateChatRoom, requestRoommateMatchingByChatRoom } from "../../apis/roommate.ts";
 
 interface ChatInfoProps {
   selectedTab: string;
@@ -78,11 +78,40 @@ const ChatInfo = ({ selectedTab, partnerName, roomId }: ChatInfoProps) => {
             btnName={"룸메 신청"}
             onClick={() => {
               if (
-                window.confirm(
-                  "상대방의 학번을 확인하셨나요?\n룸메이트 신청은 상대방의 학번 정보를 통해 이루어집니다.\n확인 버튼을 누르면 룸메이트 등록 화면으로 이동합니다.",
-                )
+                // window.confirm(
+                //   "상대방의 학번을 확인하셨나요?\n룸메이트 신청은 상대방의 학번 정보를 통해 이루어집니다.\n확인 버튼을 누르면 룸메이트 등록 화면으로 이동합니다.",
+                // )
+                window.confirm(`${partnerName}님에게 룸메이트 요청을 보낼까요?`)
               ) {
-                navigate("/roommateadd");
+                const handleMatchingRequest = async () => {
+                  if (!roomId) {
+                    alert("요청을 보내는 중 오류가 발생했습니다.");
+                    return;
+                  }
+                  try {
+                    const response = await requestRoommateMatchingByChatRoom({
+                      chatRoomId: roomId,
+                    });
+                    console.log("매칭 요청 성공:", response.data);
+                    alert(
+                      "상대방에게 룸메이트 매칭 요청을 보냈습니다!\n상대방에게 매칭 수락을 요청해보세요.",
+                    );
+                    // 예시 출력: { reciverId: 12, status: "REQUEST", matchingId: 45 }
+                  } catch (error: any) {
+                    if (error.response?.status === 404) {
+                      alert("채팅방 또는 사용자를 찾을 수 없습니다.");
+                      console.error("채팅방 또는 사용자를 찾을 수 없습니다.");
+                    } else if (error.response?.status === 409) {
+                      alert("이미 매칭 요청을 보낸 상태입니다.");
+                      console.error("이미 매칭 요청을 보낸 상태입니다.");
+                    } else {
+                      alert("알 수 없는 오류 발생:" + error);
+                      console.error("알 수 없는 오류 발생:", error);
+                    }
+                  }
+                };
+                handleMatchingRequest();
+                // navigate("/roommateadd");
               }
             }}
           />
