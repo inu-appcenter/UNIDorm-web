@@ -16,6 +16,7 @@ import {
   mbti3,
   mbti4,
   organizationLevel,
+  religion,
   showerDuration,
   showertime,
   smoking,
@@ -111,6 +112,10 @@ export default function RoomMateFilterPage() {
     number | null
   >(() => getIndex(organizationLevel, filters?.arrangement));
 
+  const [religionIndex, setReligionIndex] = useState<number | null>(() =>
+    getIndex(religion, filters?.religion),
+  );
+
   const handleSubmit = () => {
     const filters = {
       dormType: domitoryIndex !== null ? dormitory[domitoryIndex] : null,
@@ -146,6 +151,7 @@ export default function RoomMateFilterPage() {
         organizationLevelIndex !== null
           ? organizationLevel[organizationLevelIndex]
           : null,
+      religion: religionIndex !== null ? religion[religionIndex] : null, // ✅ 종교 필터 추가
     };
 
     const filteredFilters = Object.fromEntries(
@@ -308,6 +314,18 @@ export default function RoomMateFilterPage() {
             Groups={organizationLevel}
             selectedIndex={organizationLevelIndex}
             onSelect={setOrganizationLevelIndex}
+            disabled={isViewerMode}
+          />
+        }
+      />
+
+      <TitleContentArea
+        title={"종교"}
+        children={
+          <SelectableChipGroup
+            Groups={religion}
+            selectedIndex={religionIndex}
+            onSelect={setReligionIndex}
             disabled={isViewerMode}
           />
         }
