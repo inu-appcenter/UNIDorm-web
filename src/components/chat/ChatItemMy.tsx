@@ -13,7 +13,7 @@ const ChatItemMy = ({ content, time }: Props) => {
       </ContentArea>
       <TimeArea>
         <div className="time">{time}</div>
-        <div className="isRead">1</div>
+        {/*<div className="isRead">1</div>*/}
       </TimeArea>
     </ChatItemMyWrapper>
   );
