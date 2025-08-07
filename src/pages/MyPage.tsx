@@ -98,14 +98,14 @@ export default MyPage;
 
 const MyPageWrapper = styled.div`
   padding: 90px 16px;
-  padding-bottom: 120px;
+  padding-bottom: 150px;
 
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
 
-  width: 100%;
-  height: 100%;
+  //width: 100%;
+  //height: 100%;
 
   overflow-y: auto;
   background: #fafafa;

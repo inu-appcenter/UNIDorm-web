@@ -10,16 +10,12 @@ import {
   deleteMyRoommateRules,
   getMyRoommateInfo,
   getMyRoommateRules,
-  updateMyRoommateRules,
+  updateMyRoommateRules
 } from "../../apis/roommate.ts";
 import RoundSquareBlueButton from "../../components/button/RoundSquareBlueButton.tsx";
 import QuickMessageModal from "../../components/roommate/QuickMessageModal.tsx";
 import { MyRoommateInfoResponse } from "../../types/roommates.ts";
-import {
-  getMyRoommateTimeTableImage,
-  getUserTimetableImage,
-  putUserTimetableImage,
-} from "../../apis/members.ts";
+import { getMyRoommateTimeTableImage, getUserTimetableImage, putUserTimetableImage } from "../../apis/members.ts";
 import RoundSquareWhiteButton from "../../components/button/RoundSquareWhiteButton.tsx";
 import { useNavigate } from "react-router-dom";
 
@@ -520,13 +516,20 @@ const Modal = styled.div`
   border-radius: 16px;
   width: 90%;
   max-width: 420px;
-  height: fit-content;
   max-height: 80%;
   background: white;
   color: #333366;
   font-weight: 500;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
   animation: fadeIn 0.3s ease-out;
+  overflow: hidden;
+
+  img {
+    width: 100%;
+    height: auto;
+    max-height: 300px; // 버튼 영역 침범 방지
+    object-fit: contain;
+  }
 
   @keyframes fadeIn {
     from {
