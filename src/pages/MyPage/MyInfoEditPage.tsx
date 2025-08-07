@@ -315,8 +315,8 @@ const LoginPageWrapper = styled.div`
   flex-direction: column;
   box-sizing: border-box;
 
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   overflow-y: auto;
   justify-content: space-between;
 
