@@ -32,6 +32,8 @@ export default function MyRoomMatePage() {
   const [isEditing, setIsEditing] = useState(false);
   const navigate = useNavigate();
 
+  const [isNeedReload, setIsNeedReload] = useState(false);
+
   const [showQuickModal, setShowQuickModal] = useState(false);
 
   const [showImgConfirmModal, setShowImgConfirmModal] = useState(false); //모달창 열림 여부
@@ -166,7 +168,7 @@ export default function MyRoomMatePage() {
     fetchRoommateInfo();
     fetchRoommateTimetable();
     fetchUserTimetable();
-  }, []);
+  }, [isNeedReload]);
 
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -188,6 +190,7 @@ export default function MyRoomMatePage() {
         const newImageUrl = response.data.fileName;
         setMyTimetableImageUrl(newImageUrl);
         setShowImgConfirmModal(false);
+        setIsNeedReload(!isNeedReload);
       } else {
         alert("이미지 업로드 실패");
       }
