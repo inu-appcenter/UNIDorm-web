@@ -10,12 +10,16 @@ import {
   deleteMyRoommateRules,
   getMyRoommateInfo,
   getMyRoommateRules,
-  updateMyRoommateRules
+  updateMyRoommateRules,
 } from "../../apis/roommate.ts";
 import RoundSquareBlueButton from "../../components/button/RoundSquareBlueButton.tsx";
 import QuickMessageModal from "../../components/roommate/QuickMessageModal.tsx";
 import { MyRoommateInfoResponse } from "../../types/roommates.ts";
-import { getMyRoommateTimeTableImage, getUserTimetableImage, putUserTimetableImage } from "../../apis/members.ts";
+import {
+  getMyRoommateTimeTableImage,
+  getUserTimetableImage,
+  putUserTimetableImage,
+} from "../../apis/members.ts";
 import RoundSquareWhiteButton from "../../components/button/RoundSquareWhiteButton.tsx";
 import { useNavigate } from "react-router-dom";
 

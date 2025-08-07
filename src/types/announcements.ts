@@ -1,4 +1,5 @@
 export interface Announcement {
+  viewCount: number;
   emergency: boolean;
   content: string;
   id: number;

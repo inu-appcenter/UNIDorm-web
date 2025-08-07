@@ -4,6 +4,7 @@ import tokenInstance from "./tokenInstance.ts";
 import {
   MyRoommateInfoResponse,
   ReceivedMatchingRequest,
+  RoommateMatchingByChatRoomRequest,
   RoommateMatchingRequest,
   RoommateMatchingResponse,
   RoommatePost,
@@ -82,6 +83,17 @@ export const requestRoommateMatching = async (
 ): Promise<AxiosResponse<RoommateMatchingResponse>> => {
   const response = await tokenInstance.post<RoommateMatchingResponse>(
     "/roommate-matching/request",
+    data,
+  );
+  return response;
+};
+
+// 매칭 요청 함수
+export const requestRoommateMatchingByChatRoom = async (
+  data: RoommateMatchingByChatRoomRequest,
+): Promise<AxiosResponse<RoommateMatchingResponse>> => {
+  const response = await tokenInstance.post<RoommateMatchingResponse>(
+    "/roommate-matching/request-by-chatroom",
     data,
   );
   return response;
