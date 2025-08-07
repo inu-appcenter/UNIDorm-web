@@ -4,7 +4,10 @@ import GroupPurchaseInfo from "./GroupPurchaseInfo.tsx";
 import RoundSquareBlueButton from "../button/RoundSquareBlueButton.tsx";
 import TopRightDropdownMenu from "../common/TopRightDropdownMenu.tsx";
 import { useNavigate } from "react-router-dom";
-import { deleteRoommateChatRoom, requestRoommateMatchingByChatRoom } from "../../apis/roommate.ts";
+import {
+  deleteRoommateChatRoom,
+  requestRoommateMatchingByChatRoom,
+} from "../../apis/roommate.ts";
 
 interface ChatInfoProps {
   selectedTab: string;

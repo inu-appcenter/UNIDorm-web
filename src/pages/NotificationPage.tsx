@@ -3,11 +3,7 @@ import Header from "../components/common/Header.tsx";
 import { Notification } from "../types/notifications.ts";
 import NotiItem from "../components/notification/NotiItem.tsx";
 import { useEffect, useState } from "react";
-import {
-  acceptRoommateMatching,
-  getReceivedRoommateRequests,
-  rejectRoommateMatching,
-} from "../apis/roommate.ts";
+import { acceptRoommateMatching, getReceivedRoommateRequests, rejectRoommateMatching } from "../apis/roommate.ts";
 import axios from "axios";
 import useUserStore from "../stores/useUserStore.ts";
 
@@ -26,6 +22,9 @@ const NotificationPage = () => {
       ) {
         await acceptRoommateMatching(matchingId);
         alert("매칭 요청이 수락되었습니다.");
+        alert(
+          "UNI Dorm에서의 룸메이트 매칭은 실제 기숙사 룸메이트 지정과 무관하며, 룸메이트와의 편리한 생활을 위한 서비스를 제공하기 위함입니다.\n반드시 룸메이트 사전 지정 기간에 인천대학교 포털에서 신청해주세요!!!!",
+        );
       } else {
         if (
           window.confirm(`${senderName}님이 보낸 룸메이트 요청을 거절할까요?`)
