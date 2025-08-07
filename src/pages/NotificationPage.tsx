@@ -3,7 +3,11 @@ import Header from "../components/common/Header.tsx";
 import { Notification } from "../types/notifications.ts";
 import NotiItem from "../components/notification/NotiItem.tsx";
 import { useEffect, useState } from "react";
-import { acceptRoommateMatching, getReceivedRoommateRequests, rejectRoommateMatching } from "../apis/roommate.ts";
+import {
+  acceptRoommateMatching,
+  getReceivedRoommateRequests,
+  rejectRoommateMatching,
+} from "../apis/roommate.ts";
 import axios from "axios";
 import useUserStore from "../stores/useUserStore.ts";
 
