@@ -123,6 +123,8 @@ export default function RoomMateListPage() {
       if (filters.arrangement && post.arrangement !== filters.arrangement)
         return false;
 
+      if (filters.religion && post.religion !== filters.religion) return false;
+
       return true;
     });
 
