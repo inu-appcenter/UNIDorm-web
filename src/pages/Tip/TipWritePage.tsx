@@ -9,6 +9,7 @@ import tokenInstance from "../../apis/tokenInstance.ts";
 
 export default function TipWritePage() {
   const navigate = useNavigate();
+  const [tipid, setTipid] = useState("");
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [images, setImages] = useState<File[]>([]);
@@ -16,6 +17,7 @@ export default function TipWritePage() {
 
   const location = useLocation();
   const { tip } = location.state || {};
+  const [isEditMode, setIsEditMode] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -23,8 +25,10 @@ export default function TipWritePage() {
 
   useEffect(() => {
     if (tip) {
+      setTipid(tip.id);
       setTitle(tip.title);
       setContent(tip.content);
+      setIsEditMode(true);
     }
   }, [tip]);
 
@@ -56,26 +60,41 @@ export default function TipWritePage() {
 
       formData.append("requestTipDto", tipDto);
 
-      // 이미지 배열 추가 (images[] 형태로 보내야 한다면 여기만 수정)
-      for (let i = 0; i < images.length; i++) {
-        formData.append("images", images[i]);
+      // 수정 모드가 아닐 경우에만 이미지 필수
+      if (!isEditMode || (isEditMode && images.length > 0)) {
+        for (let i = 0; i < images.length; i++) {
+          formData.append("images", images[i]);
+        }
       }
 
-      const res = await tokenInstance.post("/tips", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      let res;
 
-      console.log("등록 성공", res.data);
-      alert("팁이 등록되었습니다!");
-      navigate("/tips"); // 등록 후 이동 (필요시 경로 수정)
+      if (isEditMode) {
+        // 수정 요청 (PUT) — `/tips/{id}`로 전송 (tipId 필요)
+        res = await tokenInstance.put(`/tips/${tipid}`, formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+        alert("팁이 수정되었습니다!");
+      } else {
+        // 등록 요청 (POST)
+        res = await tokenInstance.post("/tips", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+        alert("팁이 등록되었습니다!");
+      }
+
+      console.log("성공", res.data);
+      navigate("/tips");
     } catch (err: any) {
-      console.error("등록 실패", err);
+      console.error("실패", err);
       if (err.response?.data?.message) {
         alert(`[서버 응답] ${err.response.data.message}`);
       } else {
-        alert("등록 중 오류가 발생했습니다.");
+        alert("처리 중 오류가 발생했습니다.");
       }
     }
   };
@@ -87,10 +106,26 @@ export default function TipWritePage() {
           <IoCloseSharp size={24} />
         </Left>
         <Title>기숙사 꿀팁쓰기</Title>
-        <Right>임시저장</Right>
+        <Right>{""}</Right>
       </TopBar>
 
       <Content>
+        <Label>제목</Label>
+        <Input
+          placeholder="글 제목"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+        <Label>내용</Label>
+        <Textarea
+          placeholder="내용을 입력해주세요"
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+        />
+        <Label>이미지</Label>
+        {isEditMode && (
+          <>이미지를 첨부하면 기존 글에 첨부된 이미지가 대체됩니다.</>
+        )}
         <ImageBox onClick={() => inputRef.current?.click()}>
           <MdImage size={36} color="#888" />
           <span>{images.length}/10</span>
@@ -112,20 +147,6 @@ export default function TipWritePage() {
             onChange={handleImageChange}
           />
         </ImageBox>
-
-        <Label>제목</Label>
-        <Input
-          placeholder="글 제목"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-
-        <Label>내용</Label>
-        <Textarea
-          placeholder="내용을 입력해주세요"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-        />
       </Content>
 
       {/*<SubmitButton onClick={handleSubmit}>등록하기</SubmitButton>*/}
