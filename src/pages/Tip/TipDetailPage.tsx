@@ -206,7 +206,6 @@ export default function TipDetailPage() {
       <Header
         title="기숙사 꿀팁"
         hasBack={true}
-        backPath={"/tips"}
         menuItems={ismypost ? menuItems : undefined}
       />
       <ScrollArea>

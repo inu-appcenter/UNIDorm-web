@@ -1,46 +1,7 @@
 import styled from "styled-components";
 import { AiOutlineClockCircle } from "react-icons/ai";
 import { useNavigate } from "react-router-dom";
-
-const EmergencyIcon = () => {
-  return <EmergencyIconWrapper>긴급</EmergencyIconWrapper>;
-};
-
-const EmergencyIconWrapper = styled.div`
-  /* Frame 10 */
-
-  box-sizing: border-box;
-  width: fit-content;
-  height: fit-content;
-
-  /* 오토레이아웃 */
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  padding: 0 8px;
-  gap: 10px;
-
-  margin: 0 auto;
-
-  //border: 1px solid #0a84ff;
-  border-radius: 16px;
-
-  /* 내부 오토레이아웃 */
-  flex: none;
-  order: 1;
-  flex-grow: 0;
-
-  font-style: normal;
-  font-weight: 400;
-  font-size: 12px;
-  line-height: 24px;
-  letter-spacing: 0.38px;
-
-  color: white;
-
-  background: #0a84ff;
-`;
+import TagIconBlueBackground from "../common/TagIconBlueBackground.tsx";
 
 interface HomeCardProps {
   id: number;
@@ -64,7 +25,9 @@ const HomeNoticeCard = ({
         navigate("/announcements/" + id);
       }}
     >
-      <div className="emergency">{isEmergency && <EmergencyIcon />}</div>
+      <div className="emergency">
+        {isEmergency && <TagIconBlueBackground tagTitle={"긴급"} />}
+      </div>
 
       <FirstLine>
         <div className="title">{title}</div>
