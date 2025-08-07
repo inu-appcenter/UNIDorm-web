@@ -309,16 +309,16 @@ export default function MyInfoEditPage() {
   );
 }
 const MyInfoEditPageWrapper = styled.div`
-  padding: 20px;
+  padding: 16px;
   padding-top: 90px;
+  padding-bottom: 150px;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
 
-  width: 100%;
-  height: 100%;
-  overflow-y: auto;
-  justify-content: space-between;
+  //width: 100%;
+  //height: 100%;
+  //justify-content: space-between;
 
   background: #fafafa;
 `;
@@ -330,8 +330,10 @@ const ContentWrapper = styled.div`
   flex-direction: column;
   gap: 30px;
 
-  margin-bottom: 200px;
-  box-sizing: border-box;
+  //padding-bottom: 50px;
+  //margin-bottom: 200px;
+
+  //box-sizing: border-box;
 `;
 
 const ButtonWrapper = styled.div`
