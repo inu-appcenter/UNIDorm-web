@@ -1,7 +1,9 @@
 import axios from "axios";
 
+const BASE_URL = `https://${import.meta.env.VITE_API_SUBDOMAIN}.inuappcenter.kr/`;
+
 const axiosInstance = axios.create({
-  baseURL: "https://inu-dormitory-dev.inuappcenter.kr/",
+  baseURL: BASE_URL,
 });
 
 // 응답 인터셉터
