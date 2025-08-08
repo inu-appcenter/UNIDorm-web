@@ -10,6 +10,7 @@ import Tab from "../../components/chat/Tab.tsx";
 import ChatListItem from "../../components/chat/ChatListItem.tsx";
 import styled from "styled-components";
 import useUserStore from "../../stores/useUserStore.ts";
+import TopNoticeBanner from "../../components/chat/TopNoticeBanner.tsx";
 
 export default function ChatListPage() {
   const navigate = useNavigate();
@@ -74,6 +75,7 @@ export default function ChatListPage() {
       />
 
       <ContentWrapper>
+        <TopNoticeBanner />
         {selectedTab === "공동구매" ? (
           groupOrderChatRooms.length > 0 ? (
             groupOrderChatRooms.map((room) => (

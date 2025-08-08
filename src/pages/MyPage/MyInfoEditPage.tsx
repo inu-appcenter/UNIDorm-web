@@ -93,8 +93,8 @@ export default function MyInfoEditPage() {
         return;
       }
 
-      if (nickname.length < 2 || nickname.length > 8) {
-        alert("닉네임은 2자 이상 8자 이하로 입력해주세요!");
+      if (nickname.length < 2 || nickname.length > 10) {
+        alert("닉네임은 2자 이상 10자 이하로 입력해주세요!");
         return;
       }
 
