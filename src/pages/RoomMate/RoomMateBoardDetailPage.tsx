@@ -314,6 +314,7 @@ const ContentArea = styled.div`
 
     color: #1c1c1e;
     margin-bottom: 16px;
+    white-space: pre-line;
   }
 `;
 
