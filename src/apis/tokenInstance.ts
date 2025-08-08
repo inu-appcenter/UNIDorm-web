@@ -3,7 +3,7 @@ import useUserStore from "../stores/useUserStore";
 import { refresh } from "../apis/members";
 
 const tokenInstance = axios.create({
-  baseURL: "https://unidorm-server.inuappcenter.kr/",
+  baseURL: "https://inu-dormitory-dev.inuappcenter.kr/",
 });
 
 // 요청 인터셉터 - 토큰 설정
