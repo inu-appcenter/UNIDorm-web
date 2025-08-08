@@ -51,6 +51,10 @@ export default function RoomMatePage() {
     fetchData();
   }, []);
 
+  const filteredSimilarRoommates = similarRoommates.filter(
+    (post) => post.dormType === userInfo.dormType,
+  );
+
   return (
     <RoomMatePageWrapper>
       <Header title="룸메이트" hasBack={false} showAlarm={true} />
@@ -110,8 +114,8 @@ export default function RoomMatePage() {
               </ChecklistBanner>
             )}
 
-            {similarRoommates.length > 0 ? (
-              similarRoommates.map((post, key) => (
+            {filteredSimilarRoommates.length > 0 ? (
+              filteredSimilarRoommates.map((post, key) => (
                 <RoomMateCard
                   key={key}
                   title={post.title}

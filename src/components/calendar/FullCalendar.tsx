@@ -9,7 +9,7 @@ import {
   isSameDay,
   parseISO,
   startOfMonth,
-  startOfWeek
+  startOfWeek,
 } from "date-fns";
 import { useEffect, useState } from "react";
 import { getCalendarByMonth } from "../../apis/calendar.ts";

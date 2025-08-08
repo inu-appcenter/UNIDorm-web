@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import profile from "../../assets/profileimg.svg";
 
 type Props = {
   content: string;
@@ -8,9 +9,7 @@ type Props = {
 const ChatItemOtherPerson = ({ content, time }: Props) => {
   return (
     <ChatItemOtherPersonWrapper>
-      <ImgArea>
-        <img alt="상대방" />
-      </ImgArea>
+      <ProfileImg src={profile} alt="상대방"></ProfileImg>
       <ContentArea>
         <div className="message">{content}</div>
       </ContentArea>
@@ -34,20 +33,11 @@ const ChatItemOtherPersonWrapper = styled.div`
 
   gap: 4px;
 `;
-const ImgArea = styled.div`
-  width: fit-content;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  //align-items: center;
-  padding-top: 3px;
-
-  img {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    background: grey;
-  }
+const ProfileImg = styled.img`
+  //padding-top: 3px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
 `;
 const ContentArea = styled.div`
   //flex: 1;
