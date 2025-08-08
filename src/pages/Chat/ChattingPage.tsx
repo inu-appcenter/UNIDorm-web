@@ -10,6 +10,7 @@ import { useRoommateChat } from "./useRoommateChat.ts";
 import useUserStore from "../../stores/useUserStore.ts";
 import { getRoommateChatHistory } from "../../apis/chat.ts";
 import { deleteRoommateChatRoom } from "../../apis/roommate.ts";
+import TopNoticeBanner from "../../components/chat/TopNoticeBanner.tsx";
 
 type MessageType = {
   id: number;
@@ -218,7 +219,28 @@ export default function ChattingPage() {
           selectedTab={typeString}
           partnerName={partnerName}
           roomId={roomId}
+          isChatted={messageList.length > 0}
         />
+        <div
+          style={{
+            marginTop: "10px",
+            marginBottom: "10px",
+            width: "100%",
+            height: "fit-content",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <TopNoticeBanner
+            message={
+              messageList.length > 0
+                ? "서로 룸메이트를 하기로 마음먹었다면,\n룸메 신청 버튼을 눌러 룸메이트가 되어보세요!"
+                : "자유롭게 채팅을 나누며 서로를 알아가보세요!"
+            }
+          />
+        </div>
+
         <ChattingWrapper ref={scrollRef}>
           {messageList.map((msg) =>
             msg.sender === "me" ? (
@@ -274,6 +296,7 @@ const ContentWrapper = styled.div`
   flex-direction: column;
   height: 100%;
   box-sizing: border-box;
+  background: #f4f4f4;
 `;
 
 const ChattingWrapper = styled.div`

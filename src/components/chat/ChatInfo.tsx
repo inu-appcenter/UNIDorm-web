@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import profile from "../../assets/chat/profile.svg";
+import profile from "../../assets/profileimg.svg";
 import GroupPurchaseInfo from "./GroupPurchaseInfo.tsx";
 import RoundSquareBlueButton from "../button/RoundSquareBlueButton.tsx";
 import { requestRoommateMatchingByChatRoom } from "../../apis/roommate.ts";
@@ -12,9 +12,15 @@ interface ChatInfoProps {
   selectedTab: string;
   partnerName?: string;
   roomId?: number;
+  isChatted?: boolean;
 }
 
-const ChatInfo = ({ selectedTab, partnerName, roomId }: ChatInfoProps) => {
+const ChatInfo = ({
+  selectedTab,
+  partnerName,
+  roomId,
+  isChatted,
+}: ChatInfoProps) => {
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [isRequestMode, setIsRequestMode] = useState(false);
 
@@ -70,6 +76,12 @@ const ChatInfo = ({ selectedTab, partnerName, roomId }: ChatInfoProps) => {
           <RoundSquareBlueButton
             btnName={"룸메 신청"}
             onClick={() => {
+              if (!isChatted) {
+                alert(
+                  "대화를 나누지 않고 룸메이트를 신청할 수 없어요.\n상대방과 룸메이트를 하기로 약속한 뒤 눌러주세요.",
+                );
+                return;
+              }
               setIsRequestMode(true);
               setShowInfoModal(true);
             }}
@@ -196,6 +208,7 @@ const ChatInfoWrapper = styled.div`
 
   gap: 16px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  background: white;
 `;
 
 const ImgWrapper = styled.div`
