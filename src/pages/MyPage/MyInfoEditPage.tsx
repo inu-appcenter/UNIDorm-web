@@ -260,6 +260,9 @@ export default function MyInfoEditPage() {
 
         <TitleContentArea
           title={"닉네임"}
+          description={
+            "닉네임이 중복되는 경우 로그아웃이 될 수 있습니다! 재로그인 후 다른 닉네임을 사용해주세요. 조속한 시일 내에 수정하겠습니다."
+          }
           children={
             <StyledInput
               placeholder="닉네임은 2자~8자 이내로 입력해주세요."
