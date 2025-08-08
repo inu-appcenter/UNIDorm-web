@@ -40,6 +40,16 @@ import NotificationPage from "./pages/NotificationPage.tsx";
 import CalendarPage from "./pages/CalendarPage.tsx";
 
 function App() {
+  console.log("현재 MODE:", import.meta.env.MODE);
+
+  if (import.meta.env.MODE === "production") {
+    console.log = () => {};
+    console.debug = () => {};
+    console.info = () => {};
+    console.warn = () => {};
+    console.error = () => {};
+  }
+
   const { tokenInfo, setUserInfo, userInfo } = useUserStore();
   const navigate = useNavigate();
 
