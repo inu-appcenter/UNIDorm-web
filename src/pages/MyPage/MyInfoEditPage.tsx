@@ -276,11 +276,6 @@ export default function MyInfoEditPage() {
 
         <TitleContentArea
           title={"기숙사 종류"}
-          description={
-            !isFirstVisit
-              ? "기숙사 종류 또는 단과대학을 변경하시는 경우, 체크리스트를 다시 한 번 작성해주셔야 새로운 정보가 반영됩니다."
-              : ""
-          }
           children={
             <ToggleGroup
               Groups={dormitory}
