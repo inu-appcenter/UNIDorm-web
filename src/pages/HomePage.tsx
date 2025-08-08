@@ -226,6 +226,7 @@ export default function HomePage() {
         <TitleContentArea
           title={"캘린더 이벤트"}
           children={<ThreeWeekCalendar />}
+          link={"/calendar"}
         />
         {/*<TitleContentArea*/}
         {/*  title={"임박한 공동구매"}*/}

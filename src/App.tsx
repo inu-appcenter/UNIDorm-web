@@ -37,6 +37,7 @@ import AdminMainPage from "./pages/Admin/AdminMainPage.tsx";
 import AnnounceDetailPage from "./pages/Announcement/AnnounceDetailPage.tsx";
 import AnnounceWritePage from "./pages/Admin/AnnounceWritePage.tsx";
 import NotificationPage from "./pages/NotificationPage.tsx";
+import CalendarPage from "./pages/CalendarPage.tsx";
 
 function App() {
   const { tokenInfo, setUserInfo, userInfo } = useUserStore();
@@ -110,6 +111,7 @@ function App() {
         </Route>
         {/*바텀바가 필요없는 2뎁스 이상 페이지들*/}
         <Route path="/" element={<SubPage />}>
+          <Route path="/calendar" element={<CalendarPage />} />
           <Route path="/roommatelist" element={<RoomMateListPage />} />
           <Route
             path="/roommatelist/:boardId"
