@@ -53,7 +53,7 @@ const ModalBox = styled.div`
   //max-width: 300px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
   position: absolute;
-  bottom: 12px;
+  bottom: 100px;
 `;
 
 const MessageItem = styled.div`
