@@ -20,6 +20,8 @@ type MessageType = {
 };
 
 export default function ChattingPage() {
+  const isLeavingRef = useRef(false);
+
   const { chatType, id } = useParams();
   const [typeString, setTypeString] = useState<string>("");
   const [messageList, setMessageList] = useState<MessageType[]>([]);
@@ -63,6 +65,12 @@ export default function ChattingPage() {
     },
     onDisconnect: () => {
       console.log("🛑 WebSocket 연결 해제됨");
+      if (!isLeavingRef.current) {
+        alert(
+          "실시간 채팅 연결이 끊어졌습니다.\n현재 페이지를 새로고침합니다.",
+        );
+        window.location.reload();
+      }
     },
   });
 
@@ -102,6 +110,7 @@ export default function ChattingPage() {
     init();
 
     return () => {
+      isLeavingRef.current = true; // 페이지 떠나는 상태로 설정
       if (isConnected) {
         disconnect();
       }

@@ -378,7 +378,7 @@ export default function MyRoomMatePage() {
           placeholder={
             loading
               ? "로딩 중..."
-              : "현재 우리방의 규칙이 없어요!\n우측 상단 메뉴에서 규칙 추가를 눌러 작성해보세요!"
+              : "현재 우리방의 규칙이 없어요.\n우측 메뉴에서 규칙 추가를 눌러 작성해보세요!"
           }
         />
         {isEditing && !isDisabled && (
