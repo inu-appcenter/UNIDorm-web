@@ -2,8 +2,10 @@ import axios, { AxiosError } from "axios";
 import useUserStore from "../stores/useUserStore";
 import { refresh } from "../apis/members";
 
+const BASE_URL = `https://${import.meta.env.VITE_API_SUBDOMAIN}.inuappcenter.kr/`;
+
 const tokenInstance = axios.create({
-  baseURL: "https://unidorm-server.inuappcenter.kr/",
+  baseURL: BASE_URL,
 });
 
 // 요청 인터셉터 - 토큰 설정
