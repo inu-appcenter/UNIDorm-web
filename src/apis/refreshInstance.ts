@@ -1,7 +1,9 @@
 import axios from "axios";
 
+const BASE_URL = `https://${import.meta.env.VITE_API_SUBDOMAIN}.inuappcenter.kr/`;
+
 const refreshInstance = axios.create({
-  baseURL: "https://unidorm-server.inuappcenter.kr/",
+  baseURL: BASE_URL,
 });
 
 // 요청 인터셉터 - 리프레시 토큰을 POST 바디에 자동 삽입
