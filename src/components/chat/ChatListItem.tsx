@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import profile from "../../assets/chat/profile.svg";
+import profile from "../../assets/profileimg.svg";
 import GroupPurchaseInfo from "./GroupPurchaseInfo.tsx";
 
 interface ChatItemProps {
