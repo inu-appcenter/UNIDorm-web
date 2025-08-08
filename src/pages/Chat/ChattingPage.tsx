@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import Header from "../../components/common/Header.tsx";
-import { useLocation, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import ChatInfo from "../../components/chat/ChatInfo.tsx";
 import ChatItemOtherPerson from "../../components/chat/ChatItemOtherPerson.tsx";
@@ -9,6 +9,7 @@ import send from "../../assets/chat/send.svg";
 import { useRoommateChat } from "./useRoommateChat.ts";
 import useUserStore from "../../stores/useUserStore.ts";
 import { getRoommateChatHistory } from "../../apis/chat.ts";
+import { deleteRoommateChatRoom } from "../../apis/roommate.ts";
 
 type MessageType = {
   id: number;
@@ -23,6 +24,7 @@ export default function ChattingPage() {
   const [messageList, setMessageList] = useState<MessageType[]>([]);
   const [inputValue, setInputValue] = useState<string>("");
   const { tokenInfo, userInfo } = useUserStore();
+  const navigate = useNavigate();
 
   const location = useLocation();
   // navigate 시 넘긴 state 객체에서 partnerName 꺼내기
@@ -162,9 +164,55 @@ export default function ChattingPage() {
     }, 50);
   };
 
+  const menuItems = [
+    {
+      label: "사전 체크리스트 보기",
+      onClick: async () => {
+        navigate("/roommatelist/opponent", { state: { partnerName, roomId } });
+      },
+    },
+    {
+      label: "채팅방 나가기",
+      onClick: async () => {
+        const confirmed = window.confirm(
+          "정말 채팅방을 나갈까요?\n서로에게 더 이상 채팅방이 보이지 않습니다.",
+        );
+        if (!confirmed) return;
+        try {
+          if (roomId === undefined)
+            throw new Error("채팅방 id가 undefined입니다.");
+          const response = await deleteRoommateChatRoom(roomId);
+          if (response.status === 201) {
+            alert("채팅방에서 나왔어요.");
+            console.log("채팅방 나가기 성공, 채팅방이 삭제되었습니다.");
+            // 추가 처리(예: 화면 이동, 상태 업데이트 등)
+            navigate("/chat");
+          }
+        } catch (error: any) {
+          alert("채팅방 나가기를 실패했어요." + error);
+          if (error.response) {
+            if (error.response.status === 403) {
+              console.error("게스트가 아닌 사용자의 접근입니다.");
+            } else if (error.response.status === 404) {
+              console.error("유저 또는 채팅방을 찾을 수 없습니다.");
+            } else {
+              console.error("알 수 없는 오류가 발생했습니다.");
+            }
+          } else {
+            console.error("네트워크 오류 또는 서버 응답 없음");
+          }
+        }
+      },
+    },
+  ];
+
   return (
     <ChatPageWrapper>
-      <Header hasBack={true} title={typeString + " 채팅"} />
+      <Header
+        hasBack={true}
+        title={typeString + " 채팅"}
+        menuItems={menuItems}
+      />
       <ContentWrapper>
         <ChatInfo
           selectedTab={typeString}
