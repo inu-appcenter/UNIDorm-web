@@ -273,7 +273,14 @@ export default function TipDetailPage() {
               )}
 
               <Title>{tip.title}</Title>
-              <BodyText>{tip.content}</BodyText>
+              <BodyText>
+                {tip.content.split("\n").map((line, index) => (
+                  <span key={index}>
+                    {line}
+                    <br />
+                  </span>
+                ))}
+              </BodyText>
               <Divider />
 
               {/* 좋아요 영역 */}
