@@ -1,8 +1,8 @@
-import BottomBar from "../components/common/BottomBar.tsx";
 import { Outlet } from "react-router-dom";
 import styled from "styled-components";
 import { getMobilePlatform } from "../utils/getMobilePlatform.ts";
 import { useEffect, useState } from "react";
+import BottomBar from "../components/common/BottomBar.tsx";
 
 export default function RootPage() {
   const [platform, setPlatform] = useState<"ios" | "android" | "other">(
@@ -23,7 +23,7 @@ export default function RootPage() {
 }
 
 const RootPageWrapper = styled.div<{ $platform: string }>`
-  width: 100vw;
+  width: 100%;
   height: 100%;
 
   box-sizing: border-box;
