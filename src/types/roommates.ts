@@ -17,6 +17,7 @@ export interface RoommatePost {
   matched: boolean;
   roommateBoardLike: number;
   userName: string;
+  userProfileImageUrl: string;
   createDate: string;
 
   comment: string; // 추가 설명

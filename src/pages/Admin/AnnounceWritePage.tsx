@@ -93,7 +93,6 @@ export default function AnnounceWritePage() {
           <input
             ref={inputRef}
             type="file"
-            accept="image/*"
             multiple
             hidden
             onChange={handleFileChange}

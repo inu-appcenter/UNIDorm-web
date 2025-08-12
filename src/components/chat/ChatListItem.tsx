@@ -11,6 +11,7 @@ interface ChatItemProps {
   currentPeople?: number;
   maxPeople?: number;
   deadline?: string;
+  partnerProfileImageUrl?: string;
 }
 const ChatListItem = ({
   selectedTab,
@@ -21,6 +22,7 @@ const ChatListItem = ({
   currentPeople,
   maxPeople,
   deadline,
+  partnerProfileImageUrl,
 }: ChatItemProps) => {
   const formatTime = (isoString: string) => {
     const date = new Date(isoString);
@@ -45,7 +47,15 @@ const ChatListItem = ({
   return (
     <ChatItemWrapper onClick={onClick}>
       <ImgWrapper>
-        <img src={profile} alt={"프로필이미지"} />
+        <img
+          src={
+            partnerProfileImageUrl?.trim() ? partnerProfileImageUrl : profile
+          }
+          alt="프로필이미지"
+          onError={(e) => {
+            e.currentTarget.src = profile; // 이미지 로딩 실패 시 기본 이미지로 교체
+          }}
+        />
       </ImgWrapper>
       <ContentWrapper>
         <div className="titleLine">
@@ -91,6 +101,9 @@ const ImgWrapper = styled.div`
 
   img {
     width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    object-fit: cover;
   }
 `;
 const ContentWrapper = styled.div`

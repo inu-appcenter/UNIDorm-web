@@ -10,9 +10,9 @@ export default defineConfig({
             registerType: "autoUpdate", // 앱이 새로 빌드되면 자동 업데이트
             includeAssets: ["favicon.svg", "robots.txt", "apple-touch-icon.png"],
             manifest: {
-                name: "My Web App", // 전체 앱 이름
-                short_name: "WebApp", // 아이콘 밑에 표시될 짧은 이름
-                description: "설치 가능한 React + Vite 웹앱",
+                name: "UNI Dorm", // 전체 앱 이름
+                short_name: "유니돔", // 아이콘 밑에 표시될 짧은 이름
+                description: "인천대학교 기숙사 생활을 더욱 편하게!",
                 theme_color: "#ffffff", // 상단 바 색상
                 background_color: "#ffffff",
                 display: "standalone", // 브라우저 UI 없이 앱처럼

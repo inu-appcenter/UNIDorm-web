@@ -17,6 +17,7 @@ import SelectableChipGroup from "../../components/roommate/checklist/SelectableC
 import Header from "../../components/common/Header.tsx";
 import { colleges, dormitory } from "../../constants/constants.ts";
 import RoundSquareBlueButton from "../../components/button/RoundSquareBlueButton.tsx";
+import axios from "axios";
 
 const menuItems = [
   {
@@ -126,7 +127,15 @@ export default function MyInfoEditPage() {
         alert("회원정보 수정 중 오류가 발생하였습니다.");
       }
     } catch (error) {
-      alert("회원정보 수정 중 오류가 발생하였습니다.");
+      if (axios.isAxiosError(error) && error.response) {
+        if (error.response.status === 409) {
+          alert("이미 사용 중인 닉네임입니다. 다른 닉네임을 입력해주세요.");
+        } else {
+          alert("회원정보 수정 중 오류가 발생하였습니다.");
+        }
+      } else {
+        alert("회원정보 수정 중 알 수 없는 오류가 발생하였습니다.");
+      }
       console.error(error);
     }
   };

@@ -8,6 +8,7 @@ import onboarding2 from "../assets/onboarding/onboarding2.svg";
 import onboarding3 from "../assets/onboarding/onboarding3.svg";
 import { useNavigate } from "react-router-dom";
 import 로고 from "../assets/unidorm-logo-no-background.svg";
+import TermOfUse from "../components/TermOfUse.tsx";
 
 const SLIDE_DURATION = 5000;
 
@@ -179,10 +180,15 @@ const OnboardingPage: React.FC = () => {
 
       <Bottom>
         {isLastSlide && (
-          <RoundSquareBlueButton
-            btnName={"UNI Dorm 시작하기"}
-            onClick={handleStart}
-          />
+          <>
+            <TermOfUse />
+            <div>
+              <RoundSquareBlueButton
+                btnName={"UNI Dorm 시작하기"}
+                onClick={handleStart}
+              />
+            </div>
+          </>
         )}
       </Bottom>
     </Wrapper>
@@ -274,6 +280,9 @@ const Bottom = styled.div`
   width: 100%;
   padding: 0 1.5rem 2.5rem;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 `;
 
 const ProgressContainer = styled.div`
