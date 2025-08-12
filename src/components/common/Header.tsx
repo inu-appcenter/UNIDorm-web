@@ -596,6 +596,6 @@ const AccordionContent = styled.div`
 
   img {
     width: 100%;
-    height: fit-content;
+    //height: fit-content;
   }
 `;
