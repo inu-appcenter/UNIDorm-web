@@ -51,6 +51,13 @@ export const createMenuGroups = (
           navigate("/onboarding");
         },
       },
+
+      {
+        label: "인천대학교 앱센터",
+        onClick: () => {
+          window.open("https://home.inuappcenter.kr", "_blank");
+        },
+      },
       ...(isLoggedIn
         ? [
             {

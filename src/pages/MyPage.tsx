@@ -115,6 +115,10 @@ const MenuGroupsWrapper = styled.div`
   display: flex;
   flex-direction: column;
   gap: 16px;
+
+  .appcenter-logo {
+    width: 100%;
+  }
 `;
 
 const Divider = styled.div`
