@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import back from "../../assets/header/back.svg";
 import TopRightDropdownMenu from "./TopRightDropdownMenu.tsx";
@@ -42,6 +42,7 @@ export default function Header({
     "other",
   );
   const [showInfoModal, setShowInfoModal] = useState(false);
+  const deferredPromptRef = useRef<any>(null); // ← 설치 이벤트 저장용 ref
 
   const { tokenInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
@@ -49,6 +50,35 @@ export default function Header({
   useEffect(() => {
     setPlatform(getMobilePlatform());
   }, []);
+
+  // beforeinstallprompt 이벤트 감지
+  useEffect(() => {
+    const handler = (e: Event) => {
+      e.preventDefault();
+      deferredPromptRef.current = e;
+      console.log("PWA 설치 가능 상태 감지됨");
+    };
+    window.addEventListener("beforeinstallprompt", handler as EventListener);
+
+    return () => {
+      window.removeEventListener(
+        "beforeinstallprompt",
+        handler as EventListener,
+      );
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (deferredPromptRef.current) {
+      deferredPromptRef.current.prompt();
+      const { outcome } = await deferredPromptRef.current.userChoice;
+      console.log(`사용자 선택: ${outcome}`);
+      deferredPromptRef.current = null;
+    } else {
+      // 설치 이벤트가 없는 경우 기존 모달 띄우기
+      setShowInfoModal(true);
+    }
+  };
 
   const [hasMatchingRequests, setHasMatchingRequests] = useState(false);
   useEffect(() => {
@@ -153,13 +183,7 @@ export default function Header({
         </Left>
 
         <Right>
-          {/*<RoundButton*/}
-          {/*  onClick={() => {*/}
-          {/*    setShowInfoModal(true);*/}
-          {/*  }}*/}
-          {/*>*/}
-          {/*  앱 설치하기*/}
-          {/*</RoundButton>*/}
+          <RoundButton onClick={handleInstallClick}>앱 설치하기</RoundButton>
           {showAlarm && <NotificationBell hasNew={hasMatchingRequests} />}
 
           {menuItems && <TopRightDropdownMenu items={menuItems} />}
@@ -357,35 +381,35 @@ const Badge = styled.div`
   border-radius: 50%;
 `;
 
-// const RoundButton = styled.button`
-//   display: flex;
-//   align-items: center;
-//   gap: 6px;
-//   width: fit-content;
-//   height: fit-content;
-//   padding: 8px 16px;
-//   box-sizing: border-box;
-//   background: linear-gradient(135deg, #0a84ff, #4aa3ff);
-//   color: white;
-//   border: none;
-//   border-radius: 25px;
-//   font-weight: 600;
-//   font-size: 15px;
-//   cursor: pointer;
-//   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-//   transition: all 0.2s ease;
-//
-//   &:hover {
-//     background: linear-gradient(135deg, #0980f8, #3794f5);
-//     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
-//     transform: translateY(-1px);
-//   }
-//
-//   &:active {
-//     transform: translateY(1px);
-//     box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
-//   }
-// `;
+const RoundButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  height: fit-content;
+  padding: 8px 16px;
+  box-sizing: border-box;
+  background: linear-gradient(135deg, #0a84ff, #4aa3ff);
+  color: white;
+  border: none;
+  border-radius: 25px;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: linear-gradient(135deg, #0980f8, #3794f5);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(1px);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+  }
+`;
 
 const ModalBackGround = styled.div`
   position: fixed;
