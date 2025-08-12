@@ -473,8 +473,8 @@ const ModalScrollArea = styled.div`
   padding-right: 8px; /* 스크롤바 여백 */
 `;
 
-// const ButtonGroupWrapper = styled.div`
-//   display: flex;
-//   flex-direction: row;
-//   gap: 6px;
-// `;
+const ButtonGroupWrapper = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: 6px;
+`;
