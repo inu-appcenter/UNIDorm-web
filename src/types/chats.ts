@@ -17,6 +17,7 @@ export interface RoommateChatRoom {
   lastMessageTime: string; // ISO8601 형식
   partnerId: number;
   partnerName: string;
+  partnerProfileImageUrl: string;
 }
 
 export interface RoommateChat {

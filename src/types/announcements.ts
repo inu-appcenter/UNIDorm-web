@@ -19,7 +19,7 @@ export interface AnnouncementDetail {
 }
 
 export interface AnnouncementFile {
-  fileUrl: string;
+  filePath: string;
   fileName: string;
   fileSize: number;
   uploadDate: string;
@@ -43,4 +43,14 @@ export interface AnnouncementUpdateResponse {
   title: string;
   createdDate: string;
   updatedDate: string;
+}
+
+export interface AnnouncementResponse {
+  id: number;
+  title: string;
+  content: string;
+  createdDate: string;
+  updatedDate: string;
+  viewCount: number;
+  emergency: boolean;
 }
