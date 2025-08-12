@@ -77,17 +77,13 @@ export default function AnnouncementPage() {
 }
 
 const NoticePageWrapper = styled.div`
-  padding: 90px 16px 90px 16px; // ✅ 좌우 여백 최소화
+  padding: 90px 16px 90px 16px;
   display: flex;
   flex-direction: column;
   gap: 8px;
   box-sizing: border-box;
-  width: 100%;
-  height: 100%;
   overflow-y: auto;
   background: #fafafa;
-  width: 100%;
-  height: 100%;
 `;
 
 const NoticeList = styled.div`
