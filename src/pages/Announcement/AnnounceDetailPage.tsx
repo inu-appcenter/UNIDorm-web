@@ -141,7 +141,7 @@ export default function AnnounceDetailPage() {
                   >
                     <img
                       src={images[currentImage].filePath}
-                      alt={`팁 이미지 ${currentImage + 1}`}
+                      alt={`공지사항 이미지 ${currentImage + 1}`}
                       style={{
                         width: "100%",
                         height: "100%",
@@ -200,7 +200,7 @@ export default function AnnounceDetailPage() {
 
 const Wrapper = styled.div`
   position: relative;
-  height: 100vh;
+
   display: flex;
   flex-direction: column;
   background: white;
@@ -216,6 +216,7 @@ const ScrollArea = styled.div`
 const Content = styled.div`
   display: flex;
   flex-direction: column;
+  width: 100%;
 `;
 
 const UserInfo = styled.div`
@@ -251,6 +252,8 @@ const Title = styled.h2`
 const BodyText = styled.p`
   font-size: 16px;
   line-height: 1.5;
+  word-break: break-all; /* 긴 단어라도 강제로 줄바꿈 */
+  overflow-wrap: break-word; /* 브라우저 호환용 */
 `;
 
 const ImageSlider = styled.div`
