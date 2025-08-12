@@ -4,6 +4,7 @@ import {
   Announcement,
   AnnouncementDetail,
   AnnouncementFile,
+  AnnouncementResponse,
   AnnouncementUpdateRequest,
   AnnouncementUpdateResponse,
   RequestAnnouncementDto,
@@ -57,6 +58,36 @@ export const updateAnnouncement = async (
 ): Promise<AxiosResponse<AnnouncementUpdateResponse>> => {
   return await tokenInstance.put(`/announcements/${announcementId}`, data);
 };
+
+export const updateAnnouncementWithFiles = async (
+  announcementId: number,
+  data: RequestAnnouncementDto,
+  files?: File[],
+): Promise<AxiosResponse<AnnouncementResponse>> => {
+  const formData = new FormData();
+
+  formData.append(
+    "requestAnnouncementDto",
+    new Blob([JSON.stringify(data)], { type: "application/json" }),
+  );
+
+  if (files && files.length > 0) {
+    files.forEach((file) => {
+      formData.append("files", file);
+    });
+  }
+
+  return await tokenInstance.put(
+    `/announcements/${announcementId}/with-files`,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    },
+  );
+};
+
 export const deleteAnnouncement = async (
   announcementId: number,
 ): Promise<AxiosResponse<void>> => {

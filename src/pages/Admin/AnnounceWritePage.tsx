@@ -8,6 +8,7 @@ import { RequestAnnouncementDto } from "../../types/announcements.ts";
 import {
   createAnnouncement,
   updateAnnouncement,
+  updateAnnouncementWithFiles,
 } from "../../apis/announcements.ts";
 
 export default function AnnounceWritePage() {
@@ -42,11 +43,17 @@ export default function AnnounceWritePage() {
 
     try {
       if (announce) {
-        // 수정 API 호출 (id 기반)
-        await updateAnnouncement(announce.id, data);
+        // 수정 모드
+        if (files.length > 0) {
+          // 새 첨부파일이 있는 경우 → with-files API
+          await updateAnnouncementWithFiles(announce.id, data, files);
+        } else {
+          // 첨부파일 변경 없음 → 기존 수정 API
+          await updateAnnouncement(announce.id, data);
+        }
         alert("공지사항이 성공적으로 수정되었습니다.");
       } else {
-        // 생성 API 호출
+        // 생성 모드
         await createAnnouncement(data, files);
         alert("공지사항이 성공적으로 등록되었습니다.");
       }
@@ -56,7 +63,6 @@ export default function AnnounceWritePage() {
       alert("처리에 실패했습니다.");
     }
   };
-
   return (
     <Wrapper>
       <TopBar>
@@ -87,6 +93,12 @@ export default function AnnounceWritePage() {
           onChange={(e) => setContent(e.target.value)}
         />
         <Label>첨부파일</Label>
+        {announce && (
+          <div className="description">
+            첨부파일을 넣으면 기존에 업로드된 첨부파일 대신 새로 업로드한
+            첨부파일로 대체됩니다.
+          </div>
+        )}
         <FileBox onClick={() => inputRef.current?.click()}>
           <MdImage size={36} color="#888" />
           <span>{files.length}/10</span>
@@ -98,7 +110,6 @@ export default function AnnounceWritePage() {
             onChange={handleFileChange}
           />
         </FileBox>
-
         <Label>긴급 여부</Label>
         <CheckBoxWrapper>
           <input
@@ -165,6 +176,11 @@ const Content = styled.div`
   flex-direction: column;
   gap: 16px;
   overflow-y: auto;
+
+  .description {
+    font-size: 14px;
+    color: #555;
+  }
 `;
 
 const FileBox = styled.div`
