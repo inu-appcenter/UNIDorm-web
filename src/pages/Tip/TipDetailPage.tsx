@@ -8,6 +8,8 @@ import tokenInstance from "../../apis/tokenInstance";
 import { useSwipeable } from "react-swipeable";
 import axiosInstance from "../../apis/axiosInstance.ts";
 import useUserStore from "../../stores/useUserStore.ts";
+import 궁금해하는횃불이 from "../../assets/roommate/궁금해하는횃불이.png";
+import RoundSquareWhiteButton from "../../components/button/RoundSquareWhiteButton.tsx";
 
 interface TipComment {
   tipCommentId: number;
@@ -39,6 +41,9 @@ export default function TipDetailPage() {
   const { boardId } = useParams<{ boardId: string }>();
   const [tip, setTip] = useState<TipDetail | null>(null);
   const navigate = useNavigate();
+
+  const [showInfoModal, setShowInfoModal] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   // 댓글 입력 상태
   const [commentInput, setCommentInput] = useState("");
@@ -249,7 +254,12 @@ export default function TipDetailPage() {
 
               {images.length > 0 && (
                 <ImageSlider {...handlers} style={{ touchAction: "pan-y" }}>
-                  <SliderItem>
+                  <SliderItem
+                    onClick={() => {
+                      setPreviewUrl(images[currentImage]);
+                      setShowInfoModal(true);
+                    }}
+                  >
                     <img
                       src={images[currentImage]}
                       alt={`팁 이미지 ${currentImage + 1}`}
@@ -480,6 +490,24 @@ export default function TipDetailPage() {
           />
         </SendButton>
       </CommentInput>
+
+      {showInfoModal && previewUrl && (
+        <ModalBackGround>
+          <Modal>
+            <ModalHeader>
+              <img src={궁금해하는횃불이} className="wonder-character" />
+              <h2>이미지 자세히 보기</h2>
+            </ModalHeader>
+            <img src={previewUrl} />
+            <ButtonGroupWrapper>
+              <RoundSquareWhiteButton
+                btnName={"닫기"}
+                onClick={() => setShowInfoModal(false)}
+              />
+            </ButtonGroupWrapper>
+          </Modal>
+        </ModalBackGround>
+      )}
     </Wrapper>
   );
 }
@@ -760,4 +788,83 @@ const ReplyMenuItem = styled.div`
   &:hover {
     background: #f5f5f5;
   }
+`;
+
+const ModalBackGround = styled.div`
+  position: fixed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.5);
+  inset: 0 0 0 0;
+  z-index: 9999;
+`;
+
+const Modal = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  box-sizing: border-box;
+  padding: 32px 20px;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 420px;
+  max-height: 80%;
+  background: white;
+  color: #333366;
+  font-weight: 500;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  animation: fadeIn 0.3s ease-out;
+  overflow: hidden;
+  position: relative;
+
+  .wonder-character {
+    position: absolute;
+    top: 10px;
+    right: 0;
+    width: 100px;
+    height: 100px;
+    z-index: 1000;
+  }
+
+  .content {
+    width: 100%;
+    flex: 1;
+    //height: 100%;
+    overflow-y: auto;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+`;
+
+const ModalHeader = styled.div`
+  flex-shrink: 0; /* 스크롤 시 줄어들지 않게 고정 */
+  margin-bottom: 12px;
+  justify-content: space-between;
+  padding-right: 50px;
+  overflow-wrap: break-word; // 또는 wordWrap
+  word-break: keep-all; // 단어 중간이 아니라 단어 단위로 줄바꿈
+
+  h2 {
+    margin: 0;
+    box-sizing: border-box;
+  }
+  span {
+    font-size: 14px;
+  }
+`;
+
+const ButtonGroupWrapper = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: 6px;
 `;
