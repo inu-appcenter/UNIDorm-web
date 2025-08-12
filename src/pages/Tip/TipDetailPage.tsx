@@ -488,7 +488,6 @@ export default function TipDetailPage() {
 
 const Wrapper = styled.div`
   position: relative;
-  height: 100vh;
   display: flex;
   flex-direction: column;
   background: white;
