@@ -111,7 +111,10 @@ export default function RoomMateBoardDetailPage() {
 
       <TitleArea>
         <UserArea>
-          <img src={profileimg} />
+          <img
+            src={boardData.userProfileImageUrl || profileimg}
+            className="profile-img"
+          />
           <div className="description">
             <div className="name">{partnerName || boardData.userName}</div>
             <div className="date">
@@ -223,10 +226,13 @@ export default function RoomMateBoardDetailPage() {
           />
         </CardGrid>
       </ContentArea>
-      {!roomId && userInfo.dormType === boardData.dormType && (
-        <RoomMateBottomBar partnerName={boardData.userName} />
+      {((!roomId && userInfo.dormType === boardData.dormType) ||
+        !isLoggedIn) && (
+        <RoomMateBottomBar
+          partnerName={boardData.userName}
+          userProfileImageUrl={boardData.userProfileImageUrl}
+        />
       )}
-      {!isLoggedIn && <RoomMateBottomBar partnerName={boardData.userName} />}
     </RoomMateDetailPageWrapper>
   );
 }
@@ -255,8 +261,13 @@ const UserArea = styled.div`
   min-width: fit-content;
   height: fit-content;
   gap: 4px;
-  img {
-    width: 40px;
+  .profile-img {
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    min-height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
   }
 
   .description {
