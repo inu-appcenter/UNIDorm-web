@@ -3,7 +3,13 @@ import { useLocation, useNavigate } from "react-router-dom";
 import StyledInput from "../../components/common/StyledInput.tsx";
 import SquareButton from "../../components/common/SquareButton.tsx";
 import { useEffect, useState } from "react";
-import { deleteMembers, getMemberImage, getMemberInfo, putMember, putUserImage } from "../../apis/members.ts";
+import {
+  deleteMembers,
+  getMemberImage,
+  getMemberInfo,
+  putMember,
+  putUserImage,
+} from "../../apis/members.ts";
 import useUserStore from "../../stores/useUserStore.ts";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import ToggleGroup from "../../components/roommate/checklist/ToggleGroup.tsx";
