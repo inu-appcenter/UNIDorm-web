@@ -13,6 +13,7 @@ interface ChatInfoProps {
   partnerName?: string;
   roomId?: number;
   isChatted?: boolean;
+  partnerProfileImageUrl?: string;
 }
 
 const ChatInfo = ({
@@ -20,6 +21,7 @@ const ChatInfo = ({
   partnerName,
   roomId,
   isChatted,
+  partnerProfileImageUrl,
 }: ChatInfoProps) => {
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [isRequestMode, setIsRequestMode] = useState(false);
@@ -58,7 +60,7 @@ const ChatInfo = ({
   return (
     <ChatInfoWrapper>
       <ImgWrapper>
-        <img src={profile} alt={"프로필이미지"} />
+        <img src={partnerProfileImageUrl || profile} alt={"프로필이미지"} />
       </ImgWrapper>
       <ContentWrapper>
         <div
@@ -220,6 +222,9 @@ const ImgWrapper = styled.div`
 
   img {
     width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    object-fit: cover;
   }
 `;
 const ContentWrapper = styled.div`

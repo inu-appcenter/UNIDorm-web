@@ -32,6 +32,8 @@ export default function ChattingPage() {
   const location = useLocation();
   // navigate 시 넘긴 state 객체에서 partnerName 꺼내기
   const partnerName = location.state?.partnerName ?? undefined;
+  const partnerProfileImageUrl =
+    location.state?.partnerProfileImageUrl ?? undefined;
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -229,6 +231,7 @@ export default function ChattingPage() {
           partnerName={partnerName}
           roomId={roomId}
           isChatted={messageList.length > 0}
+          partnerProfileImageUrl={partnerProfileImageUrl}
         />
         <div
           style={{

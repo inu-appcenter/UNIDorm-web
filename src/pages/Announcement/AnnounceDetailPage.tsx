@@ -8,6 +8,8 @@ import {
 } from "../../apis/announcements.ts";
 import { AnnouncementDetail } from "../../types/announcements.ts";
 import useUserStore from "../../stores/useUserStore.ts";
+import AnnounceAttachment from "../../components/announce/AnnounceAttachment.tsx";
+import GrayDivider from "../../components/common/GrayDivider.tsx";
 
 export default function AnnounceDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -85,6 +87,8 @@ export default function AnnounceDetailPage() {
                   <Date>{announce?.createdDate || "날짜 불러오는 중..."}</Date>
                 </UserText>
               </UserInfo>
+              <GrayDivider margin={"16px 0"} />
+              <AnnounceAttachment announcementId={announce.id} />
               <BodyText>
                 {announce.content.split("\n").map((line, index) => (
                   <span key={index}>
@@ -127,7 +131,6 @@ const UserInfo = styled.div`
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 16px;
 
   position: relative; /* ✅ 메뉴 absolute 기준점으로 */
   overflow: visible; /* ✅ 안 짤리게 */
