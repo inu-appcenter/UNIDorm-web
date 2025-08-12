@@ -1,30 +1,88 @@
-import { useState } from "react";
+// src/pages/groupPurchase/GroupPurchaseMainPage.tsx
+import { useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import GroupPurchaseList from "../../components/GroupPurchase/GroupPurchaseList";
 import { useNavigate } from "react-router-dom";
 import { FaSearch } from "react-icons/fa";
 import Header from "../../components/common/Header.tsx";
+import {
+  fetchGroupOrders,
+  GroupOrderItem,
+  GroupOrderType,
+} from "../../apis/groupPurchase.ts";
 
-const CATEGORY_LIST = ["전체", "배달", "식자재", "생활용품", "기타"];
-const SORT_OPTIONS = ["마감 임박 순", "최신순", "좋아요 순"];
+const CATEGORY_LIST: GroupOrderType[] = ["전체", "배달", "식자재", "생활용품", "기타"];
+const SORT_OPTIONS = ["마감 임박 순", "최신순", "좋아요 순"] as const;
+type SortOption = typeof SORT_OPTIONS[number];
 
 export default function GroupPurchaseMainPage() {
   const navigate = useNavigate();
-  const [selectedCategory, setSelectedCategory] = useState("전체");
+  const [selectedCategory, setSelectedCategory] = useState<GroupOrderType>("전체");
   const [search, setSearch] = useState("");
-  const [recentSearches, setRecentSearches] = useState<string[]>([
-    "휴지",
-    "마라탕",
-    "닭가슴살",
-  ]);
-  const [sortOption, setSortOption] = useState("마감 임박순");
+  const [recentSearches, setRecentSearches] = useState<string[]>(["휴지", "마라탕", "닭가슴살"]);
+  const [sortOption, setSortOption] = useState<SortOption>("마감 임박 순");
 
-  const handleCategoryClick = (category: string) => {
+  const [rawItems, setRawItems] = useState<GroupOrderItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const run = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await fetchGroupOrders();
+        setRawItems(data);
+      } catch (e: any) {
+        setError(e?.message ?? "목록을 불러오지 못했습니다.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    run();
+  }, []);
+
+  const filteredSorted = useMemo(() => {
+    let arr = [...rawItems];
+
+    if (selectedCategory !== "전체") {
+      arr = arr.filter(
+        (it) => it.groupOrderType === selectedCategory || it.type === selectedCategory
+      );
+    }
+
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      arr = arr.filter((it) => it.title.toLowerCase().includes(q));
+    }
+
+    arr.sort((a, b) => {
+      if (sortOption === "마감 임박 순") {
+        const d1 = new Date(a.deadline).getTime();
+        const d2 = new Date(b.deadline).getTime();
+        return d1 - d2;
+      }
+      if (sortOption === "최신순") {
+        return new Date(b.createDate).getTime() - new Date(a.createDate).getTime();
+      }
+      if (sortOption === "좋아요 순") {
+        // likeCount가 없으니 참여율로 대체 정렬
+        const p1 = (a.currentPeople ?? 0) / (a.maxPeople || 1);
+        const p2 = (b.currentPeople ?? 0) / (b.maxPeople || 1);
+        return p2 - p1;
+      }
+      return 0;
+    });
+
+    return arr;
+  }, [rawItems, selectedCategory, search, sortOption]);
+
+  const handleCategoryClick = (category: GroupOrderType) => {
     setSelectedCategory(category);
   };
 
   const handleDeleteRecent = (term: string) => {
-    setRecentSearches(recentSearches.filter((item) => item !== term));
+    setRecentSearches((prev) => prev.filter((item) => item !== term));
   };
 
   return (
@@ -56,6 +114,13 @@ export default function GroupPurchaseMainPage() {
             placeholder="검색어를 입력하세요"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && search.trim()) {
+                setRecentSearches((prev) =>
+                  [search.trim(), ...prev.filter((v) => v !== search.trim())].slice(0, 10)
+                );
+              }
+            }}
           />
         </SearchBar>
 
@@ -63,9 +128,14 @@ export default function GroupPurchaseMainPage() {
           <Label>최근 검색어</Label>
           <TagList>
             {recentSearches.map((term) => (
-              <Tag key={term}>
-                {term}{" "}
-                <DeleteBtn onClick={() => handleDeleteRecent(term)}>
+              <Tag key={term} onClick={() => setSearch(term)}>
+                {term}
+                <DeleteBtn
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteRecent(term);
+                  }}
+                >
                   ×
                 </DeleteBtn>
               </Tag>
@@ -85,7 +155,9 @@ export default function GroupPurchaseMainPage() {
           ))}
         </SortFilterWrapper>
 
-        <GroupPurchaseList />
+        {loading && <div>불러오는 중...</div>}
+        {error && <div style={{ color: "red" }}>{error}</div>}
+        {!loading && !error && <GroupPurchaseList items={filteredSorted} />}
       </ContentArea>
 
       <WriteButton onClick={() => navigate("/groupPurchase/write")}>
@@ -95,43 +167,26 @@ export default function GroupPurchaseMainPage() {
   );
 }
 
+/* ---------- styles (네 기존 스타일 그대로) ---------- */
 const PageWrapper = styled.div`
   padding-top: 80px;
   background: #fafafa;
-
-  //width: 100%;
-  //height: 100%;
   box-sizing: border-box;
-
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  //height: 100vh;
-  //overflow-x: hidden;
 `;
-
-// const TopFixedSection = styled.div`
-//   position: fixed;
-//   top: 40px;
-//   left: 0;
-//   width: 100%;
-//   background-color: white;
-//   z-index: 999;
-//   padding: 70px 20px 8px 20px;
-//   box-sizing: border-box;
-// `;
 
 const CategoryWrapper = styled.div`
   display: flex;
   gap: 16px;
   width: 100%;
-  //background-color: white;
   border-bottom: 1px solid silver;
 `;
 
 const CategoryItem = styled.div`
-  flex: 1; /* 균등 너비 분배 */
-  text-align: center; /* 텍스트 가운데 정렬 */
+  flex: 1;
+  text-align: center;
   font-size: 16px;
   color: #aaa;
   cursor: pointer;
@@ -146,8 +201,7 @@ const CategoryItem = styled.div`
 `;
 
 const SearchBar = styled.div`
-  margin: 12px 12px 0 12px;
-  margin-bottom: 20px;
+  margin: 12px 12px 20px 12px;
   height: 40px;
   background-color: #f4f4f4;
   border-radius: 999px;
@@ -164,13 +218,8 @@ const SearchBar = styled.div`
     font-size: 14px;
     color: #333;
 
-    ::placeholder {
-      color: #999;
-    }
-
-    :focus {
-      outline: none;
-    }
+    ::placeholder { color: #999; }
+    :focus { outline: none; }
   }
 `;
 
@@ -199,6 +248,7 @@ const Tag = styled.div`
   display: flex;
   align-items: center;
   gap: 4px;
+  cursor: pointer;
 `;
 
 const DeleteBtn = styled.button`
