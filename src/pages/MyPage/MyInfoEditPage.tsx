@@ -3,13 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import StyledInput from "../../components/common/StyledInput.tsx";
 import SquareButton from "../../components/common/SquareButton.tsx";
 import { useEffect, useState } from "react";
-import {
-  deleteMembers,
-  getMemberImage,
-  getMemberInfo,
-  putMember,
-  putUserImage,
-} from "../../apis/members.ts";
+import { deleteMembers, getMemberImage, getMemberInfo, putMember, putUserImage } from "../../apis/members.ts";
 import useUserStore from "../../stores/useUserStore.ts";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import ToggleGroup from "../../components/roommate/checklist/ToggleGroup.tsx";
@@ -129,12 +123,14 @@ export default function MyInfoEditPage() {
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
         if (error.response.status === 409) {
-          alert("이미 사용 중인 닉네임입니다. 다른 닉네임을 입력해주세요.");
+          alert(
+            "이미 사용 중인 닉네임입니다. 다른 닉네임을 입력해주세요." + error,
+          );
         } else {
-          alert("회원정보 수정 중 오류가 발생하였습니다.");
+          alert("회원정보 수정 중 오류가 발생하였습니다." + error);
         }
       } else {
-        alert("회원정보 수정 중 알 수 없는 오류가 발생하였습니다.");
+        alert("회원정보 수정 중 알 수 없는 오류가 발생하였습니다." + error);
       }
       console.error(error);
     }
@@ -270,7 +266,7 @@ export default function MyInfoEditPage() {
         <TitleContentArea
           title={"닉네임"}
           description={
-            "닉네임이 중복되는 경우 로그아웃이 될 수 있습니다! 재로그인 후 다른 닉네임을 사용해주세요. 조속한 시일 내에 수정하겠습니다."
+            "간혹 회원 정보 변경 중 오류가 발생하는 경우가 있습니다. 변경 전 닉네임과 변경하시려는 닉네임을 [마이페이지->1대1 문의]에 남겨주시면 확인해보겠습니다."
           }
           children={
             <StyledInput

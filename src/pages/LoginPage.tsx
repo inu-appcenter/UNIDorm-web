@@ -53,6 +53,14 @@ export default function LoginPage() {
         <span className="description">
           인천대학교 포털 아이디, 비밀번호로 간편하게 로그인할 수 있어요.
         </span>
+        <br />
+        <br />
+        <span className="description">
+          <h3>알려드립니다.</h3>
+          현재 신규 로그인하시는 분들께 오류가 발생하고 있습니다.
+          8월13일(수)부터는 사용하실 수 있도록 최대한 빠르게 수정하도록
+          하겠습니다. 이용에 불편을 드려 죄송합니다.
+        </span>
 
         <h3>아이디</h3>
         <StyledInput
