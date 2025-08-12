@@ -1,29 +1,12 @@
 import styled from "styled-components";
 import { MdAttachFile } from "react-icons/md";
-import { useEffect, useState } from "react";
-import { getAnnouncementFiles } from "../../apis/announcements.ts";
 import { AnnouncementFile } from "../../types/announcements.ts";
 
 interface AnnounceAttachmentProps {
-  announcementId: number;
+  attachments: AnnouncementFile[];
 }
 
-const AnnounceAttachment = ({ announcementId }: AnnounceAttachmentProps) => {
-  const [attachments, setAttachments] = useState<AnnouncementFile[]>([]);
-
-  useEffect(() => {
-    const fetchAttachments = async () => {
-      try {
-        const res = await getAnnouncementFiles(announcementId);
-        console.log(res.data);
-        setAttachments(res.data);
-      } catch (error) {
-        console.error("첨부파일 불러오기 실패:", error);
-      }
-    };
-    fetchAttachments();
-  }, [announcementId]);
-
+const AnnounceAttachment = ({ attachments }: AnnounceAttachmentProps) => {
   return (
     <AttachmentListWrapper>
       <LeftArea>
