@@ -8,7 +8,7 @@ const CalendarPage = () => (
     <Header title={"캘린더 이벤트"} hasBack={true} />
     <TitleContentArea
       title={"캘린더 이벤트"}
-      description={"인천대학교 생활원 일정입니다."}
+      description={"인천대학교 생활원에서 알려드리는 일정입니다."}
       children={<FullCalendar />}
     />
   </CalendarPageWrapper>

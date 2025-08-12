@@ -95,8 +95,7 @@ const TipPageWrapper = styled.div`
   flex-direction: column;
   gap: 16px;
   box-sizing: border-box;
-  width: 100%;
-  height: 100%;
+
   overflow-y: auto;
   background: #fafafa;
 `;
