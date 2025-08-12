@@ -2,8 +2,15 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
 import Header from "../../components/common/Header";
-import { deleteAnnouncement, getAnnouncementDetail, getAnnouncementFiles } from "../../apis/announcements.ts";
-import { AnnouncementDetail, AnnouncementFile } from "../../types/announcements.ts";
+import {
+  deleteAnnouncement,
+  getAnnouncementDetail,
+  getAnnouncementFiles,
+} from "../../apis/announcements.ts";
+import {
+  AnnouncementDetail,
+  AnnouncementFile,
+} from "../../types/announcements.ts";
 import useUserStore from "../../stores/useUserStore.ts";
 import AnnounceAttachment from "../../components/announce/AnnounceAttachment.tsx";
 import GrayDivider from "../../components/common/GrayDivider.tsx";
