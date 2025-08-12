@@ -23,6 +23,7 @@ import Galaxy_SamsungBrowser_2 from "../../assets/app-install/Galaxy_SamsungBrow
 import iPhone_Safari_1 from "../../assets/app-install/iPhone_Safari_1.png";
 import iPhone_Safari_2 from "../../assets/app-install/iPhone_Safari_2.png";
 import iPhone_Safari_3 from "../../assets/app-install/iPhone_Safari_3.png";
+import { createPortal } from "react-dom";
 
 interface MenuItemType {
   label: string;
@@ -181,6 +182,14 @@ export default function Header({
     setOpenSection((prev) => (prev === section ? null : section));
   };
 
+  const isMain =
+    location.pathname === "/home" ||
+    location.pathname === "/" ||
+    location.pathname === "/roommate" ||
+    location.pathname === "/chat" ||
+    location.pathname === "/mypage" ||
+    location.pathname === "/groupPurchase/comingsoon";
+
   return (
     <StyledHeader
       $hasShadow={shadowSelector()}
@@ -202,7 +211,9 @@ export default function Header({
         </Left>
 
         <Right>
-          <RoundButton onClick={handleInstallClick}>앱 설치하기</RoundButton>
+          {isMain && (
+            <RoundButton onClick={handleInstallClick}>앱 설치하기</RoundButton>
+          )}
           {showAlarm && <NotificationBell hasNew={hasMatchingRequests} />}
 
           {menuItems && <TopRightDropdownMenu items={menuItems} />}
@@ -210,102 +221,104 @@ export default function Header({
       </MainLine>
       <SecondLine>{secondHeader}</SecondLine>
 
-      {showInfoModal && (
-        <ModalBackGround>
-          <Modal>
-            <ModalContentWrapper>
-              <ModalHeader>
-                <img src={궁금해하는횃불이} className="wonder-character" />
-                <h2>UNI Dorm 앱 설치하기!</h2>
-                <span>
-                  App Store와 Google Play Store에는 곧 출시 예정입니다. 그
-                  전까지는 아래 방법을 참고해 주세요!
-                </span>
-              </ModalHeader>
-              <ModalScrollArea>
-                {/* Galaxy Section */}
-                <AccordionSection>
-                  <AccordionHeader onClick={() => toggleSection("galaxy")}>
-                    <span>Galaxy</span>
-                    <Chevron>{openSection === "galaxy" ? "▲" : "▼"}</Chevron>
-                  </AccordionHeader>
-                  {openSection === "galaxy" && (
-                    <AccordionContent>
-                      Samsung Galaxy에서의 설치 방법을 안내드립니다.
-                      <div>
-                        <h3>Chrome</h3>
-                        <p>
-                          1. 우측 상단의 점 세개 메뉴 버튼 클릭
-                          <img src={Galaxy_Chrome_1} />
-                        </p>
-                        <p>
-                          2. 홈 화면 추가 클릭
-                          <img src={Galaxy_Chrome_2} />
-                        </p>{" "}
-                        <p>
-                          3. 설치 클릭
-                          <img src={Galaxy_Chrome_3} />
-                        </p>{" "}
-                        <p>
-                          4. 설치 클릭
-                          <img src={Galaxy_Chrome_4} />
-                        </p>
-                      </div>
-                      <h3>삼성 인터넷</h3>
-                      <div>
-                        <p>
-                          1. 우측 상단의 다운로드 모양 아이콘 클릭
-                          <img src={Galaxy_SamsungBrowser_1} />
-                        </p>
-                        <p>
-                          2. 추가 버튼 클릭
-                          <img src={Galaxy_SamsungBrowser_2} />
-                        </p>{" "}
-                      </div>
-                    </AccordionContent>
-                  )}
-                </AccordionSection>
+      {showInfoModal &&
+        createPortal(
+          <ModalBackGround>
+            <Modal>
+              <ModalContentWrapper>
+                <ModalHeader>
+                  <img src={궁금해하는횃불이} className="wonder-character" />
+                  <h2>UNI Dorm 앱 설치하기!</h2>
+                  <span>
+                    App Store와 Google Play Store에는 곧 출시 예정입니다. 그
+                    전까지는 아래 방법을 참고해 주세요!
+                  </span>
+                </ModalHeader>
+                <ModalScrollArea>
+                  {/* Galaxy Section */}
+                  <AccordionSection>
+                    <AccordionHeader onClick={() => toggleSection("galaxy")}>
+                      <span>Galaxy</span>
+                      <Chevron>{openSection === "galaxy" ? "▲" : "▼"}</Chevron>
+                    </AccordionHeader>
+                    {openSection === "galaxy" && (
+                      <AccordionContent>
+                        Samsung Galaxy에서의 설치 방법을 안내드립니다.
+                        <div>
+                          <h3>Chrome</h3>
+                          <p>
+                            1. 우측 상단의 점 세개 메뉴 버튼 클릭
+                            <img src={Galaxy_Chrome_1} />
+                          </p>
+                          <p>
+                            2. 홈 화면 추가 클릭
+                            <img src={Galaxy_Chrome_2} />
+                          </p>{" "}
+                          <p>
+                            3. 설치 클릭
+                            <img src={Galaxy_Chrome_3} />
+                          </p>{" "}
+                          <p>
+                            4. 설치 클릭
+                            <img src={Galaxy_Chrome_4} />
+                          </p>
+                        </div>
+                        <h3>삼성 인터넷</h3>
+                        <div>
+                          <p>
+                            1. 우측 상단의 다운로드 모양 아이콘 클릭
+                            <img src={Galaxy_SamsungBrowser_1} />
+                          </p>
+                          <p>
+                            2. 추가 버튼 클릭
+                            <img src={Galaxy_SamsungBrowser_2} />
+                          </p>{" "}
+                        </div>
+                      </AccordionContent>
+                    )}
+                  </AccordionSection>
 
-                {/* iPhone Section */}
-                <AccordionSection>
-                  <AccordionHeader onClick={() => toggleSection("iphone")}>
-                    <span>iPhone</span>
-                    <Chevron>{openSection === "iphone" ? "▲" : "▼"}</Chevron>
-                  </AccordionHeader>
-                  {openSection === "iphone" && (
-                    <AccordionContent>
-                      Apple iPhone에서의 설치 방법을 안내드립니다.
-                      <h3>Safari</h3>
-                      <div>
-                        <p>
-                          1. 하단 가운데 버튼 클릭
-                          <img src={iPhone_Safari_1} />
-                        </p>
-                        <p>
-                          2. '홈 화면에 추가' 버튼 클릭
-                          <img src={iPhone_Safari_2} />
-                        </p>
-                        <p>
-                          3. 우측 상단 추가 버튼 클릭
-                          <img src={iPhone_Safari_3} />
-                        </p>
-                      </div>
-                    </AccordionContent>
-                  )}
-                </AccordionSection>
-              </ModalScrollArea>
-            </ModalContentWrapper>
-            <ButtonGroupWrapper>
-              <RoundSquareWhiteButton
-                btnName={"닫기"}
-                onClick={() => {
-                  setShowInfoModal(false);
-                }}
-              />
-            </ButtonGroupWrapper>
-          </Modal>
-        </ModalBackGround>
-      )}
+                  {/* iPhone Section */}
+                  <AccordionSection>
+                    <AccordionHeader onClick={() => toggleSection("iphone")}>
+                      <span>iPhone</span>
+                      <Chevron>{openSection === "iphone" ? "▲" : "▼"}</Chevron>
+                    </AccordionHeader>
+                    {openSection === "iphone" && (
+                      <AccordionContent>
+                        Apple iPhone에서의 설치 방법을 안내드립니다.
+                        <h3>Safari</h3>
+                        <div>
+                          <p>
+                            1. 하단 가운데 버튼 클릭
+                            <img src={iPhone_Safari_1} />
+                          </p>
+                          <p>
+                            2. '홈 화면에 추가' 버튼 클릭
+                            <img src={iPhone_Safari_2} />
+                          </p>
+                          <p>
+                            3. 우측 상단 추가 버튼 클릭
+                            <img src={iPhone_Safari_3} />
+                          </p>
+                        </div>
+                      </AccordionContent>
+                    )}
+                  </AccordionSection>
+                </ModalScrollArea>
+              </ModalContentWrapper>
+              <ButtonGroupWrapper>
+                <RoundSquareWhiteButton
+                  btnName={"닫기"}
+                  onClick={() => {
+                    setShowInfoModal(false);
+                  }}
+                />
+              </ButtonGroupWrapper>
+            </Modal>
+          </ModalBackGround>,
+          document.body,
+        )}
     </StyledHeader>
   );
 }
