@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import back from "../../assets/header/back.svg";
 import TopRightDropdownMenu from "./TopRightDropdownMenu.tsx";
@@ -13,6 +13,17 @@ import { Bell } from "lucide-react";
 import useUserStore from "../../stores/useUserStore.ts";
 import 궁금해하는횃불이 from "../../assets/roommate/궁금해하는횃불이.png";
 import RoundSquareWhiteButton from "../button/RoundSquareWhiteButton.tsx";
+
+import Galaxy_Chrome_1 from "../../assets/app-install/Galaxy_Chrome_1.jpg";
+import Galaxy_Chrome_2 from "../../assets/app-install/Galaxy_Chrome_2.jpg";
+import Galaxy_Chrome_3 from "../../assets/app-install/Galaxy_Chrome_3.jpg";
+import Galaxy_Chrome_4 from "../../assets/app-install/Galaxy_Chrome_4.jpg";
+import Galaxy_SamsungBrowser_1 from "../../assets/app-install/Galaxy_SamsungBrowser_1.jpg";
+import Galaxy_SamsungBrowser_2 from "../../assets/app-install/Galaxy_SamsungBrowser_2.jpg";
+import iPhone_Safari_1 from "../../assets/app-install/iPhone_Safari_1.png";
+import iPhone_Safari_2 from "../../assets/app-install/iPhone_Safari_2.png";
+import iPhone_Safari_3 from "../../assets/app-install/iPhone_Safari_3.png";
+import { createPortal } from "react-dom";
 
 interface MenuItemType {
   label: string;
@@ -42,6 +53,7 @@ export default function Header({
     "other",
   );
   const [showInfoModal, setShowInfoModal] = useState(false);
+  const deferredPromptRef = useRef<any>(null); // ← 설치 이벤트 저장용 ref
 
   const { tokenInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
@@ -49,6 +61,35 @@ export default function Header({
   useEffect(() => {
     setPlatform(getMobilePlatform());
   }, []);
+
+  // beforeinstallprompt 이벤트 감지
+  useEffect(() => {
+    const handler = (e: Event) => {
+      e.preventDefault();
+      deferredPromptRef.current = e;
+      console.log("PWA 설치 가능 상태 감지됨");
+    };
+    window.addEventListener("beforeinstallprompt", handler as EventListener);
+
+    return () => {
+      window.removeEventListener(
+        "beforeinstallprompt",
+        handler as EventListener,
+      );
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (deferredPromptRef.current) {
+      deferredPromptRef.current.prompt();
+      const { outcome } = await deferredPromptRef.current.userChoice;
+      console.log(`사용자 선택: ${outcome}`);
+      deferredPromptRef.current = null;
+    } else {
+      // 설치 이벤트가 없는 경우 기존 모달 띄우기
+      setShowInfoModal(true);
+    }
+  };
 
   const [hasMatchingRequests, setHasMatchingRequests] = useState(false);
   useEffect(() => {
@@ -132,6 +173,23 @@ export default function Header({
     }
   };
 
+  // Header 컴포넌트 내부
+  const [openSection, setOpenSection] = useState<null | "galaxy" | "iphone">(
+    null,
+  );
+
+  const toggleSection = (section: "galaxy" | "iphone") => {
+    setOpenSection((prev) => (prev === section ? null : section));
+  };
+
+  const isMain =
+    location.pathname === "/home" ||
+    location.pathname === "/" ||
+    location.pathname === "/roommate" ||
+    location.pathname === "/chat" ||
+    location.pathname === "/mypage" ||
+    location.pathname === "/groupPurchase/comingsoon";
+
   return (
     <StyledHeader
       $hasShadow={shadowSelector()}
@@ -153,13 +211,9 @@ export default function Header({
         </Left>
 
         <Right>
-          {/*<RoundButton*/}
-          {/*  onClick={() => {*/}
-          {/*    setShowInfoModal(true);*/}
-          {/*  }}*/}
-          {/*>*/}
-          {/*  앱 설치하기*/}
-          {/*</RoundButton>*/}
+          {isMain && (
+            <RoundButton onClick={handleInstallClick}>앱 설치하기</RoundButton>
+          )}
           {showAlarm && <NotificationBell hasNew={hasMatchingRequests} />}
 
           {menuItems && <TopRightDropdownMenu items={menuItems} />}
@@ -167,75 +221,104 @@ export default function Header({
       </MainLine>
       <SecondLine>{secondHeader}</SecondLine>
 
-      {showInfoModal && (
-        <ModalBackGround>
-          <Modal>
-            <ModalContentWrapper>
-              <ModalHeader>
-                <img src={궁금해하는횃불이} className="wonder-character" />
-                <h2>UNI Dorm 앱 설치하기!</h2>
-                <span>
-                  App Store와 Google Play Store에는 곧 출시 예정입니다. 그
-                  전까지는 아래 방법을 참고해 주세요!
-                </span>
-              </ModalHeader>
-              <ModalScrollArea>
-                <h3>Galaxy</h3>
-                <p>Samsung Galaxy에서의 설치 방법을 안내드립니다.</p>
+      {showInfoModal &&
+        createPortal(
+          <ModalBackGround>
+            <Modal>
+              <ModalContentWrapper>
+                <ModalHeader>
+                  <img src={궁금해하는횃불이} className="wonder-character" />
+                  <h2>UNI Dorm 앱 설치하기!</h2>
+                  <span>
+                    App Store와 Google Play Store에는 곧 출시 예정입니다. 그
+                    전까지는 아래 방법을 참고해 주세요!
+                  </span>
+                </ModalHeader>
+                <ModalScrollArea>
+                  {/* Galaxy Section */}
+                  <AccordionSection>
+                    <AccordionHeader onClick={() => toggleSection("galaxy")}>
+                      <span>Galaxy</span>
+                      <Chevron>{openSection === "galaxy" ? "▲" : "▼"}</Chevron>
+                    </AccordionHeader>
+                    {openSection === "galaxy" && (
+                      <AccordionContent>
+                        Samsung Galaxy에서의 설치 방법을 안내드립니다.
+                        <div>
+                          <h3>Chrome</h3>
+                          <p>
+                            1. 우측 상단의 점 세개 메뉴 버튼 클릭
+                            <img src={Galaxy_Chrome_1} />
+                          </p>
+                          <p>
+                            2. 홈 화면 추가 클릭
+                            <img src={Galaxy_Chrome_2} />
+                          </p>{" "}
+                          <p>
+                            3. 설치 클릭
+                            <img src={Galaxy_Chrome_3} />
+                          </p>{" "}
+                          <p>
+                            4. 설치 클릭
+                            <img src={Galaxy_Chrome_4} />
+                          </p>
+                        </div>
+                        <h3>삼성 인터넷</h3>
+                        <div>
+                          <p>
+                            1. 우측 상단의 다운로드 모양 아이콘 클릭
+                            <img src={Galaxy_SamsungBrowser_1} />
+                          </p>
+                          <p>
+                            2. 추가 버튼 클릭
+                            <img src={Galaxy_SamsungBrowser_2} />
+                          </p>{" "}
+                        </div>
+                      </AccordionContent>
+                    )}
+                  </AccordionSection>
 
-                <h3>iPhone</h3>
-                <p>
-                  <strong>
-                    반드시 룸메이트 사전 지정 기간에 인천대학교 포털에서
-                    신청해주세요!!!!
-                    <br />❍ 신청기간 : 2025. 08. 15(금) 00:00 ~ 08. 17(일) 23:59
-                  </strong>
-                  <br />
-                  ❍ 신청방법
-                  <br />- 포털(
-                  <a
-                    href="https://portal.inu.ac.kr"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    https://portal.inu.ac.kr
-                  </a>
-                  ) → 통합정보 → 부속행정(생활원) → 합격조회
-                  <br />
-                  ❍ 주의사항
-                  <br />
-                  - 입사기간 및 호실형태가 동일한 학생끼리 서로 신청해야
-                  룸메이트 매칭 가능
-                  <br />
-                  ▷ 별도선발 신청자의 룸메이트 신청을 원하는 경우, 별도선발 부서
-                  신청 기간 내 신청바랍니다.
-                  <br />
-                  - 룸메이트 신청은 2명이 서로 신청한 경우에만 신청이 인정됨
-                  <br />
-                  <br />
-                  기타 자세한 사항은{" "}
-                  <a
-                    href="https://dorm.inu.ac.kr/dorm/6521/subview.do?enc=Zm5jdDF8QEB8JTJGYmJzJTJGZG9ybSUyRjIwMDMlMkY0MTAwNjIlMkZhcnRjbFZpZXcuZG8lM0Y%3D"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    여기
-                  </a>
-                  를 클릭하여 확인
-                </p>
-              </ModalScrollArea>
-            </ModalContentWrapper>
-            <ButtonGroupWrapper>
-              <RoundSquareWhiteButton
-                btnName={"닫기"}
-                onClick={() => {
-                  setShowInfoModal(false);
-                }}
-              />
-            </ButtonGroupWrapper>
-          </Modal>
-        </ModalBackGround>
-      )}
+                  {/* iPhone Section */}
+                  <AccordionSection>
+                    <AccordionHeader onClick={() => toggleSection("iphone")}>
+                      <span>iPhone</span>
+                      <Chevron>{openSection === "iphone" ? "▲" : "▼"}</Chevron>
+                    </AccordionHeader>
+                    {openSection === "iphone" && (
+                      <AccordionContent>
+                        Apple iPhone에서의 설치 방법을 안내드립니다.
+                        <h3>Safari</h3>
+                        <div>
+                          <p>
+                            1. 하단 가운데 버튼 클릭
+                            <img src={iPhone_Safari_1} />
+                          </p>
+                          <p>
+                            2. '홈 화면에 추가' 버튼 클릭
+                            <img src={iPhone_Safari_2} />
+                          </p>
+                          <p>
+                            3. 우측 상단 추가 버튼 클릭
+                            <img src={iPhone_Safari_3} />
+                          </p>
+                        </div>
+                      </AccordionContent>
+                    )}
+                  </AccordionSection>
+                </ModalScrollArea>
+              </ModalContentWrapper>
+              <ButtonGroupWrapper>
+                <RoundSquareWhiteButton
+                  btnName={"닫기"}
+                  onClick={() => {
+                    setShowInfoModal(false);
+                  }}
+                />
+              </ButtonGroupWrapper>
+            </Modal>
+          </ModalBackGround>,
+          document.body,
+        )}
     </StyledHeader>
   );
 }
@@ -357,35 +440,35 @@ const Badge = styled.div`
   border-radius: 50%;
 `;
 
-// const RoundButton = styled.button`
-//   display: flex;
-//   align-items: center;
-//   gap: 6px;
-//   width: fit-content;
-//   height: fit-content;
-//   padding: 8px 16px;
-//   box-sizing: border-box;
-//   background: linear-gradient(135deg, #0a84ff, #4aa3ff);
-//   color: white;
-//   border: none;
-//   border-radius: 25px;
-//   font-weight: 600;
-//   font-size: 15px;
-//   cursor: pointer;
-//   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-//   transition: all 0.2s ease;
-//
-//   &:hover {
-//     background: linear-gradient(135deg, #0980f8, #3794f5);
-//     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
-//     transform: translateY(-1px);
-//   }
-//
-//   &:active {
-//     transform: translateY(1px);
-//     box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
-//   }
-// `;
+const RoundButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  height: fit-content;
+  padding: 8px 16px;
+  box-sizing: border-box;
+  background: linear-gradient(135deg, #0a84ff, #4aa3ff);
+  color: white;
+  border: none;
+  border-radius: 25px;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: linear-gradient(135deg, #0980f8, #3794f5);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(1px);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+  }
+`;
 
 const ModalBackGround = styled.div`
   position: fixed;
@@ -477,4 +560,42 @@ const ButtonGroupWrapper = styled.div`
   display: flex;
   flex-direction: row;
   gap: 6px;
+`;
+
+const AccordionSection = styled.div`
+  margin-bottom: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+`;
+
+const AccordionHeader = styled.div`
+  background: #f7f7f7;
+  padding: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 16px;
+
+  &:hover {
+    background: #ececec;
+  }
+`;
+
+const Chevron = styled.span`
+  font-size: 12px;
+`;
+
+const AccordionContent = styled.div`
+  padding: 12px;
+  background: #fff;
+  font-size: 14px;
+  color: #333;
+
+  img {
+    width: 100%;
+    //height: fit-content;
+  }
 `;
