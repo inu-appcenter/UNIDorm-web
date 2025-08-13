@@ -38,9 +38,11 @@ import AnnounceDetailPage from "./pages/Announcement/AnnounceDetailPage.tsx";
 import AnnounceWritePage from "./pages/Admin/AnnounceWritePage.tsx";
 import NotificationPage from "./pages/NotificationPage.tsx";
 import CalendarPage from "./pages/CalendarPage.tsx";
+import { useFcmToken } from "./hooks/useFcmToken.ts";
 
 function App() {
   console.log("현재 MODE:", import.meta.env.MODE);
+  useFcmToken();
 
   if (import.meta.env.MODE === "production") {
     console.log = () => {};
