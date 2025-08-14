@@ -158,7 +158,7 @@ export default function RoomMateFilterPage() {
       Object.entries(filters).filter(([, v]) => v !== null && v !== undefined),
     );
 
-    navigate("/roommatelist", { state: { filters: filteredFilters } });
+    navigate("/roommate/list", { state: { filters: filteredFilters } });
   };
 
   return (

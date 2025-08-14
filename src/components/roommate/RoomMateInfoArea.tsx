@@ -19,17 +19,17 @@ const RoomMateInfoArea = ({
     return (
       <ChecklistBanner>
         등록된 내 룸메이트가 없어요! 😢 <br />
-        룸메이트 탭에서 룸메이트를 찾아보세요.
+        지금 바로 룸메이트 탭에서 룸메이트를 찾아보세요.
         <div className="button-group">
           <button onClick={() => navigate("/roommate")}>
-            지금 바로 룸메이트 찾으러 가기 →
+            룸메이트 찾으러 가기 →
           </button>
         </div>
         <br />
         이미 같이 하기로 한 룸메이트가 있다면?
         <div className="button-group">
-          <button onClick={() => navigate("/roommateadd")}>
-            룸메이트 등록하러 가기 →
+          <button onClick={() => navigate("/roommate/add")}>
+            학번으로 룸메이트 등록하러 가기 →
           </button>
         </div>
       </ChecklistBanner>

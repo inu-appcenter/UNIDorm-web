@@ -4,6 +4,7 @@ import GroupPurchaseList from "../../components/GroupPurchase/GroupPurchaseList"
 import { useNavigate } from "react-router-dom";
 import { FaSearch } from "react-icons/fa";
 import Header from "../../components/common/Header.tsx";
+import BottomBar from "../../components/common/BottomBar.tsx";
 
 const CATEGORY_LIST = ["전체", "배달", "식자재", "생활용품", "기타"];
 const SORT_OPTIONS = ["마감 임박 순", "최신순", "좋아요 순"];
@@ -91,6 +92,7 @@ export default function GroupPurchaseMainPage() {
       <WriteButton onClick={() => navigate("/groupPurchase/write")}>
         ✏️ 글쓰기
       </WriteButton>
+      <BottomBar />
     </PageWrapper>
   );
 }

@@ -2,11 +2,11 @@ import styled from "styled-components";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import RoomMateCard from "../../components/roommate/RoomMateCard.tsx";
 import Header from "../../components/common/Header.tsx";
-import { getRoomMateList } from "../../apis/roommate.ts";
 import { useEffect, useState } from "react";
 import { RoommatePost } from "../../types/roommates.ts";
 import { useLocation, useNavigate } from "react-router-dom";
 import FilterButton from "../../components/button/FilterButton.tsx";
+import { useRoomMateContext } from "../../stores/RoomMateContext.tsx";
 
 function FilterTags({ filters }: { filters: Record<string, any> }) {
   const filteredTags = Object.values(filters).filter((value) => {
@@ -54,7 +54,8 @@ const Tag = styled.div`
 `;
 
 export default function RoomMateListPage() {
-  const [roommates, setRoommates] = useState<RoommatePost[]>([]);
+  const { roommates } = useRoomMateContext();
+
   const [filteredRoommates, setFilteredRoommates] = useState<RoommatePost[]>(
     [],
   );
@@ -73,23 +74,23 @@ export default function RoomMateListPage() {
     }
   }, [location.state?.filters]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await getRoomMateList();
-        setRoommates(response.data); // API에서 받은 데이터 저장
-        console.log(response.data);
-      } catch (error) {
-        console.error("룸메이트 목록 가져오기 실패:", error);
-      }
-    };
-
-    fetchData();
-  }, []);
+  // // API 호출 (roommates 비어있을 때만)
+  // useEffect(() => {
+  //   if (roommates.length > 0) return;
+  //   const fetchData = async () => {
+  //     try {
+  //       const response = await getRoomMateList();
+  //       setRoommates(response.data);
+  //     } catch (error) {
+  //       console.error("룸메이트 목록 가져오기 실패:", error);
+  //     }
+  //   };
+  //   fetchData();
+  // }, [roommates, setRoommates]);
 
   useEffect(() => {
     // roommates가 있고 필터 조건이 있을 때 필터 적용
-    if (roommates.length === 0) return;
+    if (!Array.isArray(roommates) || roommates.length === 0) return;
 
     const filtered = roommates.filter((post) => {
       if (filters.dormType && post.dormType !== filters.dormType) return false;
@@ -146,7 +147,7 @@ export default function RoomMateListPage() {
             <FilterArea>
               <FilterButton
                 onClick={() => {
-                  navigate("/roommatelist/filter", {
+                  navigate("/roommate/filter", {
                     state: { filters: filters },
                   });
                 }}

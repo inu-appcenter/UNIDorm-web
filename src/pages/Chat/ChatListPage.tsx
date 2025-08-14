@@ -11,6 +11,7 @@ import ChatListItem from "../../components/chat/ChatListItem.tsx";
 import styled from "styled-components";
 import useUserStore from "../../stores/useUserStore.ts";
 import TopNoticeBanner from "../../components/chat/TopNoticeBanner.tsx";
+import BottomBar from "../../components/common/BottomBar.tsx";
 
 export default function ChatListPage() {
   const navigate = useNavigate();
@@ -163,6 +164,7 @@ export default function ChatListPage() {
           </EmptyMessage>
         )}
       </ContentWrapper>
+      <BottomBar />
     </ChatListPageWrapper>
   );
 }
