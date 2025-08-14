@@ -22,6 +22,7 @@ import {
 } from "../../apis/members.ts";
 import RoundSquareWhiteButton from "../../components/button/RoundSquareWhiteButton.tsx";
 import { useNavigate } from "react-router-dom";
+import BottomBar from "../../components/common/BottomBar.tsx";
 
 export default function MyRoomMatePage() {
   const [roommateInfo, setRoommateInfo] =
@@ -403,6 +404,7 @@ export default function MyRoomMatePage() {
           </div>
         )}
       </DisabledWrapper>
+      <BottomBar />
     </MyRoomMatePageWrapper>
   );
 }

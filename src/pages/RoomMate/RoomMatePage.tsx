@@ -2,54 +2,19 @@ import styled from "styled-components";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import RoomMateCard from "../../components/roommate/RoomMateCard.tsx";
 import Header from "../../components/common/Header.tsx";
-import { useEffect, useState } from "react";
-import { RoommatePost, SimilarRoommatePost } from "../../types/roommates.ts";
-import {
-  getRoomMateList,
-  getSimilarRoomMateList,
-} from "../../apis/roommate.ts";
 
 import { useNavigate } from "react-router-dom";
-import useUserStore from "../../stores/useUserStore.ts"; // 추가 필요
+import useUserStore from "../../stores/useUserStore.ts";
+import BottomBar from "../../components/common/BottomBar.tsx";
+import { useRoomMateContext } from "../../stores/RoomMateContext.tsx"; // 추가 필요
 
 export default function RoomMatePage() {
   const { tokenInfo, userInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
   const hasChecklist = userInfo.roommateCheckList;
 
-  const [roommates, setRoommates] = useState<RoommatePost[]>([]);
-  const [similarRoommates, setSimilarRoommates] = useState<
-    SimilarRoommatePost[]
-  >([]);
+  const { roommates, similarRoommates } = useRoomMateContext();
   const navigate = useNavigate(); // 페이지 이동을 위한 hook
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await getRoomMateList();
-        setRoommates(response.data);
-      } catch (error) {
-        console.error("룸메이트 목록 가져오기 실패:", error);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        if (!isLoggedIn) return;
-        const response = await getSimilarRoomMateList();
-        console.log(response.data);
-        setSimilarRoommates(response.data);
-      } catch (error) {
-        console.error("유사한 룸메이트 목록 가져오기 실패:", error);
-      }
-    };
-
-    fetchData();
-  }, []);
 
   const filteredSimilarRoommates = similarRoommates.filter(
     (post) => post.dormType === userInfo.dormType,
@@ -62,7 +27,7 @@ export default function RoomMatePage() {
       <TitleContentArea
         title={"최신순"}
         description={"룸메이트를 구하고 있는 다양한 UNI들을 찾아보세요!"}
-        link={"/roommatelist"}
+        link={"list"}
       >
         <>
           {roommates.length > 0 ? (
@@ -99,7 +64,7 @@ export default function RoomMatePage() {
           <>
             {/*로그인했는데 체크리스트를 작성하지 않은 경우*/}
             {isLoggedIn && !hasChecklist && (
-              <ChecklistBanner onClick={() => navigate("/roommatechecklist")}>
+              <ChecklistBanner onClick={() => navigate("/roommate/checklist")}>
                 아직 사전 체크리스트를 작성하지 않으셨네요! <br /> 체크리스트를
                 작성하면 나와 생활패턴이 비슷한 룸메이트를 추천받을 수 있어요.
                 <strong>지금 바로 체크리스트 작성하러 가기 →</strong>
@@ -139,11 +104,12 @@ export default function RoomMatePage() {
         }
       />
       {isLoggedIn && (
-        <WriteButton onClick={() => navigate("/roommatechecklist")}>
+        <WriteButton onClick={() => navigate("/roommate/checklist")}>
           ✏️ 사전 체크리스트 {!hasChecklist ? <>작성</> : <>수정</>}
           하기
         </WriteButton>
       )}
+      <BottomBar />
     </RoomMatePageWrapper>
   );
 }

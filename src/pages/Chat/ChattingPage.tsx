@@ -180,7 +180,7 @@ export default function ChattingPage() {
     {
       label: "사전 체크리스트 보기",
       onClick: async () => {
-        navigate("/roommatelist/opponent", { state: { partnerName, roomId } });
+        navigate("/roommate/checklist", { state: { partnerName, roomId } });
       },
     },
     {

@@ -2,6 +2,7 @@ import { useState } from "react";
 import styled from "styled-components";
 import Header from "../../components/common/Header.tsx";
 import 공동구매커밍쑨 from "../../assets/groupPurchase/공동구매커밍쑨.png";
+import BottomBar from "../../components/common/BottomBar.tsx";
 
 const CATEGORY_LIST = ["전체", "배달", "식자재", "생활용품", "기타"];
 
@@ -35,6 +36,7 @@ export default function GroupPurchaseComingSoonPage() {
       <Wrapper>
         <img src={공동구매커밍쑨} className={"comingsoon"} />
       </Wrapper>
+      <BottomBar />
     </PageWrapper>
   );
 }
