@@ -9,37 +9,27 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { fetchDailyRandomTips } from "../apis/tips.ts";
 import { Tip } from "../types/tips.ts";
 import RoomMateCard from "../components/roommate/RoomMateCard.tsx";
-import { getRoomMateList } from "../apis/roommate.ts";
-import { RoommatePost } from "../types/roommates.ts";
-import { getAnnouncements } from "../apis/announcements.ts";
-import { Announcement } from "../types/announcements.ts";
+import BottomBar from "../components/common/BottomBar.tsx";
+import { useAnnouncement } from "../stores/AnnouncementContext.tsx";
+import { useRoomMateContext } from "../stores/RoomMateContext.tsx";
 
 export default function HomePage() {
-  const [tips, setTips] = useState<Tip[]>([]);
-  const [notices, setNotices] = useState<Announcement[]>([]);
+  const [dailyTips, setDailyTips] = useState<Tip[]>([]);
+  const { notices } = useAnnouncement();
 
   useEffect(() => {
     const getTips = async () => {
       try {
         const data = await fetchDailyRandomTips();
-        setTips(data);
+        setDailyTips(data);
       } catch (err: any) {
         if (err.response?.status === 204) {
-          setTips([]); // 팁이 3개 미만인 경우 빈 배열
+          setDailyTips([]); // 팁이 3개 미만인 경우 빈 배열
         }
       }
     };
-    async function fetchAnnouncements() {
-      try {
-        const response = await getAnnouncements();
-        setNotices(response.data);
-      } catch (error) {
-        console.error("공지사항 불러오기 실패", error);
-      }
-    }
 
     getTips();
-    fetchAnnouncements();
   }, []);
 
   const sliderRef = useRef<HTMLDivElement>(null);
@@ -95,25 +85,14 @@ export default function HomePage() {
     };
   }, []);
 
-  const [roommates, setRoommates] = useState<RoommatePost[]>([]);
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await getRoomMateList();
-        setRoommates(response.data);
-      } catch (error) {
-        console.error("룸메이트 목록 가져오기 실패:", error);
-      }
-    };
-
-    fetchData();
-  }, []);
+  const { roommates } = useRoomMateContext();
 
   const randomRoommate = useMemo(() => {
-    if (!roommates || roommates.length === 0) return null;
+    if (!Array.isArray(roommates) || roommates.length === 0) return null;
 
     const unmatchedRoommates = roommates.filter((r) => !r.matched);
-    if (unmatchedRoommates.length === 0) return null;
+    if (!Array.isArray(unmatchedRoommates) || unmatchedRoommates.length === 0)
+      return null;
 
     const index = Math.floor(Math.random() * unmatchedRoommates.length);
     return unmatchedRoommates[index];
@@ -207,8 +186,8 @@ export default function HomePage() {
           link={"/tips"}
           children={
             <>
-              {tips.length > 0 ? (
-                tips.map((tip, key) => (
+              {dailyTips.length > 0 ? (
+                dailyTips.map((tip, key) => (
                   <HomeTipsCard
                     key={key}
                     index={key + 1}
@@ -235,6 +214,7 @@ export default function HomePage() {
         {/*  children={<GroupPurchaseList />}*/}
         {/*/>*/}
       </ContentWrapper>
+      <BottomBar />
     </HomePageWrapper>
   );
 }

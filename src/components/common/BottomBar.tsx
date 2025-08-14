@@ -167,7 +167,7 @@ export default function BottomBar() {
         defaultImg={roommate}
         clickedImg={roommateClicked}
         buttonName="룸메이트"
-        isActive={pathname === "/roommate" || pathname === "/myroommate"}
+        isActive={pathname === "/roommate" || pathname === "/roommate/my"}
         onClick={() => {
           const fetchRoommateInfo = async () => {
             if (!isLoggedIn) {
@@ -176,7 +176,7 @@ export default function BottomBar() {
             }
             try {
               await getMyRoommateInfo();
-              navigate("/myroommate");
+              navigate("/roommate/my");
             } catch (err: any) {
               navigate("/roommate");
               console.log(err);

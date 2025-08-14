@@ -12,7 +12,7 @@ export const createMenuGroups = (
       { label: "내 정보 수정", onClick: () => navigate("/myinfoedit") },
       {
         label: "사전 체크리스트 등록/수정",
-        onClick: () => navigate("/roommatechecklist"),
+        onClick: () => navigate("/roommate/checklist"),
       },
     ],
   },
@@ -27,8 +27,8 @@ export const createMenuGroups = (
   {
     title: "룸메이트",
     menus: [
-      { label: "내 룸메이트", onClick: () => navigate("/myroommate") },
-      { label: "룸메이트 등록하기", onClick: () => navigate("/roommateadd") },
+      { label: "내 룸메이트", onClick: () => navigate("/roommate/my") },
+      { label: "룸메이트 등록하기", onClick: () => navigate("/roommate/add") },
       {
         label: "룸메이트 해제하기",
         onClick: () => {

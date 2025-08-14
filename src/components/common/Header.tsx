@@ -140,7 +140,7 @@ export default function Header({
         return "알림";
       case "/roommatelist/1":
         return "게시글";
-      case "/roommatechecklist":
+      case "/roommate/checklist":
         return "사전 체크리스트";
       default:
         return "";
@@ -163,8 +163,7 @@ export default function Header({
       case "/notification":
       case "/home":
       case "/roommate":
-      case "/roommatelist":
-      case "/roommatelist/1":
+      case "/roommate/list":
       case "/":
       case "/mypage":
         return true;
