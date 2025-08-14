@@ -271,9 +271,6 @@ export default function MyInfoEditPage() {
 
         <TitleContentArea
           title={"닉네임"}
-          description={
-            "간혹 회원 정보 변경 중 오류가 발생하는 경우가 있습니다. 변경 전 닉네임과 변경하시려는 닉네임을 [마이페이지->1대1 문의]에 남겨주시면 확인해보겠습니다."
-          }
           children={
             <StyledInput
               placeholder="닉네임은 2자~8자 이내로 입력해주세요."
