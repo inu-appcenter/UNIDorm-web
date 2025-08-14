@@ -5,30 +5,14 @@ import Header from "../../components/common/Header";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import TipCard from "../../components/tip/TipCard";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { fetchTips } from "../../apis/tips";
-import { Tip } from "../../types/tips.ts";
 import useUserStore from "../../stores/useUserStore.ts";
+import { useTipContext } from "../../stores/TipContext.tsx";
 
 export default function TipListPage() {
   const navigate = useNavigate();
-  const [tips, setTips] = useState<Tip[]>([]);
+  const { tips } = useTipContext();
   const { tokenInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
-
-  useEffect(() => {
-    const loadTips = async () => {
-      try {
-        const data = await fetchTips();
-        console.log(data);
-        setTips(data);
-      } catch (error) {
-        console.error("팁 리스트 불러오기 실패:", error);
-      }
-    };
-
-    loadTips();
-  }, []);
 
   return (
     <TipPageWrapper>

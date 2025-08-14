@@ -22,7 +22,7 @@ const RoomMateCard = ({
 
   return (
     <CardWrapper
-      onClick={() => !matched && navigate(`/roommatelist/${boardId}`)}
+      onClick={() => !matched && navigate(`/roommate/list/${boardId}`)}
       matched={matched}
     >
       {matched && <DisabledOverlay />}

@@ -10,6 +10,7 @@ import RoomMateInfoArea from "../components/roommate/RoomMateInfoArea.tsx";
 import { getMyRoommateInfo } from "../apis/roommate.ts";
 import { MyRoommateInfoResponse } from "../types/roommates.ts";
 import TitleContentArea from "../components/common/TitleContentArea.tsx";
+import BottomBar from "../components/common/BottomBar.tsx";
 
 const MyPage = () => {
   const { tokenInfo } = useUserStore();
@@ -91,6 +92,7 @@ const MyPage = () => {
 
         <MenuGroup title={menuGroups[3].title} menus={menuGroups[3].menus} />
       </MenuGroupsWrapper>
+      <BottomBar />
     </MyPageWrapper>
   );
 };

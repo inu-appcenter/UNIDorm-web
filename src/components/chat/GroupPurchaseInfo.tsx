@@ -47,7 +47,6 @@ const GroupPurchaseInfoWrapper = styled.div`
   gap: 5px;
 
   .dDay {
-    font-family: "Pretendard";
     font-style: normal;
     font-weight: 500;
     font-size: 10px;
@@ -62,7 +61,6 @@ const GroupPurchaseInfoWrapper = styled.div`
     justify-content: center;
   }
   .people {
-    font-family: "Pretendard";
     font-style: normal;
     font-weight: 400;
     font-size: 10px;

@@ -196,7 +196,6 @@ const CalendarContainer = styled.div`
   flex-direction: column;
   width: 100%;
   max-width: 480px;
-  font-family: sans-serif;
 `;
 
 const Weekdays = styled.div`

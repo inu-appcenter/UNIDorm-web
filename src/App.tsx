@@ -3,44 +3,68 @@ import { BrowserRouter, Route, Routes, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { getMemberInfo } from "./apis/members";
 import useUserStore from "./stores/useUserStore";
+
+// 공통 레이아웃 페이지
 import RootPage from "./pages/RootPage";
+import SubPage from "./pages/SubPage";
+import OutPage from "./pages/OutPage";
+
+// 개별 페이지
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
-import ChatListPage from "./pages/Chat/ChatListPage.tsx";
-import RoomMatePage from "./pages/RoomMate/RoomMatePage.tsx";
-import MyPage from "./pages/MyPage.tsx";
-import NotificationBoardPage from "./pages/Announcement/AnnouncementPage.tsx";
-import TipListPage from "./pages/Tip/TipListPage.tsx";
-import TipWritePage from "./pages/Tip/TipWritePage.tsx";
-import TipDetailPage from "./pages/Tip/TipDetailPage.tsx";
-import RoomMateListPage from "./pages/RoomMate/RoomMateListPage.tsx";
-import RoomMateBoardDetailPage from "./pages/RoomMate/RoomMateBoardDetailPage.tsx";
-import OutPage from "./pages/OutPage.tsx";
-import SubPage from "./pages/SubPage.tsx";
-import GroupPurchasePostPage from "./pages/GroupPurchase/GroupPurchasePostPage.tsx";
-import GroupPurchaseWritePage from "./pages/GroupPurchase/GroupPurchaseWritePage.tsx";
-import RoomMateChecklistPage from "./pages/RoomMate/RoomMateChecklistPage.tsx";
-import MyPostsPage from "./pages/MyPostsPage.tsx";
-import GroupPurchaseMainPage from "./pages/GroupPurchase/GroupPurchaseMainPage.tsx";
-import MyLikesPage from "./pages/MyLikesPage.tsx";
-import MyInfoEditPage from "./pages/MyPage/MyInfoEditPage.tsx";
-import MyRoomMatePage from "./pages/RoomMate/MyRoomMatePage.tsx";
-import RoomMateAddPage from "./pages/RoomMate/RoomMateAddPage.tsx";
-import ChattingPage from "./pages/Chat/ChattingPage.tsx";
+import LogoutPage from "./pages/LogoutPage";
+import OnboardingPage from "./pages/OnboardingPage";
+import MyPage from "./pages/MyPage";
+import MyInfoEditPage from "./pages/MyPage/MyInfoEditPage";
+import MyPostsPage from "./pages/MyPostsPage";
+import MyLikesPage from "./pages/MyLikesPage";
+
+// RoomMate
+import RoomMatePage from "./pages/RoomMate/RoomMatePage";
+import MyRoomMatePage from "./pages/RoomMate/MyRoomMatePage";
+import RoomMateListPage from "./pages/RoomMate/RoomMateListPage";
+import RoomMateBoardDetailPage from "./pages/RoomMate/RoomMateBoardDetailPage";
+import RoomMateFilterPage from "./pages/RoomMate/RoomMateFilterPage";
+import RoomMateChecklistPage from "./pages/RoomMate/RoomMateChecklistPage";
+import RoomMateAddPage from "./pages/RoomMate/RoomMateAddPage";
+
+// Chat
+import ChatListPage from "./pages/Chat/ChatListPage";
+import ChattingPage from "./pages/Chat/ChattingPage";
+
+// GroupPurchase
+import GroupPurchaseMainPage from "./pages/GroupPurchase/GroupPurchaseMainPage";
+import GroupPurchaseComingSoonPage from "./pages/GroupPurchase/GroupPurchaseComingSoonPage";
+import GroupPurchasePostPage from "./pages/GroupPurchase/GroupPurchasePostPage";
+import GroupPurchaseWritePage from "./pages/GroupPurchase/GroupPurchaseWritePage";
+
+// Announcement / Notification
+import NotificationBoardPage from "./pages/Announcement/AnnouncementPage";
+import AnnounceDetailPage from "./pages/Announcement/AnnounceDetailPage";
+import AnnounceWritePage from "./pages/Admin/AnnounceWritePage";
+import NotificationPage from "./pages/NotificationPage";
+
+// Tip
+import TipListPage from "./pages/Tip/TipListPage";
+import TipWritePage from "./pages/Tip/TipWritePage";
+import TipDetailPage from "./pages/Tip/TipDetailPage";
+
+// Admin
+import AdminMainPage from "./pages/Admin/AdminMainPage";
+import CalendarAdminPage from "./pages/Admin/CalendarAdminPage";
+
+// Calendar
+import CalendarPage from "./pages/CalendarPage";
+
 import "./init";
-import LogoutPage from "./pages/LogoutPage.tsx";
-import OnboardingPage from "./pages/OnboardingPage.tsx";
-import RoomMateFilterPage from "./pages/RoomMate/RoomMateFilterPage.tsx";
-import GroupPurchaseComingSoonPage from "./pages/GroupPurchase/GroupPurchaseComingSoonPage.tsx";
-import CalendarAdminPage from "./pages/Admin/CalendarAdminPage.tsx";
-import AdminMainPage from "./pages/Admin/AdminMainPage.tsx";
-import AnnounceDetailPage from "./pages/Announcement/AnnounceDetailPage.tsx";
-import AnnounceWritePage from "./pages/Admin/AnnounceWritePage.tsx";
-import NotificationPage from "./pages/NotificationPage.tsx";
-import CalendarPage from "./pages/CalendarPage.tsx";
+import { useFcmToken } from "./hooks/useFcmToken";
+import { RoomMateProvider } from "./stores/RoomMateContext.tsx";
+import { AnnouncementProvider } from "./stores/AnnouncementContext.tsx";
+import { TipProvider } from "./stores/TipContext.tsx";
 
 function App() {
   console.log("현재 MODE:", import.meta.env.MODE);
+  useFcmToken();
 
   if (import.meta.env.MODE === "production") {
     console.log = () => {};
@@ -62,7 +86,6 @@ function App() {
     const initializeUser = async () => {
       try {
         const response = await getMemberInfo();
-        console.log(response);
         setUserInfo(response.data);
 
         if (tokenInfo.accessToken && response.data.name === "") {
@@ -84,82 +107,94 @@ function App() {
 
   useEffect(() => {
     const firstVisit = localStorage.getItem("isFirstVisit");
-
     if (firstVisit === null) {
-      // 첫 방문이면 onboarding으로 이동
       navigate("/onboarding");
     }
-
-    // firstVisit이 존재하고 false일 경우 아무것도 하지 않음
   }, []);
 
   return (
-    <>
-      <Routes>
-        {/*로그인하기 전 페이지들*/}
-        <Route path="/" element={<OutPage />}>
-          <Route path={"/login"} element={<LoginPage />} />
-          <Route path="/logout" element={<LogoutPage />} />
-          <Route path="/onboarding" element={<OnboardingPage />} />
-        </Route>
-        {/*바텀바가 필요한 루트 페이지들*/}
-        <Route path="/" element={<RootPage />}>
-          <Route index element={<HomePage />} />
+    <RoomMateProvider>
+      <TipProvider>
+        <AnnouncementProvider>
+          <Routes>
+            {/* 로그인 / 온보딩 / 로그아웃 */}
+            <Route path="/" element={<OutPage />}>
+              <Route path="login" element={<LoginPage />} />
+              <Route path="logout" element={<LogoutPage />} />
+              <Route path="onboarding" element={<OnboardingPage />} />
+            </Route>
 
-          <Route path="/home" element={<HomePage />} />
-          <Route path="/roommate" element={<RoomMatePage />} />
-          <Route path="/myroommate" element={<MyRoomMatePage />} />
+            {/* 홈 / 마이페이지 */}
+            <Route element={<RootPage />}>
+              <Route index element={<HomePage />} />
+              <Route path="home" element={<HomePage />} />
+              <Route path="mypage" element={<MyPage />} />
+              <Route path="myinfoedit" element={<MyInfoEditPage />} />
+              <Route path="myposts" element={<MyPostsPage />} />
+              <Route path="liked" element={<MyLikesPage />} />
+            </Route>
 
-          <Route path="/groupPurchase" element={<GroupPurchaseMainPage />} />
-          <Route
-            path="/groupPurchase/comingsoon"
-            element={<GroupPurchaseComingSoonPage />}
-          />
+            {/* RoomMate */}
+            <Route path="roommate" element={<SubPage />}>
+              <Route index element={<RoomMatePage />} />
+              <Route path="my" element={<MyRoomMatePage />} />
 
-          <Route path="/chat" element={<ChatListPage />} />
-          <Route path="/mypage" element={<MyPage />} />
-        </Route>
-        {/*바텀바가 필요없는 2뎁스 이상 페이지들*/}
-        <Route path="/" element={<SubPage />}>
-          <Route path="/calendar" element={<CalendarPage />} />
-          <Route path="/roommatelist" element={<RoomMateListPage />} />
-          <Route
-            path="/roommatelist/:boardId"
-            element={<RoomMateBoardDetailPage />}
-          />
-          <Route
-            path={"/roommatelist/filter"}
-            element={<RoomMateFilterPage />}
-          />
-          <Route
-            path="/roommatechecklist"
-            element={<RoomMateChecklistPage />}
-          />
-          <Route path="/myinfoedit" element={<MyInfoEditPage />} />
-          <Route path={"/notification"} element={<NotificationPage />} />
-          <Route path="/announcements" element={<NotificationBoardPage />} />
-          <Route path="/announcements/:id" element={<AnnounceDetailPage />} />
-          <Route path="/announcements/write" element={<AnnounceWritePage />} />
-          <Route path="/chat/:chatType/:id" element={<ChattingPage />} />
-          <Route path="/tips/write" element={<TipWritePage />} />
-          <Route path="/tips/:boardId" element={<TipDetailPage />} />
-          <Route path="/tips" element={<TipListPage />} />
-          <Route path="/myposts" element={<MyPostsPage />} />
-          <Route path="/liked" element={<MyLikesPage />} />
-          <Route
-            path="/groupPurchase/post"
-            element={<GroupPurchasePostPage />}
-          />
-          <Route
-            path="/groupPurchase/write"
-            element={<GroupPurchaseWritePage />}
-          />
-          <Route path="/roommateadd" element={<RoomMateAddPage />} />
-          <Route path="/admin" element={<AdminMainPage />} />
-          <Route path="/admin/calendar" element={<CalendarAdminPage />} />
-        </Route>
-      </Routes>
-    </>
+              {/* 리스트와 상세를 같은 레벨로 분리 */}
+              <Route path="list" element={<RoomMateListPage />} />
+              <Route
+                path="list/:boardId"
+                element={<RoomMateBoardDetailPage />}
+              />
+
+              <Route path="filter" element={<RoomMateFilterPage />} />
+              <Route path="checklist" element={<RoomMateChecklistPage />} />
+              <Route path="add" element={<RoomMateAddPage />} />
+            </Route>
+
+            {/* Chat */}
+            <Route path="chat" element={<SubPage />}>
+              <Route index element={<ChatListPage />} />
+              <Route path=":chatType/:id" element={<ChattingPage />} />
+            </Route>
+
+            {/* GroupPurchase */}
+            <Route path="groupPurchase" element={<SubPage />}>
+              <Route index element={<GroupPurchaseMainPage />} />
+              <Route
+                path="comingsoon"
+                element={<GroupPurchaseComingSoonPage />}
+              />
+              <Route path="post" element={<GroupPurchasePostPage />} />
+              <Route path="write" element={<GroupPurchaseWritePage />} />
+            </Route>
+
+            {/* Announcement & Notification */}
+            <Route path="announcements" element={<SubPage />}>
+              <Route index element={<NotificationBoardPage />} />
+              <Route path=":id" element={<AnnounceDetailPage />} />
+              <Route path="write" element={<AnnounceWritePage />} />
+            </Route>
+            <Route path="notification" element={<NotificationPage />} />
+
+            {/* Tip */}
+            <Route path="tips" element={<SubPage />}>
+              <Route index element={<TipListPage />} />
+              <Route path="write" element={<TipWritePage />} />
+              <Route path=":boardId" element={<TipDetailPage />} />
+            </Route>
+
+            {/* Calendar */}
+            <Route path="calendar" element={<CalendarPage />} />
+
+            {/* Admin */}
+            <Route path="admin" element={<SubPage />}>
+              <Route index element={<AdminMainPage />} />
+              <Route path="calendar" element={<CalendarAdminPage />} />
+            </Route>
+          </Routes>
+        </AnnouncementProvider>
+      </TipProvider>
+    </RoomMateProvider>
   );
 }
 

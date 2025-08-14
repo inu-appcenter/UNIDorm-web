@@ -37,7 +37,7 @@ const MyInfoArea = () => {
           </div>
         </div>
       </LeftArea>
-      <Penalty>벌점 {userInfo.penalty ?? 0}점</Penalty>
+      {/*<Penalty>벌점 {userInfo.penalty ?? 0}점</Penalty>*/}
     </MyInfoAreaWrapper>
   );
 };
@@ -104,27 +104,27 @@ const LeftArea = styled.div`
     }
   }
 `;
-
-const Penalty = styled.div`
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  padding: 8px 16px;
-  gap: 5px;
-
-  min-width: fit-content;
-  height: fit-content;
-
-  background: #0a84ff;
-  border-radius: 23px;
-
-  font-style: normal;
-  font-weight: 500;
-  font-size: 16px;
-  line-height: 24px;
-
-  letter-spacing: 0.38px;
-
-  color: #f4f4f4;
-`;
+//
+// const Penalty = styled.div`
+//   display: flex;
+//   flex-direction: row;
+//   justify-content: center;
+//   align-items: center;
+//   padding: 8px 16px;
+//   gap: 5px;
+//
+//   min-width: fit-content;
+//   height: fit-content;
+//
+//   background: #0a84ff;
+//   border-radius: 23px;
+//
+//   font-style: normal;
+//   font-weight: 500;
+//   font-size: 16px;
+//   line-height: 24px;
+//
+//   letter-spacing: 0.38px;
+//
+//   color: #f4f4f4;
+// `;

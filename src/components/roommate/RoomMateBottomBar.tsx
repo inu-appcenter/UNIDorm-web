@@ -90,7 +90,7 @@ const RoomMateBottomBar = ({
     }
     if (!userInfo.roommateCheckList) {
       alert("먼저 체크리스트를 작성해주세요!");
-      navigate("/roommatechecklist");
+      navigate("/roommate/checklist");
       return;
     }
 

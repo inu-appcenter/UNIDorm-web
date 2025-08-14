@@ -141,7 +141,6 @@ const TimeWrapper = styled.div`
   display: flex;
   align-items: center;
   .time {
-    font-family: "Pretendard";
     font-style: normal;
     font-weight: 600;
     font-size: 10px;

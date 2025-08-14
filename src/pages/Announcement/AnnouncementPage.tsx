@@ -1,40 +1,19 @@
 import styled from "styled-components";
 import Header from "../../components/common/Header.tsx";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
-import { getAnnouncements } from "../../apis/announcements.ts";
-import { useEffect, useState } from "react";
-import { Announcement } from "../../types/announcements.ts";
 import { useNavigate } from "react-router-dom";
 import useUserStore from "../../stores/useUserStore.ts";
 import { BsEye } from "react-icons/bs";
+import { useAnnouncement } from "../../stores/AnnouncementContext.tsx";
 
 export default function AnnouncementPage() {
   const navigate = useNavigate();
   const { userInfo } = useUserStore();
   const isAdmin = userInfo.isAdmin;
   console.log(isAdmin);
-  const [notices, setNotices] = useState<Announcement[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { notices, loading } = useAnnouncement();
 
-  useEffect(() => {
-    async function fetchAnnouncements() {
-      try {
-        const response = await getAnnouncements();
-        console.log(response.data);
-        setNotices(response.data);
-      } catch (error) {
-        console.error("공지사항 불러오기 실패", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchAnnouncements();
-  }, []);
-
-  if (loading) {
-    return <NoticePageWrapper>로딩중...</NoticePageWrapper>;
-  }
+  if (loading) return <NoticePageWrapper>로딩중...</NoticePageWrapper>;
 
   return (
     <NoticePageWrapper>

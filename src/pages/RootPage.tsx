@@ -2,7 +2,6 @@ import { Outlet } from "react-router-dom";
 import styled from "styled-components";
 import { getMobilePlatform } from "../utils/getMobilePlatform.ts";
 import { useEffect, useState } from "react";
-import BottomBar from "../components/common/BottomBar.tsx";
 
 export default function RootPage() {
   const [platform, setPlatform] = useState<"ios" | "android" | "other">(
@@ -17,7 +16,6 @@ export default function RootPage() {
     <RootPageWrapper $platform={platform}>
       {/*<Header />*/}
       <Outlet />
-      <BottomBar />
     </RootPageWrapper>
   );
 }

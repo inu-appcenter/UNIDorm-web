@@ -48,7 +48,6 @@ const TabButton = styled.div<{ $isactive: boolean }>`
 `;
 
 const TabTitle = styled.div<{ $isactive: boolean }>`
-  font-family: "Pretendard";
   font-weight: 600;
   font-size: 16px;
   line-height: 20px;
