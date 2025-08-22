@@ -3,6 +3,14 @@ import { AxiosResponse } from "axios";
 import { CalendarItem, CreateCalendarDto } from "../types/calendar.ts";
 import tokenInstance from "./tokenInstance.ts";
 
+export const getAllCalendars = async (): Promise<
+  AxiosResponse<CalendarItem[]>
+> => {
+  const response = await axiosInstance.get<CalendarItem[]>("/calenders");
+  console.log(response);
+  return response;
+};
+
 export const getCalendarByMonth = async (
   year: number,
   month: number,
