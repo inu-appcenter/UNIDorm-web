@@ -2,12 +2,7 @@ import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 
 import { CalendarItem, CreateCalendarDto } from "../../types/calendar.ts";
-import {
-  createCalendar,
-  deleteCalendar,
-  getCalendarByMonth,
-  updateCalendar,
-} from "../../apis/calendar.ts";
+import { createCalendar, deleteCalendar, getAllCalendars, updateCalendar } from "../../apis/calendar.ts";
 import Header from "../../components/common/Header.tsx";
 import { useNavigate } from "react-router-dom";
 
@@ -23,8 +18,8 @@ const CalendarAdminPage: React.FC = () => {
 
   const navigate = useNavigate();
 
-  const currentYear = new Date().getFullYear();
-  const currentMonth = new Date().getMonth() + 1;
+  // const currentYear = new Date().getFullYear();
+  // const currentMonth = new Date().getMonth() + 1;
 
   useEffect(() => {
     fetchCalendar();
@@ -32,7 +27,7 @@ const CalendarAdminPage: React.FC = () => {
 
   const fetchCalendar = async () => {
     try {
-      const res = await getCalendarByMonth(currentYear, currentMonth);
+      const res = await getAllCalendars();
       setCalendarList(res.data);
     } catch (err) {
       console.error("캘린더 불러오기 실패", err);
