@@ -5,13 +5,11 @@ import ThreeWeekCalendar from "../components/home/ThreeWeekCalendar.tsx";
 import Header from "../components/common/Header.tsx";
 import 배너1 from "../assets/banner/포스터1.svg";
 import HomeTipsCard from "../components/home/HomeTipsCard.tsx";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { fetchDailyRandomTips } from "../apis/tips.ts";
 import { Tip } from "../types/tips.ts";
-import RoomMateCard from "../components/roommate/RoomMateCard.tsx";
 import BottomBar from "../components/common/BottomBar.tsx";
 import { useAnnouncement } from "../stores/AnnouncementContext.tsx";
-import { useRoomMateContext } from "../stores/RoomMateContext.tsx";
 import 궁금해하는횃불이 from "../assets/roommate/궁금해하는횃불이.png";
 import RoundSquareWhiteButton from "../components/button/RoundSquareWhiteButton.tsx";
 import RoundSquareBlueButton from "../components/button/RoundSquareBlueButton.tsx";
@@ -88,18 +86,18 @@ export default function HomePage() {
     };
   }, []);
 
-  const { roommates } = useRoomMateContext();
+  // const { roommates } = useRoomMateContext();
 
-  const randomRoommate = useMemo(() => {
-    if (!Array.isArray(roommates) || roommates.length === 0) return null;
-
-    const unmatchedRoommates = roommates.filter((r) => !r.matched);
-    if (!Array.isArray(unmatchedRoommates) || unmatchedRoommates.length === 0)
-      return null;
-
-    const index = Math.floor(Math.random() * unmatchedRoommates.length);
-    return unmatchedRoommates[index];
-  }, [roommates]);
+  // const randomRoommate = useMemo(() => {
+  //   if (!Array.isArray(roommates) || roommates.length === 0) return null;
+  //
+  //   const unmatchedRoommates = roommates.filter((r) => !r.matched);
+  //   if (!Array.isArray(unmatchedRoommates) || unmatchedRoommates.length === 0)
+  //     return null;
+  //
+  //   const index = Math.floor(Math.random() * unmatchedRoommates.length);
+  //   return unmatchedRoommates[index];
+  // }, [roommates]);
 
   // 초기 상태를 localStorage에서 불러오기
   const [showInfoModal, setShowInfoModal] = useState(() => {
@@ -131,32 +129,32 @@ export default function HomePage() {
       </BannerWrapper>
 
       <ContentWrapper>
-        <TitleContentArea
-          title={"룸메이트 매칭 진행 중!"}
-          description={"룸메이트를 구하고 있는 다양한 UNI들을 찾아보세요!"}
-          link={"/roommate"}
-        >
-          <>
-            {randomRoommate ? (
-              <RoomMateCard
-                key={randomRoommate.boardId}
-                title={randomRoommate.title}
-                boardId={randomRoommate.boardId}
-                dormType={randomRoommate.dormType}
-                mbti={randomRoommate.mbti}
-                college={randomRoommate.college}
-                isSmoker={true}
-                isClean={true}
-                stayDays={randomRoommate.dormPeriod}
-                description={randomRoommate.comment}
-                roommateBoardLike={randomRoommate.roommateBoardLike}
-                matched={randomRoommate.matched}
-              />
-            ) : (
-              <EmptyMessage>게시글이 없습니다.</EmptyMessage>
-            )}
-          </>
-        </TitleContentArea>
+        {/*<TitleContentArea*/}
+        {/*  title={"룸메이트 매칭 진행 중!"}*/}
+        {/*  description={"룸메이트를 구하고 있는 다양한 UNI들을 찾아보세요!"}*/}
+        {/*  link={"/roommate"}*/}
+        {/*>*/}
+        {/*  <>*/}
+        {/*    {randomRoommate ? (*/}
+        {/*      <RoomMateCard*/}
+        {/*        key={randomRoommate.boardId}*/}
+        {/*        title={randomRoommate.title}*/}
+        {/*        boardId={randomRoommate.boardId}*/}
+        {/*        dormType={randomRoommate.dormType}*/}
+        {/*        mbti={randomRoommate.mbti}*/}
+        {/*        college={randomRoommate.college}*/}
+        {/*        isSmoker={true}*/}
+        {/*        isClean={true}*/}
+        {/*        stayDays={randomRoommate.dormPeriod}*/}
+        {/*        description={randomRoommate.comment}*/}
+        {/*        roommateBoardLike={randomRoommate.roommateBoardLike}*/}
+        {/*        matched={randomRoommate.matched}*/}
+        {/*      />*/}
+        {/*    ) : (*/}
+        {/*      <EmptyMessage>게시글이 없습니다.</EmptyMessage>*/}
+        {/*    )}*/}
+        {/*  </>*/}
+        {/*</TitleContentArea>*/}
 
         <TitleContentArea
           title={"공지사항"}
