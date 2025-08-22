@@ -14,11 +14,12 @@ import {
   RoommateRulesUpdateRequest,
   SimilarRoommatePost,
 } from "../types/roommates.ts";
+import axiosInstance from "./axiosInstance.ts";
 
 export const getRoomMateList = async (): Promise<
   AxiosResponse<RoommatePost[]>
 > => {
-  const response = await tokenInstance.get<RoommatePost[]>(`/roommates/list`);
+  const response = await axiosInstance.get<RoommatePost[]>(`/roommates/list`);
   console.log(response);
   return response;
 };
@@ -62,7 +63,7 @@ export const putRoommatePost = async (
 export const getRoomMateDetail = async (
   boardId: number,
 ): Promise<AxiosResponse<RoommatePost>> => {
-  const response = await tokenInstance.get<RoommatePost>(
+  const response = await axiosInstance.get<RoommatePost>(
     `/roommates/${boardId}`,
   );
   console.log(response);
@@ -71,7 +72,7 @@ export const getRoomMateDetail = async (
 export const getRoommateLiked = async (
   boardId: number,
 ): Promise<AxiosResponse<boolean>> => {
-  const response = await tokenInstance.get<boolean>(
+  const response = await axiosInstance.get<boolean>(
     `/roommates/${boardId}/liked`,
   );
   console.log(response);

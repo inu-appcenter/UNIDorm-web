@@ -7,25 +7,26 @@ import {
   AnnouncementResponse,
   AnnouncementUpdateRequest,
   AnnouncementUpdateResponse,
-  RequestAnnouncementDto,
+  RequestAnnouncementDto
 } from "../types/announcements.ts";
+import axiosInstance from "./axiosInstance.ts";
 
 export const getAnnouncements = async (): Promise<
   AxiosResponse<Announcement[]>
 > => {
-  return await tokenInstance.get("/announcements");
+  return await axiosInstance.get("/announcements");
 };
 
 export const getAnnouncementDetail = async (
   announcementId: number,
 ): Promise<AxiosResponse<AnnouncementDetail>> => {
-  return await tokenInstance.get(`/announcements/${announcementId}`);
+  return await axiosInstance.get(`/announcements/${announcementId}`);
 };
 
 export const getAnnouncementFiles = async (
   announcementId: number,
 ): Promise<AxiosResponse<AnnouncementFile[]>> => {
-  return await tokenInstance.get(`/announcements/${announcementId}/image`);
+  return await axiosInstance.get(`/announcements/${announcementId}/image`);
 };
 
 export const createAnnouncement = async (
