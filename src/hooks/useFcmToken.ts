@@ -28,11 +28,14 @@ export const useFcmToken = () => {
 
         if (token) {
           console.log("FCM 토큰:", token);
+          localStorage.setItem("fcmToken", token);
           // 서버로 전송
           const sendFcmToken = async (token: string) => {
             await axiosInstance.post("/fcm/token", { token });
           };
           await sendFcmToken(token); // 여기서 tokenInstance 사용
+        } else {
+          localStorage.setItem("fcmToken", "FCM 토큰 발급 실패");
         }
       } catch (err) {
         console.error("FCM 초기화 실패:", err);
