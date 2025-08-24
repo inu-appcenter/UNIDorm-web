@@ -61,6 +61,7 @@ import { useFcmToken } from "./hooks/useFcmToken";
 import { RoomMateProvider } from "./stores/RoomMateContext.tsx";
 import { AnnouncementProvider } from "./stores/AnnouncementContext.tsx";
 import { TipProvider } from "./stores/TipContext.tsx";
+import FCMPage from "./pages/Admin/FCMPage.tsx";
 
 function App() {
   console.log("현재 MODE:", import.meta.env.MODE);
@@ -190,6 +191,7 @@ function App() {
             <Route path="admin" element={<SubPage />}>
               <Route index element={<AdminMainPage />} />
               <Route path="calendar" element={<CalendarAdminPage />} />
+              <Route path="fcm" element={<FCMPage />} />
             </Route>
           </Routes>
         </AnnouncementProvider>
