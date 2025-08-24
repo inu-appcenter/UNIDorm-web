@@ -7,7 +7,7 @@ import {
   AnnouncementResponse,
   AnnouncementUpdateRequest,
   AnnouncementUpdateResponse,
-  RequestAnnouncementDto
+  RequestAnnouncementDto,
 } from "../types/announcements.ts";
 import axiosInstance from "./axiosInstance.ts";
 
