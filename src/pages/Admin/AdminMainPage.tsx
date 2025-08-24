@@ -36,6 +36,11 @@ const AdminMainPage: React.FC = () => {
       path: "/announcements",
       description: "공지사항 등록 및 수정",
     },
+    {
+      label: "FCM 토큰",
+      path: "/admin/fcm",
+      description: "푸시알림 토큰 확인",
+    },
   ];
 
   return (
