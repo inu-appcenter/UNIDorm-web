@@ -57,7 +57,7 @@ import CalendarAdminPage from "./pages/Admin/CalendarAdminPage";
 import CalendarPage from "./pages/CalendarPage";
 
 import "./init";
-// import { useFcmToken } from "./hooks/useFcmToken";
+import { useFcmToken } from "./hooks/useFcmToken";
 import { RoomMateProvider } from "./stores/RoomMateContext.tsx";
 import { AnnouncementProvider } from "./stores/AnnouncementContext.tsx";
 import { TipProvider } from "./stores/TipContext.tsx";
@@ -65,8 +65,8 @@ import FCMPage from "./pages/Admin/FCMPage.tsx";
 import { ErrorBoundary } from "./ErrorBoundary.tsx";
 
 function App() {
-  // console.log("현재 MODE:", import.meta.env.MODE);
-  // useFcmToken();
+  console.log("현재 MODE:", import.meta.env.MODE);
+  useFcmToken();
 
   // if (import.meta.env.MODE === "production") {
   //   console.log = () => {};
