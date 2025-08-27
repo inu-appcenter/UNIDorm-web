@@ -14,6 +14,7 @@ import 궁금해하는횃불이 from "../assets/roommate/궁금해하는횃불�
 import RoundSquareWhiteButton from "../components/button/RoundSquareWhiteButton.tsx";
 import RoundSquareBlueButton from "../components/button/RoundSquareBlueButton.tsx";
 import 민원접수 from "../assets/민원접수.svg";
+import 앱센터로고가로 from "../assets/앱센터로고가로.svg";
 
 export default function HomePage() {
   const [dailyTips, setDailyTips] = useState<Tip[]>([]);
@@ -316,6 +317,7 @@ export default function HomePage() {
         </ModalBackGround>
       )}
 
+      <img className="appcenter-logo" src={앱센터로고가로} />
       <FloatingButton>
         <img src={민원접수} />
       </FloatingButton>
@@ -339,6 +341,12 @@ const HomePageWrapper = styled.div`
   overflow-y: auto;
 
   background: #fafafa;
+
+  .appcenter-logo {
+    margin-top: 36px;
+    width: 50%;
+    max-width: 250px;
+  }
 `;
 
 const ContentWrapper = styled.div`
