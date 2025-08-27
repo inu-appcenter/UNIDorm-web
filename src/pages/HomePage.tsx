@@ -13,6 +13,7 @@ import { useAnnouncement } from "../stores/AnnouncementContext.tsx";
 import 궁금해하는횃불이 from "../assets/roommate/궁금해하는횃불이.png";
 import RoundSquareWhiteButton from "../components/button/RoundSquareWhiteButton.tsx";
 import RoundSquareBlueButton from "../components/button/RoundSquareBlueButton.tsx";
+import 민원접수 from "../assets/민원접수.svg";
 
 export default function HomePage() {
   const [dailyTips, setDailyTips] = useState<Tip[]>([]);
@@ -315,6 +316,10 @@ export default function HomePage() {
         </ModalBackGround>
       )}
 
+      <FloatingButton>
+        <img src={민원접수} />
+      </FloatingButton>
+
       <BottomBar />
     </HomePageWrapper>
   );
@@ -526,4 +531,15 @@ const ButtonGroupWrapper = styled.div`
   display: flex;
   flex-direction: row;
   gap: 6px;
+`;
+
+const FloatingButton = styled.button`
+  border: none;
+  background: none;
+  width: fit-content;
+  height: fit-content;
+
+  position: fixed;
+  bottom: 100px;
+  right: 24px;
 `;
