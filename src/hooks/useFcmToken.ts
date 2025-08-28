@@ -5,11 +5,31 @@ import axiosInstance from "../apis/axiosInstance.ts";
 
 export const useFcmToken = () => {
   useEffect(() => {
+    const isAndroidWebView = () => {
+      const ua = navigator.userAgent;
+      return /wv|Android.*Version\/[\d.]+/i.test(ua);
+    };
+
+    const isIOSWebView = () => {
+      const ua = navigator.userAgent;
+      return (
+        /iPhone|iPod|iPad/i.test(ua) &&
+        /AppleWebKit/i.test(ua) &&
+        !/Safari/i.test(ua)
+      );
+    };
+
+    const isWebView = () => isAndroidWebView() || isIOSWebView();
+
+    if (isWebView()) {
+      console.warn("WebView 환경에서는 FCM 훅을 실행하지 않습니다.");
+      return;
+    }
+
     const initFCM = async () => {
       try {
-        // 현재 권한 상태 확인
+        // 알림 권한 확인 및 요청
         if (Notification.permission === "default") {
-          // 아직 허용/거부 안 한 경우 → 권한 요청
           const permission = await Notification.requestPermission();
           if (permission !== "granted") {
             console.warn("알림 권한 거부됨");
@@ -20,7 +40,7 @@ export const useFcmToken = () => {
           return;
         }
 
-        // 권한 허용 상태 → 토큰 발급
+        // FCM 토큰 발급
         const token = await getToken(messaging, {
           vapidKey:
             "BG_O1TN_HO34oXS-e_Fm9pCV7GljvXpDjVZU9mA1T6LUnyp001K4EHCZV4u5gGUPo7zxnttFrTJxfzIvSDmu720",
@@ -29,11 +49,7 @@ export const useFcmToken = () => {
         if (token) {
           console.log("FCM 토큰:", token);
           localStorage.setItem("fcmToken", token);
-          // 서버로 전송
-          const sendFcmToken = async (token: string) => {
-            await axiosInstance.post("/fcm/token", { token });
-          };
-          await sendFcmToken(token); // 여기서 tokenInstance 사용
+          await axiosInstance.post("/fcm/token", { token });
         } else {
           localStorage.setItem("fcmToken", "FCM 토큰 발급 실패");
         }

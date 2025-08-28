@@ -57,15 +57,19 @@ import CalendarAdminPage from "./pages/Admin/CalendarAdminPage";
 import CalendarPage from "./pages/CalendarPage";
 
 import "./init";
-import { useFcmToken } from "./hooks/useFcmToken";
+// import { useFcmToken } from "./hooks/useFcmToken";
 import { RoomMateProvider } from "./stores/RoomMateContext.tsx";
 import { AnnouncementProvider } from "./stores/AnnouncementContext.tsx";
 import { TipProvider } from "./stores/TipContext.tsx";
 import FCMPage from "./pages/Admin/FCMPage.tsx";
+import { ErrorBoundary } from "./ErrorBoundary.tsx";
+import ComplainListPage from "./pages/Complain/ComplainListPage.tsx";
+import ComplainDetailPage from "./pages/Complain/ComplainDetailPage.tsx";
+import ComplainWritePage from "./pages/Complain/ComplainWritePage.tsx";
 
 function App() {
   console.log("현재 MODE:", import.meta.env.MODE);
-  useFcmToken();
+  // useFcmToken();  //웹뷰환경에서 이 로직이 돌면 오류발생하므로, 앱에서 알림 처리해줘야됨
 
   if (import.meta.env.MODE === "production") {
     console.log = () => {};
@@ -114,89 +118,97 @@ function App() {
   }, []);
 
   return (
-    <RoomMateProvider>
-      <TipProvider>
-        <AnnouncementProvider>
-          <Routes>
-            {/* 로그인 / 온보딩 / 로그아웃 */}
-            <Route path="/" element={<OutPage />}>
-              <Route path="login" element={<LoginPage />} />
-              <Route path="logout" element={<LogoutPage />} />
-              <Route path="onboarding" element={<OnboardingPage />} />
-            </Route>
+    <ErrorBoundary>
+      <RoomMateProvider>
+        <TipProvider>
+          <AnnouncementProvider>
+            <Routes>
+              {/* 로그인 / 온보딩 / 로그아웃 */}
+              <Route path="/" element={<OutPage />}>
+                <Route path="login" element={<LoginPage />} />
+                <Route path="logout" element={<LogoutPage />} />
+                <Route path="onboarding" element={<OnboardingPage />} />
+              </Route>
 
-            {/* 홈 / 마이페이지 */}
-            <Route element={<RootPage />}>
-              <Route index element={<HomePage />} />
-              <Route path="home" element={<HomePage />} />
-              <Route path="mypage" element={<MyPage />} />
-              <Route path="myinfoedit" element={<MyInfoEditPage />} />
-              <Route path="myposts" element={<MyPostsPage />} />
-              <Route path="liked" element={<MyLikesPage />} />
-            </Route>
+              {/* 홈 / 마이페이지 */}
+              <Route element={<RootPage />}>
+                <Route index element={<HomePage />} />
+                <Route path="home" element={<HomePage />} />
+                <Route path="mypage" element={<MyPage />} />
+                <Route path="myinfoedit" element={<MyInfoEditPage />} />
+                <Route path="myposts" element={<MyPostsPage />} />
+                <Route path="liked" element={<MyLikesPage />} />
+              </Route>
 
-            {/* RoomMate */}
-            <Route path="roommate" element={<SubPage />}>
-              <Route index element={<RoomMatePage />} />
-              <Route path="my" element={<MyRoomMatePage />} />
+              {/* RoomMate */}
+              <Route path="roommate" element={<SubPage />}>
+                <Route index element={<RoomMatePage />} />
+                <Route path="my" element={<MyRoomMatePage />} />
 
-              {/* 리스트와 상세를 같은 레벨로 분리 */}
-              <Route path="list" element={<RoomMateListPage />} />
-              <Route
-                path="list/:boardId"
-                element={<RoomMateBoardDetailPage />}
-              />
+                {/* 리스트와 상세를 같은 레벨로 분리 */}
+                <Route path="list" element={<RoomMateListPage />} />
+                <Route
+                  path="list/:boardId"
+                  element={<RoomMateBoardDetailPage />}
+                />
 
-              <Route path="filter" element={<RoomMateFilterPage />} />
-              <Route path="checklist" element={<RoomMateChecklistPage />} />
-              <Route path="add" element={<RoomMateAddPage />} />
-            </Route>
+                <Route path="filter" element={<RoomMateFilterPage />} />
+                <Route path="checklist" element={<RoomMateChecklistPage />} />
+                <Route path="add" element={<RoomMateAddPage />} />
+              </Route>
 
-            {/* Chat */}
-            <Route path="chat" element={<SubPage />}>
-              <Route index element={<ChatListPage />} />
-              <Route path=":chatType/:id" element={<ChattingPage />} />
-            </Route>
+              {/* Chat */}
+              <Route path="chat" element={<SubPage />}>
+                <Route index element={<ChatListPage />} />
+                <Route path=":chatType/:id" element={<ChattingPage />} />
+              </Route>
 
-            {/* GroupPurchase */}
-            <Route path="groupPurchase" element={<SubPage />}>
-              <Route index element={<GroupPurchaseMainPage />} />
-              <Route
-                path="comingsoon"
-                element={<GroupPurchaseComingSoonPage />}
-              />
-              <Route path="post" element={<GroupPurchasePostPage />} />
-              <Route path="write" element={<GroupPurchaseWritePage />} />
-            </Route>
+              {/* GroupPurchase */}
+              <Route path="groupPurchase" element={<SubPage />}>
+                <Route index element={<GroupPurchaseMainPage />} />
+                <Route
+                  path="comingsoon"
+                  element={<GroupPurchaseComingSoonPage />}
+                />
+                <Route path="post" element={<GroupPurchasePostPage />} />
+                <Route path="write" element={<GroupPurchaseWritePage />} />
+              </Route>
 
-            {/* Announcement & Notification */}
-            <Route path="announcements" element={<SubPage />}>
-              <Route index element={<NotificationBoardPage />} />
-              <Route path=":id" element={<AnnounceDetailPage />} />
-              <Route path="write" element={<AnnounceWritePage />} />
-            </Route>
-            <Route path="notification" element={<NotificationPage />} />
+              {/* Announcement & Notification */}
+              <Route path="announcements" element={<SubPage />}>
+                <Route index element={<NotificationBoardPage />} />
+                <Route path=":id" element={<AnnounceDetailPage />} />
+                <Route path="write" element={<AnnounceWritePage />} />
+              </Route>
+              <Route path="notification" element={<NotificationPage />} />
 
-            {/* Tip */}
-            <Route path="tips" element={<SubPage />}>
-              <Route index element={<TipListPage />} />
-              <Route path="write" element={<TipWritePage />} />
-              <Route path=":boardId" element={<TipDetailPage />} />
-            </Route>
+              {/* Tip */}
+              <Route path="tips" element={<SubPage />}>
+                <Route index element={<TipListPage />} />
+                <Route path="write" element={<TipWritePage />} />
+                <Route path=":boardId" element={<TipDetailPage />} />
+              </Route>
 
-            {/* Calendar */}
-            <Route path="calendar" element={<CalendarPage />} />
+              {/* Calendar */}
+              <Route path="calendar" element={<CalendarPage />} />
 
-            {/* Admin */}
-            <Route path="admin" element={<SubPage />}>
-              <Route index element={<AdminMainPage />} />
-              <Route path="calendar" element={<CalendarAdminPage />} />
-              <Route path="fcm" element={<FCMPage />} />
-            </Route>
-          </Routes>
-        </AnnouncementProvider>
-      </TipProvider>
-    </RoomMateProvider>
+              {/*민원*/}
+              <Route path="complain" element={<SubPage />}>
+                <Route index element={<ComplainListPage />} />
+                <Route path=":boardId" element={<ComplainDetailPage />} />
+                <Route path="write" element={<ComplainWritePage />} />
+              </Route>
+              {/* Admin */}
+              <Route path="admin" element={<SubPage />}>
+                <Route index element={<AdminMainPage />} />
+                <Route path="calendar" element={<CalendarAdminPage />} />
+                <Route path="fcm" element={<FCMPage />} />
+              </Route>
+            </Routes>
+          </AnnouncementProvider>
+        </TipProvider>
+      </RoomMateProvider>
+    </ErrorBoundary>
   );
 }
 

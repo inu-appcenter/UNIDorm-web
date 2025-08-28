@@ -13,10 +13,14 @@ import { useAnnouncement } from "../stores/AnnouncementContext.tsx";
 import 궁금해하는횃불이 from "../assets/roommate/궁금해하는횃불이.png";
 import RoundSquareWhiteButton from "../components/button/RoundSquareWhiteButton.tsx";
 import RoundSquareBlueButton from "../components/button/RoundSquareBlueButton.tsx";
+import 민원접수 from "../assets/민원접수.svg";
+import 앱센터로고가로 from "../assets/앱센터로고가로.svg";
+import { useNavigate } from "react-router-dom";
 
 export default function HomePage() {
   const [dailyTips, setDailyTips] = useState<Tip[]>([]);
   const { notices } = useAnnouncement();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const getTips = async () => {
@@ -315,6 +319,15 @@ export default function HomePage() {
         </ModalBackGround>
       )}
 
+      <img className="appcenter-logo" src={앱센터로고가로} />
+      <FloatingButton
+        onClick={() => {
+          navigate("/complain");
+        }}
+      >
+        <img src={민원접수} />
+      </FloatingButton>
+
       <BottomBar />
     </HomePageWrapper>
   );
@@ -334,6 +347,12 @@ const HomePageWrapper = styled.div`
   overflow-y: auto;
 
   background: #fafafa;
+
+  .appcenter-logo {
+    margin-top: 36px;
+    width: 50%;
+    max-width: 250px;
+  }
 `;
 
 const ContentWrapper = styled.div`
@@ -526,4 +545,17 @@ const ButtonGroupWrapper = styled.div`
   display: flex;
   flex-direction: row;
   gap: 6px;
+`;
+
+const FloatingButton = styled.button`
+  border: none;
+  background: none;
+  width: fit-content;
+  height: fit-content;
+
+  position: fixed;
+  bottom: 100px;
+  right: 24px;
+
+  cursor: pointer;
 `;

@@ -43,3 +43,5 @@ export const religion = [
   "무교",
   "기타",
 ];
+
+export const ComplainType = ["기물", "시설", "유형 1", "유형 2"];
