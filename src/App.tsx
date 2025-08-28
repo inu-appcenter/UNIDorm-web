@@ -63,6 +63,9 @@ import { AnnouncementProvider } from "./stores/AnnouncementContext.tsx";
 import { TipProvider } from "./stores/TipContext.tsx";
 import FCMPage from "./pages/Admin/FCMPage.tsx";
 import { ErrorBoundary } from "./ErrorBoundary.tsx";
+import ComplainListPage from "./pages/Complain/ComplainListPage.tsx";
+import ComplainDetailPage from "./pages/Complain/ComplainDetailPage.tsx";
+import ComplainWritePage from "./pages/Complain/ComplainWritePage.tsx";
 
 function App() {
   console.log("현재 MODE:", import.meta.env.MODE);
@@ -189,6 +192,12 @@ function App() {
               {/* Calendar */}
               <Route path="calendar" element={<CalendarPage />} />
 
+              {/*민원*/}
+              <Route path="complain" element={<SubPage />}>
+                <Route index element={<ComplainListPage />} />
+                <Route path=":boardId" element={<ComplainDetailPage />} />
+                <Route path="write" element={<ComplainWritePage />} />
+              </Route>
               {/* Admin */}
               <Route path="admin" element={<SubPage />}>
                 <Route index element={<AdminMainPage />} />

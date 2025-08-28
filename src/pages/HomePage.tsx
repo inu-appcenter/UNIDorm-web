@@ -15,10 +15,12 @@ import RoundSquareWhiteButton from "../components/button/RoundSquareWhiteButton.
 import RoundSquareBlueButton from "../components/button/RoundSquareBlueButton.tsx";
 import 민원접수 from "../assets/민원접수.svg";
 import 앱센터로고가로 from "../assets/앱센터로고가로.svg";
+import { useNavigate } from "react-router-dom";
 
 export default function HomePage() {
   const [dailyTips, setDailyTips] = useState<Tip[]>([]);
   const { notices } = useAnnouncement();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const getTips = async () => {
@@ -318,7 +320,11 @@ export default function HomePage() {
       )}
 
       <img className="appcenter-logo" src={앱센터로고가로} />
-      <FloatingButton>
+      <FloatingButton
+        onClick={() => {
+          navigate("/complain");
+        }}
+      >
         <img src={민원접수} />
       </FloatingButton>
 
@@ -550,4 +556,6 @@ const FloatingButton = styled.button`
   position: fixed;
   bottom: 100px;
   right: 24px;
+
+  cursor: pointer;
 `;
