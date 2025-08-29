@@ -3,30 +3,88 @@ import Header from "../../components/common/Header.tsx";
 import StepFlow from "../../components/complain/StepFlow.tsx";
 import ComplainCard from "../../components/complain/ComplainCard.tsx";
 import ComplainAnswerCard from "../../components/complain/ComplainAnswerCard.tsx";
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { getComplaintDetail } from "../../apis/complain.ts";
+import { ComplaintDetail } from "../../types/complain.ts";
+import useUserStore from "../../stores/useUserStore.ts";
+import { getAdminComplaintDetail } from "../../apis/complainAdmin.ts";
 
 const ComplainDetailPage = () => {
+  const { complainId } = useParams<{ complainId: string }>();
+  const [complaint, setComplaint] = useState<ComplaintDetail | null>(null);
+  const { userInfo } = useUserStore();
+
+  useEffect(() => {
+    const fetchComplaint = async () => {
+      if (!complainId) return;
+
+      try {
+        let response;
+        if (userInfo.isAdmin) {
+          response = await getAdminComplaintDetail(Number(complainId));
+        } else {
+          response = await getComplaintDetail(Number(complainId));
+        }
+
+        console.log(response);
+        setComplaint(response.data);
+      } catch (error) {
+        console.error("민원 상세 불러오기 실패:", error);
+      }
+    };
+
+    fetchComplaint();
+  }, [complainId, userInfo]);
+
   return (
     <ComplainListPageWrapper>
       <Header title={"민원 상세"} hasBack={true} />
-      <StepFlow activeIndex={1} assignee={"배현준"} />
-      <ComplainCard
-        date="25.08.27"
-        type="기물"
-        dorm="제 1기숙사"
-        studentNumber="B139840"
-        phoneNumber="010-8019-2936"
-        title="화장실 거울이 깨졌어요."
-        content="화장지를 꺼내려고 장을 열었는데 그대로 떨어져 버렸습니다.. 확인 부탁드립니다."
-      />
-      <ComplainAnswerCard
-        date={"25.08.27"}
-        type="답변"
-        managerName="배현준"
-        title={"답변 드립니다."}
-        content={
-          "담당자에게 전달 완료 했습니다. 28일 5시 내로 방문 예정입니다."
-        }
-      />
+
+      {complaint ? (
+        <>
+          {/* 진행 단계 - status를 기반으로 activeIndex 계산 */}
+          <StepFlow
+            activeIndex={
+              complaint.status === "대기중"
+                ? 0
+                : complaint.status === "담당자 배정"
+                  ? 1
+                  : complaint.status === "처리중"
+                    ? 2
+                    : complaint.status === "처리완료"
+                      ? 3
+                      : 0
+            }
+            assignee={complaint.officer}
+          />
+
+          {/* 민원 카드 */}
+          <ComplainCard
+            date={complaint.createdDate}
+            type={complaint.type}
+            dorm={complaint.dormType}
+            studentNumber={complaint.caseNumber}
+            phoneNumber={complaint.contact}
+            title={complaint.title}
+            content={complaint.content}
+            images={complaint.images}
+          />
+
+          {/* 답변 카드 (reply 존재할 때만) */}
+          {complaint.reply && (
+            <ComplainAnswerCard
+              date={complaint.reply.createdDate}
+              type="답변"
+              managerName={complaint.reply.responderName}
+              title={complaint.reply.replyTitle}
+              content={complaint.reply.replyContent}
+            />
+          )}
+        </>
+      ) : (
+        <p>민원 상세를 불러오는 중입니다...</p>
+      )}
     </ComplainListPageWrapper>
   );
 };
