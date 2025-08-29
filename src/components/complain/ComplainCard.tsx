@@ -11,6 +11,7 @@ interface NoticeCardProps {
   phoneNumber?: string;
   title: string;
   content: string;
+  images?: string[];
 }
 
 const ComplainCard: React.FC<NoticeCardProps> = ({
@@ -22,6 +23,7 @@ const ComplainCard: React.FC<NoticeCardProps> = ({
   phoneNumber,
   title,
   content,
+  images,
 }) => {
   return (
     <Card>
@@ -48,7 +50,12 @@ const ComplainCard: React.FC<NoticeCardProps> = ({
 
       <Title>{title}</Title>
       <Content miniView={miniView}>{content}</Content>
-      {!miniView && <ImagePlaceholder />}
+      {!miniView &&
+        images &&
+        images.length > 0 &&
+        images.map((image, index) => (
+          <ImagePlaceholder key={index} src={image} />
+        ))}
     </Card>
   );
 };
@@ -114,7 +121,7 @@ const Content = styled.div.withConfig({
   text-overflow: ${({ miniView }) => (miniView ? "ellipsis" : "clip")};
 `;
 
-const ImagePlaceholder = styled.div`
+const ImagePlaceholder = styled.img`
   width: 100%;
   height: 180px;
   background-color: #ddd;

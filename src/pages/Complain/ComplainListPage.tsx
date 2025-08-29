@@ -7,62 +7,89 @@ import ComplainCard from "../../components/complain/ComplainCard.tsx";
 import { useNavigate } from "react-router-dom";
 import ComplainListTable from "../../components/complain/ComplainListTable.tsx";
 import useUserStore from "../../stores/useUserStore.ts";
+import { useEffect, useState } from "react";
+import { ComplaintDetail, MyComplaint } from "../../types/complain.ts";
+import { getComplaintDetail, getMyComplaints } from "../../apis/complain.ts";
 
 const ComplainListPage = () => {
   const navigate = useNavigate();
   const { tokenInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
 
-  const data = [
-    {
-      date: "08.27",
-      type: "기물",
-      title: "화장실 거울이 깨짐",
-      status: "대기",
-    },
-    {
-      date: "08.27",
-      type: "기물",
-      title: "화장실 거울이 깨짐",
-      status: "확인",
-    },
-  ];
+  const [complaints, setComplaints] = useState<MyComplaint[]>([]);
+
+  const [recentComplain, setRecentComplain] = useState<ComplaintDetail | null>(
+    null,
+  );
+
+  useEffect(() => {
+    const fetchComplaints = async () => {
+      try {
+        const response = await getMyComplaints();
+        setComplaints(response.data); // API에서 받은 배열을 state에 저장
+      } catch (error) {
+        console.error("민원 목록 불러오기 실패:", error);
+      }
+    };
+
+    const fetchRecentComplain = async () => {
+      try {
+        const response = await getComplaintDetail(complaints[0].id);
+        console.log(response);
+        setRecentComplain(response.data);
+      } catch (error) {
+        console.error("민원 상세 불러오기 실패:", error);
+      }
+    };
+
+    if (isLoggedIn) {
+      fetchComplaints();
+      if (complaints.length > 0) {
+        fetchRecentComplain();
+      }
+    }
+  }, [isLoggedIn]);
+
   return (
     <ComplainListPageWrapper>
       <Header title={"생활원 민원"} hasBack={true} backPath={"/home"} />
-      <TitleContentArea
-        title={"최근 민원 현황"}
-        children={
-          <Wrapper1
-            onClick={() => {
-              navigate("/complain/1");
-            }}
-          >
-            <StepFlow activeIndex={1} assignee={"배현준"} />
-            <ComplainCard
-              miniView={true}
-              date="25.08.27"
-              type="기물"
-              dorm="제 1기숙사"
-              studentNumber="B139840"
-              phoneNumber="010-8019-2936"
-              title="화장실 거울이 깨졌어요."
-              content="화장지를 꺼내려고 장을 열었는데 그대로 떨어져 버렸습니다.. 확인 부탁드립니다."
-            />
-          </Wrapper1>
-        }
-      />
+
+      {/* 최근 민원 현황 */}
+      {recentComplain && (
+        <TitleContentArea
+          title={"최근 민원 현황"}
+          children={
+            <Wrapper1
+              onClick={() => navigate(`/complain/${recentComplain.id}`)}
+            >
+              <StepFlow activeIndex={1} assignee={"배현준"} />
+              <ComplainCard
+                miniView={true}
+                date={recentComplain.createdDate}
+                type={recentComplain.type}
+                dorm={recentComplain.dormType}
+                studentNumber={recentComplain.caseNumber}
+                phoneNumber={recentComplain.contact}
+                title={recentComplain.title}
+                content={recentComplain.content}
+              />
+            </Wrapper1>
+          }
+        />
+      )}
+
+      {/* 민원 목록 */}
       <TitleContentArea
         title={"민원 목록"}
         children={
           <Wrapper2>
             <SearchInput />
-            <ComplainListTable data={data} />
+            <ComplainListTable data={complaints} />
           </Wrapper2>
         }
       />
 
-      {!isLoggedIn && (
+      {isLoggedIn && (
         <WriteButton onClick={() => navigate("/complain/write")}>
           ✏️ 민원 접수
         </WriteButton>
@@ -70,7 +97,6 @@ const ComplainListPage = () => {
     </ComplainListPageWrapper>
   );
 };
-
 export default ComplainListPage;
 
 const ComplainListPageWrapper = styled.div`
