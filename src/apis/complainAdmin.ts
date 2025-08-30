@@ -2,7 +2,6 @@
 import tokenInstance from "./tokenInstance.ts";
 import {
   AdminComplaint,
-  ComplaintCreateDto,
   ComplaintDetail,
   ComplaintReplyDto,
   ComplaintReplyResponse,
@@ -94,8 +93,9 @@ export const updateComplaintReply = async (
 };
 
 // 민원 등록
-export const createComplaint = async (
-  dto: ComplaintCreateDto,
+export const createComplaintReply = async (
+  complaintId: number,
+  dto: ComplaintReplyDto,
   files?: File[],
 ): Promise<AxiosResponse<ComplaintResponse>> => {
   const formData = new FormData();
@@ -106,7 +106,7 @@ export const createComplaint = async (
   }
 
   const response = await tokenInstance.post<ComplaintResponse>(
-    `/complaints`,
+    `/admin/complaints/${complaintId}/reply`,
     formData,
     {
       headers: {

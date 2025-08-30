@@ -66,6 +66,7 @@ import ComplainListPage from "./pages/Complain/ComplainListPage.tsx";
 import ComplainDetailPage from "./pages/Complain/ComplainDetailPage.tsx";
 import ComplainWritePage from "./pages/Complain/ComplainWritePage.tsx";
 import ComplainAdminPage from "./pages/Admin/ComplainAdminPage.tsx";
+import ComplainAnswerWritePage from "./pages/Admin/ComplainAnswerWritePage.tsx";
 
 function App() {
   console.log("현재 MODE:", import.meta.env.MODE);
@@ -203,6 +204,10 @@ function App() {
                 <Route index element={<AdminMainPage />} />
                 <Route path="calendar" element={<CalendarAdminPage />} />
                 <Route path="complain" element={<ComplainAdminPage />} />
+                <Route
+                  path="complain/answer/:complainId"
+                  element={<ComplainAnswerWritePage />}
+                />
                 {/*<Route path="fcm" element={<FCMPage />} />*/}
               </Route>
             </Routes>

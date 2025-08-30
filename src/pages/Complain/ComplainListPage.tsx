@@ -84,7 +84,11 @@ const ComplainListPage = () => {
         children={
           <Wrapper2>
             <SearchInput />
-            <ComplainListTable data={complaints} />
+            {complaints ? (
+              <ComplainListTable data={complaints} />
+            ) : (
+              <EmptyMessage>조회된 민원이 없습니다.</EmptyMessage>
+            )}
           </Wrapper2>
         }
       />
@@ -141,4 +145,13 @@ const WriteButton = styled.button`
   cursor: pointer;
   box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.2);
   z-index: 100;
+`;
+
+const EmptyMessage = styled.div`
+  padding: 24px;
+  text-align: center;
+  color: #aaa;
+  font-size: 14px;
+  width: 100%;
+  box-sizing: border-box;
 `;
