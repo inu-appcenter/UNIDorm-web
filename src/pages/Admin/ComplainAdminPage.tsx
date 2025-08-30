@@ -7,12 +7,16 @@ import useUserStore from "../../stores/useUserStore.ts";
 import { useEffect, useState } from "react";
 import { AdminComplaint } from "../../types/complain.ts";
 import { getAllComplaints } from "../../apis/complainAdmin.ts";
+import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
 
 const ComplainAdminPage = () => {
   const { tokenInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
 
   const [complaints, setComplaints] = useState<AdminComplaint[]>([]);
+
+  const menus = ["최근 3개월", "2025"];
+  const [selectedMenuIndex, setSelectedMenuIndex] = useState(0);
 
   // 관리자 전체 민원 조회
   useEffect(() => {
@@ -44,7 +48,20 @@ const ComplainAdminPage = () => {
         children={
           <Wrapper2>
             <SearchInput />
-            <ComplainListTable data={complaints} isAdmin={true} />
+            <FilterGroup>
+              <FilterButton>필터</FilterButton>
+              <SelectableChipGroup
+                Groups={menus}
+                selectedIndex={selectedMenuIndex}
+                onSelect={setSelectedMenuIndex}
+              />
+            </FilterGroup>
+
+            {complaints ? (
+              <ComplainListTable data={complaints} isAdmin={true} />
+            ) : (
+              <EmptyMessage>조회된 민원이 없습니다.</EmptyMessage>
+            )}
           </Wrapper2>
         }
       />
@@ -66,6 +83,41 @@ const ComplainListPageWrapper = styled.div`
 const Wrapper2 = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
   width: 100%;
+`;
+
+const FilterGroup = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+`;
+
+const FilterButton = styled.button`
+  display: flex;
+  padding: 4px 16px;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  min-width: fit-content;
+  background: none;
+
+  border-radius: 8px;
+  border: 1px solid var(--6, #8e8e93);
+
+  color: var(--6, #8e8e93);
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 24px; /* 171.429% */
+  letter-spacing: 0.38px;
+`;
+
+const EmptyMessage = styled.div`
+  padding: 24px;
+  text-align: center;
+  color: #aaa;
+  font-size: 14px;
+  width: 100%;
+  box-sizing: border-box;
 `;

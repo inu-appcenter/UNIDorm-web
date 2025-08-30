@@ -1,10 +1,11 @@
 import React from "react";
-import styled, { css } from "styled-components";
 import { CheckCircle, Inbox, MessageSquare, User } from "lucide-react";
+import styled, { css } from "styled-components";
 
 interface StepFlowProps {
   activeIndex: number; // 0: 대기중, 1: 담당자 배정, 2: 처리중, 3: 처리완료
   assignee?: string; // 담당자가 정해졌을 경우 이름
+  handleStatus?: (arg0: string) => void;
 }
 
 interface StepItemProps {
@@ -13,7 +14,81 @@ interface StepItemProps {
   completed?: boolean;
   icon: React.ReactNode;
   extraLabel?: string;
+  handleStatus?: (arg0: string) => void;
 }
+
+const StepItem: React.FC<StepItemProps> = ({
+  label,
+  icon,
+  active,
+  completed,
+  extraLabel,
+  handleStatus,
+}) => (
+  <StepItemWrapper
+    active={active}
+    completed={completed}
+    onClick={() => {
+      if (!handleStatus) return;
+      handleStatus(label);
+    }}
+  >
+    <StepIcon active={active} completed={completed}>
+      {icon}
+    </StepIcon>
+    <div className="title">
+      {label}
+      <br />
+      {extraLabel ? ` (${extraLabel})` : ""}
+    </div>
+  </StepItemWrapper>
+);
+
+const StepFlow: React.FC<StepFlowProps> = ({
+  activeIndex,
+  assignee,
+  handleStatus,
+}) => {
+  return (
+    <StepContainer>
+      <StepItem
+        label="대기중"
+        icon={<Inbox />}
+        active={activeIndex === 0}
+        completed={activeIndex > 0}
+        handleStatus={handleStatus}
+      />
+      <Separator>...</Separator>
+
+      <StepItem
+        label="담당자 배정"
+        icon={<User />}
+        active={activeIndex === 1}
+        completed={activeIndex > 1}
+        extraLabel={assignee}
+        handleStatus={handleStatus}
+      />
+      <Separator>...</Separator>
+      <StepItem
+        label="처리중"
+        icon={<MessageSquare />}
+        active={activeIndex === 2}
+        completed={activeIndex > 2}
+        handleStatus={handleStatus}
+      />
+      <Separator>...</Separator>
+
+      <StepItem
+        label="처리완료"
+        icon={<CheckCircle />}
+        active={activeIndex === 3}
+        handleStatus={handleStatus}
+      />
+    </StepContainer>
+  );
+};
+
+export default StepFlow;
 
 const StepContainer = styled.div`
   display: flex;
@@ -42,6 +117,8 @@ const StepItemWrapper = styled.div<{ active?: boolean; completed?: boolean }>`
   font-size: 12px;
   font-weight: 500;
   position: relative;
+
+  cursor: pointer;
 
   .title {
     text-align: center;
@@ -97,60 +174,3 @@ const Separator = styled.div`
   color: #d9d9d9;
   height: 68px;
 `;
-
-const StepItem: React.FC<StepItemProps> = ({
-  label,
-  icon,
-  active,
-  completed,
-  extraLabel,
-}) => (
-  <StepItemWrapper active={active} completed={completed}>
-    <StepIcon active={active} completed={completed}>
-      {icon}
-    </StepIcon>
-    <div className="title">
-      {label}
-      <br />
-      {extraLabel ? ` (${extraLabel})` : ""}
-    </div>
-  </StepItemWrapper>
-);
-
-const StepFlow: React.FC<StepFlowProps> = ({ activeIndex, assignee }) => {
-  return (
-    <StepContainer>
-      <StepItem
-        label="대기중"
-        icon={<Inbox />}
-        active={activeIndex === 0}
-        completed={activeIndex > 0}
-      />
-      <Separator>...</Separator>
-
-      <StepItem
-        label="담당자 배정"
-        icon={<User />}
-        active={activeIndex === 1}
-        completed={activeIndex > 1}
-        extraLabel={assignee}
-      />
-      <Separator>...</Separator>
-      <StepItem
-        label="처리중"
-        icon={<MessageSquare />}
-        active={activeIndex === 2}
-        completed={activeIndex > 2}
-      />
-      <Separator>...</Separator>
-
-      <StepItem
-        label="처리완료"
-        icon={<CheckCircle />}
-        active={activeIndex === 3}
-      />
-    </StepContainer>
-  );
-};
-
-export default StepFlow;
