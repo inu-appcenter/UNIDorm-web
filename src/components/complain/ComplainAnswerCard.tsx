@@ -2,12 +2,20 @@
 import React from "react";
 import styled from "styled-components";
 
+interface File {
+  filePath: string;
+  fileName: string;
+  fileSize: number;
+  uploadDate: string;
+}
+
 interface NoticeCardProps {
   date: string;
   type: string;
   managerName: string;
   title: string;
   content: string;
+  images?: File[];
 }
 
 const ComplainCard: React.FC<NoticeCardProps> = ({
@@ -16,6 +24,7 @@ const ComplainCard: React.FC<NoticeCardProps> = ({
   managerName,
   title,
   content,
+  images,
 }) => {
   return (
     <Card>
@@ -28,10 +37,13 @@ const ComplainCard: React.FC<NoticeCardProps> = ({
           <strong>담당자</strong> {managerName}
         </div>
       </Info>
-
       <Title>{title}</Title>
       <Content>{content}</Content>
-      <ImagePlaceholder />
+      {images &&
+        images.length > 0 &&
+        images.map((image, index) => (
+          <ImagePlaceholder key={index} src={image.filePath} />
+        ))}
     </Card>
   );
 };
@@ -90,7 +102,7 @@ const Content = styled.div`
   overflow: hidden;
 `;
 
-const ImagePlaceholder = styled.div`
+const ImagePlaceholder = styled.img`
   width: 100%;
   height: 180px;
   background-color: #ddd;

@@ -27,20 +27,26 @@ const AdminMainPage: React.FC = () => {
   // 관리자 페이지 목록 (추가 확장 가능)
   const adminPages = [
     {
-      label: "캘린더 관리자 페이지",
+      label: "민원 관리",
+      path: "/admin/complain",
+      description: "민원 사항에 대해 관리할 수 있습니다.",
+    },
+    {
+      label: "캘린더 관리",
       path: "/admin/calendar",
-      description: "캘린더 관리 및 일정 설정",
+      description: "캘린더의 일정을 관리할 수 있습니다.",
     },
     {
-      label: "공지사항 관리자 페이지",
+      label: "공지사항 관리",
       path: "/announcements",
-      description: "공지사항 등록 및 수정",
+      description: "생활원 공지사항을 관리할 수 있습니다.",
     },
-    {
-      label: "FCM 토큰",
-      path: "/admin/fcm",
-      description: "푸시알림 토큰 확인",
-    },
+
+    // {
+    //   label: "FCM 토큰",
+    //   path: "/admin/fcm",
+    //   description: "푸시알림 토큰 확인",
+    // },
   ];
 
   return (
