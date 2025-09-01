@@ -5,7 +5,10 @@ import { useEffect, useRef, useState } from "react";
 import SquareButton from "../../components/common/SquareButton.tsx";
 import Header from "../../components/common/Header.tsx";
 import { ComplaintReplyDto } from "../../types/complain.ts";
-import { createComplaintReply, updateComplaintReply } from "../../apis/complainAdmin.ts"; // ✅ 타입 정의 필요
+import {
+  createComplaintReply,
+  updateComplaintReply,
+} from "../../apis/complainAdmin.ts"; // ✅ 타입 정의 필요
 
 export default function ComplainAnswerWritePage() {
   const { complainId } = useParams<{ complainId: string }>();
