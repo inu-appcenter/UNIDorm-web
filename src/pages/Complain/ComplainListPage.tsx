@@ -111,7 +111,7 @@ const ComplainListPageWrapper = styled.div`
   box-sizing: border-box;
 
   overflow-y: auto;
-  background: #fafafa;
+  //background: #fafafa;
 `;
 
 const Wrapper1 = styled.div`

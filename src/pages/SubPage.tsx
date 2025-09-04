@@ -18,6 +18,8 @@ const SubPageWrapper = styled.div<{ $isIOS: boolean }>`
   width: 100%;
   height: 100%;
   box-sizing: border-box;
+  background: #fafafa;
+
 
   ${({ $isIOS }) =>
     $isIOS &&

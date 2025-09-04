@@ -25,6 +25,8 @@ const RootPageWrapper = styled.div<{ $platform: string }>`
   height: 100%;
 
   box-sizing: border-box;
+  background: #fafafa;
+
 
   ${({ $platform }) =>
     $platform === "ios"

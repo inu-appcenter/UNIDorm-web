@@ -346,7 +346,8 @@ const HomePageWrapper = styled.div`
 
   overflow-y: auto;
 
-  background: #fafafa;
+  //background: #fafafa;
+  
 
   .appcenter-logo {
     margin-top: 36px;
