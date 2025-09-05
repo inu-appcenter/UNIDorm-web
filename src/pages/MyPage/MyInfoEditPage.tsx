@@ -352,6 +352,10 @@ const ButtonWrapper = styled.div`
 
   bottom: 0;
   left: 0;
+
+  background: rgba(244, 244, 244, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 `;
 
 const ProfileImage = styled.img`

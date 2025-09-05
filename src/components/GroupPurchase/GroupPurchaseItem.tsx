@@ -8,6 +8,7 @@ interface Props {
   currentPeople: number;
   maxPeople: number;
   thumbnailUrl: string;
+  onClick: () => void;
 }
 
 const GroupPurchaseItem = ({
@@ -17,6 +18,7 @@ const GroupPurchaseItem = ({
   currentPeople,
   maxPeople,
   thumbnailUrl,
+  onClick,
 }: Props) => {
   const getDDay = (deadline: string) => {
     const today = new Date();
@@ -28,7 +30,7 @@ const GroupPurchaseItem = ({
   };
 
   return (
-    <GroupPurchaseItemWrapper>
+    <GroupPurchaseItemWrapper onClick={onClick}>
       <ItemImage style={{ backgroundImage: `url(${thumbnailUrl})` }} />
       <TitleLine>{title}</TitleLine>
       <Price>{price.toLocaleString()}원</Price>
@@ -54,6 +56,8 @@ const GroupPurchaseItemWrapper = styled.div`
   height: fit-content;
   gap: 10px;
   width: 150px;
+  
+  cursor: pointer;
 `;
 
 const ItemImage = styled.div`
