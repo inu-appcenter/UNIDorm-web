@@ -17,7 +17,7 @@ const RoundSquareBlueButton = ({
 export default RoundSquareBlueButton;
 
 const RoundSquareBlueButtonWrapper = styled.div`
-  width: 100%;
+  width: auto;
   min-width: 80px;
   height: 100%;
   min-height: 50px;

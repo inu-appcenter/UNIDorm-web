@@ -171,7 +171,7 @@ function App() {
                   path="comingsoon"
                   element={<GroupPurchaseComingSoonPage />}
                 />
-                <Route path="post" element={<GroupPurchasePostPage />} />
+                <Route path=":id" element={<GroupPurchasePostPage />} />
                 <Route path="write" element={<GroupPurchaseWritePage />} />
               </Route>
 

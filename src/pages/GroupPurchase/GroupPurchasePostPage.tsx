@@ -1,97 +1,177 @@
-// src/pages/GroupPurchase/GroupPurchasePostPage.tsx
-
 import styled from "styled-components";
 import { BsThreeDotsVertical, BsSend } from "react-icons/bs";
 import { FaRegHeart, FaUserCircle } from "react-icons/fa";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Header from "../../components/common/Header";
+import { GroupOrderDetail, GroupOrderImage } from "../../types/grouporder.ts";
+import {
+  cancelGroupPurchaseCompletion,
+  completeGroupPurchase,
+  getGroupPurchaseDetail,
+  getGroupPurchaseImages,
+  likeGroupPurchase,
+  unlikeGroupPurchase,
+} from "../../apis/groupPurchase.ts";
+import { useParams } from "react-router-dom";
+import RoundSquareBlueButton from "../../components/button/RoundSquareBlueButton.tsx";
 
 export default function GroupPurchasePostPage() {
+  const { id } = useParams<{ id: string }>(); // URL에서 id 가져오기
+  const groupOrderId = Number(id); // string → number 변환
+
+  const [detail, setDetail] = useState<GroupOrderDetail | null>(null);
+  const [images, setImages] = useState<GroupOrderImage[]>([]);
+  const [liked, setLiked] = useState<boolean>(false);
+
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const detailData = await getGroupPurchaseDetail(groupOrderId);
+        setDetail(detailData);
+        setLiked(detailData.checkLikeCurrentUser);
+        console.log(detailData);
+
+        const imageData = await getGroupPurchaseImages(groupOrderId);
+        setImages(imageData);
+        console.log(imageData);
+      } catch (error) {
+        console.error("게시글 조회 실패:", error);
+      }
+    };
+
+    fetchData();
     window.scrollTo(0, 0);
-  }, []);
+  }, [groupOrderId]);
+
+  // 👍 좋아요 토글 핸들러
+  const handleLikeClick = async () => {
+    if (!detail) return;
+
+    try {
+      let updatedLikeCount: number;
+      if (liked) {
+        updatedLikeCount = await unlikeGroupPurchase(detail.id);
+      } else {
+        updatedLikeCount = await likeGroupPurchase(detail.id);
+      }
+
+      setDetail({ ...detail, likeCount: updatedLikeCount });
+      setLiked(!liked);
+    } catch (error) {
+      console.error("좋아요 처리 실패:", error);
+    }
+  };
+
+  // ✅ 모집 완료 토글 핸들러
+  const handleCompletionToggle = async () => {
+    if (!detail) return;
+
+    try {
+      if (detail.recruitmentComplete) {
+        await cancelGroupPurchaseCompletion(detail.id);
+      } else {
+        await completeGroupPurchase(detail.id);
+      }
+
+      setDetail({
+        ...detail,
+        recruitmentComplete: !detail.recruitmentComplete,
+      });
+    } catch (error) {
+      console.error("모집 완료 처리 실패:", error);
+    }
+  };
+
+  if (!detail) return <div>로딩중...</div>;
 
   return (
     <Wrapper>
       <Header title="공구 게시글" hasBack={true} showAlarm={true} />
-      <Divider />
-
       <Content>
-        <Divider />
         <UserInfo>
           <FaUserCircle size={36} color="#ccc" />
           <UserText>
             <Nickname>익명</Nickname>
-            <Date>03/01 18:07</Date>
+            {/*<Date>{new Date(detail.createDate).toLocaleDateString()} {new Date(detail.createDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Date>*/}
           </UserText>
           <Spacer />
-          <CategoryTag>배달</CategoryTag>
+          <CategoryTag>{detail.groupOrderType}</CategoryTag>
           <BsThreeDotsVertical size={18} />
         </UserInfo>
 
-        <ImageSlider>
-          <SliderItem />
-          <SliderIndicator>● ○ ○</SliderIndicator>
-        </ImageSlider>
+        {images.length > 0 && (
+          <ImageSlider>
+            {images.map((img, idx) => (
+              <SliderItem
+                key={idx}
+                style={{ backgroundImage: `url(${img.imageUrl})` }}
+              />
+            ))}
+            <SliderIndicator>
+              {`●`.repeat(images.length) + ` ○`.repeat(3 - images.length)}
+            </SliderIndicator>
+          </ImageSlider>
+        )}
 
-        <Title>엽떡 먹을 사람..?</Title>
+        <Title>{detail.title}</Title>
 
         <MetaInfo>
-          <Dday>D-1 02:30</Dday>
+          <Dday>
+            {/* 마감일까지 남은 시간 계산 */}
+            {(() => {
+              const deadlineDate = new Date(detail.deadline);
+              const now = new Date();
+              const diff = deadlineDate.getTime() - now.getTime();
+              const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+              const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+              const m = Math.floor((diff / (1000 * 60)) % 60);
+              return `D-${d} ${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
+            })()}
+          </Dday>
           <DividerBar>|</DividerBar>
           <People>
-            <img src="/src/assets/chat/human.svg" alt="인원" />3/4
+            <img src="/src/assets/chat/human.svg" alt="인원" />
+            조회수 {detail.viewCount}
           </People>
         </MetaInfo>
 
-        <Price>24,000원</Price>
+        <Price>{detail.price.toLocaleString()}원</Price>
 
         <BodyText>
-          엽떡나눠먹을 사람 구함 3인입니다 ㅃㄹ요 배고파
-          <br />
-          자세한 건 채팅에서 정해요 사이드 및 토핑 가능
+          {detail.description}
           <br />
           <br />
-          구매 제품 링크: aaabbbccc
+          구매 제품 링크: {detail.link}
         </BodyText>
 
         <Divider />
 
         <LikeActionRow>
-          <LikeBox>
-            <FaRegHeart /> 좋아요 2
+          <LikeBox onClick={handleLikeClick}>
+            <FaRegHeart style={{ color: liked ? "#e25555" : "#bbb" }} /> 좋아요{" "}
+            {detail.likeCount}
           </LikeBox>
-          <JoinButton>참여하기</JoinButton>
+          <RoundSquareBlueButton btnName={"오픈 채팅방 참여하기"} />
+          {/*<JoinButton>참여하기</JoinButton>*/}
         </LikeActionRow>
 
         <Divider />
 
+        {/* 댓글 리스트 */}
         <CommentList>
-          <Comment>
-            <FaUserCircle size={32} color="#ccc" />
-            <CommentContent>
-              <CommentBody>
-                <Nickname>익명 1</Nickname>
-                <CommentText>햄프피햄피 해피</CommentText>
-                <Date>오후 6:20</Date>
-              </CommentBody>
-              <BsThreeDotsVertical size={18} />
-            </CommentContent>
-          </Comment>
-
-          <Reply>
-            <FaUserCircle size={28} color="#ccc" />
-            <ReplyContent>
-              <ReplyBody>
-                <Nickname>익명 1</Nickname>
-                <CommentText>
-                  아.. 언제 자지,,, 이젠 자야하는데,,, 살려줘
-                </CommentText>
-                <Date>오후 6:20</Date>
-              </ReplyBody>
-              <BsThreeDotsVertical size={16} />
-            </ReplyContent>
-          </Reply>
+          {detail.groupOrderCommentDtoList.map((comment) => (
+            <Comment key={comment.groupOrderCommentId}>
+              <FaUserCircle size={32} color="#ccc" />
+              <CommentContent>
+                <CommentBody>
+                  <Nickname>익명</Nickname>
+                  <CommentText>{comment.reply}</CommentText>
+                  {/*<Date>{new Date(comment.createDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Date>*/}
+                </CommentBody>
+                <BsThreeDotsVertical size={18} />
+              </CommentContent>
+            </Comment>
+          ))}
         </CommentList>
       </Content>
 
@@ -117,14 +197,17 @@ export default function GroupPurchasePostPage() {
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
-  height: 100vh;           // ✅ 전체 고정
-  overflow: hidden;        // ✅ Content만 스크롤 가능하게
-  background: #fff;
+
+  padding: 80px 16px;
+  //padding-top: 60px;
+  //height: 100vh;           // ✅ 전체 고정
+  //overflow: hidden;        // ✅ Content만 스크롤 가능하게
+  //background: #fff;
 `;
 
 const Content = styled.div`
   flex: 1;
-  padding: 26px 16px 80px;
+  //padding: 26px 16px 80px;
   overflow-y: auto;
 `;
 
@@ -145,10 +228,10 @@ const Nickname = styled.div`
   font-size: 14px;
 `;
 
-const Date = styled.div`
-  font-size: 12px;
-  color: gray;
-`;
+// const Date = styled.div`
+//   font-size: 12px;
+//   color: gray;
+// `;
 
 const Spacer = styled.div`
   flex-grow: 1;
@@ -158,7 +241,7 @@ const CategoryTag = styled.div`
   background-color: #007bff;
   color: white;
   font-size: 14px;
-  padding: 10px 20px;
+  padding: 4px 16px;
   border-radius: 20px;
   margin-right: 8px;
 `;
@@ -238,6 +321,8 @@ const LikeBox = styled.div`
   gap: 6px;
   margin: 12px 0;
   color: #555;
+
+  cursor: pointer;
 `;
 
 const Divider = styled.div`
@@ -273,24 +358,24 @@ const CommentText = styled.div`
   font-size: 14px;
 `;
 
-const Reply = styled.div`
-  display: flex;
-  gap: 10px;
-  background: #f0f0f0;
-  padding: 12px;
-  border-radius: 8px;
-  margin-left: 36px;
-`;
-
-const ReplyBody = styled(CommentBody)`
-  gap: 2px;
-`;
-
-const ReplyContent = styled.div`
-  flex: 1;
-  display: flex;
-  justify-content: space-between;
-`;
+// const Reply = styled.div`
+//   display: flex;
+//   gap: 10px;
+//   background: #f0f0f0;
+//   padding: 12px;
+//   border-radius: 8px;
+//   margin-left: 36px;
+// `;
+//
+// const ReplyBody = styled(CommentBody)`
+//   gap: 2px;
+// `;
+//
+// const ReplyContent = styled.div`
+//   flex: 1;
+//   display: flex;
+//   justify-content: space-between;
+// `;
 
 const CommentInput = styled.div`
   display: flex;
@@ -298,7 +383,7 @@ const CommentInput = styled.div`
   bottom: 20px;
   left: 0;
   right: 0;
-  background: white;
+  //background: white;
   padding: 8px 16px;
   border-top: 1px solid #eee;
 
@@ -308,7 +393,7 @@ const CommentInput = styled.div`
     padding: 10px;
     border-radius: 20px;
     background: #f5f5f5;
-    font-size: 14px;
+    font-size: 16px;
     outline: none;
   }
 `;
@@ -329,15 +414,4 @@ const LikeActionRow = styled.div`
   justify-content: space-between;
   align-items: center;
   margin: 12px 0;
-`;
-
-const JoinButton = styled.button`
-  background-color: #007bff;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 999px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
 `;

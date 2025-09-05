@@ -38,12 +38,11 @@ const Button = ({
   onClick,
   showTooltip = false,
   onTooltipClose,
-  badgeCount,
 }: ButtonProps) => {
   const handleClick = () => {
     onClick();
   };
-  console.log(badgeCount);
+  // console.log(badgeCount);
   return (
     <ButtonWrapper onClick={handleClick}>
       {showTooltip && onTooltipClose && (

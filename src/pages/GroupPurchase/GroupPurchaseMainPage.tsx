@@ -1,32 +1,87 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styled from "styled-components";
 import GroupPurchaseList from "../../components/GroupPurchase/GroupPurchaseList";
 import { useNavigate } from "react-router-dom";
 import { FaSearch } from "react-icons/fa";
 import Header from "../../components/common/Header.tsx";
 import BottomBar from "../../components/common/BottomBar.tsx";
+import {
+  GetGroupPurchaseListParams,
+  GroupOrder,
+} from "../../types/grouporder.ts";
+import { getGroupPurchaseList } from "../../apis/groupPurchase.ts";
 
-const CATEGORY_LIST = ["전체", "배달", "식자재", "생활용품", "기타"];
-const SORT_OPTIONS = ["마감 임박 순", "최신순", "좋아요 순"];
+const CATEGORY_LIST: GetGroupPurchaseListParams["type"][] = [
+  "전체",
+  "배달",
+  "식료품",
+  "생활용품",
+  "기타",
+];const SORT_OPTIONS: GetGroupPurchaseListParams["sort"][] = [
+  "마감임박순",
+  "조회순",
+  "가격순",
+];
 
 export default function GroupPurchaseMainPage() {
   const navigate = useNavigate();
-  const [selectedCategory, setSelectedCategory] = useState("전체");
+  const [selectedCategory, setSelectedCategory] = useState<
+    GetGroupPurchaseListParams["type"]
+  >("전체");
   const [search, setSearch] = useState("");
   const [recentSearches, setRecentSearches] = useState<string[]>([
     "휴지",
     "마라탕",
     "닭가슴살",
   ]);
-  const [sortOption, setSortOption] = useState("마감 임박순");
+  const [sortOption, setSortOption] = useState<
+    GetGroupPurchaseListParams["sort"]
+  >("마감임박순");
+  // 게시글 상태
+  const [groupOrders, setGroupOrders] = useState<GroupOrder[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const handleCategoryClick = (category: string) => {
+  const handleCategoryClick = (category: typeof CATEGORY_LIST[number]) => {
     setSelectedCategory(category);
   };
 
   const handleDeleteRecent = (term: string) => {
     setRecentSearches(recentSearches.filter((item) => item !== term));
   };
+
+  const fetchGroupOrders = async (searchTerm?: string) => {
+    setLoading(true);
+    try {
+      const params: GetGroupPurchaseListParams = {
+        sort:
+          sortOption === "마감임박순"
+            ? "마감임박순"
+            : "조회순", // 최신순, 좋아요 순 변환 필요
+        type: selectedCategory,
+        search: searchTerm || undefined,
+      };
+      const data = await getGroupPurchaseList(params);
+      console.log("공동구매 게시글 불러오기 성공 : ", data);
+      setGroupOrders(data);
+    } catch (error) {
+      console.error("게시글 목록 불러오기 실패:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const handleSearchSubmit = () => {
+    // 검색어가 없으면 그냥 리턴
+    if (!search.trim()) return;
+
+    fetchGroupOrders(search.trim());
+  };
+
+
+  // 게시글 목록 불러오기
+  useEffect(() => {
+
+    fetchGroupOrders();
+  }, [selectedCategory, sortOption]);
 
   return (
     <PageWrapper>
@@ -49,7 +104,6 @@ export default function GroupPurchaseMainPage() {
         }
       />
 
-      <ContentArea>
         <SearchBar>
           <FaSearch size={16} color="#999" />
           <input
@@ -57,7 +111,11 @@ export default function GroupPurchaseMainPage() {
             placeholder="검색어를 입력하세요"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleSearchSubmit();
+            }}
           />
+
         </SearchBar>
 
         <RecentSearchWrapper>
@@ -66,9 +124,7 @@ export default function GroupPurchaseMainPage() {
             {recentSearches.map((term) => (
               <Tag key={term}>
                 {term}{" "}
-                <DeleteBtn onClick={() => handleDeleteRecent(term)}>
-                  ×
-                </DeleteBtn>
+                <DeleteBtn onClick={() => handleDeleteRecent(term)}>×</DeleteBtn>
               </Tag>
             ))}
           </TagList>
@@ -86,8 +142,11 @@ export default function GroupPurchaseMainPage() {
           ))}
         </SortFilterWrapper>
 
-        <GroupPurchaseList />
-      </ContentArea>
+        {loading ? (
+          <div>로딩중...</div>
+        ) : (
+          <GroupPurchaseList groupOrders={groupOrders} />
+        )}
 
       <WriteButton onClick={() => navigate("/groupPurchase/write")}>
         ✏️ 글쓰기
@@ -98,30 +157,16 @@ export default function GroupPurchaseMainPage() {
 }
 
 const PageWrapper = styled.div`
-  padding-top: 80px;
-  background: #fafafa;
-
-  //width: 100%;
-  //height: 100%;
+  padding-top: 110px;
+  //background: #fafafa;
+  
   box-sizing: border-box;
 
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  //height: 100vh;
-  //overflow-x: hidden;
 `;
 
-// const TopFixedSection = styled.div`
-//   position: fixed;
-//   top: 40px;
-//   left: 0;
-//   width: 100%;
-//   background-color: white;
-//   z-index: 999;
-//   padding: 70px 20px 8px 20px;
-//   box-sizing: border-box;
-// `;
 
 const CategoryWrapper = styled.div`
   display: flex;
@@ -211,12 +256,6 @@ const DeleteBtn = styled.button`
   cursor: pointer;
 `;
 
-const ContentArea = styled.div`
-  padding-top: 32px;
-  padding-bottom: 100px;
-  padding-left: 16px;
-  padding-right: 16px;
-`;
 
 const WriteButton = styled.button`
   position: fixed;
