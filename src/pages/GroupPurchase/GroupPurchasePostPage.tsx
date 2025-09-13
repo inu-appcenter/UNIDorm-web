@@ -14,6 +14,7 @@ import {
 import { useNavigate, useParams } from "react-router-dom";
 import RoundSquareBlueButton from "../../components/button/RoundSquareBlueButton.tsx";
 import 궁금해하는횃불이 from "../../assets/roommate/궁금해하는횃불이.png";
+import 사람 from "../../assets/chat/human.svg";
 import RoundSquareWhiteButton from "../../components/button/RoundSquareWhiteButton.tsx";
 import { useSwipeable } from "react-swipeable";
 
@@ -192,7 +193,7 @@ export default function GroupPurchasePostPage() {
           </Dday>
           <DividerBar>|</DividerBar>
           <People>
-            <img src="/src/assets/chat/human.svg" alt="인원" />
+            <img src={사람} alt="인원수" />
             조회수 {post.viewCount}
           </People>
         </MetaInfo>
