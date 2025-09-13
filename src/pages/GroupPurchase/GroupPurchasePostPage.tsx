@@ -160,18 +160,30 @@ export default function GroupPurchasePostPage() {
 
         {images.length > 0 && (
           <ImageSlider {...handlers} style={{ touchAction: "pan-y" }}>
-            {images.map((img, idx) => (
-              <SliderItem
-                key={idx}
-                style={{ backgroundImage: `url(${img.fileName})` }}
-                onClick={() => {
-                  setPreviewUrl(images[currentImage].fileName);
-                  setShowInfoModal(true);
+            <SliderItem
+              onClick={() => {
+                setPreviewUrl(images[currentImage].fileName);
+                setShowInfoModal(true);
+              }}
+            >
+              <img
+                src={images[currentImage].fileName}
+                alt={`팁 이미지 ${currentImage + 1}`}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  borderRadius: "10px",
+                  userSelect: "none",
+                  pointerEvents: "none",
                 }}
+                draggable={false}
               />
-            ))}
+            </SliderItem>
             <SliderIndicator>
-              {`●`.repeat(images.length) + ` ○`.repeat(3 - images.length)}
+              {images.map((_, idx) => (
+                <Dot key={idx} $active={idx === currentImage} />
+              ))}
             </SliderIndicator>
           </ImageSlider>
         )}
@@ -338,7 +350,6 @@ const CategoryTag = styled.div`
 
 const ImageSlider = styled.div`
   width: 100%;
-  margin-left: -16px;
   height: 200px;
   background: #ccc;
   position: relative;
@@ -618,4 +629,14 @@ const ButtonGroupWrapper = styled.div`
   display: flex;
   flex-direction: row;
   gap: 6px;
+`;
+
+const Dot = styled.span<{ $active: boolean }>`
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin: 0 4px;
+  border-radius: 50%;
+  background: ${({ $active }) => ($active ? "#222" : "#ddd")};
+  transition: background 0.2s;
 `;
