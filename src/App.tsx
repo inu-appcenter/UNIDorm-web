@@ -3,13 +3,9 @@ import { BrowserRouter, Route, Routes, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { getMemberInfo } from "./apis/members";
 import useUserStore from "./stores/useUserStore";
-
-// 공통 레이아웃 페이지
 import RootPage from "./pages/RootPage";
 import SubPage from "./pages/SubPage";
 import OutPage from "./pages/OutPage";
-
-// 개별 페이지
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import LogoutPage from "./pages/LogoutPage";
@@ -18,8 +14,6 @@ import MyPage from "./pages/MyPage";
 import MyInfoEditPage from "./pages/MyPage/MyInfoEditPage";
 import MyPostsPage from "./pages/MyPostsPage";
 import MyLikesPage from "./pages/MyLikesPage";
-
-// RoomMate
 import RoomMatePage from "./pages/RoomMate/RoomMatePage";
 import MyRoomMatePage from "./pages/RoomMate/MyRoomMatePage";
 import RoomMateListPage from "./pages/RoomMate/RoomMateListPage";
@@ -27,37 +21,23 @@ import RoomMateBoardDetailPage from "./pages/RoomMate/RoomMateBoardDetailPage";
 import RoomMateFilterPage from "./pages/RoomMate/RoomMateFilterPage";
 import RoomMateChecklistPage from "./pages/RoomMate/RoomMateChecklistPage";
 import RoomMateAddPage from "./pages/RoomMate/RoomMateAddPage";
-
-// Chat
 import ChatListPage from "./pages/Chat/ChatListPage";
 import ChattingPage from "./pages/Chat/ChattingPage";
-
-// GroupPurchase
 import GroupPurchaseMainPage from "./pages/GroupPurchase/GroupPurchaseMainPage";
 import GroupPurchaseComingSoonPage from "./pages/GroupPurchase/GroupPurchaseComingSoonPage";
 import GroupPurchasePostPage from "./pages/GroupPurchase/GroupPurchasePostPage";
 import GroupPurchaseWritePage from "./pages/GroupPurchase/GroupPurchaseWritePage";
-
-// Announcement / Notification
 import NotificationBoardPage from "./pages/Announcement/AnnouncementPage";
 import AnnounceDetailPage from "./pages/Announcement/AnnounceDetailPage";
 import AnnounceWritePage from "./pages/Admin/AnnounceWritePage";
 import NotificationPage from "./pages/NotificationPage";
-
-// Tip
 import TipListPage from "./pages/Tip/TipListPage";
 import TipWritePage from "./pages/Tip/TipWritePage";
 import TipDetailPage from "./pages/Tip/TipDetailPage";
-
-// Admin
 import AdminMainPage from "./pages/Admin/AdminMainPage";
 import CalendarAdminPage from "./pages/Admin/CalendarAdminPage";
-
-// Calendar
 import CalendarPage from "./pages/CalendarPage";
-
 import "./init";
-// import { useFcmToken } from "./hooks/useFcmToken";
 import { RoomMateProvider } from "./stores/RoomMateContext.tsx";
 import { AnnouncementProvider } from "./stores/AnnouncementContext.tsx";
 import { TipProvider } from "./stores/TipContext.tsx";
@@ -116,6 +96,19 @@ function App() {
     if (firstVisit === null) {
       navigate("/onboarding");
     }
+  }, []);
+
+  // 웹뷰에서 FCM 토큰 전달 콜백 등록
+  useEffect(() => {
+    (window as any).onReceiveFcmToken = async function (token: string) {
+      console.log("FCM 토큰 전달받음:", token);
+      // 로컬스토리지에 토큰 저장
+      localStorage.setItem("fcmToken", token);
+    };
+
+    return () => {
+      (window as any).onReceiveFcmToken = null;
+    };
   }, []);
 
   return (
