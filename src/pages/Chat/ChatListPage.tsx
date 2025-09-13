@@ -70,13 +70,13 @@ export default function ChatListPage() {
         title="채팅"
         hasBack={false}
         showAlarm={true}
-        secondHeader={
-          <Tab
-            tabItems={tabItems}
-            selectedTab={selectedTab}
-            setSelectedTab={setSelectedTab}
-          />
-        }
+        // secondHeader={
+        //   <Tab
+        //     tabItems={tabItems}
+        //     selectedTab={selectedTab}
+        //     setSelectedTab={setSelectedTab}
+        //   />
+        // }
       />
 
       <ContentWrapper>
@@ -170,7 +170,7 @@ export default function ChatListPage() {
 }
 
 const ChatListPageWrapper = styled.div`
-  padding: 70px 0;
+  padding: 30px 0;
 
   display: flex;
   flex-direction: column;

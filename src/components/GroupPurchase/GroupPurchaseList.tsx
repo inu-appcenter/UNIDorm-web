@@ -3,7 +3,6 @@ import GroupPurchaseItem from "./GroupPurchaseItem";
 import { GroupOrder } from "../../types/grouporder.ts";
 import { useNavigate } from "react-router-dom";
 
-
 interface GroupPurchaseListProps {
   groupOrders: GroupOrder[];
 }
@@ -16,17 +15,10 @@ const GroupPurchaseList = ({ groupOrders }: GroupPurchaseListProps) => {
       {groupOrders.map((order) => (
         <GroupPurchaseItem
           key={order.boardId}
-          title={order.title}
-          price={order.price}
-          deadline={order.deadline}
-          currentPeople={order.currentPeople}
-          maxPeople={order.maxPeople}
-          thumbnailUrl={order.filePath}
-
-          onClick={()=>{
-            navigate(`/groupPurchase/${order.boardId}`)
+          groupOrder={order}
+          onClick={() => {
+            navigate(`/groupPurchase/${order.boardId}`);
           }}
-
         />
       ))}
     </GroupPurchaseListWrapper>

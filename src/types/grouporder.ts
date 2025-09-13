@@ -9,13 +9,12 @@ export interface GroupOrder {
   boardId: number;
   title: string;
   type: string;
-  createDate: string;
+  createDate: string; // ISO 문자열 형식
   filePath: string;
-  deadline: string;
+  deadline: string; // 문자열 형식
   price: number;
-  currentPeople: number;
-  maxPeople: number;
-  groupOrderType: string;
+  groupOrderType: string; // 예: "전체"
+  viewCount: number; // 새로 추가된 필드
   recruitmentComplete: boolean;
 }
 
@@ -27,21 +26,6 @@ export interface GroupOrderComment {
   parentId: number;
   isDeleted: boolean;
   commentAuthorImagePath: string;
-}
-
-// 목록 조회용 타입
-export interface GroupOrder {
-  boardId: number;
-  title: string;
-  type: string;
-  createDate: string;
-  filePath: string;
-  deadline: string;
-  price: number;
-  currentPeople: number;
-  maxPeople: number;
-  groupOrderType: string;
-  recruitmentComplete: boolean;
 }
 
 // 상세 조회용 타입

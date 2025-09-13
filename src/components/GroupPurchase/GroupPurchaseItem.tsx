@@ -1,45 +1,33 @@
 import styled from "styled-components";
 import human from "../../assets/chat/human.svg";
+import { GroupOrder } from "../../types/grouporder.ts";
 
-interface Props {
-  title: string;
-  price: number;
-  deadline: string;
-  currentPeople: number;
-  maxPeople: number;
-  thumbnailUrl: string;
+interface GroupPurchaseItemProps {
+  groupOrder: GroupOrder;
   onClick: () => void;
 }
 
-const GroupPurchaseItem = ({
-  title,
-  price,
-  deadline,
-  currentPeople,
-  maxPeople,
-  thumbnailUrl,
-  onClick,
-}: Props) => {
+const GroupPurchaseItem = ({ groupOrder, onClick }: GroupPurchaseItemProps) => {
   const getDDay = (deadline: string) => {
     const today = new Date();
     const end = new Date(deadline);
     const diff = Math.ceil(
-      (end.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+      (end.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
     );
     return diff >= 0 ? `D-${diff}` : "마감";
   };
 
   return (
     <GroupPurchaseItemWrapper onClick={onClick}>
-      <ItemImage style={{ backgroundImage: `url(${thumbnailUrl})` }} />
-      <TitleLine>{title}</TitleLine>
-      <Price>{price.toLocaleString()}원</Price>
+      <ItemImage style={{ backgroundImage: `url(${groupOrder.filePath})` }} />
+      <TitleLine>{groupOrder.title}</TitleLine>
+      <Price>{groupOrder.price.toLocaleString()}원</Price>
       <AdditionalLine>
-        <span className="dDay">{getDDay(deadline)}</span>
+        <span className="dDay">{getDDay(groupOrder.deadline)}</span>
         <span className="divider">|</span>
         <span className="people">
           <img src={human} alt="인원 아이콘" />
-          {currentPeople}/{maxPeople}
+          조회수 {groupOrder.viewCount}
         </span>
       </AdditionalLine>
     </GroupPurchaseItemWrapper>
@@ -56,7 +44,7 @@ const GroupPurchaseItemWrapper = styled.div`
   height: fit-content;
   gap: 10px;
   width: 150px;
-  
+
   cursor: pointer;
 `;
 
@@ -110,6 +98,7 @@ const AdditionalLine = styled.div`
     display: flex;
     align-items: center;
     gap: 4px;
+    font-weight: normal;
 
     img {
       width: 14px;

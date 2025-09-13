@@ -10,11 +10,7 @@ import {
 import useUserStore from "../../stores/useUserStore.ts";
 import { useLocation } from "react-router-dom";
 
-export default function GroupPurchaseWritePage({
-  groupOrderId,
-}: {
-  groupOrderId?: number;
-}) {
+export default function GroupPurchaseWritePage() {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   // 수정 모드 관련 상태
@@ -26,7 +22,7 @@ export default function GroupPurchaseWritePage({
   useEffect(() => {
     if (post) {
       setTitle(post.title);
-      setDescription(post.content); // description 상태에 내용 채움
+      setDescription(post.description);
       setPrice(post.price?.toString() || "");
       setPurchaseLink(post.link || "");
       setOpenchatLink(post.openChatLink || "");
@@ -119,8 +115,8 @@ export default function GroupPurchaseWritePage({
     };
 
     try {
-      if (groupOrderId) {
-        await updateGroupPurchase(groupOrderId, requestDto, images);
+      if (isEditMode) {
+        await updateGroupPurchase(post.id, requestDto, images);
         alert("게시글이 수정되었습니다.");
       } else {
         await createGroupPurchase(requestDto, images);
@@ -289,7 +285,7 @@ export default function GroupPurchaseWritePage({
       {isLoggedIn && (
         <BottomFixed>
           <SubmitButton onClick={handleSubmit}>
-            {groupOrderId ? "수정하기" : "등록하기"}
+            {post.id ? "수정하기" : "등록하기"}
           </SubmitButton>
         </BottomFixed>
       )}
