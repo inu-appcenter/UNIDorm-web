@@ -17,7 +17,8 @@ const CATEGORY_LIST: GetGroupPurchaseListParams["type"][] = [
   "식료품",
   "생활용품",
   "기타",
-];const SORT_OPTIONS: GetGroupPurchaseListParams["sort"][] = [
+];
+const SORT_OPTIONS: GetGroupPurchaseListParams["sort"][] = [
   "마감임박순",
   "조회순",
   "가격순",
@@ -25,38 +26,25 @@ const CATEGORY_LIST: GetGroupPurchaseListParams["type"][] = [
 
 export default function GroupPurchaseMainPage() {
   const navigate = useNavigate();
-  const [selectedCategory, setSelectedCategory] = useState<
-    GetGroupPurchaseListParams["type"]
-  >("전체");
+  const [selectedCategory, setSelectedCategory] =
+    useState<GetGroupPurchaseListParams["type"]>("전체");
   const [search, setSearch] = useState("");
-  const [recentSearches, setRecentSearches] = useState<string[]>([
-    "휴지",
-    "마라탕",
-    "닭가슴살",
-  ]);
-  const [sortOption, setSortOption] = useState<
-    GetGroupPurchaseListParams["sort"]
-  >("마감임박순");
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [sortOption, setSortOption] =
+    useState<GetGroupPurchaseListParams["sort"]>("마감임박순");
   // 게시글 상태
   const [groupOrders, setGroupOrders] = useState<GroupOrder[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const handleCategoryClick = (category: typeof CATEGORY_LIST[number]) => {
+  const handleCategoryClick = (category: (typeof CATEGORY_LIST)[number]) => {
     setSelectedCategory(category);
-  };
-
-  const handleDeleteRecent = (term: string) => {
-    setRecentSearches(recentSearches.filter((item) => item !== term));
   };
 
   const fetchGroupOrders = async (searchTerm?: string) => {
     setLoading(true);
     try {
       const params: GetGroupPurchaseListParams = {
-        sort:
-          sortOption === "마감임박순"
-            ? "마감임박순"
-            : "조회순", // 최신순, 좋아요 순 변환 필요
+        sort: sortOption === "마감임박순" ? "마감임박순" : "조회순", // 최신순, 좋아요 순 변환 필요
         type: selectedCategory,
         search: searchTerm || undefined,
       };
@@ -69,17 +57,44 @@ export default function GroupPurchaseMainPage() {
       setLoading(false);
     }
   };
-  const handleSearchSubmit = () => {
-    // 검색어가 없으면 그냥 리턴
-    if (!search.trim()) return;
+  // 최근 검색어 불러오기
+  useEffect(() => {
+    const savedSearches = localStorage.getItem("recentSearches");
+    if (savedSearches) {
+      setRecentSearches(JSON.parse(savedSearches));
+    }
+  }, []);
 
-    fetchGroupOrders(search.trim());
+  const handleSearchSubmit = () => {
+    const rawTerm = search; // 사용자가 입력한 원본
+    const trimmedTerm = search.trim(); // 양끝 공백 제거
+
+    // 검색 실행
+    fetchGroupOrders(trimmedTerm);
+
+    // ✅ 공백만 있는 경우는 검색은 하지만 최근검색어에는 저장 안 함
+    if (rawTerm.trim() === "") return;
+
+    // 중복 제거 + 최신순 정렬
+    const updatedSearches = [
+      trimmedTerm,
+      ...recentSearches.filter((item) => item !== trimmedTerm),
+    ].slice(0, 10);
+
+    setRecentSearches(updatedSearches);
+    localStorage.setItem("recentSearches", JSON.stringify(updatedSearches));
+
+    setSearch(""); // 입력창 초기화 (선택)
   };
 
+  const handleDeleteRecent = (term: string) => {
+    const updatedSearches = recentSearches.filter((item) => item !== term);
+    setRecentSearches(updatedSearches);
+    localStorage.setItem("recentSearches", JSON.stringify(updatedSearches));
+  };
 
   // 게시글 목록 불러오기
   useEffect(() => {
-
     fetchGroupOrders();
   }, [selectedCategory, sortOption]);
 
@@ -104,49 +119,48 @@ export default function GroupPurchaseMainPage() {
         }
       />
 
-        <SearchBar>
-          <FaSearch size={16} color="#999" />
-          <input
-            type="text"
-            placeholder="검색어를 입력하세요"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleSearchSubmit();
-            }}
-          />
+      <SearchBar>
+        <FaSearch size={16} color="#999" />
+        <input
+          type="text"
+          placeholder="검색어를 입력하세요"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") handleSearchSubmit();
+          }}
+        />
+      </SearchBar>
 
-        </SearchBar>
-
-        <RecentSearchWrapper>
-          <Label>최근 검색어</Label>
-          <TagList>
-            {recentSearches.map((term) => (
-              <Tag key={term}>
-                {term}{" "}
-                <DeleteBtn onClick={() => handleDeleteRecent(term)}>×</DeleteBtn>
-              </Tag>
-            ))}
-          </TagList>
-        </RecentSearchWrapper>
-
-        <SortFilterWrapper>
-          {SORT_OPTIONS.map((option) => (
-            <SortButton
-              key={option}
-              className={sortOption === option ? "active" : ""}
-              onClick={() => setSortOption(option)}
-            >
-              {option}
-            </SortButton>
+      <RecentSearchWrapper>
+        <Label>최근 검색어</Label>
+        <TagList>
+          {recentSearches.map((term) => (
+            <Tag key={term}>
+              {term}{" "}
+              <DeleteBtn onClick={() => handleDeleteRecent(term)}>×</DeleteBtn>
+            </Tag>
           ))}
-        </SortFilterWrapper>
+        </TagList>
+      </RecentSearchWrapper>
 
-        {loading ? (
-          <div>로딩중...</div>
-        ) : (
-          <GroupPurchaseList groupOrders={groupOrders} />
-        )}
+      <SortFilterWrapper>
+        {SORT_OPTIONS.map((option) => (
+          <SortButton
+            key={option}
+            className={sortOption === option ? "active" : ""}
+            onClick={() => setSortOption(option)}
+          >
+            {option}
+          </SortButton>
+        ))}
+      </SortFilterWrapper>
+
+      {loading ? (
+        <div>로딩중...</div>
+      ) : (
+        <GroupPurchaseList groupOrders={groupOrders} />
+      )}
 
       <WriteButton onClick={() => navigate("/groupPurchase/write")}>
         ✏️ 글쓰기
@@ -158,15 +172,15 @@ export default function GroupPurchaseMainPage() {
 
 const PageWrapper = styled.div`
   padding-top: 110px;
+  padding-bottom: 110px;
   //background: #fafafa;
-  
+
   box-sizing: border-box;
 
   overflow-y: auto;
   display: flex;
   flex-direction: column;
 `;
-
 
 const CategoryWrapper = styled.div`
   display: flex;
@@ -255,7 +269,6 @@ const DeleteBtn = styled.button`
   font-size: 14px;
   cursor: pointer;
 `;
-
 
 const WriteButton = styled.button`
   position: fixed;

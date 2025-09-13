@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import Header from "../../components/common/Header";
 import { MdImage } from "react-icons/md";
@@ -8,8 +8,34 @@ import {
   updateGroupPurchase,
 } from "../../apis/groupPurchase.ts";
 import useUserStore from "../../stores/useUserStore.ts";
+import { useLocation } from "react-router-dom";
 
-export default function GroupPurchaseWritePage({ groupOrderId }: { groupOrderId?: number }) {
+export default function GroupPurchaseWritePage({
+  groupOrderId,
+}: {
+  groupOrderId?: number;
+}) {
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  // 수정 모드 관련 상태
+  const [isEditMode, setIsEditMode] = useState(false);
+
+  const location = useLocation();
+  const { post } = location.state || {};
+
+  useEffect(() => {
+    if (post) {
+      setTitle(post.title);
+      setDescription(post.content); // description 상태에 내용 채움
+      setPrice(post.price?.toString() || "");
+      setPurchaseLink(post.link || "");
+      setOpenchatLink(post.openChatLink || "");
+      setMaxPeople(post.maxPeople?.toString() || "");
+      setCategory(post.groupOrderType || "배달");
+      setIsEditMode(true);
+    }
+  }, [post]);
+
   const [category, setCategory] = useState("배달");
   const [deadline, setDeadline] = useState(() => {
     const now = new Date();
@@ -34,14 +60,13 @@ export default function GroupPurchaseWritePage({ groupOrderId }: { groupOrderId?
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
-  const [link, setLink] = useState("");
+  const [purchaseLink, setPurchaseLink] = useState("");
+  const [openchatLink, setOpenchatLink] = useState("");
   const [maxPeople, setMaxPeople] = useState("");
   const [images, setImages] = useState<File[]>([]);
 
   const { tokenInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
-
-
 
   // 해당 월의 마지막 일 구하기
   const getLastDay = (yearStr: string, monthStr: string) => {
@@ -75,10 +100,12 @@ export default function GroupPurchaseWritePage({ groupOrderId }: { groupOrderId?
   const handleSubmit = async () => {
     // 필수 입력 체크
     if (!title.trim()) return alert("제목을 입력해주세요.");
-    if (!price.trim() || isNaN(Number(price))) return alert("가격을 올바르게 입력해주세요.");
+    if (!price.trim() || isNaN(Number(price)))
+      return alert("가격을 올바르게 입력해주세요.");
     if (!description.trim()) return alert("내용을 입력해주세요.");
-    if (!link.trim()) return alert("구매 링크를 입력해주세요.");
-    if (!maxPeople.trim() || isNaN(Number(maxPeople))) return alert("구매 인원을 올바르게 입력해주세요.");
+    if (!purchaseLink.trim()) return alert("구매 링크를 입력해주세요.");
+    if (!maxPeople.trim() || isNaN(Number(maxPeople)))
+      return alert("구매 인원을 올바르게 입력해주세요.");
 
     const requestDto: CreateGroupOrderRequest = {
       title,
@@ -87,7 +114,8 @@ export default function GroupPurchaseWritePage({ groupOrderId }: { groupOrderId?
       price: Number(price),
       maxPeople: Number(maxPeople),
       description,
-      link,
+      link: purchaseLink,
+      openChatLink: openchatLink,
     };
 
     try {
@@ -104,7 +132,6 @@ export default function GroupPurchaseWritePage({ groupOrderId }: { groupOrderId?
     }
   };
 
-
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       setImages(Array.from(e.target.files));
@@ -117,90 +144,158 @@ export default function GroupPurchaseWritePage({ groupOrderId }: { groupOrderId?
 
   return (
     <Wrapper>
+      {isEditMode && <></>}
       <Header
         title="공동구매 글쓰기"
         hasBack={true}
-        rightContent={<TempSaveButton onClick={handleTempSave}>임시저장</TempSaveButton>}
+        rightContent={
+          <TempSaveButton onClick={handleTempSave}>임시저장</TempSaveButton>
+        }
       />
 
-        <SectionTitle>제목</SectionTitle>
-        <InputField placeholder="글 제목" value={title} onChange={(e) => setTitle(e.target.value)} />
+      <SectionTitle>제목</SectionTitle>
+      <InputField
+        placeholder="글 제목"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+      />
 
-        <SectionTitle>카테고리</SectionTitle>
-        <CategoryRow>
-          {["배달", "식자재", "생활용품", "기타"].map((item) => (
-            <CategoryButton key={item} selected={category === item} onClick={() => setCategory(item)}>
-              {item}
-            </CategoryButton>
+      <SectionTitle>카테고리</SectionTitle>
+      <CategoryRow>
+        {["배달", "식자재", "생활용품", "기타"].map((item) => (
+          <CategoryButton
+            key={item}
+            selected={category === item}
+            onClick={() => setCategory(item)}
+          >
+            {item}
+          </CategoryButton>
+        ))}
+      </CategoryRow>
+
+      <SectionTitle>가격</SectionTitle>
+      <InputField
+        placeholder="가격을 입력해주세요"
+        value={price}
+        onChange={(e) => setPrice(e.target.value)}
+      />
+
+      <SectionTitle>내용</SectionTitle>
+      <TextArea
+        placeholder="내용을 입력해주세요"
+        rows={4}
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+      />
+
+      <SectionTitle>구매 링크</SectionTitle>
+      <InputField
+        placeholder="구매 링크를 입력해주세요"
+        value={purchaseLink}
+        onChange={(e) => setPurchaseLink(e.target.value)}
+      />
+      <SectionTitle>오픈채팅방 링크</SectionTitle>
+      <InputField
+        placeholder="오픈채팅방 링크를 입력해주세요"
+        value={openchatLink}
+        onChange={(e) => setOpenchatLink(e.target.value)}
+      />
+
+      <SectionTitle>구매 인원</SectionTitle>
+      <InputField
+        placeholder="구매 인원을 입력해주세요"
+        value={maxPeople}
+        onChange={(e) => setMaxPeople(e.target.value)}
+      />
+
+      <SectionTitle>마감 시간</SectionTitle>
+      <DeadlineRow>
+        <Select
+          value={deadline.year}
+          onChange={(e) => setDeadline({ ...deadline, year: e.target.value })}
+        >
+          <option>2025년</option>
+          <option>2026년</option>
+          <option>2027년</option>
+        </Select>
+        <Select
+          value={deadline.month}
+          onChange={(e) => setDeadline({ ...deadline, month: e.target.value })}
+        >
+          {Array.from({ length: 12 }, (_, i) => `${i + 1}월`).map((m) => (
+            <option key={m}>{m}</option>
           ))}
-        </CategoryRow>
+        </Select>
+        <Select
+          value={deadline.day}
+          onChange={(e) => setDeadline({ ...deadline, day: e.target.value })}
+        >
+          {dayOptions.map((d) => (
+            <option key={d}>{d}</option>
+          ))}
+        </Select>
+      </DeadlineRow>
 
-        <SectionTitle>가격</SectionTitle>
-        <InputField placeholder="가격을 입력해주세요" value={price} onChange={(e) => setPrice(e.target.value)} />
+      <DeadlineRow>
+        <Select
+          value={deadline.ampm}
+          onChange={(e) => setDeadline({ ...deadline, ampm: e.target.value })}
+        >
+          <option>오전</option>
+          <option>오후</option>
+        </Select>
+        <Select
+          value={deadline.hour}
+          onChange={(e) => setDeadline({ ...deadline, hour: e.target.value })}
+        >
+          {Array.from({ length: 12 }, (_, i) => `${i + 1}시`).map((h) => (
+            <option key={h}>{h}</option>
+          ))}
+        </Select>
+        <Select
+          value={deadline.minute}
+          onChange={(e) => setDeadline({ ...deadline, minute: e.target.value })}
+        >
+          <option>00분</option>
+          <option>30분</option>
+        </Select>
+      </DeadlineRow>
 
-        <SectionTitle>내용</SectionTitle>
-        <TextArea placeholder="내용을 입력해주세요" rows={4} value={description} onChange={(e) => setDescription(e.target.value)} />
+      <WarningText>설정한 마감 시간이 지나면 게시물은 삭제됩니다.</WarningText>
 
-        <SectionTitle>구매 링크</SectionTitle>
-        <InputField placeholder="구매 링크를 입력해주세요" value={link} onChange={(e) => setLink(e.target.value)} />
-
-        <SectionTitle>구매 인원</SectionTitle>
-        <InputField placeholder="구매 인원을 입력해주세요" value={maxPeople} onChange={(e) => setMaxPeople(e.target.value)} />
-
-        <SectionTitle>마감 시간</SectionTitle>
-        <DeadlineRow>
-          <Select value={deadline.year} onChange={(e) => setDeadline({ ...deadline, year: e.target.value })}>
-            <option>2025년</option>
-            <option>2026년</option>
-            <option>2027년</option>
-          </Select>
-          <Select value={deadline.month} onChange={(e) => setDeadline({ ...deadline, month: e.target.value })}>
-            {Array.from({ length: 12 }, (_, i) => `${i + 1}월`).map((m) => (
-              <option key={m}>{m}</option>
-            ))}
-          </Select>
-          <Select value={deadline.day} onChange={(e) => setDeadline({ ...deadline, day: e.target.value })}>
-            {dayOptions.map((d) => (
-              <option key={d}>{d}</option>
-            ))}
-          </Select>
-        </DeadlineRow>
-
-        <DeadlineRow>
-          <Select value={deadline.ampm} onChange={(e) => setDeadline({ ...deadline, ampm: e.target.value })}>
-            <option>오전</option>
-            <option>오후</option>
-          </Select>
-          <Select value={deadline.hour} onChange={(e) => setDeadline({ ...deadline, hour: e.target.value })}>
-            {Array.from({ length: 12 }, (_, i) => `${i + 1}시`).map((h) => (
-              <option key={h}>{h}</option>
-            ))}
-          </Select>
-          <Select value={deadline.minute} onChange={(e) => setDeadline({ ...deadline, minute: e.target.value })}>
-            <option>00분</option>
-            <option>30분</option>
-          </Select>
-        </DeadlineRow>
-
-        <WarningText>설정한 마감 시간이 지나면 게시물은 삭제됩니다.</WarningText>
-
-        <SectionTitle>이미지</SectionTitle>
-        <ImageBox>
-          <MdImage size={36} color="#888" />
-          <span>{images.length}/10</span>
-          <input type="file" multiple accept="image/*" style={{ display: "none" }} onChange={handleImageChange} />
-        </ImageBox>
+      <SectionTitle>이미지</SectionTitle>
+      <ImageBox onClick={() => inputRef.current?.click()}>
+        <MdImage size={36} color="#888" />
+        <span>{images.length}/10</span>
+        {/* 여러 장 미리보기 */}
+        {images.map((file, idx) => (
+          <img
+            key={idx}
+            src={URL.createObjectURL(file)}
+            alt={`업로드 이미지${idx + 1}`}
+            style={{ width: 36, height: 36, borderRadius: 8, marginLeft: 4 }}
+          />
+        ))}
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          hidden
+          onChange={handleImageChange}
+        />
+      </ImageBox>
 
       {isLoggedIn && (
         <BottomFixed>
-          <SubmitButton onClick={handleSubmit}>{groupOrderId ? "수정하기" : "등록하기"}</SubmitButton>
+          <SubmitButton onClick={handleSubmit}>
+            {groupOrderId ? "수정하기" : "등록하기"}
+          </SubmitButton>
         </BottomFixed>
       )}
-
     </Wrapper>
   );
 }
-
 
 const Wrapper = styled.div`
   display: flex;
@@ -210,9 +305,7 @@ const Wrapper = styled.div`
   box-sizing: border-box;
   padding: 60px 16px;
   padding-bottom: 100px;
-  
 `;
-
 
 const ImageBox = styled.div`
   width: 100px;
