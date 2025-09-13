@@ -5,35 +5,41 @@ import { useEffect, useState } from "react";
 import Header from "../../components/common/Header";
 import { GroupOrderDetail, GroupOrderImage } from "../../types/grouporder.ts";
 import {
-  cancelGroupPurchaseCompletion,
-  completeGroupPurchase,
+  deleteGroupPurchase,
   getGroupPurchaseDetail,
   getGroupPurchaseImages,
   likeGroupPurchase,
   unlikeGroupPurchase,
 } from "../../apis/groupPurchase.ts";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import RoundSquareBlueButton from "../../components/button/RoundSquareBlueButton.tsx";
+import 궁금해하는횃불이 from "../../assets/roommate/궁금해하는횃불이.png";
+import RoundSquareWhiteButton from "../../components/button/RoundSquareWhiteButton.tsx";
+import { useSwipeable } from "react-swipeable";
 
 export default function GroupPurchasePostPage() {
   const { id } = useParams<{ id: string }>(); // URL에서 id 가져오기
   const groupOrderId = Number(id); // string → number 변환
+  const navigate = useNavigate();
 
-  const [detail, setDetail] = useState<GroupOrderDetail | null>(null);
+  const [post, setPost] = useState<GroupOrderDetail | null>(null);
   const [images, setImages] = useState<GroupOrderImage[]>([]);
   const [liked, setLiked] = useState<boolean>(false);
+
+  const [showInfoModal, setShowInfoModal] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const detailData = await getGroupPurchaseDetail(groupOrderId);
-        setDetail(detailData);
-        setLiked(detailData.checkLikeCurrentUser);
-        console.log(detailData);
+        const postData = await getGroupPurchaseDetail(groupOrderId);
+        setPost(postData);
+        setLiked(postData.checkLikeCurrentUser);
+        console.log("post data", postData);
 
         const imageData = await getGroupPurchaseImages(groupOrderId);
         setImages(imageData);
-        console.log(imageData);
+        console.log("imagedata", imageData);
       } catch (error) {
         console.error("게시글 조회 실패:", error);
       }
@@ -45,66 +51,122 @@ export default function GroupPurchasePostPage() {
 
   // 👍 좋아요 토글 핸들러
   const handleLikeClick = async () => {
-    if (!detail) return;
+    if (!post) return;
 
     try {
       let updatedLikeCount: number;
       if (liked) {
-        updatedLikeCount = await unlikeGroupPurchase(detail.id);
+        updatedLikeCount = await unlikeGroupPurchase(post.id);
       } else {
-        updatedLikeCount = await likeGroupPurchase(detail.id);
+        updatedLikeCount = await likeGroupPurchase(post.id);
       }
 
-      setDetail({ ...detail, likeCount: updatedLikeCount });
+      setPost({ ...post, likeCount: updatedLikeCount });
       setLiked(!liked);
     } catch (error) {
       console.error("좋아요 처리 실패:", error);
     }
   };
 
-  // ✅ 모집 완료 토글 핸들러
-  const handleCompletionToggle = async () => {
-    if (!detail) return;
-
+  const handleDelete = async () => {
+    if (!post) return;
+    if (!window.confirm("정말 삭제할까요?")) {
+      return;
+    }
     try {
-      if (detail.recruitmentComplete) {
-        await cancelGroupPurchaseCompletion(detail.id);
-      } else {
-        await completeGroupPurchase(detail.id);
-      }
-
-      setDetail({
-        ...detail,
-        recruitmentComplete: !detail.recruitmentComplete,
-      });
+      const result = deleteGroupPurchase(post.id);
+      console.log(result);
+      alert("삭제되었습니다.");
+      navigate("/groupPurchase");
     } catch (error) {
-      console.error("모집 완료 처리 실패:", error);
+      console.error("게시글 삭제 실패:", error);
     }
   };
 
-  if (!detail) return <div>로딩중...</div>;
+  // // ✅ 모집 완료 토글 핸들러
+  // const handleCompletionToggle = async () => {
+  //   if (!post) return;
+  //
+  //   try {
+  //     if (post.recruitmentComplete) {
+  //       await cancelGroupPurchaseCompletion(post.id);
+  //     } else {
+  //       await completeGroupPurchase(post.id);
+  //     }
+  //
+  //     setPost({
+  //       ...post,
+  //       recruitmentComplete: !post.recruitmentComplete,
+  //     });
+  //   } catch (error) {
+  //     console.error("모집 완료 처리 실패:", error);
+  //   }
+  // };
+
+  // --- 이미지 슬라이더
+  const [currentImage, setCurrentImage] = useState(0);
+  const handlers = useSwipeable({
+    onSwipedLeft: () =>
+      setCurrentImage((idx) => Math.min(images.length - 1, idx + 1)),
+    onSwipedRight: () => setCurrentImage((idx) => Math.max(0, idx - 1)),
+    trackMouse: true,
+  });
+
+  const menuItems = [
+    {
+      label: "수정하기",
+      onClick: () => {
+        navigate("/groupPurchase/write", { state: { post: post } });
+      },
+    },
+    {
+      label: "삭제하기",
+      onClick: () => {
+        handleDelete();
+      },
+    },
+  ];
+
+  if (!post) return <div>로딩중...</div>;
 
   return (
     <Wrapper>
-      <Header title="공구 게시글" hasBack={true} showAlarm={true} />
+      <Header title="공구 게시글" hasBack={true} menuItems={menuItems} />
       <Content>
         <UserInfo>
-          <FaUserCircle size={36} color="#ccc" />
+          {post.authorImagePath ? (
+            <img
+              src={post.authorImagePath}
+              alt="프사"
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: "50%",
+                objectFit: "cover",
+              }}
+            />
+          ) : (
+            <FaUserCircle size={36} color="#ccc" />
+          )}{" "}
           <UserText>
-            <Nickname>익명</Nickname>
+            <Nickname>{post.username}</Nickname>
             {/*<Date>{new Date(detail.createDate).toLocaleDateString()} {new Date(detail.createDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Date>*/}
           </UserText>
           <Spacer />
-          <CategoryTag>{detail.groupOrderType}</CategoryTag>
-          <BsThreeDotsVertical size={18} />
+          <CategoryTag>{post.groupOrderType}</CategoryTag>
+          {/*<BsThreeDotsVertical size={18} />*/}
         </UserInfo>
 
         {images.length > 0 && (
-          <ImageSlider>
+          <ImageSlider {...handlers} style={{ touchAction: "pan-y" }}>
             {images.map((img, idx) => (
               <SliderItem
                 key={idx}
-                style={{ backgroundImage: `url(${img.imageUrl})` }}
+                style={{ backgroundImage: `url(${img.fileName})` }}
+                onClick={() => {
+                  setPreviewUrl(images[currentImage].fileName);
+                  setShowInfoModal(true);
+                }}
               />
             ))}
             <SliderIndicator>
@@ -113,13 +175,13 @@ export default function GroupPurchasePostPage() {
           </ImageSlider>
         )}
 
-        <Title>{detail.title}</Title>
+        <Title>{post.title}</Title>
 
         <MetaInfo>
           <Dday>
             {/* 마감일까지 남은 시간 계산 */}
             {(() => {
-              const deadlineDate = new Date(detail.deadline);
+              const deadlineDate = new Date(post.deadline);
               const now = new Date();
               const diff = deadlineDate.getTime() - now.getTime();
               const d = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -131,17 +193,17 @@ export default function GroupPurchasePostPage() {
           <DividerBar>|</DividerBar>
           <People>
             <img src="/src/assets/chat/human.svg" alt="인원" />
-            조회수 {detail.viewCount}
+            조회수 {post.viewCount}
           </People>
         </MetaInfo>
 
-        <Price>{detail.price.toLocaleString()}원</Price>
+        <Price>{post.price.toLocaleString()}원</Price>
 
         <BodyText>
-          {detail.description}
+          {post.description}
           <br />
           <br />
-          구매 제품 링크: {detail.link}
+          구매 제품 링크: {post.link}
         </BodyText>
 
         <Divider />
@@ -149,9 +211,14 @@ export default function GroupPurchasePostPage() {
         <LikeActionRow>
           <LikeBox onClick={handleLikeClick}>
             <FaRegHeart style={{ color: liked ? "#e25555" : "#bbb" }} /> 좋아요{" "}
-            {detail.likeCount}
+            {post.likeCount}
           </LikeBox>
-          <RoundSquareBlueButton btnName={"오픈 채팅방 참여하기"} />
+          <RoundSquareBlueButton
+            btnName={"오픈 채팅방 참여하기"}
+            onClick={() => {
+              window.open(post.openChatLink, "_blank");
+            }}
+          />
           {/*<JoinButton>참여하기</JoinButton>*/}
         </LikeActionRow>
 
@@ -159,7 +226,7 @@ export default function GroupPurchasePostPage() {
 
         {/* 댓글 리스트 */}
         <CommentList>
-          {detail.groupOrderCommentDtoList.map((comment) => (
+          {post.groupOrderCommentDtoList.map((comment) => (
             <Comment key={comment.groupOrderCommentId}>
               <FaUserCircle size={32} color="#ccc" />
               <CommentContent>
@@ -188,6 +255,28 @@ export default function GroupPurchasePostPage() {
           />
         </SendButton>
       </CommentInput>
+
+      {showInfoModal && previewUrl && (
+        <ModalBackGround>
+          <Modal>
+            <ModalContentWrapper>
+              <ModalHeader>
+                <img src={궁금해하는횃불이} className="wonder-character" />
+                <h2>이미지 자세히 보기</h2>
+              </ModalHeader>
+              <ModalScrollArea>
+                <img src={previewUrl} />
+              </ModalScrollArea>
+            </ModalContentWrapper>
+            <ButtonGroupWrapper>
+              <RoundSquareWhiteButton
+                btnName={"닫기"}
+                onClick={() => setShowInfoModal(false)}
+              />
+            </ButtonGroupWrapper>
+          </Modal>
+        </ModalBackGround>
+      )}
     </Wrapper>
   );
 }
@@ -247,7 +336,7 @@ const CategoryTag = styled.div`
 `;
 
 const ImageSlider = styled.div`
-  width: calc(100% + 32px);
+  width: 100%;
   margin-left: -16px;
   height: 200px;
   background: #ccc;
@@ -414,4 +503,118 @@ const LikeActionRow = styled.div`
   justify-content: space-between;
   align-items: center;
   margin: 12px 0;
+`;
+
+const ModalBackGround = styled.div`
+  position: fixed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.5);
+  inset: 0 0 0 0;
+  z-index: 9999;
+`;
+
+const Modal = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  box-sizing: border-box;
+  padding: 32px 20px;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 420px;
+  max-height: 80%;
+  background: white;
+  color: #333366;
+  font-weight: 500;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  animation: fadeIn 0.3s ease-out;
+  overflow: hidden;
+  position: relative;
+
+  .wonder-character {
+    position: absolute;
+    top: 10px;
+    right: 0;
+    width: 100px;
+    height: 100px;
+    z-index: 1000;
+  }
+
+  .content {
+    width: 100%;
+    flex: 1;
+    //height: 100%;
+    overflow-y: auto;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+`;
+
+const ModalContentWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden; /* 내부에서만 스크롤 생기도록 */
+`;
+
+const ModalHeader = styled.div`
+  flex-shrink: 0; /* 스크롤 시 줄어들지 않게 고정 */
+  margin-bottom: 12px;
+  justify-content: space-between;
+  padding-right: 50px;
+  overflow-wrap: break-word; // 또는 wordWrap
+  word-break: keep-all; // 단어 중간이 아니라 단어 단위로 줄바꿈
+
+  h2 {
+    margin: 0;
+    box-sizing: border-box;
+    font-size: 22px;
+  }
+  span {
+    font-size: 14px;
+  }
+`;
+
+const ModalScrollArea = styled.div`
+  flex: 1;
+  overflow-y: scroll; /* 항상 스크롤 가능하게 */
+  padding-right: 8px;
+
+  img {
+    width: 100%;
+  }
+
+  /* 크롬/사파리 */
+  &::-webkit-scrollbar {
+    display: block; /* 기본 표시 */
+    width: 8px; /* 스크롤바 두께 */
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: #ccc;
+    border-radius: 4px;
+  }
+  &::-webkit-scrollbar-track {
+    background-color: transparent;
+  }
+
+  /* 파이어폭스 */
+  scrollbar-width: thin; /* 얇게 */
+  scrollbar-color: #ccc transparent;
+`;
+
+const ButtonGroupWrapper = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: 6px;
 `;
