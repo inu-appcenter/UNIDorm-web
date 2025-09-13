@@ -21,7 +21,7 @@ const CATEGORY_LIST: GetGroupPurchaseListParams["type"][] = [
 const SORT_OPTIONS: GetGroupPurchaseListParams["sort"][] = [
   "마감임박순",
   "조회순",
-  "가격순",
+  "낮은가격순",
 ];
 
 export default function GroupPurchaseMainPage() {
