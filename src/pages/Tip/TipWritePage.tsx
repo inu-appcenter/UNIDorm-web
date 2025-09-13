@@ -1,11 +1,11 @@
 // TipWritePage.tsx
 import styled from "styled-components";
 import { useLocation, useNavigate } from "react-router-dom";
-import { IoCloseSharp } from "react-icons/io5";
 import { MdImage } from "react-icons/md";
 import { useEffect, useRef, useState } from "react";
 import SquareButton from "../../components/common/SquareButton.tsx";
 import tokenInstance from "../../apis/tokenInstance.ts";
+import Header from "../../components/common/Header.tsx";
 
 export default function TipWritePage() {
   const navigate = useNavigate();
@@ -32,10 +32,28 @@ export default function TipWritePage() {
     }
   }, [tip]);
 
+  // 이미지 중복 제거 + 용량 검사 + 개수 제한
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const fileList = Array.from(e.target.files);
-      setImages((prev) => [...prev, ...fileList].slice(0, 10));
+
+      // 기존 이미지와 합쳐서 중복 제거 (파일명+사이즈 기준)
+      const newFiles = [...images, ...fileList].filter(
+        (file, index, self) =>
+          index ===
+          self.findIndex((f) => f.name === file.name && f.size === file.size),
+      );
+
+      // 용량 제한 (5MB)
+      for (const file of newFiles) {
+        if (file.size > 5 * 1024 * 1024) {
+          alert("이미지는 5MB 이하만 업로드 가능합니다.");
+          return;
+        }
+      }
+
+      // 최대 10장까지만 허용
+      setImages(newFiles.slice(0, 10));
     }
   };
 
@@ -43,6 +61,16 @@ export default function TipWritePage() {
     try {
       if (!title.trim() || !content.trim()) {
         alert("제목과 내용을 모두 입력해주세요.");
+        return;
+      }
+
+      // 글자 수 제한
+      if (title.length > 100) {
+        alert("제목은 100자 이하로 입력해주세요.");
+        return;
+      }
+      if (content.length > 2000) {
+        alert("내용은 2000자 이하로 입력해주세요.");
         return;
       }
 
@@ -60,7 +88,7 @@ export default function TipWritePage() {
 
       formData.append("requestTipDto", tipDto);
 
-      // 수정 모드가 아닐 경우에만 이미지 필수
+      // 이미지 추가
       if (!isEditMode || (isEditMode && images.length > 0)) {
         for (let i = 0; i < images.length; i++) {
           formData.append("images", images[i]);
@@ -70,7 +98,6 @@ export default function TipWritePage() {
       let res;
 
       if (isEditMode) {
-        // 수정 요청 (PUT) — `/tips/{id}`로 전송 (tipId 필요)
         res = await tokenInstance.put(`/tips/${tipid}`, formData, {
           headers: {
             "Content-Type": "multipart/form-data",
@@ -78,7 +105,6 @@ export default function TipWritePage() {
         });
         alert("팁이 수정되었습니다!");
       } else {
-        // 등록 요청 (POST)
         res = await tokenInstance.post("/tips", formData, {
           headers: {
             "Content-Type": "multipart/form-data",
@@ -101,13 +127,7 @@ export default function TipWritePage() {
 
   return (
     <Wrapper>
-      <TopBar>
-        <Left onClick={() => navigate(-1)}>
-          <IoCloseSharp size={24} />
-        </Left>
-        <Title>기숙사 꿀팁쓰기</Title>
-        <Right>{""}</Right>
-      </TopBar>
+      <Header title={"기숙사 꿀팁 작성"} hasBack={true} />
 
       <Content>
         <Label>제목</Label>
@@ -162,38 +182,6 @@ const Wrapper = styled.div`
   flex-direction: column;
   height: 100vh;
   background: #fafafa;
-`;
-
-const TopBar = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 70px;
-  background: white;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 20px;
-  z-index: 1000;
-  font-weight: bold;
-`;
-
-const Left = styled.button`
-  background: none;
-  border: none;
-  cursor: pointer;
-`;
-
-const Title = styled.h3`
-  font-size: 16px;
-`;
-
-const Right = styled.button`
-  background: none;
-  border: none;
-  font-size: 14px;
-  color: gray;
 `;
 
 const Content = styled.div`

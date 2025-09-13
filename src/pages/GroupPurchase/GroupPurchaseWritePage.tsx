@@ -93,8 +93,39 @@ export default function GroupPurchaseWritePage() {
     return `${year}-${month}-${day}T${hour.toString().padStart(2, "0")}:${minute}:00`;
   };
 
+  // 이미지 처리: 중복 제거 + 10장 제한 + 5MB 용량 제한
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const fileList = Array.from(e.target.files);
+
+      // 기존 이미지와 합쳐서 중복 제거 (파일명 + 크기 기준)
+      const newFiles = [...images, ...fileList].filter(
+        (file, index, self) =>
+          index ===
+          self.findIndex((f) => f.name === file.name && f.size === file.size),
+      );
+
+      // 📌 이미지 개수 제한 검사
+      if (newFiles.length > 5) {
+        alert("이미지는 최대 5장까지만 업로드 가능합니다.");
+        return;
+      }
+
+      // 용량 검사 (5MB)
+      for (const file of newFiles) {
+        if (file.size > 5 * 1024 * 1024) {
+          alert("이미지는 5MB 이하만 업로드 가능합니다.");
+          return;
+        }
+      }
+
+      // 최대 10장까지만 허용
+      setImages(newFiles.slice(0, 5));
+    }
+  };
+
   const handleSubmit = async () => {
-    // 필수 입력 체크
+    // 📌 필수 입력 체크
     if (!title.trim()) return alert("제목을 입력해주세요.");
     if (!price.trim() || isNaN(Number(price)))
       return alert("가격을 올바르게 입력해주세요.");
@@ -103,6 +134,26 @@ export default function GroupPurchaseWritePage() {
     if (!maxPeople.trim() || isNaN(Number(maxPeople)))
       return alert("구매 인원을 올바르게 입력해주세요.");
 
+    // 📌 글자 수 제한
+    if (title.length > 100) return alert("제목은 100자 이하로 입력해주세요.");
+    if (description.length > 2000)
+      return alert("내용은 2000자 이하로 입력해주세요.");
+
+    // 📌 숫자 값 제한
+    if (Number(price) <= 0) return alert("가격은 1원 이상이어야 합니다.");
+    if (Number(maxPeople) < 2)
+      return alert("구매 인원은 2명 이상이어야 합니다.");
+
+    // 📌 URL 형식 검사
+    const urlPattern = /^https?:\/\/.+/;
+    if (!urlPattern.test(purchaseLink)) {
+      return alert("구매 링크는 http 또는 https로 시작해야 합니다.");
+    }
+    if (openchatLink && !urlPattern.test(openchatLink)) {
+      return alert("오픈채팅방 링크는 http 또는 https로 시작해야 합니다.");
+    }
+
+    // DTO 생성
     const requestDto: CreateGroupOrderRequest = {
       title,
       deadline: getDeadlineString(),
@@ -125,12 +176,6 @@ export default function GroupPurchaseWritePage() {
     } catch (error) {
       console.error(error);
       alert("게시글 등록/수정 중 오류가 발생했습니다.");
-    }
-  };
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setImages(Array.from(e.target.files));
     }
   };
 
@@ -262,7 +307,7 @@ export default function GroupPurchaseWritePage() {
       <SectionTitle>이미지</SectionTitle>
       <ImageBox onClick={() => inputRef.current?.click()}>
         <MdImage size={36} color="#888" />
-        <span>{images.length}/10</span>
+        <span>{images.length}/5</span>
         {/* 여러 장 미리보기 */}
         {images.map((file, idx) => (
           <img
@@ -285,7 +330,7 @@ export default function GroupPurchaseWritePage() {
       {isLoggedIn && (
         <BottomFixed>
           <SubmitButton onClick={handleSubmit}>
-            {post.id ? "수정하기" : "등록하기"}
+            {post && post.id ? "수정하기" : "등록하기"}
           </SubmitButton>
         </BottomFixed>
       )}
@@ -299,18 +344,18 @@ const Wrapper = styled.div`
   //min-height: 100vh;
   //background: #f8f8f8;
   box-sizing: border-box;
-  padding: 60px 16px;
+  padding: 70px 16px;
   padding-bottom: 100px;
 `;
 
 const ImageBox = styled.div`
-  width: 100px;
+  width: 100%;
   height: 100px;
   //margin: 32px 0 16px 0;
   background: #eee;
   border-radius: 12px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
   gap: 6px;

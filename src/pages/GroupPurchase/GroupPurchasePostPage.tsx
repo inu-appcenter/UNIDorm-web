@@ -232,7 +232,10 @@ export default function GroupPurchasePostPage() {
           {post.description}
           <br />
           <br />
-          구매 제품 링크: {post.link}
+          구매 제품 링크:{" "}
+          <a href={post.link} target="_blank" rel="noopener noreferrer">
+            {post.link}
+          </a>
         </BodyText>
 
         <Divider />
