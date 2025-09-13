@@ -44,7 +44,7 @@ export default function GroupPurchaseMainPage() {
     setLoading(true);
     try {
       const params: GetGroupPurchaseListParams = {
-        sort: sortOption === "마감임박순" ? "마감임박순" : "조회순", // 최신순, 좋아요 순 변환 필요
+        sort: sortOption, // ✅ 선택된 정렬 옵션 그대로 전달
         type: selectedCategory,
         search: searchTerm || undefined,
       };
@@ -57,6 +57,7 @@ export default function GroupPurchaseMainPage() {
       setLoading(false);
     }
   };
+
   // 최근 검색어 불러오기
   useEffect(() => {
     const savedSearches = localStorage.getItem("recentSearches");
