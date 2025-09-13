@@ -14,7 +14,7 @@ import { getGroupPurchaseList } from "../../apis/groupPurchase.ts";
 const CATEGORY_LIST: GetGroupPurchaseListParams["type"][] = [
   "전체",
   "배달",
-  "식료품",
+  "식자재",
   "생활용품",
   "기타",
 ];

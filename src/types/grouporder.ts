@@ -1,6 +1,6 @@
 export interface GetGroupPurchaseListParams {
   sort: "조회순" | "낮은가격순" | "마감임박순";
-  type: "전체" | "배달" | "식료품" | "생활용품" | "기타";
+  type: "전체" | "배달" | "식자재" | "생활용품" | "기타";
   search?: string;
 }
 
