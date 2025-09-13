@@ -6,7 +6,6 @@ import {
   getRoommateChatRooms,
 } from "../../apis/chat.ts";
 import Header from "../../components/common/Header.tsx";
-import Tab from "../../components/chat/Tab.tsx";
 import ChatListItem from "../../components/chat/ChatListItem.tsx";
 import styled from "styled-components";
 import useUserStore from "../../stores/useUserStore.ts";
@@ -18,8 +17,8 @@ export default function ChatListPage() {
   const { tokenInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo?.accessToken ?? "");
 
-  const tabItems = ["룸메이트", "공동구매"];
-  const [selectedTab, setSelectedTab] = useState("룸메이트");
+  // const tabItems = ["룸메이트", "공동구매"];
+  const [selectedTab] = useState("룸메이트");
 
   const [groupOrderChatRooms, setGroupOrderChatRooms] = useState<
     GroupOrderChatRoom[]
