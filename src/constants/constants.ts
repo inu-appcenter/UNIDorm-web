@@ -16,7 +16,7 @@ export const colleges = [
   "인문대",
 ];
 
-export const dormitory = ["1기숙사", "2기숙사", "3기숙사"];
+export const dormitory = ["1기숙사", "2기숙사", "3기숙사", "해당없음"];
 
 export const days = ["월", "화", "수", "목", "금", "토", "일"];
 
