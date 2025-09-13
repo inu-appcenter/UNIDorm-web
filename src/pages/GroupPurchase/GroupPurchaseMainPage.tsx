@@ -10,6 +10,7 @@ import {
   GroupOrder,
 } from "../../types/grouporder.ts";
 import { getGroupPurchaseList } from "../../apis/groupPurchase.ts";
+import useUserStore from "../../stores/useUserStore.ts";
 
 const CATEGORY_LIST: GetGroupPurchaseListParams["type"][] = [
   "전체",
@@ -26,6 +27,9 @@ const SORT_OPTIONS: GetGroupPurchaseListParams["sort"][] = [
 
 export default function GroupPurchaseMainPage() {
   const navigate = useNavigate();
+  const { tokenInfo } = useUserStore();
+  const isLoggedIn = Boolean(tokenInfo.accessToken);
+
   const [selectedCategory, setSelectedCategory] =
     useState<GetGroupPurchaseListParams["type"]>("전체");
   const [search, setSearch] = useState("");
@@ -163,9 +167,12 @@ export default function GroupPurchaseMainPage() {
         <GroupPurchaseList groupOrders={groupOrders} />
       )}
 
-      <WriteButton onClick={() => navigate("/groupPurchase/write")}>
-        ✏️ 글쓰기
-      </WriteButton>
+      {isLoggedIn && (
+        <WriteButton onClick={() => navigate("/groupPurchase/write")}>
+          ✏️ 글쓰기
+        </WriteButton>
+      )}
+
       <BottomBar />
     </PageWrapper>
   );

@@ -17,15 +17,19 @@ import 궁금해하는횃불이 from "../../assets/roommate/궁금해하는횃�
 import 사람 from "../../assets/chat/human.svg";
 import RoundSquareWhiteButton from "../../components/button/RoundSquareWhiteButton.tsx";
 import { useSwipeable } from "react-swipeable";
+import useUserStore from "../../stores/useUserStore.ts";
 
 export default function GroupPurchasePostPage() {
   const { id } = useParams<{ id: string }>(); // URL에서 id 가져오기
   const groupOrderId = Number(id); // string → number 변환
   const navigate = useNavigate();
+  const { userInfo } = useUserStore();
 
   const [post, setPost] = useState<GroupOrderDetail | null>(null);
   const [images, setImages] = useState<GroupOrderImage[]>([]);
   const [liked, setLiked] = useState<boolean>(false);
+
+  const [ismypost, setismypost] = useState(false);
 
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -49,6 +53,14 @@ export default function GroupPurchasePostPage() {
     fetchData();
     window.scrollTo(0, 0);
   }, [groupOrderId]);
+
+  useEffect(() => {
+    if (post && userInfo?.name && post.username === userInfo.name) {
+      setismypost(true);
+    }
+
+    console.log(post?.username, userInfo?.name);
+  }, [post, userInfo]);
 
   // 👍 좋아요 토글 핸들러
   const handleLikeClick = async () => {
@@ -132,7 +144,11 @@ export default function GroupPurchasePostPage() {
 
   return (
     <Wrapper>
-      <Header title="공구 게시글" hasBack={true} menuItems={menuItems} />
+      <Header
+        title="공구 게시글"
+        hasBack={true}
+        menuItems={ismypost ? menuItems : undefined}
+      />
       <Content>
         <UserInfo>
           {post.authorImagePath ? (
