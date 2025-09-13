@@ -9,9 +9,13 @@ import {
 } from "../../apis/groupPurchase.ts";
 import useUserStore from "../../stores/useUserStore.ts";
 import { useLocation } from "react-router-dom";
+import Modal from "../../components/common/Modal.tsx";
+import { CheckBeforeDeal2 } from "../../constants/CheckBeforeDeal2.tsx";
 
 export default function GroupPurchaseWritePage() {
   const inputRef = useRef<HTMLInputElement | null>(null);
+
+  const [showModal, setShowModal] = useState(true);
 
   // 수정 모드 관련 상태
   const [isEditMode, setIsEditMode] = useState(false);
@@ -334,6 +338,16 @@ export default function GroupPurchaseWritePage() {
           </SubmitButton>
         </BottomFixed>
       )}
+
+      <Modal
+        onClose={() => {
+          setShowModal(false);
+        }}
+        show={showModal}
+        title={"잠깐!"}
+        content={CheckBeforeDeal2}
+        headerImageId={2}
+      />
     </Wrapper>
   );
 }
