@@ -13,10 +13,41 @@ import { useAnnouncement } from "../stores/AnnouncementContext.tsx";
 import 궁금해하는횃불이 from "../assets/roommate/궁금해하는횃불이.png";
 import RoundSquareWhiteButton from "../components/button/RoundSquareWhiteButton.tsx";
 import RoundSquareBlueButton from "../components/button/RoundSquareBlueButton.tsx";
+import BottomModal from "../components/common/BottomModal.tsx";
+import 인천시티투어_영문 from "../assets/banner/인천시티투어_영문.jpg";
+import 인천시티투어_한글 from "../assets/banner/인천시티투어_한글.jpg";
 
 export default function HomePage() {
   const [dailyTips, setDailyTips] = useState<Tip[]>([]);
   const { notices } = useAnnouncement();
+
+  // 🔹 모달 데이터 중앙 관리
+  const modalList = [
+    {
+      id: "인천시티투어_영문",
+      content: <img src={인천시티투어_영문} />,
+    },
+    {
+      id: "인천시티투어_한글",
+      content: <img src={인천시티투어_한글} />,
+    },
+    // 다른 모달 추가 가능
+  ];
+
+  // 🔹 모달별 열림 상태
+  const [modalOpenStates, setModalOpenStates] = useState(() =>
+    modalList.reduce(
+      (acc, modal) => {
+        acc[modal.id] = true;
+        return acc;
+      },
+      {} as Record<string, boolean>,
+    ),
+  );
+
+  const setModalOpen = (id: string, open: boolean) => {
+    setModalOpenStates((prev) => ({ ...prev, [id]: open }));
+  };
 
   useEffect(() => {
     const getTips = async () => {
@@ -107,6 +138,17 @@ export default function HomePage() {
   return (
     <HomePageWrapper>
       <Header title="아이돔" hasBack={false} showAlarm={true} />
+      {/* 🔹 중앙에서 관리하는 모달을 map으로 렌더링 */}
+      {modalList.map((modal) => (
+        <BottomModal
+          key={modal.id}
+          id={modal.id}
+          isOpen={modalOpenStates[modal.id]}
+          setIsOpen={(open) => setModalOpen(modal.id, open)}
+        >
+          {modal.content}
+        </BottomModal>
+      ))}
 
       <BannerWrapper>
         <FullWidthSlider ref={sliderRef}>
@@ -127,7 +169,6 @@ export default function HomePage() {
           ))}
         </IndicatorWrapper>
       </BannerWrapper>
-
       <ContentWrapper>
         {/*<TitleContentArea*/}
         {/*  title={"룸메이트 매칭 진행 중!"}*/}
@@ -314,7 +355,6 @@ export default function HomePage() {
           </Modal>
         </ModalBackGround>
       )}
-
       <BottomBar />
     </HomePageWrapper>
   );
