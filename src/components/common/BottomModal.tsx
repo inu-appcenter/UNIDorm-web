@@ -2,11 +2,17 @@ import { Drawer } from "vaul";
 import styled from "styled-components";
 import { useEffect, useRef } from "react";
 
+interface LinkItem {
+  title: string;
+  link: string;
+}
+
 interface Props {
   id: string; // 각 모달 구분용 ID
   title?: string;
   text?: string;
   children?: React.ReactNode;
+  links?: LinkItem[]; // 🔹 추가된 부분
 
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
@@ -17,6 +23,7 @@ export default function BottomModal({
   title,
   text,
   children,
+  links = [], // 기본값 빈 배열
   isOpen,
   setIsOpen,
 }: Props) {
@@ -54,6 +61,20 @@ export default function BottomModal({
             <Title>{title}</Title>
             <Text>{text}</Text>
             {children}
+
+            {/* 🔹 링크 버튼 목록 */}
+            {links.length > 0 && (
+              <LinksWrapper>
+                {links.map((item, index) => (
+                  <LinkButton
+                    key={index}
+                    onClick={() => window.open(item.link, "_blank")}
+                  >
+                    {item.title}
+                  </LinkButton>
+                ))}
+              </LinksWrapper>
+            )}
           </ScrollContent>
           <CloseMenus>
             <button onClick={handleHideForever}>다시 보지 않기</button>
@@ -118,6 +139,29 @@ const Title = styled.h2`
 
 const Text = styled.p`
   color: #4b5563;
+`;
+
+/* 🔹 링크 버튼 스타일 */
+const LinksWrapper = styled.div`
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0 16px;
+`;
+
+const LinkButton = styled.button`
+  background: #f3f4f6;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 14px;
+  cursor: pointer;
+  text-align: left;
+
+  &:hover {
+    background: #e5e7eb;
+  }
 `;
 
 const CloseMenus = styled.div`

@@ -26,12 +26,31 @@ export default function HomePage() {
     {
       id: "인천시티투어_영문",
       content: <img src={인천시티투어_영문} />,
+      links: [
+        {
+          title: "Incheon City Tour HomePage",
+          link: "https://citytour.ito.or.kr/foreign/english/citytour.do",
+        },
+        {
+          title: "Apply for the Incheon city tour – Chuseok Holiday",
+          link: "https://form.naver.com/response/9gFKMybfIWhGsq2xKZgHCQ",
+        },
+      ],
     },
     {
       id: "인천시티투어_한글",
       content: <img src={인천시티투어_한글} />,
+      links: [
+        {
+          title: "인천시티투어 관광안내",
+          link: "https://citytour.ito.or.kr/",
+        },
+        {
+          title: "생활원 추석연휴 인천 시티투어 신청",
+          link: "https://form.naver.com/response/C8J-IXLCXiAFJjla8d8cAg",
+        },
+      ],
     },
-    // 다른 모달 추가 가능
   ];
 
   // 🔹 모달별 열림 상태
@@ -145,6 +164,7 @@ export default function HomePage() {
           id={modal.id}
           isOpen={modalOpenStates[modal.id]}
           setIsOpen={(open) => setModalOpen(modal.id, open)}
+          links={modal.links}
         >
           {modal.content}
         </BottomModal>
