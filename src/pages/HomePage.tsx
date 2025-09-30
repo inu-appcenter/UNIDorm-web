@@ -19,11 +19,61 @@ import { GetGroupPurchaseListParams, GroupOrder } from "../types/grouporder.ts";
 import { getGroupPurchaseList } from "../apis/groupPurchase.ts";
 import { dormNoticeContent } from "../constants/dormNoticeContent.tsx";
 import EmptyMessage from "../constants/EmptyMessage.tsx";
+import BottomModal from "../components/common/BottomModal.tsx";
+import 인천시티투어_영문 from "../assets/banner/인천시티투어_영문.jpg";
+import 인천시티투어_한글 from "../assets/banner/인천시티투어_한글.jpg";
 
 export default function HomePage() {
   const [dailyTips, setDailyTips] = useState<Tip[]>([]);
   const { notices } = useAnnouncement();
   const navigate = useNavigate();
+
+  // 🔹 모달 데이터 중앙 관리
+  const modalList = [
+    {
+      id: "인천시티투어_영문",
+      content: <img src={인천시티투어_영문} />,
+      links: [
+        {
+          title: "Incheon City Tour HomePage",
+          link: "https://citytour.ito.or.kr/foreign/english/citytour.do",
+        },
+        {
+          title: "Apply for the Incheon city tour – Chuseok Holiday",
+          link: "https://form.naver.com/response/9gFKMybfIWhGsq2xKZgHCQ",
+        },
+      ],
+    },
+    {
+      id: "인천시티투어_한글",
+      content: <img src={인천시티투어_한글} />,
+      links: [
+        {
+          title: "인천시티투어 관광안내",
+          link: "https://citytour.ito.or.kr/",
+        },
+        {
+          title: "생활원 추석연휴 인천 시티투어 신청",
+          link: "https://form.naver.com/response/C8J-IXLCXiAFJjla8d8cAg",
+        },
+      ],
+    },
+  ];
+
+  // 🔹 모달별 열림 상태
+  const [modalOpenStates, setModalOpenStates] = useState(() =>
+    modalList.reduce(
+      (acc, modal) => {
+        acc[modal.id] = true;
+        return acc;
+      },
+      {} as Record<string, boolean>,
+    ),
+  );
+
+  const setModalOpen = (id: string, open: boolean) => {
+    setModalOpenStates((prev) => ({ ...prev, [id]: open }));
+  };
 
   useEffect(() => {
     const getTips = async () => {
@@ -136,6 +186,18 @@ export default function HomePage() {
   return (
     <HomePageWrapper>
       <Header title="아이돔" hasBack={false} showAlarm={true} />
+      {/* 🔹 중앙에서 관리하는 모달을 map으로 렌더링 */}
+      {modalList.map((modal) => (
+        <BottomModal
+          key={modal.id}
+          id={modal.id}
+          isOpen={modalOpenStates[modal.id]}
+          setIsOpen={(open) => setModalOpen(modal.id, open)}
+          links={modal.links}
+        >
+          {modal.content}
+        </BottomModal>
+      ))}
 
       <BannerWrapper>
         <FullWidthSlider ref={sliderRef}>
@@ -156,7 +218,6 @@ export default function HomePage() {
           ))}
         </IndicatorWrapper>
       </BannerWrapper>
-
       <ContentWrapper>
         {/*<TitleContentArea*/}
         {/*  title={"룸메이트 매칭 진행 중!"}*/}
