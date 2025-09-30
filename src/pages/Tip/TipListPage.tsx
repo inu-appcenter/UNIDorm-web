@@ -64,11 +64,18 @@ export default function TipListPage() {
         </CardList>
       </TitleContentArea>
 
-      {isLoggedIn && (
-        <WriteButton onClick={() => navigate("/tips/write")}>
-          ✏️ 글쓰기
-        </WriteButton>
-      )}
+      <WriteButton
+        onClick={() => {
+          if (!isLoggedIn) {
+            alert("로그인 후 사용할 수 있어요.");
+            navigate("/login");
+            return;
+          }
+          navigate("/tips/write");
+        }}
+      >
+        ✏️ 글쓰기
+      </WriteButton>
     </TipPageWrapper>
   );
 }

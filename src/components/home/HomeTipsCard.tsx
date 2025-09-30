@@ -47,15 +47,20 @@ const HomeCardWrapper = styled.div`
     letter-spacing: 0.38px;
 
     color: #0a84ff;
+
+    min-width: fit-content;
   }
   .content {
-    color: black;
+    color: #1c1c1e;
     font-style: normal;
     font-weight: 500;
     font-size: 14px;
     line-height: 24px;
     letter-spacing: 0.38px;
 
-    color: #1c1c1e;
+    /* 말줄임 처리 */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 `;

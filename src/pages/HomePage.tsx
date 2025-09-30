@@ -19,7 +19,7 @@ import { GetGroupPurchaseListParams, GroupOrder } from "../types/grouporder.ts";
 import { getGroupPurchaseList } from "../apis/groupPurchase.ts";
 import { dormNoticeContent } from "../constants/dormNoticeContent.tsx";
 import EmptyMessage from "../constants/EmptyMessage.tsx";
-import BottomModal from "../components/common/BottomModal.tsx";
+import HomeNoticeBottomModal from "../components/home/HomeNoticeBottomModal.tsx";
 import 인천시티투어_영문 from "../assets/banner/인천시티투어_영문.jpg";
 import 인천시티투어_한글 from "../assets/banner/인천시티투어_한글.jpg";
 
@@ -188,7 +188,7 @@ export default function HomePage() {
       <Header title="아이돔" hasBack={false} showAlarm={true} />
       {/* 🔹 중앙에서 관리하는 모달을 map으로 렌더링 */}
       {modalList.map((modal) => (
-        <BottomModal
+        <HomeNoticeBottomModal
           key={modal.id}
           id={modal.id}
           isOpen={modalOpenStates[modal.id]}
@@ -196,7 +196,7 @@ export default function HomePage() {
           links={modal.links}
         >
           {modal.content}
-        </BottomModal>
+        </HomeNoticeBottomModal>
       ))}
 
       <BannerWrapper>

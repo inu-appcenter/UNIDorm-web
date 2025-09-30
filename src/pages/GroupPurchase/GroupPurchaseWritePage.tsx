@@ -8,12 +8,15 @@ import {
   updateGroupPurchase,
 } from "../../apis/groupPurchase.ts";
 import useUserStore from "../../stores/useUserStore.ts";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Modal from "../../components/common/Modal.tsx";
 import { CheckBeforeDeal2 } from "../../constants/CheckBeforeDeal2.tsx";
+import CommonBottomModal from "../../components/common/CommonBottomModal.tsx";
+import CheckBeforeContent from "../../components/GroupPurchase/CheckBeforeContent.tsx";
 
 export default function GroupPurchaseWritePage() {
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const navigate = useNavigate();
 
   const [showModal, setShowModal] = useState(true);
 
@@ -176,6 +179,7 @@ export default function GroupPurchaseWritePage() {
       } else {
         await createGroupPurchase(requestDto, images);
         alert("게시글이 등록되었습니다.");
+        navigate(-1);
       }
     } catch (error) {
       console.error(error);
@@ -187,6 +191,8 @@ export default function GroupPurchaseWritePage() {
     alert("임시 저장되었습니다.");
   };
 
+  const [isOpen, setIsOpen] = useState(true);
+
   return (
     <Wrapper>
       {isEditMode && <></>}
@@ -196,6 +202,12 @@ export default function GroupPurchaseWritePage() {
         rightContent={
           <TempSaveButton onClick={handleTempSave}>임시저장</TempSaveButton>
         }
+      />
+      <CommonBottomModal
+        id={"checkbefore"}
+        isOpen={isOpen}
+        setIsOpen={setIsOpen}
+        children={<CheckBeforeContent />}
       />
 
       <SectionTitle>제목</SectionTitle>

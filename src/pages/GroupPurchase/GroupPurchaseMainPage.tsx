@@ -21,7 +21,8 @@ const CATEGORY_LIST: GetGroupPurchaseListParams["type"][] = [
 ];
 const SORT_OPTIONS: GetGroupPurchaseListParams["sort"][] = [
   "마감임박순",
-  "조회순",
+  "최신순",
+  "인기순",
   "낮은가격순",
 ];
 
@@ -39,6 +40,8 @@ export default function GroupPurchaseMainPage() {
   // 게시글 상태
   const [groupOrders, setGroupOrders] = useState<GroupOrder[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   const handleCategoryClick = (category: (typeof CATEGORY_LIST)[number]) => {
     setSelectedCategory(category);
@@ -124,31 +127,6 @@ export default function GroupPurchaseMainPage() {
         }
       />
 
-      <SearchBar>
-        <FaSearch size={16} color="#999" />
-        <input
-          type="text"
-          placeholder="검색어를 입력하세요"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") handleSearchSubmit();
-          }}
-        />
-      </SearchBar>
-
-      <RecentSearchWrapper>
-        <Label>최근 검색어</Label>
-        <TagList>
-          {recentSearches.map((term) => (
-            <Tag key={term}>
-              {term}{" "}
-              <DeleteBtn onClick={() => handleDeleteRecent(term)}>×</DeleteBtn>
-            </Tag>
-          ))}
-        </TagList>
-      </RecentSearchWrapper>
-
       <SortFilterWrapper>
         {SORT_OPTIONS.map((option) => (
           <SortButton
@@ -160,6 +138,39 @@ export default function GroupPurchaseMainPage() {
           </SortButton>
         ))}
       </SortFilterWrapper>
+
+      <SearchArea>
+        <SearchBar>
+          <FaSearch size={16} color="#999" />
+          <input
+            type="text"
+            placeholder="검색어를 입력하세요"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleSearchSubmit();
+            }}
+            onFocus={() => setIsSearchFocused(true)}
+            onBlur={() => setIsSearchFocused(false)}
+          />
+        </SearchBar>
+
+        {isSearchFocused && recentSearches.length > 0 && (
+          <RecentSearchWrapper>
+            <Label>최근 검색어</Label>
+            <TagList>
+              {recentSearches.map((term) => (
+                <Tag key={term}>
+                  {term}{" "}
+                  <DeleteBtn onClick={() => handleDeleteRecent(term)}>
+                    ×
+                  </DeleteBtn>
+                </Tag>
+              ))}
+            </TagList>
+          </RecentSearchWrapper>
+        )}
+      </SearchArea>
 
       {loading ? (
         <div>로딩중...</div>
@@ -179,8 +190,8 @@ export default function GroupPurchaseMainPage() {
 }
 
 const PageWrapper = styled.div`
-  padding-top: 110px;
-  padding-bottom: 110px;
+  padding: 110px 16px;
+  padding-top: 122px;
   //background: #fafafa;
 
   box-sizing: border-box;
@@ -188,6 +199,7 @@ const PageWrapper = styled.div`
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  gap: 16px;
 `;
 
 const CategoryWrapper = styled.div`
@@ -214,16 +226,21 @@ const CategoryItem = styled.div`
   }
 `;
 
+const SearchArea = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
 const SearchBar = styled.div`
-  margin: 12px 12px 0 12px;
-  margin-bottom: 20px;
-  height: 40px;
+  height: fit-content;
   background-color: #f4f4f4;
   border-radius: 999px;
-  padding: 0 12px;
+  padding: 12px 12px;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 5px;
   overflow: hidden;
 
   input {
@@ -244,14 +261,18 @@ const SearchBar = styled.div`
 `;
 
 const RecentSearchWrapper = styled.div`
-  padding: 0 12px;
-  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 `;
 
 const Label = styled.div`
+  color: #636366;
   font-size: 14px;
-  color: #444;
-  margin-bottom: 6px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 24px; /* 171.429% */
+  letter-spacing: 0.38px;
 `;
 
 const TagList = styled.div`
@@ -295,20 +316,32 @@ const WriteButton = styled.button`
 
 const SortFilterWrapper = styled.div`
   display: flex;
-  margin-bottom: 12px;
   gap: 8px;
-  padding: 0px 12px 0 12px;
-  flex-wrap: wrap;
+  overflow-x: auto; /* 가로 스크롤 허용 */
+  white-space: nowrap; /* 줄바꿈 방지 */
+  -ms-overflow-style: none; /* IE/Edge */
+  scrollbar-width: none; /* Firefox */
+
+  &::-webkit-scrollbar {
+    display: none; /* 크롬/사파리 스크롤바 숨김 */
+  }
 `;
 
 const SortButton = styled.button`
-  background-color: #f4f4f4;
-  border: none;
+  background-color: transparent;
+  border: 1px solid #007aff;
   border-radius: 999px;
-  padding: 6px 12px;
-  font-size: 14px;
-  color: #333;
+  padding: 4px 16px;
   cursor: pointer;
+  box-sizing: border-box;
+
+  color: var(--m-1, #0a84ff);
+  font-family: AppleSDGothicNeoM00;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 24px; /* 171.429% */
+  letter-spacing: 0.38px;
 
   &.active {
     background-color: #007bff;
