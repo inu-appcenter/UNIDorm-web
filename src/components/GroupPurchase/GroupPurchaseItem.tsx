@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import human from "../../assets/chat/human.svg";
 import { GroupOrder } from "../../types/grouporder.ts";
+import { getDeadlineText } from "../../utils/dateUtils.ts";
 
 interface GroupPurchaseItemProps {
   groupOrder: GroupOrder;
@@ -8,26 +9,17 @@ interface GroupPurchaseItemProps {
 }
 
 const GroupPurchaseItem = ({ groupOrder, onClick }: GroupPurchaseItemProps) => {
-  const getDDay = (deadline: string) => {
-    const today = new Date();
-    const end = new Date(deadline);
-    const diff = Math.ceil(
-      (end.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
-    );
-    return diff >= 0 ? `D-${diff}` : "마감";
-  };
-
   return (
     <GroupPurchaseItemWrapper onClick={onClick}>
       <ItemImage style={{ backgroundImage: `url(${groupOrder.filePath})` }} />
       <TitleLine>{groupOrder.title}</TitleLine>
       <Price>{groupOrder.price.toLocaleString()}원</Price>
       <AdditionalLine>
-        <span className="dDay">{getDDay(groupOrder.deadline)}</span>
+        <span className="dDay">{getDeadlineText(groupOrder.deadline)}</span>
         <span className="divider">|</span>
         <span className="people">
           <img src={human} alt="인원 아이콘" />
-          조회수 {groupOrder.viewCount}
+          {groupOrder.viewCount}
         </span>
       </AdditionalLine>
     </GroupPurchaseItemWrapper>

@@ -17,19 +17,17 @@ import 궁금해하는횃불이 from "../../assets/roommate/궁금해하는횃�
 import 사람 from "../../assets/chat/human.svg";
 import RoundSquareWhiteButton from "../../components/button/RoundSquareWhiteButton.tsx";
 import { useSwipeable } from "react-swipeable";
-import useUserStore from "../../stores/useUserStore.ts";
+import { getDeadlineText } from "../../utils/dateUtils.ts";
+import UserInfo from "../../components/common/UserInfo.tsx";
 
 export default function GroupPurchasePostPage() {
   const { id } = useParams<{ id: string }>(); // URL에서 id 가져오기
   const groupOrderId = Number(id); // string → number 변환
   const navigate = useNavigate();
-  const { userInfo } = useUserStore();
 
   const [post, setPost] = useState<GroupOrderDetail | null>(null);
   const [images, setImages] = useState<GroupOrderImage[]>([]);
   const [liked, setLiked] = useState<boolean>(false);
-
-  const [ismypost, setismypost] = useState(false);
 
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -53,14 +51,6 @@ export default function GroupPurchasePostPage() {
     fetchData();
     window.scrollTo(0, 0);
   }, [groupOrderId]);
-
-  useEffect(() => {
-    if (post && userInfo?.name && post.username === userInfo.name) {
-      setismypost(true);
-    }
-
-    console.log(post?.username, userInfo?.name);
-  }, [post, userInfo]);
 
   // 👍 좋아요 토글 핸들러
   const handleLikeClick = async () => {
@@ -125,6 +115,16 @@ export default function GroupPurchasePostPage() {
     trackMouse: true,
   });
 
+  const formatDeadlineDate = (deadline: string) => {
+    const date = new Date(deadline);
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const day = date.getDate().toString().padStart(2, "0");
+    const hours = date.getHours().toString().padStart(2, "0");
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+
+    return `${month}.${day} ${hours}시 ${minutes}분`;
+  };
+
   const menuItems = [
     {
       label: "수정하기",
@@ -147,33 +147,15 @@ export default function GroupPurchasePostPage() {
       <Header
         title="공구 게시글"
         hasBack={true}
-        menuItems={ismypost ? menuItems : undefined}
+        menuItems={post.myPost ? menuItems : undefined}
+      />
+      <UserInfo
+        createDate={post.createDate}
+        username={post.username}
+        authorImagePath={post.authorImagePath}
+        groupOrderType={post.groupOrderType}
       />
       <Content>
-        <UserInfo>
-          {post.authorImagePath ? (
-            <img
-              src={post.authorImagePath}
-              alt="프사"
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: "50%",
-                objectFit: "cover",
-              }}
-            />
-          ) : (
-            <FaUserCircle size={36} color="#ccc" />
-          )}{" "}
-          <UserText>
-            <Nickname>{post.username}</Nickname>
-            {/*<Date>{new Date(detail.createDate).toLocaleDateString()} {new Date(detail.createDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Date>*/}
-          </UserText>
-          <Spacer />
-          <CategoryTag>{post.groupOrderType}</CategoryTag>
-          {/*<BsThreeDotsVertical size={18} />*/}
-        </UserInfo>
-
         {images.length > 0 && (
           <ImageSlider {...handlers} style={{ touchAction: "pan-y" }}>
             <SliderItem
@@ -207,18 +189,9 @@ export default function GroupPurchasePostPage() {
         <Title>{post.title}</Title>
 
         <MetaInfo>
-          <Dday>
-            {/* 마감일까지 남은 시간 계산 */}
-            {(() => {
-              const deadlineDate = new Date(post.deadline);
-              const now = new Date();
-              const diff = deadlineDate.getTime() - now.getTime();
-              const d = Math.floor(diff / (1000 * 60 * 60 * 24));
-              const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
-              const m = Math.floor((diff / (1000 * 60)) % 60);
-              return `D-${d} ${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
-            })()}
-          </Dday>
+          <Dday>{getDeadlineText(post.deadline)}</Dday>
+          <DividerBar>|</DividerBar>
+          <Dday>마감 {formatDeadlineDate(post.deadline)}</Dday>
           <DividerBar>|</DividerBar>
           <People>
             <img src={사람} alt="인원수" />
@@ -245,12 +218,20 @@ export default function GroupPurchasePostPage() {
             <FaRegHeart style={{ color: liked ? "#e25555" : "#bbb" }} /> 좋아요{" "}
             {post.likeCount}
           </LikeBox>
-          <RoundSquareBlueButton
-            btnName={"오픈 채팅방 참여하기"}
-            onClick={() => {
-              window.open(post.openChatLink, "_blank");
-            }}
-          />
+          {post.myPost ? (
+            <RoundSquareBlueButton
+              btnName={"공구 완료 처리하기"}
+              onClick={() => {}}
+            />
+          ) : (
+            <RoundSquareBlueButton
+              btnName={"오픈 채팅방 참여하기"}
+              onClick={() => {
+                window.open(post.openChatLink, "_blank");
+              }}
+            />
+          )}
+
           {/*<JoinButton>참여하기</JoinButton>*/}
         </LikeActionRow>
 
@@ -332,18 +313,6 @@ const Content = styled.div`
   overflow-y: auto;
 `;
 
-const UserInfo = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
-`;
-
-const UserText = styled.div`
-  display: flex;
-  flex-direction: column;
-`;
-
 const Nickname = styled.div`
   font-weight: 600;
   font-size: 14px;
@@ -353,19 +322,6 @@ const Nickname = styled.div`
 //   font-size: 12px;
 //   color: gray;
 // `;
-
-const Spacer = styled.div`
-  flex-grow: 1;
-`;
-
-const CategoryTag = styled.div`
-  background-color: #007bff;
-  color: white;
-  font-size: 14px;
-  padding: 4px 16px;
-  border-radius: 20px;
-  margin-right: 8px;
-`;
 
 const ImageSlider = styled.div`
   width: 100%;

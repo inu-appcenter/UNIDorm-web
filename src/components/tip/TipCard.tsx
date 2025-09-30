@@ -1,7 +1,7 @@
 // src/components/tip/TipCard.tsx
 
 import styled from "styled-components";
-import { FaRegComment, FaRegHeart} from "react-icons/fa";
+import { FaRegComment, FaRegHeart } from "react-icons/fa";
 
 interface TipCardProps {
   tip: {
@@ -11,11 +11,9 @@ interface TipCardProps {
     time: string;
     like: number;
     comment: number;
-  }
+  };
   onClick: () => void;
-  
 }
-
 
 export default function TipCard({ tip, onClick }: TipCardProps) {
   return (
@@ -61,6 +59,7 @@ const Title = styled.div`
 const Time = styled.div`
   font-size: 12px;
   color: #888;
+  min-width: fit-content;
 `;
 
 const Content = styled.div`

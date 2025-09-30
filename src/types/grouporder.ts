@@ -1,5 +1,5 @@
 export interface GetGroupPurchaseListParams {
-  sort: "조회순" | "낮은가격순" | "마감임박순";
+  sort: "마감임박순" | "최신순" | "인기순" | "낮은가격순";
   type: "전체" | "배달" | "식자재" | "생활용품" | "기타";
   search?: string;
 }
@@ -67,8 +67,9 @@ export interface CreateGroupOrderRequest {
   deadline: string;
   groupOrderType: string;
   price: number;
-  maxPeople: number;
   description: string;
   link: string;
   openChatLink: string;
+
+  maxPeople: number;
 }
