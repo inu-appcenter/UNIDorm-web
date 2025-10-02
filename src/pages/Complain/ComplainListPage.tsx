@@ -10,6 +10,7 @@ import useUserStore from "../../stores/useUserStore.ts";
 import { useEffect, useState } from "react";
 import { ComplaintDetail, MyComplaint } from "../../types/complain.ts";
 import { getComplaintDetail, getMyComplaints } from "../../apis/complain.ts";
+import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
 
 const ComplainListPage = () => {
   const navigate = useNavigate();
@@ -21,17 +22,27 @@ const ComplainListPage = () => {
   const [recentComplain, setRecentComplain] = useState<ComplaintDetail | null>(
     null,
   );
+  const filter = ["최근 3개월", "2025"];
+  const [selectedFilterIndex, setSelectedFilterIndex] = useState(0);
 
+  // 1. isLoggedIn이 true일 때 민원 목록을 불러옵니다.
   useEffect(() => {
     const fetchComplaints = async () => {
       try {
         const response = await getMyComplaints();
-        setComplaints(response.data); // API에서 받은 배열을 state에 저장
+        setComplaints(response.data);
       } catch (error) {
         console.error("민원 목록 불러오기 실패:", error);
       }
     };
 
+    if (isLoggedIn) {
+      fetchComplaints();
+    }
+  }, [isLoggedIn]);
+
+  // 2. complaints 상태가 업데이트되면 가장 최근 민원 상세를 불러옵니다.
+  useEffect(() => {
     const fetchRecentComplain = async () => {
       try {
         const response = await getComplaintDetail(complaints[0].id);
@@ -42,13 +53,10 @@ const ComplainListPage = () => {
       }
     };
 
-    if (isLoggedIn) {
-      fetchComplaints();
-      if (complaints.length > 0) {
-        fetchRecentComplain();
-      }
+    if (complaints.length > 0) {
+      fetchRecentComplain();
     }
-  }, [isLoggedIn]);
+  }, [complaints]); // 의존성 배열에 complaints 추가
 
   return (
     <ComplainListPageWrapper>
@@ -84,6 +92,14 @@ const ComplainListPage = () => {
         children={
           <Wrapper2>
             <SearchInput />
+            <SelectableChipGroup
+              Groups={filter}
+              selectedIndex={selectedFilterIndex}
+              onSelect={setSelectedFilterIndex}
+              backgroundColor={"transparent"}
+              color={"#0A84FF"}
+              borderColor={"#007AFF"}
+            />
             {complaints ? (
               <ComplainListTable data={complaints} />
             ) : (
@@ -111,6 +127,8 @@ const ComplainListPageWrapper = styled.div`
   box-sizing: border-box;
 
   overflow-y: auto;
+  background-color: white;
+  flex: 1;
   //background: #fafafa;
 `;
 

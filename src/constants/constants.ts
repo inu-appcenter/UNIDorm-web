@@ -44,4 +44,19 @@ export const religion = [
   "기타",
 ];
 
-export const ComplainType = ["기물", "시설", "유형 1", "유형 2"];
+export const ComplainType = [
+  "소음",
+  "흡연",
+  "음주",
+  "룸메이트변경",
+  "벌점상쇄",
+  "벌점사유확인",
+];
+
+export const complainDormitory = ["1기숙사", "2기숙사", "3기숙사"];
+export const dormitoryBlocks = ["A동", "B동"];
+export const floors = Array.from({ length: 10 }, (_, i) => `${i + 1}층`);
+export const rooms = Array.from({ length: 20 }, (_, i) => `${i + 1}호`);
+export const beds = ["A", "B", "C", "D"];
+
+export const complainStatus = ["대기", "담당자 배정", "처리 중", "처리 완료"];
