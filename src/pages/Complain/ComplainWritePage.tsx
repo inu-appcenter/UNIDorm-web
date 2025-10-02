@@ -119,7 +119,7 @@ export default function ComplainWritePage() {
 
     try {
       // DTO 구성 시 기숙사와 '동' 이름을 조합
-      const fullDormName = `${complainDormitory[selectedDormitoryIndex]} ${allBlocks[selectedDormitoryBlockIndex]}`;
+      const fullDormName = `${complainDormitory[selectedDormitoryIndex]} ${dormitoryBlocks[selectedDormitoryBlockIndex]}`;
 
       const dto: ComplaintCreateDto = {
         title,
