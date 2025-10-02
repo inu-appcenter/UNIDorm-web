@@ -1,10 +1,11 @@
 import styled from "styled-components";
-import { BsThreeDotsVertical, BsSend } from "react-icons/bs";
-import { FaRegHeart, FaUserCircle } from "react-icons/fa";
+import { FaRegHeart } from "react-icons/fa";
 import { useEffect, useState } from "react";
 import Header from "../../components/common/Header";
 import { GroupOrderDetail, GroupOrderImage } from "../../types/grouporder.ts";
 import {
+  createGroupOrderComment,
+  deleteGroupOrderComment,
   deleteGroupPurchase,
   getGroupPurchaseDetail,
   getGroupPurchaseImages,
@@ -19,10 +20,18 @@ import RoundSquareWhiteButton from "../../components/button/RoundSquareWhiteButt
 import { useSwipeable } from "react-swipeable";
 import { getDeadlineText } from "../../utils/dateUtils.ts";
 import UserInfo from "../../components/common/UserInfo.tsx";
+import CommentInputBox from "../../components/comment/CommentInputBox.tsx";
+import { ReplyProps } from "../../types/comment.ts";
+import useUserStore from "../../stores/useUserStore.ts";
+import CommentSection from "../../components/comment/CommentSection.tsx";
 
 export default function GroupPurchasePostPage() {
-  const { id } = useParams<{ id: string }>(); // URL에서 id 가져오기
-  const groupOrderId = Number(id); // string → number 변환
+  const { tokenInfo } = useUserStore();
+  const isLoggedIn = Boolean(tokenInfo.accessToken);
+  const [isneedupdate, setisneedupdate] = useState(false);
+
+  const { boardId } = useParams<{ boardId: string }>(); // URL에서 id 가져오기
+  const groupOrderId = Number(boardId); // string → number 변환
   const navigate = useNavigate();
 
   const [post, setPost] = useState<GroupOrderDetail | null>(null);
@@ -31,6 +40,8 @@ export default function GroupPurchasePostPage() {
 
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  const [commentInput, setCommentInput] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -50,7 +61,7 @@ export default function GroupPurchasePostPage() {
 
     fetchData();
     window.scrollTo(0, 0);
-  }, [groupOrderId]);
+  }, [groupOrderId, isneedupdate]);
 
   // 👍 좋아요 토글 핸들러
   const handleLikeClick = async () => {
@@ -105,6 +116,52 @@ export default function GroupPurchasePostPage() {
   //     console.error("모집 완료 처리 실패:", error);
   //   }
   // };
+
+  // --- 댓글 등록
+  const handleCommentSubmit = async () => {
+    if (!commentInput.trim()) return;
+    if (!isLoggedIn) {
+      alert("로그인 후 사용해주세요.");
+      return;
+    }
+    try {
+      await createGroupOrderComment({
+        parentCommentId: null, // 대댓글이 아닐 경우 null
+        groupOrderId: Number(boardId), // 게시글 ID
+        reply: commentInput, // 입력한 댓글
+      });
+      setCommentInput("");
+      setisneedupdate(!isneedupdate);
+    } catch (err) {
+      alert("댓글 등록 실패");
+    }
+  };
+
+  //대댓글 등록
+  const handleReplySubmit = async ({
+    parentCommentId,
+    replyInputs,
+    setReplyInputs,
+    setReplyInputOpen,
+  }: ReplyProps) => {
+    const replyInput = replyInputs[parentCommentId];
+    if (!replyInput?.trim()) return;
+
+    try {
+      // 공동구매 대댓글 등록 API 호출
+      await createGroupOrderComment({
+        parentCommentId, // 부모 댓글 ID
+        groupOrderId: Number(boardId), // 게시글 ID
+        reply: replyInput, // 입력한 대댓글 내용
+      });
+
+      setReplyInputs((prev) => ({ ...prev, [parentCommentId]: "" }));
+      setReplyInputOpen((prev) => ({ ...prev, [parentCommentId]: false }));
+      setisneedupdate(true);
+    } catch (err) {
+      alert("대댓글 등록 실패");
+    }
+  };
 
   // --- 이미지 슬라이더
   const [currentImage, setCurrentImage] = useState(0);
@@ -237,37 +294,20 @@ export default function GroupPurchasePostPage() {
 
         <Divider />
 
-        {/* 댓글 리스트 */}
-        <CommentList>
-          {post.groupOrderCommentDtoList.map((comment) => (
-            <Comment key={comment.groupOrderCommentId}>
-              <FaUserCircle size={32} color="#ccc" />
-              <CommentContent>
-                <CommentBody>
-                  <Nickname>익명</Nickname>
-                  <CommentText>{comment.reply}</CommentText>
-                  {/*<Date>{new Date(comment.createDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Date>*/}
-                </CommentBody>
-                <BsThreeDotsVertical size={18} />
-              </CommentContent>
-            </Comment>
-          ))}
-        </CommentList>
+        <CommentSection
+          CommentDtoList={post.groupOrderCommentDtoList}
+          isLoggedIn={isLoggedIn}
+          setisneedupdate={setisneedupdate}
+          handleReplySubmit={handleReplySubmit}
+          handleDeleteComment={deleteGroupOrderComment}
+        />
       </Content>
 
-      <CommentInput>
-        <input placeholder="댓글 입력" />
-        <SendButton>
-          <BsSend
-            size={18}
-            style={{
-              color: "black",
-              backgroundColor: "white",
-              padding: "4px",
-            }}
-          />
-        </SendButton>
-      </CommentInput>
+      <CommentInputBox
+        commentInput={commentInput}
+        setCommentInput={setCommentInput}
+        handleCommentSubmit={handleCommentSubmit}
+      />
 
       {showInfoModal && previewUrl && (
         <ModalBackGround>
@@ -301,27 +341,11 @@ const Wrapper = styled.div`
   flex-direction: column;
 
   padding: 80px 16px;
-  //padding-top: 60px;
-  //height: 100vh;           // ✅ 전체 고정
-  //overflow: hidden;        // ✅ Content만 스크롤 가능하게
-  //background: #fff;
 `;
 
 const Content = styled.div`
   flex: 1;
-  //padding: 26px 16px 80px;
-  overflow-y: auto;
 `;
-
-const Nickname = styled.div`
-  font-weight: 600;
-  font-size: 14px;
-`;
-
-// const Date = styled.div`
-//   font-size: 12px;
-//   color: gray;
-// `;
 
 const ImageSlider = styled.div`
   width: 100%;
@@ -405,84 +429,6 @@ const Divider = styled.div`
   height: 1px;
   background-color: #eee;
   margin: 16px 0;
-`;
-
-const CommentList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-`;
-
-const Comment = styled.div`
-  display: flex;
-  gap: 10px;
-`;
-
-const CommentBody = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-`;
-
-const CommentContent = styled.div`
-  flex: 1;
-  display: flex;
-  justify-content: space-between;
-`;
-
-const CommentText = styled.div`
-  font-size: 14px;
-`;
-
-// const Reply = styled.div`
-//   display: flex;
-//   gap: 10px;
-//   background: #f0f0f0;
-//   padding: 12px;
-//   border-radius: 8px;
-//   margin-left: 36px;
-// `;
-//
-// const ReplyBody = styled(CommentBody)`
-//   gap: 2px;
-// `;
-//
-// const ReplyContent = styled.div`
-//   flex: 1;
-//   display: flex;
-//   justify-content: space-between;
-// `;
-
-const CommentInput = styled.div`
-  display: flex;
-  position: fixed;
-  bottom: 20px;
-  left: 0;
-  right: 0;
-  //background: white;
-  padding: 8px 16px;
-  border-top: 1px solid #eee;
-
-  input {
-    flex: 1;
-    border: none;
-    padding: 10px;
-    border-radius: 20px;
-    background: #f5f5f5;
-    font-size: 16px;
-    outline: none;
-  }
-`;
-
-const SendButton = styled.button`
-  background: none;
-  border: none;
-  padding: 0 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: #007bff;
 `;
 
 const LikeActionRow = styled.div`

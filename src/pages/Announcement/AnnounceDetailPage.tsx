@@ -19,7 +19,7 @@ import RoundSquareWhiteButton from "../../components/button/RoundSquareWhiteButt
 import 궁금해하는횃불이 from "../../assets/roommate/궁금해하는횃불이.png";
 
 export default function AnnounceDetailPage() {
-  const { id } = useParams<{ id: string }>();
+  const { boardId } = useParams<{ boardId: string }>();
   const [announce, setAnnounce] = useState<AnnouncementDetail | null>(null);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -48,11 +48,11 @@ export default function AnnounceDetailPage() {
   ];
 
   useEffect(() => {
-    if (!id) return;
+    if (!boardId) return;
 
     const fetchData = async () => {
       try {
-        const response = await getAnnouncementDetail(Number(id));
+        const response = await getAnnouncementDetail(Number(boardId));
         console.log(response.data);
         setAnnounce(response.data);
       } catch (err) {
@@ -62,7 +62,7 @@ export default function AnnounceDetailPage() {
 
     fetchData();
     window.scrollTo(0, 0);
-  }, [id]);
+  }, [boardId]);
 
   const [attachments, setAttachments] = useState<AnnouncementFile[]>([]);
   const [images, setImages] = useState<AnnouncementFile[]>([]);
@@ -70,8 +70,8 @@ export default function AnnounceDetailPage() {
   useEffect(() => {
     const fetchAttachments = async () => {
       try {
-        if (!id) return;
-        const res = await getAnnouncementFiles(Number(id));
+        if (!boardId) return;
+        const res = await getAnnouncementFiles(Number(boardId));
         setAttachments(res.data);
 
         const imageExtensions = [
@@ -93,15 +93,15 @@ export default function AnnounceDetailPage() {
       }
     };
     fetchAttachments();
-  }, [id]);
+  }, [boardId]);
 
   // 게시글 삭제
   const handleDelete = async () => {
-    if (!id) return;
+    if (!boardId) return;
     if (!window.confirm("정말 삭제하시겠습니까?")) return;
 
     try {
-      await deleteAnnouncement(Number(id));
+      await deleteAnnouncement(Number(boardId));
       alert("삭제되었습니다.");
       navigate(-1);
     } catch (err) {

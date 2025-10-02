@@ -73,3 +73,21 @@ export interface CreateGroupOrderRequest {
 
   maxPeople: number;
 }
+
+// 공동구매 댓글 등록
+export interface CreateGroupOrderCommentRequest {
+  parentCommentId?: number | null; // 부모 댓글 ID (대댓글일 경우)
+  groupOrderId: number; // 대상 공동구매 글 ID
+  reply: string; // 댓글 내용
+}
+
+export interface GroupOrderCommentResponse {
+  groupOrderCommentId: number;
+  userId: number;
+  reply: string;
+  parentId: number;
+  isDeleted: boolean;
+  commentAuthorImagePath: string;
+  createDate: string;
+  username: string;
+}
