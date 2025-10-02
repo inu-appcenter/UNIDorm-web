@@ -2,55 +2,101 @@ import { useState } from "react";
 import styled from "styled-components";
 import { BsSend } from "react-icons/bs";
 import { FaUserCircle } from "react-icons/fa";
-import tokenInstance from "../../apis/tokenInstance.ts";
 import TopRightDropdownMenu from "../common/TopRightDropdownMenu.tsx";
 import { TipComment } from "../../types/tips.ts";
+import { ReplyProps } from "../../types/comment.ts";
+import { GroupOrderComment } from "../../types/grouporder.ts";
 
 interface CommentSectionProps {
-  tipCommentDtoList: TipComment[];
-  boardId: string;
+  CommentDtoList: TipComment[] | GroupOrderComment[];
   isLoggedIn: boolean;
   setisneedupdate: (v: boolean) => void;
+  handleReplySubmit: (props: ReplyProps) => void;
+  handleDeleteComment: (commentId: number) => Promise<void>; // 추가
 }
 
+// 타입 가드
+const isTipComment = (
+  comment: TipComment | GroupOrderComment,
+): comment is TipComment => {
+  return (comment as TipComment).tipCommentId !== undefined;
+};
+
+// 댓글 ID 가져오기
+const getCommentId = (comment: TipComment | GroupOrderComment) => {
+  return isTipComment(comment)
+    ? comment.tipCommentId
+    : comment.groupOrderCommentId;
+};
+
+// 댓글 이미지 가져오기
+const getCommentImage = (comment: TipComment | GroupOrderComment) => {
+  return isTipComment(comment)
+    ? comment.writerImageFile
+    : comment.commentAuthorImagePath;
+};
+
+// 댓글 작성자 이름 가져오기
+const getCommentName = (comment: TipComment | GroupOrderComment) => {
+  return isTipComment(comment) ? comment.name : "익명";
+};
+
+// 대댓글 가져오기 (TipComment만 대댓글 가능)
+const getChildComments = (comment: TipComment | GroupOrderComment) => {
+  return isTipComment(comment) ? comment.childTipCommentList : undefined;
+};
+
 export default function CommentSection({
-  tipCommentDtoList,
-  boardId,
+  CommentDtoList,
   isLoggedIn,
   setisneedupdate,
+  handleReplySubmit,
+  handleDeleteComment,
 }: CommentSectionProps) {
   const [replyInputOpen, setReplyInputOpen] = useState<{
     [key: number]: boolean;
   }>({});
   const [replyInputs, setReplyInputs] = useState<{ [key: number]: string }>({});
 
-  const handleReplySubmit = async (parentCommentId: number) => {
-    const replyInput = replyInputs[parentCommentId];
-    if (!replyInput?.trim()) return;
-    try {
-      await tokenInstance.post("/tip-comments", {
-        parentCommentId,
-        tipId: Number(boardId),
-        reply: replyInput,
-      });
-
-      setReplyInputs((prev) => ({ ...prev, [parentCommentId]: "" }));
-      setReplyInputOpen((prev) => ({ ...prev, [parentCommentId]: false }));
-      setisneedupdate(true);
-    } catch (err) {
-      alert("대댓글 등록 실패");
-    }
-  };
+  const menuItems = [
+    {
+      label: "답글달기",
+      onClick: (comment: TipComment | GroupOrderComment) => {
+        const id = getCommentId(comment);
+        setReplyInputOpen((prev) => ({
+          ...prev,
+          [id]: !prev[id],
+        }));
+      },
+    },
+    {
+      label: "삭제하기",
+      onClick: async (comment: TipComment | GroupOrderComment) => {
+        if (!window.confirm("정말 삭제할까요?")) return;
+        try {
+          if (isTipComment(comment)) {
+            await handleDeleteComment(comment.tipCommentId); // prop으로 받은 삭제 함수 호출
+          } else {
+            await handleDeleteComment(comment.groupOrderCommentId); // prop으로 받은 삭제 함수 호출
+          }
+          setisneedupdate(true);
+          alert("삭제되었습니다.");
+        } catch (err) {
+          alert("삭제에 실패했습니다.");
+        }
+      },
+    },
+  ];
 
   const renderReplies = (replies?: TipComment[]) => {
     if (!replies || replies.length === 0) return null;
+
     return replies
       .filter((r) => !r.isDeleted)
       .map((reply) => (
         <Reply key={reply.tipCommentId}>
           <WriterLine>
             <UserInfo>
-              {" "}
               {reply.writerImageFile ? (
                 <img
                   src={reply.writerImageFile}
@@ -73,7 +119,7 @@ export default function CommentSection({
                 size={18}
                 items={menuItems.map((item) => ({
                   ...item,
-                  onClick: () => item.onClick(reply), // comment 전달
+                  onClick: () => item.onClick(reply),
                 }))}
               />
             )}
@@ -91,68 +137,39 @@ export default function CommentSection({
               </DateText>
             </CommentBody>
           </ReplyContent>
-          {renderReplies(reply.childTipCommentList)} {/* 재귀 호출 */}
+          {renderReplies(reply.childTipCommentList)}
         </Reply>
       ));
   };
 
-  const menuItems = [
-    {
-      label: "답글달기",
-      onClick: (comment: TipComment) => {
-        setReplyInputOpen((prev) => ({
-          ...prev,
-          [comment.tipCommentId]: !prev[comment.tipCommentId],
-        }));
-      },
-    },
-    {
-      label: "삭제하기",
-      onClick: async (comment: TipComment) => {
-        if (!comment.tipCommentId) return;
-        console.log(comment.tipCommentId);
-        if (!window.confirm("정말 삭제할까요?")) return;
-        try {
-          await tokenInstance.delete(`/tip-comments/${comment.tipCommentId}`);
-          setisneedupdate(true);
-          alert("삭제되었습니다.");
-        } catch (err) {
-          alert("삭제에 실패했습니다.");
-        }
-      },
-    },
-
-    // {
-    //   label: "신고하기",
-    //   onClick: () => {
-    //     alert("신고가 접수되었습니다!");
-    //   },
-    // },
-  ];
-
   return (
     <CommentList>
-      {tipCommentDtoList
-        ?.filter(
-          (c) =>
-            (c.parentId === 0 || c.parentId === null) && c.isDeleted === false,
-        )
-        .map((comment) => (
-          <CommentBundle key={comment.tipCommentId}>
+      {CommentDtoList?.filter(
+        (c) => (c.parentId === 0 || c.parentId === null) && !c.isDeleted,
+      ).map((comment) => {
+        const commentId = getCommentId(comment);
+        const childComments = getChildComments(comment);
+
+        return (
+          <CommentBundle key={commentId}>
             <Comment>
               <WriterLine>
                 <UserInfo>
-                  <img
-                    src={comment.writerImageFile}
-                    alt="프사"
-                    style={{
-                      width: 24,
-                      height: 24,
-                      borderRadius: "50%",
-                      objectFit: "cover",
-                    }}
-                  />
-                  <Nickname>{comment.name}</Nickname>
+                  {getCommentImage(comment) ? (
+                    <img
+                      src={getCommentImage(comment)}
+                      alt="프사"
+                      style={{
+                        width: 24,
+                        height: 24,
+                        borderRadius: "50%",
+                        objectFit: "cover",
+                      }}
+                    />
+                  ) : (
+                    <FaUserCircle size={24} />
+                  )}
+                  <Nickname>{getCommentName(comment)}</Nickname>
                 </UserInfo>
 
                 {isLoggedIn && (
@@ -160,7 +177,7 @@ export default function CommentSection({
                     size={18}
                     items={menuItems.map((item) => ({
                       ...item,
-                      onClick: () => item.onClick(comment), // comment 전달
+                      onClick: () => item.onClick(comment),
                     }))}
                   />
                 )}
@@ -170,7 +187,7 @@ export default function CommentSection({
                 <CommentBody>
                   <CommentText>{comment.reply}</CommentText>
                   <DateText>
-                    {comment.createdDate
+                    {isTipComment(comment) && comment.createdDate
                       ? new Date(comment.createdDate).toLocaleTimeString([], {
                           hour: "2-digit",
                           minute: "2-digit",
@@ -181,36 +198,51 @@ export default function CommentSection({
               </CommentContent>
             </Comment>
 
-            {replyInputOpen[comment.tipCommentId] && (
+            {replyInputOpen[commentId] && (
               <ReplyInputArea>
                 <ReplyInput
                   placeholder="답글 입력"
-                  value={replyInputs[comment.tipCommentId] || ""}
+                  value={replyInputs[commentId] || ""}
                   onChange={(e) =>
                     setReplyInputs((prev) => ({
                       ...prev,
-                      [comment.tipCommentId]: e.target.value,
+                      [commentId]: e.target.value,
                     }))
                   }
                   onKeyDown={(e) =>
-                    e.key === "Enter" && handleReplySubmit(comment.tipCommentId)
+                    e.key === "Enter" &&
+                    handleReplySubmit({
+                      parentCommentId: commentId,
+                      replyInputs,
+                      setReplyInputs,
+                      setReplyInputOpen,
+                    })
                   }
                 />
                 <ReplySendButton
-                  onClick={() => handleReplySubmit(comment.tipCommentId)}
+                  onClick={() =>
+                    handleReplySubmit({
+                      parentCommentId: commentId,
+                      replyInputs,
+                      setReplyInputs,
+                      setReplyInputOpen,
+                    })
+                  }
                 >
                   <BsSend size={16} />
                 </ReplySendButton>
               </ReplyInputArea>
             )}
 
-            {renderReplies(comment.childTipCommentList)}
+            {renderReplies(childComments)}
           </CommentBundle>
-        ))}
+        );
+      })}
     </CommentList>
   );
 }
 
+// Styled Components
 const Nickname = styled.div`
   font-weight: 600;
   font-size: 14px;
@@ -271,11 +303,10 @@ const ReplyContent = styled.div`
   justify-content: space-between;
 `;
 
-// 답글(대댓글) 입력 영역
 const ReplyInputArea = styled.div`
   display: flex;
   align-items: center;
-  margin: 10px 0 0 48px; /* 댓글에서 들여쓰기 */
+  margin: 10px 0 0 48px;
   gap: 4px;
 `;
 

@@ -164,14 +164,14 @@ function App() {
                   path="comingsoon"
                   element={<GroupPurchaseComingSoonPage />}
                 />
-                <Route path=":id" element={<GroupPurchasePostPage />} />
+                <Route path=":boardId" element={<GroupPurchasePostPage />} />
                 <Route path="write" element={<GroupPurchaseWritePage />} />
               </Route>
 
               {/* Announcement & Notification */}
               <Route path="announcements" element={<SubPage />}>
                 <Route index element={<NotificationBoardPage />} />
-                <Route path=":id" element={<AnnounceDetailPage />} />
+                <Route path=":boardId" element={<AnnounceDetailPage />} />
                 <Route path="write" element={<AnnounceWritePage />} />
               </Route>
               <Route path="notification" element={<NotificationPage />} />

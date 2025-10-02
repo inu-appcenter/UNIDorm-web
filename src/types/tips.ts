@@ -21,3 +21,17 @@ export interface TipComment {
   profileImageUrl?: string; // 프로필 이미지 URL (옵션)
   childTipCommentList?: TipComment[]; // 대댓글 목록 (옵션)
 }
+
+export interface TipDetail {
+  writerImageFile: string;
+  boardId: number;
+  title: string;
+  content: string;
+  tipLikeCount: number;
+  tipLikeUserList: number[];
+  createDate: string;
+  tipCommentDtoList: TipComment[];
+  checkLikeCurrentUser: boolean; // ← 서버 응답에 포함
+  name: string;
+  profileImageUrl: string;
+}

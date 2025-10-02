@@ -10,34 +10,11 @@ import useUserStore from "../../stores/useUserStore.ts";
 import 궁금해하는횃불이 from "../../assets/roommate/궁금해하는횃불이.png";
 import RoundSquareWhiteButton from "../../components/button/RoundSquareWhiteButton.tsx";
 import UserInfo from "../../components/common/UserInfo.tsx";
-import CommentSection from "../../components/tip/CommentSection.tsx";
-import CommentInputBox from "../../components/tip/CommentInputBox.tsx";
-
-interface TipComment {
-  tipCommentId: number;
-  userId: number;
-  reply: string;
-  parentId: number;
-  isDeleted: boolean;
-  createdDate?: string;
-  name: string;
-  profileImageUrl: string;
-  writerImageFile: string;
-}
-
-interface TipDetail {
-  writerImageFile: string;
-  boardId: number;
-  title: string;
-  content: string;
-  tipLikeCount: number;
-  tipLikeUserList: number[];
-  createDate: string;
-  tipCommentDtoList: TipComment[];
-  checkLikeCurrentUser: boolean; // ← 서버 응답에 포함
-  name: string;
-  profileImageUrl: string;
-}
+import CommentSection from "../../components/comment/CommentSection.tsx";
+import CommentInputBox from "../../components/comment/CommentInputBox.tsx";
+import { ReplyProps } from "../../types/comment.ts";
+import { deleteTipComment } from "../../apis/tips.ts";
+import { TipDetail } from "../../types/tips.ts";
 
 export default function TipDetailPage() {
   const { boardId } = useParams<{ boardId: string }>();
@@ -156,6 +133,31 @@ export default function TipDetailPage() {
     }
   };
 
+  //대댓글 등록
+
+  const handleReplySubmit = async ({
+    parentCommentId,
+    replyInputs,
+    setReplyInputs,
+    setReplyInputOpen,
+  }: ReplyProps) => {
+    const replyInput = replyInputs[parentCommentId];
+    if (!replyInput?.trim()) return;
+    try {
+      const res = await tokenInstance.post("/tip-comments", {
+        parentCommentId,
+        tipId: Number(boardId),
+        reply: replyInput,
+      });
+      console.log(res);
+      setReplyInputs((prev) => ({ ...prev, [parentCommentId]: "" }));
+      setReplyInputOpen((prev) => ({ ...prev, [parentCommentId]: false }));
+      setisneedupdate(true);
+    } catch (err) {
+      alert("대댓글 등록 실패");
+    }
+  };
+
   // --- 이미지 슬라이더
   const [currentImage, setCurrentImage] = useState(0);
   const handlers = useSwipeable({
@@ -248,10 +250,11 @@ export default function TipDetailPage() {
               </LikeBox>
               <Divider />
               <CommentSection
-                tipCommentDtoList={tip.tipCommentDtoList}
-                boardId={boardId!}
+                CommentDtoList={tip.tipCommentDtoList}
                 isLoggedIn={isLoggedIn}
                 setisneedupdate={setisneedupdate}
+                handleReplySubmit={handleReplySubmit}
+                handleDeleteComment={deleteTipComment}
               />
             </>
           )}
