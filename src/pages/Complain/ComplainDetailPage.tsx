@@ -117,30 +117,31 @@ const ComplainDetailPage = () => {
             assignee={complaint.officer}
             handleStatus={handleStatus}
           />
-
-          {/* 민원 카드 */}
-          <ComplainCard
-            date={complaint.createdDate}
-            type={complaint.type}
-            dorm={complaint.dormType}
-            studentNumber={complaint.caseNumber}
-            phoneNumber={complaint.contact}
-            title={complaint.title}
-            content={complaint.content}
-            images={complaint.images}
-          />
-
-          {/* 답변 카드 (reply 존재할 때만) */}
-          {complaint.reply && (
-            <ComplainAnswerCard
-              date={complaint.reply.createdDate}
-              type="답변"
-              managerName={complaint.reply.responderName}
-              title={complaint.reply.replyTitle}
-              content={complaint.reply.replyContent}
-              images={complaint.reply.attachmentUrl}
+          <ComplainCardsContainer>
+            {/* 민원 카드 */}
+            <ComplainCard
+              date={complaint.createdDate}
+              type={complaint.type}
+              dorm={complaint.dormType}
+              studentNumber={complaint.caseNumber}
+              phoneNumber={complaint.contact}
+              title={complaint.title}
+              content={complaint.content}
+              images={complaint.images}
             />
-          )}
+
+            {/* 답변 카드 (reply 존재할 때만) */}
+            {complaint.reply && (
+              <ComplainAnswerCard
+                date={complaint.reply.createdDate}
+                type="답변"
+                managerName={complaint.reply.responderName}
+                title={complaint.reply.replyTitle}
+                content={complaint.reply.replyContent}
+                images={complaint.reply.attachmentUrl}
+              />
+            )}
+          </ComplainCardsContainer>
         </>
       ) : (
         <p>민원 상세를 불러오는 중입니다...</p>
@@ -230,6 +231,26 @@ const ComplainListPageWrapper = styled.div`
 
   overflow-y: auto;
   background: #fafafa;
+`;
+
+const ComplainCardsContainer = styled.div`
+  display: flex;
+  flex-direction: column; /* 기본은 세로 배열 */
+  gap: 16px;
+
+  @media (min-width: 768px) {
+    /* 화면 너비가 768px 이상일 때 가로 배열로 전환 */
+    flex-direction: row;
+    justify-content: center;
+    align-items: flex-start;
+    //padding: 0 16px;
+
+    & > div {
+      /* ComplainCard와 ComplainAnswerCard의 부모 div */
+      flex: 1; /* 각 카드가 동일한 너비를 갖도록 함 */
+      min-width: 0;
+    }
+  }
 `;
 
 const ModalBackGround = styled.div`

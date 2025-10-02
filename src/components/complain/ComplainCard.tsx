@@ -25,11 +25,17 @@ const ComplainCard: React.FC<NoticeCardProps> = ({
   content,
   images,
 }) => {
+  // 날짜 형식을 'YY.MM.DD'로 변경
+  const formattedDate = date.replace(
+    /^(\d{4})-(\d{2})-(\d{2}).*$/,
+    (_match, p1, p2, p3) => `${p1.substring(2)}.${p2}.${p3}`,
+  );
+
   return (
     <Card>
       <Header>
         <Badge>{type}</Badge>
-        <DateText>{date}</DateText>
+        <DateText>{formattedDate}</DateText>
       </Header>
       {miniView && <GotoDetail>민원 상세보기 {">"}</GotoDetail>}
       {!miniView && (
@@ -97,6 +103,14 @@ const DateText = styled.div`
   color: #48484a;
   font-size: 16px;
   font-weight: 500;
+
+  color: var(--4, #48484a);
+  font-family: Pretendard;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 24px; /* 150% */
+  letter-spacing: 0.38px;
 `;
 
 const Info = styled.div`
@@ -123,7 +137,7 @@ const Content = styled.div.withConfig({
 
 const ImagePlaceholder = styled.img`
   width: 100%;
-  height: 180px;
+  //height: 180px;
   background-color: #ddd;
   border-radius: 8px;
   margin-top: 12px;
