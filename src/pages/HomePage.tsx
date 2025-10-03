@@ -13,13 +13,11 @@ import { useAnnouncement } from "../stores/AnnouncementContext.tsx";
 import 민원접수 from "../assets/민원접수.svg";
 import 앱센터로고가로 from "../assets/앱센터로고가로.svg";
 import { useNavigate } from "react-router-dom";
-import Modal from "../components/common/Modal.tsx";
 import GroupPurchaseList from "../components/GroupPurchase/GroupPurchaseList.tsx";
 import { GetGroupPurchaseListParams, GroupOrder } from "../types/grouporder.ts";
 import { getGroupPurchaseList } from "../apis/groupPurchase.ts";
-import { dormNoticeContent } from "../constants/dormNoticeContent.tsx";
 import EmptyMessage from "../constants/EmptyMessage.tsx";
-import HomeNoticeBottomModal from "../components/home/HomeNoticeBottomModal.tsx";
+import HomeNoticeBottomModal from "../components/modal/HomeNoticeBottomModal.tsx";
 import 인천시티투어_영문 from "../assets/banner/인천시티투어_영문.jpg";
 import 인천시티투어_한글 from "../assets/banner/인천시티투어_한글.jpg";
 
@@ -178,11 +176,11 @@ export default function HomePage() {
   //   return unmatchedRoommates[index];
   // }, [roommates]);
 
-  // 초기 상태를 localStorage에서 불러오기
-  const [showInfoModal, setShowInfoModal] = useState(() => {
-    const saved = localStorage.getItem("hideInfoModal");
-    return saved !== "true"; // 저장값이 "true"면 숨김
-  });
+  // // 초기 상태를 localStorage에서 불러오기
+  // const [showInfoModal, setShowInfoModal] = useState(() => {
+  //   const saved = localStorage.getItem("hideInfoModal");
+  //   return saved !== "true"; // 저장값이 "true"면 숨김
+  // });
   return (
     <HomePageWrapper>
       <Header title="아이돔" hasBack={false} showAlarm={true} />
@@ -316,15 +314,6 @@ export default function HomePage() {
           }
         />
       </ContentWrapper>
-
-      <Modal
-        show={showInfoModal}
-        onClose={() => setShowInfoModal(false)}
-        title={"유니돔에서 알려드립니다."}
-        subtitle={"기숙사 룸메이트 신청기간입니다.\n결핵 검사도 놓치지 마세요!"}
-        content={dormNoticeContent}
-        showHideOption={true}
-      />
 
       <img className="appcenter-logo" src={앱센터로고가로} />
       <FloatingButton

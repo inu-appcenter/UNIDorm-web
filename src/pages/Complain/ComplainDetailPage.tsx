@@ -14,7 +14,7 @@ import {
   updateComplaintStatus,
 } from "../../apis/complainAdmin.ts";
 import RoundSquareWhiteButton from "../../components/button/RoundSquareWhiteButton.tsx";
-import RoundSquareBlueButton from "../../components/button/RoundSquareBlueButton.tsx";
+import RoundSquareButton from "../../components/button/RoundSquareButton.tsx";
 
 const ComplainDetailPage = () => {
   const { complainId } = useParams<{ complainId: string }>();
@@ -193,7 +193,7 @@ const ComplainDetailPage = () => {
                 }}
               />
 
-              <RoundSquareBlueButton
+              <RoundSquareButton
                 btnName={"확인"}
                 onClick={() => {
                   console.log("선택된 담당자:", selectedManager);

@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Header from "../../components/common/Header";
 import { GroupOrderDetail, GroupOrderImage } from "../../types/grouporder.ts";
 import {
+  cancelGroupPurchaseCompletion,
+  completeGroupPurchase,
   createGroupOrderComment,
   deleteGroupOrderComment,
   deleteGroupPurchase,
@@ -13,10 +15,8 @@ import {
   unlikeGroupPurchase,
 } from "../../apis/groupPurchase.ts";
 import { useNavigate, useParams } from "react-router-dom";
-import RoundSquareBlueButton from "../../components/button/RoundSquareBlueButton.tsx";
-import 궁금해하는횃불이 from "../../assets/roommate/궁금해하는횃불이.png";
+import RoundSquareButton from "../../components/button/RoundSquareButton.tsx";
 import 사람 from "../../assets/chat/human.svg";
-import RoundSquareWhiteButton from "../../components/button/RoundSquareWhiteButton.tsx";
 import { useSwipeable } from "react-swipeable";
 import { getDeadlineText } from "../../utils/dateUtils.ts";
 import UserInfo from "../../components/common/UserInfo.tsx";
@@ -24,6 +24,9 @@ import CommentInputBox from "../../components/comment/CommentInputBox.tsx";
 import { ReplyProps } from "../../types/comment.ts";
 import useUserStore from "../../stores/useUserStore.ts";
 import CommentSection from "../../components/comment/CommentSection.tsx";
+import { CheckBeforeDeal2 } from "../../constants/CheckBeforeDeal2.tsx";
+import Modal from "../../components/modal/Modal.tsx";
+import CommonBottomModal from "../../components/modal/CommonBottomModal.tsx";
 
 export default function GroupPurchasePostPage() {
   const { tokenInfo } = useUserStore();
@@ -40,6 +43,8 @@ export default function GroupPurchasePostPage() {
 
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  const [showModal, setShowModal] = useState(false);
 
   const [commentInput, setCommentInput] = useState("");
 
@@ -97,25 +102,33 @@ export default function GroupPurchasePostPage() {
     }
   };
 
-  // // ✅ 모집 완료 토글 핸들러
-  // const handleCompletionToggle = async () => {
-  //   if (!post) return;
-  //
-  //   try {
-  //     if (post.recruitmentComplete) {
-  //       await cancelGroupPurchaseCompletion(post.id);
-  //     } else {
-  //       await completeGroupPurchase(post.id);
-  //     }
-  //
-  //     setPost({
-  //       ...post,
-  //       recruitmentComplete: !post.recruitmentComplete,
-  //     });
-  //   } catch (error) {
-  //     console.error("모집 완료 처리 실패:", error);
-  //   }
-  // };
+  // ✅ 공구 완료 토글 핸들러
+  const handleCompletionToggle = async () => {
+    if (!post) return;
+    // 조건에 따라 다른 확인 메시지를 표시합니다.
+    const confirmMessage = post.recruitmentComplete
+      ? "모집 완료를 취소할까요?"
+      : "공구 모집을 완료로 처리할까요?";
+
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+    try {
+      if (post.recruitmentComplete) {
+        await cancelGroupPurchaseCompletion(post.id);
+      } else {
+        await completeGroupPurchase(post.id);
+      }
+
+      setPost({
+        ...post,
+        recruitmentComplete: !post.recruitmentComplete,
+      });
+      alert("처리되었습니다.");
+    } catch (error) {
+      console.error("모집 완료 처리 실패:", error);
+    }
+  };
 
   // --- 댓글 등록
   const handleCommentSubmit = async () => {
@@ -202,7 +215,7 @@ export default function GroupPurchasePostPage() {
   return (
     <Wrapper>
       <Header
-        title="공구 게시글"
+        title="공동구매 게시글"
         hasBack={true}
         menuItems={post.myPost ? menuItems : undefined}
       />
@@ -215,6 +228,14 @@ export default function GroupPurchasePostPage() {
       <Content>
         {images.length > 0 && (
           <ImageSlider {...handlers} style={{ touchAction: "pan-y" }}>
+            {/* --- ⬇️ 수정된 부분 ⬇️ --- */}
+            {post.recruitmentComplete && (
+              <RecruitmentCompleteOverlay>
+                <OverlayTextLarge>공구 완료</OverlayTextLarge>
+                <OverlayTextSmall>공구가 완료된 게시글입니다</OverlayTextSmall>
+              </RecruitmentCompleteOverlay>
+            )}
+            {/* --- ⬆️ 수정된 부분 ⬆️ --- */}
             <SliderItem
               onClick={() => {
                 setPreviewUrl(images[currentImage].fileName);
@@ -276,15 +297,22 @@ export default function GroupPurchasePostPage() {
             {post.likeCount}
           </LikeBox>
           {post.myPost ? (
-            <RoundSquareBlueButton
-              btnName={"공구 완료 처리하기"}
-              onClick={() => {}}
+            <RoundSquareButton
+              // --- ⬇️ 수정된 부분 ⬇️ ---
+              btnName={
+                post.recruitmentComplete
+                  ? "모집 완료 취소하기"
+                  : "공구 완료 처리하기"
+              }
+              // --- ⬆️ 수정된 부분 ⬆️ ---
+              onClick={handleCompletionToggle}
+              color={post.recruitmentComplete ? "#8E8E93" : undefined}
             />
           ) : (
-            <RoundSquareBlueButton
-              btnName={"오픈 채팅방 참여하기"}
+            <RoundSquareButton
+              btnName={"오픈 채팅 참여하기"}
               onClick={() => {
-                window.open(post.openChatLink, "_blank");
+                setShowModal(true);
               }}
             />
           )}
@@ -309,27 +337,30 @@ export default function GroupPurchasePostPage() {
         handleCommentSubmit={handleCommentSubmit}
       />
 
-      {showInfoModal && previewUrl && (
-        <ModalBackGround>
-          <Modal>
-            <ModalContentWrapper>
-              <ModalHeader>
-                <img src={궁금해하는횃불이} className="wonder-character" />
-                <h2>이미지 자세히 보기</h2>
-              </ModalHeader>
-              <ModalScrollArea>
-                <img src={previewUrl} />
-              </ModalScrollArea>
-            </ModalContentWrapper>
-            <ButtonGroupWrapper>
-              <RoundSquareWhiteButton
-                btnName={"닫기"}
-                onClick={() => setShowInfoModal(false)}
-              />
-            </ButtonGroupWrapper>
-          </Modal>
-        </ModalBackGround>
-      )}
+      <CommonBottomModal
+        id={"이미지보기"}
+        isOpen={showInfoModal}
+        setIsOpen={setShowInfoModal}
+        children={
+          <div style={{ textAlign: "center" }}>
+            <img src={previewUrl || undefined} />
+          </div>
+        }
+      />
+
+      <Modal
+        onClose={() => {
+          setShowModal(false);
+        }}
+        show={showModal}
+        title={"잠깐!"}
+        content={CheckBeforeDeal2}
+        headerImageId={2}
+        closeButtonText={"확인했어요"}
+        onCloseClick={() => {
+          window.open(post.openChatLink, "_blank");
+        }}
+      />
     </Wrapper>
   );
 }
@@ -350,11 +381,40 @@ const Content = styled.div`
 const ImageSlider = styled.div`
   width: 100%;
   height: 200px;
-  background: #ccc;
+  //background: #ccc;
   position: relative;
   overflow: hidden;
   margin-bottom: 24px;
 `;
+
+// --- ⬇️ 추가된 스타일 ⬇️ ---
+const RecruitmentCompleteOverlay = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(50, 50, 50, 0.7);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+  border-radius: 10px;
+`;
+
+const OverlayTextLarge = styled.p`
+  font-size: 32px;
+  font-weight: bold;
+  margin: 0 0 8px 0;
+`;
+
+const OverlayTextSmall = styled.p`
+  font-size: 14px;
+  margin: 0;
+`;
+// --- ⬆️ 추가된 스타일 ⬆️ ---
 
 const SliderItem = styled.div`
   width: 100%;
@@ -436,120 +496,6 @@ const LikeActionRow = styled.div`
   justify-content: space-between;
   align-items: center;
   margin: 12px 0;
-`;
-
-const ModalBackGround = styled.div`
-  position: fixed;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: rgba(0, 0, 0, 0.5);
-  inset: 0 0 0 0;
-  z-index: 9999;
-`;
-
-const Modal = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  box-sizing: border-box;
-  padding: 32px 20px;
-  border-radius: 16px;
-  width: 90%;
-  max-width: 420px;
-  max-height: 80%;
-  background: white;
-  color: #333366;
-  font-weight: 500;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  animation: fadeIn 0.3s ease-out;
-  overflow: hidden;
-  position: relative;
-
-  .wonder-character {
-    position: absolute;
-    top: 10px;
-    right: 0;
-    width: 100px;
-    height: 100px;
-    z-index: 1000;
-  }
-
-  .content {
-    width: 100%;
-    flex: 1;
-    //height: 100%;
-    overflow-y: auto;
-  }
-
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-`;
-
-const ModalContentWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  overflow: hidden; /* 내부에서만 스크롤 생기도록 */
-`;
-
-const ModalHeader = styled.div`
-  flex-shrink: 0; /* 스크롤 시 줄어들지 않게 고정 */
-  margin-bottom: 12px;
-  justify-content: space-between;
-  padding-right: 50px;
-  overflow-wrap: break-word; // 또는 wordWrap
-  word-break: keep-all; // 단어 중간이 아니라 단어 단위로 줄바꿈
-
-  h2 {
-    margin: 0;
-    box-sizing: border-box;
-    font-size: 22px;
-  }
-  span {
-    font-size: 14px;
-  }
-`;
-
-const ModalScrollArea = styled.div`
-  flex: 1;
-  overflow-y: scroll; /* 항상 스크롤 가능하게 */
-  padding-right: 8px;
-
-  img {
-    width: 100%;
-  }
-
-  /* 크롬/사파리 */
-  &::-webkit-scrollbar {
-    display: block; /* 기본 표시 */
-    width: 8px; /* 스크롤바 두께 */
-  }
-  &::-webkit-scrollbar-thumb {
-    background-color: #ccc;
-    border-radius: 4px;
-  }
-  &::-webkit-scrollbar-track {
-    background-color: transparent;
-  }
-
-  /* 파이어폭스 */
-  scrollbar-width: thin; /* 얇게 */
-  scrollbar-color: #ccc transparent;
-`;
-
-const ButtonGroupWrapper = styled.div`
-  display: flex;
-  flex-direction: row;
-  gap: 6px;
 `;
 
 const Dot = styled.span<{ $active: boolean }>`
