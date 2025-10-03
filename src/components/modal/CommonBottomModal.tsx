@@ -1,20 +1,27 @@
 import { Drawer } from "vaul";
 import styled from "styled-components";
 import { useEffect, useRef } from "react";
-import RoundSquareBlueButton from "../button/RoundSquareBlueButton.tsx";
+import RoundSquareButton from "../button/RoundSquareButton.tsx";
 
+// --- [변경] Props 인터페이스에 커스텀 속성 추가 ---
 interface Props {
   id: string; // 각 모달 구분용 ID
   children?: React.ReactNode;
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
+  closeButtonText?: string; // 버튼 텍스트
+  onCloseClick?: () => void; // 닫기 전 실행할 함수
 }
+// ---------------------------------------------
 
 export default function CommonBottomModal({
   id,
   children,
   isOpen,
   setIsOpen,
+  // --- [변경] props 추가 및 기본값 설정 ---
+  closeButtonText = "닫기",
+  onCloseClick,
 }: Props) {
   const initialized = useRef(false);
 
@@ -37,10 +44,19 @@ export default function CommonBottomModal({
           <SwipeHandle />
           <ScrollContent>{children}</ScrollContent>
           <CloseMenus>
-            <RoundSquareBlueButton
-              btnName={"닫기"}
-              onClick={() => setIsOpen(false)}
+            {/* --- [변경] 버튼에 props 적용 --- */}
+            <RoundSquareButton
+              btnName={closeButtonText}
+              onClick={() => {
+                // 커스텀 클릭 이벤트가 있으면 먼저 실행
+                if (onCloseClick) {
+                  onCloseClick();
+                }
+                // 그 다음 항상 모달을 닫음
+                setIsOpen(false);
+              }}
             />
+            {/* --------------------------- */}
           </CloseMenus>
         </Content>
       </Drawer.Portal>

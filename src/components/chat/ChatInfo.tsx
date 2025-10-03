@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import profile from "../../assets/profileimg.svg";
 import GroupPurchaseInfo from "./GroupPurchaseInfo.tsx";
-import RoundSquareBlueButton from "../button/RoundSquareBlueButton.tsx";
+import RoundSquareButton from "../button/RoundSquareButton.tsx";
 import { requestRoommateMatchingByChatRoom } from "../../apis/roommate.ts";
 import { MdHelpOutline } from "react-icons/md";
 import RoundSquareWhiteButton from "../button/RoundSquareWhiteButton.tsx";
@@ -75,7 +75,7 @@ const ChatInfo = ({
       </ContentWrapper>
       <FunctionWrapper>
         {selectedTab === "룸메이트" && (
-          <RoundSquareBlueButton
+          <RoundSquareButton
             btnName={"룸메 신청"}
             onClick={() => {
               if (!isChatted) {
@@ -184,7 +184,7 @@ const ChatInfo = ({
                 }}
               />
               {isRequestMode && (
-                <RoundSquareBlueButton
+                <RoundSquareButton
                   btnName={"보내기"}
                   onClick={handleMatchingRequest}
                 />

@@ -1,8 +1,9 @@
 import RoundSquareWhiteButton from "../button/RoundSquareWhiteButton.tsx";
-import RoundSquareBlueButton from "../button/RoundSquareBlueButton.tsx";
+import RoundSquareButton from "../button/RoundSquareButton.tsx";
 import styled from "styled-components";
 import Friends from "../../assets/roommate/Friends.svg";
 import 눈물닦아주는횃불이 from "../../assets/눈물 닦아주는 횃불이.webp";
+import React from "react"; // MouseEvent 타입을 위해 import
 
 // 선택 가능한 이미지 맵
 const headerImages: Record<number, string> = {
@@ -17,7 +18,9 @@ interface ModalProps {
   subtitle?: string;
   content: React.ReactNode;
   showHideOption?: boolean;
-  headerImageId?: number | null; // 이미지 선택: 1, 2, 또는 null
+  headerImageId?: number | null;
+  closeButtonText?: string;
+  onCloseClick?: () => void;
 }
 
 const Modal = ({
@@ -27,14 +30,26 @@ const Modal = ({
   subtitle,
   content,
   showHideOption = false,
-  headerImageId = null, // 기본은 이미지 없음
+  headerImageId = null,
+  closeButtonText = "닫기",
+  onCloseClick,
 }: ModalProps) => {
   if (!show) return null;
 
   const headerImage = headerImageId ? headerImages[headerImageId] : null;
 
+  // --- [변경] 배경 클릭 시 모달 닫기 핸들러 추가 ---
+  const handleBackgroundClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // 클릭된 요소(e.target)가 배경 자신(e.currentTarget)일 때만 onClose 실행
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+  // ---------------------------------------------
+
   return (
-    <ModalBackGround>
+    // --- [변경] 배경에 onClick 이벤트 핸들러 연결 ---
+    <ModalBackGround onClick={handleBackgroundClick}>
       <ModalWrapper>
         <ModalContentWrapper>
           <ModalHeader>
@@ -54,20 +69,25 @@ const Modal = ({
               }}
             />
           )}
-          <RoundSquareBlueButton
-            btnName={"닫기"}
+          <RoundSquareButton
+            btnName={closeButtonText}
             onClick={() => {
+              if (onCloseClick) {
+                onCloseClick();
+              }
               onClose();
             }}
           />
         </ButtonGroupWrapper>
       </ModalWrapper>
     </ModalBackGround>
+    // ------------------------------------------
   );
 };
 
 export default Modal;
 
+// ... (styled-components 코드는 이전과 동일)
 const ModalBackGround = styled.div`
   position: fixed;
   display: flex;

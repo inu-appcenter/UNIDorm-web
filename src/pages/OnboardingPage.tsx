@@ -1,7 +1,7 @@
 // components/Onboarding.tsx
 import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
-import RoundSquareBlueButton from "../components/button/RoundSquareBlueButton.tsx";
+import RoundSquareButton from "../components/button/RoundSquareButton.tsx";
 
 import onboarding1 from "../assets/onboarding/onboarding1.svg";
 import onboarding2 from "../assets/onboarding/onboarding2.svg";
@@ -183,7 +183,7 @@ const OnboardingPage: React.FC = () => {
           <>
             <TermOfUse />
             <div>
-              <RoundSquareBlueButton
+              <RoundSquareButton
                 btnName={"UNI Dorm 시작하기"}
                 onClick={handleStart}
               />
