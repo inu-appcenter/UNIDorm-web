@@ -190,8 +190,7 @@ export default function GroupPurchaseMainPage() {
 }
 
 const PageWrapper = styled.div`
-  padding: 110px 16px;
-  padding-top: 122px;
+  padding: 122px 16px 140px;
   //background: #fafafa;
 
   box-sizing: border-box;
