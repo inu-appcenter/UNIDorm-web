@@ -15,13 +15,19 @@ import {
 } from "../../apis/complainAdmin.ts";
 import RoundSquareWhiteButton from "../../components/button/RoundSquareWhiteButton.tsx";
 import RoundSquareButton from "../../components/button/RoundSquareButton.tsx";
+// 🔽 필요한 컴포넌트를 import 합니다.
+import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
+import EmptyMessage from "../../constants/EmptyMessage.tsx";
 
 const ComplainDetailPage = () => {
   const { complainId } = useParams<{ complainId: string }>();
   const [complaint, setComplaint] = useState<ComplaintDetail | null>(null);
-  const [selectedManager, setSelectedManager] = useState(""); //드롭다운박스에서 선택된 매니저
+  const [selectedManager, setSelectedManager] = useState("");
   const [isNeedUpdate, setIsNeedUpdate] = useState(false);
   const navigate = useNavigate();
+
+  // 🔽 로딩 상태를 관리할 state를 추가합니다.
+  const [isLoading, setIsLoading] = useState(true);
 
   const { userInfo } = useUserStore();
   const [showModal, setShowModal] = useState(false);
@@ -30,6 +36,7 @@ const ComplainDetailPage = () => {
     const fetchComplaint = async () => {
       if (!complainId) return;
 
+      setIsLoading(true); // 데이터 로딩 시작
       try {
         let response;
         if (userInfo.isAdmin) {
@@ -42,15 +49,18 @@ const ComplainDetailPage = () => {
         setComplaint(response.data);
       } catch (error) {
         console.error("민원 상세 불러오기 실패:", error);
+        setComplaint(null); // 에러 발생 시 데이터를 null로 설정
+      } finally {
+        setIsLoading(false); // 데이터 로딩 완료
       }
     };
 
     fetchComplaint();
-  }, [complainId, userInfo, isNeedUpdate]);
+  }, [complainId, userInfo.isAdmin, isNeedUpdate]);
 
   const handleStatus = async (status: string) => {
     try {
-      if (!userInfo.isAdmin) {
+      if (!userInfo.isAdmin || !complainId) {
         return;
       }
       if (status === "담당자 배정") {
@@ -74,20 +84,11 @@ const ComplainDetailPage = () => {
       alert("담당자를 선택해주세요.");
       return;
     }
+    if (!complainId) return;
 
     try {
-      const response = await updateComplaintStatus(
-        Number(complainId),
-        "담당자 배정",
-      );
-      console.log(response);
-      console.log("민원 처리상태 변경 성공", response);
-
-      const res = await assignComplaintOfficer(
-        Number(complainId),
-        selectedManager,
-      );
-      console.log("담당자 배정 성공:", res);
+      await updateComplaintStatus(Number(complainId), "담당자 배정");
+      await assignComplaintOfficer(Number(complainId), selectedManager);
 
       setShowModal(false);
       setIsNeedUpdate((prev) => !prev);
@@ -99,9 +100,11 @@ const ComplainDetailPage = () => {
   return (
     <ComplainListPageWrapper>
       <Header title={"민원 상세"} hasBack={true} />
-      {complaint ? (
+      {/* 🔽 로딩 상태에 따라 스피너, 상세 내용, 빈 메시지를 조건부 렌더링합니다. */}
+      {isLoading ? (
+        <LoadingSpinner message="민원 상세 정보를 불러오는 중..." />
+      ) : complaint ? (
         <>
-          {/* 진행 단계 - status를 기반으로 activeIndex 계산 */}
           <StepFlow
             activeIndex={
               complaint.status === "대기중"
@@ -118,7 +121,6 @@ const ComplainDetailPage = () => {
             handleStatus={handleStatus}
           />
           <ComplainCardsContainer>
-            {/* 민원 카드 */}
             <ComplainCard
               date={complaint.createdDate}
               type={complaint.type}
@@ -129,8 +131,6 @@ const ComplainDetailPage = () => {
               content={complaint.content}
               images={complaint.images}
             />
-
-            {/* 답변 카드 (reply 존재할 때만) */}
             {complaint.reply && (
               <ComplainAnswerCard
                 date={complaint.reply.createdDate}
@@ -144,20 +144,19 @@ const ComplainDetailPage = () => {
           </ComplainCardsContainer>
         </>
       ) : (
-        <p>민원 상세를 불러오는 중입니다...</p>
+        <EmptyMessage message="민원 정보를 불러올 수 없습니다." />
       )}
+
       {showModal && (
         <ModalBackGround>
           <Modal>
             <ModalContentWrapper>
               <ModalHeader>
-                {/*<img src={궁금해하는횃불이} className="wonder-character" />*/}
                 <h2>담당자 배정</h2>
                 <span>해당 민원에 대한 담당자를 설정해주세요.</span>
               </ModalHeader>
 
               <ModalScrollArea>
-                {/* 담당자 선택 드롭다운 */}
                 <label
                   htmlFor="manager"
                   style={{
@@ -188,23 +187,14 @@ const ComplainDetailPage = () => {
             <ButtonGroupWrapper>
               <RoundSquareWhiteButton
                 btnName={"닫기"}
-                onClick={() => {
-                  setShowModal(false);
-                }}
+                onClick={() => setShowModal(false)}
               />
-
-              <RoundSquareButton
-                btnName={"확인"}
-                onClick={() => {
-                  console.log("선택된 담당자:", selectedManager);
-                  handleAssign();
-                  setShowModal(false);
-                }}
-              />
+              <RoundSquareButton btnName={"확인"} onClick={handleAssign} />
             </ButtonGroupWrapper>
           </Modal>
         </ModalBackGround>
       )}
+
       {complaint && userInfo.isAdmin && (
         <WriteButton
           onClick={() =>
@@ -243,10 +233,8 @@ const ComplainCardsContainer = styled.div`
     flex-direction: row;
     justify-content: center;
     align-items: flex-start;
-    //padding: 0 16px;
 
     & > div {
-      /* ComplainCard와 ComplainAnswerCard의 부모 div */
       flex: 1; /* 각 카드가 동일한 너비를 갖도록 함 */
       min-width: 0;
     }
@@ -293,7 +281,6 @@ const Modal = styled.div`
   .content {
     width: 100%;
     flex: 1;
-    //height: 100%;
     overflow-y: auto;
   }
 
@@ -313,16 +300,15 @@ const ModalContentWrapper = styled.div`
   display: flex;
   flex-direction: column;
   flex: 1;
-  overflow: hidden; /* 내부에서만 스크롤 생기도록 */
+  overflow: hidden;
 `;
 
 const ModalHeader = styled.div`
-  flex-shrink: 0; /* 스크롤 시 줄어들지 않게 고정 */
+  flex-shrink: 0;
   margin-bottom: 12px;
   justify-content: space-between;
-  //padding-right: 50px;
-  overflow-wrap: break-word; // 또는 wordWrap
-  word-break: keep-all; // 단어 중간이 아니라 단어 단위로 줄바꿈
+  overflow-wrap: break-word;
+  word-break: keep-all;
   text-align: center;
 
   h2 {
@@ -338,13 +324,12 @@ const ModalHeader = styled.div`
 
 const ModalScrollArea = styled.div`
   flex: 1;
-  overflow-y: auto; /* 항상 스크롤 가능하게 */
+  overflow-y: auto;
   padding-right: 8px;
 
-  /* 크롬/사파리 */
   &::-webkit-scrollbar {
-    display: block; /* 기본 표시 */
-    width: 8px; /* 스크롤바 두께 */
+    display: block;
+    width: 8px;
   }
   &::-webkit-scrollbar-thumb {
     background-color: #ccc;
@@ -354,8 +339,7 @@ const ModalScrollArea = styled.div`
     background-color: transparent;
   }
 
-  /* 파이어폭스 */
-  scrollbar-width: thin; /* 얇게 */
+  scrollbar-width: thin;
   scrollbar-color: #ccc transparent;
 `;
 

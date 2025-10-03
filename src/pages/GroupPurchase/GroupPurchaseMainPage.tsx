@@ -11,6 +11,9 @@ import {
 } from "../../types/grouporder.ts";
 import { getGroupPurchaseList } from "../../apis/groupPurchase.ts";
 import useUserStore from "../../stores/useUserStore.ts";
+// 🔽 필요한 컴포넌트를 import 합니다.
+import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
+import EmptyMessage from "../../constants/EmptyMessage.tsx";
 
 const CATEGORY_LIST: GetGroupPurchaseListParams["type"][] = [
   "전체",
@@ -51,7 +54,7 @@ export default function GroupPurchaseMainPage() {
     setLoading(true);
     try {
       const params: GetGroupPurchaseListParams = {
-        sort: sortOption, // ✅ 선택된 정렬 옵션 그대로 전달
+        sort: sortOption,
         type: selectedCategory,
         search: searchTerm || undefined,
       };
@@ -60,6 +63,7 @@ export default function GroupPurchaseMainPage() {
       setGroupOrders(data);
     } catch (error) {
       console.error("게시글 목록 불러오기 실패:", error);
+      setGroupOrders([]); // 에러 발생 시 목록을 비웁니다.
     } finally {
       setLoading(false);
     }
@@ -74,16 +78,13 @@ export default function GroupPurchaseMainPage() {
   }, []);
 
   const handleSearchSubmit = () => {
-    const rawTerm = search; // 사용자가 입력한 원본
-    const trimmedTerm = search.trim(); // 양끝 공백 제거
+    const rawTerm = search;
+    const trimmedTerm = search.trim();
 
-    // 검색 실행
     fetchGroupOrders(trimmedTerm);
 
-    // ✅ 공백만 있는 경우는 검색은 하지만 최근검색어에는 저장 안 함
     if (rawTerm.trim() === "") return;
 
-    // 중복 제거 + 최신순 정렬
     const updatedSearches = [
       trimmedTerm,
       ...recentSearches.filter((item) => item !== trimmedTerm),
@@ -92,7 +93,7 @@ export default function GroupPurchaseMainPage() {
     setRecentSearches(updatedSearches);
     localStorage.setItem("recentSearches", JSON.stringify(updatedSearches));
 
-    setSearch(""); // 입력창 초기화 (선택)
+    setSearch("");
   };
 
   const handleDeleteRecent = (term: string) => {
@@ -172,10 +173,13 @@ export default function GroupPurchaseMainPage() {
         )}
       </SearchArea>
 
+      {/* 🔽 로딩 상태에 따라 스피너, 목록, 빈 메시지를 조건부 렌더링합니다. */}
       {loading ? (
-        <div>로딩중...</div>
-      ) : (
+        <LoadingSpinner message="공동구매 목록을 불러오는 중..." />
+      ) : groupOrders.length > 0 ? (
         <GroupPurchaseList groupOrders={groupOrders} />
+      ) : (
+        <EmptyMessage message="해당 조건의 공동구매가 없습니다." />
       )}
 
       {isLoggedIn && (
@@ -191,10 +195,7 @@ export default function GroupPurchaseMainPage() {
 
 const PageWrapper = styled.div`
   padding: 122px 16px 140px;
-  //background: #fafafa;
-
   box-sizing: border-box;
-
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -205,13 +206,12 @@ const CategoryWrapper = styled.div`
   display: flex;
   gap: 16px;
   width: 100%;
-  //background-color: white;
   border-bottom: 1px solid silver;
 `;
 
 const CategoryItem = styled.div`
-  flex: 1; /* 균등 너비 분배 */
-  text-align: center; /* 텍스트 가운데 정렬 */
+  flex: 1;
+  text-align: center;
   font-size: 16px;
   color: #aaa;
   cursor: pointer;
@@ -270,7 +270,7 @@ const Label = styled.div`
   font-size: 14px;
   font-style: normal;
   font-weight: 600;
-  line-height: 24px; /* 171.429% */
+  line-height: 24px;
   letter-spacing: 0.38px;
 `;
 
@@ -316,13 +316,13 @@ const WriteButton = styled.button`
 const SortFilterWrapper = styled.div`
   display: flex;
   gap: 8px;
-  overflow-x: auto; /* 가로 스크롤 허용 */
-  white-space: nowrap; /* 줄바꿈 방지 */
-  -ms-overflow-style: none; /* IE/Edge */
-  scrollbar-width: none; /* Firefox */
+  overflow-x: auto;
+  white-space: nowrap;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 
   &::-webkit-scrollbar {
-    display: none; /* 크롬/사파리 스크롤바 숨김 */
+    display: none;
   }
 `;
 
@@ -339,7 +339,7 @@ const SortButton = styled.button`
   font-size: 14px;
   font-style: normal;
   font-weight: 400;
-  line-height: 24px; /* 171.429% */
+  line-height: 24px;
   letter-spacing: 0.38px;
 
   &.active {
