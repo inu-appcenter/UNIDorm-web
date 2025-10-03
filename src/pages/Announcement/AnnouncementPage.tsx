@@ -4,16 +4,40 @@ import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import { useNavigate } from "react-router-dom";
 import useUserStore from "../../stores/useUserStore.ts";
 import { BsEye } from "react-icons/bs";
-import { useAnnouncement } from "../../stores/AnnouncementContext.tsx";
+import { useEffect, useState } from "react";
+import { Announcement } from "../../types/announcements.ts";
+import { getAnnouncements } from "../../apis/announcements.ts";
+// 🔽 필요한 컴포넌트들을 import 합니다.
+import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
+import EmptyMessage from "../../constants/EmptyMessage.tsx";
 
 export default function AnnouncementPage() {
   const navigate = useNavigate();
   const { userInfo } = useUserStore();
   const isAdmin = userInfo.isAdmin;
-  console.log(isAdmin);
-  const { notices, loading } = useAnnouncement();
 
-  if (loading) return <NoticePageWrapper>로딩중...</NoticePageWrapper>;
+  const [notices, setNotices] = useState<Announcement[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      // 🔽 로딩 상태를 명시적으로 true로 설정 (초기값이 true이므로 생략 가능)
+      setLoading(true);
+      try {
+        const response = await getAnnouncements();
+        setNotices(response.data);
+      } catch (error) {
+        console.error("공지사항 불러오기 실패", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchData();
+  }, []);
+
+  // ❌ 기존의 전체 페이지 로딩을 제거합니다.
+  // if (loading) return <NoticePageWrapper>로딩중...</NoticePageWrapper>;
 
   return (
     <NoticePageWrapper>
@@ -25,26 +49,32 @@ export default function AnnouncementPage() {
           "인천대학교 생활원에서 알려드리는 공지사항을 확인해보세요."
         }
       >
-        <NoticeList>
-          {notices.map((notice) => (
-            <NoticeCard
-              key={notice.id}
-              onClick={() => {
-                navigate(`/announcements/${notice.id}`);
-              }}
-            >
-              <NoticeTop>
-                <NoticeTitle>{notice.title}</NoticeTitle>
-                {notice.emergency && <UrgentBadge>긴급</UrgentBadge>}
-              </NoticeTop>
-              <NoticeContent>{notice.content}</NoticeContent>
-              <NoticeBottom>
-                <BsEye size={16} /> {notice.viewCount}
-                {/*{notice.scrap || 0}*/}
-              </NoticeBottom>
-            </NoticeCard>
-          ))}
-        </NoticeList>
+        {/* 🔽 로딩 상태에 따라 스피너, 공지사항 목록, 빈 메시지를 조건부 렌더링합니다. */}
+        {loading ? (
+          <LoadingSpinner message="공지사항을 불러오는 중..." />
+        ) : notices.length > 0 ? (
+          <NoticeList>
+            {notices.map((notice) => (
+              <NoticeCard
+                key={notice.id}
+                onClick={() => {
+                  navigate(`/announcements/${notice.id}`);
+                }}
+              >
+                <NoticeTop>
+                  <NoticeTitle>{notice.title}</NoticeTitle>
+                  {notice.emergency && <UrgentBadge>긴급</UrgentBadge>}
+                </NoticeTop>
+                <NoticeContent>{notice.content}</NoticeContent>
+                <NoticeBottom>
+                  <BsEye size={16} /> {notice.viewCount}
+                </NoticeBottom>
+              </NoticeCard>
+            ))}
+          </NoticeList>
+        ) : (
+          <EmptyMessage message="등록된 공지사항이 없습니다." />
+        )}
       </TitleContentArea>
       {isAdmin && (
         <WriteButton onClick={() => navigate("/announcements/write")}>
@@ -83,6 +113,12 @@ const NoticeCard = styled.div`
   box-sizing: border-box;
   gap: 8px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition: transform 0.2s ease-in-out;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
 `;
 
 const NoticeTop = styled.div`
