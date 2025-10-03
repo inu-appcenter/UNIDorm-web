@@ -8,23 +8,36 @@ import { useEffect, useState } from "react";
 import { fetchDailyRandomTips } from "../apis/tips.ts";
 import { Tip } from "../types/tips.ts";
 import BottomBar from "../components/common/BottomBar.tsx";
-import { useAnnouncement } from "../stores/AnnouncementContext.tsx";
 import 민원접수 from "../assets/민원접수.svg";
 import 앱센터로고가로 from "../assets/앱센터로고가로.svg";
 import { useNavigate } from "react-router-dom";
 import GroupPurchaseList from "../components/GroupPurchase/GroupPurchaseList.tsx";
 import { GetGroupPurchaseListParams, GroupOrder } from "../types/grouporder.ts";
 import { getGroupPurchaseList } from "../apis/groupPurchase.ts";
-import EmptyMessage from "../constants/EmptyMessage.tsx";
 import HomeNoticeBottomModal from "../components/modal/HomeNoticeBottomModal.tsx";
 import 인천시티투어_영문 from "../assets/banner/인천시티투어_영문.jpg";
 import 인천시티투어_한글 from "../assets/banner/인천시티투어_한글.jpg";
 import HomeBanner from "../components/home/HomeBanner.tsx";
+import LoadingSpinner from "../components/common/LoadingSpinner.tsx";
+import EmptyMessage from "../constants/EmptyMessage.tsx";
+import { getAnnouncements } from "../apis/announcements.ts";
+import { Announcement } from "../types/announcements.ts";
+import useUserStore from "../stores/useUserStore.ts";
 
 export default function HomePage() {
+  const { tokenInfo } = useUserStore();
+  const isLoggedIn = Boolean(tokenInfo.accessToken);
+
   const [dailyTips, setDailyTips] = useState<Tip[]>([]);
-  const { notices } = useAnnouncement();
+  const [groupOrders, setGroupOrders] = useState<GroupOrder[]>([]);
+  const [notices, setNotices] = useState<Announcement[]>([]);
+
   const navigate = useNavigate();
+
+  const [isTipsLoading, setIsTipsLoading] = useState<boolean>(false);
+  const [isAnnounceLoading, setIsAnnounceLoading] = useState<boolean>(false);
+  const [isGroupOrdersLoading, setIsGroupOrdersLoading] =
+    useState<boolean>(false);
 
   // 🔹 모달 데이터 중앙 관리
   const modalList = [
@@ -75,6 +88,7 @@ export default function HomePage() {
 
   useEffect(() => {
     const getTips = async () => {
+      setIsTipsLoading(true);
       try {
         const data = await fetchDailyRandomTips();
         setDailyTips(data);
@@ -82,17 +96,13 @@ export default function HomePage() {
         if (err.response?.status === 204) {
           setDailyTips([]); // 팁이 3개 미만인 경우 빈 배열
         }
+      } finally {
+        setIsTipsLoading(false);
       }
     };
 
-    getTips();
-  }, []);
-
-  // 게시글 상태
-  const [groupOrders, setGroupOrders] = useState<GroupOrder[]>([]);
-
-  useEffect(() => {
     const fetchGroupOrders = async (searchTerm?: string) => {
+      setIsGroupOrdersLoading(true);
       try {
         const params: GetGroupPurchaseListParams = {
           sort: "마감임박순",
@@ -104,10 +114,26 @@ export default function HomePage() {
         setGroupOrders(data);
       } catch (error) {
         console.error("게시글 목록 불러오기 실패:", error);
+      } finally {
+        setIsGroupOrdersLoading(false);
       }
     };
 
+    async function fetchAnnouncements() {
+      setIsAnnounceLoading(true);
+      try {
+        const response = await getAnnouncements();
+        setNotices(response.data);
+      } catch (error) {
+        console.error("공지사항 불러오기 실패", error);
+      } finally {
+        setIsAnnounceLoading(false);
+      }
+    }
+
+    getTips();
     fetchGroupOrders();
+    fetchAnnouncements();
   }, []);
 
   // const { roommates } = useRoomMateContext();
@@ -148,30 +174,30 @@ export default function HomePage() {
 
       <ContentWrapper>
         {/*<TitleContentArea*/}
-        {/*  title={"룸메이트 매칭 진행 중!"}*/}
-        {/*  description={"룸메이트를 구하고 있는 다양한 UNI들을 찾아보세요!"}*/}
-        {/*  link={"/roommate"}*/}
+        {/* title={"룸메이트 매칭 진행 중!"}*/}
+        {/* description={"룸메이트를 구하고 있는 다양한 UNI들을 찾아보세요!"}*/}
+        {/* link={"/roommate"}*/}
         {/*>*/}
-        {/*  <>*/}
-        {/*    {randomRoommate ? (*/}
-        {/*      <RoomMateCard*/}
-        {/*        key={randomRoommate.boardId}*/}
-        {/*        title={randomRoommate.title}*/}
-        {/*        boardId={randomRoommate.boardId}*/}
-        {/*        dormType={randomRoommate.dormType}*/}
-        {/*        mbti={randomRoommate.mbti}*/}
-        {/*        college={randomRoommate.college}*/}
-        {/*        isSmoker={true}*/}
-        {/*        isClean={true}*/}
-        {/*        stayDays={randomRoommate.dormPeriod}*/}
-        {/*        description={randomRoommate.comment}*/}
-        {/*        roommateBoardLike={randomRoommate.roommateBoardLike}*/}
-        {/*        matched={randomRoommate.matched}*/}
-        {/*      />*/}
-        {/*    ) : (*/}
-        {/*      <EmptyMessage>게시글이 없습니다.</EmptyMessage>*/}
-        {/*    )}*/}
-        {/*  </>*/}
+        {/* <>*/}
+        {/* {randomRoommate ? (*/}
+        {/* <RoomMateCard*/}
+        {/* key={randomRoommate.boardId}*/}
+        {/* title={randomRoommate.title}*/}
+        {/* boardId={randomRoommate.boardId}*/}
+        {/* dormType={randomRoommate.dormType}*/}
+        {/* mbti={randomRoommate.mbti}*/}
+        {/* college={randomRoommate.college}*/}
+        {/* isSmoker={true}*/}
+        {/* isClean={true}*/}
+        {/* stayDays={randomRoommate.dormPeriod}*/}
+        {/* description={randomRoommate.comment}*/}
+        {/* roommateBoardLike={randomRoommate.roommateBoardLike}*/}
+        {/* matched={randomRoommate.matched}*/}
+        {/* />*/}
+        {/* ) : (*/}
+        {/* <EmptyMessage>게시글이 없습니다.</EmptyMessage>*/}
+        {/* )}*/}
+        {/* </>*/}
         {/*</TitleContentArea>*/}
 
         <TitleContentArea
@@ -180,7 +206,10 @@ export default function HomePage() {
             "인천대학교 생활원에서 알려드리는 공지사항을 확인해보세요."
           }
           link={"/announcements"}
-          children={
+        >
+          {isAnnounceLoading ? (
+            <LoadingSpinner message={"공지사항을 불러오고 있어요!"} />
+          ) : (
             <NotiWrapper>
               {notices.length > 0 ? (
                 notices
@@ -199,8 +228,8 @@ export default function HomePage() {
                 <EmptyMessage message={"공지사항이 없습니다."} />
               )}
             </NotiWrapper>
-          }
-        />
+          )}
+        </TitleContentArea>
 
         <TitleContentArea
           title="오늘의 Best 꿀팁"
@@ -208,23 +237,22 @@ export default function HomePage() {
             "기숙사에 사는 UNI들이 공유하는 다양한 기숙사 꿀팁을 찾아보세요!"
           }
           link={"/tips"}
-          children={
-            <>
-              {dailyTips.length > 0 ? (
-                dailyTips.map((tip, key) => (
-                  <HomeTipsCard
-                    key={key}
-                    index={key + 1}
-                    id={tip.boardId}
-                    content={tip.title}
-                  />
-                ))
-              ) : (
-                <EmptyMessage message={"오늘의 꿀팁이 없습니다."} />
-              )}
-            </>
-          }
-        />
+        >
+          {isTipsLoading ? (
+            <LoadingSpinner message={"꿀팁을 불러오고 있어요!"} />
+          ) : dailyTips.length > 0 ? (
+            dailyTips.map((tip, key) => (
+              <HomeTipsCard
+                key={key}
+                index={key + 1}
+                id={tip.boardId}
+                content={tip.title}
+              />
+            ))
+          ) : (
+            <EmptyMessage message={"오늘의 꿀팁이 없습니다."} />
+          )}
+        </TitleContentArea>
 
         <TitleContentArea
           title={"캘린더 이벤트"}
@@ -232,22 +260,25 @@ export default function HomePage() {
           children={<ThreeWeekCalendar />}
           link={"/calendar"}
         />
-        <TitleContentArea
-          title={"임박한 공동구매"}
-          link={"/groupPurchase"}
-          children={
-            groupOrders.length > 0 ? (
-              <GroupPurchaseList groupOrders={groupOrders} />
-            ) : (
-              <EmptyMessage message={"임박한 공동구매가 없습니다."} />
-            )
-          }
-        />
+        <TitleContentArea title={"임박한 공동구매"} link={"/groupPurchase"}>
+          {isGroupOrdersLoading ? (
+            <LoadingSpinner message={"공동구매를 불러오고 있어요!"} />
+          ) : groupOrders.length > 0 ? (
+            <GroupPurchaseList groupOrders={groupOrders} />
+          ) : (
+            <EmptyMessage message={"임박한 공동구매가 없습니다."} />
+          )}
+        </TitleContentArea>
       </ContentWrapper>
 
       <img className="appcenter-logo" src={앱센터로고가로} />
       <FloatingButton
         onClick={() => {
+          if (!isLoggedIn) {
+            alert("로그인 후 사용할 수 있습니다.");
+            navigate("/login");
+            return;
+          }
           navigate("/complain");
         }}
       >
