@@ -11,23 +11,16 @@ import {
 } from "../../types/grouporder.ts";
 import { getGroupPurchaseList } from "../../apis/groupPurchase.ts";
 import useUserStore from "../../stores/useUserStore.ts";
-// 🔽 필요한 컴포넌트를 import 합니다.
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../../constants/EmptyMessage.tsx";
-
-const CATEGORY_LIST: GetGroupPurchaseListParams["type"][] = [
-  "전체",
-  "배달",
-  "식자재",
-  "생활용품",
-  "기타",
-];
-const SORT_OPTIONS: GetGroupPurchaseListParams["sort"][] = [
-  "마감임박순",
-  "최신순",
-  "인기순",
-  "낮은가격순",
-];
+import { CATEGORY_LIST, SORT_OPTIONS } from "../../constants/constants.ts";
+import {
+  RecentSearchWrapper,
+  TagList,
+  Tag,
+  Label,
+} from "../../styles/groupPurchase.ts";
+import { FiX } from "react-icons/fi";
 
 export default function GroupPurchaseMainPage() {
   const navigate = useNavigate();
@@ -152,7 +145,7 @@ export default function GroupPurchaseMainPage() {
               if (e.key === "Enter") handleSearchSubmit();
             }}
             onFocus={() => setIsSearchFocused(true)}
-            onBlur={() => setIsSearchFocused(false)}
+            // onBlur={() => setIsSearchFocused(false)}
           />
         </SearchBar>
 
@@ -163,9 +156,11 @@ export default function GroupPurchaseMainPage() {
               {recentSearches.map((term) => (
                 <Tag key={term}>
                   {term}{" "}
-                  <DeleteBtn onClick={() => handleDeleteRecent(term)}>
-                    ×
-                  </DeleteBtn>
+                  <FiX
+                    size="14"
+                    color="#1C1C1E"
+                    onClick={() => handleDeleteRecent(term)}
+                  />
                 </Tag>
               ))}
             </TagList>
@@ -257,45 +252,6 @@ const SearchBar = styled.div`
       outline: none;
     }
   }
-`;
-
-const RecentSearchWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-`;
-
-const Label = styled.div`
-  color: #636366;
-  font-size: 14px;
-  font-style: normal;
-  font-weight: 600;
-  line-height: 24px;
-  letter-spacing: 0.38px;
-`;
-
-const TagList = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-`;
-
-const Tag = styled.div`
-  background-color: #f0f0f0;
-  border-radius: 20px;
-  padding: 6px 10px;
-  font-size: 13px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-`;
-
-const DeleteBtn = styled.button`
-  border: none;
-  background: none;
-  color: #aaa;
-  font-size: 14px;
-  cursor: pointer;
 `;
 
 const WriteButton = styled.button`

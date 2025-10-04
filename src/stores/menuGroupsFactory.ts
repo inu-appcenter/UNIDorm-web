@@ -25,6 +25,16 @@ export const createMenuGroups = (
     ],
   },
   {
+    title: "알림",
+    menus: [
+      { label: "알림 수신 설정", onClick: () => navigate("/myposts") },
+      {
+        label: "키워드 알림 설정",
+        onClick: () => navigate("/groupPurchase/keywordSetting"),
+      },
+    ],
+  },
+  {
     title: "룸메이트",
     menus: [
       { label: "내 룸메이트", onClick: () => navigate("/roommate/my") },

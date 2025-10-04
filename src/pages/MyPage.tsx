@@ -67,6 +67,14 @@ const MyPage = () => {
         <Divider />
 
         <ProtectedMenuWrapper disabled={isProtected}>
+          <MenuGroup title={menuGroups[2].title} menus={menuGroups[2].menus} />
+          {isProtected && (
+            <OverlayMessage>로그인 후 사용 가능해요.</OverlayMessage>
+          )}
+        </ProtectedMenuWrapper>
+        <Divider />
+
+        <ProtectedMenuWrapper disabled={isProtected}>
           <TitleContentArea
             title={"내 룸메이트"}
             children={
@@ -90,7 +98,7 @@ const MyPage = () => {
         </ProtectedMenuWrapper>
         <Divider />
 
-        <MenuGroup title={menuGroups[3].title} menus={menuGroups[3].menus} />
+        <MenuGroup title={menuGroups[4].title} menus={menuGroups[4].menus} />
       </MenuGroupsWrapper>
       <BottomBar />
     </MyPageWrapper>
