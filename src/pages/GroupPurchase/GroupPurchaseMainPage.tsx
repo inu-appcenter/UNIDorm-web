@@ -100,12 +100,21 @@ export default function GroupPurchaseMainPage() {
     fetchGroupOrders();
   }, [selectedCategory, sortOption]);
 
+  const menuItems = [
+    {
+      label: "키워드 알림 등록",
+      onClick: () => {
+        navigate("/groupPurchase/keywordSetting");
+      },
+    },
+  ];
+
   return (
     <PageWrapper>
       <Header
         title="공동구매"
         hasBack={false}
-        showAlarm={true}
+        menuItems={menuItems}
         secondHeader={
           <CategoryWrapper>
             {CATEGORY_LIST.map((category) => (
