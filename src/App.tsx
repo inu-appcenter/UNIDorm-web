@@ -44,6 +44,7 @@ import ComplainDetailPage from "./pages/Complain/ComplainDetailPage.tsx";
 import ComplainWritePage from "./pages/Complain/ComplainWritePage.tsx";
 import ComplainAdminPage from "./pages/Admin/ComplainAdminPage.tsx";
 import ComplainAnswerWritePage from "./pages/Admin/ComplainAnswerWritePage.tsx";
+import KeywordAlertSettingPage from "./pages/GroupPurchase/KeywordAlertSettingPage.tsx";
 
 function App() {
   console.log("현재 MODE:", import.meta.env.MODE);
@@ -154,6 +155,7 @@ function App() {
           <Route path="comingsoon" element={<GroupPurchaseComingSoonPage />} />
           <Route path=":boardId" element={<GroupPurchasePostPage />} />
           <Route path="write" element={<GroupPurchaseWritePage />} />
+          <Route path="keywordSetting" element={<KeywordAlertSettingPage />} />
         </Route>
 
         {/* Announcement & Notification */}
