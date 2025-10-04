@@ -40,8 +40,8 @@ export interface ComplaintCreateDto {
   content: string;
   type: string;
   dormType: string;
-  caseNumber: string;
-  contact: string;
+  roomNumber: string; // 이 부분을 추가
+  bedNumber: string;
 }
 
 // 민원 등록 응답 타입
@@ -88,16 +88,6 @@ export interface ComplaintReplyResponse {
     uploadDate: string;
   }[];
   createdDate: string;
-}
-
-// 민원 등록 요청 DTO
-export interface ComplaintCreateDto {
-  type: string;
-  dormType: string;
-  caseNumber: string;
-  contact: string;
-  title: string;
-  content: string;
 }
 
 // 민원 등록 응답 타입

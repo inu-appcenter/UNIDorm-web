@@ -11,7 +11,7 @@ import {
   rooms,
 } from "../../constants/constants.ts";
 import { Dropdown, DropdownContainer, Input } from "../../styles/complain.ts";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react"; // useRef와 useEffect 추가
 
 const ComplainFilter = ({
   onClose,
@@ -20,6 +20,8 @@ const ComplainFilter = ({
   onClose: () => void;
   onApply: () => void;
 }) => {
+  const wrapperRef = useRef<HTMLDivElement>(null); // 컴포넌트의 ref 생성
+
   const [selectedDormitoryIndex, setSelectedDormitoryIndex] = useState<
     number | null
   >(null);
@@ -62,8 +64,29 @@ const ComplainFilter = ({
     onApply();
   };
 
+  // useEffect를 사용하여 외부 클릭 감지 로직 추가
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // 컴포넌트 ref가 존재하고, 클릭된 요소가 컴포넌트 외부에 있을 경우 onClose 호출
+      if (
+        wrapperRef.current &&
+        !wrapperRef.current.contains(event.target as Node)
+      ) {
+        onClose();
+      }
+    };
+
+    // 이벤트 리스너 등록
+    document.addEventListener("mousedown", handleClickOutside);
+
+    // 컴포넌트가 언마운트될 때 이벤트 리스너 제거
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [onClose]); // onClose가 변경될 때마다 useEffect 재실행
+
   return (
-    <Wrapper>
+    <Wrapper ref={wrapperRef}>
       <FormField label="기숙사">
         <SelectableChipGroup
           Groups={complainDormitory}
@@ -71,7 +94,6 @@ const ComplainFilter = ({
           onSelect={setSelectedDormitoryIndex}
         />
       </FormField>
-
       <FormField label="담당자">
         <Input
           placeholder="담당자 이름을 입력해주세요"
@@ -86,7 +108,6 @@ const ComplainFilter = ({
           onSelect={setSelectedTypeIndex}
         />
       </FormField>
-
       <FormField label="현황">
         <SelectableChipGroup
           Groups={complainStatus}
@@ -94,7 +115,6 @@ const ComplainFilter = ({
           onSelect={setSelectedStatusIndex}
         />
       </FormField>
-
       <FormField label="동">
         <SelectableChipGroup
           Groups={dormitoryBlocks}
@@ -102,7 +122,6 @@ const ComplainFilter = ({
           onSelect={setSelectedBlockIndex}
         />
       </FormField>
-
       <FormField label="층/호수">
         <DropdownContainer>
           <Dropdown
@@ -149,7 +168,6 @@ const ComplainFilter = ({
           </Dropdown>
         </DropdownContainer>
       </FormField>
-
       <ButtonWrapper>
         <Button onClick={handleResetFilters} isReset>
           초기화
@@ -172,6 +190,8 @@ const Wrapper = styled.div`
   box-sizing: border-box;
   gap: 16px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+  margin-bottom: 64px;
 `;
 
 const ButtonWrapper = styled.div`
