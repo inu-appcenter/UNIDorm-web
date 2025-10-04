@@ -1,7 +1,15 @@
 import { Drawer } from "vaul";
 import styled from "styled-components";
-import { useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import RoundSquareButton from "../button/RoundSquareButton.tsx";
+import Friends from "../../assets/roommate/Friends.svg";
+import 눈물닦아주는횃불이 from "../../assets/눈물 닦아주는 횃불이.webp";
+
+// 선택 가능한 이미지 맵
+const headerImages: Record<number, string> = {
+  1: Friends,
+  2: 눈물닦아주는횃불이,
+};
 
 // --- [변경] Props 인터페이스에 커스텀 속성 추가 ---
 interface Props {
@@ -11,6 +19,9 @@ interface Props {
   setIsOpen: (isOpen: boolean) => void;
   closeButtonText?: string; // 버튼 텍스트
   onCloseClick?: () => void; // 닫기 전 실행할 함수
+  headerImageId?: number | null;
+  title?: string;
+  subtitle?: string;
 }
 // ---------------------------------------------
 
@@ -19,9 +30,11 @@ export default function CommonBottomModal({
   children,
   isOpen,
   setIsOpen,
-  // --- [변경] props 추가 및 기본값 설정 ---
   closeButtonText = "닫기",
   onCloseClick,
+  headerImageId = null,
+  title,
+  subtitle,
 }: Props) {
   const initialized = useRef(false);
 
@@ -36,12 +49,19 @@ export default function CommonBottomModal({
     initialized.current = true;
   }, [id, setIsOpen]);
 
+  const headerImage = headerImageId ? headerImages[headerImageId] : null;
+
   return (
     <Drawer.Root open={isOpen} onOpenChange={setIsOpen}>
       <Drawer.Portal>
         <Overlay />
         <Content>
           <SwipeHandle />
+          <ModalHeader>
+            <h2>{title}</h2>
+            {subtitle && <span>{subtitle}</span>}
+            {headerImage && <img src={headerImage} alt="modal header" />}
+          </ModalHeader>
           <ScrollContent>{children}</ScrollContent>
           <CloseMenus>
             {/* --- [변경] 버튼에 props 적용 --- */}
@@ -97,6 +117,35 @@ const SwipeHandle = styled.div`
   flex-shrink: 0;
   border-radius: 9999px;
   background-color: #d1d5db;
+`;
+
+const ModalHeader = styled.div`
+  flex-shrink: 0;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* 중앙 정렬 */
+  text-align: center;
+  padding-right: 0; /* 중앙 정렬 시 불필요 */
+  word-break: keep-all;
+  white-space: pre-wrap; /* 줄바꿈 유지 + 자동 줄바꿈 */
+
+  color: #1c408c;
+  width: 100%;
+
+  img {
+    width: 60%;
+    margin-bottom: 12px; /* 이미지와 제목 간 간격 */
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 24px;
+  }
+
+  span {
+    font-size: 14px;
+  }
 `;
 
 const ScrollContent = styled.div`
