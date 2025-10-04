@@ -3,7 +3,6 @@ import tokenInstance from "../apis/tokenInstance";
 import { ApiResponse } from "../types/common";
 import { MyPost, TokenInfo, UserInfo } from "../types/members";
 import { AxiosResponse } from "axios";
-import refreshInstance from "./refreshInstance.ts";
 
 // 회원 가져오기
 export const getMemberInfo = async (): Promise<AxiosResponse<UserInfo>> => {
@@ -102,23 +101,23 @@ export const putMember = async (
 };
 
 // 토큰 재발급
-export const refresh = async (): Promise<ApiResponse<TokenInfo>> => {
+export const refresh = async (): Promise<ApiResponse> => {
   const refreshToken = localStorage.getItem("refreshToken"); // 필요에 따라 위치 변경 가능
   if (!refreshToken) {
     throw new Error("리프레시 토큰이 없습니다.");
   }
-
-  const response = await refreshInstance.post<ApiResponse<TokenInfo>>(
+  console.log("refresh", refreshToken);
+  const response = await axiosInstance.post<ApiResponse<TokenInfo>>(
     "/users/refreshToken",
-    { refreshToken },
+    { refreshToken: `Bearer ${refreshToken}` },
   );
 
-  if (response.data) {
+  if (response) {
     console.log("리프레시응답");
-    console.log(response.data);
+    console.log(response);
   }
 
-  return response.data;
+  return response;
 };
 
 // 사용자가 작성한 게시글 조회
