@@ -64,14 +64,12 @@ export interface GroupOrderPopularSearch {
 
 export interface CreateGroupOrderRequest {
   title: string;
-  deadline: string;
   groupOrderType: string;
   price: number;
-  description: string;
   link: string;
   openChatLink: string;
-
-  maxPeople: number;
+  deadline: string;
+  description: string;
 }
 
 // 공동구매 댓글 등록

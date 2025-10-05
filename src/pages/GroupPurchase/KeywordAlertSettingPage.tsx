@@ -5,12 +5,12 @@ import { FiX } from "react-icons/fi";
 import CommonBottomModal from "../../components/modal/CommonBottomModal.tsx";
 import modalContent from "../../components/GroupPurchase/keywordSetting/ModalContent.tsx";
 import CategorySetting from "../../components/GroupPurchase/keywordSetting/CategorySetting.tsx";
-import { CATEGORY_LIST } from "../../constants/constants.ts";
 import {
   RecentSearchWrapper,
   TagList,
   Tag,
 } from "../../styles/groupPurchase.ts";
+import { CATEGORY_LIST } from "../../constants/groupPurchase.ts";
 
 const KeywordAlertSettingPage = () => {
   const [keyword, setKeyword] = useState("");
