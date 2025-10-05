@@ -8,12 +8,12 @@ const AdminMainPage: React.FC = () => {
   const navigate = useNavigate();
   const { tokenInfo, userInfo } = useUserStore();
 
-  useEffect(() => {
-    console.log(userInfo.isAdmin);
-    if (!tokenInfo.accessToken || !userInfo.isAdmin) {
-      navigate("/home");
-    }
-  }, [tokenInfo, navigate, userInfo]);
+  // useEffect(() => {
+  //   console.log(tokenInfo.role);
+  //   if (!tokenInfo.accessToken || !(tokenInfo.role === "ROLE_ADMIN")) {
+  //     navigate("/home");
+  //   }
+  // }, [tokenInfo, navigate, userInfo]);
 
   const menuItems = [
     {

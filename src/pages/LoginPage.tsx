@@ -12,7 +12,7 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const [id, setId] = useState("");
   const [password, setPassword] = useState("");
-  const { setTokenInfo, setUserInfo, userInfo } = useUserStore(); // store에서 setTokenInfo 불러오기
+  const { setTokenInfo } = useUserStore(); // store에서 setTokenInfo 불러오기
 
   const isFilled = () => {
     return id.trim() !== "" && password.trim() !== "";
@@ -30,11 +30,13 @@ export default function LoginPage() {
         // 토큰 로컬스토리지에 저장
         localStorage.setItem("accessToken", tokenInfo.accessToken);
         localStorage.setItem("refreshToken", tokenInfo.refreshToken);
+        localStorage.setItem("role", tokenInfo.role);
 
         setTokenInfo(tokenInfo);
-        if (id.includes("admin")) {
-          setUserInfo({ ...userInfo, isAdmin: true });
-        }
+
+        // if (id.includes("admin")) {
+        //   setUserInfo({ ...userInfo, role: response.data.role });
+        // }
 
         // ✅ 로그인 성공 후 FCM 토큰 서버 전송
         const fcmToken = localStorage.getItem("fcmToken");
@@ -45,6 +47,12 @@ export default function LoginPage() {
           } catch (tokenError) {
             console.error("로그인 후 FCM 토큰 등록 실패", tokenError);
           }
+        }
+
+        if (response.data.role === "ROLE_ADMIN") {
+          alert("admin페이지로 이동합니다.");
+          navigate("/admin");
+          return;
         }
 
         navigate("/home");

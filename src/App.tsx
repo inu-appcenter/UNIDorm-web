@@ -58,11 +58,11 @@ function App() {
     console.error = () => {};
   }
 
-  const { tokenInfo, setUserInfo, userInfo } = useUserStore();
+  const { tokenInfo, setUserInfo } = useUserStore();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (userInfo.isAdmin) {
+    if (tokenInfo.role === "USER_ADMIN") {
       console.log("admin모드로 이동합니다");
       navigate("/admin");
       return;
@@ -80,11 +80,12 @@ function App() {
           );
         }
       } catch (error) {
+        alert("회원 가져오기 실패");
         console.error("회원 가져오기 실패", error);
       }
     };
 
-    if (tokenInfo?.accessToken) {
+    if (tokenInfo?.accessToken && tokenInfo.role === "ROLE_USER") {
       initializeUser();
     }
   }, [tokenInfo, setUserInfo]);
