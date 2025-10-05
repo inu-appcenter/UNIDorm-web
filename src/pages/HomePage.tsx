@@ -123,6 +123,7 @@ export default function HomePage() {
       setIsAnnounceLoading(true);
       try {
         const response = await getAnnouncements();
+        console.log("공지사항 불러오기 성공:", response);
         setNotices(response.data);
       } catch (error) {
         console.error("공지사항 불러오기 실패", error);
@@ -213,6 +214,7 @@ export default function HomePage() {
             <NotiWrapper>
               {notices.length > 0 ? (
                 notices
+                  .filter((notice) => notice !== null && notice !== undefined)
                   .slice(0, 2)
                   .map((notice) => (
                     <HomeNoticeCard
