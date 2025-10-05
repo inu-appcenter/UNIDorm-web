@@ -13,7 +13,6 @@ import { getGroupPurchaseList } from "../../apis/groupPurchase.ts";
 import useUserStore from "../../stores/useUserStore.ts";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../../constants/EmptyMessage.tsx";
-import { CATEGORY_LIST, SORT_OPTIONS } from "../../constants/constants.ts";
 import {
   RecentSearchWrapper,
   TagList,
@@ -21,6 +20,7 @@ import {
   Label,
 } from "../../styles/groupPurchase.ts";
 import { FiX } from "react-icons/fi";
+import { CATEGORY_LIST, SORT_OPTIONS } from "../../constants/groupPurchase.ts";
 
 export default function GroupPurchaseMainPage() {
   const navigate = useNavigate();

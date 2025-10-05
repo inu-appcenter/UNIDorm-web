@@ -1,184 +1,87 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import styled from "styled-components";
+import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../../components/common/Header";
-import { MdImage } from "react-icons/md";
-import { CreateGroupOrderRequest } from "../../types/grouporder.ts";
+import CommonBottomModal from "../../components/modal/CommonBottomModal";
+import CheckBeforeContent from "../../components/GroupPurchase/CheckBeforeContent";
+import useUserStore from "../../stores/useUserStore";
 import {
   createGroupPurchase,
   updateGroupPurchase,
-} from "../../apis/groupPurchase.ts";
-import useUserStore from "../../stores/useUserStore.ts";
-import { useLocation, useNavigate } from "react-router-dom";
-import CommonBottomModal from "../../components/modal/CommonBottomModal.tsx";
-import CheckBeforeContent from "../../components/GroupPurchase/CheckBeforeContent.tsx";
+} from "../../apis/groupPurchase";
+import { CreateGroupOrderRequest } from "../../types/grouporder";
+import { useGroupPurchaseForm } from "../../utils/useGroupPurchaseForm.ts";
+import CategorySelector from "../../components/GroupPurchase/CategorySelector.tsx";
+import DeadlineSelector from "../../components/GroupPurchase/DeadlineSelector.tsx";
+import ImageUploader from "../../components/GroupPurchase/ImageUploader.tsx";
+import HowToCreateOpenChat from "../../components/GroupPurchase/HowToCreateOpenChat.tsx";
 
 export default function GroupPurchaseWritePage() {
-  const inputRef = useRef<HTMLInputElement | null>(null);
   const navigate = useNavigate();
-
-  // 수정 모드 관련 상태
-  const [isEditMode, setIsEditMode] = useState(false);
-
   const location = useLocation();
   const { post } = location.state || {};
 
-  useEffect(() => {
-    if (post) {
-      setTitle(post.title);
-      setDescription(post.description);
-      setPrice(post.price?.toString() || "");
-      setPurchaseLink(post.link || "");
-      setOpenchatLink(post.openChatLink || "");
-      setMaxPeople(post.maxPeople?.toString() || "");
-      setCategory(post.groupOrderType || "배달");
-      setIsEditMode(true);
-    }
-  }, [post]);
+  const {
+    isEditMode,
+    formData,
+    formHandlers,
+    getDeadlineString,
+    validateForm,
+  } = useGroupPurchaseForm(post);
 
-  const [category, setCategory] = useState("배달");
-  const [deadline, setDeadline] = useState(() => {
-    const now = new Date();
-    const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000); // D+1
+  const {
+    title,
+    price,
+    description,
+    purchaseLink,
+    openchatLink,
+    category,
+    images,
+    deadline,
+  } = formData;
 
-    const year = `${tomorrow.getFullYear()}년`;
-    const month = `${tomorrow.getMonth() + 1}월`; // 0~11 이므로 +1
-    const day = `${tomorrow.getDate()}일`;
-
-    let hour = tomorrow.getHours();
-    const ampm = hour >= 12 ? "오후" : "오전";
-    if (hour > 12) hour -= 12;
-    if (hour === 0) hour = 12;
-
-    const minute = `${tomorrow.getMinutes().toString().padStart(2, "0")}분`;
-    const hourStr = `${hour}시`;
-
-    return { year, month, day, ampm, hour: hourStr, minute };
-  });
-
-  const [dayOptions, setDayOptions] = useState<string[]>([]);
-  const [title, setTitle] = useState("");
-  const [price, setPrice] = useState("");
-  const [description, setDescription] = useState("");
-  const [purchaseLink, setPurchaseLink] = useState("");
-  const [openchatLink, setOpenchatLink] = useState("");
-  const [maxPeople, setMaxPeople] = useState("");
-  const [images, setImages] = useState<File[]>([]);
+  const {
+    setTitle,
+    setPrice,
+    setDescription,
+    setPurchaseLink,
+    setOpenchatLink,
+    setCategory,
+    setDeadline,
+    handleImageChange,
+  } = formHandlers;
 
   const { tokenInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
-
-  // 해당 월의 마지막 일 구하기
-  const getLastDay = (yearStr: string, monthStr: string) => {
-    const year = parseInt(yearStr.replace("년", ""));
-    const month = parseInt(monthStr.replace("월", ""));
-    return new Date(year, month, 0).getDate();
-  };
-
-  useEffect(() => {
-    const lastDay = getLastDay(deadline.year, deadline.month);
-    const days = Array.from({ length: lastDay }, (_, i) => `${i + 1}일`);
-    setDayOptions(days);
-
-    if (!days.includes(deadline.day)) {
-      setDeadline((prev) => ({ ...prev, day: days[0] }));
-    }
-  }, [deadline.year, deadline.month]);
-
-  // 마감 시간 문자열 생성: "YYYY-MM-DDTHH:mm:00"
-  const getDeadlineString = () => {
-    const year = deadline.year.replace("년", "");
-    const month = deadline.month.replace("월", "").padStart(2, "0");
-    const day = deadline.day.replace("일", "").padStart(2, "0");
-    let hour = parseInt(deadline.hour.replace("시", ""));
-    if (deadline.ampm === "오후" && hour !== 12) hour += 12;
-    if (deadline.ampm === "오전" && hour === 12) hour = 0;
-    const minute = deadline.minute.replace("분", "").padStart(2, "0");
-    return `${year}-${month}-${day}T${hour.toString().padStart(2, "0")}:${minute}:00`;
-  };
-
-  // 이미지 처리: 중복 제거 + 10장 제한 + 5MB 용량 제한
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const fileList = Array.from(e.target.files);
-
-      // 기존 이미지와 합쳐서 중복 제거 (파일명 + 크기 기준)
-      const newFiles = [...images, ...fileList].filter(
-        (file, index, self) =>
-          index ===
-          self.findIndex((f) => f.name === file.name && f.size === file.size),
-      );
-
-      // 📌 이미지 개수 제한 검사
-      if (newFiles.length > 5) {
-        alert("이미지는 최대 5장까지만 업로드 가능합니다.");
-        return;
-      }
-
-      // 용량 검사 (5MB)
-      for (const file of newFiles) {
-        if (file.size > 5 * 1024 * 1024) {
-          alert("이미지는 5MB 이하만 업로드 가능합니다.");
-          return;
-        }
-      }
-
-      // 최대 10장까지만 허용
-      setImages(newFiles.slice(0, 5));
-    }
-  };
+  const [isModalOpen, setIsModalOpen] = useState(true);
+  const [isHowtoModalOpen, setIsHowToModalOpen] = useState(false);
 
   const handleSubmit = async () => {
-    // 📌 필수 입력 체크
-    if (!title.trim()) return alert("제목을 입력해주세요.");
-    if (!price.trim() || isNaN(Number(price)))
-      return alert("가격을 올바르게 입력해주세요.");
-    if (!description.trim()) return alert("내용을 입력해주세요.");
-    if (!purchaseLink.trim()) return alert("구매 링크를 입력해주세요.");
-    if (!maxPeople.trim() || isNaN(Number(maxPeople)))
-      return alert("구매 인원을 올바르게 입력해주세요.");
+    if (!validateForm()) return;
 
-    // 📌 글자 수 제한
-    if (title.length > 100) return alert("제목은 100자 이하로 입력해주세요.");
-    if (description.length > 2000)
-      return alert("내용은 2000자 이하로 입력해주세요.");
-
-    // 📌 숫자 값 제한
-    if (Number(price) <= 0) return alert("가격은 1원 이상이어야 합니다.");
-    if (Number(maxPeople) < 2)
-      return alert("구매 인원은 2명 이상이어야 합니다.");
-
-    // 📌 URL 형식 검사
-    const urlPattern = /^https?:\/\/.+/;
-    if (!urlPattern.test(purchaseLink)) {
-      return alert("구매 링크는 http 또는 https로 시작해야 합니다.");
-    }
-    if (openchatLink && !urlPattern.test(openchatLink)) {
-      return alert("오픈채팅방 링크는 http 또는 https로 시작해야 합니다.");
-    }
-
-    // DTO 생성
     const requestDto: CreateGroupOrderRequest = {
       title,
-      deadline: getDeadlineString(),
-      groupOrderType: category,
-      price: Number(price),
-      maxPeople: Number(maxPeople),
       description,
+      price: Number(price),
       link: purchaseLink,
       openChatLink: openchatLink,
+      groupOrderType: category,
+      deadline: getDeadlineString(),
     };
 
     try {
-      if (isEditMode) {
+      if (isEditMode && post?.id) {
         await updateGroupPurchase(post.id, requestDto, images);
         alert("게시글이 수정되었습니다.");
+        // 수정 후 상세 페이지로 이동하거나 목록으로 이동
+        navigate(`/group-purchase/${post.id}`, { replace: true });
       } else {
         await createGroupPurchase(requestDto, images);
         alert("게시글이 등록되었습니다.");
-        navigate(-1);
+        navigate(-1); // 이전 페이지(목록)으로 이동
       }
     } catch (error) {
-      console.error(error);
+      console.error("게시글 등록/수정 실패:", error);
       alert("게시글 등록/수정 중 오류가 발생했습니다.");
     }
   };
@@ -187,11 +90,8 @@ export default function GroupPurchaseWritePage() {
     alert("임시 저장되었습니다.");
   };
 
-  const [isOpen, setIsOpen] = useState(true);
-
   return (
     <Wrapper>
-      {isEditMode && <></>}
       <Header
         title="공동구매 글쓰기"
         hasBack={true}
@@ -201,9 +101,16 @@ export default function GroupPurchaseWritePage() {
       />
       <CommonBottomModal
         id={"checkbefore"}
-        isOpen={isOpen}
-        setIsOpen={setIsOpen}
+        isOpen={isModalOpen}
+        setIsOpen={setIsModalOpen}
         children={<CheckBeforeContent />}
+      />
+      <CommonBottomModal
+        id={"howToCreateOpenChat"}
+        title={"오픈채팅 생성 매뉴얼"}
+        isOpen={isHowtoModalOpen}
+        setIsOpen={setIsHowToModalOpen}
+        children={<HowToCreateOpenChat />}
       />
 
       <SectionTitle>제목</SectionTitle>
@@ -214,20 +121,14 @@ export default function GroupPurchaseWritePage() {
       />
 
       <SectionTitle>카테고리</SectionTitle>
-      <CategoryRow>
-        {["배달", "식자재", "생활용품", "기타"].map((item) => (
-          <CategoryButton
-            key={item}
-            selected={category === item}
-            onClick={() => setCategory(item)}
-          >
-            {item}
-          </CategoryButton>
-        ))}
-      </CategoryRow>
+      <CategorySelector
+        selectedCategory={category}
+        onSelectCategory={setCategory}
+      />
 
       <SectionTitle>가격</SectionTitle>
       <InputField
+        type="number"
         placeholder="가격을 입력해주세요"
         value={price}
         onChange={(e) => setPrice(e.target.value)}
@@ -247,102 +148,34 @@ export default function GroupPurchaseWritePage() {
         value={purchaseLink}
         onChange={(e) => setPurchaseLink(e.target.value)}
       />
-      <SectionTitle>오픈채팅방 링크</SectionTitle>
+
+      <SectionTitle>
+        오픈채팅방 링크{" "}
+        <a onClick={() => setIsHowToModalOpen(true)}>
+          <span className="underline">어떻게 만드나요?</span>
+          {" >"}
+        </a>
+      </SectionTitle>
       <InputField
         placeholder="오픈채팅방 링크를 입력해주세요"
         value={openchatLink}
         onChange={(e) => setOpenchatLink(e.target.value)}
       />
 
-      <SectionTitle>구매 인원</SectionTitle>
-      <InputField
-        placeholder="구매 인원을 입력해주세요"
-        value={maxPeople}
-        onChange={(e) => setMaxPeople(e.target.value)}
+      <SectionTitle>마감 시간</SectionTitle>
+      <DeadlineSelector
+        deadline={deadline}
+        onDeadlineChange={setDeadline}
+        category={category}
       />
 
-      <SectionTitle>마감 시간</SectionTitle>
-      <DeadlineRow>
-        <Select
-          value={deadline.year}
-          onChange={(e) => setDeadline({ ...deadline, year: e.target.value })}
-        >
-          <option>2025년</option>
-          <option>2026년</option>
-          <option>2027년</option>
-        </Select>
-        <Select
-          value={deadline.month}
-          onChange={(e) => setDeadline({ ...deadline, month: e.target.value })}
-        >
-          {Array.from({ length: 12 }, (_, i) => `${i + 1}월`).map((m) => (
-            <option key={m}>{m}</option>
-          ))}
-        </Select>
-        <Select
-          value={deadline.day}
-          onChange={(e) => setDeadline({ ...deadline, day: e.target.value })}
-        >
-          {dayOptions.map((d) => (
-            <option key={d}>{d}</option>
-          ))}
-        </Select>
-      </DeadlineRow>
-
-      <DeadlineRow>
-        <Select
-          value={deadline.ampm}
-          onChange={(e) => setDeadline({ ...deadline, ampm: e.target.value })}
-        >
-          <option>오전</option>
-          <option>오후</option>
-        </Select>
-        <Select
-          value={deadline.hour}
-          onChange={(e) => setDeadline({ ...deadline, hour: e.target.value })}
-        >
-          {Array.from({ length: 12 }, (_, i) => `${i + 1}시`).map((h) => (
-            <option key={h}>{h}</option>
-          ))}
-        </Select>
-        <Select
-          value={deadline.minute}
-          onChange={(e) => setDeadline({ ...deadline, minute: e.target.value })}
-        >
-          <option>00분</option>
-          <option>30분</option>
-        </Select>
-      </DeadlineRow>
-
-      <WarningText>설정한 마감 시간이 지나면 게시물은 삭제됩니다.</WarningText>
-
       <SectionTitle>이미지</SectionTitle>
-      <ImageBox onClick={() => inputRef.current?.click()}>
-        <MdImage size={36} color="#888" />
-        <span>{images.length}/5</span>
-        {/* 여러 장 미리보기 */}
-        {images.map((file, idx) => (
-          <img
-            key={idx}
-            src={URL.createObjectURL(file)}
-            alt={`업로드 이미지${idx + 1}`}
-            style={{ width: 36, height: 36, borderRadius: 8, marginLeft: 4 }}
-          />
-        ))}
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/*"
-          multiple
-          hidden
-          onChange={handleImageChange}
-        />
-      </ImageBox>
+      <ImageUploader images={images} onImageChange={handleImageChange} />
 
       {isLoggedIn && (
         <BottomFixed>
           <SubmitButton onClick={handleSubmit}>
-            {post && post.id ? "수정하기" : "등록하기"}
+            {isEditMode ? "수정하기" : "등록하기"}
           </SubmitButton>
         </BottomFixed>
       )}
@@ -350,29 +183,13 @@ export default function GroupPurchaseWritePage() {
   );
 }
 
+// Styles used by the main page component
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
-  //min-height: 100vh;
-  //background: #f8f8f8;
   box-sizing: border-box;
   padding: 70px 16px;
   padding-bottom: 100px;
-`;
-
-const ImageBox = styled.div`
-  width: 100%;
-  height: 100px;
-  //margin: 32px 0 16px 0;
-  background: #eee;
-  border-radius: 12px;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  color: #555;
-  font-size: 13px;
 `;
 
 const InputField = styled.input`
@@ -396,45 +213,20 @@ const TextArea = styled.textarea`
   resize: none;
 `;
 
-const CategoryRow = styled.div`
-  display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
-`;
-
-const CategoryButton = styled.button<{ selected: boolean }>`
-  padding: 8px 16px;
-  border-radius: 20px;
-  border: none;
-  font-size: 14px;
-  background-color: ${(props) => (props.selected ? "#007bff" : "#fff")};
-  color: ${(props) => (props.selected ? "#fff" : "#000")};
-`;
-
 const SectionTitle = styled.div`
   font-weight: 600;
   margin: 16px 0 8px;
-`;
 
-const DeadlineRow = styled.div`
-  display: flex;
-  gap: 8px;
-  margin-bottom: 8px;
-`;
-
-const Select = styled.select`
-  flex: 1;
-  padding: 10px;
-  border-radius: 6px;
-  font-size: 14px;
-  border: 1px solid #fff;
-  background: white;
-`;
-
-const WarningText = styled.div`
-  color: red;
-  font-size: 12px;
-  margin-bottom: 24px;
+  a {
+    color: #0a84ff;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 500;
+    cursor: pointer;
+    .underline {
+      text-decoration-line: underline;
+    }
+  }
 `;
 
 const BottomFixed = styled.div`
@@ -457,6 +249,7 @@ const SubmitButton = styled.button`
   border-radius: 8px;
   font-size: 16px;
   font-weight: bold;
+  cursor: pointer;
 `;
 
 const TempSaveButton = styled.button`
