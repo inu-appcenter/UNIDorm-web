@@ -1,5 +1,3 @@
-import { GetGroupPurchaseListParams } from "../types/grouporder.ts";
-
 export const colleges = [
   "사범대",
   "예체대",
@@ -62,17 +60,3 @@ export const rooms = Array.from({ length: 20 }, (_, i) => `${i + 1}호`);
 export const beds = ["A", "B", "C", "D"];
 
 export const complainStatus = ["대기", "담당자 배정", "처리 중", "처리 완료"];
-
-export const CATEGORY_LIST: GetGroupPurchaseListParams["type"][] = [
-  "전체",
-  "배달",
-  "식자재",
-  "생활용품",
-  "기타",
-];
-export const SORT_OPTIONS: GetGroupPurchaseListParams["sort"][] = [
-  "마감임박순",
-  "최신순",
-  "인기순",
-  "낮은가격순",
-];

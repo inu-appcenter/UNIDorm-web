@@ -60,6 +60,8 @@ export default function GroupPurchasePostPage() {
           getGroupPurchaseDetail(groupOrderId),
           getGroupPurchaseImages(groupOrderId),
         ]);
+        console.log(postData);
+        console.log(imageData);
 
         setPost(postData);
         setLiked(postData.checkLikeCurrentUser);
