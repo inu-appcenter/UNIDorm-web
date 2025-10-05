@@ -12,6 +12,7 @@ const LogoutPage = () => {
     // 로그아웃 처리
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
+    localStorage.removeItem("role");
     localStorage.removeItem("userInfo");
     localStorage.removeItem("roommate_alert_shown");
     localStorage.removeItem("fcmToken");
@@ -19,6 +20,7 @@ const LogoutPage = () => {
     const emptyTokenInfo: TokenInfo = {
       accessToken: "",
       refreshToken: "",
+      role: "",
     };
     setTokenInfo(emptyTokenInfo);
     const emptyUserInfo = {

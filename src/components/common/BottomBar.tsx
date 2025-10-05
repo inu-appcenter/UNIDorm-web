@@ -38,6 +38,10 @@ const Button = ({
   onClick,
   showTooltip = false,
   onTooltipClose,
+<<<<<<< Updated upstream
+=======
+  // badgeCount,
+>>>>>>> Stashed changes
 }: ButtonProps) => {
   const handleClick = () => {
     onClick();

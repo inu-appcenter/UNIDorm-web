@@ -13,6 +13,7 @@ const getTokenInfoFromStorage = (): TokenInfo => {
   return {
     accessToken: localStorage.getItem("accessToken") || "",
     refreshToken: localStorage.getItem("refreshToken") || "",
+    role: localStorage.getItem("role") || "",
   };
 };
 
@@ -30,7 +31,6 @@ const getUserInfoFromStorage = (): UserInfo => {
         hasTimeTableImage: false,
         roommateCheckList: false,
         id: 0,
-        isAdmin: false,
       };
 };
 
