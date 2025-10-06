@@ -12,7 +12,7 @@ import { useIsAdminRole } from "../../hooks/useIsAdminRole.ts";
 
 export default function TipListPage() {
   const navigate = useNavigate();
-  const isAdmin = useIsAdminRole();
+  const { isAdmin } = useIsAdminRole();
 
   const [tips, setTips] = useState<Tip[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);

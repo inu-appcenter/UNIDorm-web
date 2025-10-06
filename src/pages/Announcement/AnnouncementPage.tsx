@@ -12,7 +12,7 @@ import { useIsAdminRole } from "../../hooks/useIsAdminRole.ts";
 
 export default function AnnouncementPage() {
   const navigate = useNavigate();
-  const isAdmin = useIsAdminRole();
+  const { isAdmin } = useIsAdminRole();
 
   const [notices, setNotices] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);

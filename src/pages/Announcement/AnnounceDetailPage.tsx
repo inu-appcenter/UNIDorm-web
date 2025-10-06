@@ -32,7 +32,7 @@ export default function AnnounceDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   const navigate = useNavigate();
-  const isAdmin = useIsAdminRole();
+  const { isAdmin } = useIsAdminRole();
 
   const menuItems = [
     {

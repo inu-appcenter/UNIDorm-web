@@ -19,7 +19,7 @@ import EmptyMessage from "../../constants/EmptyMessage.tsx";
 import { useIsAdminRole } from "../../hooks/useIsAdminRole.ts";
 
 const ComplainDetailPage = () => {
-  const isAdmin = useIsAdminRole();
+  const { isAdmin } = useIsAdminRole();
 
   const { complainId } = useParams<{ complainId: string }>();
   const [complaint, setComplaint] = useState<ComplaintDetail | null>(null);

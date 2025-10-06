@@ -8,7 +8,7 @@ import { useIsAdminRole } from "../../hooks/useIsAdminRole.ts";
 const AdminMainPage: React.FC = () => {
   const navigate = useNavigate();
   const { tokenInfo, userInfo } = useUserStore();
-  const isAdmin = useIsAdminRole();
+  const { isAdmin } = useIsAdminRole();
 
   useEffect(() => {
     console.log(tokenInfo.role);
