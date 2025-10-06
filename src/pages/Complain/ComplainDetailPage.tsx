@@ -7,7 +7,6 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getComplaintDetail } from "../../apis/complain.ts";
 import { ComplaintDetail } from "../../types/complain.ts";
-import useUserStore from "../../stores/useUserStore.ts";
 import {
   assignComplaintOfficer,
   getAdminComplaintDetail,
@@ -15,11 +14,13 @@ import {
 } from "../../apis/complainAdmin.ts";
 import RoundSquareWhiteButton from "../../components/button/RoundSquareWhiteButton.tsx";
 import RoundSquareButton from "../../components/button/RoundSquareButton.tsx";
-// 🔽 필요한 컴포넌트를 import 합니다.
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../../constants/EmptyMessage.tsx";
+import { useIsAdminRole } from "../../hooks/useIsAdminRole.ts";
 
 const ComplainDetailPage = () => {
+  const isAdmin = useIsAdminRole();
+
   const { complainId } = useParams<{ complainId: string }>();
   const [complaint, setComplaint] = useState<ComplaintDetail | null>(null);
   const [selectedManager, setSelectedManager] = useState("");
@@ -28,8 +29,6 @@ const ComplainDetailPage = () => {
 
   // 🔽 로딩 상태를 관리할 state를 추가합니다.
   const [isLoading, setIsLoading] = useState(true);
-
-  const { userInfo } = useUserStore();
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
@@ -39,7 +38,7 @@ const ComplainDetailPage = () => {
       setIsLoading(true); // 데이터 로딩 시작
       try {
         let response;
-        if (userInfo.isAdmin) {
+        if (isAdmin) {
           response = await getAdminComplaintDetail(Number(complainId));
         } else {
           response = await getComplaintDetail(Number(complainId));
@@ -56,11 +55,11 @@ const ComplainDetailPage = () => {
     };
 
     fetchComplaint();
-  }, [complainId, userInfo.isAdmin, isNeedUpdate]);
+  }, [complainId, isNeedUpdate]);
 
   const handleStatus = async (status: string) => {
     try {
-      if (!userInfo.isAdmin || !complainId) {
+      if (!isAdmin || !complainId) {
         return;
       }
       if (status === "담당자 배정") {
@@ -195,7 +194,7 @@ const ComplainDetailPage = () => {
         </ModalBackGround>
       )}
 
-      {complaint && userInfo.isAdmin && (
+      {complaint && isAdmin && (
         <WriteButton
           onClick={() =>
             navigate(`/admin/complain/answer/${complainId}`, {
