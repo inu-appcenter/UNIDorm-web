@@ -1,26 +1,23 @@
-// NoticeCard.tsx
 import React from "react";
 import styled from "styled-components";
 
-interface NoticeCardProps {
+interface ComplainCardProps {
   miniView?: boolean;
   date: string;
   type: string;
   dorm: string;
-  studentNumber: string;
-  phoneNumber?: string;
+  location: string;
   title: string;
   content: string;
   images?: string[];
 }
 
-const ComplainCard: React.FC<NoticeCardProps> = ({
+const ComplainCard: React.FC<ComplainCardProps> = ({
   miniView,
   date,
   type,
   dorm,
-  studentNumber,
-  phoneNumber,
+  location,
   title,
   content,
   images,
@@ -44,13 +41,8 @@ const ComplainCard: React.FC<NoticeCardProps> = ({
             <strong>기숙사</strong> {dorm}
           </div>
           <div>
-            <strong>사생번호</strong> {studentNumber}
+            <strong>동 / 호수 / 침대번호</strong> {location}
           </div>
-          {phoneNumber && (
-            <div>
-              <strong>연락처</strong> {phoneNumber}
-            </div>
-          )}
         </Info>
       )}
 

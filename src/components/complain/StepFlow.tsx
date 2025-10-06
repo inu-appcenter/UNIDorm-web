@@ -4,7 +4,7 @@ import styled, { css } from "styled-components";
 
 interface StepFlowProps {
   activeIndex: number; // 0: 대기중, 1: 담당자 배정, 2: 처리중, 3: 처리완료
-  assignee?: string; // 담당자가 정해졌을 경우 이름
+  assignee?: string | null; // 담당자가 정해졌을 경우 이름
   handleStatus?: (arg0: string) => void;
 }
 
@@ -13,7 +13,7 @@ interface StepItemProps {
   active?: boolean;
   completed?: boolean;
   icon: React.ReactNode;
-  extraLabel?: string;
+  extraLabel?: string | null;
   handleStatus?: (arg0: string) => void;
 }
 
