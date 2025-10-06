@@ -6,13 +6,13 @@ import TopRightDropdownMenu from "../common/TopRightDropdownMenu.tsx";
 import { TipComment } from "../../types/tips.ts";
 import { ReplyProps } from "../../types/comment.ts";
 import { GroupOrderComment } from "../../types/grouporder.ts";
+import useUserStore from "../../stores/useUserStore.ts";
 
 interface CommentSectionProps {
   CommentDtoList: TipComment[] | GroupOrderComment[];
-  isLoggedIn: boolean;
   setisneedupdate: (v: boolean) => void;
   handleReplySubmit: (props: ReplyProps) => void;
-  handleDeleteComment: (commentId: number) => Promise<void>; // 추가
+  handleDeleteComment: (commentId: number) => Promise<void>;
 }
 
 // 타입 가드
@@ -41,14 +41,15 @@ const getCommentName = (comment: TipComment | GroupOrderComment) => {
   return isTipComment(comment) ? comment.name : "익명";
 };
 
-// 대댓글 가져오기 (TipComment만 대댓글 가능)
+// 대댓글 가져오기
 const getChildComments = (comment: TipComment | GroupOrderComment) => {
-  return isTipComment(comment) ? comment.childTipCommentList : undefined;
+  return isTipComment(comment)
+    ? comment.childTipCommentList
+    : comment.childGroupOrderCommentList;
 };
 
 export default function CommentSection({
   CommentDtoList,
-  isLoggedIn,
   setisneedupdate,
   handleReplySubmit,
   handleDeleteComment,
@@ -57,6 +58,8 @@ export default function CommentSection({
     [key: number]: boolean;
   }>({});
   const [replyInputs, setReplyInputs] = useState<{ [key: number]: string }>({});
+
+  const { userInfo } = useUserStore();
 
   const menuItems = [
     {
@@ -74,11 +77,7 @@ export default function CommentSection({
       onClick: async (comment: TipComment | GroupOrderComment) => {
         if (!window.confirm("정말 삭제할까요?")) return;
         try {
-          if (isTipComment(comment)) {
-            await handleDeleteComment(comment.tipCommentId); // prop으로 받은 삭제 함수 호출
-          } else {
-            await handleDeleteComment(comment.groupOrderCommentId); // prop으로 받은 삭제 함수 호출
-          }
+          await handleDeleteComment(getCommentId(comment));
           setisneedupdate(true);
           alert("삭제되었습니다.");
         } catch (err) {
@@ -88,58 +87,102 @@ export default function CommentSection({
     },
   ];
 
-  const renderReplies = (replies?: TipComment[]) => {
+  // 대댓글 렌더링 (TipComment | GroupOrderComment 모두 가능)
+  const renderReplies = (replies?: (TipComment | GroupOrderComment)[]) => {
     if (!replies || replies.length === 0) return null;
 
     return replies
       .filter((r) => !r.isDeleted)
-      .map((reply) => (
-        <Reply key={reply.tipCommentId}>
-          <WriterLine>
-            <UserInfo>
-              {reply.writerImageFile ? (
-                <img
-                  src={reply.writerImageFile}
-                  alt="프사"
-                  style={{
-                    width: 20,
-                    height: 20,
-                    borderRadius: "50%",
-                    objectFit: "cover",
-                  }}
-                />
-              ) : (
-                <FaUserCircle size={20} />
-              )}
-              <Nickname>{reply.name}</Nickname>
-            </UserInfo>
+      .map((reply) => {
+        const replyId = getCommentId(reply);
+        const childReplies = getChildComments(reply);
 
-            {isLoggedIn && (
-              <TopRightDropdownMenu
-                size={18}
-                items={menuItems.map((item) => ({
-                  ...item,
-                  onClick: () => item.onClick(reply),
-                }))}
-              />
-            )}
-          </WriterLine>
-          <ReplyContent>
-            <CommentBody>
-              <CommentText>{reply.reply}</CommentText>
-              <DateText>
-                {reply.createdDate
-                  ? new Date(reply.createdDate).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
+        return (
+          <Reply key={replyId}>
+            <WriterLine>
+              <UserInfo>
+                {getCommentImage(reply) ? (
+                  <img
+                    src={getCommentImage(reply)}
+                    alt="프사"
+                    style={{
+                      width: 20,
+                      height: 20,
+                      borderRadius: "50%",
+                      objectFit: "cover",
+                    }}
+                  />
+                ) : (
+                  <FaUserCircle size={20} />
+                )}
+                <Nickname>{getCommentName(reply)}</Nickname>
+              </UserInfo>
+
+              {userInfo.id === reply.userId && (
+                <TopRightDropdownMenu
+                  size={18}
+                  items={menuItems.slice(1, 2).map((item) => ({
+                    ...item,
+                    onClick: () => item.onClick(reply),
+                  }))}
+                />
+              )}
+            </WriterLine>
+
+            <ReplyContent>
+              <CommentBody>
+                <CommentText>{reply.reply}</CommentText>
+                <DateText>
+                  {"createdDate" in reply && reply.createdDate
+                    ? new Date(reply.createdDate).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })
+                    : "방금"}
+                </DateText>
+              </CommentBody>
+            </ReplyContent>
+
+            {replyInputOpen[replyId] && (
+              <ReplyInputArea>
+                <ReplyInput
+                  placeholder="답글 입력"
+                  value={replyInputs[replyId] || ""}
+                  onChange={(e) =>
+                    setReplyInputs((prev) => ({
+                      ...prev,
+                      [replyId]: e.target.value,
+                    }))
+                  }
+                  onKeyDown={(e) =>
+                    e.key === "Enter" &&
+                    handleReplySubmit({
+                      parentCommentId: replyId,
+                      replyInputs,
+                      setReplyInputs,
+                      setReplyInputOpen,
                     })
-                  : "방금"}
-              </DateText>
-            </CommentBody>
-          </ReplyContent>
-          {renderReplies(reply.childTipCommentList)}
-        </Reply>
-      ));
+                  }
+                />
+                <ReplySendButton
+                  onClick={() =>
+                    handleReplySubmit({
+                      parentCommentId: replyId,
+                      replyInputs,
+                      setReplyInputs,
+                      setReplyInputOpen,
+                    })
+                  }
+                >
+                  <BsSend size={16} />
+                </ReplySendButton>
+              </ReplyInputArea>
+            )}
+
+            {renderReplies(childReplies)}
+          </Reply>
+        );
+      });
   };
 
   return (
@@ -172,7 +215,7 @@ export default function CommentSection({
                   <Nickname>{getCommentName(comment)}</Nickname>
                 </UserInfo>
 
-                {isLoggedIn && (
+                {userInfo.id === comment.userId && (
                   <TopRightDropdownMenu
                     size={18}
                     items={menuItems.map((item) => ({
@@ -187,7 +230,7 @@ export default function CommentSection({
                 <CommentBody>
                   <CommentText>{comment.reply}</CommentText>
                   <DateText>
-                    {isTipComment(comment) && comment.createdDate
+                    {"createdDate" in comment && comment.createdDate
                       ? new Date(comment.createdDate).toLocaleTimeString([], {
                           hour: "2-digit",
                           minute: "2-digit",

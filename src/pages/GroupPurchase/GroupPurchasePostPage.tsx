@@ -298,7 +298,6 @@ export default function GroupPurchasePostPage() {
 
             <CommentSection
               CommentDtoList={post.groupOrderCommentDtoList}
-              isLoggedIn={isLoggedIn}
               setisneedupdate={setisneedupdate}
               handleReplySubmit={handleReplySubmit}
               handleDeleteComment={deleteGroupOrderComment}
