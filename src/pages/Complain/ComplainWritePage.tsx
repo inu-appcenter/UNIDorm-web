@@ -9,11 +9,12 @@ import {
   beds,
   complainDormitory,
   ComplainType,
-  dormitoryBlocks, // '동' 데이터를 위해 다시 import
+  dormitoryBlocks,
   floors,
   rooms,
 } from "../../constants/constants.ts";
 import { createComplaint, updateComplaint } from "../../apis/complain.ts";
+// 수정된 DTO 타입을 import 합니다.
 import { ComplaintCreateDto } from "../../types/complain.ts";
 import FormField from "../../components/complain/FormField.tsx";
 import { Dropdown, DropdownContainer, Input } from "../../styles/complain.ts";
@@ -27,6 +28,7 @@ export default function ComplainWritePage() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [images, setImages] = useState<File[]>([]);
+  const [privacyAgreed, setPrivacyAgreed] = useState(false);
 
   // 선택 값 관련 상태
   const [selectedComplainTypeIndex, setSelectedComplainTypeIndex] = useState<
@@ -35,7 +37,6 @@ export default function ComplainWritePage() {
   const [selectedDormitoryIndex, setSelectedDormitoryIndex] = useState<
     number | null
   >(null);
-  // '동' 선택 상태 복원
   const [selectedDormitoryBlockIndex, setSelectedDormitoryBlockIndex] =
     useState<number | null>(null);
   const [selectedFloor, setSelectedFloor] = useState("");
@@ -44,36 +45,29 @@ export default function ComplainWritePage() {
 
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  // 페이지 진입 시 스크롤 상단으로 이동
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  // 수정 모드 로직 (기숙사, '동' 파싱 로직 복원)
   useEffect(() => {
     if (tip) {
       setIsEditMode(true);
       setTitle(tip.title);
       setContent(tip.content);
+      setPrivacyAgreed(tip.privacyAgreed || false);
 
       const typeIndex = ComplainType.indexOf(tip.type);
       if (typeIndex !== -1) setSelectedComplainTypeIndex(typeIndex);
 
-      // tip.dormType ("제1기숙사 A동") 에서 기숙사와 동을 분리하여 인덱스 설정
-      const dormMatch = complainDormitory.find((d) => tip.dormType.includes(d));
-      if (dormMatch) {
-        const dormIndex = complainDormitory.indexOf(dormMatch);
-        setSelectedDormitoryIndex(dormIndex);
-      }
+      // tip.dormType과 tip.building을 각각 찾아 인덱스 설정
+      const dormIndex = complainDormitory.indexOf(tip.dormType);
+      if (dormIndex !== -1) setSelectedDormitoryIndex(dormIndex);
 
-      const blockMatch = dormitoryBlocks.find((b) => tip.dormType.includes(b));
-      if (blockMatch) {
-        const blockIndex = dormitoryBlocks.indexOf(blockMatch);
-        setSelectedDormitoryBlockIndex(blockIndex);
-      }
+      const blockIndex = dormitoryBlocks.indexOf(tip.building);
+      if (blockIndex !== -1) setSelectedDormitoryBlockIndex(blockIndex);
 
       setSelectedFloor(tip.floor || "");
-      setSelectedRoom(tip.roomNumber || "");
+      setSelectedRoom(tip.roomNumber || ""); // roomNumber가 "301호"와 같은 형식이므로 그대로 사용
       setSelectedBed(tip.bedNumber || "");
     }
   }, [tip]);
@@ -91,21 +85,17 @@ export default function ComplainWritePage() {
   };
 
   const handleSubmit = async () => {
-    // 필수 값 검사 ('동' 선택 검사 복원)
-    if (selectedComplainTypeIndex === null) {
-      alert("민원 유형을 선택해주세요.");
-      return;
-    }
-    if (selectedDormitoryIndex === null) {
-      alert("기숙사를 선택해주세요.");
-      return;
-    }
-    if (selectedDormitoryBlockIndex === null) {
-      alert("동을 선택해주세요.");
+    // 필수 값 검사 로직 업데이트
+    if (
+      selectedComplainTypeIndex === null ||
+      selectedDormitoryIndex === null ||
+      selectedDormitoryBlockIndex === null
+    ) {
+      alert("유형, 기숙사, 동을 모두 선택해주세요.");
       return;
     }
     if (!selectedFloor || !selectedRoom || !selectedBed) {
-      alert("층/호수/침대번호를 모두 선택해주세요.");
+      alert("층, 호수, 침대를 모두 선택해주세요.");
       return;
     }
     if (!title.trim()) {
@@ -116,17 +106,22 @@ export default function ComplainWritePage() {
       alert("내용을 입력해주세요.");
       return;
     }
+    if (!privacyAgreed) {
+      alert("개인정보 수집 및 이용에 동의해주세요.");
+      return;
+    }
 
     try {
-      // DTO 구성 시 기숙사와 '동' 이름을 조합
-      const fullDormName = `${complainDormitory[selectedDormitoryIndex]} ${dormitoryBlocks[selectedDormitoryBlockIndex]}`;
-
+      // 수정된 DTO 구조에 맞게 데이터 구성
       const dto: ComplaintCreateDto = {
         title,
         content,
+        privacyAgreed,
         type: ComplainType[selectedComplainTypeIndex],
-        dormType: fullDormName, // 예: "제1기숙사 A동"
-        roomNumber: `${selectedFloor}${selectedRoom}`,
+        dormType: complainDormitory[selectedDormitoryIndex],
+        building: dormitoryBlocks[selectedDormitoryBlockIndex],
+        floor: selectedFloor,
+        roomNumber: selectedRoom,
         bedNumber: selectedBed,
       };
 
@@ -176,7 +171,6 @@ export default function ComplainWritePage() {
           />
         </FormField>
 
-        {/* '동' 선택 UI 복원 (필터링 로직 없이 항상 전체 목록 표시) */}
         <FormField label="동" required>
           <SelectableChipGroup
             Groups={dormitoryBlocks}
@@ -185,7 +179,7 @@ export default function ComplainWritePage() {
           />
         </FormField>
 
-        <FormField label="층/호수" required>
+        <FormField label="층/호수/침대" required>
           <DropdownContainer>
             <Dropdown
               value={selectedFloor}
@@ -283,6 +277,18 @@ export default function ComplainWritePage() {
             onChange={handleImageChange}
           />
         </FormField>
+
+        {/* 개인정보 동의 UI 추가 */}
+        <PrivacyAgreementContainer>
+          <CheckboxLabel>
+            <input
+              type="checkbox"
+              checked={privacyAgreed}
+              onChange={(e) => setPrivacyAgreed(e.target.checked)}
+            />
+            <span>개인정보 수집 및 이용에 동의합니다. (필수)</span>
+          </CheckboxLabel>
+        </PrivacyAgreementContainer>
       </Content>
 
       <ButtonWrapper>
@@ -295,22 +301,21 @@ export default function ComplainWritePage() {
   );
 }
 
-// --- Styled Components (이하 동일) ---
+// --- Styled Components ---
 
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  min-height: 100vh;
   background: white;
 `;
 
 const Content = styled.div`
   flex: 1;
-  padding: 80px 20px 120px; // 헤더, 버튼 영역 고려하여 패딩 조정
+  padding: 80px 20px 120px;
   display: flex;
   flex-direction: column;
-  gap: 24px; // 폼 필드 간 간격 조정
-  //overflow-y: auto;
+  gap: 24px;
 `;
 
 const Textarea = styled.textarea`
@@ -336,7 +341,9 @@ const ButtonWrapper = styled.div`
   position: fixed;
   bottom: 0;
   left: 0;
-  width: 100%;
+  right: 0;
+  max-width: 768px; /* App 레이아웃과 동일한 너비 적용 */
+  margin: 0 auto;
   padding: 16px 20px 24px;
   box-sizing: border-box;
   background: white;
@@ -361,7 +368,7 @@ const ImageUploadButton = styled.button`
   border: 1px solid #ddd;
   background-color: #f8f8f8;
   cursor: pointer;
-  flex-shrink: 0; // 크기 고정
+  flex-shrink: 0;
 
   span {
     font-size: 13px;
@@ -375,9 +382,8 @@ const ImagePreviewWrapper = styled.div`
   gap: 12px;
   overflow-x: auto;
   flex: 1;
-  padding-bottom: 8px; // 스크롤바 공간 확보
+  padding-bottom: 8px;
 
-  /* 스크롤바 스타일 */
   &::-webkit-scrollbar {
     height: 4px;
   }
@@ -414,4 +420,23 @@ const DeleteButton = styled.button`
   align-items: center;
   justify-content: center;
   cursor: pointer;
+`;
+
+// 개인정보 동의 UI를 위한 스타일 추가
+const PrivacyAgreementContainer = styled.div`
+  padding: 10px 0;
+  border-top: 1px solid #f0f0f0;
+  margin-top: 8px;
+`;
+
+const CheckboxLabel = styled.label`
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 14px;
+  color: #555;
+
+  input[type="checkbox"] {
+    margin-right: 8px;
+  }
 `;

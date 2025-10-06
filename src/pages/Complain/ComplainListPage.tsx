@@ -11,7 +11,6 @@ import { useEffect, useState } from "react";
 import { ComplaintDetail, MyComplaint } from "../../types/complain.ts";
 import { getComplaintDetail, getMyComplaints } from "../../apis/complain.ts";
 import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
-// 🔽 로딩 스피너 컴포넌트를 import 합니다.
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 
 const ComplainListPage = () => {
@@ -84,14 +83,13 @@ const ComplainListPage = () => {
             <Wrapper1
               onClick={() => navigate(`/complain/${recentComplain.id}`)}
             >
-              <StepFlow activeIndex={1} assignee={"배현준"} />
+              <StepFlow activeIndex={1} />
               <ComplainCard
                 miniView={true}
                 date={recentComplain.createdDate}
                 type={recentComplain.type}
                 dorm={recentComplain.dormType}
-                studentNumber={recentComplain.caseNumber}
-                phoneNumber={recentComplain.contact}
+                location={`${recentComplain.building} ${recentComplain.roomNumber} ${recentComplain.bedNumber}`}
                 title={recentComplain.title}
                 content={recentComplain.content}
               />
@@ -133,7 +131,7 @@ const ComplainListPage = () => {
 export default ComplainListPage;
 
 const ComplainListPageWrapper = styled.div`
-  padding: 90px 16px 40px 16px;
+  padding: 90px 16px;
   display: flex;
   flex-direction: column;
   gap: 32px;
