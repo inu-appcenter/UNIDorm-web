@@ -11,9 +11,11 @@ import { getMyRoommateInfo } from "../apis/roommate.ts";
 import { MyRoommateInfoResponse } from "../types/roommates.ts";
 import TitleContentArea from "../components/common/TitleContentArea.tsx";
 import BottomBar from "../components/common/BottomBar.tsx";
+import { useIsAdminRole } from "../hooks/useIsAdminRole.ts";
 
 const MyPage = () => {
   const { tokenInfo } = useUserStore();
+  const { isAdmin } = useIsAdminRole();
   const isLoggedIn = Boolean(tokenInfo?.accessToken ?? "");
   const navigate = useNavigate();
   const [roommateInfo, setRoommateInfo] =
@@ -99,19 +101,24 @@ const MyPage = () => {
         <Divider />
 
         <MenuGroup title={menuGroups[4].title} menus={menuGroups[4].menus} />
-        <Divider />
 
-        <MenuGroup
-          title={"관리자 전용"}
-          menus={[
-            {
-              label: "관리자 페이지",
-              onClick: () => {
-                navigate("/admin");
-              },
-            },
-          ]}
-        />
+        {isAdmin && (
+          <>
+            <Divider />
+
+            <MenuGroup
+              title={"관리자 전용"}
+              menus={[
+                {
+                  label: "관리자 페이지",
+                  onClick: () => {
+                    navigate("/admin");
+                  },
+                },
+              ]}
+            />
+          </>
+        )}
       </MenuGroupsWrapper>
       <BottomBar />
     </MyPageWrapper>

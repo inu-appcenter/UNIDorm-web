@@ -22,7 +22,7 @@ export default function TipDetailPage() {
   const { boardId } = useParams<{ boardId: string }>();
   const [tip, setTip] = useState<TipDetail | null>(null);
   const navigate = useNavigate();
-  const isAdmin = useIsAdminRole();
+  const { isAdmin } = useIsAdminRole();
 
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
