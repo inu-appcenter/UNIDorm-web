@@ -2,19 +2,17 @@ import styled from "styled-components";
 import Header from "../../components/common/Header.tsx";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import { useNavigate } from "react-router-dom";
-import useUserStore from "../../stores/useUserStore.ts";
 import { BsEye } from "react-icons/bs";
 import { useEffect, useState } from "react";
 import { Announcement } from "../../types/announcements.ts";
 import { getAnnouncements } from "../../apis/announcements.ts";
-// 🔽 필요한 컴포넌트들을 import 합니다.
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../../constants/EmptyMessage.tsx";
+import { useIsAdminRole } from "../../hooks/useIsAdminRole.ts";
 
 export default function AnnouncementPage() {
   const navigate = useNavigate();
-  const { userInfo } = useUserStore();
-  const isAdmin = userInfo.isAdmin;
+  const isAdmin = useIsAdminRole();
 
   const [notices, setNotices] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
