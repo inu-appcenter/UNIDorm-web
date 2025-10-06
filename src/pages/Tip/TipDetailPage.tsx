@@ -7,8 +7,6 @@ import tokenInstance from "../../apis/tokenInstance";
 import { useSwipeable } from "react-swipeable";
 import axiosInstance from "../../apis/axiosInstance.ts";
 import useUserStore from "../../stores/useUserStore.ts";
-import 궁금해하는횃불이 from "../../assets/roommate/궁금해하는횃불이.png";
-import RoundSquareWhiteButton from "../../components/button/RoundSquareWhiteButton.tsx";
 import UserInfo from "../../components/common/UserInfo.tsx";
 import CommentSection from "../../components/comment/CommentSection.tsx";
 import CommentInputBox from "../../components/comment/CommentInputBox.tsx";
@@ -18,6 +16,7 @@ import { TipDetail } from "../../types/tips.ts";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../../constants/EmptyMessage.tsx";
 import { useIsAdminRole } from "../../hooks/useIsAdminRole.ts";
+import CommonBottomModal from "../../components/modal/CommonBottomModal.tsx";
 
 export default function TipDetailPage() {
   const { boardId } = useParams<{ boardId: string }>();
@@ -248,27 +247,20 @@ export default function TipDetailPage() {
         setCommentInput={setCommentInput}
         handleCommentSubmit={handleCommentSubmit}
       />
-      {showInfoModal && previewUrl && (
-        <ModalBackGround>
-          <Modal>
-            <ModalHeader>
-              <img src={궁금해하는횃불이} className="wonder-character" />
-              <h2>이미지 자세히 보기</h2>
-            </ModalHeader>
-            <img
-              src={previewUrl}
-              style={{ width: "100%", objectFit: "contain" }}
-              alt="확대 이미지"
-            />
-            <ButtonGroupWrapper>
-              <RoundSquareWhiteButton
-                btnName={"닫기"}
-                onClick={() => setShowInfoModal(false)}
-              />
-            </ButtonGroupWrapper>
-          </Modal>
-        </ModalBackGround>
-      )}
+
+      <CommonBottomModal
+        id={"이미지보기"}
+        isOpen={showInfoModal}
+        setIsOpen={setShowInfoModal}
+      >
+        <div style={{ textAlign: "center" }}>
+          <img
+            src={previewUrl || undefined}
+            style={{ maxWidth: "100%" }}
+            alt="미리보기"
+          />
+        </div>
+      </CommonBottomModal>
     </Wrapper>
   );
 }
@@ -350,82 +342,4 @@ const Dot = styled.span<{ $active: boolean }>`
   border-radius: 50%;
   background: ${({ $active }) => ($active ? "#222" : "#ddd")};
   transition: background 0.2s;
-`;
-
-const ModalBackGround = styled.div`
-  position: fixed;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: rgba(0, 0, 0, 0.5);
-  inset: 0 0 0 0;
-  z-index: 9999;
-`;
-
-const Modal = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  box-sizing: border-box;
-  padding: 32px 20px;
-  border-radius: 16px;
-  width: 90%;
-  max-width: 420px;
-  max-height: 80%;
-  background: white;
-  color: #333366;
-  font-weight: 500;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  animation: fadeIn 0.3s ease-out;
-  overflow: hidden;
-  position: relative;
-
-  .wonder-character {
-    position: absolute;
-    top: 10px;
-    right: 0;
-    width: 100px;
-    height: 100px;
-    z-index: 1000;
-  }
-
-  .content {
-    width: 100%;
-    flex: 1;
-    overflow-y: auto;
-  }
-
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-`;
-
-const ModalHeader = styled.div`
-  flex-shrink: 0;
-  margin-bottom: 12px;
-  justify-content: space-between;
-  padding-right: 50px;
-  overflow-wrap: break-word;
-  word-break: keep-all;
-
-  h2 {
-    margin: 0;
-    box-sizing: border-box;
-  }
-  span {
-    font-size: 14px;
-  }
-`;
-
-const ButtonGroupWrapper = styled.div`
-  display: flex;
-  flex-direction: row;
-  gap: 6px;
 `;
