@@ -23,7 +23,7 @@ export const getGroupPurchaseList = async (
 
 // 특정 공동구매 게시글 상세 조회
 export const getGroupPurchaseDetail = async (groupOrderId: number) => {
-  const response = await axiosInstance.get<GroupOrderDetail>(
+  const response = await tokenInstance.get<GroupOrderDetail>(
     `/group-orders/${groupOrderId}`,
   );
   return response.data;
