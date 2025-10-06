@@ -27,7 +27,6 @@ const ComplainDetailPage = () => {
   const [isNeedUpdate, setIsNeedUpdate] = useState(false);
   const navigate = useNavigate();
 
-  // 🔽 로딩 상태를 관리할 state를 추가합니다.
   const [isLoading, setIsLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
 
@@ -35,7 +34,7 @@ const ComplainDetailPage = () => {
     const fetchComplaint = async () => {
       if (!complainId) return;
 
-      setIsLoading(true); // 데이터 로딩 시작
+      setIsLoading(true);
       try {
         let response;
         if (isAdmin) {
@@ -48,9 +47,9 @@ const ComplainDetailPage = () => {
         setComplaint(response.data);
       } catch (error) {
         console.error("민원 상세 불러오기 실패:", error);
-        setComplaint(null); // 에러 발생 시 데이터를 null로 설정
+        setComplaint(null);
       } finally {
-        setIsLoading(false); // 데이터 로딩 완료
+        setIsLoading(false);
       }
     };
 
@@ -99,7 +98,6 @@ const ComplainDetailPage = () => {
   return (
     <ComplainListPageWrapper>
       <Header title={"민원 상세"} hasBack={true} />
-      {/* 🔽 로딩 상태에 따라 스피너, 상세 내용, 빈 메시지를 조건부 렌더링합니다. */}
       {isLoading ? (
         <LoadingSpinner message="민원 상세 정보를 불러오는 중..." />
       ) : complaint ? (
@@ -120,16 +118,17 @@ const ComplainDetailPage = () => {
             handleStatus={handleStatus}
           />
           <ComplainCardsContainer>
+            {/* ▼▼▼ 이 부분이 수정되었습니다 ▼▼▼ */}
             <ComplainCard
               date={complaint.createdDate}
               type={complaint.type}
               dorm={complaint.dormType}
-              studentNumber={complaint.caseNumber}
-              phoneNumber={complaint.contact}
+              location={`${complaint.building} ${complaint.roomNumber} ${complaint.bedNumber}`}
               title={complaint.title}
               content={complaint.content}
               images={complaint.images}
             />
+            {/* ▲▲▲ 이 부분이 수정되었습니다 ▲▲▲ */}
             {complaint.reply && (
               <ComplainAnswerCard
                 date={complaint.reply.createdDate}

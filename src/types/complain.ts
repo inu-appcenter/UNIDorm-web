@@ -5,12 +5,14 @@ export interface ComplaintDetail {
   content: string;
   type: string;
   dormType: string;
-  caseNumber: string;
-  contact: string;
   status: string;
+  building: string; // 추가
+  floor: string; // 추가
+  roomNumber: string; // 추가
+  bedNumber: string; // 추가
   createdDate: string;
-  officer: string;
-  reply?: {
+  officer: string | null; // null 타입 추가
+  reply: {
     replyTitle: string;
     replyContent: string;
     responderName: string;
@@ -21,7 +23,7 @@ export interface ComplaintDetail {
       uploadDate: string;
     }[];
     createdDate: string;
-  };
+  } | null; // null 타입 추가
   images: string[];
 }
 
@@ -36,12 +38,15 @@ export interface MyComplaint {
 
 // 민원 등록 요청 DTO
 export interface ComplaintCreateDto {
+  dormType: string;
+  privacyAgreed: boolean;
+  roomNumber: string;
+  bedNumber: string;
+  floor: string;
+  building: string;
   title: string;
   content: string;
   type: string;
-  dormType: string;
-  roomNumber: string; // 이 부분을 추가
-  bedNumber: string;
 }
 
 // 민원 등록 응답 타입
@@ -52,7 +57,6 @@ export interface ComplaintResponse {
   type: string;
   dormType: string;
   caseNumber: string;
-  contact: string;
   status: string;
   createdDate: string;
 }
@@ -98,7 +102,6 @@ export interface ComplaintResponse {
   type: string;
   dormType: string;
   caseNumber: string;
-  contact: string;
   status: string;
   createdDate: string;
 }
