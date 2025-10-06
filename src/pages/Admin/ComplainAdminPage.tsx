@@ -62,11 +62,7 @@ const ComplainAdminPage = () => {
 
   return (
     <ComplainListPageWrapper>
-      <Header
-        title={"생활원 민원 관리자 페이지"}
-        hasBack={true}
-        backPath={"/admin"}
-      />
+      <Header title={"생활원 민원 관리자 페이지"} hasBack={true} />
 
       {/* 민원 목록 */}
       <TitleContentArea

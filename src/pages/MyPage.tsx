@@ -99,6 +99,19 @@ const MyPage = () => {
         <Divider />
 
         <MenuGroup title={menuGroups[4].title} menus={menuGroups[4].menus} />
+        <Divider />
+
+        <MenuGroup
+          title={"관리자 전용"}
+          menus={[
+            {
+              label: "관리자 페이지",
+              onClick: () => {
+                navigate("/admin");
+              },
+            },
+          ]}
+        />
       </MenuGroupsWrapper>
       <BottomBar />
     </MyPageWrapper>
