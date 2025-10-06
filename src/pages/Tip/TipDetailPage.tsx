@@ -15,27 +15,26 @@ import CommentInputBox from "../../components/comment/CommentInputBox.tsx";
 import { ReplyProps } from "../../types/comment.ts";
 import { deleteTipComment } from "../../apis/tips.ts";
 import { TipDetail } from "../../types/tips.ts";
-// 🔽 필요한 컴포넌트를 import 합니다.
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../../constants/EmptyMessage.tsx";
+import { useIsAdminRole } from "../../hooks/useIsAdminRole.ts";
 
 export default function TipDetailPage() {
   const { boardId } = useParams<{ boardId: string }>();
   const [tip, setTip] = useState<TipDetail | null>(null);
   const navigate = useNavigate();
+  const isAdmin = useIsAdminRole();
 
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [commentInput, setCommentInput] = useState("");
-  const { userInfo, tokenInfo } = useUserStore();
+  const { tokenInfo } = useUserStore();
   const [images, setImages] = useState<string[]>([]);
   const isLoggedIn = Boolean(tokenInfo.accessToken);
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
-  const [ismypost, setismypost] = useState(false);
   const [isneedupdate, setisneedupdate] = useState(false);
 
-  // 🔽 로딩 상태를 관리할 state를 추가합니다.
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -55,6 +54,8 @@ export default function TipDetailPage() {
           axiosInstance.get(`/tips/${boardId}/image`),
         ]);
 
+        console.log("tipResponse", tipResponse);
+
         // 팁 상세 정보 설정
         setTip(tipResponse.data);
         setLikeCount(tipResponse.data.tipLikeCount);
@@ -73,14 +74,6 @@ export default function TipDetailPage() {
 
     fetchAllData();
   }, [boardId, isneedupdate]);
-
-  useEffect(() => {
-    if (tip && userInfo?.name && tip.name === userInfo.name) {
-      setismypost(true);
-    } else {
-      setismypost(false);
-    }
-  }, [tip, userInfo]);
 
   const handleDelete = async () => {
     if (!boardId) return;
@@ -173,7 +166,7 @@ export default function TipDetailPage() {
       <Header
         title="기숙사 꿀팁"
         hasBack={true}
-        menuItems={ismypost ? menuItems : undefined}
+        menuItems={isAdmin ? menuItems : undefined}
       />
       <ScrollArea>
         <Content>

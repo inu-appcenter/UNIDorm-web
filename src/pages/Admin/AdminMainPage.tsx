@@ -43,6 +43,11 @@ const AdminMainPage: React.FC = () => {
       path: "/announcements",
       description: "생활원 공지사항을 관리할 수 있습니다.",
     },
+    {
+      label: "TIP 관리",
+      path: "/tips",
+      description: "기숙사 꿀팁을 관리할 수 있습니다.",
+    },
 
     // {
     //   label: "FCM 토큰",
@@ -53,7 +58,7 @@ const AdminMainPage: React.FC = () => {
 
   return (
     <Wrapper>
-      <Header title={"관리자 페이지"} hasBack={false} menuItems={menuItems} />
+      <Header title={"관리자 페이지"} hasBack={true} menuItems={menuItems} />
       <Title>관리자 기능 선택</Title>
       <MenuGrid>
         {adminPages.map((page) => (

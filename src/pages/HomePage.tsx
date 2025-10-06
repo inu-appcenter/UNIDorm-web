@@ -235,9 +235,7 @@ export default function HomePage() {
 
         <TitleContentArea
           title="오늘의 Best 꿀팁"
-          description={
-            "기숙사에 사는 UNI들이 공유하는 다양한 기숙사 꿀팁을 찾아보세요!"
-          }
+          description={"다양한 기숙사 꿀팁을 알아보세요!"}
           link={"/tips"}
         >
           {isTipsLoading ? (

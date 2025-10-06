@@ -66,6 +66,7 @@ export default function AnnounceDetailPage() {
           getAnnouncementDetail(Number(boardId)),
           getAnnouncementFiles(Number(boardId)),
         ]);
+        console.log(detailResponse);
 
         setAnnounce(detailResponse.data);
 

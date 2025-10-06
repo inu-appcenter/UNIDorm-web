@@ -62,11 +62,11 @@ function App() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (tokenInfo.role === "USER_ADMIN") {
-      console.log("admin모드로 이동합니다");
-      navigate("/admin");
-      return;
-    }
+    // if (tokenInfo.role === "USER_ADMIN") {
+    //   console.log("admin모드로 이동합니다");
+    //   navigate("/admin");
+    //   return;
+    // }
     const initializeUser = async () => {
       try {
         const response = await getMemberInfo();
