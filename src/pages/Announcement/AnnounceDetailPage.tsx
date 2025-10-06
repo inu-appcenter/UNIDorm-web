@@ -11,15 +11,14 @@ import {
   AnnouncementDetail,
   AnnouncementFile,
 } from "../../types/announcements.ts";
-import useUserStore from "../../stores/useUserStore.ts";
 import AnnounceAttachment from "../../components/announce/AnnounceAttachment.tsx";
 import GrayDivider from "../../components/common/GrayDivider.tsx";
 import { useSwipeable } from "react-swipeable";
 import RoundSquareWhiteButton from "../../components/button/RoundSquareWhiteButton.tsx";
 import 궁금해하는횃불이 from "../../assets/roommate/궁금해하는횃불이.png";
-// 🔽 필요한 컴포넌트를 import 합니다.
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../../constants/EmptyMessage.tsx";
+import { useIsAdminRole } from "../../hooks/useIsAdminRole.ts";
 
 export default function AnnounceDetailPage() {
   const { boardId } = useParams<{ boardId: string }>();
@@ -33,8 +32,7 @@ export default function AnnounceDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   const navigate = useNavigate();
-  const { userInfo } = useUserStore();
-  const isAdmin = userInfo.isAdmin;
+  const isAdmin = useIsAdminRole();
 
   const menuItems = [
     {
