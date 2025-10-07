@@ -1,6 +1,5 @@
 import styled from "styled-components";
 import { useLocation, useNavigate } from "react-router-dom";
-import { IoCloseSharp } from "react-icons/io5";
 import { MdImage } from "react-icons/md";
 import { useEffect, useRef, useState } from "react";
 import SquareButton from "../../components/common/SquareButton.tsx";
@@ -10,6 +9,7 @@ import {
   updateAnnouncement,
   updateAnnouncementWithFiles,
 } from "../../apis/announcements.ts";
+import Header from "../../components/common/Header.tsx";
 
 export default function AnnounceWritePage() {
   const navigate = useNavigate();
@@ -65,13 +65,10 @@ export default function AnnounceWritePage() {
   };
   return (
     <Wrapper>
-      <TopBar>
-        <Left onClick={() => navigate(-1)}>
-          <IoCloseSharp size={24} />
-        </Left>
-        <Title>{announce ? "공지사항 수정" : "공지사항 작성"}</Title>
-        <Right></Right>
-      </TopBar>
+      <Header
+        title={announce ? "공지사항 수정" : "공지사항 작성"}
+        hasBack={true}
+      />
 
       <Content>
         <Label>제목</Label>
@@ -135,38 +132,6 @@ const Wrapper = styled.div`
   flex-direction: column;
   height: 100vh;
   background: #fafafa;
-`;
-
-const TopBar = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 70px;
-  background: white;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 20px;
-  z-index: 1000;
-  font-weight: bold;
-`;
-
-const Left = styled.button`
-  background: none;
-  border: none;
-  cursor: pointer;
-`;
-
-const Title = styled.h3`
-  font-size: 16px;
-`;
-
-const Right = styled.button`
-  background: none;
-  border: none;
-  font-size: 14px;
-  color: gray;
 `;
 
 const Content = styled.div`
