@@ -10,6 +10,7 @@ import {
   deleteMyRoommateRules,
   getMyRoommateInfo,
   getMyRoommateRules,
+  sendQuickMessage,
   updateMyRoommateRules,
 } from "../../apis/roommate.ts";
 import RoundSquareButton from "../../components/button/RoundSquareButton.tsx";
@@ -280,9 +281,23 @@ export default function MyRoomMatePage() {
         {showQuickModal && (
           <QuickMessageModal
             onClose={() => setShowQuickModal(false)}
-            onSelect={(message) => {
-              console.log("선택된 메시지:", message);
-              // 메시지 전송 API 연동 가능
+            onSelect={async (message) => {
+              try {
+                console.log("선택된 메시지:", message);
+                if (
+                  !window.confirm(
+                    roommateInfo?.name + "님에게 메시지를 보낼까요?",
+                  )
+                )
+                  return;
+
+                await sendQuickMessage(message);
+                alert("전송되었습니다.");
+              } catch (error) {
+                console.log(error);
+                alert("전송에 실패했습니다.");
+              }
+
               setShowQuickModal(false);
             }}
           />
