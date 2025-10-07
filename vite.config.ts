@@ -5,6 +5,8 @@ import react from "@vitejs/plugin-react";
 import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
+  base: "./", // 중요한 부분: 상대경로
+
   plugins: [
     react(),
     tsconfigPaths(),
