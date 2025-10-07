@@ -1,5 +1,6 @@
 import { BsSend } from "react-icons/bs";
 import styled from "styled-components";
+import UseUserStore from "../../stores/useUserStore.ts";
 
 interface CommentInputBoxProps {
   commentInput: string;
@@ -12,23 +13,34 @@ export default function CommentInputBox({
   setCommentInput,
   handleCommentSubmit,
 }: CommentInputBoxProps) {
+  const { tokenInfo } = UseUserStore();
+  const isLoggedIn = Boolean(tokenInfo.accessToken);
+
   return (
     <CommentInput>
       <input
-        placeholder="댓글 입력"
+        placeholder={isLoggedIn ? "댓글 입력" : "로그인 후 이용해주세요"}
         value={commentInput}
         onChange={(e) => setCommentInput(e.target.value)}
         onKeyDown={(e) => {
-          if (e.key === "Enter") {
+          if (e.key === "Enter" && isLoggedIn) {
             e.preventDefault();
             handleCommentSubmit();
           }
         }}
+        disabled={!isLoggedIn}
       />
-      <SendButton onClick={handleCommentSubmit}>
+      <SendButton
+        onClick={isLoggedIn ? handleCommentSubmit : undefined}
+        disabled={!isLoggedIn}
+      >
         <BsSend
           size={18}
-          style={{ color: "black", backgroundColor: "white", padding: "4px" }}
+          style={{
+            color: isLoggedIn ? "black" : "#aaa",
+            backgroundColor: "white",
+            padding: "4px",
+          }}
         />
       </SendButton>
     </CommentInput>
@@ -54,15 +66,23 @@ const CommentInput = styled.div`
     background: #f5f5f5;
     font-size: 14px;
     outline: none;
+    color: #333;
+
+    &:disabled {
+      background: #eee;
+      color: #999;
+      cursor: not-allowed;
+    }
   }
 `;
 
-const SendButton = styled.button`
+const SendButton = styled.button<{ disabled?: boolean }>`
   background: none;
   border: none;
   padding-left: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
+  cursor: ${({ disabled }) => (disabled ? "not-allowed" : "pointer")};
+  opacity: ${({ disabled }) => (disabled ? 0.5 : 1)};
 `;
