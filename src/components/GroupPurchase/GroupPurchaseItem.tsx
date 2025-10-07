@@ -1,5 +1,10 @@
 import styled from "styled-components";
 import human from "../../assets/chat/human.svg";
+import 기타 from "../../assets/groupPurchase/default-image/기타.webp";
+import 배달 from "../../assets/groupPurchase/default-image/배달.webp";
+import 생활용품 from "../../assets/groupPurchase/default-image/생활용품.webp";
+import 식자재 from "../../assets/groupPurchase/default-image/식자재.webp";
+
 import { GroupOrder } from "../../types/grouporder.ts";
 import { getDeadlineText } from "../../utils/dateUtils.ts";
 
@@ -8,10 +13,35 @@ interface GroupPurchaseItemProps {
   onClick: () => void;
 }
 
+// --- 추가: groupOrderType에 따라 기본 이미지 경로를 반환하는 함수 ---
+const getDefaultImageByType = (type: string) => {
+  switch (type) {
+    case "배달":
+      return 배달;
+    case "생활용품":
+      return 생활용품;
+    case "식자재":
+      return 식자재;
+    case "기타":
+    default:
+      return 기타;
+  }
+};
+// -----------------------------------------------------------------
+
 const GroupPurchaseItem = ({ groupOrder, onClick }: GroupPurchaseItemProps) => {
+  // --- 수정: 이미지가 없을 경우 groupOrderType에 맞는 기본 이미지를 사용 ---
+  const hasImage = !!groupOrder.filePath;
+  const imageUrl = hasImage
+    ? groupOrder.filePath
+    : getDefaultImageByType(groupOrder.groupOrderType);
+  // ----------------------------------------------------------------------
+
   return (
     <GroupPurchaseItemWrapper onClick={onClick}>
-      <ItemImage style={{ backgroundImage: `url(${groupOrder.filePath})` }} />
+      {/* --- 수정: styled-component에 props 전달 --- */}
+      <ItemImage $imageUrl={imageUrl} $hasDefaultImage={!hasImage} />
+      {/* ------------------------------------------- */}
       <TitleLine>{groupOrder.title}</TitleLine>
       <Price>{groupOrder.price.toLocaleString()}원</Price>
       <AdditionalLine>
@@ -40,16 +70,30 @@ const GroupPurchaseItemWrapper = styled.div`
   cursor: pointer;
 `;
 
-const ItemImage = styled.div`
+// --- 추가: ItemImage가 받을 props 타입 정의 ---
+interface ItemImageProps {
+  $imageUrl: string;
+  $hasDefaultImage: boolean;
+}
+// -------------------------------------------
+
+// --- 수정: props를 받아 조건부 스타일링 적용 ---
+const ItemImage = styled.div<ItemImageProps>`
   width: 100%;
   height: 150px;
-  background-size: cover;
+  background-image: url(${(props) => props.$imageUrl});
   background-position: center;
-  background-color: #eee;
+  background-color: #d9d9d9;
   border-radius: 10px;
+
+  /* 기본 이미지일 경우 아이콘이 잘 보이도록 cover 대신 크기 지정 및 반복 없음 처리 */
+  background-size: ${(props) => (props.$hasDefaultImage ? "60px" : "cover")};
+  background-repeat: no-repeat;
 `;
+// ----------------------------------------------
 
 const TitleLine = styled.div`
+  /* ... (기존과 동일) ... */
   width: 100%;
   font-style: normal;
   font-weight: 500;
@@ -60,6 +104,7 @@ const TitleLine = styled.div`
 `;
 
 const Price = styled.div`
+  /* ... (기존과 동일) ... */
   width: 100%;
   font-size: 16px;
   font-weight: bold;
@@ -67,6 +112,7 @@ const Price = styled.div`
 `;
 
 const AdditionalLine = styled.div`
+  /* ... (기존과 동일) ... */
   width: 100%;
   display: flex;
   align-items: center;
