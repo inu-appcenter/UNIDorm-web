@@ -288,8 +288,17 @@ export default function GroupPurchasePostPage() {
                 />
               ) : (
                 <RoundSquareButton
-                  btnName={"오픈 채팅 참여하기"}
-                  onClick={() => setShowModal(true)}
+                  btnName={
+                    post.recruitmentComplete ? "마감" : "오픈 채팅 참여하기"
+                  }
+                  onClick={() => {
+                    if (post?.recruitmentComplete) {
+                      alert("마감된 공동구매입니다.");
+                      return;
+                    }
+                    setShowModal(true);
+                  }}
+                  color={post.recruitmentComplete ? "#8E8E93" : undefined}
                 />
               )}
             </LikeActionRow>
