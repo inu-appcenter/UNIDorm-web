@@ -197,7 +197,10 @@ const ComplainDetailPage = () => {
         <WriteButton
           onClick={() =>
             navigate(`/admin/complain/answer/${complainId}`, {
-              state: { complain: complaint, manager: complaint.officer },
+              state: {
+                complain: complaint.reply ? complaint : undefined,
+                manager: complaint.officer,
+              },
             })
           }
         >
