@@ -83,7 +83,19 @@ const ComplainListPage = () => {
             <Wrapper1
               onClick={() => navigate(`/complain/${recentComplain.id}`)}
             >
-              <StepFlow activeIndex={1} />
+              <StepFlow
+                activeIndex={
+                  recentComplain.status === "대기중"
+                    ? 0
+                    : recentComplain.status === "담당자 배정"
+                      ? 1
+                      : recentComplain.status === "처리중"
+                        ? 2
+                        : recentComplain.status === "처리완료"
+                          ? 3
+                          : 0
+                }
+              />
               <ComplainCard
                 miniView={true}
                 date={recentComplain.createdDate}
