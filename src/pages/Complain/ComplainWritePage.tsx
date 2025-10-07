@@ -22,7 +22,7 @@ import { Dropdown, DropdownContainer, Input } from "../../styles/complain.ts";
 export default function ComplainWritePage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { tip } = location.state || {}; // 수정할 민원 데이터
+  const { complain } = location.state || {}; // 수정할 민원 데이터
 
   const [isEditMode, setIsEditMode] = useState(false);
   const [title, setTitle] = useState("");
@@ -50,27 +50,27 @@ export default function ComplainWritePage() {
   }, []);
 
   useEffect(() => {
-    if (tip) {
+    if (complain) {
       setIsEditMode(true);
-      setTitle(tip.title);
-      setContent(tip.content);
-      setPrivacyAgreed(tip.privacyAgreed || false);
+      setTitle(complain.title);
+      setContent(complain.content);
+      setPrivacyAgreed(complain.privacyAgreed || false);
 
-      const typeIndex = ComplainType.indexOf(tip.type);
+      const typeIndex = ComplainType.indexOf(complain.type);
       if (typeIndex !== -1) setSelectedComplainTypeIndex(typeIndex);
 
       // tip.dormType과 tip.building을 각각 찾아 인덱스 설정
-      const dormIndex = complainDormitory.indexOf(tip.dormType);
+      const dormIndex = complainDormitory.indexOf(complain.dormType);
       if (dormIndex !== -1) setSelectedDormitoryIndex(dormIndex);
 
-      const blockIndex = dormitoryBlocks.indexOf(tip.building);
+      const blockIndex = dormitoryBlocks.indexOf(complain.building);
       if (blockIndex !== -1) setSelectedDormitoryBlockIndex(blockIndex);
 
-      setSelectedFloor(tip.floor || "");
-      setSelectedRoom(tip.roomNumber || ""); // roomNumber가 "301호"와 같은 형식이므로 그대로 사용
-      setSelectedBed(tip.bedNumber || "");
+      setSelectedFloor(complain.floor || "");
+      setSelectedRoom(complain.roomNumber || ""); // roomNumber가 "301호"와 같은 형식이므로 그대로 사용
+      setSelectedBed(complain.bedNumber || "");
     }
-  }, [tip]);
+  }, [complain]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -128,8 +128,8 @@ export default function ComplainWritePage() {
       console.log("전송할 DTO:", dto);
 
       let res;
-      if (isEditMode && tip?.id) {
-        res = await updateComplaint(tip.id, dto, images);
+      if (isEditMode && complain?.id) {
+        res = await updateComplaint(complain.id, dto, images);
         alert("민원이 성공적으로 수정되었습니다!");
       } else {
         res = await createComplaint(dto, images);

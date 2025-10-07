@@ -5,7 +5,7 @@ import ComplainCard from "../../components/complain/ComplainCard.tsx";
 import ComplainAnswerCard from "../../components/complain/ComplainAnswerCard.tsx";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getComplaintDetail } from "../../apis/complain.ts";
+import { deleteComplaint, getComplaintDetail } from "../../apis/complain.ts";
 import { ComplaintDetail } from "../../types/complain.ts";
 import {
   assignComplaintOfficer,
@@ -95,9 +95,43 @@ const ComplainDetailPage = () => {
     }
   };
 
+  const handleDelete = async () => {
+    try {
+      if (!window.confirm("정말 삭제할까요?")) return;
+
+      if (!complaint?.id) {
+        console.error("삭제 중 오류가 발생했습니다.");
+        return;
+      }
+
+      await deleteComplaint(complaint?.id);
+
+      alert("삭제하였습니다.");
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const menuItems = [
+    {
+      label: "수정하기",
+      onClick: () => {
+        navigate("/complain/write", { state: { complain: complaint } });
+      },
+    },
+    {
+      label: "삭제하기",
+      onClick: handleDelete,
+    },
+  ];
+
   return (
     <ComplainListPageWrapper>
-      <Header title={"민원 상세"} hasBack={true} />
+      <Header
+        title={"민원 상세"}
+        hasBack={true}
+        menuItems={complaint?.status === "대기중" ? menuItems : undefined}
+      />
       {isLoading ? (
         <LoadingSpinner message="민원 상세 정보를 불러오는 중..." />
       ) : complaint ? (

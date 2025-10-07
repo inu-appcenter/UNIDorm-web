@@ -7,15 +7,18 @@ import { useIsAdminRole } from "../../hooks/useIsAdminRole.ts";
 
 const AdminMainPage: React.FC = () => {
   const navigate = useNavigate();
-  const { tokenInfo, userInfo } = useUserStore();
+  const { tokenInfo, userInfo, isLoading } = useUserStore();
   const { isAdmin } = useIsAdminRole();
 
   useEffect(() => {
     console.log(tokenInfo.role);
-    if (!tokenInfo.accessToken || !isAdmin) {
-      navigate("/home");
+    if (!isLoading) {
+      //새로고침 시 유저정보가 불러와지는 타이밍으로 인해 어드민 메인으로 오는 문제 방지
+      if (!tokenInfo.accessToken || !isAdmin) {
+        navigate("/home");
+      }
     }
-  }, [tokenInfo, navigate, userInfo]);
+  }, [tokenInfo, userInfo, isLoading]);
 
   const menuItems = [
     {

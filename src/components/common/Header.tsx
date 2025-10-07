@@ -170,7 +170,15 @@ export default function Header({
         </Left>
 
         <Right>
-          {isAdmin && <RoundButton>{roleName}</RoundButton>}
+          {isAdmin && (
+            <RoundButton
+              onClick={() => {
+                navigate("/admin");
+              }}
+            >
+              {roleName}
+            </RoundButton>
+          )}
           {showAlarm && <NotificationBell hasNew={hasMatchingRequests} />}
 
           {menuItems && <TopRightDropdownMenu items={menuItems} />}
@@ -315,6 +323,12 @@ const RoundButton = styled.button`
   cursor: pointer;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   transition: all 0.2s ease;
+  text-align: center;
+
+  /* ✅ 줄바꿈 관련 속성 추가 */
+  white-space: normal; /* 여러 줄 허용 */
+  word-break: keep-all; /* 단어 단위로 줄바꿈 */
+  overflow-wrap: break-word; /* 너무 긴 단어는 줄바꿈 */
 
   &:hover {
     background: linear-gradient(135deg, #0980f8, #3794f5);

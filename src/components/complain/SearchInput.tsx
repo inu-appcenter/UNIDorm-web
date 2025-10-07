@@ -41,7 +41,7 @@ const SearchInput: React.FC<SearchInputProps> = ({ className, ...props }) => {
     <Container className={className}>
       <StyledInput
         type="text"
-        placeholder="민원내용을 검색할 수 있어요!"
+        placeholder="제목으로 검색할 수 있어요"
         {...props}
       />
       <SearchIcon />

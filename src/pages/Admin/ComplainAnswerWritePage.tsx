@@ -5,7 +5,11 @@ import { useEffect, useRef, useState } from "react";
 import SquareButton from "../../components/common/SquareButton.tsx";
 import Header from "../../components/common/Header.tsx";
 import { ComplaintReplyDto } from "../../types/complain.ts";
-import { createComplaintReply, updateComplaintReply } from "../../apis/complainAdmin.ts"; // ✅ 타입 정의 필요
+import {
+  createComplaintReply,
+  updateComplaintReply,
+  updateComplaintStatus,
+} from "../../apis/complainAdmin.ts";
 
 export default function ComplainAnswerWritePage() {
   const { complainId } = useParams<{ complainId: string }>();
@@ -25,7 +29,6 @@ export default function ComplainAnswerWritePage() {
     window.scrollTo(0, 0);
   }, []);
 
-  // tip 수정모드는 여기서는 필요 없으므로 제거 가능
   useEffect(() => {
     if (complain) {
       setTitle(complain.title);
@@ -70,6 +73,7 @@ export default function ComplainAnswerWritePage() {
       } else {
         // 등록 모드
         res = await createComplaintReply(Number(complainId), dto, images);
+        await updateComplaintStatus(Number(complainId), "처리완료");
         alert("답변이 등록되었습니다!");
       }
 
