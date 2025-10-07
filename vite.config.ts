@@ -4,7 +4,6 @@ import path from "path";
 import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
-  base: "./", // 하위 경로에서도 작동하도록
   plugins: [
     react(),
     VitePWA({
