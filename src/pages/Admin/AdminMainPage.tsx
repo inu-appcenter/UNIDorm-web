@@ -51,6 +51,11 @@ const AdminMainPage: React.FC = () => {
       path: "/tips",
       description: "기숙사 꿀팁을 관리할 수 있습니다.",
     },
+    {
+      label: "홈 화면 팝업 공지 관리",
+      path: "/admin/popup-notifications",
+      description: "앱 접속 시 나타날 팝업 공지를 관리할 수 있습니다.",
+    },
 
     // {
     //   label: "FCM 토큰",
