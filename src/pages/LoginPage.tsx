@@ -34,10 +34,6 @@ export default function LoginPage() {
 
         setTokenInfo(tokenInfo);
 
-        // if (id.includes("admin")) {
-        //   setUserInfo({ ...userInfo, role: response.data.role });
-        // }
-
         // ✅ 로그인 성공 후 FCM 토큰 서버 전송
         const fcmToken = localStorage.getItem("fcmToken");
         if (fcmToken) {
@@ -49,11 +45,11 @@ export default function LoginPage() {
           }
         }
 
-        if (response.data.role === "ROLE_ADMIN") {
-          alert("admin페이지로 이동합니다.");
-          navigate("/admin");
-          return;
-        }
+        // if (response.data.role === "ROLE_ADMIN") {
+        //   alert("admin페이지로 이동합니다.");
+        //   navigate("/admin");
+        //   return;
+        // }
 
         navigate("/home");
       } else {
@@ -69,18 +65,9 @@ export default function LoginPage() {
     <LoginPageWrapper>
       <Header title={"로그인"} hasBack={true} />
       <div>
-        {/*<h1>로그인</h1>*/}
         <span className="description">
           인천대학교 포털 아이디, 비밀번호로 간편하게 로그인할 수 있어요.
         </span>
-        {/*<br />*/}
-        {/*<br />*/}
-        {/*<span className="description">*/}
-        {/*  <h3>알려드립니다.</h3>*/}
-        {/*  현재 신규 로그인하시는 분들께 오류가 발생하고 있습니다.*/}
-        {/*  8월13일(수)부터는 사용하실 수 있도록 최대한 빠르게 수정하도록*/}
-        {/*  하겠습니다. 이용에 불편을 드려 죄송합니다.*/}
-        {/*</span>*/}
 
         <h3>아이디</h3>
         <StyledInput

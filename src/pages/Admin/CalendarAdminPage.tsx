@@ -106,11 +106,7 @@ const CalendarAdminPage: React.FC = () => {
   ];
   return (
     <Wrapper>
-      <Header
-        title={"캘린더 관리자 페이지"}
-        hasBack={true}
-        menuItems={menuItems}
-      />
+      <Header title={"캘린더 관리"} hasBack={true} menuItems={menuItems} />
       <Section>
         <Title>📅 캘린더 이벤트 목록</Title>
         <List>

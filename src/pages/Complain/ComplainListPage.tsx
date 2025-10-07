@@ -7,7 +7,7 @@ import ComplainCard from "../../components/complain/ComplainCard.tsx";
 import { useNavigate } from "react-router-dom";
 import ComplainListTable from "../../components/complain/ComplainListTable.tsx";
 import useUserStore from "../../stores/useUserStore.ts";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react"; // useMemo 추가
 import { ComplaintDetail, MyComplaint } from "../../types/complain.ts";
 import { getComplaintDetail, getMyComplaints } from "../../apis/complain.ts";
 import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
@@ -26,6 +26,9 @@ const ComplainListPage = () => {
   // 🔽 각 데이터 로딩 상태를 관리합니다.
   const [isListLoading, setIsListLoading] = useState<boolean>(false);
   const [isRecentLoading, setIsRecentLoading] = useState<boolean>(false);
+
+  // 🔽 검색어 상태 추가
+  const [searchTerm, setSearchTerm] = useState<string>("");
 
   const filter = ["최근 3개월", "2025"];
   const [selectedFilterIndex, setSelectedFilterIndex] = useState(0);
@@ -52,23 +55,36 @@ const ComplainListPage = () => {
   // 2. 가장 최근 민원 상세 불러오기
   useEffect(() => {
     const fetchRecentComplain = async () => {
+      if (complaints.length === 0) {
+        setRecentComplain(null); // 민원 목록이 비었으면 최근 민원도 초기화
+        return;
+      }
+
       setIsRecentLoading(true); // 최근 민원 로딩 시작
       try {
         const response = await getComplaintDetail(complaints[0].id);
         setRecentComplain(response.data);
       } catch (error) {
         console.error("민원 상세 불러오기 실패:", error);
+        setRecentComplain(null); // 에러 발생 시 초기화
       } finally {
         setIsRecentLoading(false); // 최근 민원 로딩 완료
       }
     };
 
-    if (complaints.length > 0) {
-      fetchRecentComplain();
-    } else {
-      setRecentComplain(null); // 민원 목록이 비었을 때 최근 민원도 초기화
-    }
+    fetchRecentComplain();
   }, [complaints]);
+
+  // 🔽 검색어에 따라 민원 목록을 필터링하는 로직
+  const filteredComplaints = useMemo(() => {
+    if (!searchTerm) {
+      return complaints; // 검색어가 없으면 전체 목록 반환
+    }
+    return complaints.filter((complaint) =>
+      // 민원 제목에 검색어가 포함되어 있는지 확인 (대소문자 구분 없음)
+      complaint.title.toLowerCase().includes(searchTerm.toLowerCase()),
+    );
+  }, [searchTerm, complaints]);
 
   return (
     <ComplainListPageWrapper>
@@ -113,7 +129,11 @@ const ComplainListPage = () => {
       {/* 민원 목록 */}
       <TitleContentArea title={"민원 목록"}>
         <Wrapper2>
-          <SearchInput />
+          {/* 🔽 SearchInput에 value와 onChange 핸들러 연결 */}
+          <SearchInput
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
           <SelectableChipGroup
             Groups={filter}
             selectedIndex={selectedFilterIndex}
@@ -124,8 +144,9 @@ const ComplainListPage = () => {
           />
           {isListLoading ? (
             <LoadingSpinner message="민원 목록을 불러오는 중..." />
-          ) : complaints.length > 0 ? (
-            <ComplainListTable data={complaints} />
+          ) : filteredComplaints.length > 0 ? (
+            // 🔽 필터링된 목록(filteredComplaints)을 테이블에 전달
+            <ComplainListTable data={filteredComplaints} />
           ) : (
             <EmptyMessage>조회된 민원이 없습니다.</EmptyMessage>
           )}

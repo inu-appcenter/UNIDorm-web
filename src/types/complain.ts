@@ -68,8 +68,11 @@ export interface AdminComplaint {
   type: string;
   title: string;
   status: string;
-  caseNumber: string;
   officer: string;
+  building: string;
+  floor: string;
+  roomNumber: string;
+  bedNumber: string;
   dormType: string;
 }
 

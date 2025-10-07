@@ -6,6 +6,7 @@ interface UserState {
   userInfo: UserInfo;
   setTokenInfo: (tokenInfo: TokenInfo) => void;
   setUserInfo: (userInfo: UserInfo) => void;
+  isLoading: boolean;
 }
 
 // localStorage에서 tokenInfo 불러오기
@@ -46,6 +47,7 @@ const useUserStore = create<UserState>((set) => ({
     set(() => ({ userInfo }));
     localStorage.setItem("userInfo", JSON.stringify(userInfo));
   },
+  isLoading: true, // 초기 상태를 true로 설정
 }));
 
 export default useUserStore;

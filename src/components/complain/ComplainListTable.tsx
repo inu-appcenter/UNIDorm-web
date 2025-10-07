@@ -1,4 +1,3 @@
-// TableComponent.tsx
 import React from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
@@ -27,7 +26,8 @@ const ComplainListTable: React.FC<TableProps> = ({
               <>
                 <TableHeader>담당자</TableHeader>
                 <TableHeader>기숙사</TableHeader>
-                <TableHeader>사생번호</TableHeader>
+                {/* '사생번호' 헤더를 '호실 정보'로 변경 */}
+                <TableHeader>호실 정보</TableHeader>
               </>
             )}
           </tr>
@@ -52,7 +52,11 @@ const ComplainListTable: React.FC<TableProps> = ({
                 <>
                   <TableCell>{"officer" in row && row.officer}</TableCell>
                   <TableCell>{"dormType" in row && row.dormType}</TableCell>
-                  <TableCell>{"caseNumber" in row && row.caseNumber}</TableCell>
+                  {/* caseNumber 대신 building, roomNumber, bedNumber를 조합하여 표시 */}
+                  <TableCell>
+                    {"building" in row &&
+                      `${row.building} ${row.roomNumber} ${row.bedNumber}침대`}
+                  </TableCell>
                 </>
               )}
             </tr>
@@ -105,7 +109,46 @@ const Status = styled.span<{ status: string }>`
   padding: 4px 8px;
   border-radius: 12px;
   font-size: 0.9em;
-  color: ${({ status }) => (status === "확인" ? "#1a73e8" : "#888")};
-  background-color: ${({ status }) =>
-    status === "확인" ? "#d6e4ff" : "#f2f2f2"};
+  font-weight: 500;
+  white-space: nowrap;
+
+  ${({ status }) => {
+    switch (status) {
+      case "대기중":
+        return `
+          color: #FFA500; // 주황색
+          background-color: #FFF3E0; // 연한 주황색
+        `;
+      case "담당자 배정":
+        return `
+          color: #4CAF50; // 초록색 (배정 완료)
+          background-color: #E8F5E9; // 연한 초록색
+        `;
+      case "처리중":
+        return `
+          color: #2196F3; // 파란색
+          background-color: #E3F2FD; // 연한 파란색
+        `;
+      case "처리완료":
+        return `
+          color: #4CAF50; // 진한 초록색 (완료)
+          background-color: #E8F5E9; // 연한 초록색
+        `;
+      case "반려":
+        return `
+          color: #F44336; // 빨간색
+          background-color: #FFEBEE; // 연한 빨간색
+        `;
+      case "확인":
+        return `
+          color: #1a73e8;
+          background-color: #d6e4ff;
+        `;
+      default:
+        return `
+          color: #607D8B; // 회색 (기본값)
+          background-color: #ECEFF1; // 연한 회색
+        `;
+    }
+  }}
 `;
