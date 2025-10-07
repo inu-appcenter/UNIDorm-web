@@ -27,6 +27,7 @@ export interface GroupOrderComment {
   isDeleted: boolean;
   commentAuthorImagePath: string;
   childGroupOrderCommentList: GroupOrderComment[];
+  username: string;
 }
 
 // 상세 조회용 타입

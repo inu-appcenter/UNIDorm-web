@@ -38,7 +38,7 @@ const getCommentImage = (comment: TipComment | GroupOrderComment) => {
 
 // 댓글 작성자 이름 가져오기
 const getCommentName = (comment: TipComment | GroupOrderComment) => {
-  return isTipComment(comment) ? comment.name : "익명";
+  return isTipComment(comment) ? comment.name : comment.username;
 };
 
 // 대댓글 가져오기
@@ -59,9 +59,11 @@ export default function CommentSection({
   }>({});
   const [replyInputs, setReplyInputs] = useState<{ [key: number]: string }>({});
 
-  const { userInfo } = useUserStore();
+  const { userInfo, tokenInfo } = useUserStore();
+  const isLoggedIn = Boolean(tokenInfo.accessToken);
 
-  const menuItems = [
+  // 공통 메뉴 항목
+  const baseMenuItems = [
     {
       label: "답글달기",
       onClick: (comment: TipComment | GroupOrderComment) => {
@@ -72,6 +74,10 @@ export default function CommentSection({
         }));
       },
     },
+  ];
+
+  // 본인 댓글만 가능한 항목
+  const ownerMenuItems = [
     {
       label: "삭제하기",
       onClick: async (comment: TipComment | GroupOrderComment) => {
@@ -87,7 +93,7 @@ export default function CommentSection({
     },
   ];
 
-  // 대댓글 렌더링 (TipComment | GroupOrderComment 모두 가능)
+  // 대댓글 렌더링
   const renderReplies = (replies?: (TipComment | GroupOrderComment)[]) => {
     if (!replies || replies.length === 0) return null;
 
@@ -117,11 +123,10 @@ export default function CommentSection({
                 )}
                 <Nickname>{getCommentName(reply)}</Nickname>
               </UserInfo>
-
-              {userInfo.id === reply.userId && (
+              {isLoggedIn && (
                 <TopRightDropdownMenu
                   size={18}
-                  items={menuItems.slice(1, 2).map((item) => ({
+                  items={ownerMenuItems.map((item) => ({
                     ...item,
                     onClick: () => item.onClick(reply),
                   }))}
@@ -192,6 +197,11 @@ export default function CommentSection({
       ).map((comment) => {
         const commentId = getCommentId(comment);
         const childComments = getChildComments(comment);
+        const isOwner = userInfo.id === comment.userId;
+
+        const menuItems = isOwner
+          ? [...baseMenuItems, ...ownerMenuItems]
+          : baseMenuItems;
 
         return (
           <CommentBundle key={commentId}>
@@ -215,13 +225,15 @@ export default function CommentSection({
                   <Nickname>{getCommentName(comment)}</Nickname>
                 </UserInfo>
 
-                <TopRightDropdownMenu
-                  size={18}
-                  items={menuItems.map((item) => ({
-                    ...item,
-                    onClick: () => item.onClick(comment),
-                  }))}
-                />
+                {isLoggedIn && (
+                  <TopRightDropdownMenu
+                    size={18}
+                    items={menuItems.map((item) => ({
+                      ...item,
+                      onClick: () => item.onClick(comment),
+                    }))}
+                  />
+                )}
               </WriterLine>
 
               <CommentContent>
