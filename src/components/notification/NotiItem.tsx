@@ -11,24 +11,27 @@ interface NotiItemProps {
 
 const NotiItem = ({ notidata }: NotiItemProps) => {
   const NotiIconSelector = () => {
-    if (notidata.category === "룸메이트") {
+    if (notidata.notificationType === "룸메이트") {
       return roommate;
-    } else if (notidata.category === "공동구매") {
+    } else if (notidata.notificationType === "공동구매") {
       return purchase;
-    } else if (notidata.category === "채팅") {
+    } else if (
+      notidata.notificationType === "생활원 공지사항" ||
+      notidata.notificationType === "유니돔 공지사항"
+    ) {
       return chat;
     } else {
       return announce;
     }
   };
   return (
-    <NotiItemWrapper onClick={notidata.onClick}>
+    <NotiItemWrapper onClick={undefined}>
       <IconWrapper>
         <img src={NotiIconSelector()} alt={"공지아이콘"} />
       </IconWrapper>
       <ContentWrapper>
-        <div className="category">{notidata.category}</div>
-        <div className="content">{notidata.content}</div>
+        <div className="category">{notidata.notificationType}</div>
+        <div className="content">{notidata.body}</div>
         <div className="more">더보기</div>
       </ContentWrapper>
     </NotiItemWrapper>
