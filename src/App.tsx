@@ -45,6 +45,8 @@ import ComplainWritePage from "./pages/Complain/ComplainWritePage.tsx";
 import ComplainAdminPage from "./pages/Admin/ComplainAdminPage.tsx";
 import ComplainAnswerWritePage from "./pages/Admin/ComplainAnswerWritePage.tsx";
 import KeywordAlertSettingPage from "./pages/GroupPurchase/KeywordAlertSettingPage.tsx";
+import PopupNotiListPage from "./pages/Admin/PopupNotiListPage.tsx";
+import PopupNotiCreatePage from "./pages/Admin/PopupNotiCreatePage.tsx";
 
 function App() {
   console.log("현재 MODE:", import.meta.env.MODE);
@@ -192,6 +194,12 @@ function App() {
             path="complain/answer/:complainId"
             element={<ComplainAnswerWritePage />}
           />
+          <Route path="popup-notifications" element={<PopupNotiListPage />} />
+          <Route
+            path="popup-notifications/create"
+            element={<PopupNotiCreatePage />}
+          />
+
           {/*<Route path="fcm" element={<FCMPage />} />*/}
         </Route>
       </Routes>
