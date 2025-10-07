@@ -215,15 +215,13 @@ export default function CommentSection({
                   <Nickname>{getCommentName(comment)}</Nickname>
                 </UserInfo>
 
-                {userInfo.id === comment.userId && (
-                  <TopRightDropdownMenu
-                    size={18}
-                    items={menuItems.map((item) => ({
-                      ...item,
-                      onClick: () => item.onClick(comment),
-                    }))}
-                  />
-                )}
+                <TopRightDropdownMenu
+                  size={18}
+                  items={menuItems.map((item) => ({
+                    ...item,
+                    onClick: () => item.onClick(comment),
+                  }))}
+                />
               </WriterLine>
 
               <CommentContent>
