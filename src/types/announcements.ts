@@ -16,6 +16,7 @@ export interface AnnouncementDetail {
   viewCount: number;
   createdDate: string;
   updatedDate: string;
+  link?: string;
 }
 
 export interface AnnouncementFile {

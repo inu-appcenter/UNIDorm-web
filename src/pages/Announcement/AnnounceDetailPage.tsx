@@ -27,31 +27,11 @@ export default function AnnounceDetailPage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [attachments, setAttachments] = useState<AnnouncementFile[]>([]);
   const [images, setImages] = useState<AnnouncementFile[]>([]);
-
-  // 🔽 로딩 상태를 관리할 state를 추가합니다.
   const [isLoading, setIsLoading] = useState(true);
 
   const navigate = useNavigate();
   const { isAdmin } = useIsAdminRole();
 
-  const menuItems = [
-    {
-      label: "수정하기",
-      onClick: () => {
-        navigate("/announcements/write", {
-          state: { announce },
-        });
-      },
-    },
-    {
-      label: "삭제하기",
-      onClick: () => {
-        handleDelete();
-      },
-    },
-  ];
-
-  // 🔽 데이터 로딩 로직을 하나로 통합합니다.
   useEffect(() => {
     if (!boardId) {
       setIsLoading(false);
@@ -59,18 +39,17 @@ export default function AnnounceDetailPage() {
     }
 
     const fetchData = async () => {
-      setIsLoading(true); // 로딩 시작
+      setIsLoading(true);
       try {
-        // 상세 정보와 파일 목록을 동시에 요청합니다.
         const [detailResponse, filesResponse] = await Promise.all([
           getAnnouncementDetail(Number(boardId)),
           getAnnouncementFiles(Number(boardId)),
         ]);
         console.log(detailResponse);
+        console.log(filesResponse);
 
         setAnnounce(detailResponse.data);
 
-        // 파일 목록에서 이미지와 그 외 첨부파일을 분류합니다.
         const allFiles = filesResponse.data;
         const imageExtensions = [
           "jpg",
@@ -92,13 +71,45 @@ export default function AnnounceDetailPage() {
         alert("공지사항을 불러오는 데 실패했습니다.");
         setAnnounce(null);
       } finally {
-        setIsLoading(false); // 로딩 종료
+        setIsLoading(false);
       }
     };
 
     fetchData();
     window.scrollTo(0, 0);
   }, [boardId]);
+
+  const baseMenuItems = [
+    {
+      label: "수정하기",
+      onClick: () => {
+        navigate("/announcements/write", {
+          state: { announce },
+        });
+      },
+    },
+    {
+      label: "삭제하기",
+      onClick: () => {
+        handleDelete();
+      },
+    },
+  ];
+
+  const optionalItems = announce?.link
+    ? [
+        {
+          label: "생활원 홈페이지에서 보기",
+          onClick: () => {
+            window.open(announce?.link, "_blank");
+          },
+        },
+      ]
+    : [];
+
+  const menuItems = isAdmin
+    ? [...baseMenuItems, ...optionalItems]
+    : optionalItems;
 
   const handleDelete = async () => {
     if (!boardId) return;
@@ -121,17 +132,64 @@ export default function AnnounceDetailPage() {
     trackMouse: true,
   });
 
+  // 🔽 URL 끝에 붙는 구두점을 처리하는 로직으로 개선된 함수입니다.
+  const renderContentWithLinks = (content: string) => {
+    const urlRegex = /(https?:\/\/\S+|www\.\S+)/gi;
+
+    return content.split("\n").map((line, lineIndex) => (
+      // key를 span이 아닌 Fragment에 직접 할당하여 불필요한 태그를 줄입니다.
+      <span key={lineIndex}>
+        {line.split(urlRegex).map((part, partIndex) => {
+          if (part.match(urlRegex)) {
+            let url = part;
+            let trailingChars = "";
+
+            // URL 끝에 올 수 있는 구두점 목록
+            const punctuation = [".", ",", ")", "]", "}", ":", ";", "!"];
+
+            // URL의 마지막 글자가 구두점 목록에 포함되어 있다면, 분리합니다.
+            // 여러 개가 붙어있는 경우(e.g., "...link.)")를 대비해 while문 사용
+            while (punctuation.includes(url.slice(-1))) {
+              trailingChars = url.slice(-1) + trailingChars;
+              url = url.slice(0, -1);
+            }
+
+            // URL이 비어있지 않은 경우에만 링크로 만듭니다.
+            if (url) {
+              const href = url.startsWith("www.") ? `http://${url}` : url;
+              return (
+                // key는 고유해야 하므로 partIndex를 사용합니다.
+                <span key={partIndex}>
+                  <a
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: "#0066cc", textDecoration: "underline" }}
+                  >
+                    {url}
+                  </a>
+                  {trailingChars}
+                </span>
+              );
+            } else {
+              // url이 비었다면, 분리된 구두점만 반환
+              return <span key={partIndex}>{trailingChars}</span>;
+            }
+          }
+          // URL이 아닌 일반 텍스트 부분을 반환합니다.
+          return <span key={partIndex}>{part}</span>;
+        })}
+        <br />
+      </span>
+    ));
+  };
+
   return (
     <Wrapper>
-      <Header
-        title="공지사항 상세"
-        hasBack={true}
-        menuItems={isAdmin ? menuItems : undefined}
-      />
+      <Header title="공지사항 상세" hasBack={true} menuItems={menuItems} />
 
       <ScrollArea>
         <Content>
-          {/* 🔽 로딩 상태에 따라 스피너, 상세 내용, 빈 메시지를 조건부 렌더링합니다. */}
           {isLoading ? (
             <LoadingSpinner message="공지사항을 불러오는 중..." />
           ) : announce ? (
@@ -174,16 +232,11 @@ export default function AnnounceDetailPage() {
                   </SliderIndicator>
                 </ImageSlider>
               )}
-              <AnnounceAttachment attachments={attachments} />
+              {attachments.length > 0 && (
+                <AnnounceAttachment attachments={attachments} />
+              )}
 
-              <BodyText>
-                {announce.content.split("\n").map((line, index) => (
-                  <span key={index}>
-                    {line}
-                    <br />
-                  </span>
-                ))}
-              </BodyText>
+              <BodyText>{renderContentWithLinks(announce.content)}</BodyText>
             </>
           ) : (
             <EmptyMessage message="공지사항을 불러올 수 없습니다." />
@@ -216,6 +269,7 @@ export default function AnnounceDetailPage() {
   );
 }
 
+// ... (styled-components 코드는 이전과 동일합니다)
 const Wrapper = styled.div`
   position: relative;
   display: flex;

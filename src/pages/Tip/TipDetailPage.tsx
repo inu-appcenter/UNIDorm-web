@@ -231,7 +231,6 @@ export default function TipDetailPage() {
               <Divider />
               <CommentSection
                 CommentDtoList={tip.tipCommentDtoList}
-                isLoggedIn={isLoggedIn}
                 setisneedupdate={setisneedupdate}
                 handleReplySubmit={handleReplySubmit}
                 handleDeleteComment={deleteTipComment}
