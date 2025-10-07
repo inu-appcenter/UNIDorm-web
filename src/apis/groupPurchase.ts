@@ -91,7 +91,7 @@ export const addGroupPurchaseRating = async (
   groupOrderId: number,
   ratingScore: number,
 ): Promise<void> => {
-  await axiosInstance.post(
+  await tokenInstance.post(
     `/group-orders/${groupOrderId}/rating/${ratingScore}`,
   );
 };
@@ -125,7 +125,7 @@ export const updateGroupPurchase = async (
 export const unlikeGroupPurchase = async (
   groupOrderId: number,
 ): Promise<number> => {
-  const response = await axiosInstance.patch<number>(
+  const response = await tokenInstance.patch<number>(
     `/group-orders/${groupOrderId}/unlike`,
   );
   return response.data;
@@ -135,14 +135,14 @@ export const unlikeGroupPurchase = async (
 export const cancelGroupPurchaseCompletion = async (
   groupOrderId: number,
 ): Promise<void> => {
-  await axiosInstance.patch(`/group-orders/${groupOrderId}/unCompletion`);
+  await tokenInstance.patch(`/group-orders/${groupOrderId}/unCompletion`);
 };
 
 // 공동구매 게시글 좋아요 추가
 export const likeGroupPurchase = async (
   groupOrderId: number,
 ): Promise<number> => {
-  const response = await axiosInstance.patch<number>(
+  const response = await tokenInstance.patch<number>(
     `/group-orders/${groupOrderId}/like`,
   );
   return response.data;
@@ -152,7 +152,7 @@ export const likeGroupPurchase = async (
 export const completeGroupPurchase = async (
   groupOrderId: number,
 ): Promise<void> => {
-  await axiosInstance.patch(`/group-orders/${groupOrderId}/completion`);
+  await tokenInstance.patch(`/group-orders/${groupOrderId}/completion`);
 };
 
 export const createGroupOrderComment = async (
