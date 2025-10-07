@@ -23,6 +23,8 @@ import EmptyMessage from "../constants/EmptyMessage.tsx";
 import { getAnnouncements } from "../apis/announcements.ts";
 import { Announcement } from "../types/announcements.ts";
 import useUserStore from "../stores/useUserStore.ts";
+import { getAllPopupNotifications } from "../apis/popup-notification.ts";
+import { PopupNotification } from "../types/popup-notifications.ts";
 
 export default function HomePage() {
   const { tokenInfo } = useUserStore();
@@ -31,6 +33,8 @@ export default function HomePage() {
   const [dailyTips, setDailyTips] = useState<Tip[]>([]);
   const [groupOrders, setGroupOrders] = useState<GroupOrder[]>([]);
   const [notices, setNotices] = useState<Announcement[]>([]);
+  const [popupNotices, setPopupNotices] = useState<PopupNotification[]>([]);
+  const [isPopupLoading, setIsPopupLoading] = useState<boolean>(false);
 
   const navigate = useNavigate();
 
@@ -87,6 +91,28 @@ export default function HomePage() {
   };
 
   useEffect(() => {
+    // ✅ 팝업 공지 불러오기
+    const fetchPopupNotices = async () => {
+      setIsPopupLoading(true);
+      try {
+        const response = await getAllPopupNotifications();
+        console.log("팝업 공지 불러오기 성공", response);
+        setPopupNotices(response.data);
+        // 모달별 초기 열림 상태 (true로 시작)
+        const initialState = response.data.reduce(
+          (acc, noti) => {
+            acc[noti.popupNotificationId ?? Math.random()] = true;
+            return acc;
+          },
+          {} as Record<number, boolean>,
+        );
+        setModalOpenStates(initialState);
+      } catch (error) {
+        console.error("팝업 공지 불러오기 실패:", error);
+      } finally {
+        setIsPopupLoading(false);
+      }
+    };
     const getTips = async () => {
       setIsTipsLoading(true);
       try {
@@ -132,75 +158,41 @@ export default function HomePage() {
       }
     }
 
+    fetchPopupNotices();
     getTips();
     fetchGroupOrders();
     fetchAnnouncements();
   }, []);
 
-  // const { roommates } = useRoomMateContext();
-
-  // const randomRoommate = useMemo(() => {
-  //   if (!Array.isArray(roommates) || roommates.length === 0) return null;
-  //
-  //   const unmatchedRoommates = roommates.filter((r) => !r.matched);
-  //   if (!Array.isArray(unmatchedRoommates) || unmatchedRoommates.length === 0)
-  //     return null;
-  //
-  //   const index = Math.floor(Math.random() * unmatchedRoommates.length);
-  //   return unmatchedRoommates[index];
-  // }, [roommates]);
-
-  // // 초기 상태를 localStorage에서 불러오기
-  // const [showInfoModal, setShowInfoModal] = useState(() => {
-  //   const saved = localStorage.getItem("hideInfoModal");
-  //   return saved !== "true"; // 저장값이 "true"면 숨김
-  // });
   return (
     <HomePageWrapper>
       <Header title="유니돔" hasBack={false} showAlarm={true} />
-      {/* 🔹 중앙에서 관리하는 모달을 map으로 렌더링 */}
-      {modalList.map((modal) => (
-        <HomeNoticeBottomModal
-          key={modal.id}
-          id={modal.id}
-          isOpen={modalOpenStates[modal.id]}
-          setIsOpen={(open) => setModalOpen(modal.id, open)}
-          links={modal.links}
-        >
-          {modal.content}
-        </HomeNoticeBottomModal>
-      ))}
+      {/* ✅ 팝업 공지를 모달로 렌더링 */}
+      {!isPopupLoading &&
+        popupNotices.map((popup) => (
+          <HomeNoticeBottomModal
+            key={popup.popupNotificationId}
+            id={popup.popupNotificationId?.toString() ?? ""}
+            isOpen={modalOpenStates[popup.popupNotificationId ?? 0]}
+            setIsOpen={(open) =>
+              setModalOpen(popup.popupNotificationId.toString(), open)
+            }
+            links={[]} // 필요시 popup.content에 URL을 파싱해서 전달 가능
+          >
+            <PopupModalContent>
+              {popup.imagePath?.map((img, idx) => (
+                <img key={idx} src={img} alt={popup.title} />
+              ))}
+              <h3>{popup.title}</h3>
+              <p>{popup.content}</p>
+              <span>📅 마감일: {popup.deadline}</span>
+            </PopupModalContent>
+          </HomeNoticeBottomModal>
+        ))}
 
       <HomeBanner />
 
       <ContentWrapper>
-        {/*<TitleContentArea*/}
-        {/* title={"룸메이트 매칭 진행 중!"}*/}
-        {/* description={"룸메이트를 구하고 있는 다양한 UNI들을 찾아보세요!"}*/}
-        {/* link={"/roommate"}*/}
-        {/*>*/}
-        {/* <>*/}
-        {/* {randomRoommate ? (*/}
-        {/* <RoomMateCard*/}
-        {/* key={randomRoommate.boardId}*/}
-        {/* title={randomRoommate.title}*/}
-        {/* boardId={randomRoommate.boardId}*/}
-        {/* dormType={randomRoommate.dormType}*/}
-        {/* mbti={randomRoommate.mbti}*/}
-        {/* college={randomRoommate.college}*/}
-        {/* isSmoker={true}*/}
-        {/* isClean={true}*/}
-        {/* stayDays={randomRoommate.dormPeriod}*/}
-        {/* description={randomRoommate.comment}*/}
-        {/* roommateBoardLike={randomRoommate.roommateBoardLike}*/}
-        {/* matched={randomRoommate.matched}*/}
-        {/* />*/}
-        {/* ) : (*/}
-        {/* <EmptyMessage>게시글이 없습니다.</EmptyMessage>*/}
-        {/* )}*/}
-        {/* </>*/}
-        {/*</TitleContentArea>*/}
-
         <TitleContentArea
           title={"공지사항"}
           description={
@@ -337,4 +329,32 @@ const FloatingButton = styled.button`
   right: 24px;
 
   cursor: pointer;
+`;
+
+const PopupModalContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+
+  img {
+    max-width: 100%;
+    border-radius: 8px;
+  }
+
+  h3 {
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  p {
+    font-size: 14px;
+    color: #333;
+  }
+
+  span {
+    font-size: 12px;
+    color: #777;
+  }
 `;

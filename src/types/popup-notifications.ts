@@ -1,4 +1,5 @@
 export interface PopupNotification {
+  popupNotificationId: number;
   title: string;
   content: string;
   notificationType: string; // 룸메이트, 공동구매, 생활원, 유니돔, 서포터즈 중 하나
