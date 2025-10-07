@@ -56,6 +56,11 @@ const AdminMainPage: React.FC = () => {
       path: "/admin/popup-notifications",
       description: "앱 접속 시 나타날 팝업 공지를 관리할 수 있습니다.",
     },
+    {
+      label: "푸시알림 보내기",
+      path: "/admin/notification/create",
+      description: "유저를 대상으로 푸시알림을 보낼 수 있습니다.",
+    },
 
     // {
     //   label: "FCM 토큰",

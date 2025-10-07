@@ -47,6 +47,7 @@ import ComplainAnswerWritePage from "./pages/Admin/ComplainAnswerWritePage.tsx";
 import KeywordAlertSettingPage from "./pages/GroupPurchase/KeywordAlertSettingPage.tsx";
 import PopupNotiListPage from "./pages/Admin/PopupNotiListPage.tsx";
 import PopupNotiCreatePage from "./pages/Admin/PopupNotiCreatePage.tsx";
+import CreateNotificationPage from "./pages/Admin/CreateNotificationPage.tsx";
 
 function App() {
   console.log("현재 MODE:", import.meta.env.MODE);
@@ -198,6 +199,10 @@ function App() {
           <Route
             path="popup-notifications/create"
             element={<PopupNotiCreatePage />}
+          />
+          <Route
+            path="notification/create"
+            element={<CreateNotificationPage />}
           />
 
           {/*<Route path="fcm" element={<FCMPage />} />*/}
