@@ -2,7 +2,7 @@ import styled from "styled-components";
 import { useEffect, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
 
-import profileimg from "../../assets/profileimg.svg";
+import profileimg from "../../assets/profileimg.png";
 import RoomMateBottomBar from "../../components/roommate/RoomMateBottomBar";
 import Header from "../../components/common/Header";
 import { getOpponentChecklist, getRoomMateDetail } from "../../apis/roommate";

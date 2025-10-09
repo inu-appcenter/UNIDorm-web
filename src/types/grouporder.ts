@@ -52,8 +52,8 @@ export interface GroupOrderDetail {
 }
 
 export interface GroupOrderImage {
-  imageUrl: string;
-  fileName: string;
+  imageName: string;
+  imagePath: string;
   contentType: string;
   fileSize: number;
   uploadDate: string;

@@ -7,6 +7,7 @@ import { TipComment } from "../../types/tips.ts";
 import { ReplyProps } from "../../types/comment.ts";
 import { GroupOrderComment } from "../../types/grouporder.ts";
 import useUserStore from "../../stores/useUserStore.ts";
+import profileimg from "../../assets/profileimg.png";
 
 interface CommentSectionProps {
   CommentDtoList: TipComment[] | GroupOrderComment[];
@@ -116,6 +117,10 @@ export default function CommentSection({
                       height: 20,
                       borderRadius: "50%",
                       objectFit: "cover",
+                    }}
+                    onError={(e) => {
+                      // 이미지가 깨졌을 때 기본 이미지로 교체
+                      (e.target as HTMLImageElement).src = profileimg;
                     }}
                   />
                 ) : (

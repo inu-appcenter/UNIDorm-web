@@ -35,3 +35,10 @@ export interface TipDetail {
   name: string;
   profileImageUrl: string;
 }
+
+export interface TipImage {
+  contentType: string; // 예: "image/png"
+  imagePath: string; // 예: "https://inu-dormitory-dev.inuappcenter.kr/images/tip/tip_2_d0188fe0-8a0e-484b-a2fa-fd44e55d320e.png"
+  fileSize: number; // 예: 215
+  imageName: string; // 예: "http://inu-dormitory-dev.inuappcenter.kr/api/images/tip/26"
+}

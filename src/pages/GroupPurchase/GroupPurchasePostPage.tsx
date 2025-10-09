@@ -27,7 +27,6 @@ import CommentSection from "../../components/comment/CommentSection.tsx";
 import { CheckBeforeDeal2 } from "../../constants/CheckBeforeDeal2.tsx";
 import Modal from "../../components/modal/Modal.tsx";
 import CommonBottomModal from "../../components/modal/CommonBottomModal.tsx";
-// 🔽 필요한 컴포넌트를 import 합니다.
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../../constants/EmptyMessage.tsx";
 
@@ -218,12 +217,12 @@ export default function GroupPurchasePostPage() {
                 )}
                 <SliderItem
                   onClick={() => {
-                    setPreviewUrl(images[currentImage].fileName);
+                    setPreviewUrl(images[currentImage].imagePath);
                     setShowInfoModal(true);
                   }}
                 >
                   <img
-                    src={images[currentImage].fileName}
+                    src={images[currentImage].imagePath}
                     alt={`팁 이미지 ${currentImage + 1}`}
                     style={{
                       width: "100%",
