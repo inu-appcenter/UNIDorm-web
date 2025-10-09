@@ -48,6 +48,7 @@ import KeywordAlertSettingPage from "./pages/GroupPurchase/KeywordAlertSettingPa
 import PopupNotiListPage from "./pages/Admin/PopupNotiListPage.tsx";
 import PopupNotiCreatePage from "./pages/Admin/PopupNotiCreatePage.tsx";
 import CreateNotificationPage from "./pages/Admin/CreateNotificationPage.tsx";
+import NotificationSettingPage from "./pages/MyPage/NotificationSettingPage.tsx";
 
 function App() {
   console.log("현재 MODE:", import.meta.env.MODE);
@@ -129,6 +130,10 @@ function App() {
           <Route path="home" element={<HomePage />} />
           <Route path="mypage" element={<MyPage />} />
           <Route path="myinfoedit" element={<MyInfoEditPage />} />
+          <Route
+            path="notification-setting"
+            element={<NotificationSettingPage />}
+          />
           <Route path="myposts" element={<MyPostsPage />} />
           <Route path="liked" element={<MyLikesPage />} />
         </Route>

@@ -70,3 +70,23 @@ export const deleteNotification = async (
   );
   return response;
 };
+
+// 알림 수신 설정
+export const addNotificationPreferences = async (
+  notificationTypes: string[],
+) => {
+  const response = await tokenInstance.post<void>(
+    `/user-notifications/preferences`,
+    null,
+    {
+      params: {
+        notificationTypes,
+      },
+      paramsSerializer: {
+        // indexes: null을 설정하면 대괄호([]) 없이 직렬화됩니다.
+        indexes: null,
+      },
+    },
+  );
+  return response.data;
+};

@@ -87,6 +87,12 @@ export default function GroupPurchaseMainPage() {
     localStorage.setItem("recentSearches", JSON.stringify(updatedSearches));
 
     setSearch("");
+
+    // 🔹 일정 확률로 모달 열기 (예: 30%)
+    const chance = Math.random();
+    if (chance < 0.3) {
+      setIsOpen(true);
+    }
   };
 
   const handleDeleteRecent = (term: string) => {

@@ -1,12 +1,9 @@
 import { Outlet } from "react-router-dom";
 import styled from "styled-components";
-import { getMobilePlatform } from "../utils/getMobilePlatform";
-
-const platform = getMobilePlatform();
 
 export default function SubPage() {
   return (
-    <SubPageWrapper $isIOS={platform === "ios"}>
+    <SubPageWrapper>
       {/*<Header hasBack={true} />*/}
       <StyledOutletContainer>
         <Outlet />
@@ -16,7 +13,7 @@ export default function SubPage() {
   );
 }
 
-const SubPageWrapper = styled.div<{ $isIOS: boolean }>`
+const SubPageWrapper = styled.div`
   width: 100%;
   min-height: 100vh; /* 뷰포트 전체 높이를 기준으로 설정 */
   height: fit-content;
@@ -24,12 +21,6 @@ const SubPageWrapper = styled.div<{ $isIOS: boolean }>`
   background: #fafafa;
   display: flex;
   flex-direction: column;
-
-  ${({ $isIOS }) =>
-    $isIOS &&
-    `
-      padding-top: calc(env(safe-area-inset-top, 0px) * 0.5);
-    `}
 `;
 
 const StyledOutletContainer = styled.div`
