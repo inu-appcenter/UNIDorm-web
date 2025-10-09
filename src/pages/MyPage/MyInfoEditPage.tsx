@@ -18,6 +18,7 @@ import Header from "../../components/common/Header.tsx";
 import { colleges, dormitory } from "../../constants/constants.ts";
 import RoundSquareButton from "../../components/button/RoundSquareButton.tsx";
 import axios from "axios";
+import profile from "../../assets/profileimg.png";
 
 const menuItems = [
   {
@@ -217,11 +218,10 @@ export default function MyInfoEditPage() {
               <ImageUploadContainer>
                 <ImageSelectRow>
                   <ProfileImageWrapper>
-                    {previewUrl ? (
-                      <ProfileImage src={previewUrl} alt="프로필 미리보기" />
-                    ) : (
-                      <DefaultProfileImage />
-                    )}
+                    <ProfileImage
+                      src={previewUrl || profile}
+                      alt="프로필 미리보기"
+                    />
                   </ProfileImageWrapper>
 
                   <FileInputLabel htmlFor="profileImageInput">

@@ -1,7 +1,6 @@
 import { useState } from "react";
 import styled from "styled-components";
 import { BsSend } from "react-icons/bs";
-import { FaUserCircle } from "react-icons/fa";
 import TopRightDropdownMenu from "../common/TopRightDropdownMenu.tsx";
 import { TipComment } from "../../types/tips.ts";
 import { ReplyProps } from "../../types/comment.ts";
@@ -108,24 +107,16 @@ export default function CommentSection({
           <Reply key={replyId}>
             <WriterLine>
               <UserInfo>
-                {getCommentImage(reply) ? (
-                  <img
-                    src={getCommentImage(reply)}
-                    alt="프사"
-                    style={{
-                      width: 20,
-                      height: 20,
-                      borderRadius: "50%",
-                      objectFit: "cover",
-                    }}
-                    onError={(e) => {
-                      // 이미지가 깨졌을 때 기본 이미지로 교체
-                      (e.target as HTMLImageElement).src = profileimg;
-                    }}
-                  />
-                ) : (
-                  <FaUserCircle size={20} />
-                )}
+                <img
+                  src={getCommentImage(reply) || profileimg}
+                  alt="프사"
+                  style={{
+                    width: 20,
+                    height: 20,
+                    borderRadius: "50%",
+                    objectFit: "cover",
+                  }}
+                />
                 <Nickname>{getCommentName(reply)}</Nickname>
               </UserInfo>
               {isLoggedIn && (
@@ -213,20 +204,16 @@ export default function CommentSection({
             <Comment>
               <WriterLine>
                 <UserInfo>
-                  {getCommentImage(comment) ? (
-                    <img
-                      src={getCommentImage(comment)}
-                      alt="프사"
-                      style={{
-                        width: 24,
-                        height: 24,
-                        borderRadius: "50%",
-                        objectFit: "cover",
-                      }}
-                    />
-                  ) : (
-                    <FaUserCircle size={24} />
-                  )}
+                  <img
+                    src={getCommentImage(comment) || profileimg}
+                    alt="프사"
+                    style={{
+                      width: 24,
+                      height: 24,
+                      borderRadius: "50%",
+                      objectFit: "cover",
+                    }}
+                  />
                   <Nickname>{getCommentName(comment)}</Nickname>
                 </UserInfo>
 
