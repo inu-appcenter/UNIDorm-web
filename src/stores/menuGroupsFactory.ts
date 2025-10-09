@@ -27,9 +27,12 @@ export const createMenuGroups = (
   {
     title: "알림",
     menus: [
-      { label: "알림 수신 설정", onClick: () => navigate("/myposts") },
       {
-        label: "키워드 알림 설정",
+        label: "알림 수신 설정",
+        onClick: () => navigate("/notification-setting"),
+      },
+      {
+        label: "공동구매 키워드 알림 설정",
         onClick: () => navigate("/groupPurchase/keywordSetting"),
       },
     ],

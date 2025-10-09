@@ -364,12 +364,6 @@ const ProfileImage = styled.img`
   object-fit: cover;
 `;
 
-const DefaultProfileImage = styled.div`
-  width: 100%;
-  height: 100%;
-  background: #bbb;
-`;
-
 const HiddenFileInput = styled.input`
   display: none;
 `;
