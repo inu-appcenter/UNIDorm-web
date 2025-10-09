@@ -2,6 +2,7 @@ import styled from "styled-components";
 import useUserStore from "../../stores/useUserStore.ts";
 import { useEffect, useState } from "react";
 import { getMemberImage } from "../../apis/members.ts";
+import profile from "../../assets/profileimg.png";
 
 const MyInfoArea = () => {
   const userInfo = useUserStore((state) => state.userInfo);
@@ -23,10 +24,10 @@ const MyInfoArea = () => {
       <LeftArea>
         <div className="profile">
           <img
-            src={userProfileImg || "/default-profile.png"}
+            src={userProfileImg || profile}
             alt="profile image"
             onError={(e) => {
-              e.currentTarget.src = "/default-profile.png";
+              e.currentTarget.src = profile;
             }}
           />
         </div>

@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import profile from "../../assets/profileimg.svg";
+import profile from "../../assets/profileimg.png";
 import GroupPurchaseInfo from "./GroupPurchaseInfo.tsx";
 import RoundSquareButton from "../button/RoundSquareButton.tsx";
 import { requestRoommateMatchingByChatRoom } from "../../apis/roommate.ts";
