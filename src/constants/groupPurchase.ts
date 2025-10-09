@@ -7,6 +7,8 @@ export const CATEGORY_LIST: GetGroupPurchaseListParams["type"][] = [
   "생활용품",
   "기타",
 ];
+export type CategoryType = (typeof CATEGORY_LIST)[number];
+
 export const POST_CATEGORIES = ["배달", "식자재", "생활용품", "기타"];
 
 export const SORT_OPTIONS: GetGroupPurchaseListParams["sort"][] = [

@@ -102,8 +102,12 @@ export default function GroupPurchaseMainPage() {
 
   const menuItems = [
     {
-      label: "키워드 알림 등록",
+      label: "키워드 알림 설정",
       onClick: () => {
+        if (!isLoggedIn) {
+          alert("로그인 후 사용 가능해요");
+          return;
+        }
         navigate("/groupPurchase/keywordSetting");
       },
     },
