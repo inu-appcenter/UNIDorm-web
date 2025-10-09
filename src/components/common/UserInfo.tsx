@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { FaUserCircle } from "react-icons/fa";
+import profileimg from "../../assets/profileimg.png";
 
 interface Props {
   authorImagePath: string;
@@ -7,28 +7,21 @@ interface Props {
   createDate: string;
   groupOrderType?: string;
 }
+
 const UserInfo = ({
   authorImagePath,
   username,
   createDate,
   groupOrderType,
 }: Props) => {
+  const imageSrc = authorImagePath || profileimg;
+
   return (
     <Wrapper>
-      {authorImagePath ? (
-        <img
-          src={authorImagePath}
-          alt="프사"
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: "50%",
-            objectFit: "cover",
-          }}
-        />
-      ) : (
-        <FaUserCircle size={36} color="#ccc" />
-      )}{" "}
+      <ProfileImageWrapper>
+        <ProfileImage src={imageSrc} alt="프로필 이미지" />
+      </ProfileImageWrapper>
+
       <UserText>
         <Nickname>{username}</Nickname>
         <DateText>
@@ -42,6 +35,7 @@ const UserInfo = ({
           })()}
         </DateText>
       </UserText>
+
       <Spacer />
       {groupOrderType && <CategoryTag>{groupOrderType}</CategoryTag>}
     </Wrapper>
@@ -57,14 +51,33 @@ const Wrapper = styled.div`
   margin-bottom: 16px;
 `;
 
+const ProfileImageWrapper = styled.div`
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center; /* ✅ 정중앙 정렬 */
+`;
+
+const ProfileImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* 이미지 비율 유지 + 꽉 채움 */
+  object-position: center center; /* ✅ 이미지 중심 기준을 중앙으로 고정 */
+`;
+
 const UserText = styled.div`
   display: flex;
   flex-direction: column;
 `;
+
 const DateText = styled.div`
   font-size: 12px;
   color: gray;
 `;
+
 const Spacer = styled.div`
   flex-grow: 1;
 `;
@@ -77,6 +90,7 @@ const CategoryTag = styled.div`
   border-radius: 20px;
   margin-right: 8px;
 `;
+
 const Nickname = styled.div`
   font-weight: 600;
   font-size: 14px;

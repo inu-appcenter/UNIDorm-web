@@ -12,7 +12,7 @@ import CommentSection from "../../components/comment/CommentSection.tsx";
 import CommentInputBox from "../../components/comment/CommentInputBox.tsx";
 import { ReplyProps } from "../../types/comment.ts";
 import { deleteTipComment } from "../../apis/tips.ts";
-import { TipDetail } from "../../types/tips.ts";
+import { TipDetail, TipImage } from "../../types/tips.ts";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../../constants/EmptyMessage.tsx";
 import { useIsAdminRole } from "../../hooks/useIsAdminRole.ts";
@@ -28,7 +28,7 @@ export default function TipDetailPage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [commentInput, setCommentInput] = useState("");
   const { tokenInfo } = useUserStore();
-  const [images, setImages] = useState<string[]>([]);
+  const [images, setImages] = useState<TipImage[]>([]);
   const isLoggedIn = Boolean(tokenInfo.accessToken);
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
@@ -54,15 +54,15 @@ export default function TipDetailPage() {
         ]);
 
         console.log("tipResponse", tipResponse);
-
+        console.log("tipimage", imagesResponse);
         // 팁 상세 정보 설정
         setTip(tipResponse.data);
         setLikeCount(tipResponse.data.tipLikeCount);
         setLiked(tipResponse.data.checkLikeCurrentUser ?? false);
 
         // 이미지 정보 설정
-        const urls = imagesResponse.data.map((img: any) => img.fileName);
-        setImages(urls);
+        // const urls = imagesResponse.data.map((img: any) => img.fileName);
+        setImages(imagesResponse.data);
       } catch (err) {
         console.error("게시글 또는 이미지 불러오기 실패", err);
         setTip(null); // 에러 발생 시 데이터 초기화
@@ -169,7 +169,6 @@ export default function TipDetailPage() {
       />
       <ScrollArea>
         <Content>
-          {/* 🔽 로딩 상태에 따라 스피너, 상세 내용, 빈 메시지를 조건부 렌더링합니다. */}
           {isLoading ? (
             <LoadingSpinner message="꿀팁을 불러오는 중..." />
           ) : tip ? (
@@ -184,12 +183,12 @@ export default function TipDetailPage() {
                 <ImageSlider {...handlers} style={{ touchAction: "pan-y" }}>
                   <SliderItem
                     onClick={() => {
-                      setPreviewUrl(images[currentImage]);
+                      setPreviewUrl(images[currentImage].imagePath);
                       setShowInfoModal(true);
                     }}
                   >
                     <img
-                      src={images[currentImage]}
+                      src={images[currentImage].imagePath}
                       alt={`팁 이미지 ${currentImage + 1}`}
                       style={{
                         width: "100%",

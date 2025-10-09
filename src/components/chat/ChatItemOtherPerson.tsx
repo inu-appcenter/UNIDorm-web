@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import profile from "../../assets/profileimg.svg";
+import profile from "../../assets/profileimg.png";
 
 type Props = {
   content: string;
