@@ -5,8 +5,8 @@ import Switch from "../../components/common/Switch.tsx";
 // 부모에서 type과 checked 상태를 받도록 MenuItem 인터페이스 수정
 interface MenuItem {
   label: string;
-  type: string; // API 요청을 위한 type 추가
-  checked: boolean; // 현재 상태 추가 (부모로부터 받음)
+  type?: string; // API 요청을 위한 type 추가
+  checked?: boolean; // 현재 상태 추가 (부모로부터 받음)
   onClick?: () => void;
 }
 
@@ -22,7 +22,7 @@ interface MenuGroupProps {
 const MenuGroup = ({ title, menus, hasToggle, onToggle }: MenuGroupProps) => {
   // onToggle을 직접 호출하여 부모의 핸들러에 type과 checked 상태를 전달
   const handleToggle = (menu: MenuItem, checked: boolean) => {
-    if (onToggle) {
+    if (onToggle && menu.type) {
       // label 대신 type을 전달
       onToggle(menu.type, checked);
     }
@@ -35,7 +35,7 @@ const MenuGroup = ({ title, menus, hasToggle, onToggle }: MenuGroupProps) => {
         // index 대신 menu.type을 key로 사용하는 것을 권장 (선택적)
         <MenuLine key={menu.type}>
           <MenuItem onClick={menu.onClick}>{menu.label}</MenuItem>
-          {hasToggle && (
+          {hasToggle && menu.checked && (
             <Switch
               // 부모로부터 받은 checked 상태를 사용
               checked={menu.checked}
