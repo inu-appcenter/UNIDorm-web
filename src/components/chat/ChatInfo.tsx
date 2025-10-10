@@ -6,7 +6,7 @@ import { requestRoommateMatchingByChatRoom } from "../../apis/roommate.ts";
 import { MdHelpOutline } from "react-icons/md";
 import RoundSquareWhiteButton from "../button/RoundSquareWhiteButton.tsx";
 import { useState } from "react";
-import 궁금해하는횃불이 from "../../assets/roommate/궁금해하는횃불이.png";
+import 궁금해하는횃불이 from "../../assets/roommate/궁금해하는횃불이.webp";
 
 interface ChatInfoProps {
   selectedTab: string;

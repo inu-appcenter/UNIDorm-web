@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import back from "../../assets/header/back.svg";
 import TopRightDropdownMenu from "./TopRightDropdownMenu.tsx";
 
-import logo from "../../assets/unidorm-logo.svg";
+import logo from "../../assets/unidorm-logo.webp";
 
 import { getMobilePlatform } from "../../utils/getMobilePlatform";
 import { getReceivedRoommateRequests } from "../../apis/roommate.ts";
