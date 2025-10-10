@@ -183,12 +183,12 @@ export default function TipDetailPage() {
                 <ImageSlider {...handlers} style={{ touchAction: "pan-y" }}>
                   <SliderItem
                     onClick={() => {
-                      setPreviewUrl(images[currentImage].imagePath);
+                      setPreviewUrl(images[currentImage].imageUrl);
                       setShowInfoModal(true);
                     }}
                   >
                     <img
-                      src={images[currentImage].imagePath}
+                      src={images[currentImage].imageUrl}
                       alt={`팁 이미지 ${currentImage + 1}`}
                       style={{
                         width: "100%",

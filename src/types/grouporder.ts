@@ -53,7 +53,7 @@ export interface GroupOrderDetail {
 
 export interface GroupOrderImage {
   imageName: string;
-  imagePath: string;
+  imageUrl: string;
   contentType: string;
   fileSize: number;
   uploadDate: string;
