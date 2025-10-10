@@ -1,6 +1,7 @@
 import { Drawer } from "vaul";
 import styled from "styled-components";
-import { useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
+import linkify from "../../utils/linkfy.tsx";
 
 interface LinkItem {
   title: string;
@@ -12,7 +13,7 @@ interface Props {
   title?: string;
   text?: string;
   children?: React.ReactNode;
-  links?: LinkItem[]; // 🔹 추가된 부분
+  links?: LinkItem[];
 
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
@@ -23,14 +24,14 @@ export default function HomeNoticeBottomModal({
   title,
   text,
   children,
-  links = [], // 기본값 빈 배열
+  links = [],
   isOpen,
   setIsOpen,
 }: Props) {
   const initialized = useRef(false);
 
   useEffect(() => {
-    if (initialized.current) return; // 이미 체크했으면 종료
+    if (initialized.current) return;
     const hiddenModals = JSON.parse(
       localStorage.getItem("hiddenModals") || "[]",
     );
@@ -57,12 +58,13 @@ export default function HomeNoticeBottomModal({
         <Overlay />
         <Content>
           <SwipeHandle />
+          <ModalHeader>
+            <h2>{title}</h2>
+            {text && <span>{linkify(text)}</span>}
+          </ModalHeader>
           <ScrollContent>
-            <Title>{title}</Title>
-            <Text>{text}</Text>
             {children}
 
-            {/* 🔹 링크 버튼 목록 */}
             {links.length > 0 && (
               <LinksWrapper>
                 {links.map((item, index) => (
@@ -124,30 +126,21 @@ const SwipeHandle = styled.div`
 const ScrollContent = styled.div`
   flex: 1;
   overflow-y: auto;
+  white-space: pre-wrap; /* ✅ 변경: \n 엔터 처리 */
+  padding: 0 16px; /* ✅ 추가: 내용 좌우 여백 */
+  word-break: keep-all; /* ✅ 추가: 단어 단위 줄바꿈 */
 
   img {
     width: 100%;
   }
 `;
 
-const Title = styled.h2`
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #111827;
-  margin-bottom: 1rem;
-`;
-
-const Text = styled.p`
-  color: #4b5563;
-`;
-
-/* 🔹 링크 버튼 스타일 */
 const LinksWrapper = styled.div`
   margin-top: 1rem;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  padding: 0 16px;
+  /* padding: 0 16px; ScrollContent로 이동 */
 `;
 
 const LinkButton = styled.button`
@@ -183,5 +176,36 @@ const CloseMenus = styled.div`
     line-height: 24px;
     letter-spacing: 0.38px;
     cursor: pointer;
+  }
+`;
+
+const ModalHeader = styled.div`
+  flex-shrink: 0;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0 16px; /* ✅ 추가: 헤더 좌우 여백 */
+  word-break: keep-all;
+  white-space: pre-wrap;
+
+  color: #1c408c;
+  width: 100%;
+  box-sizing: border-box; /* ✅ 추가: 패딩 계산 포함 */
+
+  img {
+    width: 60%;
+    margin-bottom: 12px;
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 24px;
+  }
+
+  span {
+    font-size: 14px;
+    color: #6c6c74;
   }
 `;

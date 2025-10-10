@@ -17,7 +17,6 @@ const PopupNotiFormPage = () => {
   const { popupNotificationId } = useParams<{ popupNotificationId: string }>();
   const navigate = useNavigate();
 
-  // URL 파라미터(id)의 존재 여부로 수정/등록 모드를 결정
   const isEditMode = !!popupNotificationId;
 
   const [formData, setFormData] = useState<RequestPopupNotificationDto>({
@@ -30,8 +29,10 @@ const PopupNotiFormPage = () => {
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
+  // 수정 모드에서 이미지 변경 여부를 추적하는 상태
+  const [imagesChanged, setImagesChanged] = useState(false);
+
   useEffect(() => {
-    // 수정 모드일 때만 기존 데이터를 불러옵니다.
     if (isEditMode) {
       const fetchNotification = async () => {
         try {
@@ -52,7 +53,7 @@ const PopupNotiFormPage = () => {
         } catch (error) {
           console.error("팝업 공지 정보 조회 실패:", error);
           alert("공지 정보를 불러오는 데 실패했습니다.");
-          navigate(-1); // 이전 페이지로 이동
+          navigate(-1);
         }
       };
       fetchNotification();
@@ -70,9 +71,12 @@ const PopupNotiFormPage = () => {
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
+      // 새로운 이미지를 선택했으므로, 변경 상태를 true로 설정
+      setImagesChanged(true);
+
       const files = Array.from(e.target.files);
       setImages(files);
-      // 메모리 누수 방지를 위해 기존 blob URL 해제
+
       previewUrls.forEach((url) => {
         if (url.startsWith("blob:")) {
           URL.revokeObjectURL(url);
@@ -93,20 +97,21 @@ const PopupNotiFormPage = () => {
     setLoading(true);
     try {
       if (isEditMode) {
-        // 수정 모드일 경우: update API 호출
+        // 수정 모드일 경우:
+        // imagesChanged가 true일 때만 images 배열을 전달합니다.
+        // false라면 undefined를 보내 API에서 이미지 관련 로직을 건너뛰도록 합니다.
         await updatePopupNotification(
           Number(popupNotificationId),
           formData,
-          images,
+          imagesChanged ? images : undefined,
         );
         alert("팝업 공지가 수정되었습니다.");
       } else {
-        // 등록 모드일 경우: create API 호출
+        // 등록 모드일 경우: 항상 images 배열을 전달합니다.
         await createPopupNotification(formData, images);
         alert("팝업 공지가 등록되었습니다.");
       }
-      // 성공 시 목록 페이지로 이동
-      navigate("/admin/popup-notifications");
+      navigate(-1);
     } catch (error) {
       console.error(`팝업 공지 ${isEditMode ? "수정" : "등록"} 실패:`, error);
       alert(`${isEditMode ? "수정" : "등록"} 중 오류가 발생했습니다.`);
@@ -115,7 +120,6 @@ const PopupNotiFormPage = () => {
     }
   };
 
-  // 모드에 따라 UI 텍스트 동적 변경
   const pageTitle = isEditMode
     ? "홈 화면 팝업 공지 수정"
     : "홈 화면 팝업 공지 등록";
@@ -163,7 +167,7 @@ const PopupNotiFormPage = () => {
             <Label>종료일</Label>
             <Input
               type="date"
-              name="deadline" // "endDate" -> "deadline"으로 변경
+              name="deadline"
               value={formData.deadline}
               onChange={handleChange}
               required

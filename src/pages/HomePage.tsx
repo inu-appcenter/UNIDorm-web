@@ -176,14 +176,13 @@ export default function HomePage() {
             isOpen={modalOpenStates[popup.id ?? 0]}
             setIsOpen={(open) => setModalOpen(popup.id.toString(), open)}
             links={[]} // 필요시 popup.content에 URL을 파싱해서 전달 가능
+            title={popup.title}
+            text={popup.content}
           >
             <PopupModalContent>
               {popup.imagePath?.map((img, idx) => (
                 <img key={idx} src={img} alt={popup.title} />
               ))}
-              <h3>{popup.title}</h3>
-              <p>{popup.content}</p>
-              <span>📅 마감일: {popup.deadline}</span>
             </PopupModalContent>
           </HomeNoticeBottomModal>
         ))}
