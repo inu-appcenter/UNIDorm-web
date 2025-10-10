@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { MyRoommateInfoResponse } from "../../types/roommates.ts";
-import default_profile_img from "../../assets/profileimg.svg";
+import default_profile_img from "../../assets/profileimg.png";
 import { MdKeyboardArrowRight } from "react-icons/md";
 
 interface RoomMateInfoAreaProps {
@@ -56,10 +56,8 @@ const RoomMateInfoArea = ({
           />
         </div>
         <div className="description">
-          <div className="name">{roommateInfo?.name || "횃불이"}</div>
-          <div className="college">
-            {roommateInfo?.college || "정보기술대학"}
-          </div>
+          <div className="name">{roommateInfo?.name || "닉네임"}</div>
+          <div className="college">{roommateInfo?.college || "단과대명"}</div>
         </div>
       </LeftArea>
       {location.pathname === "/mypage" && (
