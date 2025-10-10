@@ -16,6 +16,7 @@ const PopupNotiListPage = () => {
     const fetchNotifications = async () => {
       try {
         const response = await getAllPopupNotifications();
+        console.log("팝업 공지 목록 조회 성공:", response);
         setNotifications(response.data);
       } catch (error) {
         console.error("팝업 공지 목록 조회 실패:", error);
