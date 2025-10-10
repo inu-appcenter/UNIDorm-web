@@ -35,7 +35,7 @@ const MenuGroup = ({ title, menus, hasToggle, onToggle }: MenuGroupProps) => {
         // index 대신 menu.type을 key로 사용하는 것을 권장 (선택적)
         <MenuLine key={menu.type}>
           <MenuItem onClick={menu.onClick}>{menu.label}</MenuItem>
-          {hasToggle && menu.checked && (
+          {hasToggle && menu.checked !== undefined && (
             <Switch
               // 부모로부터 받은 checked 상태를 사용
               checked={menu.checked}
