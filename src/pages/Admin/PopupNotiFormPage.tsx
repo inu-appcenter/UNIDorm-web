@@ -23,6 +23,7 @@ const PopupNotiFormPage = () => {
     title: "",
     content: "",
     notificationType: "룸메이트",
+    startDate: "",
     deadline: "",
   });
   const [images, setImages] = useState<File[]>([]);
@@ -39,12 +40,19 @@ const PopupNotiFormPage = () => {
           const response = await getPopupNotificationById(
             Number(popupNotificationId),
           );
-          const { title, content, notificationType, deadline, imagePath } =
-            response.data;
+          const {
+            title,
+            content,
+            notificationType,
+            startDate,
+            deadline,
+            imagePath,
+          } = response.data;
           setFormData({
             title,
             content,
             notificationType,
+            startDate,
             deadline,
           });
           if (imagePath) {
@@ -163,6 +171,16 @@ const PopupNotiFormPage = () => {
         </Select>
 
         <DateGroup>
+          <div>
+            <Label>시작일</Label>
+            <Input
+              type="date"
+              name="startDate"
+              value={formData.startDate}
+              onChange={handleChange}
+              required
+            />
+          </div>
           <div>
             <Label>종료일</Label>
             <Input

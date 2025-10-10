@@ -5,8 +5,8 @@ import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import {
-  getAllPopupNotifications,
   deletePopupNotification,
+  getAllPopupNotifications,
 } from "../../apis/popup-notification";
 import { PopupNotification } from "../../types/popup-notifications";
 import Header from "../../components/common/Header";
@@ -76,6 +76,7 @@ const PopupNotiListPage = () => {
               </CardHeader>
               <CardContent>{noti.content}</CardContent>
               <CardFooter>
+                <span>📅 시작일: {noti.startDate}</span>
                 <span>📅 마감일: {noti.deadline}</span>
                 <span>🕓 등록일: {noti.createdDate}</span>
               </CardFooter>
