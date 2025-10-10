@@ -3,11 +3,11 @@ import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import RoundSquareButton from "../components/button/RoundSquareButton.tsx";
 
-import onboarding1 from "../assets/onboarding/onboarding1.svg";
-import onboarding2 from "../assets/onboarding/onboarding2.svg";
-import onboarding3 from "../assets/onboarding/onboarding3.svg";
+import onboarding1 from "../assets/onboarding/onboarding1.webp";
+import onboarding2 from "../assets/onboarding/onboarding2.webp";
+import onboarding3 from "../assets/onboarding/onboarding3.webp";
 import { useNavigate } from "react-router-dom";
-import 로고 from "../assets/unidorm-logo-no-background.svg";
+import 로고 from "../assets/unidorm-logo.webp";
 import TermOfUse from "../components/TermOfUse.tsx";
 
 const SLIDE_DURATION = 5000;

@@ -15,7 +15,7 @@ import AnnounceAttachment from "../../components/announce/AnnounceAttachment.tsx
 import GrayDivider from "../../components/common/GrayDivider.tsx";
 import { useSwipeable } from "react-swipeable";
 import RoundSquareWhiteButton from "../../components/button/RoundSquareWhiteButton.tsx";
-import 궁금해하는횃불이 from "../../assets/roommate/궁금해하는횃불이.png";
+import 궁금해하는횃불이 from "../../assets/roommate/궁금해하는횃불이.webp";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../../constants/EmptyMessage.tsx";
 import { useIsAdminRole } from "../../hooks/useIsAdminRole.ts";
