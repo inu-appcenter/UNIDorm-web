@@ -1,22 +1,25 @@
+/**
+ * 파일 경로: src/pages/admin/PopupNotiListPage.tsx
+ */
 import { useEffect, useState } from "react";
 import styled from "styled-components";
-// react-router-dom의 useNavigate를 import 합니다.
 import { useNavigate } from "react-router-dom";
-import { getAllPopupNotifications } from "../../apis/popup-notification.ts";
-import { PopupNotification } from "../../types/popup-notifications.ts";
-import Header from "../../components/common/Header.tsx";
+import {
+  getAllPopupNotifications,
+  deletePopupNotification,
+} from "../../apis/popup-notification";
+import { PopupNotification } from "../../types/popup-notifications";
+import Header from "../../components/common/Header";
 
 const PopupNotiListPage = () => {
   const [notifications, setNotifications] = useState<PopupNotification[]>([]);
   const [loading, setLoading] = useState(true);
-  // useNavigate 훅을 초기화합니다.
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
         const response = await getAllPopupNotifications();
-        console.log("팝업 공지 목록 조회 성공:", response);
         setNotifications(response.data);
       } catch (error) {
         console.error("팝업 공지 목록 조회 실패:", error);
@@ -27,9 +30,27 @@ const PopupNotiListPage = () => {
     fetchNotifications();
   }, []);
 
-  // 등록 버튼 클릭 시 호출될 함수입니다.
   const handleCreateClick = () => {
     navigate("create");
+  };
+
+  const handleEditClick = (popupNotificationId: number) => {
+    navigate(`edit/${popupNotificationId}`);
+  };
+
+  const handleDeleteClick = async (id: number) => {
+    if (window.confirm("정말로 이 공지를 삭제하시겠습니까?")) {
+      try {
+        await deletePopupNotification(id);
+        alert("공지가 삭제되었습니다.");
+        setNotifications((prev) =>
+          prev.filter((noti) => noti.popupNotificationId !== id),
+        );
+      } catch (error) {
+        console.error("팝업 공지 삭제 실패:", error);
+        alert("삭제 중 오류가 발생했습니다.");
+      }
+    }
   };
 
   if (loading) {
@@ -39,20 +60,17 @@ const PopupNotiListPage = () => {
   return (
     <Wrapper>
       <Header title={"홈 화면 팝업 공지 관리"} hasBack={true} />
-
-      {/* 버튼을 오른쪽 정렬하기 위한 컨테이너와 버튼을 추가합니다. */}
       <ButtonContainer>
         <CreateButton onClick={handleCreateClick}>
           팝업 공지 등록하기
         </CreateButton>
       </ButtonContainer>
-
       {notifications.length === 0 ? (
         <Message>등록된 팝업 공지가 없습니다.</Message>
       ) : (
         <List>
-          {notifications.map((noti, index) => (
-            <Card key={index}>
+          {notifications.map((noti) => (
+            <Card key={noti.popupNotificationId}>
               <CardHeader>
                 <CardTitle>{noti.title}</CardTitle>
                 <TypeTag>{noti.notificationType}</TypeTag>
@@ -69,6 +87,19 @@ const PopupNotiListPage = () => {
                   ))}
                 </ImageContainer>
               )}
+              <CardActions>
+                <ActionButton
+                  onClick={() => handleEditClick(noti.popupNotificationId)}
+                >
+                  수정
+                </ActionButton>
+                <ActionButton
+                  onClick={() => handleDeleteClick(noti.popupNotificationId)}
+                  className="delete"
+                >
+                  삭제
+                </ActionButton>
+              </CardActions>
             </Card>
           ))}
         </List>
@@ -88,20 +119,17 @@ const Wrapper = styled.div`
   padding: 40px 16px;
   padding-top: 80px;
   box-sizing: border-box;
-
   display: flex;
   flex-direction: column;
   gap: 20px;
 `;
 
-// 버튼을 담을 컨테이너 스타일 추가
 const ButtonContainer = styled.div`
   display: flex;
   justify-content: flex-end;
   width: 100%;
 `;
 
-// 등록 버튼 스타일 추가
 const CreateButton = styled.button`
   padding: 10px 18px;
   background-color: #007aff;
@@ -112,7 +140,6 @@ const CreateButton = styled.button`
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s;
-
   &:hover {
     background-color: #0056b3;
   }
@@ -124,13 +151,13 @@ const List = styled.div`
   gap: 16px;
 `;
 
-// ... 이하 기존 스타일 컴포넌트는 동일 ...
-
 const Card = styled.div`
   background: #ffffff;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   padding: 20px;
+  display: flex;
+  flex-direction: column;
 `;
 
 const CardHeader = styled.div`
@@ -157,6 +184,7 @@ const CardContent = styled.p`
   font-size: 14px;
   color: #333;
   margin: 10px 0;
+  white-space: pre-wrap;
 `;
 
 const CardFooter = styled.div`
@@ -164,6 +192,7 @@ const CardFooter = styled.div`
   color: #777;
   display: flex;
   justify-content: space-between;
+  margin-top: auto;
 `;
 
 const ImageContainer = styled.div`
@@ -185,4 +214,36 @@ const Message = styled.div`
   padding: 60px 0;
   font-size: 16px;
   color: #555;
+`;
+
+const CardActions = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #f0f0f0;
+`;
+
+const ActionButton = styled.button`
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background-color: #f8f9fa;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+  &:hover {
+    background-color: #e9ecef;
+    border-color: #adb5bd;
+  }
+  &.delete {
+    color: #dc3545;
+    border-color: #dc3545;
+    &:hover {
+      background-color: #dc3545;
+      color: white;
+    }
+  }
 `;

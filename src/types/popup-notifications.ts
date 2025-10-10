@@ -12,6 +12,5 @@ export interface RequestPopupNotificationDto {
   title: string;
   content: string;
   notificationType: string;
-  startDate: string;
-  endDate: string;
+  deadline: string;
 }
