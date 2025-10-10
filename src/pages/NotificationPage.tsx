@@ -5,10 +5,12 @@ import { useEffect, useState } from "react";
 import { getNotifications } from "../apis/notification.ts"; // 새로 만든 알림 API 임포트
 import useUserStore from "../stores/useUserStore.ts";
 import { Notification } from "../types/notifications.ts";
+import { useNavigate } from "react-router-dom";
 
 const NotificationPage = () => {
   // 표시될 모든 알림을 저장하는 상태
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const navigate = useNavigate();
   const { tokenInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
 
@@ -67,9 +69,18 @@ const NotificationPage = () => {
     }
   }, [isLoggedIn]);
 
+  const menuItems = [
+    {
+      label: "알림 수신 설정",
+      onClick: () => {
+        navigate("/notification-setting");
+      },
+    },
+  ];
+
   return (
     <NotificationPageWrapper>
-      <Header hasBack={true} />
+      <Header hasBack={true} menuItems={menuItems} />
       <ContentWrapper>
         {notifications.length > 0 ? (
           notifications.map((noti) => (
