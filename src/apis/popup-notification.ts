@@ -4,16 +4,30 @@ import {
 } from "../types/popup-notifications.ts";
 import { AxiosResponse } from "axios";
 import tokenInstance from "./tokenInstance.ts";
+import axiosInstance from "./axiosInstance.ts";
+
+/**
+ * 🔹 오늘 보여야 하는 팝업 알림 조회
+ * GET /popup-notifications
+ */
+export const getPopupNotifications = async (): Promise<
+  AxiosResponse<PopupNotification[]>
+> => {
+  const response = await axiosInstance.get<PopupNotification[]>(
+    "/popup-notifications",
+  );
+  return response;
+};
 
 /**
  * 🔹 모든 팝업 알림 조회
- * GET /popup-notifications
+ * GET /popup-notifications/admin
  */
 export const getAllPopupNotifications = async (): Promise<
   AxiosResponse<PopupNotification[]>
 > => {
   const response = await tokenInstance.get<PopupNotification[]>(
-    '/popup-notifications',
+    "/popup-notifications/admin",
   );
   return response;
 };
@@ -42,19 +56,19 @@ export const createPopupNotification = async (
 ): Promise<AxiosResponse<void>> => {
   const formData = new FormData();
   formData.append(
-    'requestPopupNotificationDto',
-    new Blob([JSON.stringify(data)], { type: 'application/json' }),
+    "requestPopupNotificationDto",
+    new Blob([JSON.stringify(data)], { type: "application/json" }),
   );
 
   if (images && images.length > 0) {
-    images.forEach((image) => formData.append('images', image));
+    images.forEach((image) => formData.append("images", image));
   }
 
   const response = await tokenInstance.post<void>(
-    '/popup-notifications',
+    "/popup-notifications",
     formData,
     {
-      headers: { 'Content-Type': 'multipart/form-data' },
+      headers: { "Content-Type": "multipart/form-data" },
     },
   );
   return response;
@@ -72,19 +86,19 @@ export const updatePopupNotification = async (
 ): Promise<AxiosResponse<void>> => {
   const formData = new FormData();
   formData.append(
-    'requestPopupNotificationDto',
-    new Blob([JSON.stringify(data)], { type: 'application/json' }),
+    "requestPopupNotificationDto",
+    new Blob([JSON.stringify(data)], { type: "application/json" }),
   );
 
   if (images && images.length > 0) {
-    images.forEach((image) => formData.append('images', image));
+    images.forEach((image) => formData.append("images", image));
   }
 
   const response = await tokenInstance.put<void>(
     `/popup-notifications/${popupNotificationId}`,
     formData,
     {
-      headers: { 'Content-Type': 'multipart/form-data' },
+      headers: { "Content-Type": "multipart/form-data" },
     },
   );
   return response;

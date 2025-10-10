@@ -23,7 +23,7 @@ import EmptyMessage from "../constants/EmptyMessage.tsx";
 import { getAnnouncements } from "../apis/announcements.ts";
 import { Announcement } from "../types/announcements.ts";
 import useUserStore from "../stores/useUserStore.ts";
-import { getAllPopupNotifications } from "../apis/popup-notification.ts";
+import { getPopupNotifications } from "../apis/popup-notification.ts";
 import { PopupNotification } from "../types/popup-notifications.ts";
 
 export default function HomePage() {
@@ -95,7 +95,7 @@ export default function HomePage() {
     const fetchPopupNotices = async () => {
       setIsPopupLoading(true);
       try {
-        const response = await getAllPopupNotifications();
+        const response = await getPopupNotifications();
         console.log("팝업 공지 불러오기 성공", response);
         setPopupNotices(response.data);
         // 모달별 초기 열림 상태 (true로 시작)
