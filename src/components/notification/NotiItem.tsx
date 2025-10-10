@@ -27,7 +27,8 @@ const NotiItem = ({ notidata }: NotiItemProps) => {
     }
   };
   return (
-    <NotiItemWrapper onClick={undefined}>
+    // 2. notidata.read 값을 isRead prop으로 전달합니다.
+    <NotiItemWrapper isRead={notidata.read} onClick={undefined}>
       <IconWrapper>
         <img src={NotiIconSelector()} alt={"공지아이콘"} />
       </IconWrapper>
@@ -48,16 +49,34 @@ const NotiItem = ({ notidata }: NotiItemProps) => {
 
 export default NotiItem;
 
-const NotiItemWrapper = styled.div`
+// 1. isRead prop을 받도록 수정하고, 해당 prop 값에 따라 오버레이를 표시합니다.
+const NotiItemWrapper = styled.div<{ isRead: boolean }>`
   width: 100%;
   height: fit-content;
   display: flex;
   flex-direction: row;
   gap: 10px;
   box-sizing: border-box;
+  position: relative; /* 오버레이를 위한 포지셔닝 컨텍스트 */
 
   padding: 16px;
   border-bottom: 1px solid #e6e6e6;
+
+  /* 읽음 처리된 알림 위에 반투명 오버레이를 씌웁니다. */
+  &::after {
+    content: "";
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.5); /* 흰색 반투명 오버레이 */
+    opacity: ${(props) =>
+      props.isRead ? 1 : 0}; /* isRead가 true일 때만 보이도록 설정 */
+    pointer-events: none; /* 오버레이가 클릭 이벤트를 가로채지 않도록 설정 */
+    transition: opacity 0.2s ease-in-out; /* 부드러운 전환 효과 */
+  }
 `;
 
 const IconWrapper = styled.div``;
