@@ -88,6 +88,7 @@ const PopupNotiFormPage = () => {
       alert("제목과 내용을 입력해주세요.");
       return;
     }
+    console.log(formData);
 
     setLoading(true);
     try {
@@ -162,7 +163,7 @@ const PopupNotiFormPage = () => {
             <Label>종료일</Label>
             <Input
               type="date"
-              name="endDate"
+              name="deadline" // "endDate" -> "deadline"으로 변경
               value={formData.deadline}
               onChange={handleChange}
               required
