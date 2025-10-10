@@ -19,6 +19,7 @@ import 궁금해하는횃불이 from "../../assets/roommate/궁금해하는횃�
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../../constants/EmptyMessage.tsx";
 import { useIsAdminRole } from "../../hooks/useIsAdminRole.ts";
+import linkify from "../../utils/linkfy.tsx";
 
 export default function AnnounceDetailPage() {
   const { boardId } = useParams<{ boardId: string }>();
@@ -132,58 +133,6 @@ export default function AnnounceDetailPage() {
     trackMouse: true,
   });
 
-  // 🔽 URL 끝에 붙는 구두점을 처리하는 로직으로 개선된 함수입니다.
-  const renderContentWithLinks = (content: string) => {
-    const urlRegex = /(https?:\/\/\S+|www\.\S+)/gi;
-
-    return content.split("\n").map((line, lineIndex) => (
-      // key를 span이 아닌 Fragment에 직접 할당하여 불필요한 태그를 줄입니다.
-      <span key={lineIndex}>
-        {line.split(urlRegex).map((part, partIndex) => {
-          if (part.match(urlRegex)) {
-            let url = part;
-            let trailingChars = "";
-
-            // URL 끝에 올 수 있는 구두점 목록
-            const punctuation = [".", ",", ")", "]", "}", ":", ";", "!"];
-
-            // URL의 마지막 글자가 구두점 목록에 포함되어 있다면, 분리합니다.
-            // 여러 개가 붙어있는 경우(e.g., "...link.)")를 대비해 while문 사용
-            while (punctuation.includes(url.slice(-1))) {
-              trailingChars = url.slice(-1) + trailingChars;
-              url = url.slice(0, -1);
-            }
-
-            // URL이 비어있지 않은 경우에만 링크로 만듭니다.
-            if (url) {
-              const href = url.startsWith("www.") ? `http://${url}` : url;
-              return (
-                // key는 고유해야 하므로 partIndex를 사용합니다.
-                <span key={partIndex}>
-                  <a
-                    href={href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ color: "#0066cc", textDecoration: "underline" }}
-                  >
-                    {url}
-                  </a>
-                  {trailingChars}
-                </span>
-              );
-            } else {
-              // url이 비었다면, 분리된 구두점만 반환
-              return <span key={partIndex}>{trailingChars}</span>;
-            }
-          }
-          // URL이 아닌 일반 텍스트 부분을 반환합니다.
-          return <span key={partIndex}>{part}</span>;
-        })}
-        <br />
-      </span>
-    ));
-  };
-
   return (
     <Wrapper>
       <Header title="공지사항 상세" hasBack={true} menuItems={menuItems} />
@@ -236,7 +185,7 @@ export default function AnnounceDetailPage() {
                 <AnnounceAttachment attachments={attachments} />
               )}
 
-              <BodyText>{renderContentWithLinks(announce.content)}</BodyText>
+              <BodyText>{linkify(announce.content)}</BodyText>
             </>
           ) : (
             <EmptyMessage message="공지사항을 불러올 수 없습니다." />
