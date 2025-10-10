@@ -46,7 +46,7 @@ import ComplainAdminPage from "./pages/Admin/ComplainAdminPage.tsx";
 import ComplainAnswerWritePage from "./pages/Admin/ComplainAnswerWritePage.tsx";
 import KeywordAlertSettingPage from "./pages/GroupPurchase/KeywordAlertSettingPage.tsx";
 import PopupNotiListPage from "./pages/Admin/PopupNotiListPage.tsx";
-import PopupNotiCreatePage from "./pages/Admin/PopupNotiCreatePage.tsx";
+import PopupNotiCreatePage from "./pages/Admin/PopupNotiFormPage.tsx";
 import CreateNotificationPage from "./pages/Admin/CreateNotificationPage.tsx";
 import NotificationSettingPage from "./pages/MyPage/NotificationSettingPage.tsx";
 
@@ -203,6 +203,10 @@ function App() {
           <Route path="popup-notifications" element={<PopupNotiListPage />} />
           <Route
             path="popup-notifications/create"
+            element={<PopupNotiCreatePage />}
+          />
+          <Route
+            path="popup-notifications/edit/:popupNotificationId"
             element={<PopupNotiCreatePage />}
           />
           <Route

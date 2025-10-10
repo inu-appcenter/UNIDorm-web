@@ -1,21 +1,63 @@
-import { useState } from "react";
+/**
+ * 파일 경로: src/pages/admin/PopupNotiFormPage.tsx
+ * (기존의 PopupNotiCreatePage.tsx와 PopupNotiEditPage.tsx를 이 파일로 대체합니다)
+ */
+import { useState, useEffect } from "react";
 import styled from "styled-components";
-import { createPopupNotification } from "../../apis/popup-notification.ts";
-import { RequestPopupNotificationDto } from "../../types/popup-notifications.ts";
-import Header from "../../components/common/Header.tsx";
+import { useParams, useNavigate } from "react-router-dom";
+import {
+  createPopupNotification,
+  getPopupNotificationById,
+  updatePopupNotification,
+} from "../../apis/popup-notification";
+import { RequestPopupNotificationDto } from "../../types/popup-notifications";
+import Header from "../../components/common/Header";
 
-const PopupNotiCreatePage = () => {
+const PopupNotiFormPage = () => {
+  const { popupNotificationId } = useParams<{ popupNotificationId: string }>();
+  const navigate = useNavigate();
+
+  // URL 파라미터(id)의 존재 여부로 수정/등록 모드를 결정
+  const isEditMode = !!popupNotificationId;
+
   const [formData, setFormData] = useState<RequestPopupNotificationDto>({
     title: "",
     content: "",
     notificationType: "룸메이트",
-    startDate: "",
-    endDate: "",
+    deadline: "",
   });
-
   const [images, setImages] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    // 수정 모드일 때만 기존 데이터를 불러옵니다.
+    if (isEditMode) {
+      const fetchNotification = async () => {
+        try {
+          const response = await getPopupNotificationById(
+            Number(popupNotificationId),
+          );
+          const { title, content, notificationType, deadline, imagePath } =
+            response.data;
+          setFormData({
+            title,
+            content,
+            notificationType,
+            deadline,
+          });
+          if (imagePath) {
+            setPreviewUrls(imagePath);
+          }
+        } catch (error) {
+          console.error("팝업 공지 정보 조회 실패:", error);
+          alert("공지 정보를 불러오는 데 실패했습니다.");
+          navigate(-1); // 이전 페이지로 이동
+        }
+      };
+      fetchNotification();
+    }
+  }, [popupNotificationId, isEditMode, navigate]);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -30,6 +72,12 @@ const PopupNotiCreatePage = () => {
     if (e.target.files) {
       const files = Array.from(e.target.files);
       setImages(files);
+      // 메모리 누수 방지를 위해 기존 blob URL 해제
+      previewUrls.forEach((url) => {
+        if (url.startsWith("blob:")) {
+          URL.revokeObjectURL(url);
+        }
+      });
       setPreviewUrls(files.map((file) => URL.createObjectURL(file)));
     }
   };
@@ -40,32 +88,42 @@ const PopupNotiCreatePage = () => {
       alert("제목과 내용을 입력해주세요.");
       return;
     }
-    console.log(formData.endDate);
 
     setLoading(true);
     try {
-      await createPopupNotification(formData, images);
-      alert("팝업 공지가 등록되었습니다.");
-      setFormData({
-        title: "",
-        content: "",
-        notificationType: "룸메이트",
-        startDate: "",
-        endDate: "",
-      });
-      setImages([]);
-      setPreviewUrls([]);
+      if (isEditMode) {
+        // 수정 모드일 경우: update API 호출
+        await updatePopupNotification(
+          Number(popupNotificationId),
+          formData,
+          images,
+        );
+        alert("팝업 공지가 수정되었습니다.");
+      } else {
+        // 등록 모드일 경우: create API 호출
+        await createPopupNotification(formData, images);
+        alert("팝업 공지가 등록되었습니다.");
+      }
+      // 성공 시 목록 페이지로 이동
+      navigate("/admin/popup-notifications");
     } catch (error) {
-      console.error("팝업 공지 등록 실패:", error);
-      alert("등록 중 오류가 발생했습니다.");
+      console.error(`팝업 공지 ${isEditMode ? "수정" : "등록"} 실패:`, error);
+      alert(`${isEditMode ? "수정" : "등록"} 중 오류가 발생했습니다.`);
     } finally {
       setLoading(false);
     }
   };
 
+  // 모드에 따라 UI 텍스트 동적 변경
+  const pageTitle = isEditMode
+    ? "홈 화면 팝업 공지 수정"
+    : "홈 화면 팝업 공지 등록";
+  const submitButtonText = isEditMode ? "수정하기" : "등록하기";
+  const loadingButtonText = isEditMode ? "수정 중..." : "등록 중...";
+
   return (
     <Wrapper>
-      <Header title={"홈 화면 팝업 공지 등록"} hasBack={true} />
+      <Header title={pageTitle} hasBack={true} />
       <Form onSubmit={handleSubmit}>
         <Label>제목</Label>
         <Input
@@ -101,28 +159,21 @@ const PopupNotiCreatePage = () => {
 
         <DateGroup>
           <div>
-            <Label>시작일</Label>
-            <Input
-              type="date"
-              name="startDate"
-              value={formData.startDate}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div>
             <Label>종료일</Label>
             <Input
               type="date"
               name="endDate"
-              value={formData.endDate}
+              value={formData.deadline}
               onChange={handleChange}
               required
             />
           </div>
         </DateGroup>
 
-        <Label>이미지 첨부</Label>
+        <Label>
+          이미지 첨부
+          {isEditMode && " (새 이미지 선택 시 기존 이미지는 모두 대체됩니다)"}
+        </Label>
         <Input
           type="file"
           multiple
@@ -139,24 +190,23 @@ const PopupNotiCreatePage = () => {
         )}
 
         <SubmitButton type="submit" disabled={loading}>
-          {loading ? "등록 중..." : "등록하기"}
+          {loading ? loadingButtonText : submitButtonText}
         </SubmitButton>
       </Form>
     </Wrapper>
   );
 };
 
-export default PopupNotiCreatePage;
+export default PopupNotiFormPage;
 
 // ================= Styled Components =================
 
 const Wrapper = styled.div`
   width: 100%;
   max-width: 700px;
-  //margin: 0 auto;
+  margin: 0 auto;
   padding: 40px 16px;
   padding-top: 80px;
-
   box-sizing: border-box;
 `;
 
@@ -185,7 +235,6 @@ const Textarea = styled.textarea`
   min-height: 100px;
   padding: 10px;
   box-sizing: border-box;
-
   font-size: 14px;
   border: 1px solid #ccc;
   border-radius: 8px;
@@ -195,7 +244,6 @@ const Textarea = styled.textarea`
 const Select = styled.select`
   padding: 10px;
   box-sizing: border-box;
-
   font-size: 14px;
   border-radius: 8px;
   border: 1px solid #ccc;
@@ -233,11 +281,9 @@ const SubmitButton = styled.button`
   font-weight: 600;
   cursor: pointer;
   transition: 0.2s;
-
   &:hover {
     background-color: #005fcc;
   }
-
   &:disabled {
     background-color: #ccc;
     cursor: not-allowed;
