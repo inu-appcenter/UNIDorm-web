@@ -129,7 +129,7 @@ const LeftArea = styled.div`
       font-weight: 700;
     }
 
-    .date {
+    .createdDate {
       font-weight: 400;
     }
   }

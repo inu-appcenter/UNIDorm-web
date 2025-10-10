@@ -124,7 +124,7 @@ const ModalWrapper = styled.div`
     z-index: 1000;
   }
 
-  .content {
+  .title {
     width: 100%;
     flex: 1;
     //height: 100%;

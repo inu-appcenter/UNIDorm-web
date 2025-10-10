@@ -42,7 +42,8 @@ const TitleLineWrapper = styled.div`
 
     color: #1c1c1e;
   }
-  .more {
+
+  .body {
     font-style: normal;
     font-weight: 400;
     font-size: 14px;
