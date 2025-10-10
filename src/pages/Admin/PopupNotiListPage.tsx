@@ -20,6 +20,7 @@ const PopupNotiListPage = () => {
     const fetchNotifications = async () => {
       try {
         const response = await getAllPopupNotifications();
+        console.log("팝업 공지 목록 조회 성공", response);
         setNotifications(response.data);
       } catch (error) {
         console.error("팝업 공지 목록 조회 실패:", error);
@@ -43,9 +44,7 @@ const PopupNotiListPage = () => {
       try {
         await deletePopupNotification(id);
         alert("공지가 삭제되었습니다.");
-        setNotifications((prev) =>
-          prev.filter((noti) => noti.popupNotificationId !== id),
-        );
+        setNotifications((prev) => prev.filter((noti) => noti.id !== id));
       } catch (error) {
         console.error("팝업 공지 삭제 실패:", error);
         alert("삭제 중 오류가 발생했습니다.");
@@ -70,7 +69,7 @@ const PopupNotiListPage = () => {
       ) : (
         <List>
           {notifications.map((noti) => (
-            <Card key={noti.popupNotificationId}>
+            <Card key={noti.id}>
               <CardHeader>
                 <CardTitle>{noti.title}</CardTitle>
                 <TypeTag>{noti.notificationType}</TypeTag>
@@ -88,13 +87,11 @@ const PopupNotiListPage = () => {
                 </ImageContainer>
               )}
               <CardActions>
-                <ActionButton
-                  onClick={() => handleEditClick(noti.popupNotificationId)}
-                >
+                <ActionButton onClick={() => handleEditClick(noti.id)}>
                   수정
                 </ActionButton>
                 <ActionButton
-                  onClick={() => handleDeleteClick(noti.popupNotificationId)}
+                  onClick={() => handleDeleteClick(noti.id)}
                   className="delete"
                 >
                   삭제

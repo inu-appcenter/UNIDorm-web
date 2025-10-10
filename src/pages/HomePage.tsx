@@ -101,7 +101,7 @@ export default function HomePage() {
         // 모달별 초기 열림 상태 (true로 시작)
         const initialState = response.data.reduce(
           (acc, noti) => {
-            acc[noti.popupNotificationId ?? Math.random()] = true;
+            acc[noti.id ?? Math.random()] = true;
             return acc;
           },
           {} as Record<number, boolean>,
@@ -171,12 +171,10 @@ export default function HomePage() {
       {!isPopupLoading &&
         popupNotices.map((popup) => (
           <HomeNoticeBottomModal
-            key={popup.popupNotificationId}
-            id={popup.popupNotificationId?.toString() ?? ""}
-            isOpen={modalOpenStates[popup.popupNotificationId ?? 0]}
-            setIsOpen={(open) =>
-              setModalOpen(popup.popupNotificationId.toString(), open)
-            }
+            key={popup.id}
+            id={popup.id?.toString() ?? ""}
+            isOpen={modalOpenStates[popup.id ?? 0]}
+            setIsOpen={(open) => setModalOpen(popup.id.toString(), open)}
             links={[]} // 필요시 popup.content에 URL을 파싱해서 전달 가능
           >
             <PopupModalContent>
