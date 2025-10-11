@@ -1,6 +1,9 @@
 import type { AxiosResponse } from "axios";
 import tokenInstance from "./tokenInstance.ts";
-import { NotificationPayload } from "../types/notifications.ts";
+import {
+  NotificationPayload,
+  NotificationPreferences,
+} from "../types/notifications.ts";
 import { Notification } from "../types/notifications.ts";
 
 /**
@@ -89,4 +92,43 @@ export const addNotificationPreferences = async (
     },
   );
   return response.data;
+};
+
+/**
+ * 사용자의 알림 수신 설정을 삭제합니다. (DELETE /user-notifications/preferences)
+ * * 이 함수는 쿼리 파라미터로 삭제할 알림 타입 목록을 배열 형태로 전송합니다.
+ * * @param notificationTypes 삭제할 알림 타입 배열 (예: ["공동구매", "룸메이트"])
+ * @returns AxiosResponse<void> (성공 시 204 No Content)
+ */
+export const deleteNotificationPreferences = async (
+  notificationTypes: string[],
+): Promise<AxiosResponse<void>> => {
+  // DELETE 요청 시 쿼리 파라미터를 사용하기 위해 Axios의 'params' 옵션을 사용합니다.
+  const response = await tokenInstance.delete<void>(
+    "/user-notifications/preferences",
+    {
+      params: {
+        notificationTypes,
+      },
+      paramsSerializer: {
+        // indexes: null을 설정하면 대괄호([]) 없이 직렬화됩니다.
+        indexes: null,
+      },
+    },
+  );
+
+  return response;
+};
+
+/**
+ * 현재 로그인한 사용자의 알림 환경설정을 조회합니다. (GET /user-notifications/preferences)
+ * @returns AxiosResponse<NotificationPreferences>
+ */
+export const getUserNotificationPreferences = async (): Promise<
+  AxiosResponse<NotificationPreferences>
+> => {
+  const response = await tokenInstance.get<NotificationPreferences>(
+    "/user-notifications/preferences",
+  );
+  return response;
 };
