@@ -21,18 +21,33 @@ const getTokenInfoFromStorage = (): TokenInfo => {
 // localStorage에서 userInfo 불러오기
 const getUserInfoFromStorage = (): UserInfo => {
   const stored = localStorage.getItem("userInfo");
-  return stored
-    ? JSON.parse(stored)
-    : {
-        name: "",
-        studentNumber: "",
-        dormType: "",
-        college: "",
-        penalty: 0,
-        hasTimeTableImage: false,
-        roommateCheckList: false,
-        id: 0,
-      };
+
+  // JSON.parse(stored)를 반환하기 전에 UserInfo 타입 단언을 하는 것이 일반적입니다.
+  // 여기서는 'stored'가 있을 경우 파싱된 값이 UserInfo 구조를 따른다고 가정합니다.
+  if (stored) {
+    try {
+      const parsed = JSON.parse(stored);
+      return parsed as UserInfo;
+    } catch (e) {
+      console.error("Error parsing user info from storage:", e);
+      // 파싱 실패 시 기본값 반환
+    }
+  }
+
+  // localStorage에 없거나 파싱에 실패했을 때, 새로운 UserInfo 인터페이스에 맞춘 기본 객체 반환
+  return {
+    id: 0,
+    name: "",
+    studentNumber: "",
+    dormType: "",
+    college: "",
+    penalty: 0,
+    hasTimeTableImage: false,
+    hasUnreadNotifications: false, // 새로 추가된 필드
+    termsAgreed: false, // 새로 추가된 필드
+    privacyAgreed: false, // 새로 추가된 필드
+    roommateCheckList: false,
+  };
 };
 
 const useUserStore = create<UserState>((set) => ({

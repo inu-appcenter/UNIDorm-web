@@ -75,6 +75,7 @@ function App() {
     const initializeUser = async () => {
       try {
         const response = await getMemberInfo();
+        console.log("회원 정보 가져오기 성공:", response);
         setUserInfo(response.data);
 
         if (tokenInfo.accessToken && response.data.name === "") {

@@ -8,7 +8,6 @@ import TopRightDropdownMenu from "./TopRightDropdownMenu.tsx";
 import logo from "../../assets/unidorm-logo.webp";
 
 import { getMobilePlatform } from "../../utils/getMobilePlatform";
-import { getReceivedRoommateRequests } from "../../apis/roommate.ts";
 import { Bell } from "lucide-react";
 import useUserStore from "../../stores/useUserStore.ts";
 import { useIsAdminRole } from "../../hooks/useIsAdminRole.ts";
@@ -44,8 +43,7 @@ export default function Header({
   // const [showInfoModal, setShowInfoModal] = useState(false);
   const deferredPromptRef = useRef<any>(null); // ← 설치 이벤트 저장용 ref
 
-  const { tokenInfo } = useUserStore();
-  const isLoggedIn = Boolean(tokenInfo.accessToken);
+  const { userInfo } = useUserStore();
 
   useEffect(() => {
     setPlatform(getMobilePlatform());
@@ -66,39 +64,6 @@ export default function Header({
         handler as EventListener,
       );
     };
-  }, []);
-
-  const [hasMatchingRequests, setHasMatchingRequests] = useState(false);
-  useEffect(() => {
-    const fetchMatchingRequests = async () => {
-      console.log("알림이 있는지 확인합니다");
-      try {
-        const response = await getReceivedRoommateRequests();
-
-        if (Array.isArray(response.data) && response.data.length > 0) {
-          setHasMatchingRequests(true);
-
-          // 로컬스토리지에 'roommate_alert_shown' 값이 없으면 alert 띄우기
-          const alertShown = localStorage.getItem("roommate_alert_shown");
-          if (!alertShown) {
-            alert(
-              "룸메이트 매칭 요청이 도착했습니다!\n알림 페이지로 이동해서 매칭 요청을 수락해 주세요!",
-            );
-            localStorage.setItem("roommate_alert_shown", "true");
-          }
-        } else {
-          setHasMatchingRequests(false);
-          // 알림 없으면 로컬스토리지 값도 제거 (원하면 유지 가능)
-          localStorage.removeItem("roommate_alert_shown");
-        }
-      } catch (error) {
-        console.error("매칭 요청 조회 실패:", error);
-      }
-    };
-
-    if (showAlarm && isLoggedIn) {
-      fetchMatchingRequests();
-    }
   }, []);
 
   const getCurrentPage = () => {
@@ -179,7 +144,9 @@ export default function Header({
               {roleName}
             </RoundButton>
           )}
-          {showAlarm && <NotificationBell hasNew={hasMatchingRequests} />}
+          {showAlarm && (
+            <NotificationBell hasNew={userInfo.hasUnreadNotifications} />
+          )}
 
           {menuItems && <TopRightDropdownMenu items={menuItems} />}
         </Right>
@@ -277,8 +244,15 @@ const SecondLine = styled.div`
 // 알림 여부를 prop으로 전달받아서 표시 여부 결정
 const NotificationBell = ({ hasNew }: { hasNew: boolean }) => {
   const navigate = useNavigate();
+  const { userInfo, setUserInfo } = useUserStore();
 
   const handleNotiBtnClick = () => {
+    setUserInfo({
+      // 기존 userInfo 객체의 모든 속성을 복사
+      ...userInfo,
+      // hasUnreadNotifications 필드만 true로 덮어쓰기
+      hasUnreadNotifications: false,
+    });
     navigate("/notification");
   };
 
