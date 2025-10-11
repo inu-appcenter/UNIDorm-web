@@ -168,7 +168,7 @@ export default function HomePage() {
         <TitleContentArea
           title={"공지사항"}
           description={
-            "인천대학교 생활원에서 알려드리는 공지사항을 확인해보세요."
+            "생활원과 서포터즈에서 알려드리는 공지사항을 확인해보세요."
           }
           link={"/announcements"}
         >
