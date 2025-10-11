@@ -6,6 +6,7 @@ import { getNotifications } from "../apis/notification.ts"; // 새로 만든 알
 import useUserStore from "../stores/useUserStore.ts";
 import { Notification } from "../types/notifications.ts";
 import { useNavigate } from "react-router-dom";
+import BottomBar from "../components/common/BottomBar.tsx";
 
 const NotificationPage = () => {
   // 표시될 모든 알림을 저장하는 상태
@@ -90,6 +91,7 @@ const NotificationPage = () => {
           <EmptyMessage>알림이 없습니다.</EmptyMessage>
         )}
       </ContentWrapper>
+      <BottomBar />
     </NotificationPageWrapper>
   );
 };
