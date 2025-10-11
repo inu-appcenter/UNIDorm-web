@@ -190,11 +190,18 @@ export default function GroupPurchaseMainPage() {
         <EmptyMessage message="해당 조건의 공동구매가 없습니다." />
       )}
 
-      {isLoggedIn && (
-        <WriteButton onClick={() => navigate("/groupPurchase/write")}>
-          ✏️ 글쓰기
-        </WriteButton>
-      )}
+      <WriteButton
+        onClick={() => {
+          if (!isLoggedIn) {
+            alert("로그인 후 사용 가능해요.");
+            navigate("/login");
+            return;
+          }
+          navigate("/groupPurchase/write");
+        }}
+      >
+        ✏️ 글쓰기
+      </WriteButton>
 
       <BottomBar />
     </PageWrapper>
