@@ -39,6 +39,7 @@ const ComplainListPage = () => {
       setIsListLoading(true); // 목록 로딩 시작
       try {
         const response = await getMyComplaints();
+        console.log("민원 목록 불러오기 성공", response);
         setComplaints(response.data);
       } catch (error) {
         console.error("민원 목록 불러오기 실패:", error);
@@ -77,14 +78,35 @@ const ComplainListPage = () => {
 
   // 🔽 검색어에 따라 민원 목록을 필터링하는 로직
   const filteredComplaints = useMemo(() => {
-    if (!searchTerm) {
-      return complaints; // 검색어가 없으면 전체 목록 반환
+    // 1단계: 검색어 필터링을 위한 임시 목록
+    let list = complaints;
+    if (searchTerm) {
+      list = list.filter((complaint) =>
+        complaint.title.toLowerCase().includes(searchTerm.toLowerCase()),
+      );
     }
-    return complaints.filter((complaint) =>
-      // 민원 제목에 검색어가 포함되어 있는지 확인 (대소문자 구분 없음)
-      complaint.title.toLowerCase().includes(searchTerm.toLowerCase()),
-    );
-  }, [searchTerm, complaints]);
+
+    // 2단계: 기간 필터링
+    const now = new Date();
+    const threeMonthsAgo = new Date();
+    threeMonthsAgo.setMonth(now.getMonth() - 3);
+
+    // if (selectedFilterIndex === 0) {
+    //   // "최근 3개월" 필터링 (인덱스 0)
+    //   list = list.filter((complaint) => {
+    //     const complaintDate = new Date(complaint.date);
+    //     return complaintDate >= threeMonthsAgo;
+    //   });
+    // } else if (selectedFilterIndex === 1) {
+    //   // "2025" 필터링 (인덱스 1)
+    //   list = list.filter((complaint) => {
+    //     const year = new Date(complaint.date).getFullYear();
+    //     return year === 2025;
+    //   });
+    // }
+
+    return list;
+  }, [searchTerm, complaints, selectedFilterIndex]);
 
   return (
     <ComplainListPageWrapper>
