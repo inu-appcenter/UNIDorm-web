@@ -5,12 +5,15 @@ import roommate from "../../assets/notification/roommate.svg";
 import purchase from "../../assets/notification/purchase.svg";
 // import chat from "../../assets/notification/chat.svg";
 import { formatTimeAgo } from "../../utils/dateUtils.ts";
+import { useNavigate } from "react-router-dom";
 
 interface NotiItemProps {
   notidata: Notification;
 }
 
 const NotiItem = ({ notidata }: NotiItemProps) => {
+  const navigate = useNavigate();
+
   const NotiIconSelector = () => {
     if (notidata.notificationType === "룸메이트") {
       return roommate;
@@ -26,9 +29,39 @@ const NotiItem = ({ notidata }: NotiItemProps) => {
       return announce;
     }
   };
+
+  const handleNotificationClick = () => {
+    // 클릭 시 알림을 읽음 처리하는 API를 호출하는 로직을 추가할 수 있습니다.
+    // 예: markAsRead(notidata.id);
+
+    switch (notidata.apiType) {
+      case "ANNOUNCEMENT":
+        // 공지사항 상세 페이지로 이동
+        navigate(`/announcements/${notidata.boardId}`);
+        break;
+      case "COMPLAINT":
+        // 민원 상세 페이지로 이동
+        navigate(`/complain/${notidata.boardId}`);
+        break;
+      case "GROUP_ORDER":
+        // 공동구매 상세 페이지로 이동
+        navigate(`/groupPurchase/${notidata.boardId}`);
+        break;
+      case "ROOMMATE":
+        // 룸메이트 상세 페이지로 이동
+        navigate(`/roommate/list/${notidata.boardId}`);
+        break;
+      default:
+        // 처리할 수 없는 타입일 경우 콘솔에 경고를 출력하거나 기본 페이지로 이동
+        console.warn("Unhandled apiType:", notidata.apiType);
+        // navigate("/notifications"); // 예: 알림 목록 페이지로 이동
+        break;
+    }
+  };
+
   return (
     // 2. notidata.read 값을 isRead prop으로 전달합니다.
-    <NotiItemWrapper isRead={notidata.read} onClick={undefined}>
+    <NotiItemWrapper isRead={notidata.read} onClick={handleNotificationClick}>
       <IconWrapper>
         <img src={NotiIconSelector()} alt={"공지아이콘"} />
       </IconWrapper>
