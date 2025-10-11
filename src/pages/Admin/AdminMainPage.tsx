@@ -80,6 +80,16 @@ const AdminMainPage: React.FC = () => {
             <CardDescription>{page.description}</CardDescription>
           </MenuCard>
         ))}
+        <MenuCard
+          onClick={() =>
+            (window.location.href = "https://unidorm-test.pages.dev")
+          }
+        >
+          <CardTitle>테스트 페이지</CardTitle>
+          <CardDescription>
+            개발 중인 유니돔 테스트 페이지로 이동합니다.
+          </CardDescription>
+        </MenuCard>
       </MenuGrid>
     </Wrapper>
   );
