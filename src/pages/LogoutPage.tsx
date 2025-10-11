@@ -13,8 +13,6 @@ const LogoutPage = () => {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("userInfo");
-    localStorage.removeItem("roommate_alert_shown");
-    localStorage.removeItem("fcmToken");
 
     const emptyTokenInfo: TokenInfo = {
       accessToken: "",
