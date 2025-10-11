@@ -142,6 +142,7 @@ const UrgentBadge = styled.div`
   border: 1px solid #007bff;
   padding: 2px 8px;
   border-radius: 20px;
+  min-width: fit-content;
 `;
 
 const NoticeContent = styled.div`
