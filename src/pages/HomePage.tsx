@@ -23,10 +23,22 @@ import { Announcement } from "../types/announcements.ts";
 import useUserStore from "../stores/useUserStore.ts";
 import { getPopupNotifications } from "../apis/popup-notification.ts";
 import { PopupNotification } from "../types/popup-notifications.ts";
+import useScreenWidth from "../hooks/useScreenWidth.ts";
 
 export default function HomePage() {
   const { tokenInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
+
+  // 2. 화면 너비 가져오기
+  const screenWidth = useScreenWidth();
+
+  // 3. 화면 너비에 따라 표시 개수 결정
+  const displayCount =
+    screenWidth >= 1024 // 데스크톱 크기 (예: 1024px 이상)
+      ? 5 // 데스크톱에서는 4개 표시
+      : screenWidth >= 768 // 태블릿 크기 (예: 768px 이상)
+        ? 3 // 태블릿에서는 3개 표시
+        : 2; // 모바일 크기 (768px 미만)에서는 2개 표시 (기존 값)
 
   const [dailyTips, setDailyTips] = useState<Tip[]>([]);
   const [groupOrders, setGroupOrders] = useState<GroupOrder[]>([]);
@@ -167,7 +179,7 @@ export default function HomePage() {
               {notices.length > 0 ? (
                 notices
                   .filter((notice) => notice !== null && notice !== undefined)
-                  .slice(0, 2)
+                  .slice(0, displayCount) // ✨ 여기서 동적으로 결정된 개수(displayCount)를 사용
                   .map((notice) => (
                     <HomeNoticeCard
                       key={notice.id ?? notice.title}
