@@ -17,3 +17,14 @@ export interface NotificationPayload {
   notificationType: string;
   boardId: number;
 }
+
+/**
+ * 알림 환경설정 객체의 타입 정의
+ */
+export interface NotificationPreferences {
+  roommateNotification: boolean;
+  groupOrderNotification: boolean;
+  dormitoryNotification: boolean;
+  unidormNotification: boolean;
+  supportersNotification: boolean;
+}
