@@ -9,6 +9,7 @@ import { getAnnouncements } from "../../apis/announcements.ts";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../../constants/EmptyMessage.tsx";
 import { useIsAdminRole } from "../../hooks/useIsAdminRole.ts";
+import { formatTimeAgo } from "../../utils/dateUtils.ts";
 
 export default function AnnouncementPage() {
   const navigate = useNavigate();
@@ -44,7 +45,7 @@ export default function AnnouncementPage() {
       <TitleContentArea
         title="생활원 공지사항"
         description={
-          "인천대학교 생활원에서 알려드리는 공지사항을 확인해보세요."
+          "생활원과 서포터즈에서 알려드리는 공지사항을 확인해보세요."
         }
       >
         {/* 🔽 로딩 상태에 따라 스피너, 공지사항 목록, 빈 메시지를 조건부 렌더링합니다. */}
@@ -65,7 +66,12 @@ export default function AnnouncementPage() {
                 </NoticeTop>
                 <NoticeContent>{notice.content}</NoticeContent>
                 <NoticeBottom>
-                  <BsEye size={16} /> {notice.viewCount}
+                  <div className="viewCount">
+                    <BsEye size={16} /> {notice.viewCount}
+                  </div>
+                  <div className="createdDate">
+                    {formatTimeAgo(notice.createdDate)}
+                  </div>
                 </NoticeBottom>
               </NoticeCard>
             ))}
@@ -162,6 +168,16 @@ const NoticeBottom = styled.div`
   display: flex;
   align-items: center;
   gap: 4px;
+
+  flex-direction: row;
+  justify-content: space-between;
+
+  .viewCount {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+  }
 `;
 
 const WriteButton = styled.button`
