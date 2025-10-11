@@ -61,6 +61,7 @@ function App() {
 
   useEffect(() => {
     if (userInfo.isAdmin) {
+      alert("admin 페이지로 이동합니다.");
       console.log("admin모드로 이동합니다");
       navigate("/admin");
       return;
