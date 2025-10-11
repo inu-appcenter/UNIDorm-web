@@ -8,11 +8,9 @@ const CheckBeforeContent = () => {
       <img src={버블친구} />
       <Text>
         <div className="text1">
-          학생증 등으로 <span className="strong">신원을 확인</span>해주세요.
+          학생증 등으로 <span className="strong">신원을 확인</span>해 보세요.
         </div>
-        <div className="text2">
-          원활한 소통을 위해 휴대폰 번호 교환을 하면 좋아요.
-        </div>
+        <div className="text2">휴대폰 번호를 교환하면 좀 더 안전해요.</div>
       </Text>
     </Wrapper>
   );
@@ -41,6 +39,7 @@ const Title = styled.h1`
 `;
 
 const Text = styled.div`
+  text-align: center;
   .text1 {
     color: var(--5, #6c6c74);
     text-align: center;
