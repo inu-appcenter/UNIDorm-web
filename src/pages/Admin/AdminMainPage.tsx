@@ -1,19 +1,19 @@
 import Header from "../../components/common/Header.tsx";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import useUserStore from "../../stores/useUserStore.ts";
-import { useEffect } from "react";
+// import useUserStore from "../../stores/useUserStore.ts";
+// import { useEffect } from "react";
 
 const AdminMainPage: React.FC = () => {
   const navigate = useNavigate();
-  const { tokenInfo, userInfo } = useUserStore();
+  // const { tokenInfo, userInfo } = useUserStore();
 
-  useEffect(() => {
-    console.log(userInfo.isAdmin);
-    if (!tokenInfo.accessToken || !userInfo.isAdmin) {
-      navigate("/home");
-    }
-  }, [tokenInfo, navigate, userInfo]);
+  // useEffect(() => {
+  //   console.log(userInfo.isAdmin);
+  //   if (!tokenInfo.accessToken || !userInfo.isAdmin) {
+  //     navigate("/home");
+  //   }
+  // }, [tokenInfo, navigate, userInfo]);
 
   const menuItems = [
     {
