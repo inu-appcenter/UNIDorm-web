@@ -15,8 +15,6 @@ import GroupPurchaseList from "../components/GroupPurchase/GroupPurchaseList.tsx
 import { GetGroupPurchaseListParams, GroupOrder } from "../types/grouporder.ts";
 import { getGroupPurchaseList } from "../apis/groupPurchase.ts";
 import HomeNoticeBottomModal from "../components/modal/HomeNoticeBottomModal.tsx";
-import 인천시티투어_영문 from "../assets/banner/인천시티투어_영문.jpg";
-import 인천시티투어_한글 from "../assets/banner/인천시티투어_한글.jpg";
 import HomeBanner from "../components/home/HomeBanner.tsx";
 import LoadingSpinner from "../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../constants/EmptyMessage.tsx";
@@ -43,50 +41,12 @@ export default function HomePage() {
   const [isGroupOrdersLoading, setIsGroupOrdersLoading] =
     useState<boolean>(false);
 
-  // 🔹 모달 데이터 중앙 관리
-  const modalList = [
-    {
-      id: "인천시티투어_영문",
-      content: <img src={인천시티투어_영문} />,
-      links: [
-        {
-          title: "Incheon City Tour HomePage",
-          link: "https://citytour.ito.or.kr/foreign/english/citytour.do",
-        },
-        {
-          title: "Apply for the Incheon city tour – Chuseok Holiday",
-          link: "https://form.naver.com/response/9gFKMybfIWhGsq2xKZgHCQ",
-        },
-      ],
-    },
-    {
-      id: "인천시티투어_한글",
-      content: <img src={인천시티투어_한글} />,
-      links: [
-        {
-          title: "인천시티투어 관광안내",
-          link: "https://citytour.ito.or.kr/",
-        },
-        {
-          title: "생활원 추석연휴 인천 시티투어 신청",
-          link: "https://form.naver.com/response/C8J-IXLCXiAFJjla8d8cAg",
-        },
-      ],
-    },
-  ];
+  // 🔹 모달별 열림 상태 (popupNotices 기반)
+  const [modalOpenStates, setModalOpenStates] = useState<
+    Record<number, boolean>
+  >({});
 
-  // 🔹 모달별 열림 상태
-  const [modalOpenStates, setModalOpenStates] = useState(() =>
-    modalList.reduce(
-      (acc, modal) => {
-        acc[modal.id] = true;
-        return acc;
-      },
-      {} as Record<string, boolean>,
-    ),
-  );
-
-  const setModalOpen = (id: string, open: boolean) => {
+  const setModalOpen = (id: number, open: boolean) => {
     setModalOpenStates((prev) => ({ ...prev, [id]: open }));
   };
 
@@ -98,10 +58,13 @@ export default function HomePage() {
         const response = await getPopupNotifications();
         console.log("팝업 공지 불러오기 성공", response);
         setPopupNotices(response.data);
-        // 모달별 초기 열림 상태 (true로 시작)
+
+        // 팝업 공지 기반으로 모달별 초기 열림 상태 (true로 시작) 설정
         const initialState = response.data.reduce(
           (acc, noti) => {
-            acc[noti.id ?? Math.random()] = true;
+            if (noti.id !== undefined && noti.id !== null) {
+              acc[noti.id] = true;
+            }
             return acc;
           },
           {} as Record<number, boolean>,
@@ -174,7 +137,7 @@ export default function HomePage() {
             key={popup.id}
             id={popup.id?.toString() ?? ""}
             isOpen={modalOpenStates[popup.id ?? 0]}
-            setIsOpen={(open) => setModalOpen(popup.id.toString(), open)}
+            setIsOpen={(open) => setModalOpen(popup.id ?? 0, open)}
             links={[]} // 필요시 popup.content에 URL을 파싱해서 전달 가능
             title={popup.title}
             text={popup.content}
