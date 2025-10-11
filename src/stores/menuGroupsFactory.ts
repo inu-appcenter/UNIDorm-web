@@ -64,6 +64,12 @@ export const createMenuGroups = (
           navigate("/onboarding");
         },
       },
+      {
+        label: "fcm 토큰 확인",
+        onClick: () => {
+          navigate("/admin/fcm");
+        },
+      },
 
       {
         label: "인천대학교 앱센터",
