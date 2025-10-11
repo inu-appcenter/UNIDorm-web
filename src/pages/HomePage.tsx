@@ -228,7 +228,7 @@ export default function HomePage() {
           {isGroupOrdersLoading ? (
             <LoadingSpinner message={"공동구매를 불러오고 있어요!"} />
           ) : groupOrders.length > 0 ? (
-            <GroupPurchaseList groupOrders={groupOrders} />
+            <GroupPurchaseList groupOrders={groupOrders.slice(0, 4)} /> // ⭐️ [수정] 4개로 고정
           ) : (
             <EmptyMessage message={"임박한 공동구매가 없습니다."} />
           )}
