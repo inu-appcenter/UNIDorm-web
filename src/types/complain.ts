@@ -108,3 +108,18 @@ export interface ComplaintResponse {
   status: string;
   createdDate: string;
 }
+
+/**
+ * 민원 검색 조건 DTO (쿼리 파라미터로 사용)
+ */
+export interface ComplaintSearchDto {
+  dormType?: string;
+  officer?: string;
+  status?: string;
+  keyword?: string;
+  building?: string;
+  floor?: string;
+  bedNumber?: string;
+  roomNumber?: string;
+  type?: string;
+}

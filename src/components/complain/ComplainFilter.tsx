@@ -1,3 +1,5 @@
+// 📄 components/complain/ComplainFilter.tsx
+
 import styled from "styled-components";
 import FormField from "./FormField.tsx";
 import SelectableChipGroup from "../roommate/checklist/SelectableChipGroup.tsx";
@@ -11,167 +13,166 @@ import {
   rooms,
 } from "../../constants/constants.ts";
 import { Dropdown, DropdownContainer, Input } from "../../styles/complain.ts";
-import { useState, useEffect, useRef } from "react"; // useRef와 useEffect 추가
+import { ComplaintSearchDto } from "../../types/complain.ts";
+
+// ⭐ 부모로부터 받을 Props 타입 정의
+interface ComplainFilterProps {
+  // 각 필드의 현재 값
+  dormitoryIndex: number | null;
+  typeIndex: number | null;
+  statusIndex: number | null;
+  blockIndex: number | null;
+  manager: string;
+  floor: string;
+  room: string;
+  bed: string;
+
+  // 각 필드의 값을 변경하는 함수
+  onDormitoryChange: (index: number | null) => void;
+  onTypeChange: (index: number | null) => void;
+  onStatusChange: (index: number | null) => void;
+  onBlockChange: (index: number | null) => void;
+  onManagerChange: (value: string) => void;
+  onFloorChange: (value: string) => void;
+  onRoomChange: (value: string) => void;
+  onBedChange: (value: string) => void;
+
+  // 필터 적용 및 초기화 함수
+  onApply: (filters: ComplaintSearchDto) => void;
+  onReset: () => void;
+}
 
 const ComplainFilter = ({
-  onClose,
+  // ⭐ Props 비구조화 할당
+  dormitoryIndex,
+  typeIndex,
+  statusIndex,
+  blockIndex,
+  manager,
+  floor,
+  room,
+  bed,
+  onDormitoryChange,
+  onTypeChange,
+  onStatusChange,
+  onBlockChange,
+  onManagerChange,
+  onFloorChange,
+  onRoomChange,
+  onBedChange,
   onApply,
-}: {
-  onClose: () => void;
-  onApply: () => void;
-}) => {
-  const wrapperRef = useRef<HTMLDivElement>(null); // 컴포넌트의 ref 생성
-
-  const [selectedDormitoryIndex, setSelectedDormitoryIndex] = useState<
-    number | null
-  >(null);
-  const [selectedTypeIndex, setSelectedTypeIndex] = useState<number | null>(
-    null,
-  );
-  const [selectedStatusIndex, setSelectedStatusIndex] = useState<number | null>(
-    null,
-  );
-  const [selectedBlockIndex, setSelectedBlockIndex] = useState<number | null>(
-    null,
-  );
-  const [manager, setManager] = useState("");
-  const [selectedFloor, setSelectedFloor] = useState("");
-  const [selectedRoom, setSelectedRoom] = useState("");
-  const [selectedBed, setSelectedBed] = useState("");
-
-  const handleResetFilters = () => {
-    setSelectedDormitoryIndex(null);
-    setSelectedTypeIndex(null);
-    setSelectedStatusIndex(null);
-    setSelectedBlockIndex(null);
-    setManager("");
-    setSelectedFloor("");
-    setSelectedRoom("");
-    setSelectedBed("");
-  };
-
+  onReset,
+}: ComplainFilterProps) => {
   const handleApplyFilters = () => {
-    console.log("필터 적용:", {
-      dormitory: selectedDormitoryIndex,
-      type: selectedTypeIndex,
-      status: selectedStatusIndex,
-      block: selectedBlockIndex,
-      manager,
-      floor: selectedFloor,
-      room: selectedRoom,
-      bed: selectedBed,
-    });
-    onApply();
+    const filters: ComplaintSearchDto = {
+      ...(dormitoryIndex !== null && {
+        // complainDormitory[dormitoryIndex]의 값이 string이라고 가정
+        dormType: complainDormitory[dormitoryIndex],
+      }),
+      ...(manager && { officer: manager }),
+      ...(typeIndex !== null && { type: ComplainType[typeIndex] }),
+      ...(statusIndex !== null && { status: complainStatus[statusIndex] }),
+      // 'block' 대신 'building' 사용
+      ...(blockIndex !== null && { building: dormitoryBlocks[blockIndex] }),
+      ...(floor && { floor }),
+      // 'room' 대신 'roomNumber' 사용
+      ...(room && { roomNumber: room }),
+      // 'bed' 대신 'bedNumber' 사용
+      ...(bed && { bedNumber: bed }),
+      // 원본 코드에는 없지만, DTO에 'keyword'가 있으니 필요하면 추가하세요.
+      // ...(keyword && { keyword: keyword }),
+    };
+    onApply(filters);
   };
-
-  // useEffect를 사용하여 외부 클릭 감지 로직 추가
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      // 컴포넌트 ref가 존재하고, 클릭된 요소가 컴포넌트 외부에 있을 경우 onClose 호출
-      if (
-        wrapperRef.current &&
-        !wrapperRef.current.contains(event.target as Node)
-      ) {
-        onClose();
-      }
-    };
-
-    // 이벤트 리스너 등록
-    document.addEventListener("mousedown", handleClickOutside);
-
-    // 컴포넌트가 언마운트될 때 이벤트 리스너 제거
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [onClose]); // onClose가 변경될 때마다 useEffect 재실행
 
   return (
-    <Wrapper ref={wrapperRef}>
+    <Wrapper>
       <FormField label="기숙사">
         <SelectableChipGroup
           Groups={complainDormitory}
-          selectedIndex={selectedDormitoryIndex}
-          onSelect={setSelectedDormitoryIndex}
+          selectedIndex={dormitoryIndex} // ⭐ props.selectedIndex
+          onSelect={onDormitoryChange} // ⭐ props.onSelect
         />
       </FormField>
       <FormField label="담당자">
         <Input
           placeholder="담당자 이름을 입력해주세요"
-          value={manager}
-          onChange={(e) => setManager(e.target.value)}
+          value={manager} // ⭐ props.value
+          onChange={(e) => onManagerChange(e.target.value)} // ⭐ props.onChange
         />
       </FormField>
       <FormField label="유형">
         <SelectableChipGroup
           Groups={ComplainType}
-          selectedIndex={selectedTypeIndex}
-          onSelect={setSelectedTypeIndex}
+          selectedIndex={typeIndex}
+          onSelect={onTypeChange}
         />
       </FormField>
       <FormField label="현황">
         <SelectableChipGroup
           Groups={complainStatus}
-          selectedIndex={selectedStatusIndex}
-          onSelect={setSelectedStatusIndex}
+          selectedIndex={statusIndex}
+          onSelect={onStatusChange}
         />
       </FormField>
       <FormField label="동">
         <SelectableChipGroup
           Groups={dormitoryBlocks}
-          selectedIndex={selectedBlockIndex}
-          onSelect={setSelectedBlockIndex}
+          selectedIndex={blockIndex}
+          onSelect={onBlockChange}
         />
       </FormField>
       <FormField label="층/호수">
         <DropdownContainer>
           <Dropdown
-            value={selectedFloor}
-            onChange={(e) => setSelectedFloor(e.target.value)}
-            hasValue={!!selectedFloor}
+            value={floor}
+            onChange={(e) => onFloorChange(e.target.value)}
+            hasValue={!!floor}
           >
             <option value="" disabled>
               층
             </option>
-            {floors.map((floor) => (
-              <option key={floor} value={floor}>
-                {floor}
+            {floors.map((f) => (
+              <option key={f} value={f}>
+                {f}
               </option>
             ))}
           </Dropdown>
           <Dropdown
-            value={selectedRoom}
-            onChange={(e) => setSelectedRoom(e.target.value)}
-            hasValue={!!selectedRoom}
+            value={room}
+            onChange={(e) => onRoomChange(e.target.value)}
+            hasValue={!!room}
           >
             <option value="" disabled>
               호수
             </option>
-            {rooms.map((room) => (
-              <option key={room} value={room}>
-                {room}
+            {rooms.map((r) => (
+              <option key={r} value={r}>
+                {r}
               </option>
             ))}
           </Dropdown>
           <Dropdown
-            value={selectedBed}
-            onChange={(e) => setSelectedBed(e.target.value)}
-            hasValue={!!selectedBed}
+            value={bed}
+            onChange={(e) => onBedChange(e.target.value)}
+            hasValue={!!bed}
           >
             <option value="" disabled>
               침대
             </option>
-            {beds.map((bed) => (
-              <option key={bed} value={bed}>
-                {bed}
+            {beds.map((b) => (
+              <option key={b} value={b}>
+                {b}
               </option>
             ))}
           </Dropdown>
         </DropdownContainer>
       </FormField>
       <ButtonWrapper>
-        <Button onClick={handleResetFilters} isReset>
+        <Button onClick={onReset} isReset>
           초기화
-        </Button>
+        </Button>{" "}
+        {/* ⭐ props.onReset */}
         <Button onClick={handleApplyFilters}>필터 적용</Button>
       </ButtonWrapper>
     </Wrapper>
@@ -180,6 +181,7 @@ const ComplainFilter = ({
 
 export default ComplainFilter;
 
+// (styled-components 코드는 이전과 동일)
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
@@ -190,7 +192,6 @@ const Wrapper = styled.div`
   box-sizing: border-box;
   gap: 16px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-
   margin-bottom: 64px;
 `;
 

@@ -6,6 +6,7 @@ import {
   ComplaintReplyDto,
   ComplaintReplyResponse,
   ComplaintResponse,
+  ComplaintSearchDto,
 } from "../types/complain.ts";
 import { AxiosResponse } from "axios";
 
@@ -112,6 +113,27 @@ export const createComplaintReply = async (
       headers: {
         "Content-Type": "multipart/form-data",
       },
+    },
+  );
+
+  console.log(response);
+  return response;
+};
+
+/**
+ * 민원 검색
+ * GET /admin/complaints/search
+ * @param dto 검색 조건 (쿼리 파라미터)
+ * @returns 민원 목록 응답
+ */
+export const searchComplaints = async (
+  dto: ComplaintSearchDto,
+): Promise<AxiosResponse<AdminComplaint[]>> => {
+  // dto 객체가 axios에 의해 URL 쿼리 파라미터로 변환됩니다.
+  const response = await tokenInstance.get<AdminComplaint[]>(
+    `/admin/complaints/search`,
+    {
+      params: dto,
     },
   );
 
