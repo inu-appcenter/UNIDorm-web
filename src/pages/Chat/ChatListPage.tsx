@@ -9,7 +9,7 @@ import Header from "../../components/common/Header.tsx";
 import ChatListItem from "../../components/chat/ChatListItem.tsx";
 import styled from "styled-components";
 import useUserStore from "../../stores/useUserStore.ts";
-import TopNoticeBanner from "../../components/chat/TopNoticeBanner.tsx";
+// import TopNoticeBanner from "../../components/chat/TopNoticeBanner.tsx";
 import BottomBar from "../../components/common/BottomBar.tsx";
 
 export default function ChatListPage() {
@@ -79,7 +79,7 @@ export default function ChatListPage() {
       />
 
       <ContentWrapper>
-        <TopNoticeBanner />
+        {/*<TopNoticeBanner />*/}
         {selectedTab === "공동구매" ? (
           groupOrderChatRooms.length > 0 ? (
             groupOrderChatRooms.map((room) => (
