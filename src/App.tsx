@@ -49,6 +49,7 @@ import PopupNotiListPage from "./pages/Admin/PopupNotiListPage.tsx";
 import PopupNotiCreatePage from "./pages/Admin/PopupNotiFormPage.tsx";
 import CreateNotificationPage from "./pages/Admin/CreateNotificationPage.tsx";
 import NotificationSettingPage from "./pages/MyPage/NotificationSettingPage.tsx";
+import FCMPage from "./pages/Admin/FCMPage.tsx";
 
 function App() {
   console.log("현재 MODE:", import.meta.env.MODE);
@@ -214,7 +215,7 @@ function App() {
             element={<CreateNotificationPage />}
           />
 
-          {/*<Route path="fcm" element={<FCMPage />} />*/}
+          <Route path="fcm" element={<FCMPage />} />
         </Route>
       </Routes>
     </ErrorBoundary>
