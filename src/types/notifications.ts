@@ -1,6 +1,7 @@
 // GET 응답에 사용될 알림 타입
 export interface Notification {
   id: number;
+  apiType: string;
   boardId: number;
   title: string;
   body: string;
