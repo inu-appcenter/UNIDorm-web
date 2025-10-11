@@ -91,19 +91,19 @@ const ComplainListPage = () => {
     const threeMonthsAgo = new Date();
     threeMonthsAgo.setMonth(now.getMonth() - 3);
 
-    // if (selectedFilterIndex === 0) {
-    //   // "최근 3개월" 필터링 (인덱스 0)
-    //   list = list.filter((complaint) => {
-    //     const complaintDate = new Date(complaint.date);
-    //     return complaintDate >= threeMonthsAgo;
-    //   });
-    // } else if (selectedFilterIndex === 1) {
-    //   // "2025" 필터링 (인덱스 1)
-    //   list = list.filter((complaint) => {
-    //     const year = new Date(complaint.date).getFullYear();
-    //     return year === 2025;
-    //   });
-    // }
+    if (selectedFilterIndex === 0) {
+      // "최근 3개월" 필터링 (인덱스 0)
+      list = list.filter((complaint) => {
+        const complaintDate = new Date(complaint.date);
+        return complaintDate >= threeMonthsAgo;
+      });
+    } else if (selectedFilterIndex === 1) {
+      // "2025" 필터링 (인덱스 1)
+      list = list.filter((complaint) => {
+        const year = new Date(complaint.date).getFullYear();
+        return year === 2025;
+      });
+    }
 
     return list;
   }, [searchTerm, complaints, selectedFilterIndex]);
