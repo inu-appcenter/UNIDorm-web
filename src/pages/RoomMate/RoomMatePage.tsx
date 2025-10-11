@@ -74,7 +74,7 @@ export default function RoomMatePage() {
       <Header title="룸메이트" hasBack={false} showAlarm={true} />
 
       <TitleContentArea
-        title={"최신순"}
+        title={"2025년 1학기 룸메이트 모집"}
         description={"룸메이트를 구하고 있는 다양한 UNI들을 찾아보세요!"}
         link={"list"}
       >
