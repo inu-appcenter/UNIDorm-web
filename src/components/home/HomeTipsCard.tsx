@@ -51,7 +51,7 @@ const HomeCardWrapper = styled.div`
     min-width: fit-content;
   }
 
-  .title {
+  .content {
     color: #1c1c1e;
     font-style: normal;
     font-weight: 500;
