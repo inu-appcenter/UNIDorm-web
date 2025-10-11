@@ -115,7 +115,7 @@ export default function GroupPurchaseWritePage() {
 
       <SectionTitle>제목</SectionTitle>
       <InputField
-        placeholder="글 제목"
+        placeholder="공동구매하려는 물품명을 작성해주세요"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
       />
@@ -143,6 +143,7 @@ export default function GroupPurchaseWritePage() {
       />
 
       <SectionTitle>구매 링크</SectionTitle>
+      <Description>상품의 필요 여부를 판단하는데 도움이 됩니다.</Description>
       <InputField
         placeholder="구매 링크를 입력해주세요"
         value={purchaseLink}
@@ -169,7 +170,10 @@ export default function GroupPurchaseWritePage() {
         category={category}
       />
 
-      <SectionTitle>이미지</SectionTitle>
+      <SectionTitle>이미지 (선택)</SectionTitle>
+      <Description>
+        상품 이미지를 업로드하면 공동구매가 성사될 확률이 높아져요!
+      </Description>
       <ImageUploader images={images} onImageChange={handleImageChange} />
 
       {isLoggedIn && (
@@ -227,6 +231,12 @@ const SectionTitle = styled.div`
       text-decoration-line: underline;
     }
   }
+`;
+
+const Description = styled.div`
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 8px;
 `;
 
 const BottomFixed = styled.div`

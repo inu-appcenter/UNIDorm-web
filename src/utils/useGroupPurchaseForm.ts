@@ -132,12 +132,20 @@ export function useGroupPurchaseForm(post: CreateGroupOrderRequest | null) {
       alert("구매 링크를 입력해주세요.");
       return false;
     }
-    const urlPattern = /^https?:\/\/.+/;
-    if (!urlPattern.test(purchaseLink)) {
-      alert("구매 링크는 http 또는 https로 시작해야 합니다.");
+    if (!purchaseLink.trim()) {
+      alert("구매 링크를 입력해주세요");
       return false;
     }
-    if (openchatLink && !urlPattern.test(openchatLink)) {
+    // const urlPattern = /^https?:\/\/.+/;
+    // if (!urlPattern.test(purchaseLink)) {
+    //   alert("구매 링크는 http 또는 https로 시작해야 합니다.");
+    //   return false;
+    // }
+
+    // open.kakao.com/o/ 다음에 최소 4글자 이상의 코드가 있는지 체크
+    const kakaoOpenChatPattern =
+      /^https?:\/\/open\.kakao\.com\/o\/[a-zA-Z0-9]{4,}.*$/;
+    if (openchatLink && !kakaoOpenChatPattern.test(openchatLink)) {
       alert("오픈채팅방 링크는 http 또는 https로 시작해야 합니다.");
       return false;
     }
