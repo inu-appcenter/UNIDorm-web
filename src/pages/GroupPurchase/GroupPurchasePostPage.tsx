@@ -291,6 +291,11 @@ export default function GroupPurchasePostPage() {
                     post.recruitmentComplete ? "마감" : "오픈 채팅 참여하기"
                   }
                   onClick={() => {
+                    if (!isLoggedIn) {
+                      alert("로그인 후 참여할 수 있어요.");
+                      navigate("/login");
+                      return;
+                    }
                     if (post?.recruitmentComplete) {
                       alert("마감된 공동구매입니다.");
                       return;
