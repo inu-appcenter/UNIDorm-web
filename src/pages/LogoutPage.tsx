@@ -14,8 +14,6 @@ const LogoutPage = () => {
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("role");
     localStorage.removeItem("userInfo");
-    localStorage.removeItem("roommate_alert_shown");
-    localStorage.removeItem("fcmToken");
 
     const emptyTokenInfo: TokenInfo = {
       accessToken: "",
@@ -24,19 +22,24 @@ const LogoutPage = () => {
     };
     setTokenInfo(emptyTokenInfo);
     const emptyUserInfo = {
+      id: 0,
       name: "",
       studentNumber: "",
       dormType: "",
       college: "",
       penalty: 0,
       hasTimeTableImage: false,
+      // 새로 추가된 필드들
+      hasUnreadNotifications: false,
+      termsAgreed: false,
+      privacyAgreed: false,
+      // 기존 필드
       roommateCheckList: false,
-      id: 0,
-      isAdmin: false,
+      // isAdmin: false, // 삭제됨
     };
     setUserInfo(emptyUserInfo);
     console.log("로그아웃 성공");
-    // alert("로그아웃되었습니다.");
+    alert("로그아웃되었습니다.");
     // 처리 완료 즉시 이동
     navigate("/home");
   }, [navigate, setTokenInfo]);
