@@ -26,7 +26,7 @@ const SwitchHandle = styled.span<{ checked: boolean }>`
   border-radius: 9999px;
   background-color: white;
   transform: ${({ checked }) =>
-    checked ? "translateX(14px)" : "translateX(-2px)"};
+    checked ? "translateX(20px)" : "translateX(4px)"};
   transition: transform 0.2s ease-in-out;
 `;
 
