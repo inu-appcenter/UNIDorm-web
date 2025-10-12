@@ -6,15 +6,22 @@ import purchase from "../../assets/notification/purchase.svg";
 // import chat from "../../assets/notification/chat.svg";
 import { formatTimeAgo } from "../../utils/dateUtils.ts";
 import { useNavigate } from "react-router-dom";
+import { ReceivedMatchingRequest } from "../../types/roommates.ts";
 
 interface NotiItemProps {
-  notidata: Notification;
+  notidata?: Notification;
+  receivedRoommateRequest?: ReceivedMatchingRequest;
+  handleRoommateRequest?: (matchingId: number, senderName: string) => void;
 }
 
-const NotiItem = ({ notidata }: NotiItemProps) => {
+const NotiItem = ({
+  notidata,
+  receivedRoommateRequest,
+  handleRoommateRequest,
+}: NotiItemProps) => {
   const navigate = useNavigate();
 
-  const NotiIconSelector = () => {
+  const NotiIconSelector = (notidata: Notification) => {
     if (notidata.notificationType === "룸메이트") {
       return roommate;
     } else if (notidata.notificationType === "공동구매") {
@@ -30,7 +37,7 @@ const NotiItem = ({ notidata }: NotiItemProps) => {
     }
   };
 
-  const handleNotificationClick = () => {
+  const handleNotificationClick = (notidata: Notification) => {
     // 클릭 시 알림을 읽음 처리하는 API를 호출하는 로직을 추가할 수 있습니다.
     // 예: markAsRead(notidata.id);
 
@@ -61,21 +68,56 @@ const NotiItem = ({ notidata }: NotiItemProps) => {
 
   return (
     // 2. notidata.read 값을 isRead prop으로 전달합니다.
-    <NotiItemWrapper isRead={notidata.read} onClick={handleNotificationClick}>
-      <IconWrapper>
-        <img src={NotiIconSelector()} alt={"공지아이콘"} />
-      </IconWrapper>
-      <ContentWrapper>
-        <TopRow>
-          <div className="notificationType">{notidata.notificationType}</div>
-          <div className="createdDate">
-            {formatTimeAgo(notidata.createdDate)}
-          </div>
-        </TopRow>
+    <NotiItemWrapper
+      isRead={notidata ? notidata.read : false}
+      onClick={() => {
+        if (notidata && handleNotificationClick) {
+          handleNotificationClick(notidata);
+        }
 
-        <div className="title">{notidata.title}</div>
-        <div className="body">{notidata.body}</div>
-      </ContentWrapper>
+        if (receivedRoommateRequest && handleRoommateRequest) {
+          handleRoommateRequest(
+            receivedRoommateRequest.matchingId,
+            receivedRoommateRequest.senderName,
+          );
+        }
+      }}
+    >
+      <IconWrapper>
+        <img
+          src={!notidata ? roommate : NotiIconSelector(notidata)}
+          alt={"공지아이콘"}
+        />
+      </IconWrapper>
+      {notidata && (
+        <ContentWrapper>
+          <TopRow>
+            <div className="notificationType">{notidata.notificationType}</div>
+            <div className="createdDate">
+              {formatTimeAgo(notidata.createdDate)}
+            </div>
+          </TopRow>
+
+          <div className="title">{notidata.title}</div>
+          <div className="body">{notidata.body}</div>
+        </ContentWrapper>
+      )}
+
+      {receivedRoommateRequest && (
+        <ContentWrapper>
+          <TopRow>
+            <div className="notificationType">룸메이트</div>
+            {/*<div className="createdDate">*/}
+            {/*  {formatTimeAgo(receivedRoommateRequest.createdDate)}*/}
+            {/*</div>*/}
+          </TopRow>
+
+          <div className="title">룸메이트 신청이 도착했습니다!</div>
+          <div className="body">
+            {receivedRoommateRequest.senderName}님이 룸메이트 신청을 보냈습니다.
+          </div>
+        </ContentWrapper>
+      )}
     </NotiItemWrapper>
   );
 };
