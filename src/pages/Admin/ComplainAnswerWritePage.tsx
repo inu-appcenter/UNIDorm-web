@@ -10,6 +10,7 @@ import {
   updateComplaintReply,
   updateComplaintStatus,
 } from "../../apis/complainAdmin.ts";
+import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 
 export default function ComplainAnswerWritePage() {
   const { complainId } = useParams<{ complainId: string }>();
@@ -24,6 +25,8 @@ export default function ComplainAnswerWritePage() {
   const [images, setImages] = useState<File[]>([]);
 
   const inputRef = useRef<HTMLInputElement | null>(null);
+
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -64,6 +67,8 @@ export default function ComplainAnswerWritePage() {
 
       console.log("DTO", dto);
 
+      setIsLoading(true);
+
       let res;
 
       if (isEditMode && complain?.id) {
@@ -86,12 +91,16 @@ export default function ComplainAnswerWritePage() {
       } else {
         alert("처리 중 오류가 발생했습니다.");
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <Wrapper>
       <Header title={"민원 답변 작성"} hasBack={true} />
+
+      {isLoading && <LoadingSpinner overlay message="글 쓰는 중..." />}
 
       <Content>
         <Label>

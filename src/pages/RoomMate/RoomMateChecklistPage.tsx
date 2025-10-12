@@ -33,6 +33,7 @@ import useUserStore from "../../stores/useUserStore.ts";
 import { useLocation, useNavigate } from "react-router-dom";
 import StyledTextArea from "../../components/roommate/StyledTextArea.tsx";
 import StyledTextInput from "../../components/roommate/StyledTextInput.tsx";
+import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 
 export default function RoomMateChecklistPage() {
   const { setUserInfo, userInfo } = useUserStore();
@@ -41,6 +42,7 @@ export default function RoomMateChecklistPage() {
   const partnerName = location.state?.partnerName;
   const roomId = location.state?.roomId;
   const isViewerMode = !!roomId; // roomId 있으면 뷰어 모드
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     // if (!roomId) return;
@@ -182,6 +184,8 @@ export default function RoomMateChecklistPage() {
     };
 
     try {
+      setIsLoading(true);
+
       const res = userInfo.roommateCheckList
         ? await putRoommatePost(requestBody)
         : await createRoommatePost(requestBody);
@@ -202,6 +206,8 @@ export default function RoomMateChecklistPage() {
     } catch (err) {
       alert("등록 실패");
       console.error(err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -247,6 +253,8 @@ export default function RoomMateChecklistPage() {
         hasBack={true}
         showAlarm={false}
       />
+
+      {isLoading && <LoadingSpinner overlay message="글 쓰는 중..." />}
 
       <TitleContentArea
         title={"기숙사 종류"}

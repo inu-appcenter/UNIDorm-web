@@ -15,6 +15,7 @@ import CategorySelector from "../../components/GroupPurchase/CategorySelector.ts
 import DeadlineSelector from "../../components/GroupPurchase/DeadlineSelector.tsx";
 import ImageUploader from "../../components/GroupPurchase/ImageUploader.tsx";
 import HowToCreateOpenChat from "../../components/GroupPurchase/HowToCreateOpenChat.tsx";
+import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 
 export default function GroupPurchaseWritePage() {
   const navigate = useNavigate();
@@ -55,6 +56,7 @@ export default function GroupPurchaseWritePage() {
   const isLoggedIn = Boolean(tokenInfo.accessToken);
   const [isModalOpen, setIsModalOpen] = useState(true);
   const [isHowtoModalOpen, setIsHowToModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async () => {
     if (!validateForm()) return;
@@ -70,6 +72,7 @@ export default function GroupPurchaseWritePage() {
     };
 
     try {
+      setIsLoading(true);
       if (isEditMode && post?.id) {
         await updateGroupPurchase(post.id, requestDto, images);
         alert("게시글이 수정되었습니다.");
@@ -83,6 +86,8 @@ export default function GroupPurchaseWritePage() {
     } catch (error) {
       console.error("게시글 등록/수정 실패:", error);
       alert("게시글 등록/수정 중 오류가 발생했습니다.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -99,6 +104,9 @@ export default function GroupPurchaseWritePage() {
           <TempSaveButton onClick={handleTempSave}>임시저장</TempSaveButton>
         }
       />
+
+      {isLoading && <LoadingSpinner overlay message="글 쓰는 중..." />}
+
       <CommonBottomModal
         id={"checkbefore"}
         isOpen={isModalOpen}

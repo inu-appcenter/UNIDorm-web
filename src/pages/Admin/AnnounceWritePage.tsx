@@ -10,6 +10,7 @@ import {
   updateAnnouncementWithFiles,
 } from "../../apis/announcements.ts";
 import Header from "../../components/common/Header.tsx";
+import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 
 export default function AnnounceWritePage() {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ export default function AnnounceWritePage() {
   const [writer, setWriter] = useState(announce?.writer || "관리자");
   const [isEmergency, setIsEmergency] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -42,6 +44,7 @@ export default function AnnounceWritePage() {
     };
 
     try {
+      setIsLoading(true);
       if (announce) {
         // 수정 모드
         if (files.length > 0) {
@@ -61,6 +64,8 @@ export default function AnnounceWritePage() {
     } catch (error) {
       console.error("공지사항 처리 실패:", error);
       alert("처리에 실패했습니다.");
+    } finally {
+      setIsLoading(false);
     }
   };
   return (
@@ -69,6 +74,8 @@ export default function AnnounceWritePage() {
         title={announce ? "공지사항 수정" : "공지사항 작성"}
         hasBack={true}
       />
+
+      {isLoading && <LoadingSpinner overlay message="글 쓰는 중..." />}
 
       <Content>
         <Label>제목</Label>

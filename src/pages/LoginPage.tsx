@@ -7,18 +7,29 @@ import { login } from "../apis/members.ts";
 import useUserStore from "../stores/useUserStore.ts";
 import Header from "../components/common/Header.tsx";
 import tokenInstance from "../apis/tokenInstance.ts";
+import React from "react";
+import LoadingSpinner from "../components/common/LoadingSpinner.tsx";
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const [id, setId] = useState("");
   const [password, setPassword] = useState("");
-  const { setTokenInfo } = useUserStore(); // store에서 setTokenInfo 불러오기
+  const [isLoading, setIsLoading] = useState(false); // ✅ 로딩 상태 추가
+  const { setTokenInfo } = useUserStore();
 
   const isFilled = () => {
     return id.trim() !== "" && password.trim() !== "";
   };
 
-  const handleLogin = async () => {
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!isFilled()) {
+      return;
+    }
+
+    setIsLoading(true); // ✅ 로그인 시작 시 로딩 상태 true 설정
+
     try {
       const response = await login(id, password);
       console.log(response);
@@ -34,7 +45,7 @@ export default function LoginPage() {
 
         setTokenInfo(tokenInfo);
 
-        // ✅ 로그인 성공 후 FCM 토큰 서버 전송
+        // 로그인 성공 후 FCM 토큰 서버 전송
         const fcmToken = localStorage.getItem("fcmToken");
         if (fcmToken) {
           try {
@@ -45,12 +56,6 @@ export default function LoginPage() {
           }
         }
 
-        // if (response.data.role === "ROLE_ADMIN") {
-        //   alert("admin페이지로 이동합니다.");
-        //   navigate("/admin");
-        //   return;
-        // }
-
         navigate("/home");
       } else {
         alert("로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.");
@@ -58,12 +63,16 @@ export default function LoginPage() {
     } catch (error) {
       alert("로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.");
       console.error(error);
+    } finally {
+      setIsLoading(false); // ✅ 로그인 완료(성공/실패) 후 로딩 상태 false 설정
     }
   };
 
   return (
-    <LoginPageWrapper>
+    <LoginFormWrapper onSubmit={handleLogin}>
       <Header title={"로그인"} hasBack={true} />
+      {isLoading && <LoadingSpinner overlay message="로그인 중..." />}
+
       <div>
         <span className="description">
           인천대학교 포털 아이디, 비밀번호로 간편하게 로그인할 수 있어요.
@@ -87,14 +96,15 @@ export default function LoginPage() {
       <ButtonWrapper>
         <SquareButton
           text="로그인"
-          disabled={!isFilled()}
-          onClick={handleLogin}
+          type="submit"
+          disabled={!isFilled() || isLoading} // ✅ 로딩 중일 때도 버튼 비활성화
         />
       </ButtonWrapper>
-    </LoginPageWrapper>
+    </LoginFormWrapper>
   );
 }
-const LoginPageWrapper = styled.div`
+
+const LoginFormWrapper = styled.form`
   padding: 20px;
   padding-top: 80px;
   display: flex;

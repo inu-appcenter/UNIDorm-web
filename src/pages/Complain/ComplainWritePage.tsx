@@ -18,6 +18,7 @@ import { createComplaint, updateComplaint } from "../../apis/complain.ts";
 import { ComplaintCreateDto } from "../../types/complain.ts";
 import FormField from "../../components/complain/FormField.tsx";
 import { Dropdown, DropdownContainer, Input } from "../../styles/complain.ts";
+import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 
 export default function ComplainWritePage() {
   const navigate = useNavigate();
@@ -29,6 +30,8 @@ export default function ComplainWritePage() {
   const [content, setContent] = useState("");
   const [images, setImages] = useState<File[]>([]);
   const [privacyAgreed, setPrivacyAgreed] = useState(false);
+
+  const [isLoading, setIsLoading] = useState(false);
 
   // 선택 값 관련 상태
   const [selectedComplainTypeIndex, setSelectedComplainTypeIndex] = useState<
@@ -112,6 +115,7 @@ export default function ComplainWritePage() {
     }
 
     try {
+      setIsLoading(true);
       // 수정된 DTO 구조에 맞게 데이터 구성
       const dto: ComplaintCreateDto = {
         title,
@@ -143,12 +147,16 @@ export default function ComplainWritePage() {
       const errorMessage =
         err.response?.data?.message || "처리 중 오류가 발생했습니다.";
       alert(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <Wrapper>
       <Header title={isEditMode ? "민원 수정" : "민원 접수"} hasBack={true} />
+
+      {isLoading && <LoadingSpinner overlay message="글 쓰는 중..." />}
 
       <Content>
         <FormField
