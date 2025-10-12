@@ -20,6 +20,7 @@ const AdminMainPage: React.FC = () => {
     }
   }, [tokenInfo, userInfo, isLoading]);
 
+
   const menuItems = [
     {
       label: "로그아웃",
