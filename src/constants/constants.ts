@@ -59,4 +59,4 @@ export const floors = Array.from({ length: 10 }, (_, i) => `${i + 1}층`);
 export const rooms = Array.from({ length: 20 }, (_, i) => `${i + 1}호`);
 export const beds = ["A", "B", "C", "D"];
 
-export const complainStatus = ["대기", "담당자 배정", "처리 중", "처리 완료"];
+export const complainStatus = ["대기중", "담당자 배정", "처리중", "처리완료"];
