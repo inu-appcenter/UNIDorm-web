@@ -119,7 +119,7 @@ export default function CommentSection({
                 />
                 <Nickname>{getCommentName(reply)}</Nickname>
               </UserInfo>
-              {isLoggedIn && (
+              {isLoggedIn && reply.userId === userInfo.id && (
                 <TopRightDropdownMenu
                   size={18}
                   items={ownerMenuItems.map((item) => ({
