@@ -72,6 +72,7 @@ function App() {
     //   navigate("/admin");
     //   return;
     // }
+
     const initializeUser = async () => {
       try {
         const response = await getMemberInfo();
