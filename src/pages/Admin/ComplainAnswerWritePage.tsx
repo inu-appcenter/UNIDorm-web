@@ -34,8 +34,8 @@ export default function ComplainAnswerWritePage() {
 
   useEffect(() => {
     if (complain) {
-      setTitle(complain.title);
-      setContent(complain.content);
+      setTitle(complain.reply.replyTitle);
+      setContent(complain.reply.replyContent);
       setIsEditMode(true);
     }
   }, [complain]);
