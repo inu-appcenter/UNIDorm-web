@@ -257,7 +257,7 @@ export default function HomePage() {
 const HomePageWrapper = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  //gap: 32px;
   padding-top: 16px;
   padding-bottom: 120px;
   box-sizing: border-box;
@@ -266,8 +266,7 @@ const HomePageWrapper = styled.div`
   //height: 100%;
 
   overflow-y: auto;
-
-  //background: #fafafa;
+  //background: white;
 
   .appcenter-logo {
     margin-top: 36px;
@@ -278,10 +277,13 @@ const HomePageWrapper = styled.div`
 
 const ContentWrapper = styled.div`
   padding: 0 16px;
+  padding-top: 32px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 32px;
+  border-radius: 16px 16px 0 0;
+  background: #fafafa;
 `;
 const NotiWrapper = styled.div`
   display: flex;
