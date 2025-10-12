@@ -38,7 +38,7 @@ const MyPage = () => {
           // );
           setNotFound(true);
         } else {
-          alert("룸메이트 정보를 불러오는 데 실패했습니다." + err);
+          console.log("룸메이트 정보를 불러오는 데 실패했습니다." + err);
         }
       }
     };
