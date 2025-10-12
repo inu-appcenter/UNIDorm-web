@@ -75,6 +75,7 @@ function App() {
 
     const initializeUser = async () => {
       try {
+        console.log("회원 정보 가져오기 시도");
         const response = await getMemberInfo();
         console.log("회원 정보 가져오기 성공:", response);
         setUserInfo(response.data);
@@ -92,7 +93,7 @@ function App() {
       }
     };
 
-    if (tokenInfo?.accessToken && tokenInfo.role === "ROLE_USER") {
+    if (tokenInfo?.accessToken) {
       initializeUser();
     }
   }, [tokenInfo, setUserInfo]);
