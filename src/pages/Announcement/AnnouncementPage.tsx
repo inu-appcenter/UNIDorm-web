@@ -10,6 +10,11 @@ import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../../constants/EmptyMessage.tsx";
 import { useIsAdminRole } from "../../hooks/useIsAdminRole.ts";
 import { formatTimeAgo } from "../../utils/dateUtils.ts";
+import {
+  NoticeTagWrapper,
+  TypeBadge,
+  UrgentBadge,
+} from "../../styles/announcement.ts";
 
 export default function AnnouncementPage() {
   const navigate = useNavigate();
@@ -24,6 +29,7 @@ export default function AnnouncementPage() {
       setLoading(true);
       try {
         const response = await getAnnouncements();
+        console.log("공지사항 불러오기 성공:", response);
         setNotices(response.data);
       } catch (error) {
         console.error("공지사항 불러오기 실패", error);
@@ -34,9 +40,6 @@ export default function AnnouncementPage() {
 
     fetchData();
   }, []);
-
-  // ❌ 기존의 전체 페이지 로딩을 제거합니다.
-  // if (loading) return <NoticePageWrapper>로딩중...</NoticePageWrapper>;
 
   return (
     <NoticePageWrapper>
@@ -62,7 +65,13 @@ export default function AnnouncementPage() {
               >
                 <NoticeTop>
                   <NoticeTitle>{notice.title}</NoticeTitle>
-                  {notice.emergency && <UrgentBadge>긴급</UrgentBadge>}
+                  <NoticeTagWrapper>
+                    {notice.emergency && <UrgentBadge>긴급</UrgentBadge>}
+                    {/* 🔽 props로 announcementType 전달 */}
+                    <TypeBadge type={notice.announcementType}>
+                      {notice.announcementType}
+                    </TypeBadge>
+                  </NoticeTagWrapper>
                 </NoticeTop>
                 <NoticeContent>{notice.content}</NoticeContent>
                 <NoticeBottom>
@@ -140,15 +149,6 @@ const NoticeTitle = styled.div`
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
-`;
-
-const UrgentBadge = styled.div`
-  font-size: 14px;
-  color: #007bff;
-  border: 1px solid #007bff;
-  padding: 2px 8px;
-  border-radius: 20px;
-  min-width: fit-content;
 `;
 
 const NoticeContent = styled.div`
