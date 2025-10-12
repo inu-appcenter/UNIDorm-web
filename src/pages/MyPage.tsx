@@ -53,9 +53,11 @@ const MyPage = () => {
         {isLoggedIn ? (
           <MyInfoArea />
         ) : (
-          <LoginMessage onClick={() => navigate("/login")}>
-            로그인을 해주세요<span className="go">{">"}</span>
-          </LoginMessage>
+          <LoginButton onClick={() => navigate("/login")}>
+            인천대학교 포털로
+            <span className="login"> 로그인</span>하세요
+            <span className="go">{">"}</span>
+          </LoginButton>
         )}
       </InfoAreaWrapper>
 
@@ -157,16 +159,19 @@ const Divider = styled.div`
   width: 100%;
 `;
 
-const LoginMessage = styled.div`
+const LoginButton = styled.button`
   text-align: start;
   font-size: 18px;
-  font-weight: 500;
-  color: black;
+  color: #333;
   height: fit-content;
+  cursor: pointer;
   .go {
     font-size: 16px;
     margin-left: 5px;
     font-weight: 300;
+  }
+  .login {
+    font-weight: 600;
   }
 `;
 
