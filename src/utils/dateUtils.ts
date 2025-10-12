@@ -52,3 +52,12 @@ export const formatTimeAgo = (date: string | Date): string => {
   const daysPast = Math.floor(hoursPast / 24);
   return `${daysPast}일 전`;
 };
+
+export const formatDeadlineDate = (deadline: string) => {
+  const date = new Date(deadline);
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  const day = date.getDate().toString().padStart(2, "0");
+  const hours = date.getHours().toString().padStart(2, "0");
+  const minutes = date.getMinutes().toString().padStart(2, "0");
+  return `${month}.${day} ${hours}시 ${minutes}분`;
+};

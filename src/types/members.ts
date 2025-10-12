@@ -1,3 +1,5 @@
+import { GetGroupPurchaseListParams } from "./grouporder.ts";
+
 export interface TokenInfo {
   accessToken: string;
   refreshToken: string;
@@ -22,34 +24,17 @@ export interface UserInfo {
   // isAdmin: boolean; // JSON 객체에 없으므로 삭제됨
 }
 
-type Weekday = "월" | "화" | "수" | "목" | "금" | "토" | "일";
+// type Weekday = "월" | "화" | "수" | "목" | "금" | "토" | "일";
 
 export interface MyPost {
   boardId: number;
-  content: string;
-  createDate: string; // "2025-08-07T17:56:25.348745"
-  filePath: string | null;
-  tipCommentCount: number;
-  tipLikeCount: number;
+  createDate: string;
+  deadline: string;
+  filePath: string;
+  groupOrderType: GetGroupPurchaseListParams["type"];
+  price: number;
+  recruitmentComplete: boolean;
   title: string;
-  type: "TIP" | "ROOMMATE" | "GROUP";
-
-  arrangement: string;
-  bedTime: string;
-  college: string;
-  comment: string;
-  dormPeriod: Weekday[];
-  dormType: string;
-  matched: boolean;
-  mbti: string;
-  religion: string;
-  roommateBoardLike: number;
-  showerHour: string;
-  showerTime: string;
-  sleeper: string;
-  smoking: string;
-  snoring: string;
-  toothGrind: string;
-  userId: number;
-  userName: string;
+  type: "GROUP_ORDER" | "ROOMMATE" | "TIP";
+  viewCount: number;
 }
