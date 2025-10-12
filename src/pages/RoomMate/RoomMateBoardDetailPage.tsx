@@ -134,8 +134,8 @@ export default function RoomMateBoardDetailPage() {
       </TitleArea>
 
       <ContentArea>
-        <div className="title">{boardData.title}</div>
-        <div className="content">{boardData.comment}</div>
+        <div className="board-title">{boardData.title}</div>
+        <div className="board-content">{boardData.comment}</div>
 
         <CardGrid>
           <InfoCard
@@ -285,7 +285,7 @@ const UserArea = styled.div`
       font-size: 14px;
     }
 
-    .createdDate {
+    .date {
       font-weight: 400;
       font-size: 10px;
     }
@@ -298,7 +298,7 @@ const ContentArea = styled.div`
   width: 100%;
   height: fit-content;
 
-  .title {
+  .board-title {
     font-style: normal;
     font-weight: 700;
     font-size: 16px;
@@ -313,7 +313,7 @@ const ContentArea = styled.div`
     margin-bottom: 10px;
   }
 
-  .title {
+  .board-content {
     font-style: normal;
     font-weight: 500;
     font-size: 12px;
