@@ -150,7 +150,7 @@ export default function MyInfoEditPage() {
     const getUserProfileImg = async () => {
       const result = await getMemberImage();
       console.log(result.data);
-      setPreviewUrl(result.data.fileName);
+      setPreviewUrl(result.data.imageUrl);
     };
 
     getUserProfileImg();
