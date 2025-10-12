@@ -44,7 +44,7 @@ const RoomMateInfoArea = ({
     <RoomMateInfoAreaWrapper
       onClick={() => {
         if (location.pathname === "/mypage") {
-          navigate("/myroommate");
+          navigate("/roommate/my");
         }
       }}
     >
