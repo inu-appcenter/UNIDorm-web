@@ -1,45 +1,24 @@
 import styled from "styled-components";
 import GroupPurchaseItem from "./GroupPurchaseItem";
-import { useEffect, useState } from "react";
-import axiosInstance from "../../apis/axiosInstance";
+import { GroupOrder } from "../../types/grouporder.ts";
+import { useNavigate } from "react-router-dom";
 
-interface GroupOrder {
-  id: number;
-  title: string;
-  filePath: string;
-  deadline: string;
-  price: number;
-  currentPeople: number;
-  maxPeople: number;
+interface GroupPurchaseListProps {
+  groupOrders: GroupOrder[];
 }
 
-const GroupPurchaseList = () => {
-  const [groupOrders, setGroupOrders] = useState<GroupOrder[]>([]);
-
-  useEffect(() => {
-    const fetchGroupOrders = async () => {
-      try {
-        const res = await axiosInstance.get("/group-orders");
-        setGroupOrders(res.data);
-      } catch (err) {
-        console.error("공동구매 목록 불러오기 실패", err);
-      }
-    };
-
-    fetchGroupOrders();
-  }, []);
+const GroupPurchaseList = ({ groupOrders }: GroupPurchaseListProps) => {
+  const navigate = useNavigate();
 
   return (
     <GroupPurchaseListWrapper>
       {groupOrders.map((order) => (
         <GroupPurchaseItem
-          key={order.id}
-          title={order.title}
-          price={order.price}
-          deadline={order.deadline}
-          currentPeople={order.currentPeople}
-          maxPeople={order.maxPeople}
-          thumbnailUrl={order.filePath}
+          key={order.boardId}
+          groupOrder={order}
+          onClick={() => {
+            navigate(`/groupPurchase/${order.boardId}`);
+          }}
         />
       ))}
     </GroupPurchaseListWrapper>

@@ -38,12 +38,12 @@ const Button = ({
   onClick,
   showTooltip = false,
   onTooltipClose,
-  badgeCount,
+  // badgeCount,
 }: ButtonProps) => {
   const handleClick = () => {
     onClick();
   };
-  console.log(badgeCount);
+  // console.log(badgeCount);
   return (
     <ButtonWrapper onClick={handleClick}>
       {showTooltip && onTooltipClose && (
@@ -191,8 +191,8 @@ export default function BottomBar() {
         defaultImg={buy}
         clickedImg={buyClicked}
         buttonName="공동구매"
-        isActive={pathname === "/groupPurchase/comingsoon"}
-        onClick={() => navigate("/groupPurchase/comingsoon")}
+        isActive={pathname === "/groupPurchase"}
+        onClick={() => navigate("/groupPurchase")}
       />
       <Button
         defaultImg={chat}

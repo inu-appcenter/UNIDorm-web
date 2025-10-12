@@ -11,9 +11,11 @@ import { getMyRoommateInfo } from "../apis/roommate.ts";
 import { MyRoommateInfoResponse } from "../types/roommates.ts";
 import TitleContentArea from "../components/common/TitleContentArea.tsx";
 import BottomBar from "../components/common/BottomBar.tsx";
+import { useIsAdminRole } from "../hooks/useIsAdminRole.ts";
 
 const MyPage = () => {
   const { tokenInfo } = useUserStore();
+  const { isAdmin } = useIsAdminRole();
   const isLoggedIn = Boolean(tokenInfo?.accessToken ?? "");
   const navigate = useNavigate();
   const [roommateInfo, setRoommateInfo] =
@@ -51,15 +53,25 @@ const MyPage = () => {
         {isLoggedIn ? (
           <MyInfoArea />
         ) : (
-          <LoginMessage onClick={() => navigate("/login")}>
-            로그인을 해주세요<span className="go">{">"}</span>
-          </LoginMessage>
+          <LoginButton onClick={() => navigate("/login")}>
+            인천대학교 포털로
+            <span className="login"> 로그인</span>하세요
+            <span className="go">{">"}</span>
+          </LoginButton>
         )}
       </InfoAreaWrapper>
 
       <MenuGroupsWrapper>
         <ProtectedMenuWrapper disabled={isProtected}>
           <MenuGroup title={menuGroups[0].title} menus={menuGroups[0].menus} />
+          {isProtected && (
+            <OverlayMessage>로그인 후 사용 가능해요.</OverlayMessage>
+          )}
+        </ProtectedMenuWrapper>
+        <Divider />
+
+        <ProtectedMenuWrapper disabled={isProtected}>
+          <MenuGroup title={menuGroups[2].title} menus={menuGroups[2].menus} />
           {isProtected && (
             <OverlayMessage>로그인 후 사용 가능해요.</OverlayMessage>
           )}
@@ -90,7 +102,25 @@ const MyPage = () => {
         </ProtectedMenuWrapper>
         <Divider />
 
-        <MenuGroup title={menuGroups[3].title} menus={menuGroups[3].menus} />
+        <MenuGroup title={menuGroups[4].title} menus={menuGroups[4].menus} />
+
+        {isAdmin && (
+          <>
+            <Divider />
+
+            <MenuGroup
+              title={"관리자 전용"}
+              menus={[
+                {
+                  label: "관리자 페이지",
+                  onClick: () => {
+                    navigate("/admin");
+                  },
+                },
+              ]}
+            />
+          </>
+        )}
       </MenuGroupsWrapper>
       <BottomBar />
     </MyPageWrapper>
@@ -129,16 +159,19 @@ const Divider = styled.div`
   width: 100%;
 `;
 
-const LoginMessage = styled.div`
+const LoginButton = styled.button`
   text-align: start;
   font-size: 18px;
-  font-weight: 500;
-  color: black;
+  color: #333;
   height: fit-content;
+  cursor: pointer;
   .go {
     font-size: 16px;
     margin-left: 5px;
     font-weight: 300;
+  }
+  .login {
+    font-weight: 600;
   }
 `;
 

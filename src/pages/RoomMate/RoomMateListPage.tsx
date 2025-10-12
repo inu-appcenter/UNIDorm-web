@@ -6,7 +6,11 @@ import { useEffect, useState } from "react";
 import { RoommatePost } from "../../types/roommates.ts";
 import { useLocation, useNavigate } from "react-router-dom";
 import FilterButton from "../../components/button/FilterButton.tsx";
-import { useRoomMateContext } from "../../stores/RoomMateContext.tsx";
+import { getRoomMateList } from "../../apis/roommate.ts";
+// 🔽 로딩 스피너 컴포넌트를 import 합니다.
+import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
+
+// ... (FilterTags 컴포넌트 및 스타일은 동일)
 
 function FilterTags({ filters }: { filters: Record<string, any> }) {
   const filteredTags = Object.values(filters).filter((value) => {
@@ -54,7 +58,27 @@ const Tag = styled.div`
 `;
 
 export default function RoomMateListPage() {
-  const { roommates } = useRoomMateContext();
+  const [roommates, setRoommates] = useState<RoommatePost[]>([]);
+  // 🔽 로딩 상태를 관리할 state를 추가합니다.
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const loadRoommates = async () => {
+    // 🔽 데이터 로딩 시작
+    setIsLoading(true);
+    try {
+      const data = await getRoomMateList();
+      setRoommates(data.data);
+    } catch (error) {
+      console.error("룸메이트 리스트 불러오기 실패:", error);
+    } finally {
+      // 🔽 데이터 로딩 완료 (성공/실패 무관)
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadRoommates();
+  }, []);
 
   const [filteredRoommates, setFilteredRoommates] = useState<RoommatePost[]>(
     [],
@@ -62,47 +86,29 @@ export default function RoomMateListPage() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // filters를 상태로 관리
   const [filters, setFilters] = useState<Record<string, any>>(
     location.state?.filters || {},
   );
 
-  // location.state.filters가 바뀌면 filters 업데이트
   useEffect(() => {
     if (location.state?.filters) {
       setFilters(location.state.filters);
     }
   }, [location.state?.filters]);
 
-  // // API 호출 (roommates 비어있을 때만)
-  // useEffect(() => {
-  //   if (roommates.length > 0) return;
-  //   const fetchData = async () => {
-  //     try {
-  //       const response = await getRoomMateList();
-  //       setRoommates(response.data);
-  //     } catch (error) {
-  //       console.error("룸메이트 목록 가져오기 실패:", error);
-  //     }
-  //   };
-  //   fetchData();
-  // }, [roommates, setRoommates]);
-
   useEffect(() => {
-    // roommates가 있고 필터 조건이 있을 때 필터 적용
     if (!Array.isArray(roommates) || roommates.length === 0) return;
 
     const filtered = roommates.filter((post) => {
+      // ... (filtering logic is the same)
       if (filters.dormType && post.dormType !== filters.dormType) return false;
       if (filters.college && post.college !== filters.college) return false;
-
       if (filters.dormPeriod && filters.dormPeriod.length > 0) {
         const matchAllDays = filters.dormPeriod.every((day: string) =>
           post.dormPeriod.includes(day),
         );
         if (!matchAllDays) return false;
       }
-
       if (filters.mbti) {
         const filterLetters = filters.mbti.split("");
         const matchesAll = filterLetters.every((letter: string) =>
@@ -110,7 +116,6 @@ export default function RoomMateListPage() {
         );
         if (!matchesAll) return false;
       }
-
       if (filters.smoking && post.smoking !== filters.smoking) return false;
       if (filters.snoring && post.snoring !== filters.snoring) return false;
       if (filters.toothGrind && post.toothGrind !== filters.toothGrind)
@@ -123,9 +128,7 @@ export default function RoomMateListPage() {
       if (filters.bedTime && post.bedTime !== filters.bedTime) return false;
       if (filters.arrangement && post.arrangement !== filters.arrangement)
         return false;
-
       if (filters.religion && post.religion !== filters.religion) return false;
-
       return true;
     });
 
@@ -142,24 +145,26 @@ export default function RoomMateListPage() {
       <TitleContentArea
         title={"최신순"}
         description={"룸메이트를 구하고 있는 다양한 UNI들을 찾아보세요!"}
-        children={
-          <>
-            <FilterArea>
-              <FilterButton
-                onClick={() => {
-                  navigate("/roommate/filter", {
-                    state: { filters: filters },
-                  });
-                }}
-              />
-              <FilterTags filters={filters} />
-            </FilterArea>
-            {(filteredRoommates.length > 0 ? filteredRoommates : roommates)
+      >
+        <>
+          <FilterArea>
+            <FilterButton
+              onClick={() => {
+                navigate("/roommate/filter", {
+                  state: { filters: filters },
+                });
+              }}
+            />
+            <FilterTags filters={filters} />
+          </FilterArea>
+
+          {/* 🔽 로딩 중일 때 스피너를, 로딩 완료 후 목록을 보여줍니다. */}
+          {isLoading ? (
+            <LoadingSpinner message="룸메이트 목록을 불러오는 중..." />
+          ) : (filteredRoommates.length > 0 ? filteredRoommates : roommates)
               .length > 0 ? (
-              (filteredRoommates.length > 0
-                ? filteredRoommates
-                : roommates
-              ).map((post) => (
+            (filteredRoommates.length > 0 ? filteredRoommates : roommates).map(
+              (post) => (
                 <RoomMateCard
                   key={post.boardId}
                   title={post.title}
@@ -174,27 +179,24 @@ export default function RoomMateListPage() {
                   roommateBoardLike={post.roommateBoardLike}
                   matched={post.matched}
                 />
-              ))
-            ) : (
-              <EmptyMessage>게시글이 없습니다.</EmptyMessage>
-            )}
-          </>
-        }
-      />
+              ),
+            )
+          ) : (
+            <EmptyMessage>게시글이 없습니다.</EmptyMessage>
+          )}
+        </>
+      </TitleContentArea>
     </RoomMateListPageWrapper>
   );
 }
 
 const RoomMateListPageWrapper = styled.div`
   padding: 90px 16px;
-
   display: flex;
   flex-direction: column;
   gap: 16px;
   box-sizing: border-box;
-
   overflow-y: auto;
-
   background: #fafafa;
 `;
 

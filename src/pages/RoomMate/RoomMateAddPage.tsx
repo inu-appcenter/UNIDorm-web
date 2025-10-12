@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import Header from "../../components/common/Header.tsx";
-import RoundSquareBlueButton from "../../components/button/RoundSquareBlueButton.tsx";
+import RoundSquareButton from "../../components/button/RoundSquareButton.tsx";
 import friends from "../../assets/roommate/Friends.svg";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
@@ -73,7 +73,7 @@ export default function RoomMateAddPage() {
           )}
         </TopArea>
         <BottomArea>
-          <RoundSquareBlueButton
+          <RoundSquareButton
             btnName={
               isRegistering
                 ? isLoading

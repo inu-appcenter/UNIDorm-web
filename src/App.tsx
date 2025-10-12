@@ -38,11 +38,18 @@ import AdminMainPage from "./pages/Admin/AdminMainPage";
 import CalendarAdminPage from "./pages/Admin/CalendarAdminPage";
 import CalendarPage from "./pages/CalendarPage";
 import "./init";
-import { RoomMateProvider } from "./stores/RoomMateContext.tsx";
-import { AnnouncementProvider } from "./stores/AnnouncementContext.tsx";
-import { TipProvider } from "./stores/TipContext.tsx";
-import FCMPage from "./pages/Admin/FCMPage.tsx";
 import { ErrorBoundary } from "./ErrorBoundary.tsx";
+import ComplainListPage from "./pages/Complain/ComplainListPage.tsx";
+import ComplainDetailPage from "./pages/Complain/ComplainDetailPage.tsx";
+import ComplainWritePage from "./pages/Complain/ComplainWritePage.tsx";
+import ComplainAdminPage from "./pages/Admin/ComplainAdminPage.tsx";
+import ComplainAnswerWritePage from "./pages/Admin/ComplainAnswerWritePage.tsx";
+import KeywordAlertSettingPage from "./pages/GroupPurchase/KeywordAlertSettingPage.tsx";
+import PopupNotiListPage from "./pages/Admin/PopupNotiListPage.tsx";
+import PopupNotiCreatePage from "./pages/Admin/PopupNotiFormPage.tsx";
+import CreateNotificationPage from "./pages/Admin/CreateNotificationPage.tsx";
+import NotificationSettingPage from "./pages/MyPage/NotificationSettingPage.tsx";
+import FCMPage from "./pages/Admin/FCMPage.tsx";
 
 function App() {
   console.log("현재 MODE:", import.meta.env.MODE);
@@ -56,19 +63,20 @@ function App() {
     console.error = () => {};
   }
 
-  const { tokenInfo, setUserInfo, userInfo } = useUserStore();
+  const { tokenInfo, setUserInfo } = useUserStore();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (userInfo.isAdmin) {
-      alert("admin 페이지로 이동합니다.");
-      console.log("admin모드로 이동합니다");
-      navigate("/admin");
-      return;
-    }
+    // if (tokenInfo.role === "USER_ADMIN") {
+    //   console.log("admin모드로 이동합니다");
+    //   navigate("/admin");
+    //   return;
+    // }
+
     const initializeUser = async () => {
       try {
         const response = await getMemberInfo();
+        console.log("회원 정보 가져오기 성공:", response);
         setUserInfo(response.data);
 
         if (tokenInfo.accessToken && response.data.name === "") {
@@ -79,11 +87,12 @@ function App() {
           );
         }
       } catch (error) {
+        // alert("회원 가져오기 실패");
         console.error("회원 가져오기 실패", error);
       }
     };
 
-    if (tokenInfo?.accessToken) {
+    if (tokenInfo?.accessToken && tokenInfo.role === "ROLE_USER") {
       initializeUser();
     }
   }, [tokenInfo, setUserInfo]);
@@ -110,89 +119,107 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <RoomMateProvider>
-        <TipProvider>
-          <AnnouncementProvider>
-            <Routes>
-              {/* 로그인 / 온보딩 / 로그아웃 */}
-              <Route path="/" element={<OutPage />}>
-                <Route path="login" element={<LoginPage />} />
-                <Route path="logout" element={<LogoutPage />} />
-                <Route path="onboarding" element={<OnboardingPage />} />
-              </Route>
+      <Routes>
+        {/* 로그인 / 온보딩 / 로그아웃 */}
+        <Route path="/" element={<OutPage />}>
+          <Route path="login" element={<LoginPage />} />
+          <Route path="logout" element={<LogoutPage />} />
+          <Route path="onboarding" element={<OnboardingPage />} />
+        </Route>
 
-              {/* 홈 / 마이페이지 */}
-              <Route element={<RootPage />}>
-                <Route index element={<HomePage />} />
-                <Route path="home" element={<HomePage />} />
-                <Route path="mypage" element={<MyPage />} />
-                <Route path="myinfoedit" element={<MyInfoEditPage />} />
-                <Route path="myposts" element={<MyPostsPage />} />
-                <Route path="liked" element={<MyLikesPage />} />
-              </Route>
+        {/* 홈 / 마이페이지 */}
+        <Route element={<RootPage />}>
+          <Route index element={<HomePage />} />
+          <Route path="home" element={<HomePage />} />
+          <Route path="mypage" element={<MyPage />} />
+          <Route path="myinfoedit" element={<MyInfoEditPage />} />
+          <Route
+            path="notification-setting"
+            element={<NotificationSettingPage />}
+          />
+          <Route path="myposts" element={<MyPostsPage />} />
+          <Route path="liked" element={<MyLikesPage />} />
+        </Route>
 
-              {/* RoomMate */}
-              <Route path="roommate" element={<SubPage />}>
-                <Route index element={<RoomMatePage />} />
-                <Route path="my" element={<MyRoomMatePage />} />
+        {/* RoomMate */}
+        <Route path="roommate" element={<SubPage />}>
+          <Route index element={<RoomMatePage />} />
+          <Route path="my" element={<MyRoomMatePage />} />
 
-                {/* 리스트와 상세를 같은 레벨로 분리 */}
-                <Route path="list" element={<RoomMateListPage />} />
-                <Route
-                  path="list/:boardId"
-                  element={<RoomMateBoardDetailPage />}
-                />
+          {/* 리스트와 상세를 같은 레벨로 분리 */}
+          <Route path="list" element={<RoomMateListPage />} />
+          <Route path="list/:boardId" element={<RoomMateBoardDetailPage />} />
 
-                <Route path="filter" element={<RoomMateFilterPage />} />
-                <Route path="checklist" element={<RoomMateChecklistPage />} />
-                <Route path="add" element={<RoomMateAddPage />} />
-              </Route>
+          <Route path="filter" element={<RoomMateFilterPage />} />
+          <Route path="checklist" element={<RoomMateChecklistPage />} />
+          <Route path="add" element={<RoomMateAddPage />} />
+        </Route>
 
-              {/* Chat */}
-              <Route path="chat" element={<SubPage />}>
-                <Route index element={<ChatListPage />} />
-                <Route path=":chatType/:id" element={<ChattingPage />} />
-              </Route>
+        {/* Chat */}
+        <Route path="chat" element={<SubPage />}>
+          <Route index element={<ChatListPage />} />
+          <Route path=":chatType/:id" element={<ChattingPage />} />
+        </Route>
 
-              {/* GroupPurchase */}
-              <Route path="groupPurchase" element={<SubPage />}>
-                <Route index element={<GroupPurchaseMainPage />} />
-                <Route
-                  path="comingsoon"
-                  element={<GroupPurchaseComingSoonPage />}
-                />
-                <Route path="post" element={<GroupPurchasePostPage />} />
-                <Route path="write" element={<GroupPurchaseWritePage />} />
-              </Route>
+        {/* GroupPurchase */}
+        <Route path="groupPurchase" element={<SubPage />}>
+          <Route index element={<GroupPurchaseMainPage />} />
+          <Route path="comingsoon" element={<GroupPurchaseComingSoonPage />} />
+          <Route path=":boardId" element={<GroupPurchasePostPage />} />
+          <Route path="write" element={<GroupPurchaseWritePage />} />
+          <Route path="keywordSetting" element={<KeywordAlertSettingPage />} />
+        </Route>
 
-              {/* Announcement & Notification */}
-              <Route path="announcements" element={<SubPage />}>
-                <Route index element={<NotificationBoardPage />} />
-                <Route path=":id" element={<AnnounceDetailPage />} />
-                <Route path="write" element={<AnnounceWritePage />} />
-              </Route>
-              <Route path="notification" element={<NotificationPage />} />
+        {/* Announcement & Notification */}
+        <Route path="announcements" element={<SubPage />}>
+          <Route index element={<NotificationBoardPage />} />
+          <Route path=":boardId" element={<AnnounceDetailPage />} />
+          <Route path="write" element={<AnnounceWritePage />} />
+        </Route>
+        <Route path="notification" element={<NotificationPage />} />
 
-              {/* Tip */}
-              <Route path="tips" element={<SubPage />}>
-                <Route index element={<TipListPage />} />
-                <Route path="write" element={<TipWritePage />} />
-                <Route path=":boardId" element={<TipDetailPage />} />
-              </Route>
+        {/* Tip */}
+        <Route path="tips" element={<SubPage />}>
+          <Route index element={<TipListPage />} />
+          <Route path="write" element={<TipWritePage />} />
+          <Route path=":boardId" element={<TipDetailPage />} />
+        </Route>
 
-              {/* Calendar */}
-              <Route path="calendar" element={<CalendarPage />} />
+        {/* Calendar */}
+        <Route path="calendar" element={<CalendarPage />} />
 
-              {/* Admin */}
-              <Route path="admin" element={<SubPage />}>
-                <Route index element={<AdminMainPage />} />
-                <Route path="calendar" element={<CalendarAdminPage />} />
-                <Route path="fcm" element={<FCMPage />} />
-              </Route>
-            </Routes>
-          </AnnouncementProvider>
-        </TipProvider>
-      </RoomMateProvider>
+        {/*민원*/}
+        <Route path="complain" element={<SubPage />}>
+          <Route index element={<ComplainListPage />} />
+          <Route path=":complainId" element={<ComplainDetailPage />} />
+          <Route path="write" element={<ComplainWritePage />} />
+        </Route>
+        {/* Admin */}
+        <Route path="admin" element={<SubPage />}>
+          <Route index element={<AdminMainPage />} />
+          <Route path="calendar" element={<CalendarAdminPage />} />
+          <Route path="complain" element={<ComplainAdminPage />} />
+          <Route
+            path="complain/answer/:complainId"
+            element={<ComplainAnswerWritePage />}
+          />
+          <Route path="popup-notifications" element={<PopupNotiListPage />} />
+          <Route
+            path="popup-notifications/create"
+            element={<PopupNotiCreatePage />}
+          />
+          <Route
+            path="popup-notifications/edit/:popupNotificationId"
+            element={<PopupNotiCreatePage />}
+          />
+          <Route
+            path="notification/create"
+            element={<CreateNotificationPage />}
+          />
+
+          <Route path="fcm" element={<FCMPage />} />
+        </Route>
+      </Routes>
     </ErrorBoundary>
   );
 }

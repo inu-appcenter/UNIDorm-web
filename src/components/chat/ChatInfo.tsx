@@ -1,12 +1,12 @@
 import styled from "styled-components";
-import profile from "../../assets/profileimg.svg";
+import profile from "../../assets/profileimg.png";
 import GroupPurchaseInfo from "./GroupPurchaseInfo.tsx";
-import RoundSquareBlueButton from "../button/RoundSquareBlueButton.tsx";
+import RoundSquareButton from "../button/RoundSquareButton.tsx";
 import { requestRoommateMatchingByChatRoom } from "../../apis/roommate.ts";
 import { MdHelpOutline } from "react-icons/md";
 import RoundSquareWhiteButton from "../button/RoundSquareWhiteButton.tsx";
 import { useState } from "react";
-import 궁금해하는횃불이 from "../../assets/roommate/궁금해하는횃불이.png";
+import 궁금해하는횃불이 from "../../assets/roommate/궁금해하는횃불이.webp";
 
 interface ChatInfoProps {
   selectedTab: string;
@@ -75,7 +75,7 @@ const ChatInfo = ({
       </ContentWrapper>
       <FunctionWrapper>
         {selectedTab === "룸메이트" && (
-          <RoundSquareBlueButton
+          <RoundSquareButton
             btnName={"룸메 신청"}
             onClick={() => {
               if (!isChatted) {
@@ -184,7 +184,7 @@ const ChatInfo = ({
                 }}
               />
               {isRequestMode && (
-                <RoundSquareBlueButton
+                <RoundSquareButton
                   btnName={"보내기"}
                   onClick={handleMatchingRequest}
                 />
@@ -286,7 +286,7 @@ const Modal = styled.div`
     z-index: 1000;
   }
 
-  .content {
+  .title {
     width: 100%;
     flex: 1;
     //height: 100%;

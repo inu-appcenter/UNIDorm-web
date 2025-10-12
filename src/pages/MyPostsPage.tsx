@@ -2,7 +2,6 @@
 
 import styled from "styled-components";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import Header from "../components/common/Header.tsx";
 import TitleContentArea from "../components/common/TitleContentArea.tsx";
 import MyPostLikeCard from "../components/mypage/MyPostLikeCard.tsx";
@@ -10,7 +9,6 @@ import { MyPost } from "../types/members.ts";
 import { getMemberPosts } from "../apis/members.ts";
 
 export default function MyPostsPage() {
-  const navigate = useNavigate();
   const [posts, setPosts] = useState<MyPost[]>([]);
 
   useEffect(() => {
@@ -34,11 +32,10 @@ export default function MyPostsPage() {
         <CardList>
           {posts.length > 0 ? (
             posts.map((post) => (
-              <MyPostLikeCard
-                key={post.boardId}
-                post={post}
-                onClick={() => navigate(`/tips/${post.boardId}`)}
-              />
+              <>
+                <MyPostLikeCard key={post.boardId} post={post} />
+                <Divider />
+              </>
             ))
           ) : (
             <EmptyMessage>내가 작성한 게시글이 없습니다.</EmptyMessage>
@@ -64,7 +61,7 @@ const MyPostsPageWrapper = styled.div`
 const CardList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
   width: 100%;
   height: 100%;
 `;
@@ -74,4 +71,10 @@ const EmptyMessage = styled.div`
   text-align: center;
   color: #aaa;
   font-size: 14px;
+`;
+
+const Divider = styled.div`
+  height: 1px;
+  width: 100%;
+  background: #0000001a;
 `;

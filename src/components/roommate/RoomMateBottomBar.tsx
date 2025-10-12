@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import RoundSquareBlueButton from "../button/RoundSquareBlueButton.tsx";
+import RoundSquareButton from "../button/RoundSquareButton.tsx";
 import { FaHeart, FaRegHeart } from "react-icons/fa";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -116,7 +116,7 @@ const RoomMateBottomBar = ({
       </HeartIconWrapper>
 
       <ChatButtonWrapper onClick={handleChatClick}>
-        <RoundSquareBlueButton btnName={"채팅하기"} />
+        <RoundSquareButton btnName={"채팅하기"} />
       </ChatButtonWrapper>
     </RoomMateBottomBarWrapper>
   );

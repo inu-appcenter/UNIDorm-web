@@ -1,21 +1,31 @@
 import styled from "styled-components";
 import Header from "../components/common/Header.tsx";
-import { Notification } from "../types/notifications.ts";
 import NotiItem from "../components/notification/NotiItem.tsx";
 import { useEffect, useState } from "react";
+import { getNotifications } from "../apis/notification.ts"; // 새로 만든 알림 API 임포트
+import useUserStore from "../stores/useUserStore.ts";
+import { Notification } from "../types/notifications.ts";
+import { useNavigate } from "react-router-dom";
+import BottomBar from "../components/common/BottomBar.tsx";
 import {
   acceptRoommateMatching,
   getReceivedRoommateRequests,
   rejectRoommateMatching,
 } from "../apis/roommate.ts";
 import axios from "axios";
-import useUserStore from "../stores/useUserStore.ts";
+import { ReceivedMatchingRequest } from "../types/roommates.ts";
 
 const NotificationPage = () => {
-  const [matchRequests, setMatchRequests] = useState<Notification[]>([]);
+  // 표시될 모든 알림을 저장하는 상태
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [receivedRoommateRequests, setReceivedRoommateRequests] = useState<
+    ReceivedMatchingRequest[]
+  >([]);
+  const navigate = useNavigate();
   const { tokenInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
 
+  // 룸메이트 매칭 요청 처리 로직 (기존과 동일)
   const handleRoommateRequest = async (
     matchingId: number,
     senderName: string,
@@ -37,10 +47,13 @@ const NotificationPage = () => {
           alert("매칭 요청이 거절되었습니다.");
         }
       }
+      // 요청 처리 후 목록을 새로고침
+      fetchNotiData();
     } catch (e: any) {
       if (axios.isAxiosError(e) && e.response) {
         if (e.response.status === 409) {
           alert("이미 처리된 매칭 요청입니다.");
+          fetchNotiData(); // 다른 기기에서 처리했을 수 있으니 목록 새로고침
           return;
         }
       }
@@ -49,68 +62,88 @@ const NotificationPage = () => {
     }
   };
 
-  useEffect(() => {
-    const fetchMatchingRequests = async () => {
-      try {
-        const response = await getReceivedRoommateRequests();
-        const formatted = response.data.map((item) => ({
-          id: item.matchingId,
-          category: "룸메이트",
-          content: `${item.senderName}님이 룸메 신청을 보냈어요!`,
-          onClick: () =>
-            handleRoommateRequest(item.matchingId, item.senderName),
-        }));
-        setMatchRequests(formatted);
-      } catch (error) {
-        console.error("매칭 요청 조회 실패:", error);
-      }
-    };
-    if (isLoggedIn) {
-      fetchMatchingRequests();
+  // 모든 알림 데이터를 가져오는 함수
+  const fetchNotiData = async () => {
+    try {
+      const notiResponse = await getNotifications();
+      console.log("알림 목록 불러오기 성공", notiResponse);
+      setNotifications(notiResponse.data);
+    } catch (error) {
+      console.error("알림 목록 불러오기 실패:", error);
     }
-  }, []);
+  };
 
-  const allNotifications = [...matchRequests];
+  // 모든 룸메이트 요청을 가져오는 함수
+  const fetchRoommateRequestData = async () => {
+    try {
+      const response = await getReceivedRoommateRequests();
+      console.log("룸메이트 요청 목록 불러오기 성공", response);
+      setReceivedRoommateRequests(response.data);
+    } catch (error) {
+      console.error("룸메이트 요청 목록 불러오기 실패:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      fetchNotiData();
+      fetchRoommateRequestData();
+    }
+  }, [isLoggedIn]);
+
+  const menuItems = [
+    {
+      label: "알림 수신 설정",
+      onClick: () => {
+        navigate("/notification-setting");
+      },
+    },
+  ];
 
   return (
     <NotificationPageWrapper>
-      <Header hasBack={true} />
+      <Header hasBack={true} menuItems={menuItems} />
       <ContentWrapper>
-        {allNotifications.length > 0 ? (
-          allNotifications.map((noti) => (
+        {receivedRoommateRequests.length > 0 &&
+          receivedRoommateRequests.map((receivedRoommateRequest) => (
+            <NotiItem
+              key={receivedRoommateRequest.matchingId}
+              receivedRoommateRequest={receivedRoommateRequest}
+              handleRoommateRequest={handleRoommateRequest}
+            />
+          ))}
+        {notifications.length > 0 ? (
+          notifications.map((noti) => (
             <NotiItem key={noti.id} notidata={noti} />
           ))
         ) : (
           <EmptyMessage>알림이 없습니다.</EmptyMessage>
         )}
       </ContentWrapper>
+      <BottomBar />
     </NotificationPageWrapper>
   );
 };
 
 export default NotificationPage;
 
+// Styled-components (기존과 동일)
 const NotificationPageWrapper = styled.div`
   padding: 70px 0;
-
   display: flex;
   flex-direction: column;
   gap: 20px;
   box-sizing: border-box;
-
   width: 100%;
   height: 100%;
-
   overflow-y: auto;
 `;
 
 const ContentWrapper = styled.div`
-  //padding-bottom: 70px;
   display: flex;
   flex-direction: column;
   height: 100%;
   box-sizing: border-box;
-
   overflow-y: auto;
 `;
 

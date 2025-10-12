@@ -3,7 +3,13 @@ import styled from "styled-components";
 interface BaseProps {
   Groups: string[];
   multi?: boolean;
-  disabled?: boolean; // disabled 추가
+  disabled?: boolean;
+  backgroundColor?: string;
+  selectedBackgroundColor?: string;
+  color?: string;
+  selectedColor?: string;
+  borderColor?: string; // borderColor prop 추가
+  selectedBorderColor?: string; // selectedBorderColor prop 추가
 }
 
 type SingleSelectProps = BaseProps & {
@@ -33,10 +39,16 @@ const SelectableChipGroup = (props: SelectableChipProps) => {
     selectedIndices,
     multi = false,
     disabled = false,
+    backgroundColor,
+    selectedBackgroundColor,
+    color,
+    selectedColor,
+    borderColor,
+    selectedBorderColor,
   } = props;
 
   const handleClick = (index: number) => {
-    if (disabled) return; // 클릭 무력화
+    if (disabled) return;
 
     if (isMultiProps(props)) {
       const newSelected = props.selectedIndices.includes(index)
@@ -45,7 +57,6 @@ const SelectableChipGroup = (props: SelectableChipProps) => {
 
       props.onSelect(newSelected);
     } else {
-      // 싱글 선택 모드에서 이미 선택된 인덱스를 클릭하면 해제(null)
       if (props.selectedIndex === index) {
         props.onSelect(null);
       } else {
@@ -66,7 +77,13 @@ const SelectableChipGroup = (props: SelectableChipProps) => {
             key={index}
             selected={isSelected}
             onClick={() => handleClick(index)}
-            disabled={disabled} // 스타일용 prop 전달
+            disabled={disabled}
+            backgroundColor={backgroundColor}
+            selectedBackgroundColor={selectedBackgroundColor}
+            color={color}
+            selectedColor={selectedColor}
+            borderColor={borderColor}
+            selectedBorderColor={selectedBorderColor}
           >
             {content}
           </SelectableChip>
@@ -85,24 +102,47 @@ const SelectableChipGroupWrapper = styled.div`
   width: 100%;
 `;
 
-const SelectableChip = styled.div<{ selected: boolean; disabled?: boolean }>`
+const SelectableChip = styled.div<{
+  selected: boolean;
+  disabled?: boolean;
+  backgroundColor?: string;
+  selectedBackgroundColor?: string;
+  color?: string;
+  selectedColor?: string;
+  borderColor?: string;
+  selectedBorderColor?: string;
+}>`
   box-sizing: border-box;
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 8px 13px;
+  padding: 8px 16px;
 
-  background: ${({ selected }) => (selected ? "#0A84FF" : "#ffffff")};
-  border: 1px solid #8e8e93;
+  background: ${({ selected, backgroundColor, selectedBackgroundColor }) =>
+    selected
+      ? selectedBackgroundColor || "#0A84FF"
+      : backgroundColor || "#ffffff"};
+  border: 1px solid
+    ${({ selected, borderColor, selectedBorderColor }) =>
+      selected
+        ? selectedBorderColor || "#0A84FF" // 선택되었을 때의 테두리 색상
+        : borderColor || "#8e8e93"}; // 선택되지 않았을 때의 테두리 색상
   border-radius: 20px;
 
-  font-size: 12px;
-  color: ${({ selected }) => (selected ? "#ffffff" : "#8e8e93")};
+  text-align: center;
+  font-family: Pretendard;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: normal;
+  color: ${({ selected, color, selectedColor }) =>
+    selected ? selectedColor || "#ffffff" : color || "#8e8e93"};
   cursor: ${({ disabled }) => (disabled ? "not-allowed" : "pointer")};
 
   transition:
     background 0.2s ease,
-    color 0.2s ease;
+    color 0.2s ease,
+    border-color 0.2s ease; // transition에 border-color 추가
 
   ${({ disabled }) =>
     disabled &&

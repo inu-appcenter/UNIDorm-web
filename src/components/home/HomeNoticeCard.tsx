@@ -60,7 +60,7 @@ const HomeCardWrapper = styled.div`
 
   background: #ffffff;
   border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
+  border-radius: 16px;
 `;
 
 const FirstLine = styled.div`

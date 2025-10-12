@@ -16,7 +16,7 @@ export const colleges = [
   "인문대",
 ];
 
-export const dormitory = ["1기숙사", "2기숙사", "3기숙사"];
+export const dormitory = ["1기숙사", "2기숙사", "3기숙사", "해당없음"];
 
 export const days = ["월", "화", "수", "목", "금", "토", "일"];
 
@@ -43,3 +43,20 @@ export const religion = [
   "무교",
   "기타",
 ];
+
+export const ComplainType = [
+  "소음",
+  "흡연",
+  "음주",
+  "룸메이트변경",
+  "벌점상쇄",
+  "벌점사유확인",
+];
+
+export const complainDormitory = ["1기숙사", "2기숙사", "3기숙사"];
+export const dormitoryBlocks = ["A동", "B동"];
+export const floors = Array.from({ length: 10 }, (_, i) => `${i + 1}층`);
+export const rooms = Array.from({ length: 20 }, (_, i) => `${i + 1}호`);
+export const beds = ["A", "B", "C", "D"];
+
+export const complainStatus = ["대기", "담당자 배정", "처리 중", "처리 완료"];
