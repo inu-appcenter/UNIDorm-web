@@ -70,7 +70,7 @@ tokenInstance.interceptors.response.use(
       } catch (error) {
         // 리프레시 토큰 재발급 실패 시
         // alert("로그인 정보가 만료되었습니다. 다시 로그인해 주세요.");
-        // window.location.href = "/logout";
+        window.location.href = "/logout";
         // useUserStore.getState().setTokenInfo({
         //   accessToken: "",
         //   refreshToken: "",
