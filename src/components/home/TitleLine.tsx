@@ -62,5 +62,7 @@ const TitleLineWrapper = styled.div`
     justify-content: start;
     height: fit-content;
     gap: 8px;
+
+    cursor: pointer;
   }
 `;

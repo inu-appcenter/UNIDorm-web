@@ -87,7 +87,7 @@ const ItemImage = styled.div<ItemImageProps>`
   border-radius: 10px;
 
   /* 기본 이미지일 경우 아이콘이 잘 보이도록 cover 대신 크기 지정 및 반복 없음 처리 */
-  background-size: ${(props) => (props.$hasDefaultImage ? "60px" : "cover")};
+  background-size: ${(props) => (props.$hasDefaultImage ? "40%" : "cover")};
   background-repeat: no-repeat;
 `;
 // ----------------------------------------------
