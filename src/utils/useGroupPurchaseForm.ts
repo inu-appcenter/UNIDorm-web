@@ -8,18 +8,30 @@ import {
 } from "../constants/groupPurchase.ts";
 
 const getDefaultDeadline = () => {
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
+  const now = new Date();
 
-  const year = `${tomorrow.getFullYear()}년`;
-  const month = `${tomorrow.getMonth() + 1}월`;
-  const day = `${tomorrow.getDate()}일`;
-  let hour = tomorrow.getHours();
+  // 최소 30분 뒤
+  now.setMinutes(now.getMinutes() + 30);
+
+  // 15분 단위로 반올림
+  let roundedMinutes = Math.ceil(now.getMinutes() / 15) * 15;
+  if (roundedMinutes === 60) {
+    now.setHours(now.getHours() + 1);
+    roundedMinutes = 0;
+  }
+  now.setMinutes(roundedMinutes);
+
+  const year = `${now.getFullYear()}년`;
+  const month = `${now.getMonth() + 1}월`;
+  const day = `${now.getDate()}일`;
+
+  let hour = now.getHours();
   const ampm = hour >= 12 ? "오후" : "오전";
   if (hour > 12) hour -= 12;
   if (hour === 0) hour = 12;
-  const minute = `${tomorrow.getMinutes().toString().padStart(2, "0")}분`;
   const hourStr = `${hour}시`;
+
+  const minute = `${roundedMinutes.toString().padStart(2, "0")}분`;
 
   return { year, month, day, ampm, hour: hourStr, minute };
 };
@@ -36,6 +48,7 @@ export function useGroupPurchaseForm(post: CreateGroupOrderRequest | null) {
   const [deadline, setDeadline] = useState(getDefaultDeadline);
   const [dayOptions, setDayOptions] = useState<string[]>([]);
 
+  // post가 있는 경우 (수정 모드)
   useEffect(() => {
     if (post) {
       setIsEditMode(true);
@@ -45,8 +58,22 @@ export function useGroupPurchaseForm(post: CreateGroupOrderRequest | null) {
       setPurchaseLink(post.link || "");
       setOpenchatLink(post.openChatLink || "");
       setCategory(post.groupOrderType || "배달");
-      // 참고: 수정 모드 진입 시 post.deadline 값을 파싱해서
-      // deadline 상태에 설정하는 로직이 추가로 필요할 수 있습니다.
+
+      if (post.deadline) {
+        const d = new Date(post.deadline); // 서버에서 받아온 ISO 문자열
+        const hour = d.getHours();
+        const ampm = hour >= 12 ? "오후" : "오전";
+        const hour12 = hour % 12 || 12;
+
+        setDeadline({
+          year: `${d.getFullYear()}년`,
+          month: `${d.getMonth() + 1}월`,
+          day: `${d.getDate()}일`,
+          ampm,
+          hour: `${hour12}시`,
+          minute: `${d.getMinutes().toString().padStart(2, "0")}분`,
+        });
+      }
     }
   }, [post]);
 
