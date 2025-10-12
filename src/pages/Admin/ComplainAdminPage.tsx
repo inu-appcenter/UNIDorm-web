@@ -139,21 +139,21 @@ const ComplainAdminPage = () => {
     const threeMonthsAgo = new Date();
     // AdminComplaint 타입에는 date 대신 createdDate가 있으므로, 해당 필드를 사용합니다.
     threeMonthsAgo.setMonth(now.getMonth() - 3);
-    //
-    // if (selectedMenuIndex === 0) {
-    //   // "최근 3개월" 필터링 (인덱스 0)
-    //   list = list.filter((complaint) => {
-    //     const complaintDate = new Date(complaint.date);
-    //     return complaintDate >= threeMonthsAgo;
-    //   });
-    // } else if (selectedMenuIndex === 1) {
-    //   // "2025" 필터링 (인덱스 1)
-    //   list = list.filter((complaint) => {
-    //     const year = new Date(complaint.date).getFullYear();
-    //     // 실제 연도와 비교합니다.
-    //     return year === 2025;
-    //   });
-    // }
+
+    if (selectedMenuIndex === 0) {
+      // "최근 3개월" 필터링 (인덱스 0)
+      list = list.filter((complaint) => {
+        const complaintDate = new Date(complaint.date);
+        return complaintDate >= threeMonthsAgo;
+      });
+    } else if (selectedMenuIndex === 1) {
+      // "2025" 필터링 (인덱스 1)
+      list = list.filter((complaint) => {
+        const year = new Date(complaint.date).getFullYear();
+        // 실제 연도와 비교합니다.
+        return year === 2025;
+      });
+    }
 
     return list;
   }, [searchTerm, complaints, selectedMenuIndex]);
