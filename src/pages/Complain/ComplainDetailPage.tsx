@@ -39,8 +39,10 @@ const ComplainDetailPage = () => {
         let response;
         if (isAdmin) {
           response = await getAdminComplaintDetail(Number(complainId));
+          console.log("관리자용 민원 상세 가져오기 성공:", response);
         } else {
           response = await getComplaintDetail(Number(complainId));
+          console.log("일반 유저용 민원 상세 가져오기 성공:", response);
         }
 
         console.log(response);
