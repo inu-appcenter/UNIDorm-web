@@ -337,7 +337,7 @@ export default function GroupPurchasePostPage() {
           <Modal
             onClose={() => setShowModal(false)}
             show={showModal}
-            title={"잠깐!"}
+            title={"거래 전 확인하세요!"}
             content={CheckBeforeDeal2}
             headerImageId={2}
             closeButtonText={"확인했어요"}
