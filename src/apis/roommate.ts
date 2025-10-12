@@ -196,3 +196,12 @@ export const cancelRoommateMatching = async (
   );
   return response;
 };
+
+export const sendQuickMessage = async (
+  message: string,
+): Promise<AxiosResponse<string>> => {
+  const response = await tokenInstance.post<string>("/api/quick-message", {
+    params: { message },
+  });
+  return response;
+};

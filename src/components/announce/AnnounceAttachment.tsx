@@ -22,10 +22,11 @@ const AnnounceAttachment = ({ attachments }: AnnounceAttachmentProps) => {
               target="_blank"
               rel="noopener noreferrer"
             >
-              {" "}
               첨부파일 {file.fileName}
             </a>
-            <FileMeta>({(file.fileSize / 1024).toFixed(1)}KB)</FileMeta>
+            {file.fileSize > 0 && (
+              <FileMeta>({(file.fileSize / 1024).toFixed(1)}KB)</FileMeta>
+            )}
           </AnnounceAttachmentWrapper>
         ))}
       </RightArea>

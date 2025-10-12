@@ -48,7 +48,7 @@ tokenInstance.interceptors.response.use(
       try {
         console.log("리프레시 발급 시도");
         const { data } = await refresh(); // refresh API로 토큰 재발급
-        console.log(data);
+        console.log("리프레시결과 - ", data);
         const newTokenInfo = data.accessToken; // 새로운 토큰 정보
 
         // 스토어에 새로운 토큰 정보 저장 (로컬스토리지에도 저장됨)
@@ -67,7 +67,7 @@ tokenInstance.interceptors.response.use(
         originalRequest.headers["Authorization"] = `Bearer ${newTokenInfo}`;
 
         return tokenInstance(originalRequest); // 기존 요청 재시도
-      } catch (refreshError) {
+      } catch (error) {
         // 리프레시 토큰 재발급 실패 시
         // alert("로그인 정보가 만료되었습니다. 다시 로그인해 주세요.");
         // window.location.href = "/logout";
@@ -78,10 +78,9 @@ tokenInstance.interceptors.response.use(
         // localStorage.removeItem("accessToken");
         // localStorage.removeItem("refreshToken");
 
-        (
-          refreshError as AxiosError & { isRefreshError?: boolean }
-        ).isRefreshError = true;
-        return Promise.reject(refreshError);
+        (error as AxiosError & { isRefreshError?: boolean }).isRefreshError =
+          true;
+        return Promise.reject(error);
       }
     }
     return Promise.reject(error);

@@ -16,8 +16,9 @@ import ToggleGroup from "../../components/roommate/checklist/ToggleGroup.tsx";
 import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
 import Header from "../../components/common/Header.tsx";
 import { colleges, dormitory } from "../../constants/constants.ts";
-import RoundSquareBlueButton from "../../components/button/RoundSquareBlueButton.tsx";
+import RoundSquareButton from "../../components/button/RoundSquareButton.tsx";
 import axios from "axios";
+import profile from "../../assets/profileimg.png";
 
 const menuItems = [
   {
@@ -217,11 +218,10 @@ export default function MyInfoEditPage() {
               <ImageUploadContainer>
                 <ImageSelectRow>
                   <ProfileImageWrapper>
-                    {previewUrl ? (
-                      <ProfileImage src={previewUrl} alt="프로필 미리보기" />
-                    ) : (
-                      <DefaultProfileImage />
-                    )}
+                    <ProfileImage
+                      src={previewUrl || profile}
+                      alt="프로필 미리보기"
+                    />
                   </ProfileImageWrapper>
 
                   <FileInputLabel htmlFor="profileImageInput">
@@ -237,7 +237,7 @@ export default function MyInfoEditPage() {
 
                 {imageFile && (
                   <UploadButtonWrapper>
-                    <RoundSquareBlueButton
+                    <RoundSquareButton
                       btnName="이미지 변경하기"
                       onClick={handleUploadImage}
                     />
@@ -352,18 +352,16 @@ const ButtonWrapper = styled.div`
 
   bottom: 0;
   left: 0;
+
+  background: rgba(244, 244, 244, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 `;
 
 const ProfileImage = styled.img`
   width: 100%;
   height: 100%;
   object-fit: cover;
-`;
-
-const DefaultProfileImage = styled.div`
-  width: 100%;
-  height: 100%;
-  background: #bbb;
 `;
 
 const HiddenFileInput = styled.input`

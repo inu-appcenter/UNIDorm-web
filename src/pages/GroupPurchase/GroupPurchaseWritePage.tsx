@@ -1,170 +1,207 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import styled from "styled-components";
+import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../../components/common/Header";
-import { MdImage } from "react-icons/md";
+import CommonBottomModal from "../../components/modal/CommonBottomModal";
+import CheckBeforeContent from "../../components/GroupPurchase/CheckBeforeContent";
+import useUserStore from "../../stores/useUserStore";
+import {
+  createGroupPurchase,
+  updateGroupPurchase,
+} from "../../apis/groupPurchase";
+import { CreateGroupOrderRequest } from "../../types/grouporder";
+import { useGroupPurchaseForm } from "../../utils/useGroupPurchaseForm.ts";
+import CategorySelector from "../../components/GroupPurchase/CategorySelector.tsx";
+import DeadlineSelector from "../../components/GroupPurchase/DeadlineSelector.tsx";
+import ImageUploader from "../../components/GroupPurchase/ImageUploader.tsx";
+import HowToCreateOpenChat from "../../components/GroupPurchase/HowToCreateOpenChat.tsx";
+import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 
 export default function GroupPurchaseWritePage() {
-  const [category, setCategory] = useState("배달");
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { post } = location.state || {};
 
-  const [deadline, setDeadline] = useState({
-    year: "2025년",
-    month: "7월",
-    day: "1일",
-    ampm: "오후",
-    hour: "1시",
-    minute: "00분",
-  });
+  const {
+    isEditMode,
+    formData,
+    formHandlers,
+    getDeadlineString,
+    validateForm,
+  } = useGroupPurchaseForm(post);
 
-  const [dayOptions, setDayOptions] = useState<string[]>([]);
+  const {
+    title,
+    price,
+    description,
+    purchaseLink,
+    openchatLink,
+    category,
+    images,
+    deadline,
+  } = formData;
 
-  // 해당 월의 마지막 일 구하기
-  const getLastDay = (yearStr: string, monthStr: string) => {
-    const year = parseInt(yearStr.replace("년", ""));
-    const month = parseInt(monthStr.replace("월", ""));
-    return new Date(year, month, 0).getDate();
-  };
+  const {
+    setTitle,
+    setPrice,
+    setDescription,
+    setPurchaseLink,
+    setOpenchatLink,
+    setCategory,
+    setDeadline,
+    handleImageChange,
+  } = formHandlers;
 
-  // 연도나 월이 바뀌면 day 옵션 다시 생성
-  useEffect(() => {
-    const lastDay = getLastDay(deadline.year, deadline.month);
-    const days = Array.from({ length: lastDay }, (_, i) => `${i + 1}일`);
-    setDayOptions(days);
+  const { tokenInfo } = useUserStore();
+  const isLoggedIn = Boolean(tokenInfo.accessToken);
+  const [isModalOpen, setIsModalOpen] = useState(true);
+  const [isHowtoModalOpen, setIsHowToModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-    if (!days.includes(deadline.day)) {
-      setDeadline((prev) => ({ ...prev, day: days[0] }));
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
+
+    const requestDto: CreateGroupOrderRequest = {
+      title,
+      description,
+      price: Number(price),
+      link: purchaseLink,
+      openChatLink: openchatLink,
+      groupOrderType: category,
+      deadline: getDeadlineString(),
+    };
+
+    try {
+      setIsLoading(true);
+      if (isEditMode && post?.id) {
+        await updateGroupPurchase(post.id, requestDto, images);
+        alert("게시글이 수정되었습니다.");
+        // 수정 후 상세 페이지로 이동하거나 목록으로 이동
+        navigate(`/group-purchase/${post.id}`, { replace: true });
+      } else {
+        await createGroupPurchase(requestDto, images);
+        alert("게시글이 등록되었습니다.");
+        navigate(-1); // 이전 페이지(목록)으로 이동
+      }
+    } catch (error) {
+      console.error("게시글 등록/수정 실패:", error);
+      alert("게시글 등록/수정 중 오류가 발생했습니다.");
+    } finally {
+      setIsLoading(false);
     }
-  }, [deadline.year, deadline.month]);
+  };
 
   const handleTempSave = () => {
     alert("임시 저장되었습니다.");
   };
+
   return (
     <Wrapper>
-      <Header title="공동구매 글쓰기" hasBack={true}  rightContent={<TempSaveButton onClick={handleTempSave}>임시저장</TempSaveButton>} />
-      <Content>
-        <ImageBox style={{marginTop: 80}}>
-          <MdImage size={36} color="#888" />
-          <span>0/10</span>
-        </ImageBox>
+      <Header
+        title="공동구매 글쓰기"
+        hasBack={true}
+        rightContent={
+          <TempSaveButton onClick={handleTempSave}>임시저장</TempSaveButton>
+        }
+      />
 
-        <SectionTitle>제목</SectionTitle>
-        <InputField placeholder="글 제목" />
+      {isLoading && <LoadingSpinner overlay message="글 쓰는 중..." />}
 
-        <SectionTitle>카테고리</SectionTitle>
-        <CategoryRow>
-          {["배달", "식자재", "생활용품", "기타"].map((item) => (
-            <CategoryButton
-              key={item}
-              selected={category === item}
-              onClick={() => setCategory(item)}
-            >
-              {item}
-            </CategoryButton>
-          ))}
-        </CategoryRow>
+      <CommonBottomModal
+        id={"checkbefore"}
+        isOpen={isModalOpen}
+        setIsOpen={setIsModalOpen}
+        children={<CheckBeforeContent />}
+      />
+      <CommonBottomModal
+        id={"howToCreateOpenChat"}
+        title={"오픈채팅 생성 매뉴얼"}
+        isOpen={isHowtoModalOpen}
+        setIsOpen={setIsHowToModalOpen}
+        children={<HowToCreateOpenChat />}
+      />
 
-        <SectionTitle>가격</SectionTitle>
-        <InputField placeholder="가격을 입력해주세요" />
+      <SectionTitle>제목</SectionTitle>
+      <InputField
+        placeholder="공동구매하려는 물품명을 작성해주세요"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+      />
 
-        <SectionTitle>내용</SectionTitle>
-        <TextArea placeholder="내용을 입력해주세요" rows={4} />
+      <SectionTitle>카테고리</SectionTitle>
+      <CategorySelector
+        selectedCategory={category}
+        onSelectCategory={setCategory}
+      />
 
-        <SectionTitle>구매 링크</SectionTitle>
-        <InputField placeholder="구매 링크를 입력해주세요" />
+      <SectionTitle>가격</SectionTitle>
+      <InputField
+        type="number"
+        placeholder="가격을 입력해주세요"
+        value={price}
+        onChange={(e) => setPrice(e.target.value)}
+      />
 
-        <SectionTitle>구매 인원</SectionTitle>
-        <InputField placeholder="구매 인원을 입력해주세요" />
+      <SectionTitle>내용</SectionTitle>
+      <TextArea
+        placeholder="내용을 입력해주세요"
+        rows={4}
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+      />
 
-        <SectionTitle>마감 시간</SectionTitle>
-        <DeadlineRow>
-          <Select value={deadline.year} onChange={(e) => setDeadline({ ...deadline, year: e.target.value })}>
-            <option>2025년</option>
-            <option>2026년</option>
-            <option>2027년</option>
-          </Select>
-          <Select value={deadline.month} onChange={(e) => setDeadline({ ...deadline, month: e.target.value })}>
-            <option>1월</option>
-            <option>2월</option>
-            <option>3월</option>
-            <option>4월</option>
-            <option>5월</option>
-            <option>6월</option>
-            <option>7월</option>
-            <option>8월</option>
-            <option>9월</option>
-            <option>10월</option>
-            <option>11월</option>
-            <option>12월</option>
-          </Select>
-          <Select value={deadline.day} onChange={(e) => setDeadline({ ...deadline, day: e.target.value })}>
-            {dayOptions.map((d) => (
-              <option key={d}>{d}</option>
-            ))}
-          </Select>
-        </DeadlineRow>
+      <SectionTitle>구매 링크</SectionTitle>
+      <Description>상품의 필요 여부를 판단하는데 도움이 됩니다.</Description>
+      <InputField
+        placeholder="구매 링크를 입력해주세요"
+        value={purchaseLink}
+        onChange={(e) => setPurchaseLink(e.target.value)}
+      />
 
-        <DeadlineRow>
-          <Select value={deadline.ampm} onChange={(e) => setDeadline({ ...deadline, ampm: e.target.value })}>
-            <option>오전</option>
-            <option>오후</option>
-          </Select>
-          <Select value={deadline.hour} onChange={(e) => setDeadline({ ...deadline, hour: e.target.value })}>
-            <option>1시</option>
-            <option>2시</option>
-            <option>3시</option>
-            <option>4시</option>
-            <option>5시</option>
-            <option>6시</option>
-            <option>7시</option>
-            <option>8시</option>
-            <option>9시</option>
-            <option>10시</option>
-            <option>11시</option>
-            <option>12시</option>
-          </Select>
-          <Select value={deadline.minute} onChange={(e) => setDeadline({ ...deadline, minute: e.target.value })}>
-            <option>00분</option>
-            <option>30분</option>
-          </Select>
-        </DeadlineRow>
+      <SectionTitle>
+        오픈채팅방 링크{" "}
+        <a onClick={() => setIsHowToModalOpen(true)}>
+          <span className="underline">어떻게 만드나요?</span>
+          {" >"}
+        </a>
+      </SectionTitle>
+      <InputField
+        placeholder="오픈채팅방 링크를 입력해주세요"
+        value={openchatLink}
+        onChange={(e) => setOpenchatLink(e.target.value)}
+      />
 
-        <WarningText>
-          설정한 마감 시간이 지나면 게시물은 삭제됩니다.
-        </WarningText>
-      </Content>
+      <SectionTitle>마감 시간</SectionTitle>
+      <DeadlineSelector
+        deadline={deadline}
+        onDeadlineChange={setDeadline}
+        category={category}
+      />
 
-      <BottomFixed>
-        <SubmitButton>등록하기</SubmitButton>
-      </BottomFixed>
+      <SectionTitle>이미지 (선택)</SectionTitle>
+      <Description>
+        상품 이미지를 업로드하면 공동구매가 성사될 확률이 높아져요!
+      </Description>
+      <ImageUploader images={images} onImageChange={handleImageChange} />
+
+      {isLoggedIn && (
+        <BottomFixed>
+          <SubmitButton onClick={handleSubmit}>
+            {isEditMode ? "수정하기" : "등록하기"}
+          </SubmitButton>
+        </BottomFixed>
+      )}
     </Wrapper>
   );
 }
 
+// Styles used by the main page component
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  background: #f8f8f8;
-`;
-
-const Content = styled.div`
-  padding: 16px;
-  padding-bottom: 140px;
-`;
-
-const ImageBox = styled.div`
-  width: 100px;
-  height: 100px;
-  margin: 32px 0 16px 0;
-  background: #eee;
-  border-radius: 12px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  color: #555;
-  font-size: 13px;
+  box-sizing: border-box;
+  padding: 70px 16px;
+  padding-bottom: 100px;
 `;
 
 const InputField = styled.input`
@@ -188,45 +225,26 @@ const TextArea = styled.textarea`
   resize: none;
 `;
 
-const CategoryRow = styled.div`
-  display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
-`;
-
-const CategoryButton = styled.button<{ selected: boolean }>`
-  padding: 8px 16px;
-  border-radius: 20px;
-  border: none;
-  font-size: 14px;
-  background-color: ${(props) => (props.selected ? "#007bff" : "#fff")};
-  color: ${(props) => (props.selected ? "#fff" : "#000")};
-`;
-
 const SectionTitle = styled.div`
   font-weight: 600;
   margin: 16px 0 8px;
+
+  a {
+    color: #0a84ff;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 500;
+    cursor: pointer;
+    .underline {
+      text-decoration-line: underline;
+    }
+  }
 `;
 
-const DeadlineRow = styled.div`
-  display: flex;
-  gap: 8px;
-  margin-bottom: 8px;
-`;
-
-const Select = styled.select`
-  flex: 1;
-  padding: 10px;
-  border-radius: 6px;
-  font-size: 14px;
-  border: 1px solid #fff;
-  background: white;
-`;
-
-const WarningText = styled.div`
-  color: red;
+const Description = styled.div`
   font-size: 12px;
-  margin-bottom: 24px;
+  color: #888;
+  margin-bottom: 8px;
 `;
 
 const BottomFixed = styled.div`
@@ -235,8 +253,9 @@ const BottomFixed = styled.div`
   left: 0;
   right: 0;
   padding: 16px;
-  background: #fff;
-  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.05);
+  background: rgba(244, 244, 244, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 `;
 
 const SubmitButton = styled.button`
@@ -248,6 +267,7 @@ const SubmitButton = styled.button`
   border-radius: 8px;
   font-size: 16px;
   font-weight: bold;
+  cursor: pointer;
 `;
 
 const TempSaveButton = styled.button`

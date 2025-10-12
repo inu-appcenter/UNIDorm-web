@@ -1,20 +1,23 @@
 import React, { useEffect, useRef, useState } from "react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import { MoreVertical } from "lucide-react";
+import { TipComment } from "../../types/tips.ts";
 
 type MenuItemType = {
   label: string;
-  onClick: () => void;
+  onClick: (comment?: TipComment) => void;
 };
 
 interface TopRightDropdownMenuProps {
   items: MenuItemType[];
   color?: string;
+  size?: number;
 }
 
 const TopRightDropdownMenu: React.FC<TopRightDropdownMenuProps> = ({
   items,
   color,
+  size = 24,
 }) => {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -32,7 +35,7 @@ const TopRightDropdownMenu: React.FC<TopRightDropdownMenuProps> = ({
   return (
     <Container ref={menuRef}>
       <MenuButton onClick={() => setOpen((prev) => !prev)}>
-        <MoreVertical size={24} color={color || "black"} />
+        <MoreVertical size={size} color={color || "black"} />
       </MenuButton>
 
       {open && (
@@ -68,6 +71,18 @@ const MenuButton = styled.button`
   cursor: pointer;
 `;
 
+// 2. 애니메이션 정의
+const unfurlAnimation = keyframes`
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+`;
+
 const Dropdown = styled.div`
   position: absolute;
   top: 36px; /* 메뉴 버튼 아래로 */
@@ -78,7 +93,6 @@ const Dropdown = styled.div`
   border-radius: 16px;
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
   padding: 16px;
-  //padding-right: 32px;
   box-sizing: border-box;
   min-width: 160px;
 
@@ -86,8 +100,11 @@ const Dropdown = styled.div`
   flex-direction: column;
   gap: 12px;
   align-items: start;
-`;
 
+  /* 3. 애니메이션 속성 추가 */
+  transform-origin: top right; /* 애니메이션 기준점을 우측 상단으로 설정 */
+  animation: ${unfurlAnimation} 0.15s ease-out; /* 애니메이션 적용 */
+`;
 const MenuItem = styled.button`
   all: unset;
   display: block;

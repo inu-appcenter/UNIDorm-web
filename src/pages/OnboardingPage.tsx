@@ -1,13 +1,13 @@
 // components/Onboarding.tsx
 import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
-import RoundSquareBlueButton from "../components/button/RoundSquareBlueButton.tsx";
+import RoundSquareButton from "../components/button/RoundSquareButton.tsx";
 
-import onboarding1 from "../assets/onboarding/onboarding1.svg";
-import onboarding2 from "../assets/onboarding/onboarding2.svg";
-import onboarding3 from "../assets/onboarding/onboarding3.svg";
+import onboarding1 from "../assets/onboarding/onboarding1.webp";
+import onboarding2 from "../assets/onboarding/onboarding2.webp";
+import onboarding3 from "../assets/onboarding/onboarding3.webp";
 import { useNavigate } from "react-router-dom";
-import 로고 from "../assets/unidorm-logo-no-background.svg";
+import 로고 from "../assets/unidorm-logo.webp";
 import TermOfUse from "../components/TermOfUse.tsx";
 
 const SLIDE_DURATION = 5000;
@@ -30,7 +30,7 @@ const slides = [
     id: 2,
     title: "공동구매",
     content:
-      "기숙사 UNI들과 배달음식, 식자재, 생활용품 등 함께 공동구매해서 절약해보세요!\n(9월 중 공개 예정)",
+      "기숙사 UNI들과 배달음식, 식자재, 생활용품 등 함께 공동구매해서 절약해보세요!",
     image: onboarding2,
   },
   {
@@ -183,7 +183,7 @@ const OnboardingPage: React.FC = () => {
           <>
             <TermOfUse />
             <div>
-              <RoundSquareBlueButton
+              <RoundSquareButton
                 btnName={"UNI Dorm 시작하기"}
                 onClick={handleStart}
               />

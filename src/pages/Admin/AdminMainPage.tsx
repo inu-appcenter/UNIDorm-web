@@ -1,19 +1,25 @@
 import Header from "../../components/common/Header.tsx";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-// import useUserStore from "../../stores/useUserStore.ts";
-// import { useEffect } from "react";
+import useUserStore from "../../stores/useUserStore.ts";
+import { useEffect } from "react";
+import { useIsAdminRole } from "../../hooks/useIsAdminRole.ts";
 
 const AdminMainPage: React.FC = () => {
   const navigate = useNavigate();
-  // const { tokenInfo, userInfo } = useUserStore();
+  const { tokenInfo, userInfo, isLoading } = useUserStore();
+  const { isAdmin } = useIsAdminRole();
 
-  // useEffect(() => {
-  //   console.log(userInfo.isAdmin);
-  //   if (!tokenInfo.accessToken || !userInfo.isAdmin) {
-  //     navigate("/home");
-  //   }
-  // }, [tokenInfo, navigate, userInfo]);
+  useEffect(() => {
+    console.log(tokenInfo.role);
+    if (!isLoading) {
+      //새로고침 시 유저정보가 불러와지는 타이밍으로 인해 어드민 메인으로 오는 문제 방지
+      if (!tokenInfo.accessToken || !isAdmin) {
+        navigate("/home");
+      }
+    }
+  }, [tokenInfo, userInfo, isLoading]);
+
 
   const menuItems = [
     {
@@ -27,25 +33,46 @@ const AdminMainPage: React.FC = () => {
   // 관리자 페이지 목록 (추가 확장 가능)
   const adminPages = [
     {
-      label: "캘린더 관리자 페이지",
+      label: "민원 관리",
+      path: "/admin/complain",
+      description: "민원 사항에 대해 관리할 수 있습니다.",
+    },
+    {
+      label: "캘린더 관리",
       path: "/admin/calendar",
-      description: "캘린더 관리 및 일정 설정",
+      description: "캘린더의 일정을 관리할 수 있습니다.",
     },
     {
-      label: "공지사항 관리자 페이지",
+      label: "공지사항 관리",
       path: "/announcements",
-      description: "공지사항 등록 및 수정",
+      description: "생활원 공지사항을 관리할 수 있습니다.",
     },
     {
-      label: "FCM 토큰",
-      path: "/admin/fcm",
-      description: "푸시알림 토큰 확인",
+      label: "TIP 관리",
+      path: "/tips",
+      description: "기숙사 꿀팁을 관리할 수 있습니다.",
     },
+    {
+      label: "홈 화면 팝업 공지 관리",
+      path: "/admin/popup-notifications",
+      description: "앱 접속 시 나타날 팝업 공지를 관리할 수 있습니다.",
+    },
+    {
+      label: "푸시알림 보내기",
+      path: "/admin/notification/create",
+      description: "유저를 대상으로 푸시알림을 보낼 수 있습니다.",
+    },
+
+    // {
+    //   label: "FCM 토큰",
+    //   path: "/admin/fcm",
+    //   description: "푸시알림 토큰 확인",
+    // },
   ];
 
   return (
     <Wrapper>
-      <Header title={"관리자 페이지"} hasBack={false} menuItems={menuItems} />
+      <Header title={"관리자 페이지"} hasBack={true} menuItems={menuItems} />
       <Title>관리자 기능 선택</Title>
       <MenuGrid>
         {adminPages.map((page) => (
@@ -77,6 +104,8 @@ export const Wrapper = styled.div`
   box-sizing: border-box;
   max-width: 800px;
   margin: 0 auto;
+  flex: 1;
+  width: 100%;
 `;
 
 const Title = styled.h2`

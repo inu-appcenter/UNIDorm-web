@@ -2,7 +2,7 @@ import styled from "styled-components";
 import { useEffect, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
 
-import profileimg from "../../assets/profileimg.svg";
+import profileimg from "../../assets/profileimg.png";
 import RoomMateBottomBar from "../../components/roommate/RoomMateBottomBar";
 import Header from "../../components/common/Header";
 import { getOpponentChecklist, getRoomMateDetail } from "../../apis/roommate";
@@ -258,6 +258,7 @@ const UserArea = styled.div`
   min-width: fit-content;
   height: fit-content;
   gap: 4px;
+
   .profile-img {
     width: 44px;
     min-width: 44px;
@@ -284,7 +285,7 @@ const UserArea = styled.div`
       font-size: 14px;
     }
 
-    .date {
+    .createdDate {
       font-weight: 400;
       font-size: 10px;
     }
@@ -296,6 +297,7 @@ const ContentArea = styled.div`
   flex-direction: column;
   width: 100%;
   height: fit-content;
+
   .title {
     font-style: normal;
     font-weight: 700;
@@ -310,7 +312,8 @@ const ContentArea = styled.div`
 
     margin-bottom: 10px;
   }
-  .content {
+
+  .title {
     font-style: normal;
     font-weight: 500;
     font-size: 12px;

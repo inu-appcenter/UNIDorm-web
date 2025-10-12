@@ -1,39 +1,124 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styled from "styled-components";
 import GroupPurchaseList from "../../components/GroupPurchase/GroupPurchaseList";
 import { useNavigate } from "react-router-dom";
 import { FaSearch } from "react-icons/fa";
 import Header from "../../components/common/Header.tsx";
 import BottomBar from "../../components/common/BottomBar.tsx";
-
-const CATEGORY_LIST = ["전체", "배달", "식자재", "생활용품", "기타"];
-const SORT_OPTIONS = ["마감 임박 순", "최신순", "좋아요 순"];
+import {
+  GetGroupPurchaseListParams,
+  GroupOrder,
+} from "../../types/grouporder.ts";
+import { getGroupPurchaseList } from "../../apis/groupPurchase.ts";
+import useUserStore from "../../stores/useUserStore.ts";
+import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
+import EmptyMessage from "../../constants/EmptyMessage.tsx";
+import {
+  RecentSearchWrapper,
+  TagList,
+  Tag,
+  Label,
+} from "../../styles/groupPurchase.ts";
+import { FiX } from "react-icons/fi";
+import { CATEGORY_LIST, SORT_OPTIONS } from "../../constants/groupPurchase.ts";
 
 export default function GroupPurchaseMainPage() {
   const navigate = useNavigate();
-  const [selectedCategory, setSelectedCategory] = useState("전체");
-  const [search, setSearch] = useState("");
-  const [recentSearches, setRecentSearches] = useState<string[]>([
-    "휴지",
-    "마라탕",
-    "닭가슴살",
-  ]);
-  const [sortOption, setSortOption] = useState("마감 임박순");
+  const { tokenInfo } = useUserStore();
+  const isLoggedIn = Boolean(tokenInfo.accessToken);
 
-  const handleCategoryClick = (category: string) => {
+  const [selectedCategory, setSelectedCategory] =
+    useState<GetGroupPurchaseListParams["type"]>("전체");
+  const [search, setSearch] = useState("");
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [sortOption, setSortOption] =
+    useState<GetGroupPurchaseListParams["sort"]>("마감임박순");
+  // 게시글 상태
+  const [groupOrders, setGroupOrders] = useState<GroupOrder[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+
+  const handleCategoryClick = (category: (typeof CATEGORY_LIST)[number]) => {
     setSelectedCategory(category);
   };
 
-  const handleDeleteRecent = (term: string) => {
-    setRecentSearches(recentSearches.filter((item) => item !== term));
+  const fetchGroupOrders = async (searchTerm?: string) => {
+    setLoading(true);
+    try {
+      const params: GetGroupPurchaseListParams = {
+        sort: sortOption,
+        type: selectedCategory,
+        search: searchTerm || undefined,
+      };
+      const data = await getGroupPurchaseList(params);
+      console.log("공동구매 게시글 불러오기 성공 : ", data);
+      setGroupOrders(data);
+    } catch (error) {
+      console.error("게시글 목록 불러오기 실패:", error);
+      setGroupOrders([]); // 에러 발생 시 목록을 비웁니다.
+    } finally {
+      setLoading(false);
+    }
   };
+
+  // 최근 검색어 불러오기
+  useEffect(() => {
+    const savedSearches = localStorage.getItem("recentSearches");
+    if (savedSearches) {
+      setRecentSearches(JSON.parse(savedSearches));
+    }
+  }, []);
+
+  const handleSearchSubmit = () => {
+    const rawTerm = search;
+    const trimmedTerm = search.trim();
+
+    fetchGroupOrders(trimmedTerm);
+
+    if (rawTerm.trim() === "") return;
+
+    const updatedSearches = [
+      trimmedTerm,
+      ...recentSearches.filter((item) => item !== trimmedTerm),
+    ].slice(0, 10);
+
+    setRecentSearches(updatedSearches);
+    localStorage.setItem("recentSearches", JSON.stringify(updatedSearches));
+
+    setSearch("");
+  };
+
+  const handleDeleteRecent = (term: string) => {
+    const updatedSearches = recentSearches.filter((item) => item !== term);
+    setRecentSearches(updatedSearches);
+    localStorage.setItem("recentSearches", JSON.stringify(updatedSearches));
+  };
+
+  // 게시글 목록 불러오기
+  useEffect(() => {
+    fetchGroupOrders();
+  }, [selectedCategory, sortOption]);
+
+  const menuItems = [
+    {
+      label: "키워드 알림 설정",
+      onClick: () => {
+        if (!isLoggedIn) {
+          alert("로그인 후 사용 가능해요");
+          return;
+        }
+        navigate("/groupPurchase/keywordSetting");
+      },
+    },
+  ];
 
   return (
     <PageWrapper>
       <Header
         title="공동구매"
         hasBack={false}
-        showAlarm={true}
+        menuItems={menuItems}
         secondHeader={
           <CategoryWrapper>
             {CATEGORY_LIST.map((category) => (
@@ -49,7 +134,19 @@ export default function GroupPurchaseMainPage() {
         }
       />
 
-      <ContentArea>
+      <SortFilterWrapper>
+        {SORT_OPTIONS.map((option) => (
+          <SortButton
+            key={option}
+            className={sortOption === option ? "active" : ""}
+            onClick={() => setSortOption(option)}
+          >
+            {option}
+          </SortButton>
+        ))}
+      </SortFilterWrapper>
+
+      <SearchArea>
         <SearchBar>
           <FaSearch size={16} color="#999" />
           <input
@@ -57,83 +154,79 @@ export default function GroupPurchaseMainPage() {
             placeholder="검색어를 입력하세요"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleSearchSubmit();
+            }}
+            onFocus={() => setIsSearchFocused(true)}
+            // onBlur={() => setIsSearchFocused(false)}
           />
         </SearchBar>
 
-        <RecentSearchWrapper>
-          <Label>최근 검색어</Label>
-          <TagList>
-            {recentSearches.map((term) => (
-              <Tag key={term}>
-                {term}{" "}
-                <DeleteBtn onClick={() => handleDeleteRecent(term)}>
-                  ×
-                </DeleteBtn>
-              </Tag>
-            ))}
-          </TagList>
-        </RecentSearchWrapper>
+        {isSearchFocused && recentSearches.length > 0 && (
+          <RecentSearchWrapper>
+            <Label>최근 검색어</Label>
+            <TagList>
+              {recentSearches.map((term) => (
+                <Tag key={term}>
+                  {term}{" "}
+                  <FiX
+                    size="14"
+                    color="#1C1C1E"
+                    onClick={() => handleDeleteRecent(term)}
+                  />
+                </Tag>
+              ))}
+            </TagList>
+          </RecentSearchWrapper>
+        )}
+      </SearchArea>
 
-        <SortFilterWrapper>
-          {SORT_OPTIONS.map((option) => (
-            <SortButton
-              key={option}
-              className={sortOption === option ? "active" : ""}
-              onClick={() => setSortOption(option)}
-            >
-              {option}
-            </SortButton>
-          ))}
-        </SortFilterWrapper>
+      {/* 🔽 로딩 상태에 따라 스피너, 목록, 빈 메시지를 조건부 렌더링합니다. */}
+      {loading ? (
+        <LoadingSpinner message="공동구매 목록을 불러오는 중..." />
+      ) : groupOrders.length > 0 ? (
+        <GroupPurchaseList groupOrders={groupOrders} />
+      ) : (
+        <EmptyMessage message="해당 조건의 공동구매가 없습니다." />
+      )}
 
-        <GroupPurchaseList />
-      </ContentArea>
-
-      <WriteButton onClick={() => navigate("/groupPurchase/write")}>
+      <WriteButton
+        onClick={() => {
+          if (!isLoggedIn) {
+            alert("로그인 후 사용 가능해요.");
+            navigate("/login");
+            return;
+          }
+          navigate("/groupPurchase/write");
+        }}
+      >
         ✏️ 글쓰기
       </WriteButton>
+
       <BottomBar />
     </PageWrapper>
   );
 }
 
 const PageWrapper = styled.div`
-  padding-top: 80px;
-  background: #fafafa;
-
-  //width: 100%;
-  //height: 100%;
+  padding: 122px 16px 140px;
   box-sizing: border-box;
-
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  //height: 100vh;
-  //overflow-x: hidden;
+  gap: 16px;
 `;
-
-// const TopFixedSection = styled.div`
-//   position: fixed;
-//   top: 40px;
-//   left: 0;
-//   width: 100%;
-//   background-color: white;
-//   z-index: 999;
-//   padding: 70px 20px 8px 20px;
-//   box-sizing: border-box;
-// `;
 
 const CategoryWrapper = styled.div`
   display: flex;
   gap: 16px;
   width: 100%;
-  //background-color: white;
   border-bottom: 1px solid silver;
 `;
 
 const CategoryItem = styled.div`
-  flex: 1; /* 균등 너비 분배 */
-  text-align: center; /* 텍스트 가운데 정렬 */
+  flex: 1;
+  text-align: center;
   font-size: 16px;
   color: #aaa;
   cursor: pointer;
@@ -147,16 +240,21 @@ const CategoryItem = styled.div`
   }
 `;
 
+const SearchArea = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
 const SearchBar = styled.div`
-  margin: 12px 12px 0 12px;
-  margin-bottom: 20px;
-  height: 40px;
+  height: fit-content;
   background-color: #f4f4f4;
   border-radius: 999px;
-  padding: 0 12px;
+  padding: 12px 12px;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 5px;
   overflow: hidden;
 
   input {
@@ -176,48 +274,6 @@ const SearchBar = styled.div`
   }
 `;
 
-const RecentSearchWrapper = styled.div`
-  padding: 0 12px;
-  margin-bottom: 12px;
-`;
-
-const Label = styled.div`
-  font-size: 14px;
-  color: #444;
-  margin-bottom: 6px;
-`;
-
-const TagList = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-`;
-
-const Tag = styled.div`
-  background-color: #f0f0f0;
-  border-radius: 20px;
-  padding: 6px 10px;
-  font-size: 13px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-`;
-
-const DeleteBtn = styled.button`
-  border: none;
-  background: none;
-  color: #aaa;
-  font-size: 14px;
-  cursor: pointer;
-`;
-
-const ContentArea = styled.div`
-  padding-top: 32px;
-  padding-bottom: 100px;
-  padding-left: 16px;
-  padding-right: 16px;
-`;
-
 const WriteButton = styled.button`
   position: fixed;
   bottom: 90px;
@@ -235,20 +291,32 @@ const WriteButton = styled.button`
 
 const SortFilterWrapper = styled.div`
   display: flex;
-  margin-bottom: 12px;
   gap: 8px;
-  padding: 0px 12px 0 12px;
-  flex-wrap: wrap;
+  overflow-x: auto;
+  white-space: nowrap;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 `;
 
 const SortButton = styled.button`
-  background-color: #f4f4f4;
-  border: none;
+  background-color: transparent;
+  border: 1px solid #007aff;
   border-radius: 999px;
-  padding: 6px 12px;
-  font-size: 14px;
-  color: #333;
+  padding: 4px 16px;
   cursor: pointer;
+  box-sizing: border-box;
+
+  color: var(--m-1, #0a84ff);
+  font-family: AppleSDGothicNeoM00;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 24px;
+  letter-spacing: 0.38px;
 
   &.active {
     background-color: #007bff;

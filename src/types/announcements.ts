@@ -1,4 +1,5 @@
 export interface Announcement {
+  announcementType: string;
   viewCount: number;
   emergency: boolean;
   content: string;
@@ -9,6 +10,9 @@ export interface Announcement {
 }
 
 export interface AnnouncementDetail {
+  announcementType: string;
+  emergency: boolean;
+
   id: number;
   title: string;
   writer: string;
@@ -16,6 +20,7 @@ export interface AnnouncementDetail {
   viewCount: number;
   createdDate: string;
   updatedDate: string;
+  link?: string;
 }
 
 export interface AnnouncementFile {

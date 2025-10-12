@@ -11,31 +11,86 @@ import {
   AnnouncementDetail,
   AnnouncementFile,
 } from "../../types/announcements.ts";
-import useUserStore from "../../stores/useUserStore.ts";
 import AnnounceAttachment from "../../components/announce/AnnounceAttachment.tsx";
 import GrayDivider from "../../components/common/GrayDivider.tsx";
 import { useSwipeable } from "react-swipeable";
 import RoundSquareWhiteButton from "../../components/button/RoundSquareWhiteButton.tsx";
-import 궁금해하는횃불이 from "../../assets/roommate/궁금해하는횃불이.png";
+import 궁금해하는횃불이 from "../../assets/roommate/궁금해하는횃불이.webp";
+import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
+import EmptyMessage from "../../constants/EmptyMessage.tsx";
+import { useIsAdminRole } from "../../hooks/useIsAdminRole.ts";
+import linkify from "../../utils/linkfy.tsx";
+import {
+  NoticeTagWrapper,
+  TypeBadge,
+  UrgentBadge,
+} from "../../styles/announcement.ts";
 
 export default function AnnounceDetailPage() {
-  const { id } = useParams<{ id: string }>();
+  const { boardId } = useParams<{ boardId: string }>();
   const [announce, setAnnounce] = useState<AnnouncementDetail | null>(null);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [attachments, setAttachments] = useState<AnnouncementFile[]>([]);
+  const [images, setImages] = useState<AnnouncementFile[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const navigate = useNavigate();
-  const { userInfo } = useUserStore();
-  const isAdmin = userInfo.isAdmin;
+  const { isAdmin } = useIsAdminRole();
 
-  const menuItems = [
+  useEffect(() => {
+    if (!boardId) {
+      setIsLoading(false);
+      return;
+    }
+
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const [detailResponse, filesResponse] = await Promise.all([
+          getAnnouncementDetail(Number(boardId)),
+          getAnnouncementFiles(Number(boardId)),
+        ]);
+        console.log("공지사항 불러오기 성공", detailResponse);
+        console.log("공지사항 이미지 불러오기 성공", filesResponse);
+
+        setAnnounce(detailResponse.data);
+
+        const allFiles = filesResponse.data;
+        const imageExtensions = [
+          "jpg",
+          "jpeg",
+          "png",
+          "gif",
+          "bmp",
+          "webp",
+          "svg",
+        ];
+        const imageFiles = allFiles.filter((file) => {
+          const ext = file.fileName.split(".").pop()?.toLowerCase();
+          return ext && imageExtensions.includes(ext);
+        });
+
+        setImages(imageFiles);
+        setAttachments(allFiles);
+      } catch (err) {
+        alert("공지사항을 불러오는 데 실패했습니다.");
+        setAnnounce(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+    window.scrollTo(0, 0);
+  }, [boardId]);
+
+  const baseMenuItems = [
     {
       label: "수정하기",
       onClick: () => {
         navigate("/announcements/write", {
-          state: {
-            announce,
-          },
+          state: { announce },
         });
       },
     },
@@ -47,68 +102,34 @@ export default function AnnounceDetailPage() {
     },
   ];
 
-  useEffect(() => {
-    if (!id) return;
+  const optionalItems = announce?.link
+    ? [
+        {
+          label: "생활원 홈페이지에서 보기",
+          onClick: () => {
+            window.open(announce?.link, "_blank");
+          },
+        },
+      ]
+    : [];
 
-    const fetchData = async () => {
-      try {
-        const response = await getAnnouncementDetail(Number(id));
-        console.log(response.data);
-        setAnnounce(response.data);
-      } catch (err) {
-        alert("공지사항을 불러오는 데 실패했습니다.");
-      }
-    };
+  const menuItems = isAdmin
+    ? [...baseMenuItems, ...optionalItems]
+    : optionalItems;
 
-    fetchData();
-    window.scrollTo(0, 0);
-  }, [id]);
-
-  const [attachments, setAttachments] = useState<AnnouncementFile[]>([]);
-  const [images, setImages] = useState<AnnouncementFile[]>([]);
-
-  useEffect(() => {
-    const fetchAttachments = async () => {
-      try {
-        if (!id) return;
-        const res = await getAnnouncementFiles(Number(id));
-        setAttachments(res.data);
-
-        const imageExtensions = [
-          "jpg",
-          "jpeg",
-          "png",
-          "gif",
-          "bmp",
-          "webp",
-          "svg",
-        ];
-        const imgs = res.data.filter((file) => {
-          const ext = file.fileName.split(".").pop()?.toLowerCase();
-          return ext && imageExtensions.includes(ext);
-        });
-        setImages(imgs);
-      } catch (error) {
-        console.error("첨부파일 불러오기 실패:", error);
-      }
-    };
-    fetchAttachments();
-  }, [id]);
-
-  // 게시글 삭제
   const handleDelete = async () => {
-    if (!id) return;
+    if (!boardId) return;
     if (!window.confirm("정말 삭제하시겠습니까?")) return;
 
     try {
-      await deleteAnnouncement(Number(id));
+      await deleteAnnouncement(Number(boardId));
       alert("삭제되었습니다.");
       navigate(-1);
     } catch (err) {
       alert("삭제에 실패했습니다.");
     }
   };
-  // --- 이미지 슬라이더
+
   const [currentImage, setCurrentImage] = useState(0);
   const handlers = useSwipeable({
     onSwipedLeft: () =>
@@ -119,17 +140,24 @@ export default function AnnounceDetailPage() {
 
   return (
     <Wrapper>
-      <Header
-        title="공지사항 상세"
-        hasBack={true}
-        menuItems={isAdmin ? menuItems : undefined}
-      />
+      <Header title="공지사항 상세" hasBack={true} menuItems={menuItems} />
 
       <ScrollArea>
         <Content>
-          {announce && (
+          {isLoading ? (
+            <LoadingSpinner message="공지사항을 불러오는 중..." />
+          ) : announce ? (
             <>
-              <Title>{announce.title}</Title>
+              <TitleArea>
+                <Title>{announce.title}</Title>
+                <NoticeTagWrapper>
+                  {announce.emergency && <UrgentBadge>긴급</UrgentBadge>}
+                  <TypeBadge type={announce.announcementType}>
+                    {announce.announcementType}
+                  </TypeBadge>
+                </NoticeTagWrapper>
+              </TitleArea>
+
               <UserInfo>
                 <UserText>
                   <Nickname>{announce.writer}</Nickname>
@@ -167,17 +195,14 @@ export default function AnnounceDetailPage() {
                   </SliderIndicator>
                 </ImageSlider>
               )}
-              <AnnounceAttachment attachments={attachments} />
+              {attachments.length > 0 && (
+                <AnnounceAttachment attachments={attachments} />
+              )}
 
-              <BodyText>
-                {announce.content.split("\n").map((line, index) => (
-                  <span key={index}>
-                    {line}
-                    <br />
-                  </span>
-                ))}
-              </BodyText>
+              <BodyText>{linkify(announce.content)}</BodyText>
             </>
+          ) : (
+            <EmptyMessage message="공지사항을 불러올 수 없습니다." />
           )}
         </Content>
       </ScrollArea>
@@ -189,7 +214,11 @@ export default function AnnounceDetailPage() {
               <h2>이미지 자세히 보기</h2>
               <span>{images[currentImage].fileName}</span>
             </ModalHeader>
-            <img src={previewUrl} />
+            <img
+              src={previewUrl}
+              style={{ width: "100%", objectFit: "contain" }}
+              alt="확대 이미지"
+            />
             <ButtonGroupWrapper>
               <RoundSquareWhiteButton
                 btnName={"닫기"}
@@ -203,21 +232,21 @@ export default function AnnounceDetailPage() {
   );
 }
 
-// --- styled-components
-
+// ... (styled-components 코드는 이전과 동일합니다)
 const Wrapper = styled.div`
   position: relative;
-
   display: flex;
   flex-direction: column;
   background: white;
   padding-top: 56px;
+  height: 100vh;
+  box-sizing: border-box;
 `;
 
 const ScrollArea = styled.div`
   flex: 1;
   overflow-y: auto;
-  padding: 24px 16px 100px; /* 댓글창 고려 */
+  padding: 24px 16px 100px;
 `;
 
 const Content = styled.div`
@@ -230,9 +259,8 @@ const UserInfo = styled.div`
   display: flex;
   align-items: center;
   gap: 12px;
-
-  position: relative; /* ✅ 메뉴 absolute 기준점으로 */
-  overflow: visible; /* ✅ 안 짤리게 */
+  position: relative;
+  overflow: visible;
 `;
 
 const UserText = styled.div`
@@ -259,14 +287,14 @@ const Title = styled.h2`
 const BodyText = styled.p`
   font-size: 16px;
   line-height: 1.5;
-  word-break: break-all; /* 긴 단어라도 강제로 줄바꿈 */
-  overflow-wrap: break-word; /* 브라우저 호환용 */
+  word-break: break-all;
+  overflow-wrap: break-word;
 `;
 
 const ImageSlider = styled.div`
   width: 100%;
   height: 200px;
-  background: #ccc;
+  background: #f0f0f0;
   position: relative;
   overflow: hidden;
   margin-bottom: 24px;
@@ -276,6 +304,7 @@ const ImageSlider = styled.div`
 const SliderItem = styled.div`
   width: 100%;
   height: 100%;
+  cursor: pointer;
 `;
 
 const SliderIndicator = styled.div`
@@ -283,8 +312,6 @@ const SliderIndicator = styled.div`
   bottom: 8px;
   width: 100%;
   text-align: center;
-  font-size: 12px;
-  color: #fff;
 `;
 
 const Dot = styled.span<{ $active: boolean }>`
@@ -298,12 +325,12 @@ const Dot = styled.span<{ $active: boolean }>`
 `;
 
 const ModalHeader = styled.div`
-  flex-shrink: 0; /* 스크롤 시 줄어들지 않게 고정 */
+  flex-shrink: 0;
   margin-bottom: 12px;
   justify-content: space-between;
   padding-right: 50px;
-  overflow-wrap: break-word; // 또는 wordWrap
-  word-break: keep-all; // 단어 중간이 아니라 단어 단위로 줄바꿈
+  overflow-wrap: break-word;
+  word-break: keep-all;
 
   h2 {
     margin: 0;
@@ -357,10 +384,9 @@ const Modal = styled.div`
     z-index: 1000;
   }
 
-  .content {
+  .title {
     width: 100%;
     flex: 1;
-    //height: 100%;
     overflow-y: auto;
   }
 
@@ -374,4 +400,10 @@ const Modal = styled.div`
       transform: translateY(0);
     }
   }
+`;
+
+const TitleArea = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 `;

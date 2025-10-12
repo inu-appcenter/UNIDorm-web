@@ -6,11 +6,10 @@ import {
   getRoommateChatRooms,
 } from "../../apis/chat.ts";
 import Header from "../../components/common/Header.tsx";
-import Tab from "../../components/chat/Tab.tsx";
 import ChatListItem from "../../components/chat/ChatListItem.tsx";
 import styled from "styled-components";
 import useUserStore from "../../stores/useUserStore.ts";
-import TopNoticeBanner from "../../components/chat/TopNoticeBanner.tsx";
+// import TopNoticeBanner from "../../components/chat/TopNoticeBanner.tsx";
 import BottomBar from "../../components/common/BottomBar.tsx";
 
 export default function ChatListPage() {
@@ -18,8 +17,8 @@ export default function ChatListPage() {
   const { tokenInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo?.accessToken ?? "");
 
-  const tabItems = ["룸메이트", "공동구매"];
-  const [selectedTab, setSelectedTab] = useState("룸메이트");
+  // const tabItems = ["룸메이트", "공동구매"];
+  const [selectedTab] = useState("룸메이트");
 
   const [groupOrderChatRooms, setGroupOrderChatRooms] = useState<
     GroupOrderChatRoom[]
@@ -70,17 +69,17 @@ export default function ChatListPage() {
         title="채팅"
         hasBack={false}
         showAlarm={true}
-        secondHeader={
-          <Tab
-            tabItems={tabItems}
-            selectedTab={selectedTab}
-            setSelectedTab={setSelectedTab}
-          />
-        }
+        // secondHeader={
+        //   <Tab
+        //     tabItems={tabItems}
+        //     selectedTab={selectedTab}
+        //     setSelectedTab={setSelectedTab}
+        //   />
+        // }
       />
 
       <ContentWrapper>
-        <TopNoticeBanner />
+        {/*<TopNoticeBanner />*/}
         {selectedTab === "공동구매" ? (
           groupOrderChatRooms.length > 0 ? (
             groupOrderChatRooms.map((room) => (
@@ -170,7 +169,7 @@ export default function ChatListPage() {
 }
 
 const ChatListPageWrapper = styled.div`
-  padding: 70px 0;
+  padding: 30px 0;
 
   display: flex;
   flex-direction: column;
