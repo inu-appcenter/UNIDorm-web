@@ -12,7 +12,7 @@ const MyInfoArea = () => {
     const getUserProfileImg = async () => {
       const result = await getMemberImage();
       console.log(result.data);
-      setUserProfileImg(result.data.fileName);
+      setUserProfileImg(result.data.imageUrl);
     };
 
     getUserProfileImg();
