@@ -64,8 +64,8 @@ const GroupPurchaseItemWrapper = styled.div`
   align-items: center;
   justify-content: center;
   height: fit-content;
-  gap: 10px;
-  width: 150px;
+  gap: 4px;
+  width: 100%;
 
   cursor: pointer;
 `;
@@ -80,7 +80,7 @@ interface ItemImageProps {
 // --- 수정: props를 받아 조건부 스타일링 적용 ---
 const ItemImage = styled.div<ItemImageProps>`
   width: 100%;
-  height: 150px;
+  aspect-ratio: 1 / 1; /* ✅ 가로 세로 1:1 비율 유지 */
   background-image: url(${(props) => props.$imageUrl});
   background-position: center;
   background-color: #d9d9d9;
@@ -94,12 +94,13 @@ const ItemImage = styled.div<ItemImageProps>`
 
 const TitleLine = styled.div`
   /* ... (기존과 동일) ... */
+  margin-top: 4px;
   width: 100%;
-  font-style: normal;
+  //font-style: normal;
   font-weight: 500;
   font-size: 17px;
-  line-height: 21px;
-  letter-spacing: -0.165px;
+  //line-height: 21px;
+  //letter-spacing: -0.165px;
   color: #000000;
 `;
 
@@ -120,8 +121,8 @@ const AdditionalLine = styled.div`
   font-style: normal;
   font-weight: 500;
   font-size: 14px;
-  line-height: 21px;
-  letter-spacing: -0.165px;
+  //line-height: 21px;
+  //letter-spacing: -0.165px;
   color: #666;
 
   .dDay {

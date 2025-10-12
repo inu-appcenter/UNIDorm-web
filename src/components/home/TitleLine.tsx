@@ -1,5 +1,6 @@
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
+import FaRight from "../../assets/FaRight.svg";
 
 interface TitleLineProps {
   title: string;
@@ -13,7 +14,7 @@ const TitleLine = ({ title, link }: TitleLineProps) => {
       <div className="title">{title}</div>
       {link && (
         <div onClick={() => navigate(link)} className="more">
-          더보기 {`>`}
+          더보기 <img src={FaRight} />
         </div>
       )}
     </TitleLineWrapper>
@@ -51,5 +52,15 @@ const TitleLineWrapper = styled.div`
     /* 상자 높이와 동일 또는 200% */
 
     color: #8e8e93;
+  }
+
+  .more {
+    color: #8e8e93;
+    display: flex;
+    flex-direction: row;
+    align-content: start;
+    justify-content: start;
+    height: fit-content;
+    gap: 8px;
   }
 `;
