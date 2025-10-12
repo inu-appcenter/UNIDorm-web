@@ -2,10 +2,8 @@ import React, { useEffect, useMemo } from "react";
 import styled from "styled-components";
 
 // Helper Functions
-const getDaysInMonth = (year: number, month: number) => {
-  // month는 1-12 기반
-  return new Date(year, month, 0).getDate();
-};
+const getDaysInMonth = (year: number, month: number) =>
+  new Date(year, month, 0).getDate();
 const parseUnit = (value: string): number => parseInt(value) || 0;
 
 interface Deadline {
@@ -18,7 +16,7 @@ interface Deadline {
 }
 
 interface DeadlineSelectorProps {
-  category: string; // 카테고리 prop 추가
+  category: string;
   deadline: Deadline;
   onDeadlineChange: (newDeadline: Deadline) => void;
 }
@@ -28,41 +26,33 @@ export default function DeadlineSelector({
   deadline,
   onDeadlineChange,
 }: DeadlineSelectorProps) {
-  // --- Constants and Memos ---
   const today = useMemo(() => new Date(), []);
   const isDelivery = category === "배달";
   const isOtherCategory = ["생활용품", "식자재", "기타"].includes(category);
 
-  // '기타' 카테고리를 위한 7일 날짜 범위 계산
   const dateRange = useMemo(() => {
     if (!isOtherCategory) return null;
     const start = new Date();
-    start.setHours(0, 0, 0, 0); // 오늘 0시
+    start.setHours(0, 0, 0, 0);
     const end = new Date();
-    end.setDate(start.getDate() + 6); // 6일 뒤 (오늘 포함 총 7일)
+    end.setDate(start.getDate() + 6);
     end.setHours(23, 59, 59, 999);
     return { start, end };
   }, [isOtherCategory]);
 
-  // --- Effects for Validation and Correction ---
-
-  // 1. 카테고리 변경 시 마감일이 유효한지 확인하고 벗어났다면 오늘 날짜로 초기화
+  // --- 연/월/일 유효성 체크 ---
   useEffect(() => {
     const deadlineDate = new Date(
-      `${parseUnit(deadline.year)}-${parseUnit(deadline.month)}-${parseUnit(
-        deadline.day,
-      )}`,
+      `${parseUnit(deadline.year)}-${parseUnit(deadline.month)}-${parseUnit(deadline.day)}`,
     );
 
     let newDeadline = { ...deadline };
     let needsUpdate = false;
 
     if (isDelivery) {
-      // '배달' 카테고리는 항상 오늘 날짜
       const todayYear = `${today.getFullYear()}년`;
       const todayMonth = `${today.getMonth() + 1}월`;
       const todayDay = `${today.getDate()}일`;
-
       if (
         deadline.year !== todayYear ||
         deadline.month !== todayMonth ||
@@ -77,7 +67,6 @@ export default function DeadlineSelector({
         needsUpdate = true;
       }
     } else if (isOtherCategory && dateRange) {
-      // '기타' 카테고리는 7일 이내인지 확인
       if (deadlineDate < dateRange.start || deadlineDate > dateRange.end) {
         newDeadline = {
           ...newDeadline,
@@ -89,20 +78,15 @@ export default function DeadlineSelector({
       }
     }
 
-    if (needsUpdate) {
-      onDeadlineChange(newDeadline);
-    }
-  }, [category, onDeadlineChange, today]); // category 변경 시에만 트리거
+    if (needsUpdate) onDeadlineChange(newDeadline);
+  }, [category, onDeadlineChange, today]);
 
-  // 2. 연/월 변경 시, 일이 유효한 범위를 벗어나면 마지막 날로 조정
   useEffect(() => {
     const year = parseUnit(deadline.year);
     const month = parseUnit(deadline.month);
     const day = parseUnit(deadline.day);
-
     let maxDay = getDaysInMonth(year, month);
 
-    // '기타' 카테고리일 경우, 7일 범위의 마지막 날보다 클 수 없음
     if (
       isOtherCategory &&
       dateRange &&
@@ -124,18 +108,16 @@ export default function DeadlineSelector({
     dateRange,
   ]);
 
-  // --- Event Handler ---
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const { name, value } = e.target;
     onDeadlineChange({ ...deadline, [name]: value });
   };
 
-  // --- Dynamic Option Generation ---
+  // --- 연/월/일 옵션 ---
   const { yearOptions, monthOptions, dayOptions } = useMemo(() => {
     const currentYear = parseUnit(deadline.year);
     const currentMonth = parseUnit(deadline.month);
 
-    // 기본 옵션 (카테고리 제약 없을 시)
     let yOpts = ["2025년", "2026년", "2027년"];
     let mOpts = Array.from({ length: 12 }, (_, i) => `${i + 1}월`);
     let dOpts = Array.from(
@@ -149,26 +131,21 @@ export default function DeadlineSelector({
       dOpts = [`${today.getDate()}일`];
     } else if (isOtherCategory && dateRange) {
       const { start, end } = dateRange;
-      const yStart = start.getFullYear();
-      const yEnd = end.getFullYear();
-
-      // Year options
       yOpts = [];
-      for (let y = yStart; y <= yEnd; y++) yOpts.push(`${y}년`);
+      for (let y = start.getFullYear(); y <= end.getFullYear(); y++)
+        yOpts.push(`${y}년`);
 
-      // Month options
-      const mStart = currentYear === yStart ? start.getMonth() : 0;
-      const mEnd = currentYear === yEnd ? end.getMonth() : 11;
+      const mStart = currentYear === start.getFullYear() ? start.getMonth() : 0;
+      const mEnd = currentYear === end.getFullYear() ? end.getMonth() : 11;
       mOpts = [];
       for (let m = mStart; m <= mEnd; m++) mOpts.push(`${m + 1}월`);
 
-      // Day options
       const dStart =
-        currentYear === yStart && currentMonth - 1 === mStart
+        currentYear === start.getFullYear() && currentMonth - 1 === mStart
           ? start.getDate()
           : 1;
       const dEnd =
-        currentYear === yEnd && currentMonth - 1 === mEnd
+        currentYear === end.getFullYear() && currentMonth - 1 === mEnd
           ? end.getDate()
           : getDaysInMonth(currentYear, currentMonth);
       dOpts = [];
@@ -185,7 +162,65 @@ export default function DeadlineSelector({
     today,
   ]);
 
-  // --- Render ---
+  const { ampmOptions, hourOptions, minuteOptions } = useMemo(() => {
+    let ampmOpts = ["오전", "오후"];
+    let hourOpts = Array.from({ length: 12 }, (_, i) => `${i + 1}시`);
+    let minuteOpts = Array.from(
+      { length: 60 / 15 },
+      (_, i) => (i * 15).toString().padStart(2, "0") + "분",
+    );
+
+    const selectedDate = new Date(
+      parseUnit(deadline.year),
+      parseUnit(deadline.month) - 1,
+      parseUnit(deadline.day),
+    );
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+
+    if (
+      selectedDate.getFullYear() === now.getFullYear() &&
+      selectedDate.getMonth() === now.getMonth() &&
+      selectedDate.getDate() === now.getDate()
+    ) {
+      // 오전/오후 필터
+      if (currentHour >= 12) {
+        ampmOpts = ["오후"];
+      } else {
+        ampmOpts = ["오전", "오후"];
+      }
+
+      // 시 필터
+      hourOpts = hourOpts.filter((h) => {
+        const hNum = parseInt(h); // 1~12
+        const isAm = deadline.ampm === "오전"; // 현재 선택된 AM/PM
+        const hour24 = (hNum % 12) + (isAm ? 0 : 12);
+        return hour24 >= currentHour;
+      });
+
+      // 분 필터
+      const selectedHour = parseInt(deadline.hour);
+      const isSelectedAm = deadline.ampm === "오전";
+      const selectedHour24 = (selectedHour % 12) + (isSelectedAm ? 0 : 12);
+
+      if (selectedHour24 === currentHour) {
+        minuteOpts = minuteOpts.filter((m) => parseInt(m) > currentMinute);
+      } else {
+        minuteOpts = Array.from(
+          { length: 60 / 15 },
+          (_, i) => (i * 15).toString().padStart(2, "0") + "분",
+        );
+      }
+    }
+
+    return {
+      ampmOptions: ampmOpts,
+      hourOptions: hourOpts,
+      minuteOptions: minuteOpts,
+    };
+  }, [deadline]);
+
   return (
     <>
       <DeadlineRow>
@@ -223,17 +258,19 @@ export default function DeadlineSelector({
 
       <DeadlineRow>
         <Select name="ampm" value={deadline.ampm} onChange={handleChange}>
-          <option>오전</option>
-          <option>오후</option>
+          {ampmOptions.map((a) => (
+            <option key={a}>{a}</option>
+          ))}
         </Select>
         <Select name="hour" value={deadline.hour} onChange={handleChange}>
-          {Array.from({ length: 12 }, (_, i) => `${i + 1}시`).map((h) => (
+          {hourOptions.map((h) => (
             <option key={h}>{h}</option>
           ))}
         </Select>
         <Select name="minute" value={deadline.minute} onChange={handleChange}>
-          <option>00분</option>
-          <option>30분</option>
+          {minuteOptions.map((m) => (
+            <option key={m}>{m}</option>
+          ))}
         </Select>
       </DeadlineRow>
 
@@ -250,7 +287,7 @@ export default function DeadlineSelector({
   );
 }
 
-// Styles used only by this component
+// --- Styles ---
 const DeadlineRow = styled.div`
   display: flex;
   gap: 8px;
@@ -262,11 +299,11 @@ const Select = styled.select`
   padding: 10px;
   border-radius: 6px;
   font-size: 14px;
-  border: 1px solid #ddd; // 테두리 색상 미세 조정
+  border: 1px solid #ddd;
   background: white;
 
   &:disabled {
-    background-color: #f2f2f2; // 비활성화 스타일
+    background-color: #f2f2f2;
     color: #999;
   }
 `;

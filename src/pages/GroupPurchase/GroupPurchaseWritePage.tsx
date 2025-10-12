@@ -61,6 +61,9 @@ export default function GroupPurchaseWritePage() {
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
+    // ✅ DeadlineSelector에서 선택한 값 기반으로 문자열 생성
+    const deadlineString = getDeadlineString();
+
     const requestDto: CreateGroupOrderRequest = {
       title,
       description,
@@ -68,20 +71,21 @@ export default function GroupPurchaseWritePage() {
       link: purchaseLink,
       openChatLink: openchatLink,
       groupOrderType: category,
-      deadline: getDeadlineString(),
+      deadline: deadlineString, // ✅ 반영 완료
     };
+
+    console.log("requestDto.deadline", requestDto.deadline);
 
     try {
       setIsLoading(true);
       if (isEditMode && post?.id) {
         await updateGroupPurchase(post.id, requestDto, images);
         alert("게시글이 수정되었습니다.");
-        // 수정 후 상세 페이지로 이동하거나 목록으로 이동
-        navigate(`/group-purchase/${post.id}`, { replace: true });
+        navigate(`/groupPurchase/${post.id}`, { replace: true });
       } else {
         await createGroupPurchase(requestDto, images);
         alert("게시글이 등록되었습니다.");
-        navigate(-1); // 이전 페이지(목록)으로 이동
+        navigate(-1);
       }
     } catch (error) {
       console.error("게시글 등록/수정 실패:", error);
@@ -195,7 +199,7 @@ export default function GroupPurchaseWritePage() {
   );
 }
 
-// Styles used by the main page component
+// --- styles ---
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
