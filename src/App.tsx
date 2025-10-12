@@ -86,7 +86,7 @@ function App() {
           );
         }
       } catch (error) {
-        alert("회원 가져오기 실패");
+        // alert("회원 가져오기 실패");
         console.error("회원 가져오기 실패", error);
       }
     };
