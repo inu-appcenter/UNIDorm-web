@@ -20,6 +20,11 @@ import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../../constants/EmptyMessage.tsx";
 import { useIsAdminRole } from "../../hooks/useIsAdminRole.ts";
 import linkify from "../../utils/linkfy.tsx";
+import {
+  NoticeTagWrapper,
+  TypeBadge,
+  UrgentBadge,
+} from "../../styles/announcement.ts";
 
 export default function AnnounceDetailPage() {
   const { boardId } = useParams<{ boardId: string }>();
@@ -46,8 +51,8 @@ export default function AnnounceDetailPage() {
           getAnnouncementDetail(Number(boardId)),
           getAnnouncementFiles(Number(boardId)),
         ]);
-        console.log(detailResponse);
-        console.log(filesResponse);
+        console.log("공지사항 불러오기 성공", detailResponse);
+        console.log("공지사항 이미지 불러오기 성공", filesResponse);
 
         setAnnounce(detailResponse.data);
 
@@ -143,7 +148,16 @@ export default function AnnounceDetailPage() {
             <LoadingSpinner message="공지사항을 불러오는 중..." />
           ) : announce ? (
             <>
-              <Title>{announce.title}</Title>
+              <TitleArea>
+                <Title>{announce.title}</Title>
+                <NoticeTagWrapper>
+                  {announce.emergency && <UrgentBadge>긴급</UrgentBadge>}
+                  <TypeBadge type={announce.announcementType}>
+                    {announce.announcementType}
+                  </TypeBadge>
+                </NoticeTagWrapper>
+              </TitleArea>
+
               <UserInfo>
                 <UserText>
                   <Nickname>{announce.writer}</Nickname>
@@ -386,4 +400,10 @@ const Modal = styled.div`
       transform: translateY(0);
     }
   }
+`;
+
+const TitleArea = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 `;

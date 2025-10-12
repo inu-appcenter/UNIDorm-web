@@ -1,4 +1,5 @@
 export interface Announcement {
+  announcementType: string;
   viewCount: number;
   emergency: boolean;
   content: string;
@@ -9,6 +10,9 @@ export interface Announcement {
 }
 
 export interface AnnouncementDetail {
+  announcementType: string;
+  emergency: boolean;
+
   id: number;
   title: string;
   writer: string;
