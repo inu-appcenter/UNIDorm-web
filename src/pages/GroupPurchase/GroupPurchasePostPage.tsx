@@ -18,7 +18,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import RoundSquareButton from "../../components/button/RoundSquareButton.tsx";
 import 사람 from "../../assets/chat/human.svg";
 import { useSwipeable } from "react-swipeable";
-import { getDeadlineText } from "../../utils/dateUtils.ts";
+import { formatDeadlineDate, getDeadlineText } from "../../utils/dateUtils.ts";
 import UserInfo from "../../components/common/UserInfo.tsx";
 import CommentInputBox from "../../components/comment/CommentInputBox.tsx";
 import { ReplyProps } from "../../types/comment.ts";
@@ -29,6 +29,12 @@ import Modal from "../../components/modal/Modal.tsx";
 import CommonBottomModal from "../../components/modal/CommonBottomModal.tsx";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../../constants/EmptyMessage.tsx";
+import {
+  Dday,
+  DividerBar,
+  MetaInfo,
+  People,
+} from "../../styles/groupPurchase.ts";
 
 export default function GroupPurchasePostPage() {
   const { tokenInfo } = useUserStore();
@@ -168,15 +174,6 @@ export default function GroupPurchasePostPage() {
     onSwipedRight: () => setCurrentImage((idx) => Math.max(0, idx - 1)),
     trackMouse: true,
   });
-
-  const formatDeadlineDate = (deadline: string) => {
-    const date = new Date(deadline);
-    const month = (date.getMonth() + 1).toString().padStart(2, "0");
-    const day = date.getDate().toString().padStart(2, "0");
-    const hours = date.getHours().toString().padStart(2, "0");
-    const minutes = date.getMinutes().toString().padStart(2, "0");
-    return `${month}.${day} ${hours}시 ${minutes}분`;
-  };
 
   const menuItems = [
     {
@@ -420,33 +417,6 @@ const Title = styled.h2`
   font-size: 16px;
   font-weight: bold;
   margin: 8px 0;
-`;
-
-const MetaInfo = styled.div`
-  display: flex;
-  align-items: center;
-  font-size: 14px;
-  color: #999;
-  margin-bottom: 4px;
-  gap: 6px;
-`;
-
-const Dday = styled.span`
-  color: #f97171;
-`;
-
-const DividerBar = styled.span`
-  color: #aaa;
-`;
-
-const People = styled.span`
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  img {
-    width: 14px;
-    height: 14px;
-  }
 `;
 
 const Price = styled.div`
