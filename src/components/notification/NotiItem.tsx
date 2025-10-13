@@ -55,8 +55,12 @@ const NotiItem = ({
         navigate(`/groupPurchase/${notidata.boardId}`);
         break;
       case "ROOMMATE":
-        // 룸메이트 상세 페이지로 이동
-        navigate(`/roommate/list/${notidata.boardId}`);
+        if (notidata.boardId) {
+          // 룸메이트 상세 페이지로 이동
+          navigate(`/roommate/list/${notidata.boardId}`);
+        } else {
+          alert(notidata.title + "\n" + notidata.body);
+        }
         break;
       default:
         // 처리할 수 없는 타입일 경우 콘솔에 경고를 출력하거나 기본 페이지로 이동
