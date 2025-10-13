@@ -102,7 +102,7 @@ export default function GroupPurchasePostPage() {
     try {
       await deleteGroupPurchase(post.id);
       alert("삭제되었습니다.");
-      navigate("/groupPurchase");
+      navigate("/groupPurchase", { replace: true });
     } catch (error) {
       console.error("게시글 삭제 실패:", error);
     }
