@@ -2,6 +2,7 @@ import styled from "styled-components";
 import { AiOutlineClockCircle } from "react-icons/ai";
 import { useNavigate } from "react-router-dom";
 import TagIconBlueBackground from "../common/TagIconBlueBackground.tsx";
+import { formatTimeAgo } from "../../utils/dateUtils.ts";
 
 interface HomeCardProps {
   id: number;
@@ -35,7 +36,7 @@ const HomeNoticeCard = ({
       <SecondLine>{content}</SecondLine>
       <LastLine>
         <AiOutlineClockCircle style={{ marginRight: "4px" }} />
-        {createdDate}
+        {formatTimeAgo(createdDate)}
       </LastLine>
     </HomeCardWrapper>
   );
@@ -109,18 +110,16 @@ const SecondLine = styled.div`
 const LastLine = styled.div`
   display: flex;
   flex-direction: row;
+  align-items: center;
   justify-content: start;
   width: 100%;
   height: fit-content;
-  align-items: center;
 
   font-style: normal;
   font-weight: 400;
   font-size: 12px;
   line-height: 24px;
   /* 상자 높이와 동일 또는 200% */
-  display: flex;
-  align-items: center;
   letter-spacing: 0.38px;
 
   color: #1c1c1e;
