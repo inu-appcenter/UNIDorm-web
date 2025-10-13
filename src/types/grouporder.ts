@@ -28,6 +28,7 @@ export interface GroupOrderComment {
   commentAuthorImagePath: string;
   childGroupOrderCommentList: GroupOrderComment[];
   username: string;
+  createDate: string;
 }
 
 // 상세 조회용 타입

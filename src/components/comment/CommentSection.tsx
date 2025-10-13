@@ -7,6 +7,7 @@ import { ReplyProps } from "../../types/comment.ts";
 import { GroupOrderComment } from "../../types/grouporder.ts";
 import useUserStore from "../../stores/useUserStore.ts";
 import profileimg from "../../assets/profileimg.png";
+import { formatTimeAgo } from "../../utils/dateUtils.ts";
 
 interface CommentSectionProps {
   CommentDtoList: TipComment[] | GroupOrderComment[];
@@ -134,14 +135,7 @@ export default function CommentSection({
               <ReplyContent>
                 <CommentBody>
                   <CommentText>{reply.reply}</CommentText>
-                  <DateText>
-                    {"createdDate" in reply && reply.createdDate
-                      ? new Date(reply.createdDate).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })
-                      : "방금"}
-                  </DateText>
+                  <DateText>{formatTimeAgo(reply.createDate)}</DateText>
                 </CommentBody>
               </ReplyContent>
 
@@ -233,14 +227,7 @@ export default function CommentSection({
               <CommentContent>
                 <CommentBody>
                   <CommentText>{comment.reply}</CommentText>
-                  <DateText>
-                    {"createdDate" in comment && comment.createdDate
-                      ? new Date(comment.createdDate).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })
-                      : "방금"}
-                  </DateText>
+                  <DateText>{formatTimeAgo(comment.createDate)}</DateText>
                 </CommentBody>
               </CommentContent>
             </Comment>
