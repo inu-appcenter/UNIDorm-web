@@ -3,6 +3,9 @@ import useUserStore from "../stores/useUserStore.ts";
 
 type RoleInfo = {
   isAdmin: boolean;
+  isDormAdmin: boolean;
+  isSupporters: boolean;
+  isMainAdmin: boolean;
   roleName: string;
 };
 
@@ -25,9 +28,20 @@ export const useIsAdminRole = (): RoleInfo => {
     role === "ROLE_DORM_LIFE_MANAGER" ||
     role === "ROLE_DORM_ROOMMATE_MANAGER" ||
     role === "ROLE_DORM_SUPPORTERS";
+  const isDormAdmin =
+    role === "ROLE_DORM_MANAGER" ||
+    role === "ROLE_DORM_LIFE_MANAGER" ||
+    role === "ROLE_DORM_ROOMMATE_MANAGER";
+
+  const isSupporters = role === "ROLE_DORM_SUPPORTERS";
+
+  const isMainAdmin = role === "ROLE_ADMIN";
 
   return {
     isAdmin,
+    isDormAdmin,
+    isSupporters,
+    isMainAdmin,
     roleName: roleMap[role] ?? "알 수 없는 권한",
   };
 };
