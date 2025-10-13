@@ -38,9 +38,6 @@ const NotiItem = ({
   };
 
   const handleNotificationClick = (notidata: Notification) => {
-    // 클릭 시 알림을 읽음 처리하는 API를 호출하는 로직을 추가할 수 있습니다.
-    // 예: markAsRead(notidata.id);
-
     switch (notidata.apiType) {
       case "ANNOUNCEMENT":
         // 공지사항 상세 페이지로 이동
