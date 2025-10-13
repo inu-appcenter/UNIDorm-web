@@ -38,7 +38,7 @@ const HomeCardWrapper = styled.div`
   display: flex;
   flex-direction: row;
   gap: 8px;
-
+  cursor: pointer;
   .title {
     font-style: normal;
     font-weight: 500;
