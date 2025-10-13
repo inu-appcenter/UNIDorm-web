@@ -48,7 +48,6 @@ export default function GroupPurchasePostPage() {
   const [post, setPost] = useState<GroupOrderDetail | null>(null);
   const [images, setImages] = useState<GroupOrderImage[]>([]);
   const [liked, setLiked] = useState<boolean>(false);
-  // 🔽 로딩 상태를 관리할 state를 추가합니다.
   const [isLoading, setIsLoading] = useState(true);
 
   const [showInfoModal, setShowInfoModal] = useState(false);
@@ -58,9 +57,8 @@ export default function GroupPurchasePostPage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      setIsLoading(true); // 로딩 시작
+      setIsLoading(true);
       try {
-        // 상세 정보와 이미지를 동시에 요청합니다.
         const [postData, imageData] = await Promise.all([
           getGroupPurchaseDetail(groupOrderId),
           getGroupPurchaseImages(groupOrderId),
@@ -73,9 +71,9 @@ export default function GroupPurchasePostPage() {
         setImages(imageData);
       } catch (error) {
         console.error("게시글 조회 실패:", error);
-        setPost(null); // 에러 발생 시 데이터 초기화
+        setPost(null);
       } finally {
-        setIsLoading(false); // 로딩 종료
+        setIsLoading(false);
       }
     };
 
@@ -83,7 +81,6 @@ export default function GroupPurchasePostPage() {
     window.scrollTo(0, 0);
   }, [groupOrderId, isneedupdate]);
 
-  // 👍 좋아요 토글 핸들러
   const handleLikeClick = async () => {
     if (!post) return;
     try {
@@ -108,7 +105,6 @@ export default function GroupPurchasePostPage() {
     }
   };
 
-  // ✅ 공구 완료 토글 핸들러
   const handleCompletionToggle = async () => {
     if (!post) return;
     const confirmMessage = post.recruitmentComplete
@@ -190,129 +186,142 @@ export default function GroupPurchasePostPage() {
         hasBack={true}
         menuItems={post?.myPost ? menuItems : undefined}
       />
-      {/* 🔽 로딩 상태에 따라 스피너, 상세 내용, 빈 메시지를 조건부 렌더링합니다. */}
       {isLoading ? (
         <LoadingSpinner message="게시글을 불러오는 중..." />
       ) : post ? (
         <>
-          <UserInfo
-            createDate={post.createDate}
-            username={post.username}
-            authorImagePath={post.authorImagePath}
-            groupOrderType={post.groupOrderType}
-          />
-          <Content>
-            {images.length > 0 && (
-              <ImageSlider {...handlers} style={{ touchAction: "pan-y" }}>
-                {post.recruitmentComplete && (
-                  <RecruitmentCompleteOverlay>
-                    <OverlayTextLarge>공구 완료</OverlayTextLarge>
-                    <OverlayTextSmall>
-                      공구가 완료된 게시글입니다
-                    </OverlayTextSmall>
-                  </RecruitmentCompleteOverlay>
-                )}
-                <SliderItem
-                  onClick={() => {
-                    setPreviewUrl(images[currentImage].imageUrl);
-                    setShowInfoModal(true);
-                  }}
-                >
-                  <img
-                    src={images[currentImage].imageUrl}
-                    alt={`팁 이미지 ${currentImage + 1}`}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                      borderRadius: "10px",
-                      userSelect: "none",
-                      pointerEvents: "none",
-                    }}
-                    draggable={false}
-                  />
-                </SliderItem>
-                <SliderIndicator>
-                  {images.map((_, idx) => (
-                    <Dot key={idx} $active={idx === currentImage} />
-                  ))}
-                </SliderIndicator>
-              </ImageSlider>
-            )}
-
-            <Title>{post.title}</Title>
-
-            <MetaInfo>
-              <Dday>{getDeadlineText(post.deadline)}</Dday>
-              <DividerBar>|</DividerBar>
-              <Dday>마감 {formatDeadlineDate(post.deadline)}</Dday>
-              <DividerBar>|</DividerBar>
-              <People>
-                <img src={사람} alt="인원수" />
-                조회수 {post.viewCount}
-              </People>
-            </MetaInfo>
-
-            <Price>{post.price.toLocaleString()}원</Price>
-
-            <BodyText>
-              {post.description}
-              <br />
-              <br />
-              구매 제품 링크:{" "}
-              <a href={post.link} target="_blank" rel="noopener noreferrer">
-                {post.link}
-              </a>
-            </BodyText>
-
-            <Divider />
-
-            <LikeActionRow>
-              <LikeBox onClick={handleLikeClick}>
-                <FaRegHeart style={{ color: liked ? "#e25555" : "#bbb" }} />{" "}
-                좋아요 {post.likeCount}
-              </LikeBox>
-              {post.myPost ? (
-                <RoundSquareButton
-                  btnName={
-                    post.recruitmentComplete
-                      ? "모집 완료 취소하기"
-                      : "공구 완료 처리하기"
-                  }
-                  onClick={handleCompletionToggle}
-                  color={post.recruitmentComplete ? "#8E8E93" : undefined}
-                />
-              ) : (
-                <RoundSquareButton
-                  btnName={
-                    post.recruitmentComplete ? "마감" : "오픈 채팅 참여하기"
-                  }
-                  onClick={() => {
-                    if (!isLoggedIn) {
-                      alert("로그인 후 참여할 수 있어요.");
-                      navigate("/login");
-                      return;
-                    }
-                    if (post?.recruitmentComplete) {
-                      alert("마감된 공동구매입니다.");
-                      return;
-                    }
-                    setShowModal(true);
-                  }}
-                  color={post.recruitmentComplete ? "#8E8E93" : undefined}
-                />
+          <PageLayout>
+            {/* 🔽 PC에서 좌우 2단 레이아웃을 위한 컨테이너 */}
+            <TopContentContainer>
+              {/* 🖼️ 좌측: 이미지 섹션 */}
+              {images.length > 0 && (
+                <ImageSection>
+                  <ImageSlider {...handlers} style={{ touchAction: "pan-y" }}>
+                    {post.recruitmentComplete && (
+                      <RecruitmentCompleteOverlay>
+                        <OverlayTextLarge>공구 완료</OverlayTextLarge>
+                        <OverlayTextSmall>
+                          공구가 완료된 게시글입니다
+                        </OverlayTextSmall>
+                      </RecruitmentCompleteOverlay>
+                    )}
+                    <SliderItem
+                      onClick={() => {
+                        setPreviewUrl(images[currentImage].imageUrl);
+                        setShowInfoModal(true);
+                      }}
+                    >
+                      <img
+                        src={images[currentImage].imageUrl}
+                        alt={`이미지 ${currentImage + 1}`}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                          borderRadius: "10px",
+                          userSelect: "none",
+                          pointerEvents: "none",
+                        }}
+                        draggable={false}
+                      />
+                    </SliderItem>
+                    <SliderIndicator>
+                      {images.map((_, idx) => (
+                        <Dot key={idx} $active={idx === currentImage} />
+                      ))}
+                    </SliderIndicator>
+                  </ImageSlider>
+                </ImageSection>
               )}
-            </LikeActionRow>
 
-            <Divider />
+              {/* ℹ️ 우측: 정보 섹션 */}
+              <InfoSection>
+                <UserInfo
+                  createDate={post.createDate}
+                  username={post.username}
+                  authorImagePath={post.authorImagePath}
+                  groupOrderType={post.groupOrderType}
+                />
+                <Content>
+                  <Title>{post.title}</Title>
+                  <MetaInfo>
+                    <Dday>{getDeadlineText(post.deadline)}</Dday>
+                    <DividerBar>|</DividerBar>
+                    <Dday>마감 {formatDeadlineDate(post.deadline)}</Dday>
+                    <DividerBar>|</DividerBar>
+                    <People>
+                      <img src={사람} alt="인원수" />
+                      조회수 {post.viewCount}
+                    </People>
+                  </MetaInfo>
+                  <Price>{post.price.toLocaleString()}원</Price>
+                  <BodyText>
+                    {post.description}
+                    <br />
+                    <br />
+                    구매 제품 링크:{" "}
+                    <a
+                      href={post.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {post.link}
+                    </a>
+                  </BodyText>
 
-            <CommentSection
-              CommentDtoList={post.groupOrderCommentDtoList}
-              setisneedupdate={setisneedupdate}
-              handleReplySubmit={handleReplySubmit}
-              handleDeleteComment={deleteGroupOrderComment}
-            />
-          </Content>
+                  <Divider />
+
+                  <LikeActionRow>
+                    <LikeBox onClick={handleLikeClick}>
+                      <FaRegHeart
+                        style={{ color: liked ? "#e25555" : "#bbb" }}
+                      />{" "}
+                      좋아요 {post.likeCount}
+                    </LikeBox>
+                    {post.myPost ? (
+                      <RoundSquareButton
+                        btnName={
+                          post.recruitmentComplete
+                            ? "모집 완료 취소하기"
+                            : "공구 완료 처리하기"
+                        }
+                        onClick={handleCompletionToggle}
+                        color={post.recruitmentComplete ? "#8E8E93" : undefined}
+                      />
+                    ) : (
+                      <RoundSquareButton
+                        btnName={
+                          post.recruitmentComplete
+                            ? "마감"
+                            : "오픈 채팅 참여하기"
+                        }
+                        onClick={() => {
+                          if (!isLoggedIn) {
+                            alert("로그인 후 참여할 수 있어요.");
+                            navigate("/login");
+                            return;
+                          }
+                          if (post?.recruitmentComplete) {
+                            alert("마감된 공동구매입니다.");
+                            return;
+                          }
+                          setShowModal(true);
+                        }}
+                        color={post.recruitmentComplete ? "#8E8E93" : undefined}
+                      />
+                    )}
+                  </LikeActionRow>
+                </Content>
+                <Divider />
+                <CommentSection
+                  CommentDtoList={post.groupOrderCommentDtoList}
+                  setisneedupdate={setisneedupdate}
+                  handleReplySubmit={handleReplySubmit}
+                  handleDeleteComment={deleteGroupOrderComment}
+                />
+              </InfoSection>
+            </TopContentContainer>
+          </PageLayout>
 
           <CommentInputBox
             commentInput={commentInput}
@@ -359,6 +368,46 @@ const Wrapper = styled.div`
   padding: 80px 16px;
   min-height: 100vh;
   box-sizing: border-box;
+
+  @media (min-width: 1024px) {
+    padding: 100px 16px; // PC에서는 상하 여백 조정
+  }
+`;
+
+// 🔽 추가된 스타일: PC에서 콘텐츠를 중앙 정렬하고 최대 너비를 설정
+const PageLayout = styled.div`
+  width: 100%;
+  @media (min-width: 1024px) {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+`;
+
+// 🔽 추가된 스타일: PC에서 이미지와 정보를 좌우로 나누는 컨테이너
+const TopContentContainer = styled.div`
+  @media (min-width: 1024px) {
+    display: flex;
+    gap: 32px;
+    align-items: flex-start;
+  }
+`;
+
+// 🔽 추가된 스타일: 좌측 이미지 섹션
+const ImageSection = styled.div`
+  width: 100%;
+  @media (min-width: 1024px) {
+    flex: 1.2;
+    position: sticky; // 스크롤 시 이미지 영역 고정
+    top: 100px;
+  }
+`;
+
+// 🔽 추가된 스타일: 우측 정보 섹션
+const InfoSection = styled.div`
+  width: 100%;
+  @media (min-width: 1024px) {
+    flex: 1;
+  }
 `;
 
 const Content = styled.div`
@@ -371,6 +420,13 @@ const ImageSlider = styled.div`
   position: relative;
   overflow: hidden;
   margin-bottom: 24px;
+
+  /* PC에서는 이미지를 더 크게 표시 */
+  @media (min-width: 1024px) {
+    height: auto;
+    aspect-ratio: 4 / 3; // 4:3 비율 유지
+    margin-bottom: 0;
+  }
 `;
 
 const RecruitmentCompleteOverlay = styled.div`

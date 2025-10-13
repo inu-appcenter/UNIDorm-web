@@ -136,11 +136,17 @@ const MyPageWrapper = styled.div`
   flex-direction: column;
   box-sizing: border-box;
 
-  //width: 100%;
+  width: 100%;
+  flex: 1;
   //height: 100%;
 
   overflow-y: auto;
   background: #fafafa;
+
+  @media (min-width: 1024px) {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
 `;
 
 const MenuGroupsWrapper = styled.div`

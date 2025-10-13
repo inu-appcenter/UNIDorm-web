@@ -41,6 +41,7 @@ export default function HomeBanner() {
 const BannerWrapper = styled.div`
   position: relative;
   width: 100%;
+  max-width: 1200px;
 
   .home-swiper {
     width: 100%;

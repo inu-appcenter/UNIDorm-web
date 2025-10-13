@@ -176,6 +176,13 @@ const RoomMatePageWrapper = styled.div`
   box-sizing: border-box;
   overflow-y: auto;
   background: #fafafa;
+  width: 100%;
+  flex: 1;
+
+  @media (min-width: 1024px) {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
 `;
 
 const EmptyMessage = styled.div`

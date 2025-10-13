@@ -41,7 +41,6 @@ export default function HomePage() {
   const [isGroupOrdersLoading, setIsGroupOrdersLoading] =
     useState<boolean>(false);
 
-  // 🔹 모달별 열림 상태 (popupNotices 기반)
   const [modalOpenStates, setModalOpenStates] = useState<
     Record<number, boolean>
   >({});
@@ -51,7 +50,6 @@ export default function HomePage() {
   };
 
   useEffect(() => {
-    // ✅ 팝업 공지 불러오기
     const fetchPopupNotices = async () => {
       setIsPopupLoading(true);
       try {
@@ -59,7 +57,6 @@ export default function HomePage() {
         console.log("팝업 공지 불러오기 성공", response);
         setPopupNotices(response.data);
 
-        // 팝업 공지 기반으로 모달별 초기 열림 상태 (true로 시작) 설정
         const initialState = response.data.reduce(
           (acc, noti) => {
             if (noti.id !== undefined && noti.id !== null) {
@@ -83,7 +80,7 @@ export default function HomePage() {
         setDailyTips(data);
       } catch (err: any) {
         if (err.response?.status === 204) {
-          setDailyTips([]); // 팁이 3개 미만인 경우 빈 배열
+          setDailyTips([]);
         }
       } finally {
         setIsTipsLoading(false);
@@ -130,7 +127,6 @@ export default function HomePage() {
   return (
     <HomePageWrapper>
       <Header title="유니돔" hasBack={false} showAlarm={true} />
-      {/* ✅ 팝업 공지를 모달로 렌더링 */}
       {!isPopupLoading &&
         popupNotices.map((popup) => (
           <HomeNoticeBottomModal
@@ -138,7 +134,7 @@ export default function HomePage() {
             id={popup.id?.toString() ?? ""}
             isOpen={modalOpenStates[popup.id ?? 0]}
             setIsOpen={(open) => setModalOpen(popup.id ?? 0, open)}
-            links={[]} // 필요시 popup.content에 URL을 파싱해서 전달 가능
+            links={[]}
             title={popup.title}
             text={popup.content}
           >
@@ -187,39 +183,41 @@ export default function HomePage() {
             </NotiArea>
           )}
         </TitleContentArea>
+        {/* PC에서는 '꿀팁'과 '캘린더'를 묶어서 그리드 아이템으로 처리 */}
+        <GridContainer>
+          <TitleContentArea
+            title="오늘의 Best 꿀팁"
+            description={"다양한 기숙사 꿀팁을 알아보세요!"}
+            link={"/tips"}
+          >
+            {isTipsLoading ? (
+              <LoadingSpinner message={"꿀팁을 불러오고 있어요!"} />
+            ) : dailyTips.length > 0 ? (
+              dailyTips.map((tip, key) => (
+                <HomeTipsCard
+                  key={key}
+                  index={key + 1}
+                  id={tip.boardId}
+                  content={tip.title}
+                />
+              ))
+            ) : (
+              <EmptyMessage message={"오늘의 꿀팁이 없습니다."} />
+            )}
+          </TitleContentArea>
+          <TitleContentArea
+            title={"캘린더 이벤트"}
+            description={"인천대학교 생활원에서 알려드리는 일정입니다."}
+            children={<ThreeWeekCalendar />}
+            link={"/calendar"}
+          />
+        </GridContainer>
 
-        <TitleContentArea
-          title="오늘의 Best 꿀팁"
-          description={"다양한 기숙사 꿀팁을 알아보세요!"}
-          link={"/tips"}
-        >
-          {isTipsLoading ? (
-            <LoadingSpinner message={"꿀팁을 불러오고 있어요!"} />
-          ) : dailyTips.length > 0 ? (
-            dailyTips.map((tip, key) => (
-              <HomeTipsCard
-                key={key}
-                index={key + 1}
-                id={tip.boardId}
-                content={tip.title}
-              />
-            ))
-          ) : (
-            <EmptyMessage message={"오늘의 꿀팁이 없습니다."} />
-          )}
-        </TitleContentArea>
-
-        <TitleContentArea
-          title={"캘린더 이벤트"}
-          description={"인천대학교 생활원에서 알려드리는 일정입니다."}
-          children={<ThreeWeekCalendar />}
-          link={"/calendar"}
-        />
         <TitleContentArea title={"임박한 공동구매"} link={"/groupPurchase"}>
           {isGroupOrdersLoading ? (
             <LoadingSpinner message={"공동구매를 불러오고 있어요!"} />
           ) : groupOrders.length > 0 ? (
-            <GroupPurchaseList groupOrders={groupOrders.slice(0, 4)} /> // ⭐️ [수정] 4개로 고정
+            <GroupPurchaseList groupOrders={groupOrders.slice(0, 4)} />
           ) : (
             <EmptyMessage message={"임박한 공동구매가 없습니다."} />
           )}
@@ -248,21 +246,21 @@ export default function HomePage() {
 const HomePageWrapper = styled.div`
   display: flex;
   flex-direction: column;
-  //gap: 32px;
+  align-items: center; // 🖥️ PC 레이아웃을 위해 중앙 정렬 추가
   padding-top: 16px;
   padding-bottom: 120px;
   box-sizing: border-box;
-  //
-  //width: 100%;
-  //height: 100%;
-
   overflow-y: auto;
-  //background: white;
+  width: 100%; // 🖥️ 너비 100% 명시
 
   .appcenter-logo {
     margin-top: 36px;
     width: 50%;
     max-width: 250px;
+    align-self: start;
+    @media (min-width: 768px) {
+      align-self: center;
+    }
   }
 `;
 
@@ -275,6 +273,28 @@ const ContentWrapper = styled.div`
   gap: 32px;
   border-radius: 16px 16px 0 0;
   background: #fafafa;
+  width: 100%; // 🖥️ 너비 100% 명시
+
+  // 🖥️ PC (태블릿 포함) 화면에서는 최대 너비를 지정하여 콘텐츠가 너무 넓어지는 것을 방지
+  @media (min-width: 768px) {
+    max-width: 1200px;
+    padding: 32px;
+  }
+`;
+
+// 🖥️ PC에서 꿀팁, 캘린더를 묶기 위한 새로운 그리드 컨테이너
+const GridContainer = styled.div`
+  display: contents; // 기본적으로는 아무런 스타일도 가지지 않음
+
+  // 🖥️ PC 화면에서 그리드 레이아웃 적용
+  @media (min-width: 1024px) {
+    display: grid;
+    grid-template-columns: 1fr 1fr; // 1:1 비율의 2열 그리드
+    gap: 32px;
+
+    // 이 컨테이너가 '공지사항'보다 위에 오도록 순서 변경
+    order: -1;
+  }
 `;
 
 const NotiArea = styled.div`
@@ -283,6 +303,13 @@ const NotiArea = styled.div`
   right: -16px;
   width: calc(100% + 32px);
   height: fit-content;
+
+  // 🖥️ PC 화면에서는 좌우 패딩을 제거
+  @media (min-width: 768px) {
+    left: 0;
+    right: 0;
+    width: 100%;
+  }
 `;
 
 const NotiWrapper = styled.div`
@@ -295,8 +322,16 @@ const NotiWrapper = styled.div`
   padding-left: 32px;
   padding-top: 8px;
   box-sizing: border-box;
+  overflow-x: auto; // (수정) overflow-y -> overflow-x
 
-  overflow-y: auto;
+  //// 🖥️ PC 화면에서는 스크롤 대신 그리드로 표시
+  //@media (min-width: 768px) {
+  //  display: grid;
+  //  // 카드의 최소 너비는 280px, 공간이 남으면 1fr씩 나눠가짐
+  //  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  //  overflow-x: hidden;
+  //  padding: 8px 0 0 0;
+  //}
 `;
 
 const FloatingButton = styled.button`
@@ -304,12 +339,16 @@ const FloatingButton = styled.button`
   background: none;
   width: fit-content;
   height: fit-content;
-
   position: fixed;
   bottom: 100px;
   right: 24px;
-
   cursor: pointer;
+
+  // 🖥️ PC 화면에서는 위치를 조금 더 안쪽으로 조정할 수 있음
+  @media (min-width: 768px) {
+    right: 48px;
+    //bottom: 50px;
+  }
 `;
 
 const PopupModalContent = styled.div`
@@ -323,17 +362,14 @@ const PopupModalContent = styled.div`
     max-width: 100%;
     border-radius: 8px;
   }
-
   h3 {
     font-size: 18px;
     font-weight: 600;
   }
-
   p {
     font-size: 14px;
     color: #333;
   }
-
   span {
     font-size: 12px;
     color: #777;
@@ -352,4 +388,9 @@ const GradientRight = styled.div`
     rgba(250, 250, 250, 0) 100%
   );
   pointer-events: none;
+
+  // 🖥️ PC 화면에서는 가로 스크롤이 없으므로 그라데이션을 숨김
+  @media (min-width: 768px) {
+    display: none;
+  }
 `;

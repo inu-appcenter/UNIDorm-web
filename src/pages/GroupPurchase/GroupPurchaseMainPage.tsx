@@ -215,6 +215,13 @@ const PageWrapper = styled.div`
   display: flex;
   flex-direction: column;
   gap: 16px;
+  flex: 1;
+  width: 100%;
+
+  @media (min-width: 1024px) {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
 `;
 
 const CategoryWrapper = styled.div`
@@ -222,6 +229,11 @@ const CategoryWrapper = styled.div`
   gap: 16px;
   width: 100%;
   border-bottom: 1px solid silver;
+
+  @media (min-width: 1024px) {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
 `;
 
 const CategoryItem = styled.div`
