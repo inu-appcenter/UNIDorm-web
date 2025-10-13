@@ -65,7 +65,7 @@ export default function TipDetailPage() {
         setImages(imagesResponse.data);
       } catch (err) {
         console.error("게시글 또는 이미지 불러오기 실패", err);
-        setTip(null); // 에러 발생 시 데이터 초기화
+        // setTip(null); // 에러 발생 시 데이터 초기화
       } finally {
         setIsLoading(false); // 데이터 로딩 완료
       }
