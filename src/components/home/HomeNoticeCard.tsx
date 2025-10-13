@@ -45,8 +45,6 @@ export default HomeNoticeCard;
 
 const HomeCardWrapper = styled.div`
   box-sizing: border-box;
-
-  /* 오토레이아웃 */
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -54,13 +52,15 @@ const HomeCardWrapper = styled.div`
   padding: 8px 16px;
   gap: 5px;
 
-  width: 100%;
-  max-width: 200px;
+  width: 45vw;
+  max-width: 170px;
   height: 175px;
 
-  background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  flex-shrink: 0; /* ✅ width가 줄지 않도록 고정 */
+
   border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
 `;
 
 const FirstLine = styled.div`

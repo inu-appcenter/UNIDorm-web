@@ -23,22 +23,10 @@ import { Announcement } from "../types/announcements.ts";
 import useUserStore from "../stores/useUserStore.ts";
 import { getPopupNotifications } from "../apis/popup-notification.ts";
 import { PopupNotification } from "../types/popup-notifications.ts";
-import useScreenWidth from "../hooks/useScreenWidth.ts";
 
 export default function HomePage() {
   const { tokenInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
-
-  // 2. 화면 너비 가져오기
-  const screenWidth = useScreenWidth();
-
-  // 3. 화면 너비에 따라 표시 개수 결정
-  const displayCount =
-    screenWidth >= 1024 // 데스크톱 크기 (예: 1024px 이상)
-      ? 5 // 데스크톱에서는 4개 표시
-      : screenWidth >= 768 // 태블릿 크기 (예: 768px 이상)
-        ? 3 // 태블릿에서는 3개 표시
-        : 2; // 모바일 크기 (768px 미만)에서는 2개 표시 (기존 값)
 
   const [dailyTips, setDailyTips] = useState<Tip[]>([]);
   const [groupOrders, setGroupOrders] = useState<GroupOrder[]>([]);
@@ -175,25 +163,28 @@ export default function HomePage() {
           {isAnnounceLoading ? (
             <LoadingSpinner message={"공지사항을 불러오고 있어요!"} />
           ) : (
-            <NotiWrapper>
-              {notices.length > 0 ? (
-                notices
-                  .filter((notice) => notice !== null && notice !== undefined)
-                  .slice(0, displayCount) // ✨ 여기서 동적으로 결정된 개수(displayCount)를 사용
-                  .map((notice) => (
-                    <HomeNoticeCard
-                      key={notice.id ?? notice.title}
-                      id={notice.id}
-                      title={notice.title}
-                      content={notice.content}
-                      isEmergency={notice.emergency}
-                      createdDate={notice.createdDate}
-                    />
-                  ))
-              ) : (
-                <EmptyMessage message={"공지사항이 없습니다."} />
-              )}
-            </NotiWrapper>
+            <NotiArea>
+              <NotiWrapper>
+                {notices.length > 0 ? (
+                  notices
+                    .filter((notice) => notice !== null && notice !== undefined)
+                    .slice(0, 8)
+                    .map((notice) => (
+                      <HomeNoticeCard
+                        key={notice.id ?? notice.title}
+                        id={notice.id}
+                        title={notice.title}
+                        content={notice.content}
+                        isEmergency={notice.emergency}
+                        createdDate={notice.createdDate}
+                      />
+                    ))
+                ) : (
+                  <EmptyMessage message={"공지사항이 없습니다."} />
+                )}
+              </NotiWrapper>
+              <GradientRight />
+            </NotiArea>
           )}
         </TitleContentArea>
 
@@ -285,11 +276,27 @@ const ContentWrapper = styled.div`
   border-radius: 16px 16px 0 0;
   background: #fafafa;
 `;
+
+const NotiArea = styled.div`
+  position: relative;
+  left: -16px;
+  right: -16px;
+  width: calc(100% + 32px);
+  height: fit-content;
+`;
+
 const NotiWrapper = styled.div`
   display: flex;
   flex-direction: row;
-  gap: 12px;
+  gap: 16px;
   width: 100%;
+  padding: 16px;
+  padding-right: 48px;
+  padding-left: 32px;
+  padding-top: 8px;
+  box-sizing: border-box;
+
+  overflow-y: auto;
 `;
 
 const FloatingButton = styled.button`
@@ -331,4 +338,18 @@ const PopupModalContent = styled.div`
     font-size: 12px;
     color: #777;
   }
+`;
+
+const GradientRight = styled.div`
+  position: absolute;
+  right: -16px;
+  top: 0;
+  bottom: 0;
+  width: 48px;
+  background: linear-gradient(
+    270deg,
+    #fafafa 38.54%,
+    rgba(250, 250, 250, 0) 100%
+  );
+  pointer-events: none;
 `;

@@ -63,7 +63,6 @@ export default function WeeklyCalendar() {
         const weekStartDate = week[0];
         const weekEndDate = week[6];
 
-        // 해당 주에 속하는 이벤트만 따로 추출
         const eventsInWeek: {
           start: number;
           end: number;
@@ -75,7 +74,6 @@ export default function WeeklyCalendar() {
           const start = parseISO(event.startDate);
           const end = parseISO(event.endDate);
 
-          // 이벤트가 해당 주와 겹치는 경우만 처리
           if (
             (isBefore(start, addDays(weekEndDate, 1)) ||
               isSameDay(start, weekEndDate)) &&
@@ -101,7 +99,6 @@ export default function WeeklyCalendar() {
           }
         });
 
-        // 이벤트 간 겹침 여부에 따라 row 결정
         const placedEvents: {
           start: number;
           end: number;
@@ -121,7 +118,6 @@ export default function WeeklyCalendar() {
           ) {
             row += 1;
           }
-
           placedEvents.push({ ...currentEvent, row });
         });
 
@@ -141,56 +137,65 @@ export default function WeeklyCalendar() {
 
     fetchEvents();
   }, []);
-  // weeks.map 전에 추가
+
   const maxRowsByWeek = weeks.map((_, weekIdx) => {
     const rows = eventsByWeek
       .filter((e) => e.weekIndex === weekIdx)
       .map((e) => e.row);
-    return rows.length > 0 ? Math.max(...rows) + 1 : 1; // row는 0부터 시작하므로 +1
+    return rows.length > 0 ? Math.max(...rows) + 1 : 1;
   });
 
   return (
     <CalendarContainer>
+      {/* 요일 헤더는 테두리 밖 */}
       <Weekdays>
         {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d, i) => (
-          <div key={i}>{d}</div>
+          <WeekdayCell key={i} $index={i}>
+            {d}
+          </WeekdayCell>
         ))}
       </Weekdays>
 
-      {weeks.map((week, weekIdx) => {
-        const maxRows = maxRowsByWeek[weekIdx];
-        return (
-          <WeekRow key={weekIdx} $maxRows={maxRows}>
-            {week.map((date, idx) => {
-              const isToday = isSameDay(date, today);
-              return (
-                <DayCell key={idx} $isToday={isToday}>
-                  <DateNumber $isToday={isToday}>
-                    {format(date, "d")}
-                  </DateNumber>
-                </DayCell>
-              );
-            })}
+      {/* 테두리와 둥근 모서리는 이 부분만 */}
+      <CalendarBody>
+        {weeks.map((week, weekIdx) => {
+          const maxRows = maxRowsByWeek[weekIdx];
+          return (
+            <WeekRow key={weekIdx} $maxRows={maxRows}>
+              {week.map((date, idx) => {
+                const isToday = isSameDay(date, today);
+                const isLastRow = weekIdx === weeks.length - 1;
+                return (
+                  <DayCell key={idx} $isLastRow={isLastRow}>
+                    {isToday && <TodayCircle />}
+                    <DateNumber $isToday={isToday}>
+                      {format(date, "d")}
+                    </DateNumber>
+                  </DayCell>
+                );
+              })}
 
-            {eventsByWeek
-              .filter((e) => e.weekIndex === weekIdx)
-              .map((event, i) => (
-                <EventBar
-                  key={i}
-                  $start={event.start}
-                  $end={event.end}
-                  $row={event.row}
-                >
-                  {event.title}
-                </EventBar>
-              ))}
-          </WeekRow>
-        );
-      })}
+              {eventsByWeek
+                .filter((e) => e.weekIndex === weekIdx)
+                .map((event, i) => (
+                  <EventBar
+                    key={i}
+                    $start={event.start}
+                    $end={event.end}
+                    $row={event.row}
+                  >
+                    {event.title}
+                  </EventBar>
+                ))}
+            </WeekRow>
+          );
+        })}
+      </CalendarBody>
     </CalendarContainer>
   );
 }
 
+/* 요일 헤더와 본체를 분리 */
 const CalendarContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -201,58 +206,91 @@ const CalendarContainer = styled.div`
 const Weekdays = styled.div`
   display: grid;
   grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 4px;
+`;
+
+const WeekdayCell = styled.div<{ $index: number }>`
   text-align: center;
-  color: #888;
   font-size: 14px;
+  font-weight: 500;
+  color: ${({ $index }) =>
+    $index === 0
+      ? "#F97171" // 일요일
+      : $index === 6
+        ? "#0A84FF" // 토요일
+        : "#4C4C4C"}; // 평일
+`;
+
+const CalendarBody = styled.div`
+  border: 0.5px solid #c3c3c3;
+  border-radius: 8px;
+  overflow: hidden;
 `;
 
 const WeekRow = styled.div<{ $maxRows: number }>`
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  position: relative; /* absolute 자식 기준 */
+  position: relative;
   min-height: ${({ $maxRows }) => 80 + ($maxRows - 1) * 16}px;
-  border-top: 1px solid #ddd;
-  border-left: 1px solid #ddd;
+  border-top: 1px solid #c3c3c3;
 
-  & > div {
-    border-right: 1px solid #ddd;
-    border-bottom: 1px solid #ddd;
+  &:first-child {
+    border-top: none;
   }
 `;
 
-const DayCell = styled.div<{ $isToday: boolean }>`
+const DayCell = styled.div<{ $isLastRow?: boolean }>`
   padding: 6px;
-  background-color: ${({ $isToday }) => ($isToday ? "#e0f0ff" : "#fff")};
+  background-color: #fff;
   text-align: center;
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
+
+  border-right: 1px solid #c3c3c3;
+  border-bottom: ${({ $isLastRow }) =>
+    $isLastRow ? "none" : "1px solid #c3c3c3"};
+
+  &:nth-child(7n) {
+    border-right: none;
+  }
+`;
+
+// 오늘 표시용 원 컴포넌트
+const TodayCircle = styled.div`
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: #0a84ff;
+  z-index: 1;
 `;
 
 const DateNumber = styled.div<{ $isToday: boolean }>`
-  font-weight: ${({ $isToday }) => ($isToday ? "bold" : "normal")};
-  color: ${({ $isToday }) => ($isToday ? "#007aff" : "#000")};
+  color: ${({ $isToday }) => ($isToday ? "#F4F4F4" : "#000")};
+  position: relative;
+  z-index: 2;
 `;
 
 const EventBar = styled.div<{ $start: number; $end: number; $row: number }>`
   position: absolute;
-  top: ${({ $row }) => 35 + $row * 24}px; /* 기본 35px + row마다 24px 간격 */
+  top: ${({ $row }) => 35 + $row * 24}px;
   left: ${({ $start }) => `calc(100% / 7 * ${$start})`};
   width: ${({ $start, $end }) => `calc(100% / 7 * (${$end - $start + 1}))`};
-
   height: 20px;
   background-color: #ffd60a;
   font-size: 11px;
   padding: 2px 6px;
   box-sizing: border-box;
-
   border-radius: 4px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   display: flex;
   align-items: center;
-
   color: #636366;
 `;

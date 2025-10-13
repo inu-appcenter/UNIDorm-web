@@ -5,6 +5,7 @@ interface TitleContentAreaProps {
   title: string; // 공지사항, 기숙사 꿀팁 등
   link?: string;
   description?: string;
+  margin?: string;
   children: React.ReactNode;
 }
 
@@ -12,12 +13,15 @@ const TitleContentArea = ({
   title,
   link,
   description,
+  margin,
   children,
 }: TitleContentAreaProps) => {
   return (
     <TitleContentAreaWrapper>
       <TitleLine title={title} link={link} />
-      {description && <DescriptionText>{description}</DescriptionText>}
+      {description && (
+        <DescriptionText $margin={margin}>{description}</DescriptionText>
+      )}
       {children}
     </TitleContentAreaWrapper>
   );
@@ -37,10 +41,10 @@ const TitleContentAreaWrapper = styled.div`
   gap: 8px;
 `;
 
-const DescriptionText = styled.p`
+const DescriptionText = styled.p<{ $margin?: string }>`
   font-size: 14px;
   color: #666;
-  margin: 0 8px;
   text-align: start;
   width: 100%;
+  margin: ${({ $margin }) => $margin || "0"};
 `;
