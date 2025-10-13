@@ -229,7 +229,7 @@ const ComplainDetailPage = () => {
         </ModalBackGround>
       )}
 
-      {complaint && isAdmin && (
+      {complaint && complaint?.status !== "대기중" && isAdmin && (
         <WriteButton
           onClick={() =>
             navigate(`/admin/complain/answer/${complainId}`, {

@@ -169,15 +169,15 @@ export function useGroupPurchaseForm(post: CreateGroupOrderRequest | null) {
     //   return false;
     // }
 
-    // open.kakao.com/o/ 다음에 최소 4글자 이상의 코드가 있는지 체크
-    const kakaoOpenChatPattern =
-      /^https?:\/\/open\.kakao\.com\/o\/[a-zA-Z0-9]{4,}.*$/;
-    if (openchatLink || !kakaoOpenChatPattern.test(openchatLink)) {
+    // open.kakao.com/o/ 카카오 오픈채팅 주소 패턴인지 체크
+    const kakaoOpenChatPattern = /^https?:\/\/open\.kakao\.com\/o/;
+    if (!openchatLink || !kakaoOpenChatPattern.test(openchatLink)) {
       alert(
         "오픈채팅방 링크는 카카오 오픈채팅방 링크만 가능합니다.(https://open.kakao.com/o/~~)",
       );
       return false;
     }
+
     return true;
   };
 
