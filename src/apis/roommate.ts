@@ -200,8 +200,10 @@ export const cancelRoommateMatching = async (
 export const sendQuickMessage = async (
   message: string,
 ): Promise<AxiosResponse<string>> => {
-  const response = await tokenInstance.post<string>("/api/quick-message", {
-    params: { message },
-  });
+  const response = await tokenInstance.post<string>(
+    "/api/quick-message",
+    {}, // 본문은 비워두고
+    { params: { message } }, // 쿼리스트링으로 전달
+  );
   return response;
 };
