@@ -1,7 +1,7 @@
 // src/components/tip/MyPostCard.tsx
 
 import styled from "styled-components";
-import { MyPost } from "../../types/members";
+import { MyPost_GroupOrder } from "../../types/members";
 import TagIconWhiteBackground from "../common/TagIconWhiteBackground.tsx";
 import { FaHeart } from "react-icons/fa";
 import { getDeadlineText } from "../../utils/dateUtils.ts";
@@ -15,7 +15,7 @@ import {
 import { useNavigate } from "react-router-dom";
 
 interface MyPostLikeCardProps {
-  post: MyPost;
+  post: MyPost_GroupOrder;
   isLike?: boolean;
 }
 
@@ -61,7 +61,8 @@ export default function MyPostLikeCard({ post, isLike }: MyPostLikeCardProps) {
           <Title>{post.title}</Title>
         </TopRow>
 
-        <Price>{post.price}원</Price>
+        {post.price && <Price>{post.price}원</Price>}
+        {/*{post.comment && <Text>{post.comment}</Text>}*/}
 
         <BottomRow>
           <MetaInfo>
@@ -164,3 +165,13 @@ const Price = styled.div`
   font-weight: 600;
   letter-spacing: -0.165px;
 `;
+
+// const Text = styled.div`
+//   color: var(--1, #1c1c1e);
+//   font-family: Pretendard;
+//   font-size: 12px;
+//   font-style: normal;
+//   font-weight: 500;
+//   line-height: 24px; /* 200% */
+//   letter-spacing: 0.38px;
+// `;

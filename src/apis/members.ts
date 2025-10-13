@@ -1,7 +1,7 @@
 import axiosInstance from "../apis/axiosInstance";
 import tokenInstance from "../apis/tokenInstance";
 import { ApiResponse } from "../types/common";
-import { MyPost, TokenInfo, UserInfo } from "../types/members";
+import { MyPost_GroupOrder, TokenInfo, UserInfo } from "../types/members";
 import { AxiosResponse } from "axios";
 
 // 회원 가져오기
@@ -121,17 +121,19 @@ export const refresh = async (): Promise<ApiResponse> => {
 };
 
 // 사용자가 작성한 게시글 조회
-export const getMemberPosts = async (): Promise<AxiosResponse<MyPost[]>> => {
-  const response = await tokenInstance.get<MyPost[]>(`/users/board`);
+export const getMemberPosts = async (): Promise<
+  AxiosResponse<MyPost_GroupOrder[]>
+> => {
+  const response = await tokenInstance.get<MyPost_GroupOrder[]>(`/users/board`);
   console.log(response);
   return response;
 };
 
 // 사용자가 좋아요한 게시글 조회
 export const getMemberLikePosts = async (): Promise<
-  AxiosResponse<MyPost[]>
+  AxiosResponse<MyPost_GroupOrder[]>
 > => {
-  const response = await tokenInstance.get<MyPost[]>(`/users/like`);
+  const response = await tokenInstance.get<MyPost_GroupOrder[]>(`/users/like`);
   console.log(response);
   return response;
 };
