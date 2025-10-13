@@ -3,10 +3,11 @@ import React from "react";
 import styled from "styled-components";
 
 interface File {
-  filePath: string;
-  fileName: string;
+  contentType: string;
   fileSize: number;
-  uploadDate: string;
+  imageName: string;
+  imageUrl: string;
+  uploadDate: string | null;
 }
 
 interface NoticeCardProps {
@@ -48,7 +49,7 @@ const ComplainCard: React.FC<NoticeCardProps> = ({
       {images &&
         images.length > 0 &&
         images.map((image, index) => (
-          <ImagePlaceholder key={index} src={image.filePath} />
+          <ImagePlaceholder key={index} src={image.imageUrl} />
         ))}
     </Card>
   );
