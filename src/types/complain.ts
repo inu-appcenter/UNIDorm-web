@@ -1,3 +1,11 @@
+export interface Files {
+  contentType: string;
+  fileSize: number;
+  imageName: string;
+  imageUrl: string;
+  uploadDate: string | null;
+}
+
 // 민원 상세 타입
 export interface ComplaintDetail {
   id: number;
@@ -16,12 +24,7 @@ export interface ComplaintDetail {
     replyTitle: string;
     replyContent: string;
     responderName: string;
-    attachmentUrl: {
-      filePath: string;
-      fileName: string;
-      fileSize: number;
-      uploadDate: string;
-    }[];
+    attachmentUrl: Files[];
     createdDate: string;
   } | null; // null 타입 추가
   images: string[];

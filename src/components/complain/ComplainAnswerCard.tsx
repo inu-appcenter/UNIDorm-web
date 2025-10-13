@@ -1,14 +1,7 @@
 // NoticeCard.tsx
 import React from "react";
 import styled from "styled-components";
-
-interface File {
-  contentType: string;
-  fileSize: number;
-  imageName: string;
-  imageUrl: string;
-  uploadDate: string | null;
-}
+import { Files } from "../../types/complain.ts";
 
 interface NoticeCardProps {
   date: string;
@@ -16,7 +9,7 @@ interface NoticeCardProps {
   managerName: string;
   title: string;
   content: string;
-  images?: File[];
+  images?: Files[];
 }
 
 const ComplainCard: React.FC<NoticeCardProps> = ({
