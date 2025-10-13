@@ -139,7 +139,7 @@ export default function GroupPurchasePostPage() {
         reply: commentInput,
       });
       setCommentInput("");
-      setisneedupdate(!isneedupdate);
+      setisneedupdate((prev) => !prev);
     } catch (err) {
       alert("댓글 등록 실패");
     }
@@ -161,7 +161,7 @@ export default function GroupPurchasePostPage() {
       });
       setReplyInputs((prev) => ({ ...prev, [parentCommentId]: "" }));
       setReplyInputOpen((prev) => ({ ...prev, [parentCommentId]: false }));
-      setisneedupdate(true);
+      setisneedupdate((prev) => !prev);
     } catch (err) {
       alert("대댓글 등록 실패");
     }

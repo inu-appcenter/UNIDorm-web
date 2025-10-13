@@ -10,7 +10,7 @@ import profileimg from "../../assets/profileimg.png";
 
 interface CommentSectionProps {
   CommentDtoList: TipComment[] | GroupOrderComment[];
-  setisneedupdate: (v: boolean) => void;
+  setisneedupdate: React.Dispatch<React.SetStateAction<boolean>>;
   handleReplySubmit: (props: ReplyProps) => void;
   handleDeleteComment: (commentId: number) => Promise<void>;
 }
@@ -84,7 +84,7 @@ export default function CommentSection({
         if (!window.confirm("정말 삭제할까요?")) return;
         try {
           await handleDeleteComment(getCommentId(comment));
-          setisneedupdate(true);
+          setisneedupdate((prev: boolean) => !prev);
           alert("삭제되었습니다.");
         } catch (err) {
           alert("삭제에 실패했습니다.");
@@ -97,99 +97,101 @@ export default function CommentSection({
   const renderReplies = (replies?: (TipComment | GroupOrderComment)[]) => {
     if (!replies || replies.length === 0) return null;
 
-    return replies
-      .filter((r) => !r.isDeleted)
-      .map((reply) => {
-        const replyId = getCommentId(reply);
-        const childReplies = getChildComments(reply);
+    return (
+      replies
+        // .filter((r) => !r.isDeleted)
+        .map((reply) => {
+          const replyId = getCommentId(reply);
+          const childReplies = getChildComments(reply);
 
-        return (
-          <Reply key={replyId}>
-            <WriterLine>
-              <UserInfo>
-                <img
-                  src={getCommentImage(reply) || profileimg}
-                  alt="프사"
-                  style={{
-                    width: 20,
-                    height: 20,
-                    borderRadius: "50%",
-                    objectFit: "cover",
-                  }}
-                />
-                <Nickname>{getCommentName(reply)}</Nickname>
-              </UserInfo>
-              {isLoggedIn && reply.userId === userInfo.id && (
-                <TopRightDropdownMenu
-                  size={18}
-                  items={ownerMenuItems.map((item) => ({
-                    ...item,
-                    onClick: () => item.onClick(reply),
-                  }))}
-                />
-              )}
-            </WriterLine>
+          return (
+            <Reply key={replyId}>
+              <WriterLine>
+                <UserInfo>
+                  <img
+                    src={getCommentImage(reply) || profileimg}
+                    alt="프사"
+                    style={{
+                      width: 20,
+                      height: 20,
+                      borderRadius: "50%",
+                      objectFit: "cover",
+                    }}
+                  />
+                  <Nickname>{getCommentName(reply)}</Nickname>
+                </UserInfo>
+                {isLoggedIn && reply.userId === userInfo.id && (
+                  <TopRightDropdownMenu
+                    size={18}
+                    items={ownerMenuItems.map((item) => ({
+                      ...item,
+                      onClick: () => item.onClick(reply),
+                    }))}
+                  />
+                )}
+              </WriterLine>
 
-            <ReplyContent>
-              <CommentBody>
-                <CommentText>{reply.reply}</CommentText>
-                <DateText>
-                  {"createdDate" in reply && reply.createdDate
-                    ? new Date(reply.createdDate).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
+              <ReplyContent>
+                <CommentBody>
+                  <CommentText>{reply.reply}</CommentText>
+                  <DateText>
+                    {"createdDate" in reply && reply.createdDate
+                      ? new Date(reply.createdDate).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
+                      : "방금"}
+                  </DateText>
+                </CommentBody>
+              </ReplyContent>
+
+              {replyInputOpen[replyId] && (
+                <ReplyInputArea>
+                  <ReplyInput
+                    placeholder="답글 입력"
+                    value={replyInputs[replyId] || ""}
+                    onChange={(e) =>
+                      setReplyInputs((prev) => ({
+                        ...prev,
+                        [replyId]: e.target.value,
+                      }))
+                    }
+                    onKeyDown={(e) =>
+                      e.key === "Enter" &&
+                      handleReplySubmit({
+                        parentCommentId: replyId,
+                        replyInputs,
+                        setReplyInputs,
+                        setReplyInputOpen,
                       })
-                    : "방금"}
-                </DateText>
-              </CommentBody>
-            </ReplyContent>
+                    }
+                  />
+                  <ReplySendButton
+                    onClick={() =>
+                      handleReplySubmit({
+                        parentCommentId: replyId,
+                        replyInputs,
+                        setReplyInputs,
+                        setReplyInputOpen,
+                      })
+                    }
+                  >
+                    <BsSend size={16} />
+                  </ReplySendButton>
+                </ReplyInputArea>
+              )}
 
-            {replyInputOpen[replyId] && (
-              <ReplyInputArea>
-                <ReplyInput
-                  placeholder="답글 입력"
-                  value={replyInputs[replyId] || ""}
-                  onChange={(e) =>
-                    setReplyInputs((prev) => ({
-                      ...prev,
-                      [replyId]: e.target.value,
-                    }))
-                  }
-                  onKeyDown={(e) =>
-                    e.key === "Enter" &&
-                    handleReplySubmit({
-                      parentCommentId: replyId,
-                      replyInputs,
-                      setReplyInputs,
-                      setReplyInputOpen,
-                    })
-                  }
-                />
-                <ReplySendButton
-                  onClick={() =>
-                    handleReplySubmit({
-                      parentCommentId: replyId,
-                      replyInputs,
-                      setReplyInputs,
-                      setReplyInputOpen,
-                    })
-                  }
-                >
-                  <BsSend size={16} />
-                </ReplySendButton>
-              </ReplyInputArea>
-            )}
-
-            {renderReplies(childReplies)}
-          </Reply>
-        );
-      });
+              {renderReplies(childReplies)}
+            </Reply>
+          );
+        })
+    );
   };
 
   return (
     <CommentList>
       {CommentDtoList?.filter(
-        (c) => (c.parentId === 0 || c.parentId === null) && !c.isDeleted,
+        (c) => c.parentId === 0 || c.parentId === null,
       ).map((comment) => {
         const commentId = getCommentId(comment);
         const childComments = getChildComments(comment);
