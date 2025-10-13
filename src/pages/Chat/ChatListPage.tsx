@@ -177,10 +177,16 @@ const ChatListPageWrapper = styled.div`
   box-sizing: border-box;
   //padding-bottom: 500px;
 
-  //width: 100%;
+  width: 100%;
+  flex: 1;
   //height: 100%;
 
   overflow-y: auto;
+
+  @media (min-width: 1024px) {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
 `;
 
 const ContentWrapper = styled.div`
@@ -188,7 +194,7 @@ const ContentWrapper = styled.div`
   padding-bottom: 100px;
   display: flex;
   flex-direction: column;
-  overflow-y: scroll;
+  //overflow-y: scroll;
   height: 100%;
   box-sizing: border-box;
 `;

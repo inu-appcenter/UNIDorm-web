@@ -235,4 +235,8 @@ const StyledBottomBar = styled.footer`
   -webkit-backdrop-filter: blur(10px); /* Safari 지원 */
 
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+
+  @media (min-width: 1024px) {
+    padding: 0 256px;
+  }
 `;

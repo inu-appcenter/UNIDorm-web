@@ -7,7 +7,7 @@ import ComplainCard from "../../components/complain/ComplainCard.tsx";
 import { useNavigate } from "react-router-dom";
 import ComplainListTable from "../../components/complain/ComplainListTable.tsx";
 import useUserStore from "../../stores/useUserStore.ts";
-import { useEffect, useMemo, useState } from "react"; // useMemo 추가
+import { useEffect, useMemo, useState } from "react";
 import { ComplaintDetail, MyComplaint } from "../../types/complain.ts";
 import { getComplaintDetail, getMyComplaints } from "../../apis/complain.ts";
 import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
@@ -23,11 +23,8 @@ const ComplainListPage = () => {
     null,
   );
 
-  // 🔽 각 데이터 로딩 상태를 관리합니다.
   const [isListLoading, setIsListLoading] = useState<boolean>(false);
   const [isRecentLoading, setIsRecentLoading] = useState<boolean>(false);
-
-  // 🔽 검색어 상태 추가
   const [searchTerm, setSearchTerm] = useState<string>("");
 
   const filter = ["최근 3개월", "2025"];
@@ -36,7 +33,7 @@ const ComplainListPage = () => {
   // 1. 민원 목록 불러오기
   useEffect(() => {
     const fetchComplaints = async () => {
-      setIsListLoading(true); // 목록 로딩 시작
+      setIsListLoading(true);
       try {
         const response = await getMyComplaints();
         console.log("민원 목록 불러오기 성공", response);
@@ -44,7 +41,7 @@ const ComplainListPage = () => {
       } catch (error) {
         console.error("민원 목록 불러오기 실패:", error);
       } finally {
-        setIsListLoading(false); // 목록 로딩 완료
+        setIsListLoading(false);
       }
     };
 
@@ -57,28 +54,26 @@ const ComplainListPage = () => {
   useEffect(() => {
     const fetchRecentComplain = async () => {
       if (complaints.length === 0) {
-        setRecentComplain(null); // 민원 목록이 비었으면 최근 민원도 초기화
+        setRecentComplain(null);
         return;
       }
 
-      setIsRecentLoading(true); // 최근 민원 로딩 시작
+      setIsRecentLoading(true);
       try {
         const response = await getComplaintDetail(complaints[0].id);
         setRecentComplain(response.data);
       } catch (error) {
         console.error("민원 상세 불러오기 실패:", error);
-        setRecentComplain(null); // 에러 발생 시 초기화
+        setRecentComplain(null);
       } finally {
-        setIsRecentLoading(false); // 최근 민원 로딩 완료
+        setIsRecentLoading(false);
       }
     };
 
     fetchRecentComplain();
   }, [complaints]);
 
-  // 🔽 검색어에 따라 민원 목록을 필터링하는 로직
   const filteredComplaints = useMemo(() => {
-    // 1단계: 검색어 필터링을 위한 임시 목록
     let list = complaints;
     if (searchTerm) {
       list = list.filter((complaint) =>
@@ -86,19 +81,16 @@ const ComplainListPage = () => {
       );
     }
 
-    // 2단계: 기간 필터링
     const now = new Date();
     const threeMonthsAgo = new Date();
     threeMonthsAgo.setMonth(now.getMonth() - 3);
 
     if (selectedFilterIndex === 0) {
-      // "최근 3개월" 필터링 (인덱스 0)
       list = list.filter((complaint) => {
         const complaintDate = new Date(complaint.date);
         return complaintDate >= threeMonthsAgo;
       });
     } else if (selectedFilterIndex === 1) {
-      // "2025" 필터링 (인덱스 1)
       list = list.filter((complaint) => {
         const year = new Date(complaint.date).getFullYear();
         return year === 2025;
@@ -112,68 +104,73 @@ const ComplainListPage = () => {
     <ComplainListPageWrapper>
       <Header title={"생활원 민원"} hasBack={true} backPath={"/home"} />
 
-      {/* 최근 민원 현황: 로딩 중이거나 데이터가 있을 때만 섹션을 표시 */}
-      {(isRecentLoading || recentComplain) && (
-        <TitleContentArea title={"최근 민원 현황"}>
-          {isRecentLoading ? (
-            <LoadingSpinner />
-          ) : recentComplain ? (
-            <Wrapper1
-              onClick={() => navigate(`/complain/${recentComplain.id}`)}
-            >
-              <StepFlow
-                activeIndex={
-                  recentComplain.status === "대기중"
-                    ? 0
-                    : recentComplain.status === "담당자 배정"
-                      ? 1
-                      : recentComplain.status === "처리중"
-                        ? 2
-                        : recentComplain.status === "처리완료"
-                          ? 3
-                          : 0
-                }
-              />
-              <ComplainCard
-                miniView={true}
-                date={recentComplain.createdDate}
-                type={recentComplain.type}
-                dorm={recentComplain.dormType}
-                location={`${recentComplain.building} ${recentComplain.roomNumber} ${recentComplain.bedNumber}`}
-                title={recentComplain.title}
-                content={recentComplain.content}
-              />
-            </Wrapper1>
-          ) : null}
-        </TitleContentArea>
-      )}
+      {/* 🔽 MainContent로 두 섹션을 감싸줍니다. */}
+      <MainContent>
+        {/* 최근 민원 현황: 로딩 중이거나 데이터가 있을 때만 섹션을 표시 */}
+        {(isRecentLoading || recentComplain) && (
+          <LeftSection>
+            <TitleContentArea title={"최근 민원 현황"}>
+              {isRecentLoading ? (
+                <LoadingSpinner />
+              ) : recentComplain ? (
+                <Wrapper1
+                  onClick={() => navigate(`/complain/${recentComplain.id}`)}
+                >
+                  <StepFlow
+                    activeIndex={
+                      recentComplain.status === "대기중"
+                        ? 0
+                        : recentComplain.status === "담당자 배정"
+                          ? 1
+                          : recentComplain.status === "처리중"
+                            ? 2
+                            : recentComplain.status === "처리완료"
+                              ? 3
+                              : 0
+                    }
+                  />
+                  <ComplainCard
+                    miniView={true}
+                    date={recentComplain.createdDate}
+                    type={recentComplain.type}
+                    dorm={recentComplain.dormType}
+                    location={`${recentComplain.building} ${recentComplain.roomNumber} ${recentComplain.bedNumber}`}
+                    title={recentComplain.title}
+                    content={recentComplain.content}
+                  />
+                </Wrapper1>
+              ) : null}
+            </TitleContentArea>
+          </LeftSection>
+        )}
 
-      {/* 민원 목록 */}
-      <TitleContentArea title={"민원 목록"}>
-        <Wrapper2>
-          {/* 🔽 SearchInput에 value와 onChange 핸들러 연결 */}
-          <SearchInput
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <SelectableChipGroup
-            Groups={filter}
-            selectedIndex={selectedFilterIndex}
-            onSelect={setSelectedFilterIndex}
-            backgroundColor={"transparent"}
-            color={"#0A84FF"}
-            borderColor={"#007AFF"}
-          />
-          {isListLoading ? (
-            <LoadingSpinner message="민원 목록을 불러오는 중..." />
-          ) : filteredComplaints.length > 0 ? (
-            // 🔽 필터링된 목록(filteredComplaints)을 테이블에 전달
-            <ComplainListTable data={filteredComplaints} />
-          ) : (
-            <EmptyMessage>조회된 민원이 없습니다.</EmptyMessage>
-          )}
-        </Wrapper2>
-      </TitleContentArea>
+        {/* 민원 목록 */}
+        <RightSection>
+          <TitleContentArea title={"민원 목록"}>
+            <Wrapper2>
+              <SearchInput
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <SelectableChipGroup
+                Groups={filter}
+                selectedIndex={selectedFilterIndex}
+                onSelect={setSelectedFilterIndex}
+                backgroundColor={"transparent"}
+                color={"#0A84FF"}
+                borderColor={"#007AFF"}
+              />
+              {isListLoading ? (
+                <LoadingSpinner message="민원 목록을 불러오는 중..." />
+              ) : filteredComplaints.length > 0 ? (
+                <ComplainListTable data={filteredComplaints} />
+              ) : (
+                <EmptyMessage>조회된 민원이 없습니다.</EmptyMessage>
+              )}
+            </Wrapper2>
+          </TitleContentArea>
+        </RightSection>
+      </MainContent>
 
       {isLoggedIn && (
         <WriteButton onClick={() => navigate("/complain/write")}>
@@ -195,6 +192,42 @@ const ComplainListPageWrapper = styled.div`
   overflow-y: auto;
   background-color: white;
   flex: 1;
+  align-items: center; // 🖥️ PC 레이아웃을 위해 중앙 정렬 추가
+`;
+
+// 🔽 추가된 스타일: 메인 콘텐츠 레이아웃 래퍼
+const MainContent = styled.div`
+  display: flex;
+  flex-direction: column; // 모바일 기본: 세로 배치
+  gap: 32px;
+  flex: 1;
+  width: 100%;
+
+  /* PC 화면 (1024px 이상)에서 가로 배치로 변경 */
+  @media (min-width: 1024px) {
+    flex-direction: row;
+    align-items: flex-start; /* 상단 정렬 */
+    max-width: 1200px;
+    //padding: 32px;
+    box-sizing: border-box;
+  }
+`;
+
+// 🔽 추가된 스타일: 좌측 섹션 (최근 민원 현황)
+const LeftSection = styled.div`
+  width: 100%;
+  @media (min-width: 1024px) {
+    flex: 1; /* 너비 비율 1 */
+    min-width: 300px; /* 최소 너비 지정 */
+  }
+`;
+
+// 🔽 추가된 스타일: 우측 섹션 (민원 목록)
+const RightSection = styled.div`
+  width: 100%;
+  @media (min-width: 1024px) {
+    flex: 2; /* 너비 비율 2 (왼쪽보다 2배 크게) */
+  }
 `;
 
 const Wrapper1 = styled.div`
