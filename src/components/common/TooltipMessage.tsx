@@ -32,13 +32,13 @@ const Tooltip = styled.div`
   bottom: 80px;
   left: 50%;
   transform: translateX(-50%);
-  background-color: #000;
+  background-color: #333;
   color: #fff;
   padding: 8px 12px;
   border-radius: 8px;
   font-size: 12px;
   z-index: 2000;
-  width: 100px;
+  width: 110px;
   text-align: center;
   cursor: pointer;
 `;
@@ -52,7 +52,7 @@ const TooltipArrow = styled.div`
   height: 0;
   border-left: 6px solid transparent;
   border-right: 6px solid transparent;
-  border-top: 6px solid #000;
+  border-top: 6px solid #333;
 `;
 
 const CloseButton = styled.button`
