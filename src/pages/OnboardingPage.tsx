@@ -8,7 +8,7 @@ import onboarding2 from "../assets/onboarding/onboarding2.webp";
 import onboarding3 from "../assets/onboarding/onboarding3.webp";
 import { useNavigate } from "react-router-dom";
 import 로고 from "../assets/unidorm-logo.webp";
-import TermOfUse from "../components/TermOfUse.tsx";
+// import TermOfUse from "../components/TermOfUse.tsx";
 
 const SLIDE_DURATION = 5000;
 
@@ -181,7 +181,7 @@ const OnboardingPage: React.FC = () => {
       <Bottom>
         {isLastSlide && (
           <>
-            <TermOfUse />
+            {/*<TermOfUse />*/}
             <div>
               <RoundSquareButton
                 btnName={"UNI Dorm 시작하기"}

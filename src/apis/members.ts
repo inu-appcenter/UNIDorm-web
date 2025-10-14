@@ -137,3 +137,18 @@ export const getMemberLikePosts = async (): Promise<
   console.log(response);
   return response;
 };
+
+//개인정보, 이용약관 동의
+export const putUserAgreement = async (
+  isTermsAgreed: boolean,
+  isPrivacyAgreed: boolean,
+): Promise<AxiosResponse<void>> => {
+  const response = await tokenInstance.put<void>(`/users/agreement`, null, {
+    params: {
+      isTermsAgreed,
+      isPrivacyAgreed,
+    },
+  });
+  console.log(response);
+  return response;
+};

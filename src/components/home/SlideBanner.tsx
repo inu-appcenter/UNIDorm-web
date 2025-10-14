@@ -1,10 +1,10 @@
 // components/home/SlideBanner.tsx
 import styled from "styled-components";
 import { useEffect, useState } from "react";
-import 배너1 from "../../assets/banner/포스터1.svg";
+import 배너1 from "../../assets/banner/포스터1.webp";
 
 const mockBanners = [
-  { id: 1, imageUrl: "/assets/banner/포스터1.jpg", link: "/event/1" },
+  { id: 1, imageUrl: "/assets/banner/포스터1.webp", link: "/event/1" },
 ];
 
 export default function SlideBanner() {

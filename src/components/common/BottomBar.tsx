@@ -237,6 +237,6 @@ const StyledBottomBar = styled.footer`
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
 
   @media (min-width: 1024px) {
-    padding: 0 256px;
+    padding: 0 30vw;
   }
 `;
