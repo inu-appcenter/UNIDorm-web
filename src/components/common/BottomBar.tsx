@@ -48,7 +48,7 @@ const Button = ({
     <ButtonWrapper onClick={handleClick}>
       {showTooltip && onTooltipClose && (
         <TooltipMessage
-          message="나와 가장 어울리는 룸메이트를 찾아보세요!"
+          message="공동구매할 물건이나 음식을 찾아보세요!"
           onClose={onTooltipClose}
         />
       )}
@@ -137,6 +137,7 @@ export default function BottomBar() {
   }, [pathname]);
 
   const [showTooltip, setShowTooltip] = useState(() => {
+    // return false;
     const stored = localStorage.getItem("showRoommateTooltip");
     return stored !== "false"; // 기본값 true
   });
@@ -184,8 +185,8 @@ export default function BottomBar() {
           };
           fetchRoommateInfo();
         }}
-        showTooltip={showTooltip}
-        onTooltipClose={hideTooltip}
+        // showTooltip={showTooltip}
+        // onTooltipClose={hideTooltip}
       />
       <Button
         defaultImg={buy}
@@ -193,6 +194,8 @@ export default function BottomBar() {
         buttonName="공동구매"
         isActive={pathname === "/groupPurchase"}
         onClick={() => navigate("/groupPurchase")}
+        showTooltip={showTooltip}
+        onTooltipClose={hideTooltip}
       />
       <Button
         defaultImg={chat}
