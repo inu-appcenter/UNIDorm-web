@@ -3,7 +3,7 @@ import { Autoplay, Pagination } from "swiper/modules";
 import styled from "styled-components";
 
 // 배너 이미지 import
-import 배너1 from "../../assets/banner/포스터1.svg"; // 기존 HomePage에 있던 배너
+import 배너1 from "../../assets/banner/포스터1.webp"; // 기존 HomePage에 있던 배너
 // Swiper에 필요한 CSS를 import합니다.
 // @ts-ignore
 import "swiper/css";

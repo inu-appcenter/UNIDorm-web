@@ -50,6 +50,7 @@ import PopupNotiCreatePage from "./pages/Admin/PopupNotiFormPage.tsx";
 import CreateNotificationPage from "./pages/Admin/CreateNotificationPage.tsx";
 import NotificationSettingPage from "./pages/MyPage/NotificationSettingPage.tsx";
 import FCMPage from "./pages/Admin/FCMPage.tsx";
+import AgreementPage from "./pages/MyPage/AgreementPage.tsx";
 
 function App() {
   console.log("현재 MODE:", import.meta.env.MODE);
@@ -86,6 +87,10 @@ function App() {
             { pathname: "/myinfoedit", search: "?firstvisit=true" },
             { replace: true },
           );
+          return;
+        }
+        if (!response.data.termsAgreed || !response.data.privacyAgreed) {
+          navigate("/agreement", { replace: true });
         }
       } catch (error) {
         // alert("회원 가져오기 실패");
@@ -134,6 +139,7 @@ function App() {
           <Route path="home" element={<HomePage />} />
           <Route path="mypage" element={<MyPage />} />
           <Route path="myinfoedit" element={<MyInfoEditPage />} />
+          <Route path="agreement" element={<AgreementPage />} />
           <Route
             path="notification-setting"
             element={<NotificationSettingPage />}
