@@ -104,7 +104,11 @@ const ComplainListPage = () => {
     <ComplainListPageWrapper>
       <Header title={"생활원 민원"} hasBack={true} backPath={"/home"} />
 
-      {/* 🔽 MainContent로 두 섹션을 감싸줍니다. */}
+      <span className="description">
+        인천대학교 생활원 민원을 작성할 수 있습니다.
+        <br />
+        유니돔 앱 관련 문의는 마이페이지의 1대1 문의를 이용해주세요.
+      </span>
       <MainContent>
         {/* 최근 민원 현황: 로딩 중이거나 데이터가 있을 때만 섹션을 표시 */}
         {(isRecentLoading || recentComplain) && (
@@ -193,6 +197,10 @@ const ComplainListPageWrapper = styled.div`
   background-color: white;
   flex: 1;
   align-items: center; // 🖥️ PC 레이아웃을 위해 중앙 정렬 추가
+
+  .description {
+    font-size: 14px;
+  }
 `;
 
 // 🔽 추가된 스타일: 메인 콘텐츠 레이아웃 래퍼
