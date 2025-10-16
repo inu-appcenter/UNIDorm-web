@@ -5,6 +5,7 @@ import styled from "styled-components";
 // 배너 이미지 import
 import 배너1 from "../../assets/banner/포스터1.webp";
 import 배너2 from "../../assets/banner/포스터2.webp";
+import 배너3 from "../../assets/banner/포스터3.webp";
 
 // Swiper에 필요한 CSS를 import합니다.
 // @ts-ignore
@@ -31,6 +32,9 @@ export default function HomeBanner() {
         </SwiperSlide>
         <SwiperSlide>
           <img className="banner-img" src={배너2} alt="배너 이미지 2" />
+        </SwiperSlide>
+        <SwiperSlide>
+          <img className="banner-img" src={배너3} alt="배너 이미지 3" />
         </SwiperSlide>
       </Swiper>
     </BannerWrapper>

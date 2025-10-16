@@ -48,9 +48,8 @@ export const ComplainType = [
   "소음",
   "흡연",
   "음주",
-  "룸메이트변경",
-  "벌점상쇄",
-  "벌점사유확인",
+  "호실변경신청",
+  "공용공간",
 ];
 
 export const complainDormitory = ["1기숙사", "2기숙사", "3기숙사"];

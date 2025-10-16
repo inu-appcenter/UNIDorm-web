@@ -45,6 +45,9 @@ export default function ComplainWritePage() {
   const [selectedFloor, setSelectedFloor] = useState("");
   const [selectedRoom, setSelectedRoom] = useState("");
   const [selectedBed, setSelectedBed] = useState("");
+  const [specificLocation, setSpecificLocation] = useState("");
+  const [incidentDate, setIncidentDate] = useState("");
+  const [incidentTime, setIncidentTime] = useState("");
 
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -118,15 +121,22 @@ export default function ComplainWritePage() {
       setIsLoading(true);
       // 수정된 DTO 구조에 맞게 데이터 구성
       const dto: ComplaintCreateDto = {
+        id: complain?.id || 0,
         title,
         content,
-        privacyAgreed,
         type: ComplainType[selectedComplainTypeIndex],
         dormType: complainDormitory[selectedDormitoryIndex],
         building: dormitoryBlocks[selectedDormitoryBlockIndex],
         floor: selectedFloor,
         roomNumber: selectedRoom,
         bedNumber: selectedBed,
+        status: complain?.status || "접수 대기",
+        specificLocation,
+        incidentDate: incidentDate || new Date().toISOString().split("T")[0],
+        incidentTime:
+          incidentTime || new Date().toISOString().split("T")[1].slice(0, 5),
+        createdDate: complain?.createdDate || new Date().toISOString(),
+        privacyAgreed,
       };
 
       console.log("전송할 DTO:", dto);
@@ -159,11 +169,7 @@ export default function ComplainWritePage() {
       {isLoading && <LoadingSpinner overlay message="글 쓰는 중..." />}
 
       <Content>
-        <FormField
-          label="유형"
-          required
-          description={"시설 민원은 포털을 통해 신청할 수 있어요!"}
-        >
+        <FormField label="유형" required>
           <SelectableChipGroup
             Groups={ComplainType}
             selectedIndex={selectedComplainTypeIndex}
@@ -187,6 +193,7 @@ export default function ComplainWritePage() {
           />
         </FormField>
 
+        {/* --- 기존 층/호수/침대 선택 --- */}
         <FormField label="층/호수/침대" required>
           <DropdownContainer>
             <Dropdown
@@ -232,6 +239,31 @@ export default function ComplainWritePage() {
               ))}
             </Dropdown>
           </DropdownContainer>
+        </FormField>
+
+        {/* ✅ 새로 추가된 필드들 */}
+        <FormField label="세부 위치">
+          <Input
+            placeholder="정확한 위치를 입력해주세요 (예: 화장실 앞, 복도 끝 등)"
+            value={specificLocation}
+            onChange={(e) => setSpecificLocation(e.target.value)}
+          />
+        </FormField>
+
+        <FormField label="발생 날짜">
+          <Input
+            type="date"
+            value={incidentDate}
+            onChange={(e) => setIncidentDate(e.target.value)}
+          />
+        </FormField>
+
+        <FormField label="발생 시간">
+          <Input
+            type="time"
+            value={incidentTime}
+            onChange={(e) => setIncidentTime(e.target.value)}
+          />
         </FormField>
 
         <FormField label="제목" required>

@@ -41,15 +41,21 @@ export interface MyComplaint {
 
 // 민원 등록 요청 DTO
 export interface ComplaintCreateDto {
-  dormType: string;
-  privacyAgreed: boolean;
-  roomNumber: string;
-  bedNumber: string;
-  floor: string;
-  building: string;
+  id: number;
   title: string;
   content: string;
   type: string;
+  dormType: string;
+  building: string;
+  floor: string;
+  roomNumber: string;
+  bedNumber: string;
+  status: string;
+  specificLocation: string;
+  incidentDate: string;
+  incidentTime: string;
+  createdDate: string;
+  privacyAgreed: boolean;
 }
 
 // 민원 등록 응답 타입
