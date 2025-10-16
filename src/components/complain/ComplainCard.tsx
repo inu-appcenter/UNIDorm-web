@@ -9,6 +9,11 @@ interface ComplainCardProps {
   location: string;
   title: string;
   content: string;
+
+  incidentDate: string;
+  incidentTime: string;
+  specificLocation: string;
+
   images?: string[];
 }
 
@@ -21,6 +26,9 @@ const ComplainCard: React.FC<ComplainCardProps> = ({
   title,
   content,
   images,
+  incidentDate,
+  incidentTime,
+  specificLocation,
 }) => {
   // 날짜 형식을 'YY.MM.DD'로 변경
   const formattedDate = date.replace(
@@ -42,6 +50,12 @@ const ComplainCard: React.FC<ComplainCardProps> = ({
           </div>
           <div>
             <strong>동 / 호수 / 침대번호</strong> {location}
+          </div>
+          <div>
+            <strong>발생 일시</strong> {incidentDate} {incidentTime}
+          </div>
+          <div>
+            <strong>발생 장소</strong> {specificLocation}
           </div>
         </Info>
       )}

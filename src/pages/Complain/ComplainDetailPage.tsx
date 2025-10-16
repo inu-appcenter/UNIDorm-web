@@ -63,6 +63,13 @@ const ComplainDetailPage = () => {
       if (!isAdmin || !complainId) {
         return;
       }
+      if (status === "처리완료") {
+        alert("반려/처리완료는 담당자 배정 후, 답변 작성에서 가능합니다.");
+        return;
+      }
+      if (!window.confirm(`처리 상태를 ${status}(으)로 바꿀까요?`)) {
+        return;
+      }
       if (status === "담당자 배정") {
         setShowModal(true);
         return;
@@ -148,13 +155,14 @@ const ComplainDetailPage = () => {
                     ? 2
                     : complaint.status === "처리완료"
                       ? 3
-                      : 0
+                      : complaint.status === "반려"
+                        ? 4
+                        : 0
             }
             assignee={complaint.officer}
-            handleStatus={handleStatus}
+            handleStatus={isAdmin ? handleStatus : undefined}
           />
           <ComplainCardsContainer>
-            {/* ▼▼▼ 이 부분이 수정되었습니다 ▼▼▼ */}
             <ComplainCard
               date={complaint.createdDate}
               type={complaint.type}
@@ -163,8 +171,10 @@ const ComplainDetailPage = () => {
               title={complaint.title}
               content={complaint.content}
               images={complaint.images}
+              incidentDate={complaint.incidentDate}
+              incidentTime={complaint.incidentTime}
+              specificLocation={complaint.specificLocation}
             />
-            {/* ▲▲▲ 이 부분이 수정되었습니다 ▲▲▲ */}
             {complaint.reply && (
               <ComplainAnswerCard
                 date={complaint.reply.createdDate}

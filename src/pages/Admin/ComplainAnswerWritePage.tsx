@@ -20,6 +20,7 @@ export default function ComplainAnswerWritePage() {
   const { complain, manager } = location.state || {};
   const [isEditMode, setIsEditMode] = useState(false);
 
+  const [isRejected, setIsRejected] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [images, setImages] = useState<File[]>([]);
@@ -37,6 +38,7 @@ export default function ComplainAnswerWritePage() {
       setTitle(complain.reply.replyTitle);
       setContent(complain.reply.replyContent);
       setIsEditMode(true);
+      setIsRejected(complain.status === "반려");
     }
   }, [complain]);
 
@@ -74,13 +76,17 @@ export default function ComplainAnswerWritePage() {
       if (isEditMode && complain?.id) {
         // 수정 모드
         res = await updateComplaintReply(complain.id, dto, images);
-        alert("답변이 수정되었습니다!");
       } else {
         // 등록 모드
         res = await createComplaintReply(Number(complainId), dto, images);
-        await updateComplaintStatus(Number(complainId), "처리완료");
-        alert("답변이 등록되었습니다!");
       }
+      if (isRejected === true) {
+        await updateComplaintStatus(Number(complainId), "반려");
+      } else {
+        await updateComplaintStatus(Number(complainId), "처리완료");
+      }
+
+      alert(`답변이 ${isEditMode ? "수정" : "등록"}되었습니다!`);
 
       console.log("성공", res.data);
       navigate(-1);
@@ -103,6 +109,18 @@ export default function ComplainAnswerWritePage() {
       {isLoading && <LoadingSpinner overlay message="글 쓰는 중..." />}
 
       <Content>
+        <Label>
+          반려 여부<span className="required"></span>
+        </Label>
+        <label>
+          <Input
+            type="checkbox"
+            checked={isRejected}
+            onChange={(e) => setIsRejected(e.target.checked)}
+          />{" "}
+          반려
+        </label>
+
         <Label>
           제목<span className="required"> *</span>
         </Label>
@@ -158,7 +176,7 @@ const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background: #fafafa;
+  background: #fff;
 `;
 
 const Content = styled.div`
@@ -199,7 +217,7 @@ const Input = styled.input`
   padding: 12px;
   border-radius: 8px;
   border: none;
-  background: rgb(255, 255, 255);
+  background: rgba(0, 0, 0, 0.04);
 `;
 
 const Textarea = styled.textarea`
@@ -207,7 +225,7 @@ const Textarea = styled.textarea`
   padding: 12px;
   border-radius: 8px;
   border: none;
-  background: rgb(255, 255, 255);
+  background: rgba(0, 0, 0, 0.04);
   resize: none;
 `;
 
