@@ -33,7 +33,7 @@ const StepItem: React.FC<StepItemProps> = ({
       handleStatus(label);
     }}
   >
-    <StepIcon active={active} completed={completed}>
+    <StepIcon active={active} completed={completed} rejected={label === "반려"}>
       {icon}
     </StepIcon>
     <div className="title">
@@ -50,60 +50,89 @@ const StepFlow: React.FC<StepFlowProps> = ({
   handleStatus,
 }) => {
   return (
-    <StepContainer>
-      <StepItem
-        label="대기중"
-        icon={<Inbox />}
-        active={activeIndex === 0}
-        completed={activeIndex > 0}
-        handleStatus={handleStatus}
-      />
-      <Separator>...</Separator>
+    <Wrapper>
+      {handleStatus && (
+        <div className="select-please">처리상태를 선택해주세요.</div>
+      )}
+      <StepContainer>
+        <StepItem
+          label="대기중"
+          icon={<Inbox />}
+          active={activeIndex === 0}
+          completed={activeIndex > 0}
+          handleStatus={handleStatus}
+        />
+        <Separator>...</Separator>
 
-      <StepItem
-        label="담당자 배정"
-        icon={<User />}
-        active={activeIndex === 1}
-        completed={activeIndex > 1}
-        extraLabel={assignee}
-        handleStatus={handleStatus}
-      />
-      <Separator>...</Separator>
-      <StepItem
-        label="처리중"
-        icon={<MessageSquare />}
-        active={activeIndex === 2}
-        completed={activeIndex > 2}
-        handleStatus={handleStatus}
-      />
-      <Separator>...</Separator>
-
-      <StepItem
-        label="처리완료"
-        icon={<CheckCircle />}
-        active={activeIndex === 3}
-        handleStatus={handleStatus}
-      />
-    </StepContainer>
+        <StepItem
+          label="담당자 배정"
+          icon={<User />}
+          active={activeIndex === 1}
+          completed={activeIndex > 1}
+          extraLabel={assignee}
+          handleStatus={handleStatus}
+        />
+        <Separator>...</Separator>
+        <StepItem
+          label="처리중"
+          icon={<MessageSquare />}
+          active={activeIndex === 2}
+          completed={activeIndex > 2}
+          handleStatus={handleStatus}
+        />
+        <Separator>...</Separator>
+        {activeIndex === 4 ? (
+          <StepItem
+            label="반려"
+            icon={<CheckCircle />}
+            active={activeIndex === 4}
+            handleStatus={handleStatus}
+          />
+        ) : (
+          <StepItem
+            label="처리완료"
+            icon={<CheckCircle />}
+            active={activeIndex === 3}
+            handleStatus={handleStatus}
+          />
+        )}
+      </StepContainer>
+    </Wrapper>
   );
 };
 
 export default StepFlow;
 
+const Wrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+
+  border-radius: 1rem;
+  padding: 16px;
+  box-sizing: border-box;
+  box-shadow: 2px 4px 8px 0 rgba(0, 0, 0, 0.06);
+
+  gap: 12px;
+
+  .select-please {
+    color: var(--4, #48484a);
+    font-size: 14px;
+    font-weight: 600;
+  }
+`;
+
 const StepContainer = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #fff;
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  border-radius: 1rem;
-  padding: 16px;
+
   position: relative;
 
   width: 100%;
-  box-sizing: border-box;
-
-  box-shadow: 2px 4px 8px 0 rgba(0, 0, 0, 0.06);
 `;
 
 const StepItemWrapper = styled.div<{ active?: boolean; completed?: boolean }>`
@@ -117,6 +146,7 @@ const StepItemWrapper = styled.div<{ active?: boolean; completed?: boolean }>`
   font-size: 12px;
   font-weight: 500;
   position: relative;
+  width: fit-content;
 
   cursor: pointer;
 
@@ -134,7 +164,11 @@ const StepItemWrapper = styled.div<{ active?: boolean; completed?: boolean }>`
   }
 `;
 
-const StepIcon = styled.div<{ active?: boolean; completed?: boolean }>`
+const StepIcon = styled.div<{
+  active?: boolean;
+  completed?: boolean;
+  rejected?: boolean;
+}>`
   display: flex;
   align-items: center;
   justify-content: center;
@@ -156,12 +190,18 @@ const StepIcon = styled.div<{ active?: boolean; completed?: boolean }>`
       color: #f4f4f4;
     `}
 
-  ${({ completed }) =>
-    completed &&
-    css`
-      background: #e7f3ff;
-      color: #8e8e93;
-    `}
+  ${({ completed, rejected }) =>
+    completed
+      ? css`
+          background: #e7f3ff;
+          color: #8e8e93;
+        `
+      : rejected
+        ? css`
+            background: #f97171;
+            color: #f4f4f4;
+          `
+        : undefined}
 
   svg {
     width: 100%;
