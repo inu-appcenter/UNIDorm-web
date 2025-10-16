@@ -3,7 +3,7 @@ import styled from "styled-components";
 import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../../components/common/Header";
 import CommonBottomModal from "../../components/modal/CommonBottomModal";
-import CheckBeforeContent from "../../components/GroupPurchase/CheckBeforeContent";
+// import CheckBeforeContent from "../../components/GroupPurchase/CheckBeforeContent";
 import useUserStore from "../../stores/useUserStore";
 import {
   createGroupPurchase,
@@ -54,7 +54,7 @@ export default function GroupPurchaseWritePage() {
 
   const { tokenInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
-  const [isModalOpen, setIsModalOpen] = useState(true);
+  // const [isModalOpen, setIsModalOpen] = useState(true);
   const [isHowtoModalOpen, setIsHowToModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -108,15 +108,14 @@ export default function GroupPurchaseWritePage() {
           <TempSaveButton onClick={handleTempSave}>임시저장</TempSaveButton>
         }
       />
-
       {isLoading && <LoadingSpinner overlay message="글 쓰는 중..." />}
-
-      <CommonBottomModal
-        id={"checkbefore"}
-        isOpen={isModalOpen}
-        setIsOpen={setIsModalOpen}
-        children={<CheckBeforeContent />}
-      />
+      {/*거래 전 확인하세요 모달*/}
+      {/*<CommonBottomModal*/}
+      {/*  id={"checkbefore"}*/}
+      {/*  isOpen={isModalOpen}*/}
+      {/*  setIsOpen={setIsModalOpen}*/}
+      {/*  children={<CheckBeforeContent />}*/}
+      {/*/>*/}
       <CommonBottomModal
         id={"howToCreateOpenChat"}
         title={"오픈채팅 생성 매뉴얼"}
@@ -124,20 +123,17 @@ export default function GroupPurchaseWritePage() {
         setIsOpen={setIsHowToModalOpen}
         children={<HowToCreateOpenChat />}
       />
-
       <SectionTitle>제목</SectionTitle>
       <InputField
         placeholder="공동구매하려는 물품명을 작성해주세요"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
       />
-
       <SectionTitle>카테고리</SectionTitle>
       <CategorySelector
         selectedCategory={category}
         onSelectCategory={setCategory}
       />
-
       <SectionTitle>가격</SectionTitle>
       <InputField
         type="number"
@@ -145,7 +141,6 @@ export default function GroupPurchaseWritePage() {
         value={price}
         onChange={(e) => setPrice(e.target.value)}
       />
-
       <SectionTitle>내용</SectionTitle>
       <TextArea
         placeholder="내용을 입력해주세요"
@@ -153,7 +148,6 @@ export default function GroupPurchaseWritePage() {
         value={description}
         onChange={(e) => setDescription(e.target.value)}
       />
-
       <SectionTitle>구매 링크</SectionTitle>
       <Description>상품의 필요 여부를 판단하는데 도움이 됩니다.</Description>
       <InputField
@@ -161,7 +155,6 @@ export default function GroupPurchaseWritePage() {
         value={purchaseLink}
         onChange={(e) => setPurchaseLink(e.target.value)}
       />
-
       <SectionTitle>
         오픈채팅방 링크{" "}
         <a onClick={() => setIsHowToModalOpen(true)}>
@@ -174,20 +167,17 @@ export default function GroupPurchaseWritePage() {
         value={openchatLink}
         onChange={(e) => setOpenchatLink(e.target.value)}
       />
-
       <SectionTitle>마감 시간</SectionTitle>
       <DeadlineSelector
         deadline={deadline}
         onDeadlineChange={setDeadline}
         category={category}
       />
-
       <SectionTitle>이미지 (선택)</SectionTitle>
       <Description>
         상품 이미지를 업로드하면 공동구매가 성사될 확률이 높아져요!
       </Description>
       <ImageUploader images={images} onImageChange={handleImageChange} />
-
       {isLoggedIn && (
         <BottomFixed>
           <SubmitButton onClick={handleSubmit}>
