@@ -1,7 +1,9 @@
-// src/components/tip/MyPostCard.tsx
-
 import styled from "styled-components";
-import { MyPost_GroupOrder } from "../../types/members";
+import {
+  MyPost_GroupOrder,
+  MyPost_RoommateBoard,
+  MyPost_TipBoard,
+} from "../../types/members";
 import TagIconWhiteBackground from "../common/TagIconWhiteBackground.tsx";
 import { FaHeart } from "react-icons/fa";
 import { getDeadlineText } from "../../utils/dateUtils.ts";
@@ -15,14 +17,13 @@ import {
 import { useNavigate } from "react-router-dom";
 
 interface MyPostLikeCardProps {
-  post: MyPost_GroupOrder;
+  post: MyPost_GroupOrder | MyPost_RoommateBoard | MyPost_TipBoard;
   isLike?: boolean;
 }
 
 export default function MyPostLikeCard({ post, isLike }: MyPostLikeCardProps) {
   const navigate = useNavigate();
 
-  /** ✅ 게시글 클릭 시 type에 따라 이동 경로 다르게 처리 */
   const handleClick = () => {
     switch (post.type) {
       case "GROUP_ORDER":
@@ -34,22 +35,6 @@ export default function MyPostLikeCard({ post, isLike }: MyPostLikeCardProps) {
       case "TIP":
         navigate(`/tips/${post.boardId}`);
         break;
-      default:
-        console.warn("알 수 없는 게시글 타입:", post.type);
-    }
-  };
-
-  /** ✅ 타입별 배지 렌더링 */
-  const renderBadge = () => {
-    switch (post.type) {
-      case "GROUP_ORDER":
-        return <TagIconWhiteBackground tagTitle="공동구매" />;
-      case "ROOMMATE":
-        return <TagIconWhiteBackground tagTitle="룸메이트" />;
-      case "TIP":
-        return <TagIconWhiteBackground tagTitle="꿀팁" />;
-      default:
-        return null;
     }
   };
 
@@ -57,33 +42,54 @@ export default function MyPostLikeCard({ post, isLike }: MyPostLikeCardProps) {
     <CardWrapper onClick={handleClick}>
       <LeftContent>
         <TopRow>
-          {renderBadge()}
+          {post.type === "GROUP_ORDER" && (
+            <TagIconWhiteBackground tagTitle="공동구매" />
+          )}
+          {post.type === "ROOMMATE" && (
+            <TagIconWhiteBackground tagTitle="룸메이트" />
+          )}
+          {post.type === "TIP" && <TagIconWhiteBackground tagTitle="꿀팁" />}
           <Title>{post.title}</Title>
         </TopRow>
 
-        {post.price && <Price>{post.price}원</Price>}
-        {/*{post.comment && <Text>{post.comment}</Text>}*/}
+        {post.type === "GROUP_ORDER" && <Price>{post.price}원</Price>}
+        {post.type === "TIP" && <Text>{post.content}</Text>}
+        {post.type === "ROOMMATE" && (
+          <Text>
+            <TagRow>
+              <Tag category="mbti">{post.mbti}</Tag>
+              <Tag category="college">{post.college}</Tag>
+              <Tag category="smoker">{post.smoking ? "흡연⭕" : "흡연❌"}</Tag>
+              <Tag category="clean">
+                {post.arrangement ? "🧼깔끔" : "정돈보통"}
+              </Tag>
+            </TagRow>
+            <StayInfo>상주 요일: {post.dormPeriod.join(", ")}</StayInfo>
+            {/*기숙사 상주기간 : {post.dormPeriod} / 단과대 : {post.college} / MBTI*/}
+            {/*: {post.mbti} / 취침 시간 : {post.bedTime} / 잠귀 : {post.sleeper}*/}
+          </Text>
+        )}
 
-        <BottomRow>
-          <MetaInfo>
-            <Dday>{getDeadlineText(post.deadline)}</Dday>
-            <DividerBar>|</DividerBar>
-            <People>
-              <img src={사람} alt="인원수" />
-              조회수 {post.viewCount}
-            </People>
-          </MetaInfo>
-        </BottomRow>
+        {post.type === "GROUP_ORDER" && (
+          <BottomRow>
+            <MetaInfo>
+              <Dday>{getDeadlineText(post.deadline)}</Dday>
+              <DividerBar>|</DividerBar>
+              <People>
+                <img src={사람} alt="인원수" />
+                조회수 {post.viewCount}
+              </People>
+            </MetaInfo>
+          </BottomRow>
+        )}
       </LeftContent>
 
-      {/* ❤️ 좋아요 표시 */}
       {isLike && (
         <RightContent>
           <FaHeart color="#FF453A" size={18} />
         </RightContent>
       )}
 
-      {/* 📷 게시글 이미지 */}
       {post.filePath && (
         <RightContent>
           <Image src={post.filePath} alt="게시글 이미지" />
@@ -100,6 +106,7 @@ const CardWrapper = styled.div`
   background: transparent;
   //border-radius: 12px;
   width: 100%;
+  min-height: 74px;
   box-sizing: border-box;
   gap: 12px;
   align-items: flex-start;
@@ -116,6 +123,7 @@ const LeftContent = styled.div`
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-width: 0; /* <<< 이 부분을 추가해주세요 */
 `;
 
 const RightContent = styled.div`
@@ -166,12 +174,56 @@ const Price = styled.div`
   letter-spacing: -0.165px;
 `;
 
-// const Text = styled.div`
-//   color: var(--1, #1c1c1e);
-//   font-family: Pretendard;
-//   font-size: 12px;
-//   font-style: normal;
-//   font-weight: 500;
-//   line-height: 24px; /* 200% */
-//   letter-spacing: 0.38px;
-// `;
+const Text = styled.div`
+  color: var(--1, #1c1c1e);
+  font-family: Pretendard;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 24px; /* 200% */
+  letter-spacing: 0.38px;
+
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* 최대 2줄까지만 표시 */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const TagRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  //margin-right: 60px;
+`;
+const Tag = styled.div.withConfig({
+  shouldForwardProp: (prop) => prop !== "category",
+})<{ category: string }>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #1c1c1e;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: 500;
+  background: ${({ category }) => {
+    switch (category) {
+      case "mbti":
+        return "#E4F6ED";
+      case "college":
+        return "#FCEEF3";
+      case "smoker":
+        return "#E8F0FE";
+      case "clean":
+        return "#F3F4F6";
+      default:
+        return "#f1f1f1";
+    }
+  }};
+`;
+
+const StayInfo = styled.div`
+  font-size: 12px;
+  color: #3a3a3c;
+`;
