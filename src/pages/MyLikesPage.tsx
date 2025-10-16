@@ -31,7 +31,10 @@ export default function MyLikesPage() {
         <CardList>
           {posts.length > 0 ? (
             posts.map((post) => (
-              <MyPostLikeCard key={post.boardId} post={post} isLike={true} />
+              <>
+                <MyPostLikeCard key={post.boardId} post={post} isLike={true} />
+                <Divider />
+              </>
             ))
           ) : (
             <EmptyMessage>내가 좋아요한 글이 없습니다.</EmptyMessage>
@@ -57,7 +60,7 @@ const MyScrapPageWrapper = styled.div`
 const CardList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
   width: 100%;
   height: 100%;
 `;
@@ -67,4 +70,13 @@ const EmptyMessage = styled.div`
   text-align: center;
   color: #aaa;
   font-size: 14px;
+`;
+
+const Divider = styled.div`
+  height: 1px;
+  width: 100vw;
+  background: #0000001a;
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
 `;

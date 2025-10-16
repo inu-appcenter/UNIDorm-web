@@ -103,6 +103,9 @@ const MyPage = () => {
         <Divider />
 
         <MenuGroup title={menuGroups[4].title} menus={menuGroups[4].menus} />
+        <Divider />
+
+        <MenuGroup title={"앱 버전"} menus={[{ label: "v 1.2.0" }]} />
 
         {isAdmin && (
           <>
@@ -161,8 +164,11 @@ const MenuGroupsWrapper = styled.div`
 
 const Divider = styled.div`
   height: 1px;
-  background-color: #e0e0e0; /* 연한 회색 */
-  width: 100%;
+  width: 100vw;
+  background: #0000001a;
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
 `;
 
 const LoginButton = styled.button`
