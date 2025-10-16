@@ -176,7 +176,10 @@ export default function GroupPurchasePostPage() {
   const menuItems = [
     {
       label: "수정하기",
-      onClick: () => navigate("/groupPurchase/write", { state: { post } }),
+      onClick: () =>
+        navigate("/groupPurchase/write", {
+          state: { post, curImages: images },
+        }),
     },
     { label: "삭제하기", onClick: handleDelete },
   ];
