@@ -1,6 +1,6 @@
 import "./index.css";
 import { BrowserRouter, Route, Routes, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { getMemberInfo } from "./apis/members";
 import useUserStore from "./stores/useUserStore";
 import RootPage from "./pages/RootPage";
@@ -51,6 +51,8 @@ import CreateNotificationPage from "./pages/Admin/CreateNotificationPage.tsx";
 import NotificationSettingPage from "./pages/MyPage/NotificationSettingPage.tsx";
 import FCMPage from "./pages/Admin/FCMPage.tsx";
 import AgreementPage from "./pages/MyPage/AgreementPage.tsx";
+import CommonBottomModal from "./components/modal/CommonBottomModal.tsx";
+import ModalContent_EventWin from "./components/common/ModalContent_EventWin.tsx";
 
 function App() {
   console.log("현재 MODE:", import.meta.env.MODE);
@@ -122,6 +124,8 @@ function App() {
       (window as any).onReceiveFcmToken = null;
     };
   }, []);
+
+  const [isOpen, setIsOpen] = useState(true);
 
   return (
     <ErrorBoundary>
@@ -227,6 +231,15 @@ function App() {
           <Route path="fcm" element={<FCMPage />} />
         </Route>
       </Routes>
+      <CommonBottomModal
+        id={"이벤트 당첨"}
+        isOpen={isOpen}
+        setIsOpen={setIsOpen}
+        title={"이벤트에 당첨되었어요!"}
+        headerImageId={3}
+        children={ModalContent_EventWin()}
+        closeButtonText={"감사합니다"}
+      />
     </ErrorBoundary>
   );
 }

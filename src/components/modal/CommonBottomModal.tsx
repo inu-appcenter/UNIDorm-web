@@ -4,11 +4,13 @@ import React, { useEffect, useRef } from "react";
 import RoundSquareButton from "../button/RoundSquareButton.tsx";
 import Friends from "../../assets/roommate/Friends.svg";
 import 눈물닦아주는횃불이 from "../../assets/눈물 닦아주는 횃불이.webp";
+import 배달의민족상품권이미지 from "../../assets/event/배달의민족 1만원권.webp";
 
 // 선택 가능한 이미지 맵
 const headerImages: Record<number, string> = {
   1: Friends,
   2: 눈물닦아주는횃불이,
+  3: 배달의민족상품권이미지,
 };
 
 // --- [변경] Props 인터페이스에 커스텀 속성 추가 ---
@@ -58,13 +60,14 @@ export default function CommonBottomModal({
         <Content>
           <SwipeHandle />
           <ModalHeader>
-            <h2>{title}</h2>
-            {subtitle && <span>{subtitle}</span>}
+            <div className="title-area">
+              <h2>{title}</h2>
+              {subtitle && <span>{subtitle}</span>}
+            </div>
             {headerImage && <img src={headerImage} alt="modal header" />}
           </ModalHeader>
           <ScrollContent>{children}</ScrollContent>
           <CloseMenus>
-            {/* --- [변경] 버튼에 props 적용 --- */}
             <RoundSquareButton
               btnName={closeButtonText}
               onClick={() => {
@@ -130,9 +133,10 @@ const ModalHeader = styled.div`
   word-break: keep-all;
   white-space: pre-wrap; /* 줄바꿈 유지 + 자동 줄바꿈 */
 
+  gap: 12px;
+
   color: #1c408c;
   width: 100%;
-
   img {
     width: 60%;
     margin-bottom: 12px; /* 이미지와 제목 간 간격 */
