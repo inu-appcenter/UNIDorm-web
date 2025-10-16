@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
-import { ImageFile } from "../components/common/ImageUploader"; // 경로 확인 필요
-import { TipImage } from "../types/tips"; // 경로 확인 필요
-import { urlToFile } from "../utils/fileUtils"; // 경로 확인 필요
+import { ImageFile } from "../components/common/ImageUploader";
+import { TipImage } from "../types/tips";
+import { urlToFile } from "../utils/fileUtils";
 
 // 훅에 전달할 props 타입 정의
 interface UseImageHandlerProps {

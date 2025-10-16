@@ -13,14 +13,19 @@ import { CreateGroupOrderRequest } from "../../types/grouporder";
 import { useGroupPurchaseForm } from "../../utils/useGroupPurchaseForm.ts";
 import CategorySelector from "../../components/GroupPurchase/CategorySelector.tsx";
 import DeadlineSelector from "../../components/GroupPurchase/DeadlineSelector.tsx";
-import ImageUploader from "../../components/GroupPurchase/ImageUploader.tsx";
 import HowToCreateOpenChat from "../../components/GroupPurchase/HowToCreateOpenChat.tsx";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
+import { useImageHandler } from "../../hooks/useImageHandler.ts";
+import ImageUploader from "../../components/common/ImageUploader.tsx";
 
 export default function GroupPurchaseWritePage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { post } = location.state || {};
+  const { post, curImages } = location.state || {};
+  // 이미지 상태 및 핸들러 커스텀 훅
+  const { images, addImages, deleteImage, isImageLoading } = useImageHandler({
+    initialImages: curImages,
+  });
 
   const {
     isEditMode,
@@ -37,7 +42,6 @@ export default function GroupPurchaseWritePage() {
     purchaseLink,
     openchatLink,
     category,
-    images,
     deadline,
   } = formData;
 
@@ -49,7 +53,6 @@ export default function GroupPurchaseWritePage() {
     setOpenchatLink,
     setCategory,
     setDeadline,
-    handleImageChange,
   } = formHandlers;
 
   const { tokenInfo } = useUserStore();
@@ -61,7 +64,7 @@ export default function GroupPurchaseWritePage() {
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
-    // ✅ DeadlineSelector에서 선택한 값 기반으로 문자열 생성
+    // DeadlineSelector에서 선택한 값 기반으로 문자열 생성
     const deadlineString = getDeadlineString();
 
     const requestDto: CreateGroupOrderRequest = {
@@ -81,17 +84,16 @@ export default function GroupPurchaseWritePage() {
       if (isEditMode && post?.id) {
         await updateGroupPurchase(post.id, requestDto, images);
         alert("게시글이 수정되었습니다.");
-        navigate(`/groupPurchase/${post.id}`, { replace: true });
       } else {
         await createGroupPurchase(requestDto, images);
         alert("게시글이 등록되었습니다.");
-        navigate(-1);
       }
     } catch (error) {
       console.error("게시글 등록/수정 실패:", error);
       alert("게시글 등록/수정 중 오류가 발생했습니다.");
     } finally {
       setIsLoading(false);
+      navigate(-1);
     }
   };
 
@@ -177,7 +179,13 @@ export default function GroupPurchaseWritePage() {
       <Description>
         상품 이미지를 업로드하면 공동구매가 성사될 확률이 높아져요!
       </Description>
-      <ImageUploader images={images} onImageChange={handleImageChange} />
+      <ImageUploader
+        images={images}
+        onAddImages={addImages}
+        onDeleteImage={deleteImage}
+        isLoading={isImageLoading}
+      />
+
       {isLoggedIn && (
         <BottomFixed>
           <SubmitButton onClick={handleSubmit}>
