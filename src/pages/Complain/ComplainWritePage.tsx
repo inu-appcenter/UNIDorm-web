@@ -1,7 +1,6 @@
 import styled from "styled-components";
 import { useLocation, useNavigate } from "react-router-dom";
-import { MdImage, MdClose } from "react-icons/md";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import SquareButton from "../../components/common/SquareButton.tsx";
 import Header from "../../components/common/Header.tsx";
 import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
@@ -14,24 +13,29 @@ import {
   rooms,
 } from "../../constants/constants.ts";
 import { createComplaint, updateComplaint } from "../../apis/complain.ts";
-// 수정된 DTO 타입을 import 합니다.
 import { ComplaintCreateDto } from "../../types/complain.ts";
 import FormField from "../../components/complain/FormField.tsx";
 import { Dropdown, DropdownContainer, Input } from "../../styles/complain.ts";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
+import { useFileHandler } from "../../hooks/useFileHandler.ts";
+import FileUploader from "../../components/common/FileUploader.tsx";
 
 export default function ComplainWritePage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { complain } = location.state || {}; // 수정할 민원 데이터
+  const { complain, complainImages } = location.state || {}; // 수정할 민원 데이터
 
   const [isEditMode, setIsEditMode] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [images, setImages] = useState<File[]>([]);
   const [privacyAgreed, setPrivacyAgreed] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
+
+  // 이미지 상태 및 핸들러 커스텀 훅
+  const { files, addFiles, deleteFile, isFileLoading } = useFileHandler({
+    initialFiles: complainImages,
+  });
 
   // 선택 값 관련 상태
   const [selectedComplainTypeIndex, setSelectedComplainTypeIndex] = useState<
@@ -48,8 +52,6 @@ export default function ComplainWritePage() {
   const [specificLocation, setSpecificLocation] = useState("");
   const [incidentDate, setIncidentDate] = useState("");
   const [incidentTime, setIncidentTime] = useState("");
-
-  const inputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -73,22 +75,13 @@ export default function ComplainWritePage() {
       if (blockIndex !== -1) setSelectedDormitoryBlockIndex(blockIndex);
 
       setSelectedFloor(complain.floor || "");
-      setSelectedRoom(complain.roomNumber || ""); // roomNumber가 "301호"와 같은 형식이므로 그대로 사용
+      setSelectedRoom(complain.roomNumber || "");
       setSelectedBed(complain.bedNumber || "");
+      setSpecificLocation(complain.specificLocation || "");
+      setIncidentDate(complain.incidentDate || "");
+      setIncidentTime(complain.incidentTime || "");
     }
   }, [complain]);
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const fileList = Array.from(e.target.files);
-      setImages((prev) => [...prev, ...fileList].slice(0, 10));
-    }
-    e.target.value = "";
-  };
-
-  const handleImageDelete = (indexToDelete: number) => {
-    setImages((prev) => prev.filter((_, index) => index !== indexToDelete));
-  };
 
   const handleSubmit = async () => {
     // 필수 값 검사 로직 업데이트
@@ -143,10 +136,10 @@ export default function ComplainWritePage() {
 
       let res;
       if (isEditMode && complain?.id) {
-        res = await updateComplaint(complain.id, dto, images);
+        res = await updateComplaint(complain.id, dto, files);
         alert("민원이 성공적으로 수정되었습니다!");
       } else {
-        res = await createComplaint(dto, images);
+        res = await createComplaint(dto, files);
         alert("민원이 성공적으로 등록되었습니다!");
       }
 
@@ -286,35 +279,11 @@ export default function ComplainWritePage() {
           label="이미지"
           description="상황 설명에 도움이 되는 이미지가 있으면 첨부해 주세요."
         >
-          <ImageUploadContainer>
-            <ImageUploadButton
-              type="button"
-              onClick={() => inputRef.current?.click()}
-            >
-              <MdImage size={28} color="#555" />
-              <span>{images.length}/10</span>
-            </ImageUploadButton>
-            <ImagePreviewWrapper>
-              {images.map((file, idx) => (
-                <ImagePreviewItem key={idx}>
-                  <img
-                    src={URL.createObjectURL(file)}
-                    alt={`업로드 이미지 ${idx + 1}`}
-                  />
-                  <DeleteButton onClick={() => handleImageDelete(idx)}>
-                    <MdClose size={12} color="white" />
-                  </DeleteButton>
-                </ImagePreviewItem>
-              ))}
-            </ImagePreviewWrapper>
-          </ImageUploadContainer>
-          <input
-            ref={inputRef}
-            type="file"
-            accept="image/*"
-            multiple
-            hidden
-            onChange={handleImageChange}
+          <FileUploader
+            images={files}
+            onAddImages={addFiles}
+            onDeleteImage={deleteFile}
+            isLoading={isFileLoading}
           />
         </FormField>
 
@@ -388,78 +357,6 @@ const ButtonWrapper = styled.div`
   box-sizing: border-box;
   background: white;
   border-top: 1px solid #f0f0f0;
-`;
-
-const ImageUploadContainer = styled.div`
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  width: 100%;
-`;
-
-const ImageUploadButton = styled.button`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 72px;
-  height: 72px;
-  border-radius: 12px;
-  border: 1px solid #ddd;
-  background-color: #f8f8f8;
-  cursor: pointer;
-  flex-shrink: 0;
-
-  span {
-    font-size: 13px;
-    color: #555;
-    margin-top: 4px;
-  }
-`;
-
-const ImagePreviewWrapper = styled.div`
-  display: flex;
-  gap: 12px;
-  overflow-x: auto;
-  flex: 1;
-  padding-bottom: 8px;
-
-  &::-webkit-scrollbar {
-    height: 4px;
-  }
-  &::-webkit-scrollbar-thumb {
-    background: #ccc;
-    border-radius: 4px;
-  }
-`;
-
-const ImagePreviewItem = styled.div`
-  position: relative;
-  width: 72px;
-  height: 72px;
-  flex-shrink: 0;
-
-  img {
-    width: 100%;
-    height: 100%;
-    border-radius: 12px;
-    object-fit: cover;
-  }
-`;
-
-const DeleteButton = styled.button`
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background-color: rgba(0, 0, 0, 0.6);
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
 `;
 
 // 개인정보 동의 UI를 위한 스타일 추가
