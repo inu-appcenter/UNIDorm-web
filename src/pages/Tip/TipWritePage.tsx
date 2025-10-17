@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import SquareButton from "../../components/common/SquareButton.tsx";
 import tokenInstance from "../../apis/tokenInstance.ts";
 import Header from "../../components/common/Header.tsx";
-import ImageUploader from "../../components/common/ImageUploader.tsx";
-import { useImageHandler } from "../../hooks/useImageHandler.ts";
+import FileUploader from "../../components/common/FileUploader.tsx";
+import { useFileHandler } from "../../hooks/useFileHandler.ts";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 
 export default function TipWritePage() {
@@ -21,8 +21,8 @@ export default function TipWritePage() {
   const [isLoading, setIsLoading] = useState(false);
 
   // 이미지 상태 및 핸들러 커스텀 훅
-  const { images, addImages, deleteImage, isImageLoading } = useImageHandler({
-    initialImages: tipImages,
+  const { files, addFiles, deleteFile, isFileLoading } = useFileHandler({
+    initialFiles: tipImages,
   });
 
   // 초기 렌더링 시 스크롤 상단 이동
@@ -64,7 +64,7 @@ export default function TipWritePage() {
     formData.append("requestTipDto", tipDto);
 
     // 이미지 파일 추가
-    images.forEach((imageFile) => {
+    files.forEach((imageFile) => {
       formData.append("images", imageFile.file);
     });
 
@@ -113,18 +113,18 @@ export default function TipWritePage() {
           value={content}
           onChange={(e) => setContent(e.target.value)}
         />
-        <Label>이미지 ({images.length}/10)</Label>
+        <Label>이미지 ({files.length}/10)</Label>
         {isEditMode && (
           <InfoText>
             이미지를 새로 첨부하면 기존 이미지는 모두 대체됩니다.
           </InfoText>
         )}
 
-        <ImageUploader
-          images={images}
-          onAddImages={addImages}
-          onDeleteImage={deleteImage}
-          isLoading={isImageLoading}
+        <FileUploader
+          images={files}
+          onAddImages={addFiles}
+          onDeleteImage={deleteFile}
+          isLoading={isFileLoading}
         />
       </Content>
 

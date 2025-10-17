@@ -31,7 +31,7 @@ export default function AnnounceDetailPage() {
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [attachments, setAttachments] = useState<AnnouncementFile[]>([]);
-  const [images, setImages] = useState<AnnouncementFile[]>([]);
+  const [images, setimages] = useState<AnnouncementFile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const navigate = useNavigate();
@@ -70,7 +70,7 @@ export default function AnnounceDetailPage() {
           return ext && imageExtensions.includes(ext);
         });
 
-        setImages(imageFiles);
+        setimages(imageFiles);
         setAttachments(allFiles);
       } catch (err) {
         alert("공지사항을 불러오는 데 실패했습니다.");
@@ -89,7 +89,7 @@ export default function AnnounceDetailPage() {
       label: "수정하기",
       onClick: () => {
         navigate("/announcements/write", {
-          state: { announce },
+          state: { announce, announceFiles: images },
         });
       },
     },

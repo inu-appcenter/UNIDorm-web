@@ -15,18 +15,17 @@ import CategorySelector from "../../components/GroupPurchase/CategorySelector.ts
 import DeadlineSelector from "../../components/GroupPurchase/DeadlineSelector.tsx";
 import HowToCreateOpenChat from "../../components/GroupPurchase/HowToCreateOpenChat.tsx";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
-import { useImageHandler } from "../../hooks/useImageHandler.ts";
-import ImageUploader from "../../components/common/ImageUploader.tsx";
+import { useFileHandler } from "../../hooks/useFileHandler.ts";
+import FileUploader from "../../components/common/FileUploader.tsx";
 
 export default function GroupPurchaseWritePage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { post, curImages } = location.state || {};
   // 이미지 상태 및 핸들러 커스텀 훅
-  const { images, addImages, deleteImage, isImageLoading } = useImageHandler({
-    initialImages: curImages,
+  const { files, addFiles, deleteFile, isFileLoading } = useFileHandler({
+    initialFiles: curImages,
   });
-
   const {
     isEditMode,
     formData,
@@ -82,10 +81,10 @@ export default function GroupPurchaseWritePage() {
     try {
       setIsLoading(true);
       if (isEditMode && post?.id) {
-        await updateGroupPurchase(post.id, requestDto, images);
+        await updateGroupPurchase(post.id, requestDto, files);
         alert("게시글이 수정되었습니다.");
       } else {
-        await createGroupPurchase(requestDto, images);
+        await createGroupPurchase(requestDto, files);
         alert("게시글이 등록되었습니다.");
       }
     } catch (error) {
@@ -179,11 +178,11 @@ export default function GroupPurchaseWritePage() {
       <Description>
         상품 이미지를 업로드하면 공동구매가 성사될 확률이 높아져요!
       </Description>
-      <ImageUploader
-        images={images}
-        onAddImages={addImages}
-        onDeleteImage={deleteImage}
-        isLoading={isImageLoading}
+      <FileUploader
+        images={files}
+        onAddImages={addFiles}
+        onDeleteImage={deleteFile}
+        isLoading={isFileLoading}
       />
 
       {isLoggedIn && (
