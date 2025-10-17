@@ -16,7 +16,6 @@ import ToggleGroup from "../../components/roommate/checklist/ToggleGroup.tsx";
 import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
 import Header from "../../components/common/Header.tsx";
 import { colleges, dormitory } from "../../constants/constants.ts";
-import RoundSquareButton from "../../components/button/RoundSquareButton.tsx";
 import axios from "axios";
 import profile from "../../assets/profileimg.png";
 
@@ -182,7 +181,9 @@ export default function MyInfoEditPage() {
   };
 
   const handleUploadImage = async () => {
-    if (!imageFile) return;
+    if (!imageFile) {
+      return;
+    }
 
     try {
       const response = await putUserImage(imageFile);
@@ -235,14 +236,13 @@ export default function MyInfoEditPage() {
                   />
                 </ImageSelectRow>
 
-                {imageFile && (
-                  <UploadButtonWrapper>
-                    <RoundSquareButton
-                      btnName="이미지 변경하기"
-                      onClick={handleUploadImage}
-                    />
-                  </UploadButtonWrapper>
-                )}
+                <UploadButtonWrapper>
+                  <SquareButton
+                    text="이미지 변경하기"
+                    onClick={handleUploadImage}
+                    disabled={!imageFile}
+                  />
+                </UploadButtonWrapper>
               </ImageUploadContainer>
             }
           />

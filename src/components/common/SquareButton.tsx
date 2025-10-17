@@ -35,7 +35,7 @@ export default SquareButton;
 
 const SquareButtonWrapper = styled.button<ButtonProps & { disabled?: boolean }>`
   width: 100%;
-  min-height: 60px;
+  min-height: 56px;
   font-size: 16px;
   font-weight: 500;
   color: white;
