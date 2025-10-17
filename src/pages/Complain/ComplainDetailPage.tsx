@@ -17,6 +17,7 @@ import RoundSquareButton from "../../components/button/RoundSquareButton.tsx";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../../constants/EmptyMessage.tsx";
 import { useIsAdminRole } from "../../hooks/useIsAdminRole.ts";
+import { TipImage } from "../../types/tips.ts";
 
 const ComplainDetailPage = () => {
   const { isAdmin } = useIsAdminRole();
@@ -26,6 +27,7 @@ const ComplainDetailPage = () => {
   const [selectedManager, setSelectedManager] = useState("");
   const [isNeedUpdate, setIsNeedUpdate] = useState(false);
   const navigate = useNavigate();
+  const [images, setImages] = useState<TipImage[]>([]);
 
   const [isLoading, setIsLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -44,7 +46,16 @@ const ComplainDetailPage = () => {
           response = await getComplaintDetail(Number(complainId));
           console.log("일반 유저용 민원 상세 가져오기 성공:", response);
         }
-
+        setImages(
+          response.data.images.map(
+            (url: string, index): TipImage => ({
+              contentType: "",
+              imageUrl: url,
+              fileSize: 0,
+              imageName: `이미지 ${index + 1}`,
+            }),
+          ),
+        );
         console.log(response);
         setComplaint(response.data);
       } catch (error) {
@@ -125,7 +136,9 @@ const ComplainDetailPage = () => {
     {
       label: "수정하기",
       onClick: () => {
-        navigate("/complain/write", { state: { complain: complaint } });
+        navigate("/complain/write", {
+          state: { complain: complaint, complainImages: images },
+        });
       },
     },
     {
