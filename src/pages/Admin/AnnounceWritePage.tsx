@@ -1,7 +1,6 @@
 import styled from "styled-components";
 import { useLocation, useNavigate } from "react-router-dom";
-import { MdImage } from "react-icons/md";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import SquareButton from "../../components/common/SquareButton.tsx";
 import { RequestAnnouncementDto } from "../../types/announcements.ts";
 import {
@@ -11,29 +10,29 @@ import {
 } from "../../apis/announcements.ts";
 import Header from "../../components/common/Header.tsx";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
+import FileUploader from "../../components/common/FileUploader.tsx";
+import { useFileHandler } from "../../hooks/useFileHandler.ts";
 
 export default function AnnounceWritePage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { announce } = location.state || {};
+  const { announce, announceFiles } = location.state || {};
   const [title, setTitle] = useState(announce?.title || "");
   const [content, setContent] = useState(announce?.content || "");
   const [writer, setWriter] = useState(announce?.writer || "관리자");
   const [isEmergency, setIsEmergency] = useState(false);
-  const inputRef = useRef<HTMLInputElement | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // 이미지 상태 및 핸들러 커스텀 훅
+  const { files, addFiles, deleteFile, isFileLoading } = useFileHandler({
+    initialFiles: announceFiles,
+    mode: "file",
+  });
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    console.log("announceImages", announceFiles);
   }, []);
-
-  const [files, setFiles] = useState<File[]>([]);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setFiles(Array.from(e.target.files));
-    }
-  };
 
   const handleSubmit = async () => {
     const data: RequestAnnouncementDto = {
@@ -42,7 +41,6 @@ export default function AnnounceWritePage() {
       content,
       isEmergency,
     };
-
     try {
       setIsLoading(true);
       if (announce) {
@@ -99,21 +97,17 @@ export default function AnnounceWritePage() {
         <Label>첨부파일</Label>
         {announce && (
           <div className="description">
-            첨부파일을 넣으면 기존에 업로드된 첨부파일 대신 새로 업로드한
-            첨부파일로 대체됩니다.
+            이미지 또는 일반 파일을 첨부할 수 있습니다. 이미지를 첨부하면
+            게시글에서 미리보기가 지원됩니다.
           </div>
         )}
-        <FileBox onClick={() => inputRef.current?.click()}>
-          <MdImage size={36} color="#888" />
-          <span>{files.length}/10</span>
-          <input
-            ref={inputRef}
-            type="file"
-            multiple
-            hidden
-            onChange={handleFileChange}
-          />
-        </FileBox>
+        <FileUploader
+          images={files}
+          onAddImages={addFiles}
+          onDeleteImage={deleteFile}
+          isLoading={isFileLoading}
+          mode="file" // ← 파일 모드로 동작
+        />
         <Label>긴급 여부</Label>
         <CheckBoxWrapper>
           <input
@@ -152,23 +146,6 @@ const Content = styled.div`
   .description {
     font-size: 14px;
     color: #555;
-  }
-`;
-
-const FileBox = styled.div`
-  width: 100%;
-  height: 80px;
-  background: #eee;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  color: #555;
-
-  img {
-    width: 24px;
-    height: 24px;
   }
 `;
 

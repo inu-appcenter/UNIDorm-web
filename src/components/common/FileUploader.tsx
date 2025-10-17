@@ -1,36 +1,30 @@
 import React, { useRef, ChangeEvent } from "react";
 import styled from "styled-components";
 import LoadingSpinner from "./LoadingSpinner.tsx";
+import { ManagedFile } from "../../hooks/useFileHandler.ts";
 
-// 부모와 자식이 함께 사용할 타입을 export 합니다.
-export interface ImageFile {
-  file: File;
-  preview: string;
-}
-
-// 부모로부터 받아올 props의 타입을 정의합니다.
-interface ImageUploaderProps {
-  images: ImageFile[];
+interface FileUploaderProps {
+  images: ManagedFile[];
   onAddImages: (files: FileList) => void;
   onDeleteImage: (index: number) => void;
   isLoading?: boolean;
+  mode?: "image" | "file"; // ✅ 추가된 prop
 }
 
-const ImageUploader: React.FC<ImageUploaderProps> = ({
+const FileUploader: React.FC<FileUploaderProps> = ({
   images,
   onAddImages,
   onDeleteImage,
   isLoading,
+  mode = "image", // ✅ 기본값: 이미지 모드
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // 파일이 선택되면, 받은 파일을 그대로 부모의 함수로 전달합니다.
-  const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files && files.length > 0) {
       onAddImages(files);
     }
-    // input 값 초기화하여 동일한 파일 재업로드 가능하게 함
     if (event.target) {
       event.target.value = "";
     }
@@ -40,36 +34,53 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     fileInputRef.current?.click();
   };
 
+  const isImageMode = mode === "image";
+
   return (
     <Container>
       <input
         type="file"
         multiple
-        accept="image/*"
-        onChange={handleImageChange}
+        accept={isImageMode ? "image/*" : undefined}
+        onChange={handleFileChange}
         ref={fileInputRef}
         style={{ display: "none" }}
       />
-      <AddButton onClick={triggerFileInput}>이미지 선택</AddButton>
-      {isLoading && <LoadingSpinner message="이미지를 불러오는 중..." />}
+
+      <AddButton onClick={triggerFileInput}>
+        {isImageMode ? "이미지 선택" : "파일 선택"}
+      </AddButton>
+
+      {isLoading && <LoadingSpinner message="불러오는 중..." />}
+
       {images.length > 0 && (
         <PreviewContainer>
-          {images.map((image, index) => (
-            <ImageWrapper key={index}>
-              <PreviewImage src={image.preview} alt={`미리보기 ${index}`} />
-              {/* 삭제 요청 시, 해당 이미지의 인덱스를 부모 함수로 전달합니다. */}
-              <DeleteButton onClick={() => onDeleteImage(index)}>
-                X
-              </DeleteButton>
-            </ImageWrapper>
-          ))}
+          {images.map((image, index) =>
+            isImageMode && image.preview ? (
+              <ImageWrapper key={index}>
+                <PreviewImage src={image.preview} alt={`미리보기 ${index}`} />
+                <DeleteButton onClick={() => onDeleteImage(index)}>
+                  X
+                </DeleteButton>
+              </ImageWrapper>
+            ) : (
+              <FileWrapper key={index}>
+                {image.file.name}
+                <DeleteButton onClick={() => onDeleteImage(index)}>
+                  X
+                </DeleteButton>
+              </FileWrapper>
+            ),
+          )}
         </PreviewContainer>
       )}
     </Container>
   );
 };
 
-export default ImageUploader;
+export default FileUploader;
+
+/* ---------------- Styled Components ---------------- */
 
 const Container = styled.div`
   padding: 20px;
@@ -94,7 +105,6 @@ const AddButton = styled.button`
   color: white;
   border: none;
   border-radius: 8px;
-  //margin-bottom: 20px;
   transition: background-color 0.2s;
   width: fit-content;
   height: fit-content;
@@ -110,14 +120,23 @@ const PreviewContainer = styled.div`
   flex-wrap: wrap;
   gap: 8px;
   width: 100%;
-  //margin-top: 20px;
 `;
 
 const ImageWrapper = styled.div`
   position: relative;
   width: 30%;
   aspect-ratio: 1/1;
-  //height: auto;
+`;
+
+const FileWrapper = styled.div`
+  position: relative;
+  width: 100%;
+  padding: 8px 16px;
+  box-sizing: border-box;
+  border-radius: 4px;
+  border: 1px solid #8e8e93;
+  color: #8e8e93;
+  font-weight: 500;
 `;
 
 const PreviewImage = styled.img`
