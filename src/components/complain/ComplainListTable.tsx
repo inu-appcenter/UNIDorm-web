@@ -28,6 +28,7 @@ const ComplainListTable: React.FC<TableProps> = ({
                 <TableHeader>기숙사</TableHeader>
                 {/* '사생번호' 헤더를 '호실 정보'로 변경 */}
                 <TableHeader>호실 정보</TableHeader>
+                <TableHeader>학번</TableHeader>
               </>
             )}
           </tr>
@@ -52,10 +53,12 @@ const ComplainListTable: React.FC<TableProps> = ({
                 <>
                   <TableCell>{"officer" in row && row.officer}</TableCell>
                   <TableCell>{"dormType" in row && row.dormType}</TableCell>
-                  {/* caseNumber 대신 building, roomNumber, bedNumber를 조합하여 표시 */}
                   <TableCell>
                     {"building" in row &&
                       `${row.building} ${row.roomNumber} ${row.bedNumber}침대`}
+                  </TableCell>
+                  <TableCell>
+                    {"studentNumber" in row && row.studentNumber}
                   </TableCell>
                 </>
               )}

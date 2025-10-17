@@ -75,6 +75,9 @@ const EmptyMessage = styled.div`
 
 const Divider = styled.div`
   height: 1px;
-  width: 100%;
+  width: 100vw;
   background: #0000001a;
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
 `;

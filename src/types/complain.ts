@@ -6,6 +6,15 @@ export interface Files {
   uploadDate: string | null;
 }
 
+// 파일 정보 타입
+export interface FileInfo {
+  imageName: string;
+  imageUrl: string;
+  contentType: string;
+  fileSize: number;
+  uploadDate: string;
+}
+
 // 민원 상세 타입
 export interface ComplaintDetail {
   id: number;
@@ -14,20 +23,24 @@ export interface ComplaintDetail {
   type: string;
   dormType: string;
   status: string;
-  building: string; // 추가
-  floor: string; // 추가
-  roomNumber: string; // 추가
-  bedNumber: string; // 추가
+  building: string;
+  floor: string;
+  roomNumber: string;
+  bedNumber: string;
+  specificLocation: string;
+  incidentDate: string;
+  incidentTime: string;
   createdDate: string;
-  officer: string | null; // null 타입 추가
+  officer: string;
   reply: {
     replyTitle: string;
     replyContent: string;
     responderName: string;
-    attachmentUrl: Files[];
+    attachmentUrl: FileInfo[];
     createdDate: string;
-  } | null; // null 타입 추가
+  } | null;
   images: string[];
+  studentNumber: string;
 }
 
 // 민원 목록용 타입
@@ -83,6 +96,7 @@ export interface AdminComplaint {
   roomNumber: string;
   bedNumber: string;
   dormType: string;
+  studentNumber: string;
 }
 
 // 답변 등록/수정 DTO

@@ -35,11 +35,13 @@ import {
   MetaInfo,
   People,
 } from "../../styles/groupPurchase.ts";
+import useMediaQuery from "../../hooks/useMediaQuery.ts";
 
 export default function GroupPurchasePostPage() {
   const { tokenInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
   const [isneedupdate, setisneedupdate] = useState(false);
+  const isDesktop = useMediaQuery("(min-width: 1024px)");
 
   const { boardId } = useParams<{ boardId: string }>();
   const groupOrderId = Number(boardId);
@@ -174,7 +176,10 @@ export default function GroupPurchasePostPage() {
   const menuItems = [
     {
       label: "수정하기",
-      onClick: () => navigate("/groupPurchase/write", { state: { post } }),
+      onClick: () =>
+        navigate("/groupPurchase/write", {
+          state: { post, curImages: images },
+        }),
     },
     { label: "삭제하기", onClick: handleDelete },
   ];
@@ -193,6 +198,15 @@ export default function GroupPurchasePostPage() {
           <PageLayout>
             {/* 🔽 PC에서 좌우 2단 레이아웃을 위한 컨테이너 */}
             <TopContentContainer>
+              {!isDesktop && (
+                <UserInfo
+                  createDate={post.createDate}
+                  username={post.username}
+                  authorImagePath={post.authorImagePath}
+                  groupOrderType={post.groupOrderType}
+                />
+              )}
+
               {/* 🖼️ 좌측: 이미지 섹션 */}
               {images.length > 0 && (
                 <ImageSection>
@@ -236,12 +250,15 @@ export default function GroupPurchasePostPage() {
 
               {/* ℹ️ 우측: 정보 섹션 */}
               <InfoSection>
-                <UserInfo
-                  createDate={post.createDate}
-                  username={post.username}
-                  authorImagePath={post.authorImagePath}
-                  groupOrderType={post.groupOrderType}
-                />
+                {isDesktop && (
+                  <UserInfo
+                    createDate={post.createDate}
+                    username={post.username}
+                    authorImagePath={post.authorImagePath}
+                    groupOrderType={post.groupOrderType}
+                  />
+                )}
+
                 <Content>
                   <Title>{post.title}</Title>
                   <MetaInfo>
@@ -347,7 +364,7 @@ export default function GroupPurchasePostPage() {
             onClose={() => setShowModal(false)}
             show={showModal}
             title={"거래 전 확인하세요!"}
-            content={CheckBeforeDeal2}
+            content={CheckBeforeDeal2()}
             headerImageId={2}
             closeButtonText={"확인했어요"}
             onCloseClick={() => {

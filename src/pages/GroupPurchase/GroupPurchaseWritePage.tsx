@@ -3,7 +3,7 @@ import styled from "styled-components";
 import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../../components/common/Header";
 import CommonBottomModal from "../../components/modal/CommonBottomModal";
-import CheckBeforeContent from "../../components/GroupPurchase/CheckBeforeContent";
+// import CheckBeforeContent from "../../components/GroupPurchase/CheckBeforeContent";
 import useUserStore from "../../stores/useUserStore";
 import {
   createGroupPurchase,
@@ -13,15 +13,19 @@ import { CreateGroupOrderRequest } from "../../types/grouporder";
 import { useGroupPurchaseForm } from "../../utils/useGroupPurchaseForm.ts";
 import CategorySelector from "../../components/GroupPurchase/CategorySelector.tsx";
 import DeadlineSelector from "../../components/GroupPurchase/DeadlineSelector.tsx";
-import ImageUploader from "../../components/GroupPurchase/ImageUploader.tsx";
 import HowToCreateOpenChat from "../../components/GroupPurchase/HowToCreateOpenChat.tsx";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
+import { useFileHandler } from "../../hooks/useFileHandler.ts";
+import FileUploader from "../../components/common/FileUploader.tsx";
 
 export default function GroupPurchaseWritePage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { post } = location.state || {};
-
+  const { post, curImages } = location.state || {};
+  // 이미지 상태 및 핸들러 커스텀 훅
+  const { files, addFiles, deleteFile, isFileLoading } = useFileHandler({
+    initialFiles: curImages,
+  });
   const {
     isEditMode,
     formData,
@@ -37,7 +41,6 @@ export default function GroupPurchaseWritePage() {
     purchaseLink,
     openchatLink,
     category,
-    images,
     deadline,
   } = formData;
 
@@ -49,19 +52,18 @@ export default function GroupPurchaseWritePage() {
     setOpenchatLink,
     setCategory,
     setDeadline,
-    handleImageChange,
   } = formHandlers;
 
   const { tokenInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
-  const [isModalOpen, setIsModalOpen] = useState(true);
+  // const [isModalOpen, setIsModalOpen] = useState(true);
   const [isHowtoModalOpen, setIsHowToModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
-    // ✅ DeadlineSelector에서 선택한 값 기반으로 문자열 생성
+    // DeadlineSelector에서 선택한 값 기반으로 문자열 생성
     const deadlineString = getDeadlineString();
 
     const requestDto: CreateGroupOrderRequest = {
@@ -79,19 +81,18 @@ export default function GroupPurchaseWritePage() {
     try {
       setIsLoading(true);
       if (isEditMode && post?.id) {
-        await updateGroupPurchase(post.id, requestDto, images);
+        await updateGroupPurchase(post.id, requestDto, files);
         alert("게시글이 수정되었습니다.");
-        navigate(`/groupPurchase/${post.id}`, { replace: true });
       } else {
-        await createGroupPurchase(requestDto, images);
+        await createGroupPurchase(requestDto, files);
         alert("게시글이 등록되었습니다.");
-        navigate(-1);
       }
     } catch (error) {
       console.error("게시글 등록/수정 실패:", error);
       alert("게시글 등록/수정 중 오류가 발생했습니다.");
     } finally {
       setIsLoading(false);
+      navigate(-1);
     }
   };
 
@@ -108,15 +109,14 @@ export default function GroupPurchaseWritePage() {
           <TempSaveButton onClick={handleTempSave}>임시저장</TempSaveButton>
         }
       />
-
       {isLoading && <LoadingSpinner overlay message="글 쓰는 중..." />}
-
-      <CommonBottomModal
-        id={"checkbefore"}
-        isOpen={isModalOpen}
-        setIsOpen={setIsModalOpen}
-        children={<CheckBeforeContent />}
-      />
+      {/*거래 전 확인하세요 모달*/}
+      {/*<CommonBottomModal*/}
+      {/*  id={"checkbefore"}*/}
+      {/*  isOpen={isModalOpen}*/}
+      {/*  setIsOpen={setIsModalOpen}*/}
+      {/*  children={<CheckBeforeContent />}*/}
+      {/*/>*/}
       <CommonBottomModal
         id={"howToCreateOpenChat"}
         title={"오픈채팅 생성 매뉴얼"}
@@ -124,20 +124,17 @@ export default function GroupPurchaseWritePage() {
         setIsOpen={setIsHowToModalOpen}
         children={<HowToCreateOpenChat />}
       />
-
       <SectionTitle>제목</SectionTitle>
       <InputField
         placeholder="공동구매하려는 물품명을 작성해주세요"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
       />
-
       <SectionTitle>카테고리</SectionTitle>
       <CategorySelector
         selectedCategory={category}
         onSelectCategory={setCategory}
       />
-
       <SectionTitle>가격</SectionTitle>
       <InputField
         type="number"
@@ -145,7 +142,6 @@ export default function GroupPurchaseWritePage() {
         value={price}
         onChange={(e) => setPrice(e.target.value)}
       />
-
       <SectionTitle>내용</SectionTitle>
       <TextArea
         placeholder="내용을 입력해주세요"
@@ -153,7 +149,6 @@ export default function GroupPurchaseWritePage() {
         value={description}
         onChange={(e) => setDescription(e.target.value)}
       />
-
       <SectionTitle>구매 링크</SectionTitle>
       <Description>상품의 필요 여부를 판단하는데 도움이 됩니다.</Description>
       <InputField
@@ -161,7 +156,6 @@ export default function GroupPurchaseWritePage() {
         value={purchaseLink}
         onChange={(e) => setPurchaseLink(e.target.value)}
       />
-
       <SectionTitle>
         오픈채팅방 링크{" "}
         <a onClick={() => setIsHowToModalOpen(true)}>
@@ -174,19 +168,22 @@ export default function GroupPurchaseWritePage() {
         value={openchatLink}
         onChange={(e) => setOpenchatLink(e.target.value)}
       />
-
       <SectionTitle>마감 시간</SectionTitle>
       <DeadlineSelector
         deadline={deadline}
         onDeadlineChange={setDeadline}
         category={category}
       />
-
       <SectionTitle>이미지 (선택)</SectionTitle>
       <Description>
         상품 이미지를 업로드하면 공동구매가 성사될 확률이 높아져요!
       </Description>
-      <ImageUploader images={images} onImageChange={handleImageChange} />
+      <FileUploader
+        images={files}
+        onAddImages={addFiles}
+        onDeleteImage={deleteFile}
+        isLoading={isFileLoading}
+      />
 
       {isLoggedIn && (
         <BottomFixed>
