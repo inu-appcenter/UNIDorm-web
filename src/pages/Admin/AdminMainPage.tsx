@@ -66,7 +66,12 @@ const AdminMainPage: React.FC = () => {
   // SUPPORTERS인 경우 특정 페이지만 표시
   const adminPages = isSupporters
     ? allAdminPages.filter((page) =>
-        ["공지사항 관리", "캘린더 관리", "TIP 관리"].includes(page.label),
+        [
+          "공지사항 관리",
+          "캘린더 관리",
+          "TIP 관리",
+          "홈 화면 팝업 공지 관리",
+        ].includes(page.label),
       )
     : allAdminPages;
 

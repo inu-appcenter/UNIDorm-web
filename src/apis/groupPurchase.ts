@@ -9,7 +9,8 @@ import {
   GroupOrderImage,
   GroupOrderPopularSearch,
 } from "../types/grouporder.ts";
-import tokenInstance from "./tokenInstance.ts"; // 이미 토큰 처리된 인스턴스
+import tokenInstance from "./tokenInstance.ts";
+import { ManagedFile } from "../hooks/useFileHandler.ts";
 
 //공동구매 게시글 목록 조회
 export const getGroupPurchaseList = async (
@@ -65,7 +66,7 @@ export const getGroupPurchasePopularSearch = async (): Promise<
 //공동구매 게시글 등록
 export const createGroupPurchase = async (
   requestGroupOrderDto: CreateGroupOrderRequest,
-  images?: File[],
+  images?: ManagedFile[],
 ): Promise<void> => {
   const formData = new FormData();
   formData.append(
@@ -77,7 +78,7 @@ export const createGroupPurchase = async (
 
   if (images && images.length > 0) {
     images.forEach((image) => {
-      formData.append("images", image);
+      formData.append("images", image.file);
     });
   }
 
@@ -100,7 +101,7 @@ export const addGroupPurchaseRating = async (
 export const updateGroupPurchase = async (
   groupOrderId: number,
   requestGroupOrderDto: CreateGroupOrderRequest,
-  images?: File[],
+  images?: ManagedFile[],
 ): Promise<void> => {
   const formData = new FormData();
   formData.append(
@@ -112,7 +113,7 @@ export const updateGroupPurchase = async (
 
   if (images && images.length > 0) {
     images.forEach((image) => {
-      formData.append("images", image);
+      formData.append("images", image.file);
     });
   }
 

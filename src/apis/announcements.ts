@@ -10,6 +10,7 @@ import {
   RequestAnnouncementDto,
 } from "../types/announcements.ts";
 import axiosInstance from "./axiosInstance.ts";
+import { ManagedFile } from "../hooks/useFileHandler.ts";
 
 export const getAnnouncements = async (): Promise<
   AxiosResponse<Announcement[]>
@@ -31,7 +32,7 @@ export const getAnnouncementFiles = async (
 
 export const createAnnouncement = async (
   data: RequestAnnouncementDto,
-  files?: File[],
+  files?: ManagedFile[],
 ): Promise<AxiosResponse<void>> => {
   const formData = new FormData();
 
@@ -42,7 +43,7 @@ export const createAnnouncement = async (
 
   if (files && files.length > 0) {
     files.forEach((file) => {
-      formData.append("files", file);
+      formData.append("files", file.file);
     });
   }
 
@@ -63,7 +64,7 @@ export const updateAnnouncement = async (
 export const updateAnnouncementWithFiles = async (
   announcementId: number,
   data: RequestAnnouncementDto,
-  files?: File[],
+  files?: ManagedFile[],
 ): Promise<AxiosResponse<AnnouncementResponse>> => {
   const formData = new FormData();
 
@@ -74,7 +75,7 @@ export const updateAnnouncementWithFiles = async (
 
   if (files && files.length > 0) {
     files.forEach((file) => {
-      formData.append("files", file);
+      formData.append("files", file.file);
     });
   }
 

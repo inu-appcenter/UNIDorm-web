@@ -1,28 +1,36 @@
-// TipWritePage.tsx
 import styled from "styled-components";
 import { useLocation, useNavigate } from "react-router-dom";
-import { MdImage } from "react-icons/md";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import SquareButton from "../../components/common/SquareButton.tsx";
 import tokenInstance from "../../apis/tokenInstance.ts";
 import Header from "../../components/common/Header.tsx";
+import FileUploader from "../../components/common/FileUploader.tsx";
+import { useFileHandler } from "../../hooks/useFileHandler.ts";
+import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 
 export default function TipWritePage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { tip, tipImages } = location.state || {};
+
   const [tipid, setTipid] = useState("");
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [images, setImages] = useState<File[]>([]);
-  const inputRef = useRef<HTMLInputElement | null>(null);
-
-  const location = useLocation();
-  const { tip } = location.state || {};
   const [isEditMode, setIsEditMode] = useState(false);
 
+  const [isLoading, setIsLoading] = useState(false);
+
+  // 이미지 상태 및 핸들러 커스텀 훅
+  const { files, addFiles, deleteFile, isFileLoading } = useFileHandler({
+    initialFiles: tipImages,
+  });
+
+  // 초기 렌더링 시 스크롤 상단 이동
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
+  // 수정 모드 데이터 설정
   useEffect(() => {
     if (tip) {
       setTipid(tip.id);
@@ -32,102 +40,65 @@ export default function TipWritePage() {
     }
   }, [tip]);
 
-  // 이미지 중복 제거 + 용량 검사 + 개수 제한
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const fileList = Array.from(e.target.files);
-
-      // 기존 이미지와 합쳐서 중복 제거 (파일명+사이즈 기준)
-      const newFiles = [...images, ...fileList].filter(
-        (file, index, self) =>
-          index ===
-          self.findIndex((f) => f.name === file.name && f.size === file.size),
-      );
-
-      // 용량 제한 (5MB)
-      for (const file of newFiles) {
-        if (file.size > 5 * 1024 * 1024) {
-          alert("이미지는 5MB 이하만 업로드 가능합니다.");
-          return;
-        }
-      }
-
-      // 최대 10장까지만 허용
-      setImages(newFiles.slice(0, 10));
-    }
-  };
-
+  // 폼 제출 핸들러
   const handleSubmit = async () => {
+    if (!title.trim() || !content.trim()) {
+      alert("제목과 내용을 모두 입력해주세요.");
+      return;
+    }
+    if (title.length > 100) {
+      alert("제목은 100자 이하로 입력해주세요.");
+      return;
+    }
+    if (content.length > 2000) {
+      alert("내용은 2000자 이하로 입력해주세요.");
+      return;
+    }
+
+    const formData = new FormData();
+
+    // DTO 데이터 추가
+    const tipDto = new Blob([JSON.stringify({ title, content })], {
+      type: "application/json",
+    });
+    formData.append("requestTipDto", tipDto);
+
+    // 이미지 파일 추가
+    files.forEach((imageFile) => {
+      formData.append("images", imageFile.file);
+    });
+
     try {
-      if (!title.trim() || !content.trim()) {
-        alert("제목과 내용을 모두 입력해주세요.");
-        return;
-      }
-
-      // 글자 수 제한
-      if (title.length > 100) {
-        alert("제목은 100자 이하로 입력해주세요.");
-        return;
-      }
-      if (content.length > 2000) {
-        alert("내용은 2000자 이하로 입력해주세요.");
-        return;
-      }
-
-      const formData = new FormData();
-
-      const tipDto = new Blob(
-        [
-          JSON.stringify({
-            title: title,
-            content: content,
-          }),
-        ],
-        { type: "application/json" },
-      );
-
-      formData.append("requestTipDto", tipDto);
-
-      // 이미지 추가
-      if (!isEditMode || (isEditMode && images.length > 0)) {
-        for (let i = 0; i < images.length; i++) {
-          formData.append("images", images[i]);
-        }
-      }
-
-      let res;
-
+      setIsLoading(true);
       if (isEditMode) {
-        res = await tokenInstance.put(`/tips/${tipid}`, formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
+        await tokenInstance.put(`/tips/${tipid}`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
         });
         alert("팁이 수정되었습니다!");
       } else {
-        res = await tokenInstance.post("/tips", formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
+        await tokenInstance.post("/tips", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
         });
         alert("팁이 등록되었습니다!");
       }
-
-      console.log("성공", res.data);
-      navigate("/tips");
+      navigate(-1);
     } catch (err: any) {
-      console.error("실패", err);
-      if (err.response?.data?.message) {
-        alert(`[서버 응답] ${err.response.data.message}`);
-      } else {
-        alert("처리 중 오류가 발생했습니다.");
-      }
+      console.error("Submit failed:", err);
+      const message =
+        err.response?.data?.message || "처리 중 오류가 발생했습니다.";
+      alert(message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <Wrapper>
-      <Header title={"기숙사 꿀팁 작성"} hasBack={true} />
+      <Header
+        title={`기숙사 꿀팁 ${isEditMode ? "수정" : "작성"}`}
+        hasBack={true}
+      />
+      {isLoading && <LoadingSpinner message="글 쓰는 중..." overlay={true} />}
 
       <Content>
         <Label>제목</Label>
@@ -142,40 +113,32 @@ export default function TipWritePage() {
           value={content}
           onChange={(e) => setContent(e.target.value)}
         />
-        <Label>이미지</Label>
+        <Label>이미지 ({files.length}/10)</Label>
         {isEditMode && (
-          <>이미지를 첨부하면 기존 글에 첨부된 이미지가 대체됩니다.</>
+          <InfoText>
+            이미지를 새로 첨부하면 기존 이미지는 모두 대체됩니다.
+          </InfoText>
         )}
-        <ImageBox onClick={() => inputRef.current?.click()}>
-          <MdImage size={36} color="#888" />
-          <span>{images.length}/10</span>
-          {/* 여러 장 미리보기 */}
-          {images.map((file, idx) => (
-            <img
-              key={idx}
-              src={URL.createObjectURL(file)}
-              alt={`업로드 이미지${idx + 1}`}
-              style={{ width: 36, height: 36, borderRadius: 8, marginLeft: 4 }}
-            />
-          ))}
-          <input
-            ref={inputRef}
-            type="file"
-            accept="image/*"
-            multiple
-            hidden
-            onChange={handleImageChange}
-          />
-        </ImageBox>
+
+        <FileUploader
+          images={files}
+          onAddImages={addFiles}
+          onDeleteImage={deleteFile}
+          isLoading={isFileLoading}
+        />
       </Content>
 
-      {/*<SubmitButton onClick={handleSubmit}>등록하기</SubmitButton>*/}
       <ButtonWrapper>
-        <SquareButton text="등록하기" onClick={handleSubmit} />
+        <SquareButton
+          text={isEditMode ? "수정하기" : "등록하기"}
+          onClick={handleSubmit}
+        />
       </ButtonWrapper>
     </Wrapper>
   );
 }
+
+// --- Styled Components ---
 
 const Wrapper = styled.div`
   display: flex;
@@ -193,67 +156,39 @@ const Content = styled.div`
   overflow-y: auto;
 `;
 
-const ImageBox = styled.div`
-  width: 100%;
-  height: 80px;
-  background: #eee;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  color: #555;
-
-  img {
-    width: 24px;
-    height: 24px;
-  }
-`;
-
 const Label = styled.label`
   font-weight: 600;
+`;
+
+const InfoText = styled.p`
+  font-size: 14px;
+  color: #888;
+  margin: -8px 0;
 `;
 
 const Input = styled.input`
   padding: 12px;
   border-radius: 8px;
-  border: none;
-  background: rgb(255, 255, 255);
+  border: 1px solid #ddd;
+  background: #fff;
 `;
 
 const Textarea = styled.textarea`
   min-height: 200px;
   padding: 12px;
   border-radius: 8px;
-  border: none;
-  background: rgb(255, 255, 255);
+  border: 1px solid #ddd;
+  background: #fff;
   resize: none;
+  font-family: inherit;
 `;
-
-// const SubmitButton = styled.button`
-//   position: fixed;
-//   bottom: 90px;
-//   left: 16px;
-//   right: 16px;
-//   background: #007bff;
-//   color: white;
-//   border: none;
-//   border-radius: 12px;
-//   padding: 16px;
-//   font-weight: bold;
-//   font-size: 16px;
-//   cursor: pointer;
-//   z-index: 1001;
-// `;
 
 const ButtonWrapper = styled.div`
   width: 100%;
-  height: fit-content;
   position: fixed;
-
-  padding: 12px 16px;
-  box-sizing: border-box;
-
   bottom: 0;
   left: 0;
+  padding: 20px 16px;
+  box-sizing: border-box;
+  background-color: #fafafa;
 `;

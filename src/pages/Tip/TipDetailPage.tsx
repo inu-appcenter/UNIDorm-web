@@ -152,7 +152,8 @@ export default function TipDetailPage() {
   const menuItems = [
     {
       label: "수정하기",
-      onClick: () => navigate("/tips/write", { state: { tip: tip } }),
+      onClick: () =>
+        navigate("/tips/write", { state: { tip: tip, tipImages: images } }),
     },
     {
       label: "삭제하기",

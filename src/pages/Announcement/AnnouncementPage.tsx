@@ -141,8 +141,9 @@ const NoticeTop = styled.div`
 `;
 
 const NoticeTitle = styled.div`
-  font-weight: bold;
-  font-size: 18px;
+  font-weight: 600;
+  font-size: 16px;
+  color: #1c1c1e;
 
   display: -webkit-box;
   -webkit-line-clamp: 1; /* 한 줄 */

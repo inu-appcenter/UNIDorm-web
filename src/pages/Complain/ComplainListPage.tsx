@@ -130,7 +130,9 @@ const ComplainListPage = () => {
                             ? 2
                             : recentComplain.status === "처리완료"
                               ? 3
-                              : 0
+                              : recentComplain.status === "반려"
+                                ? 4
+                                : 0
                     }
                   />
                   <ComplainCard
@@ -141,6 +143,9 @@ const ComplainListPage = () => {
                     location={`${recentComplain.building} ${recentComplain.roomNumber} ${recentComplain.bedNumber}`}
                     title={recentComplain.title}
                     content={recentComplain.content}
+                    incidentDate={recentComplain.incidentDate}
+                    incidentTime={recentComplain.incidentTime}
+                    specificLocation={recentComplain.specificLocation}
                   />
                 </Wrapper1>
               ) : null}

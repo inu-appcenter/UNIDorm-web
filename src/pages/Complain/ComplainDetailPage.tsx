@@ -17,6 +17,7 @@ import RoundSquareButton from "../../components/button/RoundSquareButton.tsx";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../../constants/EmptyMessage.tsx";
 import { useIsAdminRole } from "../../hooks/useIsAdminRole.ts";
+import { TipImage } from "../../types/tips.ts";
 
 const ComplainDetailPage = () => {
   const { isAdmin } = useIsAdminRole();
@@ -26,6 +27,7 @@ const ComplainDetailPage = () => {
   const [selectedManager, setSelectedManager] = useState("");
   const [isNeedUpdate, setIsNeedUpdate] = useState(false);
   const navigate = useNavigate();
+  const [complainImages, setComplainImages] = useState<TipImage[]>([]);
 
   const [isLoading, setIsLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -44,7 +46,16 @@ const ComplainDetailPage = () => {
           response = await getComplaintDetail(Number(complainId));
           console.log("일반 유저용 민원 상세 가져오기 성공:", response);
         }
-
+        setComplainImages(
+          response.data.images.map(
+            (url: string, index): TipImage => ({
+              contentType: "",
+              imageUrl: url,
+              fileSize: 0,
+              imageName: `이미지 ${index + 1}`,
+            }),
+          ),
+        );
         console.log(response);
         setComplaint(response.data);
       } catch (error) {
@@ -61,6 +72,13 @@ const ComplainDetailPage = () => {
   const handleStatus = async (status: string) => {
     try {
       if (!isAdmin || !complainId) {
+        return;
+      }
+      if (status === "처리완료") {
+        alert("반려/처리완료는 담당자 배정 후, 답변 작성에서 가능합니다.");
+        return;
+      }
+      if (!window.confirm(`처리 상태를 ${status}(으)로 바꿀까요?`)) {
         return;
       }
       if (status === "담당자 배정") {
@@ -118,7 +136,9 @@ const ComplainDetailPage = () => {
     {
       label: "수정하기",
       onClick: () => {
-        navigate("/complain/write", { state: { complain: complaint } });
+        navigate("/complain/write", {
+          state: { complain: complaint, complainImages: complainImages },
+        });
       },
     },
     {
@@ -148,13 +168,14 @@ const ComplainDetailPage = () => {
                     ? 2
                     : complaint.status === "처리완료"
                       ? 3
-                      : 0
+                      : complaint.status === "반려"
+                        ? 4
+                        : 0
             }
             assignee={complaint.officer}
-            handleStatus={handleStatus}
+            handleStatus={isAdmin ? handleStatus : undefined}
           />
           <ComplainCardsContainer>
-            {/* ▼▼▼ 이 부분이 수정되었습니다 ▼▼▼ */}
             <ComplainCard
               date={complaint.createdDate}
               type={complaint.type}
@@ -163,8 +184,10 @@ const ComplainDetailPage = () => {
               title={complaint.title}
               content={complaint.content}
               images={complaint.images}
+              incidentDate={complaint.incidentDate}
+              incidentTime={complaint.incidentTime}
+              specificLocation={complaint.specificLocation}
             />
-            {/* ▲▲▲ 이 부분이 수정되었습니다 ▲▲▲ */}
             {complaint.reply && (
               <ComplainAnswerCard
                 date={complaint.reply.createdDate}
@@ -236,6 +259,7 @@ const ComplainDetailPage = () => {
               state: {
                 complain: complaint.reply ? complaint : undefined,
                 manager: complaint.officer,
+                Images: complaint?.reply?.attachmentUrl,
               },
             })
           }

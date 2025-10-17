@@ -31,4 +31,6 @@ const TagIconWrapper = styled.div`
   //letter-spacing: 0.38px;
 
   color: #0a84ff;
+
+  min-width: fit-content;
 `;
