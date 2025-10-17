@@ -1,7 +1,6 @@
 import styled from "styled-components";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { MdImage } from "react-icons/md";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import SquareButton from "../../components/common/SquareButton.tsx";
 import Header from "../../components/common/Header.tsx";
 import { ComplaintReplyDto } from "../../types/complain.ts";
@@ -11,21 +10,25 @@ import {
   updateComplaintStatus,
 } from "../../apis/complainAdmin.ts";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
+import FileUploader from "../../components/common/FileUploader.tsx";
+import { useFileHandler } from "../../hooks/useFileHandler.ts";
 
 export default function ComplainAnswerWritePage() {
   const { complainId } = useParams<{ complainId: string }>();
 
   const navigate = useNavigate();
   const location = useLocation();
-  const { complain, manager } = location.state || {};
+  const { complain, manager, Images } = location.state || {};
   const [isEditMode, setIsEditMode] = useState(false);
 
   const [isRejected, setIsRejected] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [images, setImages] = useState<File[]>([]);
 
-  const inputRef = useRef<HTMLInputElement | null>(null);
+  // 이미지 상태 및 핸들러 커스텀 훅
+  const { files, addFiles, deleteFile, isFileLoading } = useFileHandler({
+    initialFiles: Images,
+  });
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -41,13 +44,6 @@ export default function ComplainAnswerWritePage() {
       setIsRejected(complain.status === "반려");
     }
   }, [complain]);
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const fileList = Array.from(e.target.files);
-      setImages((prev) => [...prev, ...fileList].slice(0, 10));
-    }
-  };
 
   const handleSubmit = async () => {
     try {
@@ -75,10 +71,10 @@ export default function ComplainAnswerWritePage() {
 
       if (isEditMode && complain?.id) {
         // 수정 모드
-        res = await updateComplaintReply(complain.id, dto, images);
+        res = await updateComplaintReply(complain.id, dto, files);
       } else {
         // 등록 모드
-        res = await createComplaintReply(Number(complainId), dto, images);
+        res = await createComplaintReply(Number(complainId), dto, files);
       }
       if (isRejected === true) {
         await updateComplaintStatus(Number(complainId), "반려");
@@ -141,28 +137,13 @@ export default function ComplainAnswerWritePage() {
           value={content}
           onChange={(e) => setContent(e.target.value)}
         />
-        <Label>첨부파일</Label>
-        {isEditMode && <>수정 시 첨부파일을 다시 업로드해주세요.</>}
-        <ImageBox onClick={() => inputRef.current?.click()}>
-          <MdImage size={36} color="#888" />
-          <span>{images.length}/10</span>
-          {images.map((file, idx) => (
-            <img
-              key={idx}
-              src={URL.createObjectURL(file)}
-              alt={`업로드 이미지${idx + 1}`}
-              style={{ width: 36, height: 36, borderRadius: 8, marginLeft: 4 }}
-            />
-          ))}
-          <input
-            ref={inputRef}
-            type="file"
-            accept="image/*"
-            multiple
-            hidden
-            onChange={handleImageChange}
-          />
-        </ImageBox>
+        <Label>이미지</Label>
+        <FileUploader
+          images={files}
+          onAddImages={addFiles}
+          onDeleteImage={deleteFile}
+          isLoading={isFileLoading}
+        />
       </Content>
 
       <ButtonWrapper>
@@ -186,23 +167,6 @@ const Content = styled.div`
   flex-direction: column;
   gap: 16px;
   overflow-y: auto;
-`;
-
-const ImageBox = styled.div`
-  width: 100%;
-  min-height: 80px;
-  background: #eee;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  color: #555;
-
-  img {
-    width: 24px;
-    height: 24px;
-  }
 `;
 
 const Label = styled.label`

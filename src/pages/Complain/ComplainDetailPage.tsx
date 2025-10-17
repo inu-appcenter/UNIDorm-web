@@ -27,7 +27,7 @@ const ComplainDetailPage = () => {
   const [selectedManager, setSelectedManager] = useState("");
   const [isNeedUpdate, setIsNeedUpdate] = useState(false);
   const navigate = useNavigate();
-  const [images, setImages] = useState<TipImage[]>([]);
+  const [complainImages, setComplainImages] = useState<TipImage[]>([]);
 
   const [isLoading, setIsLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -46,7 +46,7 @@ const ComplainDetailPage = () => {
           response = await getComplaintDetail(Number(complainId));
           console.log("일반 유저용 민원 상세 가져오기 성공:", response);
         }
-        setImages(
+        setComplainImages(
           response.data.images.map(
             (url: string, index): TipImage => ({
               contentType: "",
@@ -137,7 +137,7 @@ const ComplainDetailPage = () => {
       label: "수정하기",
       onClick: () => {
         navigate("/complain/write", {
-          state: { complain: complaint, complainImages: images },
+          state: { complain: complaint, complainImages: complainImages },
         });
       },
     },
@@ -259,6 +259,7 @@ const ComplainDetailPage = () => {
               state: {
                 complain: complaint.reply ? complaint : undefined,
                 manager: complaint.officer,
+                Images: complaint?.reply?.attachmentUrl,
               },
             })
           }
