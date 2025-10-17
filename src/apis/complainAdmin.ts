@@ -9,6 +9,7 @@ import {
   ComplaintSearchDto,
 } from "../types/complain.ts";
 import { AxiosResponse } from "axios";
+import { ManagedFile } from "../hooks/useFileHandler.ts";
 
 export const deleteComplaintReply = async (
   complaintId: number,
@@ -70,13 +71,13 @@ export const assignComplaintOfficer = async (
 export const updateComplaintReply = async (
   complaintId: number,
   dto: ComplaintReplyDto,
-  files?: File[],
+  files?: ManagedFile[],
 ): Promise<AxiosResponse<ComplaintReplyResponse>> => {
   const formData = new FormData();
   formData.append("dto", JSON.stringify(dto));
 
   if (files) {
-    files.forEach((file) => formData.append("files", file));
+    files.forEach((file) => formData.append("files", file.file));
   }
 
   const response = await tokenInstance.put<ComplaintReplyResponse>(
@@ -97,13 +98,13 @@ export const updateComplaintReply = async (
 export const createComplaintReply = async (
   complaintId: number,
   dto: ComplaintReplyDto,
-  files?: File[],
+  files?: ManagedFile[],
 ): Promise<AxiosResponse<ComplaintResponse>> => {
   const formData = new FormData();
   formData.append("dto", JSON.stringify(dto));
 
   if (files) {
-    files.forEach((file) => formData.append("files", file));
+    files.forEach((file) => formData.append("files", file.file));
   }
 
   const response = await tokenInstance.post<ComplaintResponse>(
