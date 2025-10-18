@@ -1,6 +1,7 @@
 // menuGroupsFactory.ts
 
 import { MenuGroup } from "../types/mypage.ts";
+import { getMobilePlatform } from "../utils/getMobilePlatform.ts";
 
 export const createMenuGroups = (
   isLoggedIn: boolean,
@@ -29,11 +30,25 @@ export const createMenuGroups = (
     menus: [
       {
         label: "알림 수신 설정",
-        onClick: () => navigate("/notification-setting"),
+        onClick: () => {
+          const platform = getMobilePlatform();
+          if (platform === "android_browser" || platform === "ios_browser") {
+            alert("앱 설치 후 사용할 수 있습니다.");
+            return;
+          }
+          navigate("/notification-setting");
+        },
       },
       {
         label: "공동구매 키워드 알림 설정",
-        onClick: () => navigate("/groupPurchase/keywordSetting"),
+        onClick: () => {
+          const platform = getMobilePlatform();
+          if (platform === "android_browser" || platform === "ios_browser") {
+            alert("앱 설치 후 사용할 수 있습니다.");
+            return;
+          }
+          navigate("/groupPurchase/keywordSetting");
+        },
       },
     ],
   },
