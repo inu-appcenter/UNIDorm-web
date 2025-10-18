@@ -18,6 +18,7 @@ import { useEffect, useState } from "react";
 import useUserStore from "../../stores/useUserStore.ts";
 import { getMyRoommateInfo } from "../../apis/roommate.ts";
 import { getRoommateChatRooms } from "../../apis/chat.ts";
+import { getMobilePlatform } from "../../utils/getMobilePlatform.ts";
 
 interface ButtonProps {
   defaultImg: string;
@@ -217,6 +218,8 @@ export default function BottomBar() {
   );
 }
 
+const platform = getMobilePlatform();
+
 const StyledBottomBar = styled.footer`
   position: fixed;
   bottom: 0;
@@ -229,8 +232,8 @@ const StyledBottomBar = styled.footer`
   align-items: center;
 
   width: 100%;
-  height: 74px;
-  padding: 0 20px;
+  height: fit-content;
+  padding: 8px 20px;
   box-sizing: border-box;
 
   background: rgba(244, 244, 244, 0.6); /* 반투명 */
@@ -238,6 +241,9 @@ const StyledBottomBar = styled.footer`
   -webkit-backdrop-filter: blur(10px); /* Safari 지원 */
 
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+
+  /* ✅ iOS WebView 환경에서는 padding-bottom 추가 */
+  padding-bottom: ${platform === "ios" && "24px"};
 
   @media (min-width: 1024px) {
     padding: 0 30vw;
