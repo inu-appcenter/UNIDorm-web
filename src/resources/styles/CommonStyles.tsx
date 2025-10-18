@@ -9,9 +9,16 @@ const CommonStyles = createGlobalStyle`
     font-weight: 400;
     font-display: swap;
   }
+
+  html, body {
+    -webkit-text-size-adjust : none; /* , A2| */
+    -ms-text-size-adjust : none; /* IE */
+    -moz-text-size-adjust : none; /* 01= */
+    
+    font-family: "Pretendard", sans-serif;
+  }
   
   body {
-    font-family: 'Pretendard', Roboto, Inter;
     margin: 0;
     -ms-overflow-style: none;
   }
