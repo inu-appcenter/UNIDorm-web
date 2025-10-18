@@ -21,6 +21,7 @@ import {
 } from "../../styles/groupPurchase.ts";
 import { FiX } from "react-icons/fi";
 import { CATEGORY_LIST, SORT_OPTIONS } from "../../constants/groupPurchase.ts";
+import { getMobilePlatform } from "../../utils/getMobilePlatform.ts";
 
 export default function GroupPurchaseMainPage() {
   const navigate = useNavigate();
@@ -104,10 +105,17 @@ export default function GroupPurchaseMainPage() {
     {
       label: "키워드 알림 설정",
       onClick: () => {
+        const platform = getMobilePlatform();
+        if (platform === "android_browser" || platform === "ios_browser") {
+          alert("앱 설치 후 사용할 수 있습니다.");
+          return;
+        }
+
         if (!isLoggedIn) {
           alert("로그인 후 사용 가능해요");
           return;
         }
+
         navigate("/groupPurchase/keywordSetting");
       },
     },
