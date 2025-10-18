@@ -1,6 +1,6 @@
 import "./index.css";
 import { BrowserRouter, Route, Routes, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { getMemberInfo } from "./apis/members";
 import useUserStore from "./stores/useUserStore";
 import RootPage from "./pages/RootPage";
@@ -53,8 +53,10 @@ import FCMPage from "./pages/Admin/FCMPage.tsx";
 import AgreementPage from "./pages/MyPage/AgreementPage.tsx";
 import CommonBottomModal from "./components/modal/CommonBottomModal.tsx";
 import ModalContent_EventWin from "./components/common/ModalContent_EventWin.tsx";
+import ModalContent_AppInstall from "./components/common/ModalContent_AppInstall.tsx";
 import { getEventWin } from "./apis/event.ts";
 import { useCouponStore } from "./stores/useCouponStore.ts";
+import { getMobilePlatform } from "./utils/getMobilePlatform.ts";
 
 function App() {
   console.log("현재 MODE:", import.meta.env.MODE);
@@ -75,6 +77,12 @@ function App() {
   const isCouponWinOpen = useCouponStore((state) => state.isCouponWinOpen);
   const setIsCouponWinOpen = useCouponStore(
     (state) => state.setIsCouponWinOpen,
+  );
+
+  const platform = getMobilePlatform();
+  const [isAppInstallOpen, setIsAppInstallOpen] = useState(
+    (platform === "ios_browser" || platform === "android_browser") &&
+      Math.random() < 0.3,
   );
 
   useEffect(() => {
@@ -250,6 +258,28 @@ function App() {
         headerImageId={3}
         children={ModalContent_EventWin()}
         closeButtonText={"감사합니다"}
+      />
+      <CommonBottomModal
+        id={"이벤트 당첨"}
+        isOpen={isAppInstallOpen}
+        setIsOpen={setIsAppInstallOpen}
+        title={"유니돔 앱을 사용해보세요!"}
+        headerImageId={0}
+        children={ModalContent_AppInstall()}
+        closeButtonText={"스토어에서 설치하기"}
+        onCloseClick={() => {
+          if (platform === "ios_browser") {
+            window.open(
+              "https://apps.apple.com/kr/app/%EC%9C%A0%EB%8B%88%EB%8F%94/id6751404748",
+              "_blank",
+            );
+          } else if (platform === "android_browser") {
+            window.open(
+              "https://play.google.com/store/apps/details?id=com.hjunieee.inudormitory",
+              "_blank",
+            );
+          }
+        }}
       />
     </ErrorBoundary>
   );
