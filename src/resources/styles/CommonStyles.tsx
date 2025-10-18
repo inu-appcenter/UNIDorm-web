@@ -22,7 +22,7 @@ const CommonStyles = createGlobalStyle`
     margin: 0;
     -ms-overflow-style: none;
   }
-  a, button, img {
+  a, button {
     //cursor: url('/pointers/cursor-pointer.svg'), pointer;
     cursor: pointer;
   }
