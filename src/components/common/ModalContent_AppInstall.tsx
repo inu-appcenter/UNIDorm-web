@@ -11,7 +11,7 @@ const ModalContent_AppInstall = () => {
       유니돔의 모든 기능을 사용할 수 있어요.
       <br />
       <span className="secondLine">
-        공지사항, 공동구매 등 푸시알림을 사용해 보세요.
+        공지사항, 공동구매 등 <strong>푸시알림</strong>을 사용해 보세요.
       </span>
     </ModalContentWrapper>
   );
