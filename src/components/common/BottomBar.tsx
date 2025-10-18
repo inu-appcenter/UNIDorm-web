@@ -75,7 +75,7 @@ const ButtonWrapper = styled.div`
   align-items: center;
   justify-content: center;
   width: 50px;
-  height: 100%;
+  height: 50px;
   gap: 5px;
   cursor: pointer;
 
@@ -242,8 +242,8 @@ const StyledBottomBar = styled.footer`
 
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
 
-  /* ✅ iOS WebView 환경에서는 padding-bottom 추가 */
-  padding-bottom: ${platform === "ios" && "24px"};
+  /* iOS WebView 환경에서는 padding-bottom 추가 */
+  padding-bottom: ${platform === "other" && "24px"};
 
   @media (min-width: 1024px) {
     padding: 0 30vw;
