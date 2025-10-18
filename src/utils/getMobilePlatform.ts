@@ -1,4 +1,4 @@
-export type MobilePlatform = "ios-webview" | "android-webview" | "other";
+export type MobilePlatform = "ios" | "android" | "other";
 
 /**
  * 현재 접속한 브라우저가 iOS WebView, Android WebView, 혹은 기타 환경인지 판별합니다.
@@ -12,7 +12,7 @@ export function getMobilePlatform(): MobilePlatform {
   const isIOS = /iPhone|iPad|iPod/i.test(userAgent);
   const isSafari = /Safari/i.test(userAgent);
   if (isIOS && !isSafari) {
-    return "ios-webview";
+    return "ios";
   }
 
   // ✅ Android WebView 판별
@@ -21,7 +21,7 @@ export function getMobilePlatform(): MobilePlatform {
     /Android/i.test(userAgent) &&
     (/wv/i.test(userAgent) || /Version\/[\d.]+/i.test(userAgent))
   ) {
-    return "android-webview";
+    return "android";
   }
 
   // ✅ 기타 (일반 브라우저 등)
