@@ -1,16 +1,18 @@
 import styled from "styled-components";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
-import back from "../../assets/header/back.svg";
-import TopRightDropdownMenu from "./TopRightDropdownMenu.tsx";
+import back from "../../../assets/header/back.svg";
+import TopRightDropdownMenu from "../TopRightDropdownMenu.tsx";
 
-import logo from "../../assets/unidorm-logo.webp";
+import logo from "../../../assets/unidorm-logo.webp";
 
 import { Bell } from "lucide-react";
-import useUserStore from "../../stores/useUserStore.ts";
-import { useIsAdminRole } from "../../hooks/useIsAdminRole.ts";
-import { getMobilePlatform } from "../../utils/getMobilePlatform.ts";
+import { Settings } from "lucide-react";
+import useUserStore from "../../../stores/useUserStore.ts";
+import { useIsAdminRole } from "../../../hooks/useIsAdminRole.ts";
+import { getMobilePlatform } from "../../../utils/getMobilePlatform.ts";
+import TooltipMessage from "./TooltipMessage.tsx";
 
 interface MenuItemType {
   label: string;
@@ -22,6 +24,7 @@ interface HeaderProps {
   title?: string;
   showAlarm?: boolean;
   menuItems?: MenuItemType[];
+  settingOnClick?: () => void;
   rightContent?: React.ReactNode;
   secondHeader?: React.ReactNode;
 }
@@ -32,6 +35,7 @@ export default function Header({
   title,
   showAlarm = false,
   menuItems,
+  settingOnClick,
   secondHeader,
 }: HeaderProps) {
   const navigate = useNavigate();
@@ -43,6 +47,19 @@ export default function Header({
   const deferredPromptRef = useRef<any>(null); // ← 설치 이벤트 저장용 ref
 
   const { userInfo } = useUserStore();
+
+  // ⬇️ 툴팁 표시 여부를 위한 state 추가
+  const [showSettingTooltip, setShowSettingTooltip] = useState(() => {
+    // return false;
+    const stored = localStorage.getItem("showKeywordSettingTooltip");
+    return stored !== "false"; // 기본값 true
+  });
+
+  const hideTooltip = () => {
+    console.log("툴팁 숨김 처리");
+    setShowSettingTooltip(false);
+    localStorage.setItem("showKeywordSettingTooltip", "false");
+  };
 
   // beforeinstallprompt 이벤트 감지
   useEffect(() => {
@@ -130,25 +147,26 @@ export default function Header({
         </Left>
 
         <Right>
-          {(platform === "ios_browser" || platform === "android_browser") && (
-            <RoundButton
-              onClick={() => {
-                if (platform === "ios_browser") {
-                  window.open(
-                    "https://apps.apple.com/kr/app/%EC%9C%A0%EB%8B%88%EB%8F%94/id6751404748",
-                    "_blank",
-                  );
-                } else if (platform === "android_browser") {
-                  window.open(
-                    "https://play.google.com/store/apps/details?id=com.hjunieee.inudormitory",
-                    "_blank",
-                  );
-                }
-              }}
-            >
-              앱 설치하기
-            </RoundButton>
-          )}
+          {!isAdmin &&
+            (platform === "ios_browser" || platform === "android_browser") && (
+              <RoundButton
+                onClick={() => {
+                  if (platform === "ios_browser") {
+                    window.open(
+                      "https://apps.apple.com/kr/app/%EC%9C%A0%EB%8B%88%EB%8F%94/id6751404748",
+                      "_blank",
+                    );
+                  } else if (platform === "android_browser") {
+                    window.open(
+                      "https://play.google.com/store/apps/details?id=com.hjunieee.inudormitory",
+                      "_blank",
+                    );
+                  }
+                }}
+              >
+                앱 설치
+              </RoundButton>
+            )}
           {isAdmin && (
             <RoundButton
               onClick={() => {
@@ -161,8 +179,18 @@ export default function Header({
           {showAlarm && (
             <NotificationBell hasNew={userInfo.hasUnreadNotifications} />
           )}
-
           {menuItems && <TopRightDropdownMenu items={menuItems} />}
+          {settingOnClick && (
+            <SettingWrapper>
+              <Settings size={24} onClick={settingOnClick} />
+              {showSettingTooltip && (
+                <TooltipMessage
+                  message="키워드 / 카테고리\n알림을 설정해보세요."
+                  onClose={hideTooltip}
+                />
+              )}
+            </SettingWrapper>
+          )}{" "}
         </Right>
       </MainLine>
       <SecondLine>{secondHeader}</SecondLine>
@@ -174,7 +202,7 @@ const StyledHeader = styled.header<{ $hasShadow: boolean; $isHome: boolean }>`
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 1000;
+  z-index: 11;
   width: 100%;
 
   background: ${({ $isHome }) =>
@@ -317,4 +345,12 @@ const RoundButton = styled.button`
     transform: translateY(1px);
     box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
   }
+`;
+
+const SettingWrapper = styled.div`
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
 `;

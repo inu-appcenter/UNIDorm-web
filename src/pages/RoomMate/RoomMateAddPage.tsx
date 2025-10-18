@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import Header from "../../components/common/Header.tsx";
+import Header from "../../components/common/Header/Header.tsx";
 import RoundSquareButton from "../../components/button/RoundSquareButton.tsx";
 import friends from "../../assets/roommate/Friends.svg";
 import { useNavigate } from "react-router-dom";

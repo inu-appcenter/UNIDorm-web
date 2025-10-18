@@ -1,10 +1,10 @@
 import styled from "styled-components";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import RoomMateCard from "../../components/roommate/RoomMateCard.tsx";
-import Header from "../../components/common/Header.tsx";
+import Header from "../../components/common/Header/Header.tsx";
 import { useNavigate } from "react-router-dom";
 import useUserStore from "../../stores/useUserStore.ts";
-import BottomBar from "../../components/common/BottomBar.tsx";
+import BottomBar from "../../components/common/BottomBar/BottomBar.tsx";
 import { useEffect, useState } from "react";
 import { RoommatePost, SimilarRoommatePost } from "../../types/roommates.ts";
 import {
@@ -231,5 +231,5 @@ const WriteButton = styled.button`
   border: none;
   cursor: pointer;
   box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.2);
-  z-index: 100;
+  z-index: 2;
 `;

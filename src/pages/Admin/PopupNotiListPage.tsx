@@ -9,7 +9,7 @@ import {
   getAllPopupNotifications,
 } from "../../apis/popup-notification";
 import { PopupNotification } from "../../types/popup-notifications";
-import Header from "../../components/common/Header";
+import Header from "../../components/common/Header/Header.tsx";
 
 const PopupNotiListPage = () => {
   const [notifications, setNotifications] = useState<PopupNotification[]>([]);

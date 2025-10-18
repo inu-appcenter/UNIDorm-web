@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import { FaRegHeart } from "react-icons/fa";
 import { useEffect, useState } from "react";
-import Header from "../../components/common/Header";
+import Header from "../../components/common/Header/Header.tsx";
 import { GroupOrderDetail, GroupOrderImage } from "../../types/grouporder.ts";
 import {
   cancelGroupPurchaseCompletion,
@@ -36,6 +36,7 @@ import {
   People,
 } from "../../styles/groupPurchase.ts";
 import useMediaQuery from "../../hooks/useMediaQuery.ts";
+import ToolTipMessage from "../../components/GroupPurchase/TooltipMessage.tsx";
 
 export default function GroupPurchasePostPage() {
   const { tokenInfo } = useUserStore();
@@ -57,6 +58,8 @@ export default function GroupPurchasePostPage() {
   const [showModal, setShowModal] = useState(false);
   const [commentInput, setCommentInput] = useState("");
 
+  const [showToolTip, setShowToolTip] = useState(false);
+
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
@@ -65,12 +68,16 @@ export default function GroupPurchasePostPage() {
           getGroupPurchaseDetail(groupOrderId),
           getGroupPurchaseImages(groupOrderId),
         ]);
-        console.log(postData);
-        console.log(imageData);
+        console.log("공동구매 게시글 조회 성공", postData);
+        console.log("공동구매 게시글 이미지 조회 성공", imageData);
 
         setPost(postData);
         setLiked(postData.checkLikeCurrentUser);
         setImages(imageData);
+
+        if (post?.openChatLink === "") {
+          setShowToolTip(true);
+        }
       } catch (error) {
         console.error("게시글 조회 실패:", error);
         setPost(null);
@@ -109,6 +116,14 @@ export default function GroupPurchasePostPage() {
 
   const handleCompletionToggle = async () => {
     if (!post) return;
+    if (post.openChatLink === "") {
+      alert("오픈채팅방 링크를 등록해주세요!");
+      navigate("/groupPurchase/write", {
+        state: { post, curImages: images },
+      });
+      return;
+    }
+
     const confirmMessage = post.recruitmentComplete
       ? "모집 완료를 취소할까요?"
       : "공구 모집을 완료로 처리할까요?";
@@ -296,15 +311,33 @@ export default function GroupPurchasePostPage() {
                       좋아요 {post.likeCount}
                     </LikeBox>
                     {post.myPost ? (
-                      <RoundSquareButton
-                        btnName={
-                          post.recruitmentComplete
-                            ? "모집 완료 취소하기"
-                            : "공구 완료 처리하기"
-                        }
-                        onClick={handleCompletionToggle}
-                        color={post.recruitmentComplete ? "#8E8E93" : undefined}
-                      />
+                      <RelativeButtonWrapper>
+                        <RoundSquareButton
+                          btnName={
+                            post.openChatLink === ""
+                              ? "오픈채팅방 개설하기"
+                              : post.recruitmentComplete
+                                ? "모집 완료 취소하기"
+                                : "공구 완료 처리하기"
+                          }
+                          onClick={handleCompletionToggle}
+                          color={
+                            post.openChatLink === ""
+                              ? "#8E8E93"
+                              : post.recruitmentComplete
+                                ? "#8E8E93"
+                                : undefined
+                          }
+                        />
+                        {showToolTip && (
+                          <ToolTipMessage
+                            message={
+                              "같이 구매하실 분이 나타났다면,\n오픈채팅방을 개설해주세요"
+                            }
+                            onClose={() => setShowToolTip(false)}
+                          />
+                        )}
+                      </RelativeButtonWrapper>
                     ) : (
                       <RoundSquareButton
                         btnName={
@@ -534,4 +567,10 @@ const Dot = styled.span<{ $active: boolean }>`
   border-radius: 50%;
   background: ${({ $active }) => ($active ? "#222" : "#ddd")};
   transition: background 0.2s;
+`;
+
+const RelativeButtonWrapper = styled.div`
+  position: relative;
+  padding-left: 40px;
+  //box-sizing: border-box;
 `;

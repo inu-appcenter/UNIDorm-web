@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import Header from "../../components/common/Header";
+import Header from "../../components/common/Header/Header.tsx";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import TipCard from "../../components/tip/TipCard";
 import { useNavigate } from "react-router-dom";
@@ -21,6 +21,7 @@ export default function TipListPage() {
     setIsLoading(true);
     try {
       const data = await fetchTips();
+      console.log("팁 리스트 불러오기 성공", data);
       setTips(data);
     } catch (error) {
       console.error("팁 리스트 불러오기 실패:", error);

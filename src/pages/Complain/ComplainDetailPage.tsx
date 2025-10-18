@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import Header from "../../components/common/Header.tsx";
+import Header from "../../components/common/Header/Header.tsx";
 import StepFlow from "../../components/complain/StepFlow.tsx";
 import ComplainCard from "../../components/complain/ComplainCard.tsx";
 import ComplainAnswerCard from "../../components/complain/ComplainAnswerCard.tsx";

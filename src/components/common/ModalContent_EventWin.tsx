@@ -9,13 +9,15 @@ const ModalContent_EventWin = () => {
       교환권
       <br />
       <span className="secondLine">
-        쿠폰 번호 : EJWS UVTF PD <button>복사하기</button>
+        이 화면을 캡처해서 에브리타임 자유게시판에
         <br />
-        유효기간 : 2026년 10월 19일
+        제목에 '유니돔' 키워드를 담아 당첨 인증글을 올려주세요!
         <br />
-        배달의민족 APP {"[선물함]->[선물 코드 등록]"}에서
+        에브리타임 쪽지로 쿠폰 번호를 보내드립니다 😊
         <br />
-        등록 후 사용할 수 있습니다.
+        <span style={{ fontSize: "12px" }}>
+          쪽지가 오지 않는다면, 마이페이지 {"->"} 1대1 문의를 남겨주세요.
+        </span>
       </span>
     </ModalContentWrapper>
   );
