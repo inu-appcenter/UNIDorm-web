@@ -147,25 +147,26 @@ export default function Header({
         </Left>
 
         <Right>
-          {(platform === "ios_browser" || platform === "android_browser") && (
-            <RoundButton
-              onClick={() => {
-                if (platform === "ios_browser") {
-                  window.open(
-                    "https://apps.apple.com/kr/app/%EC%9C%A0%EB%8B%88%EB%8F%94/id6751404748",
-                    "_blank",
-                  );
-                } else if (platform === "android_browser") {
-                  window.open(
-                    "https://play.google.com/store/apps/details?id=com.hjunieee.inudormitory",
-                    "_blank",
-                  );
-                }
-              }}
-            >
-              앱 설치
-            </RoundButton>
-          )}
+          {!isAdmin &&
+            (platform === "ios_browser" || platform === "android_browser") && (
+              <RoundButton
+                onClick={() => {
+                  if (platform === "ios_browser") {
+                    window.open(
+                      "https://apps.apple.com/kr/app/%EC%9C%A0%EB%8B%88%EB%8F%94/id6751404748",
+                      "_blank",
+                    );
+                  } else if (platform === "android_browser") {
+                    window.open(
+                      "https://play.google.com/store/apps/details?id=com.hjunieee.inudormitory",
+                      "_blank",
+                    );
+                  }
+                }}
+              >
+                앱 설치
+              </RoundButton>
+            )}
           {isAdmin && (
             <RoundButton
               onClick={() => {
