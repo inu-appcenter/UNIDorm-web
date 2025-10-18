@@ -105,7 +105,7 @@ const MyPage = () => {
         <MenuGroup title={menuGroups[4].title} menus={menuGroups[4].menus} />
         <Divider />
 
-        <MenuGroup title={"앱 버전"} menus={[{ label: "v 1.3.5" }]} />
+        <MenuGroup title={"앱 버전"} menus={[{ label: "v 1.3.6" }]} />
 
         {isAdmin && (
           <>

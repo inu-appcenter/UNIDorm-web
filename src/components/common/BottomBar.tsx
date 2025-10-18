@@ -246,6 +246,7 @@ const StyledBottomBar = styled.footer`
   padding-bottom: ${platform === "ios" && "24px"};
 
   @media (min-width: 1024px) {
-    padding: 0 30vw;
+    padding-left: 30vw;
+    padding-right: 30vw;
   }
 `;
