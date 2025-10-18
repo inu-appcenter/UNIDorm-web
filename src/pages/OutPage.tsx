@@ -1,25 +1,16 @@
 import { Outlet } from "react-router-dom";
 import styled from "styled-components";
-import { getMobilePlatform } from "../utils/getMobilePlatform.ts";
-
-const platform = getMobilePlatform();
 
 export default function OutPage() {
   return (
-    <OutPageWrapper $isIOS={platform === "ios"}>
+    <OutPageWrapper>
       <Outlet />
     </OutPageWrapper>
   );
 }
 
-const OutPageWrapper = styled.div<{ $isIOS: boolean }>`
+const OutPageWrapper = styled.div`
   width: 100vw;
   height: 100vh;
   box-sizing: border-box;
-
-  ${({ $isIOS }) =>
-    $isIOS &&
-    `
-      padding-top: calc(env(safe-area-inset-top, 0px) * 0.5);
-    `}
 `;
