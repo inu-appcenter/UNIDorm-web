@@ -23,6 +23,9 @@ import { Announcement } from "../types/announcements.ts";
 import useUserStore from "../stores/useUserStore.ts";
 import { getPopupNotifications } from "../apis/popup-notification.ts";
 import { PopupNotification } from "../types/popup-notifications.ts";
+import { getMobilePlatform } from "../utils/getMobilePlatform.ts";
+import ModalContent_AppInstall from "../components/common/ModalContent_AppInstall.tsx";
+import CommonBottomModal from "../components/modal/CommonBottomModal.tsx";
 
 export default function HomePage() {
   const { tokenInfo } = useUserStore();
@@ -48,6 +51,12 @@ export default function HomePage() {
   const setModalOpen = (id: number, open: boolean) => {
     setModalOpenStates((prev) => ({ ...prev, [id]: open }));
   };
+
+  const platform = getMobilePlatform();
+  const [isAppInstallOpen, setIsAppInstallOpen] = useState(
+    (platform === "ios_browser" || platform === "android_browser") &&
+      Math.random() < 0.5,
+  );
 
   useEffect(() => {
     const fetchPopupNotices = async () => {
@@ -237,6 +246,29 @@ export default function HomePage() {
       >
         <img src={민원접수} />
       </FloatingButton>
+
+      <CommonBottomModal
+        id={"이벤트 당첨"}
+        isOpen={isAppInstallOpen}
+        setIsOpen={setIsAppInstallOpen}
+        title={"유니돔 앱을 사용해보세요!"}
+        headerImageId={0}
+        children={ModalContent_AppInstall()}
+        closeButtonText={"스토어에서 설치하기"}
+        onCloseClick={() => {
+          if (platform === "ios_browser") {
+            window.open(
+              "https://apps.apple.com/kr/app/%EC%9C%A0%EB%8B%88%EB%8F%94/id6751404748",
+              "_blank",
+            );
+          } else if (platform === "android_browser") {
+            window.open(
+              "https://play.google.com/store/apps/details?id=com.hjunieee.inudormitory",
+              "_blank",
+            );
+          }
+        }}
+      />
 
       <BottomBar />
     </HomePageWrapper>
