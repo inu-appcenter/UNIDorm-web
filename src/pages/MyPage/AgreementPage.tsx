@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
-import Header from "../../components/common/Header.tsx";
+import Header from "../../components/common/Header/Header.tsx";
 import SquareButton from "../../components/common/SquareButton.tsx";
 import { putUserAgreement } from "../../apis/members.ts";
 import { useNavigate } from "react-router-dom";

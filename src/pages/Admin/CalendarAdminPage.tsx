@@ -7,7 +7,7 @@ import {
   getAllCalendars,
   updateCalendar,
 } from "../../apis/calendar.ts";
-import Header from "../../components/common/Header.tsx";
+import Header from "../../components/common/Header/Header.tsx";
 import { useNavigate } from "react-router-dom";
 
 // --- 페이지 컴포넌트 ---

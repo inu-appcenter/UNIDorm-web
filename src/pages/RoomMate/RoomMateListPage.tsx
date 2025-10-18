@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import RoomMateCard from "../../components/roommate/RoomMateCard.tsx";
-import Header from "../../components/common/Header.tsx";
+import Header from "../../components/common/Header/Header.tsx";
 import { useEffect, useState } from "react";
 import { RoommatePost } from "../../types/roommates.ts";
 import { useLocation, useNavigate } from "react-router-dom";

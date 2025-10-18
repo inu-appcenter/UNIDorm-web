@@ -3,8 +3,8 @@ import styled from "styled-components";
 import GroupPurchaseList from "../../components/GroupPurchase/GroupPurchaseList";
 import { useNavigate } from "react-router-dom";
 import { FaSearch } from "react-icons/fa";
-import Header from "../../components/common/Header.tsx";
-import BottomBar from "../../components/common/BottomBar.tsx";
+import Header from "../../components/common/Header/Header.tsx";
+import BottomBar from "../../components/common/BottomBar/BottomBar.tsx";
 import {
   GetGroupPurchaseListParams,
   GroupOrder,
@@ -101,32 +101,26 @@ export default function GroupPurchaseMainPage() {
     fetchGroupOrders();
   }, [selectedCategory, sortOption]);
 
-  const menuItems = [
-    {
-      label: "키워드 알림 설정",
-      onClick: () => {
-        const platform = getMobilePlatform();
-        if (platform === "android_browser" || platform === "ios_browser") {
-          alert("앱 설치 후 사용할 수 있습니다.");
-          return;
-        }
+  const handleKeywordSettingButton = () => {
+    const platform = getMobilePlatform();
+    if (platform === "android_browser" || platform === "ios_browser") {
+      alert("앱 설치 후 사용할 수 있습니다.");
+      return;
+    }
 
-        if (!isLoggedIn) {
-          alert("로그인 후 사용 가능해요");
-          return;
-        }
+    if (!isLoggedIn) {
+      alert("로그인 후 사용 가능해요");
+      return;
+    }
 
-        navigate("/groupPurchase/keywordSetting");
-      },
-    },
-  ];
+    navigate("/groupPurchase/keywordSetting");
+  };
 
   return (
     <PageWrapper>
       <Header
         title="공동구매"
         hasBack={false}
-        menuItems={menuItems}
         secondHeader={
           <CategoryWrapper>
             {CATEGORY_LIST.map((category) => (
@@ -140,6 +134,7 @@ export default function GroupPurchaseMainPage() {
             ))}
           </CategoryWrapper>
         }
+        settingOnClick={handleKeywordSettingButton}
       />
 
       <SortFilterWrapper>
