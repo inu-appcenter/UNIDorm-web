@@ -8,33 +8,40 @@ import {
 } from "../../apis/notification.ts";
 import { useState, useEffect } from "react";
 import { NotificationPreferences } from "../../types/notifications.ts";
+import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 
 // 알림 항목 목록 (로컬 이름과 API 키를 매핑하여 관리)
 const initialMenus = [
   {
-    label: "룸메이트 알림",
-    type: "룸메이트",
-    apiKey: "roommateNotification" as keyof NotificationPreferences,
-  },
-  {
-    label: "공동구매 알림",
-    type: "공동구매",
-    apiKey: "groupOrderNotification" as keyof NotificationPreferences,
+    label: "유니돔 앱 알림",
+    type: "유니돔",
+    apiKey: "unidormNotification" as keyof NotificationPreferences,
+    description: "유니돔 앱 공지사항",
   },
   {
     label: "생활원 알림",
     type: "생활원",
     apiKey: "dormitoryNotification" as keyof NotificationPreferences,
+    description: "생활원 공지사항",
   },
-  {
-    label: "유니돔 알림",
-    type: "유니돔",
-    apiKey: "unidormNotification" as keyof NotificationPreferences,
-  },
+
   {
     label: "서포터즈 알림",
     type: "서포터즈",
     apiKey: "supportersNotification" as keyof NotificationPreferences,
+    description: "서포터즈 공지사항",
+  },
+  {
+    label: "룸메이트 알림",
+    type: "룸메이트",
+    apiKey: "roommateNotification" as keyof NotificationPreferences,
+    description: "퀵 메시지",
+  },
+  {
+    label: "공동구매 알림",
+    type: "공동구매",
+    apiKey: "groupOrderNotification" as keyof NotificationPreferences,
+    description: "키워드 및 카테고리 새 글 알림 / 좋아요한 글 마감 임박 알림",
   },
 ];
 
@@ -126,16 +133,6 @@ const NotificationSettingPage = () => {
     }
   };
 
-  // 로딩 중일 때 UI를 보여줍니다.
-  if (isLoading) {
-    return (
-      <Wrapper>
-        <Header title={"알림 수신 설정"} hasBack={true} />
-        <LoadingText>설정 정보를 불러오는 중입니다...</LoadingText>
-      </Wrapper>
-    );
-  }
-
   // 로컬 상태와 결합하여 MenuGroup에 전달할 최종 menus 데이터 생성
   const menusWithStatus = initialMenus.map((menu) => ({
     ...menu,
@@ -145,12 +142,19 @@ const NotificationSettingPage = () => {
   return (
     <Wrapper>
       <Header title={"알림 수신 설정"} hasBack={true} />
-      <MenuGroup
-        title={""}
-        menus={menusWithStatus}
-        hasToggle={true}
-        onToggle={handleToggleChange} // type과 enabled를 받는 함수를 전달
-      />
+      {isLoading ? (
+        <LoadingSpinner
+          overlay={true}
+          message={"알림 설정 상태를 불러오는 중 ..."}
+        />
+      ) : (
+        <MenuGroup
+          title={""}
+          menus={menusWithStatus}
+          hasToggle={true}
+          onToggle={handleToggleChange} // type과 enabled를 받는 함수를 전달
+        />
+      )}
     </Wrapper>
   );
 };
@@ -169,10 +173,4 @@ const Wrapper = styled.div`
 
   overflow-y: auto;
   background: #fafafa;
-`;
-
-const LoadingText = styled.p`
-  text-align: center;
-  margin-top: 50px;
-  color: #666;
 `;
