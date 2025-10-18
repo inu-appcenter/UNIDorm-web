@@ -1,26 +1,29 @@
-export const getMobilePlatform = (): "ios" | "android" | "other" => {
-  const ua = navigator.userAgent.toLowerCase();
+export type MobilePlatform = "ios-webview" | "android-webview" | "other";
 
-  // 1. iOS 디바이스 확인 (iPhone, iPad, iPod)
-  const isIOS = /iphone|ipad|ipod/.test(ua);
+/**
+ * 현재 접속한 브라우저가 iOS WebView, Android WebView, 혹은 기타 환경인지 판별합니다.
+ */
+export function getMobilePlatform(): MobilePlatform {
+  const userAgent =
+    navigator.userAgent || navigator.vendor || (window as any).opera;
 
-  // 2. iOS 웹뷰 확인 로직: iOS 디바이스이면서 Safari 문자열이 없는 경우
-  //    (WKWebView는 기본적으로 'Safari'를 포함하지 않음)
-  const isIOSWebView = isIOS && !/safari/.test(ua);
-
-  // 3. Android 웹뷰 확인 로직: 'android' 문자열과 'wv' 문자열이 모두 있는 경우
-  const isAndroidWebView = /android/.test(ua) && /wv/.test(ua);
-
-  // 실행 순서를 바꿔서 웹뷰 여부를 먼저 반환하도록 수정
-
-  if (isIOSWebView) {
-    return "ios"; // iOS 웹뷰
+  // ✅ iOS WebView 판별
+  // iPhone|iPad|iPod 가 포함되어 있고, Safari 문자열이 없으면 WebView로 간주
+  const isIOS = /iPhone|iPad|iPod/i.test(userAgent);
+  const isSafari = /Safari/i.test(userAgent);
+  if (isIOS && !isSafari) {
+    return "ios-webview";
   }
 
-  if (isAndroidWebView) {
-    return "android"; // Android 웹뷰
+  // ✅ Android WebView 판별
+  // Android가 포함되어 있고, 'wv' 또는 'Version/' 문자열이 있으면 WebView로 간주
+  if (
+    /Android/i.test(userAgent) &&
+    (/wv/i.test(userAgent) || /Version\/[\d.]+/i.test(userAgent))
+  ) {
+    return "android-webview";
   }
 
-  // 위의 모든 조건에 해당하지 않는 경우 (일반 브라우저, 데스크톱, 기타 모바일)
+  // ✅ 기타 (일반 브라우저 등)
   return "other";
-};
+}
