@@ -229,8 +229,8 @@ const StyledBottomBar = styled.footer`
   align-items: center;
 
   width: 100%;
-  height: 74px;
-  padding: 0 20px;
+  height: fit-content;
+  padding: 8px 20px;
   box-sizing: border-box;
 
   background: rgba(244, 244, 244, 0.6); /* 반투명 */
