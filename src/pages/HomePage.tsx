@@ -375,6 +375,7 @@ const FloatingButton = styled.button`
   bottom: 100px;
   right: 24px;
   cursor: pointer;
+  z-index: 100;
 
   // 🖥️ PC 화면에서는 위치를 조금 더 안쪽으로 조정할 수 있음
   @media (min-width: 768px) {
