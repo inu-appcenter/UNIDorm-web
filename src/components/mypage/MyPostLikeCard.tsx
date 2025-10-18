@@ -168,7 +168,6 @@ const Image = styled.img`
 
 const Price = styled.div`
   color: #000;
-  font-family: Pretendard;
   font-size: 16px;
   font-weight: 600;
   letter-spacing: -0.165px;
@@ -176,7 +175,6 @@ const Price = styled.div`
 
 const Text = styled.div`
   color: var(--1, #1c1c1e);
-  font-family: Pretendard;
   font-size: 12px;
   font-style: normal;
   font-weight: 500;

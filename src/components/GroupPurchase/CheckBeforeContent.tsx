@@ -31,7 +31,6 @@ const Wrapper = styled.div`
 const Title = styled.h1`
   color: #1c408c;
   text-align: center;
-  font-family: Pretendard;
   font-size: 24px;
   font-style: normal;
   font-weight: 700;
@@ -43,7 +42,6 @@ const Text = styled.div`
   .text1 {
     color: var(--5, #6c6c74);
     text-align: center;
-    font-family: Pretendard;
     font-size: 19px;
     font-style: normal;
     font-weight: 500;
@@ -51,7 +49,6 @@ const Text = styled.div`
   }
   .strong {
     color: var(--5, #6c6c74);
-    font-family: Pretendard;
     font-size: 19px;
     font-style: normal;
     font-weight: 700;
@@ -59,7 +56,6 @@ const Text = styled.div`
   }
   .text2 {
     color: var(--5, #6c6c74);
-    font-family: Pretendard;
     font-size: 14px;
     font-style: normal;
     font-weight: 500;
