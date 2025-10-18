@@ -73,17 +73,42 @@ const KeywordAlertSettingPage = () => {
     }
   }, []);
 
-  // ✅ 사용자가 카테고리를 변경했을 때 호출될 새로운 핸들러
+  // ✅ "전체" 선택 로직이 추가된 새로운 핸들러
   const handleCategoryChange = async (newIndices: number[]) => {
-    // UI는 즉시 업데이트
-    setCategoryIndices(newIndices);
+    let modifiedIndices = [...newIndices];
 
-    // 추가된 아이템과 삭제된 아이템 찾기
-    const addedIndices = newIndices.filter(
+    // "전체" 카테고리의 인덱스는 0입니다.
+    const allCategoryIndex = 0;
+
+    // 현재 UI 상태에 "전체"가 선택되어 있었는지 확인
+    const wasAllCategoryPreviouslySelected =
+      categoryIndices.includes(allCategoryIndex);
+    // 새로 전달된 인덱스에 "전체"가 포함되어 있는지 확인
+    const allCategoryIsNowSelected = newIndices.includes(allCategoryIndex);
+
+    // 1. "전체"가 방금 선택된 경우 (이전엔 없었고, 지금은 있음)
+    if (!wasAllCategoryPreviouslySelected && allCategoryIsNowSelected) {
+      modifiedIndices = [allCategoryIndex]; // "전체"만 선택하도록 변경
+    }
+    // 2. "전체"가 이미 선택된 상태에서 다른 항목이 추가된 경우
+    else if (wasAllCategoryPreviouslySelected && newIndices.length > 1) {
+      // "전체"를 해제하고 다른 항목만 선택하도록 변경
+      modifiedIndices = newIndices.filter(
+        (index) => index !== allCategoryIndex,
+      );
+    }
+    // 3. 그 외의 경우 (예: "전체"가 아닌 항목들끼리 선택/해제, "전체"만 해제)
+    // modifiedIndices는 newIndices 값을 그대로 사용
+
+    // UI는 수정된 인덱스로 즉시 업데이트
+    setCategoryIndices(modifiedIndices);
+
+    // 추가된 아이템과 삭제된 아이템 찾기 (수정된 인덱스 기준)
+    const addedIndices = modifiedIndices.filter(
       (index) => !savedCategoryIndices.includes(index),
     );
     const removedIndices = savedCategoryIndices.filter(
-      (index) => !newIndices.includes(index),
+      (index) => !modifiedIndices.includes(index),
     );
 
     let hasError = false;
@@ -114,9 +139,9 @@ const KeywordAlertSettingPage = () => {
       }
     }
 
-    // 모든 API 호출이 끝난 후, 에러가 없었다면 저장된 상태를 업데이트
+    // 모든 API 호출이 끝난 후, 에러가 없었다면 저장된 상태를 업데이트 (수정된 인덱스 기준)
     if (!hasError) {
-      setSavedCategoryIndices(newIndices);
+      setSavedCategoryIndices(modifiedIndices); // 👈 newIndices 대신 modifiedIndices
       console.log("모든 카테고리 변경사항이 성공적으로 반영되었습니다.");
     } else {
       // 에러 발생 시, UI를 다시 서버 상태로 되돌리거나 사용자에게 알림
