@@ -5,7 +5,7 @@ import SquareButton from "../components/common/SquareButton.tsx";
 import { useState } from "react";
 import { login } from "../apis/members.ts";
 import useUserStore from "../stores/useUserStore.ts";
-import Header from "../components/common/Header.tsx";
+import Header from "../components/common/Header/Header.tsx";
 import tokenInstance from "../apis/tokenInstance.ts";
 import React from "react";
 import LoadingSpinner from "../components/common/LoadingSpinner.tsx";

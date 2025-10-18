@@ -1,7 +1,7 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
-import Header from "../../components/common/Header";
+import Header from "../../components/common/Header/Header.tsx";
 import {
   deleteAnnouncement,
   getAnnouncementDetail,

@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import Header from "../../components/common/Header";
+import Header from "../../components/common/Header/Header.tsx";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import TipCard from "../../components/tip/TipCard";
 import { useNavigate } from "react-router-dom";

@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import Header from "../../components/common/Header.tsx";
+import Header from "../../components/common/Header/Header.tsx";
 import { useEffect, useState } from "react";
 import { FiX } from "react-icons/fi";
 import CommonBottomModal from "../../components/modal/CommonBottomModal.tsx";

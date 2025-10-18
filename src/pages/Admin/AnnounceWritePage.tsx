@@ -8,7 +8,7 @@ import {
   updateAnnouncement,
   updateAnnouncementWithFiles,
 } from "../../apis/announcements.ts";
-import Header from "../../components/common/Header.tsx";
+import Header from "../../components/common/Header/Header.tsx";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import FileUploader from "../../components/common/FileUploader.tsx";
 import { useFileHandler } from "../../hooks/useFileHandler.ts";

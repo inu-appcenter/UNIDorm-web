@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import Header from "../components/common/Header.tsx";
+import Header from "../components/common/Header/Header.tsx";
 import TitleContentArea from "../components/common/TitleContentArea.tsx";
 import FullCalendar from "../components/calendar/FullCalendar.tsx";
 

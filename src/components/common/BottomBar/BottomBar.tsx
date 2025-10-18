@@ -1,24 +1,24 @@
 import styled from "styled-components";
 import { useLocation, useNavigate } from "react-router-dom";
 
-import buy from "../../assets/bottombar/buy.svg";
-import chat from "../../assets/bottombar/chat.svg";
-import home from "../../assets/bottombar/home.svg";
-import roommate from "../../assets/bottombar/roommate.svg";
-import mypage from "../../assets/bottombar/mypage.svg";
+import buy from "../../../assets/bottombar/buy.svg";
+import chat from "../../../assets/bottombar/chat.svg";
+import home from "../../../assets/bottombar/home.svg";
+import roommate from "../../../assets/bottombar/roommate.svg";
+import mypage from "../../../assets/bottombar/mypage.svg";
 
 // 클릭된 이미지 import
-import buyClicked from "../../assets/bottombar/buy-clicked.svg";
-import chatClicked from "../../assets/bottombar/chat-clicked.svg";
-import homeClicked from "../../assets/bottombar/home-clicked.svg";
-import roommateClicked from "../../assets/bottombar/roommate-clicked.svg";
-import mypageClicked from "../../assets/bottombar/mypage-clicked.svg";
+import buyClicked from "../../../assets/bottombar/buy-clicked.svg";
+import chatClicked from "../../../assets/bottombar/chat-clicked.svg";
+import homeClicked from "../../../assets/bottombar/home-clicked.svg";
+import roommateClicked from "../../../assets/bottombar/roommate-clicked.svg";
+import mypageClicked from "../../../assets/bottombar/mypage-clicked.svg";
 import TooltipMessage from "./TooltipMessage.tsx";
 import { useEffect, useState } from "react";
-import useUserStore from "../../stores/useUserStore.ts";
-import { getMyRoommateInfo } from "../../apis/roommate.ts";
-import { getRoommateChatRooms } from "../../apis/chat.ts";
-import { getMobilePlatform } from "../../utils/getMobilePlatform.ts";
+import useUserStore from "../../../stores/useUserStore.ts";
+import { getMyRoommateInfo } from "../../../apis/roommate.ts";
+import { getRoommateChatRooms } from "../../../apis/chat.ts";
+import { getMobilePlatform } from "../../../utils/getMobilePlatform.ts";
 
 interface ButtonProps {
   defaultImg: string;
