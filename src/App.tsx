@@ -1,6 +1,6 @@
 import "./index.css";
 import { BrowserRouter, Route, Routes, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { getMemberInfo } from "./apis/members";
 import useUserStore from "./stores/useUserStore";
 import RootPage from "./pages/RootPage";
@@ -53,6 +53,8 @@ import FCMPage from "./pages/Admin/FCMPage.tsx";
 import AgreementPage from "./pages/MyPage/AgreementPage.tsx";
 import CommonBottomModal from "./components/modal/CommonBottomModal.tsx";
 import ModalContent_EventWin from "./components/common/ModalContent_EventWin.tsx";
+import { getEventWin } from "./apis/event.ts";
+import { useCouponStore } from "./stores/useCouponStore.ts";
 
 function App() {
   console.log("현재 MODE:", import.meta.env.MODE);
@@ -69,21 +71,21 @@ function App() {
   const { tokenInfo, setUserInfo } = useUserStore();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // if (tokenInfo.role === "USER_ADMIN") {
-    //   console.log("admin모드로 이동합니다");
-    //   navigate("/admin");
-    //   return;
-    // }
+  //쿠폰 바텀시트 열림 상태 전역관리
+  const isCouponWinOpen = useCouponStore((state) => state.isCouponWinOpen);
+  const setIsCouponWinOpen = useCouponStore(
+    (state) => state.setIsCouponWinOpen,
+  );
 
+  useEffect(() => {
     const initializeUser = async () => {
       try {
         console.log("회원 정보 가져오기 시도");
-        const response = await getMemberInfo();
-        console.log("회원 정보 가져오기 성공:", response);
-        setUserInfo(response.data);
+        const memberResponse = await getMemberInfo();
+        console.log("회원 정보 가져오기 성공:", memberResponse);
+        setUserInfo(memberResponse.data);
 
-        if (tokenInfo.accessToken && response.data.name === "") {
+        if (tokenInfo.accessToken && memberResponse.data.name === "") {
           alert("처음 로그인하셨네요! 먼저 회원 정보를 입력해주세요.");
           navigate(
             { pathname: "/myinfoedit", search: "?firstvisit=true" },
@@ -91,8 +93,19 @@ function App() {
           );
           return;
         }
-        if (!response.data.termsAgreed || !response.data.privacyAgreed) {
+        if (
+          !memberResponse.data.termsAgreed ||
+          !memberResponse.data.privacyAgreed
+        ) {
           navigate("/agreement", { replace: true });
+          return;
+        }
+
+        //이벤트 당첨 여부 확인
+        const couponResponse = await getEventWin();
+        console.log("이벤트 당첨 여부 확인 성공 : ", couponResponse);
+        if (couponResponse.data.success) {
+          setIsCouponWinOpen(true);
         }
       } catch (error) {
         // alert("회원 가져오기 실패");
@@ -124,8 +137,6 @@ function App() {
       (window as any).onReceiveFcmToken = null;
     };
   }, []);
-
-  const [isOpen, setIsOpen] = useState(false);
 
   return (
     <ErrorBoundary>
@@ -233,8 +244,8 @@ function App() {
       </Routes>
       <CommonBottomModal
         id={"이벤트 당첨"}
-        isOpen={isOpen}
-        setIsOpen={setIsOpen}
+        isOpen={isCouponWinOpen}
+        setIsOpen={setIsCouponWinOpen}
         title={"이벤트에 당첨되었어요!"}
         headerImageId={3}
         children={ModalContent_EventWin()}

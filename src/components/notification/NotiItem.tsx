@@ -7,6 +7,7 @@ import purchase from "../../assets/notification/purchase.svg";
 import { formatTimeAgo } from "../../utils/dateUtils.ts";
 import { useNavigate } from "react-router-dom";
 import { ReceivedMatchingRequest } from "../../types/roommates.ts";
+import { useCouponStore } from "../../stores/useCouponStore.ts";
 
 interface NotiItemProps {
   notidata?: Notification;
@@ -20,6 +21,11 @@ const NotiItem = ({
   handleRoommateRequest,
 }: NotiItemProps) => {
   const navigate = useNavigate();
+
+  //쿠폰 바텀시트 열림 상태 전역관리
+  const setIsCouponWinOpen = useCouponStore(
+    (state) => state.setIsCouponWinOpen,
+  );
 
   const NotiIconSelector = (notidata: Notification) => {
     if (notidata.notificationType === "룸메이트") {
@@ -58,6 +64,9 @@ const NotiItem = ({
         } else {
           alert(notidata.title + "\n" + notidata.body);
         }
+        break;
+      case "COUPON":
+        setIsCouponWinOpen(true);
         break;
       default:
         // 처리할 수 없는 타입일 경우 콘솔에 경고를 출력하거나 기본 페이지로 이동

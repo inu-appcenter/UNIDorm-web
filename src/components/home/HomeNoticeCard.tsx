@@ -53,11 +53,11 @@ const HomeCardWrapper = styled.div`
   padding: 8px 16px;
   gap: 5px;
 
-  width: 45vw;
-  max-width: 170px;
+  width: 50vw;
+  max-width: 180px;
   height: 175px;
 
-  flex-shrink: 0; /* ✅ width가 줄지 않도록 고정 */
+  flex-shrink: 0; /* width가 줄지 않도록 고정 */
 
   border-radius: 16px;
   background: #fff;
@@ -78,7 +78,7 @@ const FirstLine = styled.div`
   .title {
     font-style: normal;
     font-weight: 700;
-    font-size: 16px;
+    font-size: 15px;
     line-height: 24px;
     display: -webkit-box;
     -webkit-line-clamp: 2; /* 최대 두 줄 */
