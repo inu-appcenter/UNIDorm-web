@@ -180,7 +180,6 @@ const Textarea = styled.textarea`
   border: 1px solid #ddd;
   background: #fff;
   resize: none;
-  font-family: inherit;
 `;
 
 const ButtonWrapper = styled.div`

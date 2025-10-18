@@ -130,7 +130,6 @@ const SelectableChip = styled.div<{
   border-radius: 20px;
 
   text-align: center;
-  font-family: Pretendard;
   font-size: 14px;
   font-style: normal;
   font-weight: 500;

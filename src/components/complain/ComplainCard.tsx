@@ -84,7 +84,6 @@ const Card = styled.div`
   padding: 16px;
   box-sizing: border-box;
   background-color: #fff;
-  //font-family: "Noto Sans KR", sans-serif;
 
   box-shadow: 2px 4px 8px 0 rgba(0, 0, 0, 0.06);
 `;
@@ -111,7 +110,6 @@ const DateText = styled.div`
   font-weight: 500;
 
   color: var(--4, #48484a);
-  font-family: Pretendard;
   font-size: 16px;
   font-style: normal;
   font-weight: 600;

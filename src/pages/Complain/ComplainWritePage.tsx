@@ -336,7 +336,6 @@ const Textarea = styled.textarea`
   background: #f8f8f8;
   resize: vertical;
   color: #1c1c1e;
-  font-family: inherit;
   font-size: 15px;
   font-weight: 500;
   box-sizing: border-box;
