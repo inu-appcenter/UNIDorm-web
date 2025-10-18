@@ -29,7 +29,7 @@ export default function TooltipMessage({
 
 const Tooltip = styled.div`
   position: absolute;
-  bottom: 80px;
+  bottom: 65px;
   left: 50%;
   transform: translateX(-50%);
   background-color: #333;
