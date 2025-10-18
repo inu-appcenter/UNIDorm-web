@@ -323,7 +323,6 @@ const SortButton = styled.button`
   box-sizing: border-box;
 
   color: var(--m-1, #0a84ff);
-  font-family: AppleSDGothicNeoM00;
   font-size: 14px;
   font-style: normal;
   font-weight: 400;

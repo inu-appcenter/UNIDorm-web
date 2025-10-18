@@ -80,7 +80,6 @@ const Badge = styled.div`
 
 const DateText = styled.div`
   color: var(--4, #48484a);
-  font-family: Pretendard;
   font-size: 16px;
   font-style: normal;
   font-weight: 600;
