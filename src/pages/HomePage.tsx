@@ -55,7 +55,7 @@ export default function HomePage() {
   const platform = getMobilePlatform();
   const [isAppInstallOpen, setIsAppInstallOpen] = useState(
     (platform === "ios_browser" || platform === "android_browser") &&
-      Math.random() < 0.5,
+      Math.random() < 0.4,
   );
 
   useEffect(() => {

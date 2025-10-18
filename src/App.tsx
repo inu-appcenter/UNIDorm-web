@@ -119,7 +119,8 @@ function App() {
   }, [tokenInfo, setUserInfo]);
 
   useEffect(() => {
-    const firstVisit = localStorage.getItem("isFirstVisit");
+    localStorage.removeItem("isFirstVisit");
+    const firstVisit = localStorage.getItem("isFirstVisit(10.20)");
     if (firstVisit === null) {
       navigate("/onboarding");
     }
