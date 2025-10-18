@@ -1,13 +1,12 @@
 import styled from "styled-components";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
 import back from "../../assets/header/back.svg";
 import TopRightDropdownMenu from "./TopRightDropdownMenu.tsx";
 
 import logo from "../../assets/unidorm-logo.webp";
 
-import { getMobilePlatform } from "../../utils/getMobilePlatform";
 import { Bell } from "lucide-react";
 import useUserStore from "../../stores/useUserStore.ts";
 import { useIsAdminRole } from "../../hooks/useIsAdminRole.ts";
@@ -37,17 +36,11 @@ export default function Header({
   const navigate = useNavigate();
   const { isAdmin, roleName } = useIsAdminRole();
   const location = useLocation();
-  const [platform, setPlatform] = useState<"ios" | "android" | "other">(
-    "other",
-  );
+
   // const [showInfoModal, setShowInfoModal] = useState(false);
   const deferredPromptRef = useRef<any>(null); // ← 설치 이벤트 저장용 ref
 
   const { userInfo } = useUserStore();
-
-  useEffect(() => {
-    setPlatform(getMobilePlatform());
-  }, []);
 
   // beforeinstallprompt 이벤트 감지
   useEffect(() => {
@@ -119,7 +112,7 @@ export default function Header({
       $hasShadow={shadowSelector()}
       $isHome={location.pathname === "/home" || location.pathname === "/"}
     >
-      <MainLine $platform={platform}>
+      <MainLine>
         <Left>
           {hasBack && (
             <img src={back} alt="뒤로가기" onClick={handleBackClick} />
@@ -215,25 +208,14 @@ const Right = styled.div`
   gap: 8px;
 `;
 
-const MainLine = styled.div<{ $platform: string }>`
+const MainLine = styled.div`
   width: 100%;
   box-sizing: border-box;
   display: flex;
   justify-content: space-between;
   align-items: center;
 
-  padding-left: 20px;
-  padding-right: 20px;
-
-  ${({ $platform }) =>
-    $platform === "ios"
-      ? `
-        padding-top: env(safe-area-inset-top, 0px);
-        height: calc(44px + env(safe-area-inset-top, 0px));
-      `
-      : `
-        height: 70px;
-      `}
+  padding: 16px 20px;
 `;
 
 const SecondLine = styled.div`
