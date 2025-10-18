@@ -1,29 +1,42 @@
-export type MobilePlatform = "ios" | "android" | "other";
+export type MobilePlatform =
+  | "ios_webview"
+  | "ios_browser"
+  | "android_webview"
+  | "android_browser"
+  | "other";
 
 /**
- * 현재 접속한 브라우저가 iOS WebView, Android WebView, 혹은 기타 환경인지 판별합니다.
+ * 현재 접속한 환경이 iOS/Android WebView 또는 일반 브라우저인지 판별합니다.
  */
 export function getMobilePlatform(): MobilePlatform {
   const userAgent =
     navigator.userAgent || navigator.vendor || (window as any).opera;
 
-  // ✅ iOS WebView 판별
-  // iPhone|iPad|iPod 가 포함되어 있고, Safari 문자열이 없으면 WebView로 간주
+  // ✅ iOS 판별
   const isIOS = /iPhone|iPad|iPod/i.test(userAgent);
   const isSafari = /Safari/i.test(userAgent);
-  if (isIOS && !isSafari) {
-    return "ios";
+  const isWKWebView =
+    /(Version\/[\d.]+).*Mobile.*Safari/.test(userAgent) === false;
+
+  if (isIOS) {
+    // WebView는 Safari가 없거나, WKWebView의 패턴을 가질 때
+    if (!isSafari || isWKWebView) {
+      return "ios_webview";
+    }
+    return "ios_browser";
   }
 
-  // ✅ Android WebView 판별
-  // Android가 포함되어 있고, 'wv' 또는 'Version/' 문자열이 있으면 WebView로 간주
-  if (
-    /Android/i.test(userAgent) &&
-    (/wv/i.test(userAgent) || /Version\/[\d.]+/i.test(userAgent))
-  ) {
-    return "android";
+  // ✅ Android 판별
+  const isAndroid = /Android/i.test(userAgent);
+  const isWebView = /wv/i.test(userAgent) || /Version\/[\d.]+/i.test(userAgent);
+
+  if (isAndroid) {
+    if (isWebView) {
+      return "android_webview";
+    }
+    return "android_browser";
   }
 
-  // ✅ 기타 (일반 브라우저 등)
+  // ✅ 기타 환경
   return "other";
 }

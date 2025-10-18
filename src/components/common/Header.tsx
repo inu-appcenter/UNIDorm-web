@@ -10,6 +10,7 @@ import logo from "../../assets/unidorm-logo.webp";
 import { Bell } from "lucide-react";
 import useUserStore from "../../stores/useUserStore.ts";
 import { useIsAdminRole } from "../../hooks/useIsAdminRole.ts";
+import { getMobilePlatform } from "../../utils/getMobilePlatform.ts";
 
 interface MenuItemType {
   label: string;
@@ -36,6 +37,7 @@ export default function Header({
   const navigate = useNavigate();
   const { isAdmin, roleName } = useIsAdminRole();
   const location = useLocation();
+  const platform = getMobilePlatform();
 
   // const [showInfoModal, setShowInfoModal] = useState(false);
   const deferredPromptRef = useRef<any>(null); // ← 설치 이벤트 저장용 ref
@@ -128,6 +130,25 @@ export default function Header({
         </Left>
 
         <Right>
+          {(platform === "ios_browser" || platform === "android_browser") && (
+            <RoundButton
+              onClick={() => {
+                if (platform === "ios_browser") {
+                  window.open(
+                    "https://apps.apple.com/kr/app/%EC%9C%A0%EB%8B%88%EB%8F%94/id6751404748",
+                    "_blank",
+                  );
+                } else if (platform === "android_browser") {
+                  window.open(
+                    "https://play.google.com/store/apps/details?id=com.hjunieee.inudormitory",
+                    "_blank",
+                  );
+                }
+              }}
+            >
+              앱 설치하기
+            </RoundButton>
+          )}
           {isAdmin && (
             <RoundButton
               onClick={() => {

@@ -243,7 +243,7 @@ const StyledBottomBar = styled.footer`
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
 
   /* iOS WebView 환경에서는 padding-bottom 추가 */
-  padding-bottom: ${platform === "ios" && "24px"};
+  padding-bottom: ${platform === "ios_webview" && "24px"};
 
   @media (min-width: 1024px) {
     padding-left: 30vw;
