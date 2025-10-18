@@ -2,7 +2,7 @@ import styled from "styled-components";
 import MyInfoArea from "../components/mypage/MyInfoArea.tsx";
 import MenuGroup from "../components/mypage/MenuGroup.tsx";
 import { useEffect, useState } from "react";
-import Header from "../components/common/Header.tsx";
+import Header from "../components/common/Header/Header.tsx";
 import useUserStore from "../stores/useUserStore.ts";
 import { useNavigate } from "react-router-dom";
 import { createMenuGroups } from "../stores/menuGroupsFactory.ts";
@@ -10,7 +10,7 @@ import RoomMateInfoArea from "../components/roommate/RoomMateInfoArea.tsx";
 import { getMyRoommateInfo } from "../apis/roommate.ts";
 import { MyRoommateInfoResponse } from "../types/roommates.ts";
 import TitleContentArea from "../components/common/TitleContentArea.tsx";
-import BottomBar from "../components/common/BottomBar.tsx";
+import BottomBar from "../components/common/BottomBar/BottomBar.tsx";
 import { useIsAdminRole } from "../hooks/useIsAdminRole.ts";
 
 const MyPage = () => {
@@ -105,7 +105,7 @@ const MyPage = () => {
         <MenuGroup title={menuGroups[4].title} menus={menuGroups[4].menus} />
         <Divider />
 
-        <MenuGroup title={"앱 버전"} menus={[{ label: "v 1.3.7" }]} />
+        <MenuGroup title={"앱 버전"} menus={[{ label: "v 1.3.8" }]} />
 
         {isAdmin && (
           <>

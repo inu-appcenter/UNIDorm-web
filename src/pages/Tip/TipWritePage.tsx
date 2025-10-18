@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import SquareButton from "../../components/common/SquareButton.tsx";
 import tokenInstance from "../../apis/tokenInstance.ts";
-import Header from "../../components/common/Header.tsx";
+import Header from "../../components/common/Header/Header.tsx";
 import FileUploader from "../../components/common/FileUploader.tsx";
 import { useFileHandler } from "../../hooks/useFileHandler.ts";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";

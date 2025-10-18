@@ -104,7 +104,7 @@ function App() {
         //이벤트 당첨 여부 확인
         const couponResponse = await getEventWin();
         console.log("이벤트 당첨 여부 확인 성공 : ", couponResponse);
-        if (couponResponse.data.success) {
+        if (couponResponse.data.success && couponResponse.data.issued) {
           setIsCouponWinOpen(true);
         }
       } catch (error) {
@@ -119,7 +119,8 @@ function App() {
   }, [tokenInfo, setUserInfo]);
 
   useEffect(() => {
-    const firstVisit = localStorage.getItem("isFirstVisit");
+    localStorage.removeItem("isFirstVisit");
+    const firstVisit = localStorage.getItem("isFirstVisit(10.20)");
     if (firstVisit === null) {
       navigate("/onboarding");
     }

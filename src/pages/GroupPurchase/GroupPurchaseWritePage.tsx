@@ -1,9 +1,8 @@
 import { useState } from "react";
 import styled from "styled-components";
 import { useLocation, useNavigate } from "react-router-dom";
-import Header from "../../components/common/Header";
+import Header from "../../components/common/Header/Header.tsx";
 import CommonBottomModal from "../../components/modal/CommonBottomModal";
-// import CheckBeforeContent from "../../components/GroupPurchase/CheckBeforeContent";
 import useUserStore from "../../stores/useUserStore";
 import {
   createGroupPurchase,
@@ -17,6 +16,8 @@ import HowToCreateOpenChat from "../../components/GroupPurchase/HowToCreateOpenC
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import { useFileHandler } from "../../hooks/useFileHandler.ts";
 import FileUploader from "../../components/common/FileUploader.tsx";
+import Modal from "../../components/modal/Modal.tsx";
+import { CheckBeforeDeal2 } from "../../constants/CheckBeforeDeal2.tsx";
 
 export default function GroupPurchaseWritePage() {
   const navigate = useNavigate();
@@ -60,6 +61,8 @@ export default function GroupPurchaseWritePage() {
   const [isHowtoModalOpen, setIsHowToModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  const [showModal, setShowModal] = useState(false);
+
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
@@ -87,12 +90,12 @@ export default function GroupPurchaseWritePage() {
         await createGroupPurchase(requestDto, files);
         alert("게시글이 등록되었습니다.");
       }
+      navigate(-1);
     } catch (error) {
       console.error("게시글 등록/수정 실패:", error);
       alert("게시글 등록/수정 중 오류가 발생했습니다.");
     } finally {
       setIsLoading(false);
-      navigate(-1);
     }
   };
 
@@ -185,9 +188,26 @@ export default function GroupPurchaseWritePage() {
         isLoading={isFileLoading}
       />
 
+      <Modal
+        onClose={() => setShowModal(false)}
+        show={showModal}
+        title={"거래 전 확인하세요!"}
+        content={CheckBeforeDeal2()}
+        headerImageId={2}
+        closeButtonText={"확인했어요"}
+        onCloseClick={() => {
+          handleSubmit();
+          // window.open(post.openChatLink, "_blank");
+        }}
+      />
+
       {isLoggedIn && (
         <BottomFixed>
-          <SubmitButton onClick={handleSubmit}>
+          <SubmitButton
+            onClick={() => {
+              setShowModal(true);
+            }}
+          >
             {isEditMode ? "수정하기" : "등록하기"}
           </SubmitButton>
         </BottomFixed>

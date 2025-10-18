@@ -2,7 +2,7 @@
 
 import styled from "styled-components";
 import { useEffect, useState } from "react";
-import Header from "../components/common/Header.tsx";
+import Header from "../components/common/Header/Header.tsx";
 import TitleContentArea from "../components/common/TitleContentArea.tsx";
 import MyPostLikeCard from "../components/mypage/MyPostLikeCard.tsx";
 import { MyPost_GroupOrder } from "../types/members.ts";

@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import { useEffect, useRef, useState } from "react";
 
-import Header from "../../components/common/Header";
+import Header from "../../components/common/Header/Header.tsx";
 import IconTextButton from "../../components/button/IconTextButton.tsx";
 import StyledTextArea from "../../components/roommate/StyledTextArea.tsx";
 import RoomMateInfoArea from "../../components/roommate/RoomMateInfoArea.tsx";
@@ -23,7 +23,7 @@ import {
 } from "../../apis/members.ts";
 import RoundSquareWhiteButton from "../../components/button/RoundSquareWhiteButton.tsx";
 import { useNavigate } from "react-router-dom";
-import BottomBar from "../../components/common/BottomBar.tsx";
+import BottomBar from "../../components/common/BottomBar/BottomBar.tsx";
 
 export default function MyRoomMatePage() {
   const [roommateInfo, setRoommateInfo] =

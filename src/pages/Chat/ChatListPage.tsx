@@ -5,12 +5,12 @@ import {
   getGroupOrderChatRooms,
   getRoommateChatRooms,
 } from "../../apis/chat.ts";
-import Header from "../../components/common/Header.tsx";
+import Header from "../../components/common/Header/Header.tsx";
 import ChatListItem from "../../components/chat/ChatListItem.tsx";
 import styled from "styled-components";
 import useUserStore from "../../stores/useUserStore.ts";
 // import TopNoticeBanner from "../../components/chat/TopNoticeBanner.tsx";
-import BottomBar from "../../components/common/BottomBar.tsx";
+import BottomBar from "../../components/common/BottomBar/BottomBar.tsx";
 
 export default function ChatListPage() {
   const navigate = useNavigate();

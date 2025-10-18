@@ -45,7 +45,7 @@ const OverlayContainer = styled.div`
   left: 0;
   width: 100vw;
   height: 100vh;
-  z-index: 101;
+  z-index: 10;
 
   /* 중앙 정렬 */
   display: flex;

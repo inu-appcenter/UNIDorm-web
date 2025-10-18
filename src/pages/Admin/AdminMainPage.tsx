@@ -1,4 +1,4 @@
-import Header from "../../components/common/Header.tsx";
+import Header from "../../components/common/Header/Header.tsx";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import useUserStore from "../../stores/useUserStore.ts";

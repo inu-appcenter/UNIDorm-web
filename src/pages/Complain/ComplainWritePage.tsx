@@ -2,7 +2,7 @@ import styled from "styled-components";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import SquareButton from "../../components/common/SquareButton.tsx";
-import Header from "../../components/common/Header.tsx";
+import Header from "../../components/common/Header/Header.tsx";
 import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
 import {
   beds,

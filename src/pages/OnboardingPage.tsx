@@ -5,7 +5,11 @@ import RoundSquareButton from "../components/button/RoundSquareButton.tsx";
 
 import onboarding1 from "../assets/onboarding/onboarding1.webp";
 import onboarding2 from "../assets/onboarding/onboarding2.webp";
-import onboarding3 from "../assets/onboarding/onboarding3.webp";
+// import onboarding3 from "../assets/onboarding/onboarding3.webp";
+import onboarding4 from "../assets/onboarding/onboarding4.webp";
+// import onboarding5 from "../assets/onboarding/onboarding5.webp";
+import 민원접수 from "../assets/민원접수.svg";
+
 import { useNavigate } from "react-router-dom";
 import 로고 from "../assets/unidorm-logo.webp";
 // import TermOfUse from "../components/TermOfUse.tsx";
@@ -29,16 +33,23 @@ const slides = [
   {
     id: 2,
     title: "공동구매",
-    content:
-      "기숙사 UNI들과 배달음식, 식자재, 생활용품 등 함께 공동구매해서 절약해보세요!",
+    content: "배달음식, 식자재, 생활용품 등 함께 공동구매해서 절약해보세요!",
     image: onboarding2,
   },
   {
     id: 3,
-    title: "기숙사 정보와 Tips",
+    title: "생활원 민원 작성",
     content:
-      "인천대학교 기숙사에서 제공하는 소식과 기숙사생들이 공유하는 다양한 기숙사 꿀팁을 만나보세요.",
-    image: onboarding3,
+      "기숙사를 살면서 발생한 불편사항을 간편하게 접수하고, 답변이 등록되면 알림으로 알려드려요.",
+    image: 민원접수,
+  },
+  {
+    id: 4,
+    title: "푸시알림으로 놓치지 마세요",
+    content:
+      "기숙사 공지사항 및 이벤트, 공동구매 키워드/카테고리 새 글 알림 등 알림 기능으로 놓치지 마세요!",
+    subContent: "*스토어에서 앱 설치 시 사용할 수 있습니다.",
+    image: onboarding4,
   },
 ];
 
@@ -58,7 +69,8 @@ const FirstSlide = ({ title }: { title: string }) => {
 
 const FirstSlideWrapper = styled.div`
   width: 80%;
-  height: 100%;
+  //height: 100%;
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -133,12 +145,12 @@ const OnboardingPage: React.FC = () => {
   };
 
   const handleStart = () => {
-    localStorage.setItem("isFirstVisit", "false");
+    localStorage.setItem("isFirstVisit(10.20)", "false");
 
     navigate("/home");
   };
 
-  const { id, title, content, image } = slides[currentIndex];
+  const { id, title, content, subContent, image } = slides[currentIndex];
 
   return (
     <Wrapper onClick={handleTouch}>
@@ -172,6 +184,7 @@ const OnboardingPage: React.FC = () => {
           <TitleTextWrapper>
             <Title>{title}</Title>
             <Text>{content}</Text>
+            <Text style={{ fontSize: "12px" }}>{subContent}</Text>
           </TitleTextWrapper>
 
           <Image src={image ?? undefined} alt={title} />
@@ -199,12 +212,13 @@ export default OnboardingPage;
 
 const Wrapper = styled.div`
   width: 100%;
+  flex: 1;
   height: 100%;
   background-color: white;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start; // 기존 space-between에서 변경
+  justify-content: space-between; // 기존 space-between에서 변경
   position: relative;
 `;
 
@@ -234,15 +248,18 @@ const SkipButton = styled.button`
 
 const Content = styled.div`
   width: 100%;
-  max-width: 400px;
+  //height: 100%;
+  flex: 1;
+  max-width: 450px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   text-align: center;
   padding: 0 1.5rem;
   box-sizing: border-box;
 
-  margin-top: 10vh; // 여기서 높이 조절
+  //margin-top: 10vh; // 여기서 높이 조절
   margin-bottom: auto; // 아래 영역 확보
 `;
 
@@ -256,14 +273,19 @@ const Title = styled.h2`
   font-weight: 700;
   color: #000;
   margin-bottom: 0.75rem;
+
+  word-break: keep-all;
 `;
 
 const Text = styled.p`
   font-size: 16px;
   color: #666;
   line-height: 1.4;
-  margin: 0 0 1.5rem;
+  //margin: 0 0 1.5rem;
   white-space: pre-line;
+  word-break: keep-all;
+  margin: 0;
+  //padding: 0;
 `;
 
 const Image = styled.img`

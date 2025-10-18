@@ -1,12 +1,12 @@
 import styled from "styled-components";
-import Header from "../components/common/Header.tsx";
+import Header from "../components/common/Header/Header.tsx";
 import NotiItem from "../components/notification/NotiItem.tsx";
 import { useEffect, useState } from "react";
 import { getNotifications } from "../apis/notification.ts"; // 새로 만든 알림 API 임포트
 import useUserStore from "../stores/useUserStore.ts";
 import { Notification } from "../types/notifications.ts";
 import { useNavigate } from "react-router-dom";
-import BottomBar from "../components/common/BottomBar.tsx";
+import BottomBar from "../components/common/BottomBar/BottomBar.tsx";
 import {
   acceptRoommateMatching,
   getReceivedRoommateRequests,

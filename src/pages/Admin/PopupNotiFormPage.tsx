@@ -11,7 +11,7 @@ import {
   updatePopupNotification,
 } from "../../apis/popup-notification";
 import { RequestPopupNotificationDto } from "../../types/popup-notifications";
-import Header from "../../components/common/Header";
+import Header from "../../components/common/Header/Header.tsx";
 
 const PopupNotiFormPage = () => {
   const { popupNotificationId } = useParams<{ popupNotificationId: string }>();

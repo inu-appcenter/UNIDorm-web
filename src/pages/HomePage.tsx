@@ -2,12 +2,12 @@ import styled from "styled-components";
 import TitleContentArea from "../components/common/TitleContentArea.tsx";
 import HomeNoticeCard from "../components/home/HomeNoticeCard.tsx";
 import ThreeWeekCalendar from "../components/home/ThreeWeekCalendar.tsx";
-import Header from "../components/common/Header.tsx";
+import Header from "../components/common/Header/Header.tsx";
 import HomeTipsCard from "../components/home/HomeTipsCard.tsx";
 import { useEffect, useState } from "react";
 import { fetchDailyRandomTips } from "../apis/tips.ts";
 import { Tip } from "../types/tips.ts";
-import BottomBar from "../components/common/BottomBar.tsx";
+import BottomBar from "../components/common/BottomBar/BottomBar.tsx";
 import 민원접수 from "../assets/민원접수.svg";
 import 앱센터로고가로 from "../assets/앱센터로고가로.svg";
 import { useNavigate } from "react-router-dom";
@@ -55,7 +55,7 @@ export default function HomePage() {
   const platform = getMobilePlatform();
   const [isAppInstallOpen, setIsAppInstallOpen] = useState(
     (platform === "ios_browser" || platform === "android_browser") &&
-      Math.random() < 0.5,
+      Math.random() < 0.4,
   );
 
   useEffect(() => {
@@ -375,6 +375,7 @@ const FloatingButton = styled.button`
   bottom: 100px;
   right: 24px;
   cursor: pointer;
+  z-index: 100;
 
   // 🖥️ PC 화면에서는 위치를 조금 더 안쪽으로 조정할 수 있음
   @media (min-width: 768px) {

@@ -14,7 +14,7 @@ import useUserStore from "../../stores/useUserStore.ts";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import ToggleGroup from "../../components/roommate/checklist/ToggleGroup.tsx";
 import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
-import Header from "../../components/common/Header.tsx";
+import Header from "../../components/common/Header/Header.tsx";
 import { colleges, dormitory } from "../../constants/constants.ts";
 import axios from "axios";
 import profile from "../../assets/profileimg.png";
