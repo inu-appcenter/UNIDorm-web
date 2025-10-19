@@ -134,6 +134,7 @@ function App() {
   // 웹뷰에서 FCM 토큰 전달 콜백 등록
   useEffect(() => {
     (window as any).onReceiveFcmToken = async function (token: string) {
+      alert(`FCM 토큰 전달받음 ${token}`);
       console.log("FCM 토큰 전달받음:", token);
       setFcmToken(token);
       // 로컬스토리지에 토큰 저장
