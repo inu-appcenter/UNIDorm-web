@@ -13,7 +13,7 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const [id, setId] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false); // ✅ 로딩 상태 추가
+  const [isLoading, setIsLoading] = useState(false); // 로딩 상태
   const { setTokenInfo } = useUserStore();
 
   const isFilled = () => {
@@ -52,7 +52,7 @@ export default function LoginPage() {
       alert("로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.");
       console.error(error);
     } finally {
-      setIsLoading(false); // ✅ 로그인 완료(성공/실패) 후 로딩 상태 false 설정
+      setIsLoading(false);
     }
   };
 
@@ -85,7 +85,7 @@ export default function LoginPage() {
         <SquareButton
           text="로그인"
           type="submit"
-          disabled={!isFilled() || isLoading} // ✅ 로딩 중일 때도 버튼 비활성화
+          disabled={!isFilled() || isLoading}
         />
       </ButtonWrapper>
     </LoginFormWrapper>
