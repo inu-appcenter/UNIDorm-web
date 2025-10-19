@@ -53,9 +53,26 @@ export const ComplainType = [
 ];
 
 export const complainDormitory = ["1기숙사", "2기숙사", "3기숙사"];
-export const dormitoryBlocks = ["A동", "B동"];
-export const floors = Array.from({ length: 10 }, (_, i) => `${i + 1}층`);
-export const rooms = Array.from({ length: 20 }, (_, i) => `${i + 1}호`);
-export const beds = ["A", "B", "C", "D"];
+export const dormitoryBlocks = ["A동", "B동", "C동"];
+// --- 요청사항 반영: 기숙사/동별 데이터 구조 정의 ---
+export const dormStructure = {
+  "1기숙사": {
+    A동: { floors: { min: 3, max: 13 }, rooms: 10, beds: 3 },
+    B동: { floors: { min: 2, max: 9 }, rooms: 11, beds: 3 },
+    C동: { floors: { min: 2, max: 9 }, rooms: 11, beds: 3 },
+  },
+  "2기숙사": {
+    A동: { floors: { min: 2, max: 11 }, rooms: 33, beds: 2 },
+    B동: { floors: { min: 2, max: 15 }, rooms: 23, beds: 2 },
+  },
+  "3기숙사": {
+    A동: { floors: { min: 2, max: 12 }, rooms: 28, beds: 2 },
+    B동: { floors: { min: 2, max: 12 }, rooms: 23, beds: 2 },
+  },
+};
+
+// export const floors = Array.from({ length: 10 }, (_, i) => `${i + 1}층`);
+// export const rooms = Array.from({ length: 20 }, (_, i) => `${i + 1}호`);
+// export const beds = ["A", "B", "C", "D"];
 
 export const complainStatus = ["대기중", "담당자 배정", "처리중", "처리완료"];
