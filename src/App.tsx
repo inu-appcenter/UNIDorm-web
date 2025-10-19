@@ -155,7 +155,7 @@ function App() {
         try {
           await tokenInstance.post("/fcm/token", { fcmToken });
           console.log("FCM 토큰 등록 성공");
-          alert(`FCM 토큰 등록 성공 ${fcmToken}`);
+          // alert(`FCM 토큰 등록 성공 ${fcmToken}`);
         } catch (tokenError) {
           console.error("FCM 토큰 등록 실패", tokenError);
           alert(
@@ -170,7 +170,7 @@ function App() {
               fcmToken: localstorageFcmToken,
             });
             console.log("ios FCM 토큰 등록 성공");
-            alert(`ios FCM 토큰 등록 성공 ${localstorageFcmToken}`);
+            // alert(`ios FCM 토큰 등록 성공 ${localstorageFcmToken}`);
           } catch (tokenError) {
             console.error("FCM 토큰 등록 실패", tokenError);
             alert(
