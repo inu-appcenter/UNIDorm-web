@@ -349,17 +349,21 @@ const NotiWrapper = styled.div`
   flex-direction: row;
   gap: 16px;
   width: 100%;
-  padding: 16px;
-  padding-right: 48px;
-  padding-left: 32px;
+  padding: 16px 48px 16px 32px;
   padding-top: 8px;
   box-sizing: border-box;
-  overflow-x: auto; // (수정) overflow-y -> overflow-x
+  overflow-x: auto; /* 스크롤 가능 */
+
+  /* 스크롤바 숨기기 (크로스브라우저 대응) */
+  -ms-overflow-style: none; /* IE, Edge */
+  scrollbar-width: none; /* Firefox */
+  &::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
 
   //// 🖥️ PC 화면에서는 스크롤 대신 그리드로 표시
   //@media (min-width: 768px) {
   //  display: grid;
-  //  // 카드의 최소 너비는 280px, 공간이 남으면 1fr씩 나눠가짐
   //  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   //  overflow-x: hidden;
   //  padding: 8px 0 0 0;
