@@ -58,7 +58,7 @@ export default function GroupPurchasePostPage() {
   const [showModal, setShowModal] = useState(false);
   const [commentInput, setCommentInput] = useState("");
 
-  const [showToolTip, setShowToolTip] = useState(false);
+  const [showToolTip, setShowToolTip] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -92,6 +92,10 @@ export default function GroupPurchasePostPage() {
 
   const handleLikeClick = async () => {
     if (!post) return;
+    if (!isLoggedIn) {
+      alert("로그인 후 사용할 수 있습니다.");
+      return;
+    }
     try {
       const updatedLikeCount = liked
         ? await unlikeGroupPurchase(post.id)
@@ -339,26 +343,48 @@ export default function GroupPurchasePostPage() {
                         )}
                       </RelativeButtonWrapper>
                     ) : (
-                      <RoundSquareButton
-                        btnName={
-                          post.recruitmentComplete
-                            ? "마감"
-                            : "오픈 채팅 참여하기"
-                        }
-                        onClick={() => {
-                          if (!isLoggedIn) {
-                            alert("로그인 후 참여할 수 있어요.");
-                            navigate("/login");
-                            return;
+                      <RelativeButtonWrapper>
+                        <RoundSquareButton
+                          btnName={
+                            post.openChatLink !== ""
+                              ? "오픈채팅방 미개설"
+                              : post.recruitmentComplete
+                                ? "마감"
+                                : "오픈 채팅 참여하기"
                           }
-                          if (post?.recruitmentComplete) {
-                            alert("마감된 공동구매입니다.");
-                            return;
+                          onClick={() => {
+                            if (!isLoggedIn) {
+                              alert("로그인 후 참여할 수 있어요.");
+                              navigate("/login");
+                              return;
+                            }
+                            if (post.openChatLink !== "") {
+                              alert(
+                                "아직 오픈채팅방이 개설되지 않았어요.\n댓글로 글 작성자에게 개설을 요청해보세요.",
+                              );
+                              return;
+                            }
+                            if (post?.recruitmentComplete) {
+                              alert("마감된 공동구매입니다.");
+                              return;
+                            }
+                            setShowModal(true);
+                          }}
+                          color={
+                            post.recruitmentComplete || post.openChatLink !== ""
+                              ? "#8E8E93"
+                              : undefined
                           }
-                          setShowModal(true);
-                        }}
-                        color={post.recruitmentComplete ? "#8E8E93" : undefined}
-                      />
+                        />
+                        {showToolTip && (
+                          <ToolTipMessage
+                            message={
+                              "작성자에게 오픈채팅방\n개설을 요청해보세요!"
+                            }
+                            onClose={() => setShowToolTip(false)}
+                          />
+                        )}
+                      </RelativeButtonWrapper>
                     )}
                   </LikeActionRow>
                 </Content>
