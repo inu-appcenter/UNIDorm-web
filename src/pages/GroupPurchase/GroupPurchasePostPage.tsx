@@ -58,7 +58,7 @@ export default function GroupPurchasePostPage() {
   const [showModal, setShowModal] = useState(false);
   const [commentInput, setCommentInput] = useState("");
 
-  const [showToolTip, setShowToolTip] = useState(true);
+  const [showToolTip, setShowToolTip] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -346,7 +346,7 @@ export default function GroupPurchasePostPage() {
                       <RelativeButtonWrapper>
                         <RoundSquareButton
                           btnName={
-                            post.openChatLink !== ""
+                            post.openChatLink === ""
                               ? "오픈채팅방 미개설"
                               : post.recruitmentComplete
                                 ? "마감"
@@ -358,7 +358,7 @@ export default function GroupPurchasePostPage() {
                               navigate("/login");
                               return;
                             }
-                            if (post.openChatLink !== "") {
+                            if (post.openChatLink === "") {
                               alert(
                                 "아직 오픈채팅방이 개설되지 않았어요.\n댓글로 글 작성자에게 개설을 요청해보세요.",
                               );
@@ -371,7 +371,7 @@ export default function GroupPurchasePostPage() {
                             setShowModal(true);
                           }}
                           color={
-                            post.recruitmentComplete || post.openChatLink !== ""
+                            post.recruitmentComplete || post.openChatLink === ""
                               ? "#8E8E93"
                               : undefined
                           }

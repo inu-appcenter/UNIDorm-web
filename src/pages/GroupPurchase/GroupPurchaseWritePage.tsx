@@ -111,7 +111,7 @@ export default function GroupPurchaseWritePage() {
   return (
     <Wrapper>
       <Header
-        title="공동구매 글쓰기"
+        title={`공동구매 ${isEditMode ? "수정" : "작성"}`}
         hasBack={true}
         rightContent={
           <TempSaveButton onClick={handleTempSave}>임시저장</TempSaveButton>
