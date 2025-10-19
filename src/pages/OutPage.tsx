@@ -10,7 +10,11 @@ export default function OutPage() {
 }
 
 const OutPageWrapper = styled.div`
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  min-height: 100%; /* 뷰포트 전체 높이를 기준으로 설정 */
+  height: fit-content;
   box-sizing: border-box;
+  background: #fafafa;
+  display: flex;
+  flex-direction: column;
 `;
