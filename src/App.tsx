@@ -151,7 +151,7 @@ function App() {
         try {
           await tokenInstance.post("/fcm/token", { fcmToken });
           console.log("FCM 토큰 등록 성공");
-          alert("FCM 토큰 등록 성공");
+          alert(`FCM 토큰 등록 성공 ${fcmToken}`);
         } catch (tokenError) {
           console.error("FCM 토큰 등록 실패", tokenError);
           alert("FCM 토큰 등록 실패");
