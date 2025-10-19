@@ -1,6 +1,6 @@
 import "./index.css";
 import { BrowserRouter, Route, Routes, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { getMemberInfo } from "./apis/members";
 import useUserStore from "./stores/useUserStore";
 import RootPage from "./pages/RootPage";
@@ -55,6 +55,7 @@ import CommonBottomModal from "./components/modal/CommonBottomModal.tsx";
 import ModalContent_EventWin from "./components/common/ModalContent_EventWin.tsx";
 import { getEventWin } from "./apis/event.ts";
 import { useCouponStore } from "./stores/useCouponStore.ts";
+import tokenInstance from "./apis/tokenInstance.ts";
 
 function App() {
   console.log("현재 MODE:", import.meta.env.MODE);
@@ -76,6 +77,8 @@ function App() {
   const setIsCouponWinOpen = useCouponStore(
     (state) => state.setIsCouponWinOpen,
   );
+
+  const [fcmToken, setFcmToken] = useState("");
 
   useEffect(() => {
     const initializeUser = async () => {
@@ -130,6 +133,7 @@ function App() {
   useEffect(() => {
     (window as any).onReceiveFcmToken = async function (token: string) {
       console.log("FCM 토큰 전달받음:", token);
+      setFcmToken(token);
       // 로컬스토리지에 토큰 저장
       localStorage.setItem("fcmToken", token);
     };
@@ -138,6 +142,23 @@ function App() {
       (window as any).onReceiveFcmToken = null;
     };
   }, []);
+
+  useEffect(() => {
+    const registerFcmToken = async () => {
+      if (fcmToken) {
+        try {
+          await tokenInstance.post("/fcm/token", { fcmToken });
+          console.log("FCM 토큰 등록 성공");
+          alert("FCM 토큰 등록 성공");
+        } catch (tokenError) {
+          console.error("FCM 토큰 등록 실패", tokenError);
+          alert("FCM 토큰 등록 실패");
+        }
+      }
+    };
+
+    registerFcmToken();
+  }, [fcmToken]);
 
   return (
     <ErrorBoundary>
