@@ -132,25 +132,33 @@ export default function GroupPurchaseWritePage() {
         setIsOpen={setIsHowToModalOpen}
         children={<HowToCreateOpenChat />}
       />
-      <SectionTitle>제목</SectionTitle>
+      <SectionTitle>
+        제목 <span className="required"> *</span>
+      </SectionTitle>
       <InputField
         placeholder="공동구매하려는 물품명을 작성해주세요"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
       />
-      <SectionTitle>카테고리</SectionTitle>
+      <SectionTitle>
+        카테고리 <span className="required"> *</span>
+      </SectionTitle>
       <CategorySelector
         selectedCategory={category}
         onSelectCategory={setCategory}
       />
-      <SectionTitle>가격</SectionTitle>
+      <SectionTitle>
+        가격 <span className="required"> *</span>
+      </SectionTitle>
       <InputField
         type="number"
         placeholder="가격을 입력해주세요"
         value={price}
         onChange={(e) => setPrice(e.target.value)}
       />
-      <SectionTitle>내용</SectionTitle>
+      <SectionTitle>
+        내용 <span className="required"> *</span>
+      </SectionTitle>
       <TextArea
         placeholder="내용을 입력해주세요"
         rows={4}
@@ -171,18 +179,21 @@ export default function GroupPurchaseWritePage() {
           {" >"}
         </a>
       </SectionTitle>
+      <Description>같이 구매할 사람이 생겼을 때 추가해도 돼요.</Description>
       <InputField
         placeholder="오픈채팅방 링크를 입력해주세요"
         value={openchatLink}
         onChange={(e) => setOpenchatLink(e.target.value)}
       />
-      <SectionTitle>마감 시간</SectionTitle>
+      <SectionTitle>
+        마감 시간 <span className="required"> *</span>
+      </SectionTitle>
       <DeadlineSelector
         deadline={deadline}
         onDeadlineChange={setDeadline}
         category={category}
       />
-      <SectionTitle>이미지 (선택)</SectionTitle>
+      <SectionTitle>이미지</SectionTitle>
       <Description>
         상품 이미지를 업로드하면 공동구매가 성사될 확률이 높아져요!
       </Description>
@@ -228,6 +239,10 @@ const Wrapper = styled.div`
   box-sizing: border-box;
   padding: 70px 16px;
   padding-bottom: 100px;
+
+  .required {
+    color: red;
+  }
 `;
 
 const InputField = styled.input`
