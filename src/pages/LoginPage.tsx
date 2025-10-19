@@ -6,7 +6,6 @@ import { useState } from "react";
 import { login } from "../apis/members.ts";
 import useUserStore from "../stores/useUserStore.ts";
 import Header from "../components/common/Header/Header.tsx";
-import tokenInstance from "../apis/tokenInstance.ts";
 import React from "react";
 import LoadingSpinner from "../components/common/LoadingSpinner.tsx";
 
@@ -44,17 +43,6 @@ export default function LoginPage() {
         localStorage.setItem("role", tokenInfo.role);
 
         setTokenInfo(tokenInfo);
-
-        // 로그인 성공 후 FCM 토큰 서버 전송
-        const fcmToken = localStorage.getItem("fcmToken");
-        if (fcmToken) {
-          try {
-            await tokenInstance.post("/fcm/token", { fcmToken });
-            console.log("로그인 후 FCM 토큰 등록 완료");
-          } catch (tokenError) {
-            console.error("로그인 후 FCM 토큰 등록 실패", tokenError);
-          }
-        }
 
         navigate("/home");
       } else {
