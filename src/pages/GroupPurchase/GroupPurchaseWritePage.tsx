@@ -76,7 +76,7 @@ export default function GroupPurchaseWritePage() {
       link: purchaseLink,
       openChatLink: openchatLink,
       groupOrderType: category,
-      deadline: deadlineString, // ✅ 반영 완료
+      deadline: deadlineString,
     };
 
     console.log("requestDto.deadline", requestDto.deadline);
@@ -92,8 +92,13 @@ export default function GroupPurchaseWritePage() {
       }
       navigate(-1);
     } catch (error) {
-      console.error("게시글 등록/수정 실패:", error);
-      alert("게시글 등록/수정 중 오류가 발생했습니다.");
+      const err = error as any;
+
+      console.error("게시글 등록/수정 실패:", err.response.data.errors);
+      alert(
+        "게시글 등록/수정 중 오류가 발생했습니다.\n" +
+          err.response.data.errors.join("\n"),
+      );
     } finally {
       setIsLoading(false);
     }
