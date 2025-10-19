@@ -88,6 +88,10 @@ export default function TipDetailPage() {
 
   const handleLike = async () => {
     if (!boardId) return;
+    if (!isLoggedIn) {
+      alert("로그인 후 사용할 수 있습니다.");
+      return;
+    }
     try {
       const endpoint = liked
         ? `/tips/${boardId}/unlike`
