@@ -12,7 +12,7 @@ import 민원접수 from "../assets/민원접수.svg";
 
 import { useNavigate } from "react-router-dom";
 import 로고 from "../assets/unidorm-logo.webp";
-// import TermOfUse from "../components/TermOfUse.tsx";
+import TermOfUse from "../components/TermOfUse.tsx";
 
 const SLIDE_DURATION = 5000;
 
@@ -172,9 +172,9 @@ const OnboardingPage: React.FC = () => {
           })}
         </ProgressContainer>
 
-        <TopRight>
-          <SkipButton onClick={handleStart}>건너뛰기</SkipButton>
-        </TopRight>
+        {/*<TopRight>*/}
+        {/*  <SkipButton onClick={handleStart}>건너뛰기</SkipButton>*/}
+        {/*</TopRight>*/}
       </TopSection>
 
       {id === 0 ? (
@@ -194,7 +194,7 @@ const OnboardingPage: React.FC = () => {
       <Bottom>
         {isLastSlide && (
           <>
-            {/*<TermOfUse />*/}
+            <TermOfUse />
             <div>
               <RoundSquareButton
                 btnName={"UNI Dorm 시작하기"}
@@ -222,13 +222,13 @@ const Wrapper = styled.div`
   position: relative;
 `;
 
-const TopRight = styled.div`
-  width: 100%;
-  display: flex;
-  justify-content: flex-end;
-  //padding: 1rem;
-  box-sizing: border-box;
-`;
+// const TopRight = styled.div`
+//   width: 100%;
+//   display: flex;
+//   justify-content: flex-end;
+//   //padding: 1rem;
+//   box-sizing: border-box;
+// `;
 
 const TopSection = styled.div`
   width: 100%;
@@ -237,14 +237,14 @@ const TopSection = styled.div`
   box-sizing: border-box;
 `;
 
-const SkipButton = styled.button`
-  font-size: 16px;
-  color: black;
-  font-weight: 600;
-  background: none;
-  border: none;
-  cursor: pointer;
-`;
+// const SkipButton = styled.button`
+//   font-size: 16px;
+//   color: black;
+//   font-weight: 600;
+//   background: none;
+//   border: none;
+//   cursor: pointer;
+// `;
 
 const Content = styled.div`
   width: 100%;

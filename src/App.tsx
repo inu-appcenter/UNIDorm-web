@@ -104,7 +104,7 @@ function App() {
         //이벤트 당첨 여부 확인
         const couponResponse = await getEventWin();
         console.log("이벤트 당첨 여부 확인 성공 : ", couponResponse);
-        if (couponResponse.data.success && couponResponse.data.issued) {
+        if (couponResponse.data.success && !couponResponse.data.issued) {
           setIsCouponWinOpen(true);
         }
       } catch (error) {

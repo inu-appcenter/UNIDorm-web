@@ -4,16 +4,46 @@ import styled from "styled-components";
 import FormField from "./FormField.tsx";
 import SelectableChipGroup from "../roommate/checklist/SelectableChipGroup.tsx";
 import {
-  beds,
   complainDormitory,
   complainStatus,
   ComplainType,
   dormitoryBlocks,
-  floors,
-  rooms,
-} from "../../constants/constants.ts";
+} from "../../constants/constants.ts"; // 'as const'로 선언된 상수들
 import { Dropdown, DropdownContainer, Input } from "../../styles/complain.ts";
 import { ComplaintSearchDto } from "../../types/complain.ts";
+import { useEffect, useState } from "react"; // ⭐ useState, useEffect 추가
+
+// --- 1. 타입 정의 추가 (ComplainWritePage와 동일) ---
+type DormName = (typeof complainDormitory)[number];
+type BlockName = (typeof dormitoryBlocks)[number];
+
+type DormRules = {
+  floors: { min: number; max: number };
+  rooms: number;
+  beds: number;
+};
+
+// --- 2. dormStructure 정의 (ComplainWritePage와 동일) ---
+const dormStructure: Record<DormName, Partial<Record<BlockName, DormRules>>> = {
+  "1기숙사": {
+    A동: { floors: { min: 3, max: 13 }, rooms: 10, beds: 3 },
+    B동: { floors: { min: 2, max: 9 }, rooms: 11, beds: 3 },
+    C동: { floors: { min: 2, max: 9 }, rooms: 11, beds: 3 },
+  },
+  "2기숙사": {
+    A동: { floors: { min: 2, max: 11 }, rooms: 33, beds: 2 },
+    B동: { floors: { min: 2, max: 15 }, rooms: 23, beds: 2 },
+  },
+  "3기숙사": {
+    A동: { floors: { min: 2, max: 12 }, rooms: 28, beds: 2 },
+    B동: { floors: { min: 2, max: 12 }, rooms: 23, beds: 2 },
+  },
+};
+
+// --- 3. 헬퍼 함수 정의 (ComplainWritePage와 동일) ---
+const generateOptions = (min: number, max: number, suffix: string) => {
+  return Array.from({ length: max - min + 1 }, (_, i) => `${min + i}${suffix}`);
+};
 
 // ⭐ 부모로부터 받을 Props 타입 정의
 interface ComplainFilterProps {
@@ -63,24 +93,69 @@ const ComplainFilter = ({
   onApply,
   onReset,
 }: ComplainFilterProps) => {
+  // --- 4. 동적 옵션 목록을 위한 상태 추가 ---
+  const [floorOptions, setFloorOptions] = useState<string[]>([]);
+  const [roomOptions, setRoomOptions] = useState<string[]>([]);
+  const [bedOptions, setBedOptions] = useState<string[]>([]);
+
+  // --- 5. 기숙사/동 선택 시 옵션 동적 생성 Effect ---
+  useEffect(() => {
+    const dormName = complainDormitory[dormitoryIndex as number];
+    const blockName = dormitoryBlocks[blockIndex as number];
+
+    let floors: string[] = [];
+    let rooms: string[] = [];
+    let beds: string[] = [];
+
+    if (dormName && blockName) {
+      const dorm = dormStructure[dormName];
+      const rules = dorm?.[blockName];
+
+      if (rules) {
+        floors = generateOptions(rules.floors.min, rules.floors.max, "층");
+        rooms = generateOptions(1, rules.rooms, "호");
+        beds = generateOptions(1, rules.beds, "번");
+      }
+    }
+
+    setFloorOptions(floors);
+    setRoomOptions(rooms);
+    setBedOptions(beds);
+
+    // ⭐ 옵션 변경 시, 부모의 상태(props)가 유효하지 않으면 초기화 핸들러 호출
+    if (!floors.includes(floor)) {
+      onFloorChange("");
+    }
+    if (!rooms.includes(room)) {
+      onRoomChange("");
+    }
+    if (!beds.includes(bed)) {
+      onBedChange("");
+    }
+    // props로 받은 floor, room, bed 및 핸들러 함수를 의존성 배열에 추가
+  }, [
+    dormitoryIndex,
+    blockIndex,
+    floor,
+    room,
+    bed,
+    onFloorChange,
+    onRoomChange,
+    onBedChange,
+  ]);
+
   const handleApplyFilters = () => {
     const filters: ComplaintSearchDto = {
       ...(dormitoryIndex !== null && {
-        // complainDormitory[dormitoryIndex]의 값이 string이라고 가정
         dormType: complainDormitory[dormitoryIndex],
       }),
       ...(manager && { officer: manager }),
       ...(typeIndex !== null && { type: ComplainType[typeIndex] }),
       ...(statusIndex !== null && { status: complainStatus[statusIndex] }),
-      // 'block' 대신 'building' 사용
       ...(blockIndex !== null && { building: dormitoryBlocks[blockIndex] }),
       ...(floor && { floor }),
-      // 'room' 대신 'roomNumber' 사용
       ...(room && { roomNumber: room }),
-      // 'bed' 대신 'bedNumber' 사용
       ...(bed && { bedNumber: bed }),
-      // 원본 코드에는 없지만, DTO에 'keyword'가 있으니 필요하면 추가하세요.
-      // ...(keyword && { keyword: keyword }),
     };
     onApply(filters);
   };
@@ -90,15 +165,15 @@ const ComplainFilter = ({
       <FormField label="기숙사">
         <SelectableChipGroup
           Groups={complainDormitory}
-          selectedIndex={dormitoryIndex} // ⭐ props.selectedIndex
-          onSelect={onDormitoryChange} // ⭐ props.onSelect
+          selectedIndex={dormitoryIndex}
+          onSelect={onDormitoryChange}
         />
       </FormField>
       <FormField label="담당자">
         <Input
           placeholder="담당자 이름을 입력해주세요"
-          value={manager} // ⭐ props.value
-          onChange={(e) => onManagerChange(e.target.value)} // ⭐ props.onChange
+          value={manager}
+          onChange={(e) => onManagerChange(e.target.value)}
         />
       </FormField>
       <FormField label="유형">
@@ -122,17 +197,21 @@ const ComplainFilter = ({
           onSelect={onBlockChange}
         />
       </FormField>
-      <FormField label="층/호수">
+
+      {/* --- 6. JSX 드롭다운 수정 --- */}
+      <FormField label="층/호수/침대">
         <DropdownContainer>
           <Dropdown
             value={floor}
             onChange={(e) => onFloorChange(e.target.value)}
             hasValue={!!floor}
+            disabled={floorOptions.length === 0} // ⭐ disabled 추가
           >
             <option value="" disabled>
               층
             </option>
-            {floors.map((f) => (
+            {/* ⭐ floorOptions 사용 */}
+            {floorOptions.map((f) => (
               <option key={f} value={f}>
                 {f}
               </option>
@@ -142,11 +221,13 @@ const ComplainFilter = ({
             value={room}
             onChange={(e) => onRoomChange(e.target.value)}
             hasValue={!!room}
+            disabled={roomOptions.length === 0} // ⭐ disabled 추가
           >
             <option value="" disabled>
               호수
             </option>
-            {rooms.map((r) => (
+            {/* ⭐ roomOptions 사용 */}
+            {roomOptions.map((r) => (
               <option key={r} value={r}>
                 {r}
               </option>
@@ -156,11 +237,13 @@ const ComplainFilter = ({
             value={bed}
             onChange={(e) => onBedChange(e.target.value)}
             hasValue={!!bed}
+            disabled={bedOptions.length === 0} // ⭐ disabled 추가
           >
             <option value="" disabled>
               침대
             </option>
-            {beds.map((b) => (
+            {/* ⭐ bedOptions 사용 */}
+            {bedOptions.map((b) => (
               <option key={b} value={b}>
                 {b}
               </option>
@@ -171,8 +254,7 @@ const ComplainFilter = ({
       <ButtonWrapper>
         <Button onClick={onReset} isReset>
           초기화
-        </Button>{" "}
-        {/* ⭐ props.onReset */}
+        </Button>
         <Button onClick={handleApplyFilters}>필터 적용</Button>
       </ButtonWrapper>
     </Wrapper>
@@ -181,7 +263,7 @@ const ComplainFilter = ({
 
 export default ComplainFilter;
 
-// (styled-components 코드는 이전과 동일)
+// (styled-components 코드는 동일)
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;

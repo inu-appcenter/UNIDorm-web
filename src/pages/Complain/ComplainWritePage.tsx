@@ -5,12 +5,10 @@ import SquareButton from "../../components/common/SquareButton.tsx";
 import Header from "../../components/common/Header/Header.tsx";
 import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
 import {
-  beds,
   complainDormitory,
   ComplainType,
   dormitoryBlocks,
-  floors,
-  rooms,
+  dormStructure,
 } from "../../constants/constants.ts";
 import { createComplaint, updateComplaint } from "../../apis/complain.ts";
 import { ComplaintCreateDto } from "../../types/complain.ts";
@@ -19,6 +17,11 @@ import { Dropdown, DropdownContainer, Input } from "../../styles/complain.ts";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import { useFileHandler } from "../../hooks/useFileHandler.ts";
 import FileUploader from "../../components/common/FileUploader.tsx";
+
+// ---  옵션 배열 생성 헬퍼 함수 ---
+const generateOptions = (min: number, max: number, suffix: string) => {
+  return Array.from({ length: max - min + 1 }, (_, i) => `${min + i}${suffix}`);
+};
 
 export default function ComplainWritePage() {
   const navigate = useNavigate();
@@ -53,9 +56,54 @@ export default function ComplainWritePage() {
   const [incidentDate, setIncidentDate] = useState("");
   const [incidentTime, setIncidentTime] = useState("");
 
+  // ---  동적 옵션 목록을 위한 상태 ---
+  const [floorOptions, setFloorOptions] = useState<string[]>([]);
+  const [roomOptions, setRoomOptions] = useState<string[]>([]);
+  const [bedOptions, setBedOptions] = useState<string[]>([]);
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  // ---  기숙사/동 선택 시 옵션 동적 생성 ---
+  useEffect(() => {
+    const dormName = complainDormitory[selectedDormitoryIndex as number];
+    const blockName = dormitoryBlocks[selectedDormitoryBlockIndex as number];
+
+    let floors: string[] = [];
+    let rooms: string[] = [];
+    let beds: string[] = [];
+
+    // @ts-ignore
+    if (dormName && blockName && dormStructure[dormName]?.[blockName]) {
+      // @ts-ignore
+      const rules = dormStructure[dormName][blockName];
+      floors = generateOptions(rules.floors.min, rules.floors.max, "층");
+      rooms = generateOptions(1, rules.rooms, "호");
+      beds = generateOptions(1, rules.beds, "번");
+    }
+
+    setFloorOptions(floors);
+    setRoomOptions(rooms);
+    setBedOptions(beds);
+
+    // 옵션이 변경되었을 때, 기존 선택 값이 새 옵션에 없으면 초기화
+    if (!floors.includes(selectedFloor)) {
+      setSelectedFloor("");
+    }
+    if (!rooms.includes(selectedRoom)) {
+      setSelectedRoom("");
+    }
+    if (!beds.includes(selectedBed)) {
+      setSelectedBed("");
+    }
+  }, [
+    selectedDormitoryIndex,
+    selectedDormitoryBlockIndex,
+    selectedFloor,
+    selectedRoom,
+    selectedBed,
+  ]);
 
   useEffect(() => {
     if (complain) {
@@ -67,13 +115,16 @@ export default function ComplainWritePage() {
       const typeIndex = ComplainType.indexOf(complain.type);
       if (typeIndex !== -1) setSelectedComplainTypeIndex(typeIndex);
 
-      // tip.dormType과 tip.building을 각각 찾아 인덱스 설정
       const dormIndex = complainDormitory.indexOf(complain.dormType);
       if (dormIndex !== -1) setSelectedDormitoryIndex(dormIndex);
 
       const blockIndex = dormitoryBlocks.indexOf(complain.building);
       if (blockIndex !== -1) setSelectedDormitoryBlockIndex(blockIndex);
 
+      // (수정 모드 진입 시)
+      // 이 useEffect가 위의 동적 옵션 생성 useEffect보다 먼저 실행되거나 동시에 실행되더라도,
+      // state 설정 후 re-render가 발생하면 동적 옵션 생성 useEffect가 올바른 옵션을 설정하고
+      // 아래 값들은 유효성 검사를 통과하여 유지됩니다.
       setSelectedFloor(complain.floor || "");
       setSelectedRoom(complain.roomNumber || "");
       setSelectedBed(complain.bedNumber || "");
@@ -186,46 +237,53 @@ export default function ComplainWritePage() {
           />
         </FormField>
 
-        {/* --- 기존 층/호수/침대 선택 --- */}
+        {/* ---  동적 옵션(floorOptions) 사용 --- */}
         <FormField label="층/호수/침대" required>
           <DropdownContainer>
             <Dropdown
               value={selectedFloor}
               onChange={(e) => setSelectedFloor(e.target.value)}
               hasValue={!!selectedFloor}
+              disabled={floorOptions.length === 0} // 옵션 없으면 비활성화
             >
               <option value="" disabled>
                 층
               </option>
-              {floors.map((floor) => (
+              {floorOptions.map((floor) => (
                 <option key={floor} value={floor}>
                   {floor}
                 </option>
               ))}
             </Dropdown>
+
+            {/* ---  동적 옵션(roomOptions) 사용 --- */}
             <Dropdown
               value={selectedRoom}
               onChange={(e) => setSelectedRoom(e.target.value)}
               hasValue={!!selectedRoom}
+              disabled={roomOptions.length === 0} // 옵션 없으면 비활성화
             >
               <option value="" disabled>
                 호수
               </option>
-              {rooms.map((room) => (
+              {roomOptions.map((room) => (
                 <option key={room} value={room}>
                   {room}
                 </option>
               ))}
             </Dropdown>
+
+            {/* ---  동적 옵션(bedOptions) 사용 --- */}
             <Dropdown
               value={selectedBed}
               onChange={(e) => setSelectedBed(e.target.value)}
               hasValue={!!selectedBed}
+              disabled={bedOptions.length === 0} // 옵션 없으면 비활성화
             >
               <option value="" disabled>
                 침대
               </option>
-              {beds.map((bed) => (
+              {bedOptions.map((bed) => (
                 <option key={bed} value={bed}>
                   {bed}
                 </option>
@@ -234,7 +292,6 @@ export default function ComplainWritePage() {
           </DropdownContainer>
         </FormField>
 
-        {/* ✅ 새로 추가된 필드들 */}
         <FormField label="세부 위치">
           <Input
             placeholder="정확한 위치를 입력해주세요 (예: 화장실 앞, 복도 끝 등)"
@@ -287,7 +344,6 @@ export default function ComplainWritePage() {
           />
         </FormField>
 
-        {/* 개인정보 동의 UI 추가 */}
         <PrivacyAgreementContainer>
           <CheckboxLabel>
             <input
@@ -358,7 +414,6 @@ const ButtonWrapper = styled.div`
   border-top: 1px solid #f0f0f0;
 `;
 
-// 개인정보 동의 UI를 위한 스타일 추가
 const PrivacyAgreementContainer = styled.div`
   padding: 10px 0;
   border-top: 1px solid #f0f0f0;
