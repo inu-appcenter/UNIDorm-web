@@ -56,6 +56,7 @@ import ModalContent_EventWin from "./components/common/ModalContent_EventWin.tsx
 import { getEventWin } from "./apis/event.ts";
 import { useCouponStore } from "./stores/useCouponStore.ts";
 import tokenInstance from "./apis/tokenInstance.ts";
+import { getMobilePlatform } from "./utils/getMobilePlatform.ts";
 
 function App() {
   console.log("현재 MODE:", import.meta.env.MODE);
@@ -81,6 +82,8 @@ function App() {
   );
 
   const [fcmToken, setFcmToken] = useState("");
+
+  const platform = getMobilePlatform();
 
   useEffect(() => {
     const initializeUser = async () => {
@@ -134,7 +137,7 @@ function App() {
   // 웹뷰에서 FCM 토큰 전달 콜백 등록
   useEffect(() => {
     (window as any).onReceiveFcmToken = async function (token: string) {
-      alert(`FCM 토큰 전달받음 ${token}`);
+      // alert(`FCM 토큰 전달받음 ${token}`);
       console.log("FCM 토큰 전달받음:", token);
       setFcmToken(token);
       // 로컬스토리지에 토큰 저장
@@ -158,6 +161,20 @@ function App() {
           alert(
             "푸시알림 활성화 중 오류가 발생했어요. 앱을 완전히 닫고 다시 실행해주시고, 오류가 반복되면 문의해주세요.",
           );
+        }
+      } else if (platform === "ios_webview") {
+        const localstorageFcmToken = localStorage.getItem("fcmToken");
+        if (localstorageFcmToken && isLoggedIn) {
+          try {
+            await tokenInstance.post("/fcm/token", { localstorageFcmToken });
+            console.log("ios FCM 토큰 등록 성공");
+            alert(`ios FCM 토큰 등록 성공 ${fcmToken}`);
+          } catch (tokenError) {
+            console.error("FCM 토큰 등록 실패", tokenError);
+            alert(
+              "푸시알림 활성화 중 오류가 발생했어요. 앱을 완전히 닫고 다시 실행해주시고, 오류가 반복되면 문의해주세요.",
+            );
+          }
         }
       }
     };
