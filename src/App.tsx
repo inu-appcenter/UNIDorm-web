@@ -166,7 +166,9 @@ function App() {
         const localstorageFcmToken = localStorage.getItem("fcmToken");
         if (localstorageFcmToken && isLoggedIn) {
           try {
-            await tokenInstance.post("/fcm/token", { localstorageFcmToken });
+            await tokenInstance.post("/fcm/token", {
+              fcmToken: localstorageFcmToken,
+            });
             console.log("ios FCM 토큰 등록 성공");
             alert(`ios FCM 토큰 등록 성공 ${localstorageFcmToken}`);
           } catch (tokenError) {
