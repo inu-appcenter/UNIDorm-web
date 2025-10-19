@@ -5,7 +5,6 @@ import { FaRegHeart } from "react-icons/fa";
 import Header from "../../components/common/Header/Header.tsx";
 import tokenInstance from "../../apis/tokenInstance";
 import { useSwipeable } from "react-swipeable";
-import axiosInstance from "../../apis/axiosInstance.ts";
 import useUserStore from "../../stores/useUserStore.ts";
 import UserInfo from "../../components/common/UserInfo.tsx";
 import CommentSection from "../../components/comment/CommentSection.tsx";
@@ -49,8 +48,8 @@ export default function TipDetailPage() {
       try {
         // 두 API 호출을 병렬로 처리하고 둘 다 완료될 때까지 기다립니다.
         const [tipResponse, imagesResponse] = await Promise.all([
-          axiosInstance.get(`/tips/${boardId}`),
-          axiosInstance.get(`/tips/${boardId}/image`),
+          tokenInstance.get(`/tips/${boardId}`),
+          tokenInstance.get(`/tips/${boardId}/image`),
         ]);
 
         console.log("tipResponse", tipResponse);
