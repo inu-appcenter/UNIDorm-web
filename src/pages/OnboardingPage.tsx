@@ -47,7 +47,7 @@ const slides = [
     id: 4,
     title: "푸시알림으로 놓치지 마세요",
     content:
-      "기숙사 공지사항 및 이벤트, 공동구매 키워드/카테고리 새 글 알림 등 알림 기능으로 놓치지 마세요!",
+      "기숙사 공지사항 및 이벤트, 공동구매 새 글 알림 등 알림 기능으로 놓치지 마세요!",
     subContent: "*스토어에서 앱 설치 시 사용할 수 있습니다.",
     image: onboarding4,
   },
@@ -211,15 +211,13 @@ const OnboardingPage: React.FC = () => {
 export default OnboardingPage;
 
 const Wrapper = styled.div`
-  width: 100%;
-  flex: 1;
-  height: 100%;
-  background-color: white;
   display: flex;
+  flex: 1;
   flex-direction: column;
   align-items: center;
-  justify-content: space-between; // 기존 space-between에서 변경
-  position: relative;
+  box-sizing: border-box;
+  overflow-y: auto;
+  width: 100%;
 `;
 
 // const TopRight = styled.div`
@@ -232,7 +230,7 @@ const Wrapper = styled.div`
 
 const TopSection = styled.div`
   width: 100%;
-  padding: 1rem 1.5rem 0;
+  padding: 20px;
   padding-top: 32px;
   box-sizing: border-box;
 `;
@@ -269,7 +267,7 @@ const TitleTextWrapper = styled.div`
 `;
 
 const Title = styled.h2`
-  font-size: 30px;
+  font-size: 28px;
   font-weight: 700;
   color: #000;
   margin-bottom: 0.75rem;
@@ -278,7 +276,7 @@ const Title = styled.h2`
 `;
 
 const Text = styled.p`
-  font-size: 16px;
+  font-size: 14px;
   color: #666;
   line-height: 1.4;
   //margin: 0 0 1.5rem;
@@ -300,7 +298,7 @@ const Image = styled.img`
 
 const Bottom = styled.div`
   width: 100%;
-  padding: 0 1.5rem 2.5rem;
+  padding: 20px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -353,3 +351,16 @@ const ProgressFill = styled.div<{
     }
   }
 `;
+
+// const ButtonWrapper = styled.div`
+//   width: 100%;
+//   height: fit-content;
+//   position: fixed;
+//   bottom: 0;
+//   left: 0;
+//   padding: 16px;
+//   box-sizing: border-box;
+//   background: rgba(244, 244, 244, 0.6);
+//   backdrop-filter: blur(10px);
+//   -webkit-backdrop-filter: blur(10px);
+// `;
