@@ -70,6 +70,8 @@ function App() {
   }
 
   const { tokenInfo, setUserInfo } = useUserStore();
+  const isLoggedIn = Boolean(tokenInfo.accessToken);
+
   const navigate = useNavigate();
 
   //쿠폰 바텀시트 열림 상태 전역관리
@@ -145,7 +147,7 @@ function App() {
 
   useEffect(() => {
     const registerFcmToken = async () => {
-      if (fcmToken) {
+      if (fcmToken && isLoggedIn) {
         try {
           await tokenInstance.post("/fcm/token", { fcmToken });
           console.log("FCM 토큰 등록 성공");
@@ -158,7 +160,7 @@ function App() {
     };
 
     registerFcmToken();
-  }, [fcmToken]);
+  }, [fcmToken, isLoggedIn]);
 
   return (
     <ErrorBoundary>
