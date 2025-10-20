@@ -76,7 +76,7 @@ export default function GroupPurchasePostPage() {
         setImages(imageData);
 
         if (postData?.openChatLink === "") {
-          alert("오픈채팅 링크 없음");
+          // alert("오픈채팅 링크 없음");
           setShowToolTip(true);
         }
       } catch (error) {
