@@ -10,16 +10,29 @@ import {
   TagList,
   Tag,
 } from "../../styles/groupPurchase.ts";
-import { CATEGORY_LIST, CategoryType } from "../../constants/groupPurchase.ts";
+// ✅ CATEGORY_LIST 임포트 제거, CategoryType만 사용 (string 또는 유니언 타입이라고 가정)
+import { CategoryType } from "../../constants/groupPurchase.ts";
 import RegisteredKeywordItem from "../../components/GroupPurchase/keywordSetting/RegisteredKeywordItem.tsx";
 import {
   addGroupOrderCategoryNotification,
-  deleteGroupOrderCategoryNotification, // 삭제 API 추가
+  deleteGroupOrderCategoryNotification,
   deleteGroupOrderKeywordNotification,
   getGroupOrderCategoryNotifications,
   getGroupOrderKeywordNotifications,
   addGroupOrderKeywordNotification,
 } from "../../apis/groupPurchaseKeywordSetting.ts";
+
+// --- ✅ 상수 정의 ---
+// ✅ API와 통신할 실제 카테고리 목록
+const API_CATEGORY_LIST: CategoryType[] = [
+  "배달",
+  "식자재",
+  "생활용품",
+  "기타",
+];
+// ✅ "전체"가 포함된, UI에 표시될 카테고리 목록
+const DISPLAY_CATEGORY_LIST = ["전체", ...API_CATEGORY_LIST];
+// --------------------
 
 const KeywordAlertSettingPage = () => {
   const [keyword, setKeyword] = useState("");
@@ -29,9 +42,9 @@ const KeywordAlertSettingPage = () => {
   const [isOpen, setIsOpen] = useState(true);
   const [isneedReload, setIsneedReload] = useState(false);
 
-  // ✅ 사용자가 UI에서 선택하는 현재 카테고리 상태
+  // ✅ UI에서 선택된 인덱스 상태 (DISPLAY_CATEGORY_LIST 기준)
   const [categoryIndices, setCategoryIndices] = useState<number[]>([]);
-  // ✅ 서버에 마지막으로 저장된 카테고리 상태 (비교 기준)
+  // ✅ 서버에 마지막으로 저장된 인덱스 상태 (DISPLAY_CATEGORY_LIST 기준)
   const [savedCategoryIndices, setSavedCategoryIndices] = useState<number[]>(
     [],
   );
@@ -49,13 +62,25 @@ const KeywordAlertSettingPage = () => {
         const res = await getGroupOrderCategoryNotifications(); // ["배달", "식자재"]
         console.log("카테고리 알림 설정 목록 불러오기 성공", res);
 
-        const indices = res
-          .map((category) => CATEGORY_LIST.indexOf(category as CategoryType))
+        // ✅ API_CATEGORY_LIST 기준으로 인덱스 찾기
+        const apiIndices = res
+          .map((category) =>
+            API_CATEGORY_LIST.indexOf(category as CategoryType),
+          )
           .filter((index) => index !== -1);
 
-        // ✅ 두 state를 모두 초기화
-        setCategoryIndices(indices);
-        setSavedCategoryIndices(indices);
+        // ✅ DISPLAY_CATEGORY_LIST 기준으로 인덱스 변환 (1씩 더함)
+        const displayIndices = apiIndices.map((index) => index + 1);
+
+        let finalIndices = displayIndices;
+
+        // ✅ 만약 모든 API 카테고리가 선택되었다면 "전체" (인덱스 0)도 추가
+        if (displayIndices.length === API_CATEGORY_LIST.length) {
+          finalIndices = [0, ...displayIndices];
+        }
+
+        setCategoryIndices(finalIndices);
+        setSavedCategoryIndices(finalIndices);
       } catch (error) {
         console.error("카테고리 알림 설정 목록 불러오기 실패:", error);
       }
@@ -73,50 +98,79 @@ const KeywordAlertSettingPage = () => {
     }
   }, []);
 
-  // ✅ "전체" 선택 로직이 추가된 새로운 핸들러
+  // ✅ "전체" 선택/해제 시 모두 동기화되는 로직 핸들러
   const handleCategoryChange = async (newIndices: number[]) => {
+    // --- UI 상태 계산 ---
+    const allCategoryIndex = 0; // "전체"
+    // "전체"를 제외한 나머지 인덱스들 [1, 2, 3, 4]
+    const allApiDisplayIndices = Array.from(
+      { length: API_CATEGORY_LIST.length },
+      (_, i) => i + 1,
+    );
+    // "전체" 포함 모든 인덱스들 [0, 1, 2, 3, 4]
+    const allDisplayIndices = [allCategoryIndex, ...allApiDisplayIndices];
+    const numOtherCategories = API_CATEGORY_LIST.length; // 4
+
     let modifiedIndices = [...newIndices];
 
-    // "전체" 카테고리의 인덱스는 0입니다.
-    const allCategoryIndex = 0;
-
-    // 현재 UI 상태에 "전체"가 선택되어 있었는지 확인
     const wasAllCategoryPreviouslySelected =
       categoryIndices.includes(allCategoryIndex);
-    // 새로 전달된 인덱스에 "전체"가 포함되어 있는지 확인
     const allCategoryIsNowSelected = newIndices.includes(allCategoryIndex);
 
-    // 1. "전체"가 방금 선택된 경우 (이전엔 없었고, 지금은 있음)
+    // 1. "전체"가 방금 선택된 경우 -> 모든 아이템 선택
     if (!wasAllCategoryPreviouslySelected && allCategoryIsNowSelected) {
-      modifiedIndices = [allCategoryIndex]; // "전체"만 선택하도록 변경
+      modifiedIndices = allDisplayIndices;
     }
-    // 2. "전체"가 이미 선택된 상태에서 다른 항목이 추가된 경우
-    else if (wasAllCategoryPreviouslySelected && newIndices.length > 1) {
-      // "전체"를 해제하고 다른 항목만 선택하도록 변경
+    // 2. "전체"가 방금 해제된 경우 -> 모든 아이템 해제
+    else if (wasAllCategoryPreviouslySelected && !allCategoryIsNowSelected) {
+      modifiedIndices = [];
+    }
+    // 3. "전체"가 선택된 상태에서, 다른 개별 아이템이 해제된 경우 -> "전체"도 함께 해제
+    else if (
+      allCategoryIsNowSelected &&
+      newIndices.length < allDisplayIndices.length
+    ) {
       modifiedIndices = newIndices.filter(
         (index) => index !== allCategoryIndex,
       );
     }
-    // 3. 그 외의 경우 (예: "전체"가 아닌 항목들끼리 선택/해제, "전체"만 해제)
-    // modifiedIndices는 newIndices 값을 그대로 사용
+    // 4. "전체"가 선택되지 않은 상태에서, 마지막 개별 아이템이 선택되어 모든 아이템이 채워진 경우 -> "전체"도 함께 선택
+    else if (!allCategoryIsNowSelected) {
+      const otherIndicesInNew = newIndices.filter(
+        (index) => index !== allCategoryIndex,
+      );
+      if (otherIndicesInNew.length === numOtherCategories) {
+        modifiedIndices = allDisplayIndices;
+      }
+    }
 
     // UI는 수정된 인덱스로 즉시 업데이트
     setCategoryIndices(modifiedIndices);
 
-    // 추가된 아이템과 삭제된 아이템 찾기 (수정된 인덱스 기준)
-    const addedIndices = modifiedIndices.filter(
-      (index) => !savedCategoryIndices.includes(index),
+    // --- API 호출 로직 ---
+
+    // 헬퍼 함수: displayIndices에서 "전체"를 제외하고 실제 API 카테고리 이름 배열 반환
+    const getApiCategories = (indices: number[]): string[] => {
+      return indices
+        .filter((index) => index !== allCategoryIndex) // "전체" 인덱스(0) 제외
+        .map((index) => API_CATEGORY_LIST[index - 1]); // display 인덱스(1,2) -> api 인덱스(0,1)
+    };
+
+    // "전체"가 제외된, API로 보낼 실제 카테고리 목록 비교
+    const oldCategories = getApiCategories(savedCategoryIndices);
+    const newCategories = getApiCategories(modifiedIndices);
+
+    const addedCategories = newCategories.filter(
+      (cat) => !oldCategories.includes(cat),
     );
-    const removedIndices = savedCategoryIndices.filter(
-      (index) => !modifiedIndices.includes(index),
+    const removedCategories = oldCategories.filter(
+      (cat) => !newCategories.includes(cat),
     );
 
     let hasError = false;
 
     // 삭제 API 호출
-    for (const index of removedIndices) {
-      const category = CATEGORY_LIST[index];
-      if (!category) continue;
+    for (const category of removedCategories) {
       try {
         await deleteGroupOrderCategoryNotification(category);
         console.log("카테고리 삭제 성공:", category);
@@ -127,9 +181,7 @@ const KeywordAlertSettingPage = () => {
     }
 
     // 추가 API 호출
-    for (const index of addedIndices) {
-      const category = CATEGORY_LIST[index];
-      if (!category) continue;
+    for (const category of addedCategories) {
       try {
         await addGroupOrderCategoryNotification(category);
         console.log("카테고리 추가 성공:", category);
@@ -139,12 +191,12 @@ const KeywordAlertSettingPage = () => {
       }
     }
 
-    // 모든 API 호출이 끝난 후, 에러가 없었다면 저장된 상태를 업데이트 (수정된 인덱스 기준)
+    // 모든 API 호출이 끝난 후, 에러가 없었다면 저장된 상태를 업데이트
     if (!hasError) {
-      setSavedCategoryIndices(modifiedIndices); // 👈 newIndices 대신 modifiedIndices
+      setSavedCategoryIndices(modifiedIndices); // UI 상태(modifiedIndices)로 동기화
       console.log("모든 카테고리 변경사항이 성공적으로 반영되었습니다.");
     } else {
-      // 에러 발생 시, UI를 다시 서버 상태로 되돌리거나 사용자에게 알림
+      // 에러 발생 시, UI를 다시 서버 상태(savedCategoryIndices)로 되돌림
       alert("카테고리 변경 중 오류가 발생했습니다. 다시 시도해주세요.");
       setCategoryIndices(savedCategoryIndices); // UI를 이전 상태로 롤백
     }
@@ -167,14 +219,13 @@ const KeywordAlertSettingPage = () => {
       localStorage.setItem("recentSearches", JSON.stringify(updatedSearches));
       setIsneedReload((prev) => !prev);
     } catch (error) {
-      // TS18046 에러를 해결하기 위해 'error'를 'any'로 타입 단언하여 'response' 속성에 접근합니다.
       const err = error as any;
 
       if (err.response && err.response.status === 406) {
         alert("이미 등록된 키워드입니다.");
       } else {
         alert("키워드 등록 중 오류가 발생했습니다.");
-        console.error(error); // 원래의 에러 객체를 콘솔에 출력
+        console.error(error);
       }
     }
     setKeyword("");
@@ -237,7 +288,7 @@ const KeywordAlertSettingPage = () => {
                   size="14"
                   color="#1C1C1E"
                   onClick={(e) => {
-                    e.stopPropagation(); // Tag의 onClick 이벤트 전파 방지
+                    e.stopPropagation();
                     handleDeleteRecent(term);
                   }}
                 />
@@ -265,11 +316,11 @@ const KeywordAlertSettingPage = () => {
         </EmptyMessage>
       )}
 
-      {/* ✅ setSelectedIndices에 새로운 핸들러 연결 */}
+      {/* ✅ Groups에 "전체"가 포함된 DISPLAY_CATEGORY_LIST 전달 */}
       <CategorySetting
         selectedIndices={categoryIndices}
         setSelectedIndices={handleCategoryChange}
-        Groups={CATEGORY_LIST}
+        Groups={DISPLAY_CATEGORY_LIST}
       />
 
       <CommonBottomModal
@@ -286,7 +337,7 @@ const KeywordAlertSettingPage = () => {
 
 export default KeywordAlertSettingPage;
 
-// ... (styled-components 코드는 변경 없음)
+// --- Styled Components (변경 없음) ---
 const Wrapper = styled.div`
   padding: 90px 16px 40px 16px;
   display: flex;
@@ -361,3 +412,6 @@ const ListWrapper = styled.div`
   flex-direction: column;
   gap: 8px;
 `;
+
+// ✅ 이 파일 하단에 있던 CATEGORY_LIST 정의는 제거했습니다.
+// (constants/groupPurchase.ts 파일에서 CategoryType을 가져와 사용)
