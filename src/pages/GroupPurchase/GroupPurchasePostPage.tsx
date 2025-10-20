@@ -302,7 +302,7 @@ export default function GroupPurchasePostPage() {
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      {post.link}
+                      바로가기
                     </a>
                   </BodyText>
 
@@ -562,6 +562,7 @@ const Price = styled.div`
 const BodyText = styled.p`
   font-size: 14px;
   line-height: 1.5;
+  overflow-wrap: break-word;
 `;
 
 const LikeBox = styled.div`
