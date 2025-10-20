@@ -297,13 +297,17 @@ export default function GroupPurchasePostPage() {
                     <br />
                     <br />
                     구매 제품 링크:{" "}
-                    <a
-                      href={post.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      바로가기
-                    </a>
+                    {post.link ? (
+                      <a
+                        href={post.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        바로가기
+                      </a>
+                    ) : (
+                      <>작성자가 링크를 입력하지 않았어요.</>
+                    )}
                   </BodyText>
 
                   <Divider />
