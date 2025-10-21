@@ -135,14 +135,14 @@ const NotificationBody = styled.div`
 
 const Title = styled.h3`
   margin: 0 0 4px 0;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: bold;
   color: #111; /* --- 수정됨: 가독성을 위해 더 진하게 --- */
 `;
 
 const Message = styled.p`
   margin: 0;
-  font-size: 15px;
+  font-size: 13px;
   line-height: 1.4;
   color: #444; /* --- 수정됨: 가독성을 위해 조정 --- */
   white-space: pre-line; /* ← \\n을 실제 줄바꿈으로 표시 */
