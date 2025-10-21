@@ -22,7 +22,7 @@ import {
 import { FiX } from "react-icons/fi";
 import { CATEGORY_LIST, SORT_OPTIONS } from "../../constants/groupPurchase.ts";
 import { getMobilePlatform } from "../../utils/getMobilePlatform.ts";
-import TopPopupNotification from "./TopPopupNotification.tsx";
+import TopPopupNotification from "../../components/common/TopPopupNotification.tsx";
 
 // --- 🔽 [수정] 헬퍼 함수 로직 (요청사항 3가지 모두 적용) ---
 

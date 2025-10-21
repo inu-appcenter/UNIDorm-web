@@ -26,6 +26,7 @@ import { PopupNotification } from "../types/popup-notifications.ts";
 import { getMobilePlatform } from "../utils/getMobilePlatform.ts";
 import ModalContent_AppInstall from "../components/common/ModalContent_AppInstall.tsx";
 import CommonBottomModal from "../components/modal/CommonBottomModal.tsx";
+import TopPopupNotification from "../components/common/TopPopupNotification.tsx";
 
 export default function HomePage() {
   const { tokenInfo } = useUserStore();
@@ -133,8 +134,54 @@ export default function HomePage() {
     fetchAnnouncements();
   }, []);
 
+  // 알림에 표시할 데이터의 타입 (예시)
+  interface NotificationData {
+    title: string;
+    message: string;
+  }
+
+  // 1. 알림 데이터를 관리할 state.
+  const [notification, setNotification] = useState<NotificationData | null>(
+    () => {
+      return {
+        title: "배민상품권 1만원권 나눔 행사 진행 중!(~금)",
+        message: `아직 쿠폰이 4장 남았어요. 로그인 후, 넓은 시간에 걸쳐 들어오시면 당첨될 확률이 높아요.\n공동구매 인증 이벤트도 진행 중이니, 공지사항을 참고해주세요.`,
+      };
+    },
+  );
+
+  // 3. 알림이 닫힐 때 호출될 함수 (onClose prop으로 전달)
+  const handleCloseNotification = () => {
+    // 1. UI에서 즉시 숨김
+    setNotification(null);
+
+    // // 2. 로컬 스토리지에 '오늘' 알림을 '닫음'으로 표시
+    // try {
+    //   const storageKey = "dailyNotificationInfo";
+    //   const dailyState = getDailyNotificationState(); // 현재 상태(오늘 날짜, 카운트) 가져오기
+    //
+    //   // 오늘 날짜의 상태에 'dismissed: true'를 설정하여 다시 저장
+    //   localStorage.setItem(
+    //     storageKey,
+    //     JSON.stringify({ ...dailyState, dismissed: true }),
+    //   );
+    // } catch (error) {
+    //   console.error("로컬 스토리지 업데이트 실패 (알림 닫기):", error);
+    // }
+  };
+
   return (
     <HomePageWrapper>
+      {notification && (
+        <TopPopupNotification
+          title={notification.title}
+          message={notification.message}
+          onClose={handleCloseNotification}
+          // (선택 사항) 앱 아이콘이나 이름을 바꿀 수 있습니다.
+          // appName="내 앱"
+          // appIcon="🚀"
+        />
+      )}
       <Header title="유니돔" hasBack={false} showAlarm={true} />
       {!isPopupLoading &&
         popupNotices.map((popup) => (
