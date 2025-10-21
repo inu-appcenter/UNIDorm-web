@@ -64,9 +64,9 @@ const NotificationWrapper = styled.div<{
   z-index: 9999;
   width: calc(100% - 10px);
   max-width: 450px;
-  padding: 8px 30px;
+  padding: 12px 40px;
   box-sizing: border-box;
-  border-radius: 40px;
+  border-radius: 60px;
   font-family:
     -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
     Arial, sans-serif;
