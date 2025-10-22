@@ -82,7 +82,7 @@ export default ComplainCard;
 const Card = styled.div<{ miniView: boolean }>`
   position: relative;
   width: 100%;
-  ${({ miniView }) => !miniView && `max-width: 50%;`}
+
   border-radius: 12px;
   border: 1px solid rgba(0, 0, 0, 0.1);
 
@@ -91,6 +91,10 @@ const Card = styled.div<{ miniView: boolean }>`
   background-color: #fff;
 
   box-shadow: 2px 4px 8px 0 rgba(0, 0, 0, 0.06);
+
+  // @media (min-width: 768px) {
+  //   ${({ miniView }) => !miniView && `max-width: 50%;`}
+  // }
 `;
 
 const Header = styled.div`
@@ -144,10 +148,11 @@ const Content = styled.div.withConfig({
 
 const ImagePlaceholder = styled.img`
   width: 100%;
-  //height: 180px;
-  background-color: #ddd;
+  height: auto;
+  max-height: 400px;
   border-radius: 8px;
   margin-top: 12px;
+  object-fit: contain;
 `;
 
 const GotoDetail = styled.div`
