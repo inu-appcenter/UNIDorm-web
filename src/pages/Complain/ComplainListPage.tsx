@@ -186,6 +186,7 @@ const ComplainListPage = () => {
                     incidentDate={recentComplain.incidentDate}
                     incidentTime={recentComplain.incidentTime}
                     specificLocation={recentComplain.specificLocation}
+                    studentNumber={recentComplain.studentNumber}
                   />
                 </Wrapper1>
               ) : null}
