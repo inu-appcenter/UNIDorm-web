@@ -144,18 +144,37 @@ export default function ComplainWritePage() {
       alert("유형, 기숙사, 동을 모두 선택해주세요.");
       return;
     }
+
     if (!selectedFloor || !selectedRoom || !selectedBed) {
       alert("층, 호수, 침대를 모두 선택해주세요.");
       return;
     }
+
+    if (!specificLocation.trim()) {
+      alert("세부 위치를 입력해주세요.");
+      return;
+    }
+
+    if (!incidentDate) {
+      alert("발생 날짜를 선택해주세요.");
+      return;
+    }
+
+    if (!incidentTime) {
+      alert("발생 시간을 선택해주세요.");
+      return;
+    }
+
     if (!title.trim()) {
       alert("제목을 입력해주세요.");
       return;
     }
+
     if (!content.trim()) {
       alert("내용을 입력해주세요.");
       return;
     }
+
     if (!privacyAgreed) {
       alert("개인정보 수집 및 이용에 동의해주세요.");
       return;
@@ -163,7 +182,7 @@ export default function ComplainWritePage() {
 
     try {
       setIsLoading(true);
-      // 수정된 DTO 구조에 맞게 데이터 구성
+
       const dto: ComplaintCreateDto = {
         id: complain?.id || 0,
         title,
@@ -176,9 +195,8 @@ export default function ComplainWritePage() {
         bedNumber: selectedBed,
         status: complain?.status || "접수 대기",
         specificLocation,
-        incidentDate: incidentDate || new Date().toISOString().split("T")[0],
-        incidentTime:
-          incidentTime || new Date().toISOString().split("T")[1].slice(0, 5),
+        incidentDate,
+        incidentTime,
         createdDate: complain?.createdDate || new Date().toISOString(),
         privacyAgreed,
       };
@@ -292,7 +310,7 @@ export default function ComplainWritePage() {
           </DropdownContainer>
         </FormField>
 
-        <FormField label="세부 위치">
+        <FormField label="세부 위치" required>
           <Input
             placeholder="정확한 위치를 입력해주세요 (예: 화장실 앞, 복도 끝 등)"
             value={specificLocation}
@@ -300,7 +318,7 @@ export default function ComplainWritePage() {
           />
         </FormField>
 
-        <FormField label="발생 날짜">
+        <FormField label="발생 날짜" required>
           <Input
             type="date"
             value={incidentDate}
@@ -308,7 +326,7 @@ export default function ComplainWritePage() {
           />
         </FormField>
 
-        <FormField label="발생 시간">
+        <FormField label="발생 시간" required>
           <Input
             type="time"
             value={incidentTime}

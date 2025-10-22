@@ -60,7 +60,7 @@ export default ComplainCard;
 const Card = styled.div`
   position: relative;
   width: 100%;
-  max-width: 50%;
+  //max-width: 50%;
   border-radius: 12px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   padding: 16px;
@@ -116,8 +116,9 @@ const Content = styled.div`
 
 const ImagePlaceholder = styled.img`
   width: 100%;
-  //height: 180px;
-  background-color: #ddd;
+  height: auto;
+  max-height: 400px;
   border-radius: 8px;
   margin-top: 12px;
+  object-fit: contain;
 `;
