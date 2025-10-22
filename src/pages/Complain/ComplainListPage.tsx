@@ -87,14 +87,26 @@ const ComplainListPage = () => {
     const threeMonthsAgo = new Date();
     threeMonthsAgo.setMonth(now.getMonth() - 3);
 
+    /**
+     * ❗ 아이폰(Safari) 호환성을 위한 날짜 파싱 헬퍼 함수
+     * YYYY-MM-DD HH:MM:SS 형식을 YYYY-MM-DDTHH:MM:SS 형식으로 변경합니다.
+     */
+    const parseSafeDate = (dateString: string) => {
+      // API 응답이 항상 문자열이라고 가정
+      return new Date(dateString.replace(" ", "T"));
+    };
+
     if (selectedFilterIndex === 0) {
       list = list.filter((complaint) => {
-        const complaintDate = new Date(complaint.date);
+        // 🔽 수정된 부분
+        const complaintDate = parseSafeDate(complaint.date);
         return complaintDate >= threeMonthsAgo;
       });
     } else if (selectedFilterIndex === 1) {
       list = list.filter((complaint) => {
-        const year = new Date(complaint.date).getFullYear();
+        // 🔽 수정된 부분
+        const complaintDate = parseSafeDate(complaint.date);
+        const year = complaintDate.getFullYear();
         return year === 2025;
       });
     }
