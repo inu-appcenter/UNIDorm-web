@@ -140,7 +140,7 @@ const ComplainListPage = () => {
                     date={recentComplain.createdDate}
                     type={recentComplain.type}
                     dorm={recentComplain.dormType}
-                    location={`${recentComplain.building} ${recentComplain.roomNumber} ${recentComplain.bedNumber}`}
+                    location={`${recentComplain.building} / ${recentComplain.floor} / ${recentComplain.roomNumber} / ${recentComplain.bedNumber}`}
                     title={recentComplain.title}
                     content={recentComplain.content}
                     incidentDate={recentComplain.incidentDate}
