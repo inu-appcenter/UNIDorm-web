@@ -123,10 +123,7 @@ const ComplainAdminPage = () => {
     // 예: fetchAllComplaints();
   };
 
-  // 🔽 검색어 및 기간 필터링 로직 (클라이언트 측 필터링)
-  // 서버에서 전체 데이터를 받아온 후, 클라이언트에서 검색어 및 기간으로 필터링합니다.
   const filteredComplaints = useMemo(() => {
-    // 1단계: 검색어 필터링
     let list = complaints;
     if (searchTerm) {
       list = list.filter((complaint) =>
@@ -134,23 +131,30 @@ const ComplainAdminPage = () => {
       );
     }
 
-    // 2단계: 기간 필터링
     const now = new Date();
     const threeMonthsAgo = new Date();
-    // AdminComplaint 타입에는 date 대신 createdDate가 있으므로, 해당 필드를 사용합니다.
     threeMonthsAgo.setMonth(now.getMonth() - 3);
 
+    /**
+     * ❗ 아이폰(Safari) 호환성을 위한 날짜 파싱 헬퍼 함수
+     * YYYY-MM-DD HH:MM:SS 형식을 YYYY-MM-DDTHH:MM:SS 형식으로 변경합니다.
+     */
+    const parseSafeDate = (dateString: string) => {
+      // API 응답이 항상 문자열이라고 가정
+      return new Date(dateString.replace(" ", "T"));
+    };
+
     if (selectedMenuIndex === 0) {
-      // "최근 3개월" 필터링 (인덱스 0)
       list = list.filter((complaint) => {
-        const complaintDate = new Date(complaint.date);
+        // 🔽 수정된 부분
+        const complaintDate = parseSafeDate(complaint.date);
         return complaintDate >= threeMonthsAgo;
       });
     } else if (selectedMenuIndex === 1) {
-      // "2025" 필터링 (인덱스 1)
       list = list.filter((complaint) => {
-        const year = new Date(complaint.date).getFullYear();
-        // 실제 연도와 비교합니다.
+        // 🔽 수정된 부분
+        const complaintDate = parseSafeDate(complaint.date);
+        const year = complaintDate.getFullYear();
         return year === 2025;
       });
     }
