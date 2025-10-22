@@ -26,7 +26,6 @@ const ComplainListTable: React.FC<TableProps> = ({
               <>
                 <TableHeader>담당자</TableHeader>
                 <TableHeader>기숙사</TableHeader>
-                {/* '사생번호' 헤더를 '호실 정보'로 변경 */}
                 <TableHeader>호실 정보</TableHeader>
                 <TableHeader>학번</TableHeader>
               </>
@@ -55,7 +54,7 @@ const ComplainListTable: React.FC<TableProps> = ({
                   <TableCell>{"dormType" in row && row.dormType}</TableCell>
                   <TableCell>
                     {"building" in row &&
-                      `${row.building} ${row.roomNumber} ${row.bedNumber}침대`}
+                      `${row.building} ${row.floor} ${row.roomNumber} / ${row.bedNumber}침대`}
                   </TableCell>
                   <TableCell>
                     {"studentNumber" in row && row.studentNumber}
