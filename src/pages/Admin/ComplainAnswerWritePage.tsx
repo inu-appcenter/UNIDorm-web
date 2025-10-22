@@ -12,20 +12,19 @@ import {
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import FileUploader from "../../components/common/FileUploader.tsx";
 import { useFileHandler } from "../../hooks/useFileHandler.ts";
+import LabeledField from "../../components/complain/LabeledField.tsx";
 
 export default function ComplainAnswerWritePage() {
   const { complainId } = useParams<{ complainId: string }>();
-
   const navigate = useNavigate();
   const location = useLocation();
   const { complain, manager, Images } = location.state || {};
-  const [isEditMode, setIsEditMode] = useState(false);
 
+  const [isEditMode, setIsEditMode] = useState(false);
   const [isRejected, setIsRejected] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
 
-  // 이미지 상태 및 핸들러 커스텀 훅
   const { files, addFiles, deleteFile, isFileLoading } = useFileHandler({
     initialFiles: Images,
   });
@@ -56,35 +55,30 @@ export default function ComplainAnswerWritePage() {
         return;
       }
 
-      // DTO 구성
       const dto: ComplaintReplyDto = {
         replyTitle: title,
         responderName: manager,
         replyContent: content,
       };
 
-      console.log("DTO", dto);
-
       setIsLoading(true);
-
       let res;
 
       if (isEditMode && complain?.id) {
-        // 수정 모드
         res = await updateComplaintReply(complain.id, dto, files);
       } else {
-        // 등록 모드
         res = await createComplaintReply(Number(complainId), dto, files);
       }
-      if (isRejected === true) {
+
+      console.log("작성 성공", res);
+
+      if (isRejected) {
         await updateComplaintStatus(Number(complainId), "반려");
       } else {
         await updateComplaintStatus(Number(complainId), "처리완료");
       }
 
       alert(`답변이 ${isEditMode ? "수정" : "등록"}되었습니다!`);
-
-      console.log("성공", res.data);
       navigate(-1);
     } catch (err: any) {
       console.error("실패", err);
@@ -105,45 +99,49 @@ export default function ComplainAnswerWritePage() {
       {isLoading && <LoadingSpinner overlay message="글 쓰는 중..." />}
 
       <Content>
-        <Label>
-          반려 여부<span className="required"></span>
-        </Label>
-        <label>
-          <Input
-            type="checkbox"
-            checked={isRejected}
-            onChange={(e) => setIsRejected(e.target.checked)}
-          />{" "}
-          반려
-        </label>
+        <LabeledField label="반려 여부">
+          <CheckboxLabel>
+            <input
+              type="checkbox"
+              checked={isRejected}
+              onChange={(e) => setIsRejected(e.target.checked)}
+            />{" "}
+            반려
+          </CheckboxLabel>
+        </LabeledField>
 
-        <Label>
-          제목<span className="required"> *</span>
-        </Label>
-        <Input
-          placeholder="제목을 입력해주세요"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-        <Label>
-          담당자<span className="required"> *</span>
-        </Label>
-        <Input placeholder="담당자명" value={manager} readOnly />
-        <Label>
-          내용<span className="required"> *</span>
-        </Label>
-        <Textarea
-          placeholder="내용을 입력해주세요"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-        />
-        <Label>이미지</Label>
-        <FileUploader
-          images={files}
-          onAddImages={addFiles}
-          onDeleteImage={deleteFile}
-          isLoading={isFileLoading}
-        />
+        <LabeledField label="제목" required>
+          <Input
+            placeholder="제목을 입력해주세요"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+        </LabeledField>
+
+        <LabeledField
+          label="담당자"
+          required
+          description="학생에게는 노출되지 않습니다."
+        >
+          <Input placeholder="담당자명" value={manager} readOnly />
+        </LabeledField>
+
+        <LabeledField label="내용" required>
+          <Textarea
+            placeholder="내용을 입력해주세요"
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+          />
+        </LabeledField>
+
+        <LabeledField label="이미지">
+          <FileUploader
+            images={files}
+            onAddImages={addFiles}
+            onDeleteImage={deleteFile}
+            isLoading={isFileLoading}
+          />
+        </LabeledField>
       </Content>
 
       <ButtonWrapper>
@@ -169,12 +167,20 @@ const Content = styled.div`
   overflow-y: auto;
 `;
 
-const Label = styled.label`
-  font-weight: 600;
+const ButtonWrapper = styled.div`
+  width: 100%;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  padding: 12px 16px;
+  box-sizing: border-box;
+`;
 
-  .required {
-    color: red;
-  }
+const CheckboxLabel = styled.label`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
 `;
 
 const Input = styled.input`
@@ -191,16 +197,4 @@ const Textarea = styled.textarea`
   border: none;
   background: rgba(0, 0, 0, 0.04);
   resize: none;
-`;
-
-const ButtonWrapper = styled.div`
-  width: 100%;
-  height: fit-content;
-  position: fixed;
-
-  padding: 12px 16px;
-  box-sizing: border-box;
-
-  bottom: 0;
-  left: 0;
 `;

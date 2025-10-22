@@ -244,7 +244,7 @@ const ComplainDetailPage = () => {
 
             <ButtonGroupWrapper>
               <RoundSquareWhiteButton
-                btnName={"닫기"}
+                btnName={"취소"}
                 onClick={() => setShowModal(false)}
               />
               <RoundSquareButton btnName={"확인"} onClick={handleAssign} />
@@ -293,7 +293,7 @@ const ComplainCardsContainer = styled.div`
   @media (min-width: 768px) {
     /* 화면 너비가 768px 이상일 때 가로 배열로 전환 */
     flex-direction: row;
-    justify-content: center;
+    justify-content: start;
     align-items: flex-start;
 
     & > div {

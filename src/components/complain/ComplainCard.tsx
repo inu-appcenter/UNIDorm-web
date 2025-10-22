@@ -39,7 +39,7 @@ const ComplainCard: React.FC<ComplainCardProps> = ({
   );
 
   return (
-    <Card>
+    <Card miniView={miniView ? miniView : false}>
       <Header>
         <Badge>{type}</Badge>
         <DateText>{formattedDate}</DateText>
@@ -79,10 +79,10 @@ const ComplainCard: React.FC<ComplainCardProps> = ({
 
 export default ComplainCard;
 
-const Card = styled.div`
+const Card = styled.div<{ miniView: boolean }>`
   position: relative;
   width: 100%;
-  //max-width: 400px;
+  ${({ miniView }) => !miniView && `max-width: 50%;`}
   border-radius: 12px;
   border: 1px solid rgba(0, 0, 0, 0.1);
 
@@ -112,10 +112,6 @@ const Badge = styled.div`
 const DateText = styled.div`
   color: #48484a;
   font-size: 16px;
-  font-weight: 500;
-
-  color: var(--4, #48484a);
-  font-size: 16px;
   font-style: normal;
   font-weight: 600;
   line-height: 24px; /* 150% */
@@ -139,9 +135,11 @@ const Content = styled.div.withConfig({
 })<{ miniView?: boolean }>`
   font-size: 0.9rem;
   color: #333;
-  white-space: ${({ miniView }) => (miniView ? "nowrap" : "pre-line")};
+  // white-space: ${({ miniView }) => (miniView ? "nowrap" : "pre-line")};
   overflow: hidden;
   text-overflow: ${({ miniView }) => (miniView ? "ellipsis" : "clip")};
+
+  white-space: pre-line;
 `;
 
 const ImagePlaceholder = styled.img`
