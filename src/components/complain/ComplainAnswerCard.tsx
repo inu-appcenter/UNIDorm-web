@@ -2,6 +2,7 @@
 import React from "react";
 import styled from "styled-components";
 import { Files } from "../../types/complain.ts";
+import { useIsAdminRole } from "../../hooks/useIsAdminRole.ts";
 
 interface NoticeCardProps {
   date: string;
@@ -20,10 +21,13 @@ const ComplainCard: React.FC<NoticeCardProps> = ({
   content,
   images,
 }) => {
-  // 날짜 형식을 'YY.MM.DD'로 변경
+  const { isAdmin } = useIsAdminRole();
+
+  // 날짜 형식을 'YY.MM.DD HH:MM'으로 변경
   const formattedDate = date.replace(
-    /^(\d{4})-(\d{2})-(\d{2}).*$/,
-    (_match, p1, p2, p3) => `${p1.substring(2)}.${p2}.${p3}`,
+    /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}).*$/,
+    (_match, p1, p2, p3, p4, p5) =>
+      `${p1.substring(2)}.${p2}.${p3} ${p4}:${p5}`,
   );
 
   return (
@@ -32,11 +36,14 @@ const ComplainCard: React.FC<NoticeCardProps> = ({
         <Badge>{type}</Badge>
         <DateText>{formattedDate}</DateText>
       </Header>
-      <Info>
-        <div>
-          <strong>담당자</strong> {managerName}
-        </div>
-      </Info>
+      {isAdmin && (
+        <Info>
+          <div>
+            <strong>담당자</strong> {managerName}
+          </div>
+        </Info>
+      )}
+
       <Title>{title}</Title>
       <Content>{content}</Content>
       {images &&
@@ -53,7 +60,7 @@ export default ComplainCard;
 const Card = styled.div`
   position: relative;
   width: 100%;
-  //max-width: 400px;
+  max-width: 50%;
   border-radius: 12px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   padding: 16px;
@@ -79,7 +86,7 @@ const Badge = styled.div`
 `;
 
 const DateText = styled.div`
-  color: var(--4, #48484a);
+  color: #48484a;
   font-size: 16px;
   font-style: normal;
   font-weight: 600;
@@ -103,6 +110,8 @@ const Content = styled.div`
   font-size: 0.9rem;
   color: #333;
   overflow: hidden;
+
+  white-space: pre-line;
 `;
 
 const ImagePlaceholder = styled.img`

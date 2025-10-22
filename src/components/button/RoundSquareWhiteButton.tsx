@@ -18,6 +18,7 @@ const RoundSquareWhiteButton = ({
 export default RoundSquareWhiteButton;
 
 const RoundSquareWhiteButtonWrapper = styled.div`
+  flex: 1;
   width: 100%;
   min-width: 80px;
   height: 100%;

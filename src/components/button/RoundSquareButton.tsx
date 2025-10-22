@@ -23,8 +23,9 @@ const RoundSquareButton = ({
 export default RoundSquareButton;
 
 // 4. styled-component가 color prop을 받도록 타입 지정
-const RoundSquareButtonWrapper = styled.div<{ color: string }>`
-  width: auto;
+const RoundSquareButtonWrapper = styled.button<{ color: string }>`
+  flex: 1;
+  width: 100%;
   min-width: 80px;
   height: 100%;
   min-height: 50px;
