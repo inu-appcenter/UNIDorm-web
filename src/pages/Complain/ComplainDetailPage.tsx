@@ -187,6 +187,7 @@ const ComplainDetailPage = () => {
               incidentDate={complaint.incidentDate}
               incidentTime={complaint.incidentTime}
               specificLocation={complaint.specificLocation}
+              studentNumber={complaint.studentNumber}
             />
             {complaint.reply && (
               <ComplainAnswerCard
