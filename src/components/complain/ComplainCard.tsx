@@ -9,7 +9,7 @@ interface ComplainCardProps {
   location: string;
   title: string;
   content: string;
-
+  studentNumber: string;
   incidentDate: string;
   incidentTime: string;
   specificLocation: string;
@@ -25,6 +25,7 @@ const ComplainCard: React.FC<ComplainCardProps> = ({
   location,
   title,
   content,
+  studentNumber,
   images,
   incidentDate,
   incidentTime,
@@ -46,6 +47,9 @@ const ComplainCard: React.FC<ComplainCardProps> = ({
       {miniView && <GotoDetail>민원 상세보기 {">"}</GotoDetail>}
       {!miniView && (
         <Info>
+          <div>
+            <strong>학번</strong> {studentNumber}
+          </div>
           <div>
             <strong>기숙사</strong> {dorm}
           </div>
