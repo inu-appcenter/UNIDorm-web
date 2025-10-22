@@ -137,22 +137,23 @@ const ComplainAdminPage = () => {
 
     /**
      * ❗ 아이폰(Safari) 호환성을 위한 날짜 파싱 헬퍼 함수
-     * YYYY-MM-DD HH:MM:SS 형식을 YYYY-MM-DDTHH:MM:SS 형식으로 변경합니다.
+     * '2025.10.23' 형식을 '2025/10/23' 형식으로 변경합니다.
      */
     const parseSafeDate = (dateString: string) => {
-      // API 응답이 항상 문자열이라고 가정
-      return new Date(dateString.replace(" ", "T"));
+      // 🔽 수정된 부분: 모든 점(.)을 슬래시(/)로 변경 (g: global)
+      const safariSafeFormat = dateString.replace(/\./g, "/");
+      return new Date(safariSafeFormat);
     };
 
     if (selectedMenuIndex === 0) {
       list = list.filter((complaint) => {
-        // 🔽 수정된 부분
+        // 🔽 수정된 헬퍼 함수 사용
         const complaintDate = parseSafeDate(complaint.date);
         return complaintDate >= threeMonthsAgo;
       });
     } else if (selectedMenuIndex === 1) {
       list = list.filter((complaint) => {
-        // 🔽 수정된 부분
+        // 🔽 수정된 헬퍼 함수 사용
         const complaintDate = parseSafeDate(complaint.date);
         const year = complaintDate.getFullYear();
         return year === 2025;
