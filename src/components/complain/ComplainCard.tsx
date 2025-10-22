@@ -30,10 +30,11 @@ const ComplainCard: React.FC<ComplainCardProps> = ({
   incidentTime,
   specificLocation,
 }) => {
-  // 날짜 형식을 'YY.MM.DD'로 변경
+  // 날짜 형식을 'YY.MM.DD HH:MM'으로 변경
   const formattedDate = date.replace(
-    /^(\d{4})-(\d{2})-(\d{2}).*$/,
-    (_match, p1, p2, p3) => `${p1.substring(2)}.${p2}.${p3}`,
+    /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}).*$/,
+    (_match, p1, p2, p3, p4, p5) =>
+      `${p1.substring(2)}.${p2}.${p3} ${p4}:${p5}`,
   );
 
   return (
@@ -49,7 +50,7 @@ const ComplainCard: React.FC<ComplainCardProps> = ({
             <strong>기숙사</strong> {dorm}
           </div>
           <div>
-            <strong>동 / 호수 / 침대번호</strong> {location}
+            <strong>동 / 층 / 호수 / 침대번호</strong> {location}
           </div>
           <div>
             <strong>발생 일시</strong> {incidentDate} {incidentTime}

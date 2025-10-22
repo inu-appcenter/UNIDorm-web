@@ -154,20 +154,6 @@ export default function HomePage() {
   const handleCloseNotification = () => {
     // 1. UI에서 즉시 숨김
     setNotification(null);
-
-    // // 2. 로컬 스토리지에 '오늘' 알림을 '닫음'으로 표시
-    // try {
-    //   const storageKey = "dailyNotificationInfo";
-    //   const dailyState = getDailyNotificationState(); // 현재 상태(오늘 날짜, 카운트) 가져오기
-    //
-    //   // 오늘 날짜의 상태에 'dismissed: true'를 설정하여 다시 저장
-    //   localStorage.setItem(
-    //     storageKey,
-    //     JSON.stringify({ ...dailyState, dismissed: true }),
-    //   );
-    // } catch (error) {
-    //   console.error("로컬 스토리지 업데이트 실패 (알림 닫기):", error);
-    // }
   };
 
   return (

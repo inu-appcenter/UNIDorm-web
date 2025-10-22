@@ -180,7 +180,7 @@ const ComplainDetailPage = () => {
               date={complaint.createdDate}
               type={complaint.type}
               dorm={complaint.dormType}
-              location={`${complaint.building} ${complaint.roomNumber} ${complaint.bedNumber}`}
+              location={`${complaint.building} ${complaint.floor} ${complaint.roomNumber} / ${complaint.bedNumber} 침대`}
               title={complaint.title}
               content={complaint.content}
               images={complaint.images}
