@@ -12,6 +12,8 @@ import { ComplaintDetail, MyComplaint } from "../../types/complain.ts";
 import { getComplaintDetail, getMyComplaints } from "../../apis/complain.ts";
 import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
+import TopPopupNotification from "../../components/common/TopPopupNotification.tsx";
+import { getMobilePlatform } from "../../utils/getMobilePlatform.ts";
 
 const ComplainListPage = () => {
   const navigate = useNavigate();
@@ -100,9 +102,47 @@ const ComplainListPage = () => {
     return list;
   }, [searchTerm, complaints, selectedFilterIndex]);
 
+  useEffect(() => {
+    const platform = getMobilePlatform();
+    if (platform !== "ios_webview" && platform !== "android_webview") {
+      setNotification({
+        title: "민원 처리 상태 알림은 앱에서만 받을 수 있어요",
+        message: `스토어에서 유니돔 앱을 설치 후 로그인하세요.`,
+      });
+    }
+  }, []);
+
+  // 알림에 표시할 데이터의 타입 (예시)
+  interface NotificationData {
+    title: string;
+    message: string;
+  }
+
+  // 1. 알림 데이터를 관리할 state.
+  const [notification, setNotification] = useState<NotificationData | null>(
+    null,
+  );
+
+  // 3. 알림이 닫힐 때 호출될 함수 (onClose prop으로 전달)
+  const handleCloseNotification = () => {
+    // 1. UI에서 즉시 숨김
+    setNotification(null);
+  };
+
   return (
     <ComplainListPageWrapper>
       <Header title={"생활원 민원"} hasBack={true} backPath={"/home"} />
+
+      {notification && (
+        <TopPopupNotification
+          title={notification.title}
+          message={notification.message}
+          onClose={handleCloseNotification}
+          // (선택 사항) 앱 아이콘이나 이름을 바꿀 수 있습니다.
+          // appName="내 앱"
+          // appIcon="🚀"
+        />
+      )}
 
       <span className="description">
         인천대학교 생활원 민원을 작성할 수 있습니다.
