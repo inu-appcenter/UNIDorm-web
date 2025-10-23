@@ -8,6 +8,7 @@ export const DropdownContainer = styled.div`
 export const Dropdown = styled.select<{ hasValue: boolean }>`
   flex: 1;
   padding: 10px 16px;
+  padding-right: 32px;
   border: none;
   border-radius: 8px;
   background: #f8f8f8;
