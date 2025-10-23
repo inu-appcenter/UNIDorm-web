@@ -57,6 +57,9 @@ import { getEventWin } from "./apis/event.ts";
 import { useCouponStore } from "./stores/useCouponStore.ts";
 import tokenInstance from "./apis/tokenInstance.ts";
 import { getMobilePlatform } from "./utils/getMobilePlatform.ts";
+import FormListPage from "./pages/Form/FormListPage.tsx";
+import FormDetailPage from "./pages/Form/FormDetailPage.tsx";
+import FormCreatePage from "./pages/Admin/FormCreatePage.tsx";
 
 function App() {
   console.log("현재 MODE:", import.meta.env.MODE);
@@ -262,6 +265,12 @@ function App() {
           <Route path=":complainId" element={<ComplainDetailPage />} />
           <Route path="write" element={<ComplainWritePage />} />
         </Route>
+
+        {/*폼*/}
+        <Route path="form" element={<SubPage />}>
+          <Route index element={<FormListPage />} />
+          <Route path=":formId" element={<FormDetailPage />} />
+        </Route>
         {/* Admin */}
         <Route path="admin" element={<SubPage />}>
           <Route index element={<AdminMainPage />} />
@@ -284,6 +293,7 @@ function App() {
             path="notification/create"
             element={<CreateNotificationPage />}
           />
+          <Route path="form/create" element={<FormCreatePage />} />
 
           <Route path="fcm" element={<FCMPage />} />
         </Route>
