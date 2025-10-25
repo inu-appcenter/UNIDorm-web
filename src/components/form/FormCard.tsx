@@ -2,25 +2,37 @@ import styled from "styled-components";
 import arrowright from "../../assets/arrow-right.svg";
 import FormContent from "./FormContent.tsx";
 import { useNavigate } from "react-router-dom";
+import { SurveySummary } from "../../types/formTypes.ts";
 
-const FormCard = () => {
+interface FormCardProps {
+  SurveySummary: SurveySummary;
+  miniView?: boolean;
+  buttonText?: string;
+}
+
+const FormCard = ({
+  SurveySummary,
+  miniView = true,
+  buttonText = "신청하러 가기",
+}: FormCardProps) => {
   const navigate = useNavigate();
+
   return (
     <FormBox>
       <FormContent
-        badgeStatus="마감"
-        duration="09.12 10:00 ~ 10.23 17:00"
-        title="외국인 학우들을 위한 추석 이벤트 신청"
-        description="<무료 인천 시티투어 이벤트> 추석 연휴를 맞아 외국인 재학생들을 위해 이벤트를 진행합니다."
-        miniView={true}
+        badgeStatus={"진행전"}
+        duration={`${SurveySummary.startDate} ~ ${SurveySummary.endDate}`}
+        title={SurveySummary.title}
+        description={SurveySummary.description}
+        miniView={miniView}
       />
       <LastLine>
         <Button
           onClick={() => {
-            navigate("1");
+            navigate(`form/${SurveySummary.id}`);
           }}
         >
-          신청하러 가기 <img src={arrowright} />
+          {buttonText} <img src={arrowright} />
         </Button>
       </LastLine>
     </FormBox>
@@ -50,6 +62,7 @@ const LastLine = styled.div`
   width: 100%;
   justify-content: end;
 `;
+
 const Button = styled.button`
   display: flex;
   flex-direction: row;
@@ -64,6 +77,10 @@ const Button = styled.button`
   font-size: 14px;
   font-style: normal;
   font-weight: 400;
-  line-height: 24px; /* 171.429% */
+  line-height: 24px;
   letter-spacing: 0.38px;
+
+  img {
+    margin-left: 4px;
+  }
 `;

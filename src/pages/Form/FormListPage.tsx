@@ -3,12 +3,36 @@ import Header from "../../components/common/Header/Header.tsx";
 import SearchInput from "../../components/complain/SearchInput.tsx";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
 import FormCard from "../../components/form/FormCard.tsx";
+import { SurveySummary } from "../../types/formTypes.ts";
+import { getAllSurveys } from "../../apis/formApis.ts";
+import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 
 const FormListPage = () => {
   const navigate = useNavigate();
+
+  const [forms, setForms] = useState<SurveySummary[]>([]);
+  const [isListLoading, setIsListLoading] = useState(false);
+
+  useEffect(() => {
+    const getFormList = async () => {
+      try {
+        setIsListLoading(true);
+        const res = await getAllSurveys();
+        console.log("폼 전체 리스트 불러오기 성공", res);
+        setForms(res.data);
+      } catch (e) {
+        console.error("폼 전체 리스트 불러오기 실패", e);
+      } finally {
+        setIsListLoading(false);
+      }
+    };
+
+    getFormList();
+  }, []);
+
   const [searchTerm, setSearchTerm] = useState<string>("");
 
   const filter = ["최근 3개월", "2025"];
@@ -33,16 +57,14 @@ const FormListPage = () => {
               color={"#0A84FF"}
               borderColor={"#007AFF"}
             />
-            <FormCard />
-            <FormCard />
 
-            {/*{isListLoading ? (*/}
-            {/*  <LoadingSpinner message="폼 목록을 불러오는 중..." />*/}
-            {/*) : filteredComplaints.length > 0 ? (*/}
-            {/*  <ComplainListTable data={filteredComplaints} />*/}
-            {/*) : (*/}
-            {/*  <EmptyMessage>조회된 폼이 없습니다.</EmptyMessage>*/}
-            {/*)}*/}
+            {isListLoading ? (
+              <LoadingSpinner message="폼 목록을 불러오는 중..." />
+            ) : forms.length > 0 ? (
+              forms?.map((form, i) => <FormCard key={i} SurveySummary={form} />)
+            ) : (
+              <EmptyMessage>조회된 폼이 없습니다.</EmptyMessage>
+            )}
           </Wrapper2>
         </TitleContentArea>
       </MainContent>
@@ -112,4 +134,11 @@ const WriteButton = styled.button`
   cursor: pointer;
   box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.2);
   z-index: 100;
+`;
+
+const EmptyMessage = styled.div`
+  padding: 24px;
+  text-align: center;
+  color: #aaa;
+  font-size: 14px;
 `;
