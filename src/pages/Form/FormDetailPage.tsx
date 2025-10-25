@@ -7,7 +7,12 @@ import { useEffect, useState } from "react";
 import arrowright from "../../assets/arrow-right.svg";
 import { formatDeadlineDate } from "../../utils/dateUtils.ts";
 import { SurveyDetail } from "../../types/formTypes.ts";
-import { deleteSurvey, getSurveyDetail } from "../../apis/formApis.ts";
+import {
+  closeSurvey,
+  deleteSurvey,
+  getSurveyDetail,
+  submitSurveyResponse,
+} from "../../apis/formApis.ts";
 import { useNavigate, useParams } from "react-router-dom";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import { Input } from "../../styles/complain.ts";
@@ -18,6 +23,7 @@ const FormDetailPage = () => {
   const { formId } = useParams<{ formId: string }>();
   const [form, setForm] = useState<SurveyDetail | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitLoading, setIsSubmitLoading] = useState(false);
 
   // 답변 상태 (문항 순서대로 관리)
   const [answers, setAnswers] = useState<(string | number | number[] | null)[]>(
@@ -74,9 +80,110 @@ const FormDetailPage = () => {
     getFormList();
   }, [formId]);
 
+  const handleSubmit = async () => {
+    if (!form || !form.questions) return;
+
+    const hasMissingRequired = form.questions.some((q, i) => {
+      if (!q.required) return false;
+      const ans = answers[i];
+      return (
+        ans === null || ans === "" || (Array.isArray(ans) && ans.length === 0)
+      );
+    });
+    if (hasMissingRequired) {
+      alert("필수 질문에 답변을 모두 입력해주세요.");
+      return;
+    }
+
+    try {
+      console.log("폼 제출 시도");
+      setIsSubmitLoading(true);
+
+      // 1️⃣ SurveyResponseRequest 구조에 맞게 변환
+      const responseData = {
+        surveyId: form.id, // 설문 ID
+        answers: form.questions.map((question, index) => {
+          const userAnswer = answers[index];
+
+          // 기본 구조
+          const answer: {
+            questionId: number;
+            optionIds: number[];
+            answerText: string | null;
+          } = {
+            questionId: question.id,
+            optionIds: [],
+            answerText: null,
+          };
+
+          // 주관식
+          if (question.questionType === "SHORT_ANSWER") {
+            answer.answerText = (userAnswer as string) || null;
+          }
+
+          // 객관식 (단일 or 다중)
+          if (question.questionType === "MULTIPLE_CHOICE") {
+            if (question.allowMultipleSelection) {
+              // 다중 선택
+              answer.optionIds = Array.isArray(userAnswer)
+                ? userAnswer
+                    .map((idx: number) => question.options[idx]?.id)
+                    .filter((id): id is number => !!id)
+                : [];
+            } else {
+              // 단일 선택
+              const optionIndex = userAnswer as number | null;
+              if (
+                typeof optionIndex === "number" &&
+                question.options[optionIndex]
+              ) {
+                answer.optionIds = [question.options[optionIndex].id];
+              }
+            }
+          }
+
+          return answer;
+        }),
+      };
+
+      console.log("제출 요청 데이터:", responseData);
+
+      // 2️⃣ API 호출
+      const res = await submitSurveyResponse(responseData);
+
+      console.log("폼 제출 성공:", res.data); // res.data는 number (응답 ID)
+      alert("제출이 완료되었습니다!");
+      navigate(-1);
+    } catch (e) {
+      console.error("폼 제출 실패", e);
+      alert("제출 중 오류가 발생했습니다. 다시 시도해주세요.");
+    } finally {
+      setIsSubmitLoading(false);
+    }
+  };
+
+  const handleFormClose = async () => {
+    if (!formId) return;
+    if (
+      !window.confirm(
+        "정말 마감할까요?\n더 이상 응답을 받지 않으며, 이 작업은 되돌릴 수 없습니다.",
+      )
+    )
+      return;
+    try {
+      const res = closeSurvey(Number(formId));
+      console.log("폼 마감 처리 성공", res);
+      alert("마감 처리 되었습니다.");
+      // navigate(-1);
+    } catch (err) {
+      alert("마감 처리에 실패했습니다.");
+    }
+  };
+
   const handleDelete = async () => {
     if (!formId) return;
-    if (!window.confirm("정말 삭제할까요? 이 작업은 되돌릴 수 없어요.")) return;
+    if (!window.confirm("정말 삭제할까요?\n이 작업은 되돌릴 수 없습니다."))
+      return;
     try {
       const res = deleteSurvey(Number(formId));
       console.log("폼 삭제 성공", res);
@@ -94,6 +201,10 @@ const FormDetailPage = () => {
       // navigate("/tips/write", { state: { tip: tip, tipImages: images } }),
     },
     {
+      label: "설문 마감하기",
+      onClick: handleFormClose,
+    },
+    {
       label: "삭제하기",
       onClick: handleDelete,
     },
@@ -102,13 +213,14 @@ const FormDetailPage = () => {
   return (
     <PageWrapper>
       <Header title={"폼 상세"} hasBack={true} menuItems={menuItems} />
+      {isSubmitLoading && <LoadingSpinner overlay={true} />}
       <FormBox>
         {isLoading ? (
           <LoadingSpinner />
         ) : form ? (
           <>
             <FormContent
-              badgeStatus={"진행전"}
+              closed={form.closed}
               duration={`${formatDeadlineDate(form.startDate)} ~ ${formatDeadlineDate(form.endDate)}`}
               title={form.title}
               description={form.description}
@@ -182,7 +294,7 @@ const FormDetailPage = () => {
         )}
 
         <LastLine>
-          <Button>
+          <Button onClick={handleSubmit}>
             신청 <img src={arrowright} />
           </Button>
         </LastLine>

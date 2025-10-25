@@ -21,7 +21,7 @@ const FormCard = ({
   return (
     <FormBox>
       <FormContent
-        badgeStatus={"진행전"}
+        closed={SurveySummary.closed}
         duration={`${formatDeadlineDate(SurveySummary.startDate)} ~ ${formatDeadlineDate(SurveySummary.endDate)}`}
         title={SurveySummary.title}
         description={SurveySummary.description}

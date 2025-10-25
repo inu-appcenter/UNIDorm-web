@@ -1,7 +1,7 @@
 import styled from "styled-components";
 
 type FormContentProps = {
-  badgeStatus: "진행전" | "진행중" | "마감";
+  closed: boolean;
   duration: string;
   title: string;
   description: string;
@@ -9,16 +9,18 @@ type FormContentProps = {
 };
 
 const FormContent = ({
-  badgeStatus,
+  closed,
   duration,
   title,
   description,
   miniView, // 변경된 부분: miniView prop 받기
 }: FormContentProps) => {
+  const statusText = () => (closed ? "마감" : "진행 중");
+
   return (
     <FormContentWrapper>
       <FirstLine>
-        <Badge status={badgeStatus}>{badgeStatus}</Badge>
+        <Badge status={statusText()}>{statusText()}</Badge>
         <Duration>{duration}</Duration>
       </FirstLine>
       <Title>{title}</Title>
@@ -45,7 +47,7 @@ const FirstLine = styled.div`
   align-items: center;
 `;
 
-const Badge = styled.div<{ status: "진행전" | "진행중" | "마감" }>`
+const Badge = styled.div<{ status: string }>`
   min-width: fit-content;
   border-radius: 23px;
   padding: 2px 10px;
@@ -57,9 +59,9 @@ const Badge = styled.div<{ status: "진행전" | "진행중" | "마감" }>`
   line-height: 24px;
   letter-spacing: 0.38px;
   background: ${({ status }) =>
-    status === "진행전"
+    status === "진행 전"
       ? "rgba(142, 142, 147, 0.3)" // 회색
-      : status === "진행중"
+      : status === "진행 중"
         ? "rgba(255, 212, 0, 0.4)" // 노란색
         : "rgba(235, 0, 0, 0.3)"}; // 빨간색
 `;
