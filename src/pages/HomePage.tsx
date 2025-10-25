@@ -26,7 +26,6 @@ import { PopupNotification } from "../types/popup-notifications.ts";
 import { getMobilePlatform } from "../utils/getMobilePlatform.ts";
 import ModalContent_AppInstall from "../components/common/ModalContent_AppInstall.tsx";
 import CommonBottomModal from "../components/modal/CommonBottomModal.tsx";
-import TopPopupNotification from "../components/common/TopPopupNotification.tsx";
 
 export default function HomePage() {
   const { tokenInfo } = useUserStore();
@@ -134,40 +133,8 @@ export default function HomePage() {
     fetchAnnouncements();
   }, []);
 
-  // 알림에 표시할 데이터의 타입 (예시)
-  interface NotificationData {
-    title: string;
-    message: string;
-  }
-
-  // 1. 알림 데이터를 관리할 state.
-  const [notification, setNotification] = useState<NotificationData | null>(
-    () => {
-      return {
-        title: "배민상품권 1만원권 나눔 행사 진행 중!(~금)",
-        message: `아직 쿠폰이 2장 남았어요. 로그인 후, 넓은 시간에 걸쳐 들어오시면 당첨될 확률이 높아요. 공동구매 인증 이벤트도 진행 중이니, 공지사항을 참고해주세요.`,
-      };
-    },
-  );
-
-  // 3. 알림이 닫힐 때 호출될 함수 (onClose prop으로 전달)
-  const handleCloseNotification = () => {
-    // 1. UI에서 즉시 숨김
-    setNotification(null);
-  };
-
   return (
     <HomePageWrapper>
-      {notification && (
-        <TopPopupNotification
-          title={notification.title}
-          message={notification.message}
-          onClose={handleCloseNotification}
-          // (선택 사항) 앱 아이콘이나 이름을 바꿀 수 있습니다.
-          // appName="내 앱"
-          // appIcon="🚀"
-        />
-      )}
       <Header title="유니돔" hasBack={false} showAlarm={true} />
       {!isPopupLoading &&
         popupNotices.map((popup) => (
