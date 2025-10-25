@@ -71,7 +71,7 @@ const FormListPage = () => {
 
       {/*{isLoggedIn && (*/}
       <WriteButton onClick={() => navigate("/admin/form/create")}>
-        ✏️ 폼 추가하기
+        ✏️ 폼 등록
       </WriteButton>
       {/*)}*/}
     </PageWrapper>
