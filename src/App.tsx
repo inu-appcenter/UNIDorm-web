@@ -51,10 +51,6 @@ import CreateNotificationPage from "./pages/Admin/CreateNotificationPage.tsx";
 import NotificationSettingPage from "./pages/MyPage/NotificationSettingPage.tsx";
 import FCMPage from "./pages/Admin/FCMPage.tsx";
 import AgreementPage from "./pages/MyPage/AgreementPage.tsx";
-import CommonBottomModal from "./components/modal/CommonBottomModal.tsx";
-import ModalContent_EventWin from "./components/common/ModalContent_EventWin.tsx";
-import { getEventWin } from "./apis/event.ts";
-import { useCouponStore } from "./stores/useCouponStore.ts";
 import tokenInstance from "./apis/tokenInstance.ts";
 import { getMobilePlatform } from "./utils/getMobilePlatform.ts";
 
@@ -75,11 +71,11 @@ function App() {
 
   const navigate = useNavigate();
 
-  //쿠폰 바텀시트 열림 상태 전역관리
-  const isCouponWinOpen = useCouponStore((state) => state.isCouponWinOpen);
-  const setIsCouponWinOpen = useCouponStore(
-    (state) => state.setIsCouponWinOpen,
-  );
+  // //쿠폰 바텀시트 열림 상태 전역관리
+  // const isCouponWinOpen = useCouponStore((state) => state.isCouponWinOpen);
+  // const setIsCouponWinOpen = useCouponStore(
+  //   (state) => state.setIsCouponWinOpen,
+  // );
 
   const [fcmToken, setFcmToken] = useState("");
 
@@ -109,12 +105,12 @@ function App() {
           return;
         }
 
-        //이벤트 당첨 여부 확인
-        const couponResponse = await getEventWin();
-        console.log("이벤트 당첨 여부 확인 성공 : ", couponResponse);
-        if (couponResponse.data.success && !couponResponse.data.issued) {
-          setIsCouponWinOpen(true);
-        }
+        // //이벤트 당첨 여부 확인
+        // const couponResponse = await getEventWin();
+        // console.log("이벤트 당첨 여부 확인 성공 : ", couponResponse);
+        // if (couponResponse.data.success && !couponResponse.data.issued) {
+        //   setIsCouponWinOpen(true);
+        // }
       } catch (error) {
         // alert("회원 가져오기 실패");
         console.error("회원 가져오기 실패", error);
@@ -288,15 +284,15 @@ function App() {
           <Route path="fcm" element={<FCMPage />} />
         </Route>
       </Routes>
-      <CommonBottomModal
-        id={"이벤트 당첨"}
-        isOpen={isCouponWinOpen}
-        setIsOpen={setIsCouponWinOpen}
-        title={"이벤트에 당첨되었어요!"}
-        headerImageId={3}
-        children={ModalContent_EventWin()}
-        closeButtonText={"감사합니다"}
-      />
+      {/*<CommonBottomModal*/}
+      {/*  id={"이벤트 당첨"}*/}
+      {/*  isOpen={isCouponWinOpen}*/}
+      {/*  setIsOpen={setIsCouponWinOpen}*/}
+      {/*  title={"이벤트에 당첨되었어요!"}*/}
+      {/*  headerImageId={3}*/}
+      {/*  children={ModalContent_EventWin()}*/}
+      {/*  closeButtonText={"감사합니다"}*/}
+      {/*/>*/}
     </ErrorBoundary>
   );
 }
