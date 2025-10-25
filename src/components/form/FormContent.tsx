@@ -46,6 +46,7 @@ const FirstLine = styled.div`
 `;
 
 const Badge = styled.div<{ status: "진행전" | "진행중" | "마감" }>`
+  min-width: fit-content;
   border-radius: 23px;
   padding: 2px 10px;
   box-sizing: border-box;
