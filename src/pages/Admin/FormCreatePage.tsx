@@ -149,6 +149,7 @@ const FormCreatePage = () => {
             allowMultipleSelection: field.allowMultipleSelection,
             options: optionsForApi,
           };
+          console.log("apiQuestionData", apiQuestionData);
 
           // 3. (서버 정책에 따라) SHORT_ANSWER 타입일 경우 옵션 관련 필드 정리
           if (field.questionType === "SHORT_ANSWER") {
@@ -174,6 +175,7 @@ const FormCreatePage = () => {
       };
 
       console.log("요청 보낼 설문 객체", surveyData);
+      console.log("quesions", surveyData.questions);
 
       // API 호출
       const response = await createSurvey(surveyData);
