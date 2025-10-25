@@ -3,6 +3,7 @@ import arrowright from "../../assets/arrow-right.svg";
 import FormContent from "./FormContent.tsx";
 import { useNavigate } from "react-router-dom";
 import { SurveySummary } from "../../types/formTypes.ts";
+import { formatDeadlineDate } from "../../utils/dateUtils.ts";
 
 interface FormCardProps {
   SurveySummary: SurveySummary;
@@ -21,7 +22,7 @@ const FormCard = ({
     <FormBox>
       <FormContent
         badgeStatus={"진행전"}
-        duration={`${SurveySummary.startDate} ~ ${SurveySummary.endDate}`}
+        duration={`${formatDeadlineDate(SurveySummary.startDate)} ~ ${formatDeadlineDate(SurveySummary.endDate)}`}
         title={SurveySummary.title}
         description={SurveySummary.description}
         miniView={miniView}
