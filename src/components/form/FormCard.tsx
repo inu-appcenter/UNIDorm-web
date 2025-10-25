@@ -14,7 +14,7 @@ interface FormCardProps {
 const FormCard = ({
   SurveySummary,
   miniView = true,
-  buttonText = "신청하러 가기",
+  buttonText = "신청하기",
 }: FormCardProps) => {
   const navigate = useNavigate();
 
@@ -30,7 +30,7 @@ const FormCard = ({
       <LastLine>
         <Button
           onClick={() => {
-            navigate(`form/${SurveySummary.id}`);
+            navigate(`${SurveySummary.id}`);
           }}
         >
           {buttonText} <img src={arrowright} />
