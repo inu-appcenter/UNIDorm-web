@@ -15,6 +15,7 @@ import {
   OptionCreateRequest, // (formTypes.ts에 정의되어 있다고 가정)
 } from "../../types/formTypes.ts";
 import { createSurvey } from "../../apis/formApis.ts";
+import { AddButton, AddButtonArea } from "../../styles/form.ts";
 
 // [수정] 2. DTO에 맞춘 로컬 상태 타입 정의
 // AddNewFormField에서 옵션을 관리하기 위한 UI용 옵션 상태 (React key 포함)
@@ -125,6 +126,9 @@ const FormCreatePage = () => {
     }
     // --- 유효성 검사 끝 ---
 
+    if (!window.confirm("폼을 등록할까요? 내용을 다시한번 확인해주세요.")) {
+      return;
+    }
     setIsLoading(true);
 
     try {
@@ -174,18 +178,18 @@ const FormCreatePage = () => {
         questions: questionsForApi,
       };
 
-      console.log("요청 보낼 설문 객체", surveyData);
+      console.log("요청 보낼 폼 객체", surveyData);
       console.log("quesions", surveyData.questions);
 
       // API 호출
       const response = await createSurvey(surveyData);
-      console.log("설문 생성 성공:", response.data);
-      alert("설문이 성공적으로 생성되었습니다.");
+      console.log("폼 생성 성공:", response.data);
+      alert("폼이 성공적으로 등록되었습니다.");
 
       navigate(-1); // (성공 시 이동 경로)
     } catch (error) {
-      console.error("설문 생성 실패:", error);
-      alert("설문 생성에 실패했습니다. 입력 내용을 확인해주세요.");
+      console.error("폼 생성 실패:", error);
+      alert("폼 생성에 실패했습니다. 입력 내용을 확인해주세요.");
     } finally {
       setIsLoading(false);
     }
@@ -193,7 +197,7 @@ const FormCreatePage = () => {
 
   return (
     <PageWrapper>
-      <Header title={"폼 생성"} hasBack={true} />
+      <Header title={"폼 만들기"} hasBack={true} />
       <FormBox>
         {/* --- 기본 설문 정보 입력 --- */}
         <FormField label="제목">
@@ -226,13 +230,6 @@ const FormCreatePage = () => {
         </FormField>
       </FormBox>
 
-      {/* [수정] 8. 개별 질문 필드 렌더링 */}
-      {/* [주의] AddNewFormField.tsx 컴포넌트가 아래 props를 받아야 합니다.
-        - fieldData: FormFieldState (현재 질문의 모든 데이터)
-        - onUpdate: (id: number, updatedData: Partial<FormFieldState>) => void
-        - onRemove: (id: number) => void
-        - canRemove: boolean
-      */}
       {formFields.map((field) => (
         <AddNewFormField
           key={field.id}
@@ -243,13 +240,11 @@ const FormCreatePage = () => {
         />
       ))}
 
-      {/* --- 필드 추가 버튼 --- */}
       <AddButtonArea>
         <AddButton onClick={handleAddField}>{"+"}</AddButton>
         필드 추가
       </AddButtonArea>
 
-      {/* --- 생성하기 버튼 --- */}
       <LastLine>
         <Button onClick={handleSubmit} disabled={isLoading}>
           {isLoading ? "생성 중..." : "생성하기"}
@@ -342,24 +337,4 @@ const Textarea = styled.textarea`
   &::placeholder {
     color: #aeaeae;
   }
-`;
-
-const AddButtonArea = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  justify-content: center;
-  align-items: center;
-  font-size: 12px;
-  color: #0a84ff;
-`;
-
-const AddButton = styled.button`
-  border-radius: 60px;
-  background: #fff;
-  box-shadow: 0 0 16px 0 rgba(10, 132, 255, 0.25);
-  width: 40px;
-  height: 40px;
-  color: #0a84ff;
-  font-size: 28px;
 `;
