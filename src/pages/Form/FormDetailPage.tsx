@@ -197,8 +197,9 @@ const FormDetailPage = () => {
   const menuItems = [
     {
       label: "수정하기",
-      onClick: () => alert("구현 예정"),
-      // navigate("/tips/write", { state: { tip: tip, tipImages: images } }),
+      onClick: () => {
+        navigate("/admin/form/create", { state: { form: form } });
+      },
     },
     {
       label: "설문 마감하기",
