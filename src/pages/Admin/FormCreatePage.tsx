@@ -1,36 +1,39 @@
 import styled from "styled-components";
 import Header from "../../components/common/Header/Header.tsx";
 import FormField from "../../components/complain/FormField.tsx";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import arrowright from "../../assets/arrow-right.svg";
 import { Input } from "../../styles/complain.ts";
 import AddNewFormField from "../../components/form/AddNewFormField.tsx";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
-// [수정] 1. 요청하신 임포트 구문으로 변경
+// [수정] 1. 요청하신 임포트 구문으로 변경 (updateSurvey 추가)
 import {
   QuestionCreateRequest,
   SurveyCreateRequest,
-  QuestionType, // (formTypes.ts에 정의되어 있다고 가정)
-  OptionCreateRequest, // (formTypes.ts에 정의되어 있다고 가정)
+  QuestionType,
+  OptionCreateRequest,
+  // [가정] SurveyUpdateRequest 타입을 import (SurveyCreateRequest와 동일하다고 가정)
+  // 만약 타입이 다르다면, 해당 타입을 import 해야 합니다.
+  SurveyCreateRequest as SurveyUpdateRequest,
 } from "../../types/formTypes.ts";
-import { createSurvey } from "../../apis/formApis.ts";
+// [수정] 2. updateSurvey API 임포트
+import { createSurvey, updateSurvey } from "../../apis/formApis.ts";
+import { AddButton, AddButtonArea } from "../../styles/form.ts";
 
-// [수정] 2. DTO에 맞춘 로컬 상태 타입 정의
-// AddNewFormField에서 옵션을 관리하기 위한 UI용 옵션 상태 (React key 포함)
+// (FormOptionState, FormFieldState 인터페이스는 동일)
 export interface FormOptionState {
-  id: number; // React key
+  id: number;
   optionText: string;
 }
 
-// AddNewFormField에서 질문을 관리하기 위한 UI용 질문 상태 (React key 포함)
 export interface FormFieldState {
-  id: number; // React key
+  id: number;
   questionText: string;
-  questionType: QuestionType; // DTO의 타입
-  isRequired: boolean; // DTO의 필드
-  allowMultipleSelection: boolean; // DTO의 필드
-  options: FormOptionState[]; // UI용 옵션 배열
+  questionType: QuestionType;
+  isRequired: boolean;
+  allowMultipleSelection: boolean;
+  options: FormOptionState[];
 }
 
 const FormCreatePage = () => {
@@ -42,26 +45,57 @@ const FormCreatePage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  // [수정] 3. DTO의 필드를 반영한 'questions' 상태 초기화
+  // (formFields 상태 초기화는 동일)
   const [formFields, setFormFields] = useState<FormFieldState[]>([
     {
       id: Date.now(),
       questionText: "",
-      questionType: "SHORT_ANSWER", // (QuestionType의 기본값으로 가정)
+      questionType: "SHORT_ANSWER",
       isRequired: true,
       allowMultipleSelection: false,
       options: [],
     },
   ]);
 
-  // [수정] 4. 필드 추가 핸들러 (새 DTO 구조에 맞게)
+  const location = useLocation();
+  // [수정] 3. 수정할 폼 데이터(form) 및 수정 모드(isEditMode) 확인
+  const { form } = location.state || {};
+  const isEditMode = !!form; // form 객체가 있으면 true (수정 모드)
+
+  // [수정] 4. useEffect 의존성 배열 변경 (기존 []도 문제는 없으나 명시적으로 form 추가)
+  // (기존 코드와 동일하게 두어도 무방합니다.)
+  useEffect(() => {
+    if (form) {
+      setTitle(form.title);
+      setContent(form.description);
+      // [수정] 4-1. 날짜 형식이 datetime-local input에 맞게 변환 (ISO -> YYYY-MM-DDTHH:MM)
+      // (서버에서 ISO String (UTC)으로 왔다고 가정)
+      const toLocalISOString = (isoString: string) => {
+        if (!isoString) return "";
+        const date = new Date(isoString);
+        // 로컬 시간대로 변환
+        date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+        // 'YYYY-MM-DDTHH:MM' 형식으로 자르기
+        return date.toISOString().slice(0, 16);
+      };
+
+      setStartDate(toLocalISOString(form.startDate));
+      setEndDate(toLocalISOString(form.endDate));
+
+      // [중요] form.questions가 FormFieldState[]와 호환되는 구조여야 함
+      // (React key를 위한 id 필드가 포함되어 있어야 함)
+      setFormFields(form.questions);
+    }
+  }, [form]); // 의존성 배열에 form 추가
+
+  // (필드 추가, 업데이트, 삭제 핸들러는 기존과 동일)
   const handleAddField = () => {
     setFormFields((prevFields) => [
       ...prevFields,
       {
         id: Date.now(),
         questionText: "",
-        questionType: "SHORT_ANSWER", // (QuestionType의 기본값으로 가정)
+        questionType: "SHORT_ANSWER",
         isRequired: true,
         allowMultipleSelection: false,
         options: [],
@@ -69,8 +103,6 @@ const FormCreatePage = () => {
     ]);
   };
 
-  // [수정] 5. 질문 업데이트 핸들러 (AddNewFormField로부터 변경된 데이터 받기)
-  // (이 핸들러의 시그니처는 변경 없으나, updatedData의 내용이 DTO에 맞게 변경됨)
   const handleUpdateField = (
     id: number,
     updatedData: Partial<Omit<FormFieldState, "id">>,
@@ -82,7 +114,6 @@ const FormCreatePage = () => {
     );
   };
 
-  // [수정] 6. 질문 삭제 핸들러 (변경 없음)
   const handleRemoveField = (id: number) => {
     if (formFields.length <= 1) {
       alert("최소 1개의 질문이 필요합니다.");
@@ -93,11 +124,11 @@ const FormCreatePage = () => {
     );
   };
 
-  // [수정] 7. 폼 제출 핸들러 (새 DTO 구조에 맞게 API 페이로드 생성)
+  // [수정] 5. 폼 제출 핸들러 (수정 / 생성 분기 처리)
   const handleSubmit = async () => {
     if (isLoading) return;
 
-    // --- 유효성 검사 ---
+    // --- 유효성 검사 (기존과 동일) ---
     if (!title.trim() || !content.trim() || !startDate || !endDate) {
       alert("제목, 설명, 시작 일시, 종료 일시를 모두 입력해주세요.");
       return;
@@ -106,7 +137,6 @@ const FormCreatePage = () => {
       alert("종료 일시는 시작 일시보다 이후여야 합니다.");
       return;
     }
-    // 질문 유효성 검사
     const isQuestionsValid = formFields.every(
       (f) => f.questionText.trim() !== "",
     );
@@ -114,7 +144,6 @@ const FormCreatePage = () => {
       alert("질문 내용을 모두 입력해주세요.");
       return;
     }
-    // (추가) 옵션이 필요한 질문(CHOICE)에 옵션이 있는지 검사
     const choiceQuestions = formFields.filter(
       (f) => f.questionType !== "SHORT_ANSWER",
     );
@@ -125,14 +154,19 @@ const FormCreatePage = () => {
     }
     // --- 유효성 검사 끝 ---
 
+    // [수정] 6. 모드에 따른 확인 메시지
+    const action = isEditMode ? "수정" : "등록";
+    if (
+      !window.confirm(`폼을 ${action}할까요? 내용을 다시한번 확인해주세요.`)
+    ) {
+      return;
+    }
     setIsLoading(true);
 
     try {
-      // API DTO 형식에 맞게 데이터 가공
+      // API DTO 형식에 맞게 데이터 가공 (기존과 동일)
       const questionsForApi: QuestionCreateRequest[] = formFields.map(
         (field, index) => {
-          // 1. UI용 options (FormOptionState[])를 API용 (OptionCreateRequest[])로 변환
-          // (가정: OptionCreateRequest가 { optionText: string } 라고 가정)
           const optionsForApi: OptionCreateRequest[] = field.options.map(
             (opt, index) => ({
               optionText: opt.optionText,
@@ -140,18 +174,15 @@ const FormCreatePage = () => {
             }),
           );
 
-          // 2. 최종 QuestionCreateRequest 객체 생성
           const apiQuestionData: QuestionCreateRequest = {
             questionText: field.questionText,
             questionType: field.questionType,
-            questionOrder: index + 1, // DTO에 맞게 1-based 순서 부여
+            questionOrder: index + 1,
             isRequired: field.isRequired,
             allowMultipleSelection: field.allowMultipleSelection,
             options: optionsForApi,
           };
-          console.log("apiQuestionData", apiQuestionData);
 
-          // 3. (서버 정책에 따라) SHORT_ANSWER 타입일 경우 옵션 관련 필드 정리
           if (field.questionType === "SHORT_ANSWER") {
             apiQuestionData.options = [];
             apiQuestionData.allowMultipleSelection = false;
@@ -161,12 +192,12 @@ const FormCreatePage = () => {
         },
       );
 
-      // 날짜 ISO String 변환
+      // 날짜 ISO String 변환 (UTC)
       const isoStartDate = new Date(startDate).toISOString();
       const isoEndDate = new Date(endDate).toISOString();
 
-      // 최종 요청 페이로드
-      const surveyData: SurveyCreateRequest = {
+      // [가정] SurveyUpdateRequest가 SurveyCreateRequest와 동일한 구조라고 가정
+      const payload: SurveyCreateRequest | SurveyUpdateRequest = {
         title,
         description: content,
         startDate: isoStartDate,
@@ -174,18 +205,32 @@ const FormCreatePage = () => {
         questions: questionsForApi,
       };
 
-      console.log("요청 보낼 설문 객체", surveyData);
-      console.log("quesions", surveyData.questions);
+      // [수정] 7. 모드에 따라 다른 API 호출
+      if (isEditMode) {
+        // [가정] 수정할 폼의 ID가 form.id (또는 form.surveyId)에 있다고 가정
+        if (!form.id) {
+          alert("수정할 폼의 ID를 찾을 수 없습니다.");
+          setIsLoading(false);
+          return;
+        }
 
-      // API 호출
-      const response = await createSurvey(surveyData);
-      console.log("설문 생성 성공:", response.data);
-      alert("설문이 성공적으로 생성되었습니다.");
+        console.log("요청 보낼 폼 객체 (수정)", form.id, payload);
+        // PUT /surveys/{surveyId} 호출
+        await updateSurvey(form.id, payload);
+        alert("폼이 성공적으로 수정되었습니다.");
+      } else {
+        // POST /surveys 호출
+        console.log("요청 보낼 폼 객체 (생성)", payload);
+        await createSurvey(payload);
+        alert("폼이 성공적으로 등록되었습니다.");
+      }
 
-      navigate(-1); // (성공 시 이동 경로)
+      navigate(-1); // (성공 시 공통 이동)
     } catch (error) {
-      console.error("설문 생성 실패:", error);
-      alert("설문 생성에 실패했습니다. 입력 내용을 확인해주세요.");
+      // [수정] 8. 모드에 따른 동적 에러 메시지
+      const errorAction = isEditMode ? "수정" : "생성";
+      console.error(`폼 ${errorAction} 실패:`, error);
+      alert(`폼 ${errorAction}에 실패했습니다. 입력 내용을 확인해주세요.`);
     } finally {
       setIsLoading(false);
     }
@@ -193,9 +238,10 @@ const FormCreatePage = () => {
 
   return (
     <PageWrapper>
-      <Header title={"폼 생성"} hasBack={true} />
+      {/* [수정] 9. 헤더 타이틀 동적 변경 */}
+      <Header title={isEditMode ? "폼 수정하기" : "폼 만들기"} hasBack={true} />
       <FormBox>
-        {/* --- 기본 설문 정보 입력 --- */}
+        {/* --- 기본 설문 정보 입력 (폼은 동일) --- */}
         <FormField label="제목">
           <Input
             placeholder="글 제목"
@@ -226,13 +272,7 @@ const FormCreatePage = () => {
         </FormField>
       </FormBox>
 
-      {/* [수정] 8. 개별 질문 필드 렌더링 */}
-      {/* [주의] AddNewFormField.tsx 컴포넌트가 아래 props를 받아야 합니다.
-        - fieldData: FormFieldState (현재 질문의 모든 데이터)
-        - onUpdate: (id: number, updatedData: Partial<FormFieldState>) => void
-        - onRemove: (id: number) => void
-        - canRemove: boolean
-      */}
+      {/* (질문 필드 맵핑은 동일) */}
       {formFields.map((field) => (
         <AddNewFormField
           key={field.id}
@@ -243,16 +283,22 @@ const FormCreatePage = () => {
         />
       ))}
 
-      {/* --- 필드 추가 버튼 --- */}
+      {/* (필드 추가 버튼 동일) */}
       <AddButtonArea>
         <AddButton onClick={handleAddField}>{"+"}</AddButton>
         필드 추가
       </AddButtonArea>
 
-      {/* --- 생성하기 버튼 --- */}
       <LastLine>
+        {/* [수정] 10. 버튼 텍스트 동적 변경 */}
         <Button onClick={handleSubmit} disabled={isLoading}>
-          {isLoading ? "생성 중..." : "생성하기"}
+          {isLoading
+            ? isEditMode
+              ? "수정 중..."
+              : "생성 중..."
+            : isEditMode
+              ? "수정하기"
+              : "생성하기"}
           {!isLoading && <img src={arrowright} />}
         </Button>
       </LastLine>
@@ -262,7 +308,7 @@ const FormCreatePage = () => {
 
 export default FormCreatePage;
 
-// ... (styled-components 코드는 이전과 동일) ...
+// ... (styled-components 코드는 기존과 동일) ...
 
 const PageWrapper = styled.div`
   padding: 90px 16px;
@@ -284,7 +330,7 @@ const FormBox = styled.div`
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 600px; // (PC 레이아웃 고려)
+  max-width: 600px;
   height: fit-content;
   gap: 16px;
   align-items: center;
@@ -301,7 +347,7 @@ const LastLine = styled.div`
   display: flex;
   flex-direction: row;
   width: 100%;
-  max-width: 600px; // (PC 레이아웃 고려)
+  max-width: 600px;
   justify-content: end;
 `;
 
@@ -342,24 +388,4 @@ const Textarea = styled.textarea`
   &::placeholder {
     color: #aeaeae;
   }
-`;
-
-const AddButtonArea = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  justify-content: center;
-  align-items: center;
-  font-size: 12px;
-  color: #0a84ff;
-`;
-
-const AddButton = styled.button`
-  border-radius: 60px;
-  background: #fff;
-  box-shadow: 0 0 16px 0 rgba(10, 132, 255, 0.25);
-  width: 40px;
-  height: 40px;
-  color: #0a84ff;
-  font-size: 28px;
 `;
