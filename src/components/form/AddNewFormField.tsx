@@ -2,6 +2,7 @@ import styled from "styled-components";
 import { Dropdown, Input } from "../../styles/complain"; // 기존 경로
 import { QuestionType } from "../../types/formTypes.ts";
 import { FormFieldState } from "../../pages/Admin/FormCreatePage.tsx";
+import { AddButton, AddButtonArea } from "../../styles/form.ts";
 
 // [수정] 1. 부모로부터 받을 props 타입 정의
 interface AddNewFormFieldProps {
@@ -13,7 +14,7 @@ interface AddNewFormFieldProps {
 
 // [수정] 2. UI 표시용 텍스트와 실제 DTO 값을 매핑
 const typeOptions: { label: string; value: QuestionType }[] = [
-  { label: "주관식 (단답형)", value: "SHORT_ANSWER" },
+  { label: "주관식", value: "SHORT_ANSWER" },
   { label: "객관식", value: "MULTIPLE_CHOICE" },
 ];
 
@@ -23,11 +24,6 @@ const AddNewFormField = ({
   onRemove,
   canRemove,
 }: AddNewFormFieldProps) => {
-  // [수정] 3. 로컬 상태(useState) 대신 부모에게 받은 fieldData를 직접 사용
-  // const [title, setTitle] = useState(""); -> 제거
-  // const [selectedFieldType, setSelectedFieldType] = useState("주관식"); -> 제거
-  // const [options, setOptions] = useState([""]); -> 제거
-
   // [수정] 4. 질문 타입 변경 핸들러 (DTO에 맞게)
   const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newType = e.target.value as QuestionType;
@@ -107,27 +103,27 @@ const AddNewFormField = ({
           <ToggleLabel>
             <input
               type="checkbox"
-              checked={fieldData.allowMultipleSelection}
-              onChange={(e) =>
-                onUpdate({ allowMultipleSelection: e.target.checked })
-              }
-              // 주관식일 땐 '다중 선택' 비활성화
-              disabled={fieldData.questionType === "SHORT_ANSWER"}
-            />
-            다중 선택 허용
-          </ToggleLabel>
-          <ToggleLabel>
-            <input
-              type="checkbox"
               checked={fieldData.isRequired}
               onChange={(e) => onUpdate({ isRequired: e.target.checked })}
             />
             필수 응답
           </ToggleLabel>
+          {fieldData.questionType === "MULTIPLE_CHOICE" && (
+            <ToggleLabel>
+              <input
+                type="checkbox"
+                checked={fieldData.allowMultipleSelection}
+                onChange={(e) =>
+                  onUpdate({ allowMultipleSelection: e.target.checked })
+                }
+              />
+              다중 선택 허용
+            </ToggleLabel>
+          )}
         </ToggleWrapper>
         {/* '질문 삭제' 버튼 (onRemove, canRemove props 사용) */}
         <RemoveQuestionButton onClick={onRemove} disabled={!canRemove}>
-          질문 삭제
+          X
         </RemoveQuestionButton>
       </SecondLine>
 
@@ -163,7 +159,9 @@ const AddNewFormField = ({
               )}
             </OptionItem>
           ))}
-          <AddButton onClick={handleAddOption}>옵션 추가</AddButton>
+          <AddButtonArea>
+            <AddButton onClick={handleAddOption}>{"+"}</AddButton>
+          </AddButtonArea>
         </ObjectiveOptionsWrapper>
       )}
     </FormBox>
@@ -174,6 +172,7 @@ export default AddNewFormField;
 // --- Styled Components (기존 + 신규 추가) ---
 
 const FormBox = styled.div`
+  position: relative;
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -201,7 +200,7 @@ const FirstLine = styled.div`
   /* 드롭다운이 너무 커지는 것을 방지 */
   & > ${Dropdown} {
     flex-shrink: 0;
-    width: 160px;
+    width: 100px;
   }
 `;
 
@@ -296,16 +295,6 @@ const BaseButton = styled.button`
   }
 `;
 
-const AddButton = styled(BaseButton)`
-  background-color: #e0eaff;
-  color: #0a84ff;
-  align-self: flex-start;
-
-  &:hover {
-    background-color: #d0e0ff;
-  }
-`;
-
 // [수정] 옵션 삭제 버튼 (이름 변경)
 const RemoveOptionButton = styled(BaseButton)`
   flex-shrink: 0;
@@ -322,9 +311,13 @@ const RemoveOptionButton = styled(BaseButton)`
 
 // [신규] 질문 삭제 버튼
 const RemoveQuestionButton = styled(BaseButton)`
+  position: absolute;
+  top: -12px;
+  right: -12px;
   background-color: #f0f0f0;
   color: #ff3b30;
   font-weight: 600;
+  border-radius: 50%;
 
   &:hover:not(:disabled) {
     background-color: #ffcfcf;
