@@ -19,7 +19,7 @@ import {
 } from "../../types/formTypes.ts";
 // [수정] 2. updateSurvey API 임포트
 import { createSurvey, updateSurvey } from "../../apis/formApis.ts";
-import { AddButton, AddButtonArea } from "../../styles/form.ts";
+import { AddButton, AddButtonArea, FormBoxBlue } from "../../styles/form.ts";
 
 // (FormOptionState, FormFieldState 인터페이스는 동일)
 export interface FormOptionState {
@@ -240,7 +240,7 @@ const FormCreatePage = () => {
     <PageWrapper>
       {/* [수정] 9. 헤더 타이틀 동적 변경 */}
       <Header title={isEditMode ? "폼 수정하기" : "폼 만들기"} hasBack={true} />
-      <FormBox>
+      <FormBoxBlue>
         {/* --- 기본 설문 정보 입력 (폼은 동일) --- */}
         <FormField label="제목">
           <Input
@@ -270,7 +270,7 @@ const FormCreatePage = () => {
             onChange={(e) => setEndDate(e.target.value)}
           />
         </FormField>
-      </FormBox>
+      </FormBoxBlue>
 
       {/* (질문 필드 맵핑은 동일) */}
       {formFields.map((field) => (
@@ -324,23 +324,6 @@ const PageWrapper = styled.div`
   .description {
     font-size: 14px;
   }
-`;
-
-const FormBox = styled.div`
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  max-width: 600px;
-  height: fit-content;
-  gap: 16px;
-  align-items: center;
-  padding: 16px;
-  box-sizing: border-box;
-  border-radius: 16px;
-  background: #fff;
-  box-shadow:
-    0 0 16px 0 rgba(10, 132, 255, 0.25),
-    0 0 10px 0 rgba(0, 0, 0, 0.25);
 `;
 
 const LastLine = styled.div`
