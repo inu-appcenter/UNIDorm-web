@@ -62,4 +62,10 @@ export const People = styled.span`
     width: 14px;
     height: 14px;
   }
+
+  color: var(--6, #8e8e93);
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 0%; /* 0 */
 `;
