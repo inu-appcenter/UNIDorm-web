@@ -96,6 +96,13 @@ const FormDetailPage = () => {
       return;
     }
 
+    if (
+      !window.confirm(
+        "정말 제출할까요?\n올바르게 입력했는지 다시 한번 확인해주세요.",
+      )
+    ) {
+      return;
+    }
     try {
       console.log("폼 제출 시도");
       setIsSubmitLoading(true);
