@@ -1,7 +1,8 @@
 import styled from "styled-components";
+import { statusText } from "../../utils/formUtils.ts";
 
 type FormContentProps = {
-  closed: boolean;
+  status: string;
   duration: string;
   title: string;
   description: string;
@@ -9,18 +10,16 @@ type FormContentProps = {
 };
 
 const FormContent = ({
-  closed,
+  status,
   duration,
   title,
   description,
   miniView, // 변경된 부분: miniView prop 받기
 }: FormContentProps) => {
-  const statusText = () => (closed ? "마감" : "진행 중");
-
   return (
     <FormContentWrapper>
       <FirstLine>
-        <Badge status={statusText()}>{statusText()}</Badge>
+        <Badge status={statusText(status)}>{statusText(status)}</Badge>
         <Duration>{duration}</Duration>
       </FirstLine>
       <Title>{title}</Title>
@@ -60,7 +59,7 @@ const Badge = styled.div<{ status: string }>`
   letter-spacing: 0.38px;
   background: ${({ status }) =>
     status === "진행 전"
-      ? "rgba(142, 142, 147, 0.3)" // 회색
+      ? "#CECECE" // 회색
       : status === "진행 중"
         ? "rgba(255, 212, 0, 0.4)" // 노란색
         : "rgba(235, 0, 0, 0.3)"}; // 빨간색
