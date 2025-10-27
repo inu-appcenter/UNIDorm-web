@@ -3,7 +3,8 @@ import Header from "../../components/common/Header/Header.tsx";
 import SearchInput from "../../components/complain/SearchInput.tsx";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+// 1. useMemo 임포트 추가
+import { useEffect, useState, useMemo } from "react";
 import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
 import FormCard from "../../components/form/FormCard.tsx";
 import { SurveySummary } from "../../types/formTypes.ts";
@@ -35,8 +36,39 @@ const FormListPage = () => {
 
   const [searchTerm, setSearchTerm] = useState<string>("");
 
-  const filter = ["최근 3개월", "2025"];
+  // 2. 요청하신 대로 필터 이름 변경
+  const filter = ["등록순", "신청 시작순", "마감 임박순"];
   const [selectedFilterIndex, setSelectedFilterIndex] = useState(0);
+
+  // 3. 검색 및 정렬 로직 추가
+  const filteredAndSortedForms = useMemo(() => {
+    // 3-1. 검색어로 필터링
+    const filtered = forms.filter((form) =>
+      form.title.toLowerCase().includes(searchTerm.toLowerCase()),
+    );
+
+    // 3-2. 선택된 인덱스로 정렬
+    switch (selectedFilterIndex) {
+      case 0: // 등록순 (최신순으로 정렬)
+        return filtered.sort(
+          (a, b) =>
+            new Date(b.createdDate).getTime() -
+            new Date(a.createdDate).getTime(),
+        );
+      case 1: // 설문시작순 (시작일이 빠른 순)
+        return filtered.sort(
+          (a, b) =>
+            new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
+        );
+      case 2: // 설문마감순 (마감일이 빠른 순)
+        return filtered.sort(
+          (a, b) =>
+            new Date(a.endDate).getTime() - new Date(b.endDate).getTime(),
+        );
+      default:
+        return filtered;
+    }
+  }, [forms, selectedFilterIndex, searchTerm]);
 
   return (
     <PageWrapper>
@@ -58,12 +90,17 @@ const FormListPage = () => {
               borderColor={"#007AFF"}
             />
 
+            {/* 4. 렌더링 시 forms 대신 filteredAndSortedForms 사용 */}
             {isListLoading ? (
               <LoadingSpinner message="폼 목록을 불러오는 중..." />
-            ) : forms.length > 0 ? (
-              forms?.map((form, i) => <FormCard key={i} SurveySummary={form} />)
+            ) : filteredAndSortedForms.length > 0 ? (
+              filteredAndSortedForms.map((form, i) => (
+                <FormCard key={form.id || i} SurveySummary={form} />
+              ))
             ) : (
-              <EmptyMessage>조회된 폼이 없습니다.</EmptyMessage>
+              <EmptyMessage>
+                {searchTerm ? "검색 결과가 없습니다." : "조회된 폼이 없습니다."}
+              </EmptyMessage>
             )}
           </Wrapper2>
         </TitleContentArea>

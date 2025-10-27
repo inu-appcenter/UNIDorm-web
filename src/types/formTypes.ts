@@ -39,7 +39,8 @@ export interface SurveySummary {
   endDate: string;
   createdDate: string;
   totalResponses: number;
-  closed: boolean;
+  status: string;
+  hasSubmitted: boolean;
 }
 
 /**
