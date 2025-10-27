@@ -56,6 +56,7 @@ import { getMobilePlatform } from "./utils/getMobilePlatform.ts";
 import FormListPage from "./pages/Form/FormListPage.tsx";
 import FormDetailPage from "./pages/Form/FormDetailPage.tsx";
 import FormCreatePage from "./pages/Admin/FormCreatePage.tsx";
+import FormResultPage from "./pages/Admin/FormResultPage.tsx";
 
 function App() {
   console.log("현재 MODE:", import.meta.env.MODE);
@@ -290,6 +291,7 @@ function App() {
             element={<CreateNotificationPage />}
           />
           <Route path="form/create" element={<FormCreatePage />} />
+          <Route path="form/:formId/result" element={<FormResultPage />} />
 
           <Route path="fcm" element={<FCMPage />} />
         </Route>

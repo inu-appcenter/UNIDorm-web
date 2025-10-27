@@ -16,6 +16,7 @@ import {
 import { useNavigate, useParams } from "react-router-dom";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import { Input } from "../../styles/complain.ts";
+import { FormBoxGray } from "../../styles/form.ts";
 
 const FormDetailPage = () => {
   const navigate = useNavigate();
@@ -206,17 +207,24 @@ const FormDetailPage = () => {
 
   const menuItems = [
     {
-      label: "수정하기",
+      label: "응답 결과 보기",
+      onClick: () => {
+        navigate(`/admin/form/${formId}/result`);
+      },
+    },
+    {
+      label: "폼 마감하기",
+      onClick: handleFormClose,
+    },
+    {
+      label: "폼 수정하기",
       onClick: () => {
         navigate("/admin/form/create", { state: { form: form } });
       },
     },
+
     {
-      label: "설문 마감하기",
-      onClick: handleFormClose,
-    },
-    {
-      label: "삭제하기",
+      label: "폼 삭제하기",
       onClick: handleDelete,
     },
   ];
@@ -227,7 +235,7 @@ const FormDetailPage = () => {
       {isSubmitLoading && (
         <LoadingSpinner overlay={true} message={"폼 제출 중 ..."} />
       )}
-      <FormBox>
+      <FormBoxGray>
         {isLoading ? (
           <LoadingSpinner message={"폼을 불러오는 중 ..."} />
         ) : form ? (
@@ -311,7 +319,7 @@ const FormDetailPage = () => {
             신청 <img src={arrowright} />
           </Button>
         </LastLine>
-      </FormBox>
+      </FormBoxGray>
     </PageWrapper>
   );
 };
@@ -334,22 +342,6 @@ const PageWrapper = styled.div`
   .description {
     font-size: 14px;
   }
-`;
-
-const FormBox = styled.div`
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  height: fit-content;
-  gap: 32px;
-  align-items: center;
-
-  padding: 16px;
-  box-sizing: border-box;
-
-  border-radius: 16px;
-  background: #fff;
-  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.25);
 `;
 
 const LastLine = styled.div`
