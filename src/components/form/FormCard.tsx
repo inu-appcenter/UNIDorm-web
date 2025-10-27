@@ -4,6 +4,8 @@ import FormContent from "./FormContent.tsx";
 import { useNavigate } from "react-router-dom";
 import { SurveySummary } from "../../types/formTypes.ts";
 import { formatDeadlineDate } from "../../utils/dateUtils.ts";
+import { statusText } from "../../utils/formUtils.ts";
+import { useIsAdminRole } from "../../hooks/useIsAdminRole.ts";
 
 interface FormCardProps {
   SurveySummary: SurveySummary;
@@ -14,14 +16,32 @@ interface FormCardProps {
 const FormCard = ({
   SurveySummary,
   miniView = true,
-  buttonText = "신청하기",
+  buttonText = "자세히 보기",
 }: FormCardProps) => {
   const navigate = useNavigate();
+  const { isAdmin } = useIsAdminRole();
+
+  const currentStatus = statusText(SurveySummary.status);
+
+  const ButtonText = () => {
+    if (currentStatus === "진행 중") {
+      if (SurveySummary.hasSubmitted) {
+        return "제출 완료";
+      }
+      return "자세히 보기";
+    } else if (currentStatus === "마감") {
+      return "마감";
+    } else if (currentStatus === "진행 전") {
+      return "진행 전";
+    } else {
+      return buttonText;
+    }
+  };
 
   return (
     <FormBox>
       <FormContent
-        closed={SurveySummary.closed}
+        status={SurveySummary.status}
         duration={`${formatDeadlineDate(SurveySummary.startDate)} ~ ${formatDeadlineDate(SurveySummary.endDate)}`}
         title={SurveySummary.title}
         description={SurveySummary.description}
@@ -29,11 +49,27 @@ const FormCard = ({
       />
       <LastLine>
         <Button
+          status={currentStatus}
           onClick={() => {
-            navigate(`${SurveySummary.id}`);
+            if (isAdmin) {
+              //관리자인 경우 무조건 폼 접근 가능
+              navigate(`${SurveySummary.id}`);
+            } else {
+              if (SurveySummary.hasSubmitted) {
+                alert("이미 제출한 폼입니다.");
+                return;
+              }
+
+              if (currentStatus === "진행 중") {
+                navigate(`${SurveySummary.id}`);
+              } else {
+                alert("진행 기간이 아닙니다.");
+              }
+            }
           }}
         >
-          {buttonText} <img src={arrowright} />
+          {ButtonText()}
+          <img src={arrowright} />
         </Button>
       </LastLine>
     </FormBox>
@@ -64,13 +100,12 @@ const LastLine = styled.div`
   justify-content: end;
 `;
 
-const Button = styled.button`
+const Button = styled.button<{ status: string }>`
   display: flex;
   flex-direction: row;
   align-items: center;
 
   border-radius: 23px;
-  background: var(--m-1, #0a84ff);
   padding: 4px 16px;
   box-sizing: border-box;
 
@@ -81,7 +116,12 @@ const Button = styled.button`
   line-height: 24px;
   letter-spacing: 0.38px;
 
+  background: ${({ status }) =>
+    status === "진행 중" ? "var(--m-1, #0a84ff)" : "#CECECE"};
+
   img {
     margin-left: 4px;
   }
+
+  cursor: ${({ status }) => (status === "진행 중" ? "pointer" : "not-allowed")};
 `;

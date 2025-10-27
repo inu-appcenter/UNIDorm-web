@@ -148,14 +148,16 @@ const FormDetailPage = () => {
 
       console.log("제출 요청 데이터:", responseData);
 
-      // 2️⃣ API 호출
       const res = await submitSurveyResponse(responseData);
-
       console.log("폼 제출 성공:", res.data); // res.data는 number (응답 ID)
       alert("제출이 완료되었습니다!");
       navigate(-1);
     } catch (e) {
       console.error("폼 제출 실패", e);
+      if ((e as any).status === 409) {
+        alert("이미 제출한 폼입니다.");
+        return;
+      }
       alert("제출 중 오류가 발생했습니다. 다시 시도해주세요.");
     } finally {
       setIsSubmitLoading(false);
@@ -171,12 +173,16 @@ const FormDetailPage = () => {
     )
       return;
     try {
-      const res = closeSurvey(Number(formId));
+      const res = await closeSurvey(Number(formId));
       console.log("폼 마감 처리 성공", res);
       alert("마감 처리 되었습니다.");
       // navigate(-1);
     } catch (err) {
-      alert("마감 처리에 실패했습니다.");
+      if (err instanceof Error) {
+        alert("마감 처리에 실패했습니다. - " + err.message);
+      } else {
+        alert("마감 처리에 실패했습니다.");
+      }
     }
   };
 
@@ -185,12 +191,16 @@ const FormDetailPage = () => {
     if (!window.confirm("정말 삭제할까요?\n이 작업은 되돌릴 수 없습니다."))
       return;
     try {
-      const res = deleteSurvey(Number(formId));
+      const res = await deleteSurvey(Number(formId));
       console.log("폼 삭제 성공", res);
       alert("삭제되었습니다.");
       navigate(-1);
     } catch (err) {
-      alert("삭제에 실패했습니다.");
+      if (err instanceof Error) {
+        alert("삭제에 실패했습니다. - " + err.message);
+      } else {
+        alert("삭제에 실패했습니다.");
+      }
     }
   };
 
@@ -214,14 +224,16 @@ const FormDetailPage = () => {
   return (
     <PageWrapper>
       <Header title={"폼 상세"} hasBack={true} menuItems={menuItems} />
-      {isSubmitLoading && <LoadingSpinner overlay={true} />}
+      {isSubmitLoading && (
+        <LoadingSpinner overlay={true} message={"폼 제출 중 ..."} />
+      )}
       <FormBox>
         {isLoading ? (
-          <LoadingSpinner />
+          <LoadingSpinner message={"폼을 불러오는 중 ..."} />
         ) : form ? (
           <>
             <FormContent
-              closed={form.closed}
+              status={form.status}
               duration={`${formatDeadlineDate(form.startDate)} ~ ${formatDeadlineDate(form.endDate)}`}
               title={form.title}
               description={form.description}
@@ -291,7 +303,7 @@ const FormDetailPage = () => {
             })}
           </>
         ) : (
-          <></>
+          <EmptyMessage>삭제된 폼이거나, 오류가 발생했습니다.</EmptyMessage>
         )}
 
         <LastLine>
@@ -362,4 +374,11 @@ const Button = styled.button`
   font-weight: 400;
   line-height: 24px; /* 171.429% */
   letter-spacing: 0.38px;
+`;
+
+const EmptyMessage = styled.div`
+  padding: 24px;
+  text-align: center;
+  color: #aaa;
+  font-size: 14px;
 `;
