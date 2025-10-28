@@ -83,7 +83,10 @@ const FormResultPage = () => {
                       question={`${index + 1}. ${question.questionText}`}
                       type={question.questionType}
                       answerCount={question.shortAnswers.length}
-                      unanswerCount={0} // API에 정보가 없음
+                      unanswerCount={
+                        formResultData.totalResponses -
+                        question.shortAnswers.length
+                      }
                     />
                     <AnswerListWrapper>
                       {question.shortAnswers.length > 0 ? (
@@ -114,7 +117,7 @@ const FormResultPage = () => {
                       question={`${index + 1}. ${question.questionText}`}
                       type={question.questionType}
                       answerCount={totalVotes}
-                      unanswerCount={0} // API에 정보가 없음
+                      unanswerCount={formResultData.totalResponses - totalVotes}
                     />
                     {/* 차트 컴포넌트 렌더링 */}
                     <MultipleChoiceResultChart data={question.optionResults} />
