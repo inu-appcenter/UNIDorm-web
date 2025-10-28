@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { fetchDailyRandomTips } from "../apis/tips.ts";
 import { Tip } from "../types/tips.ts";
 import BottomBar from "../components/common/BottomBar/BottomBar.tsx";
-import 민원접수 from "../assets/민원접수.svg";
+// import 민원접수 from "../assets/민원접수.svg";
 import 앱센터로고가로 from "../assets/앱센터로고가로.svg";
 import { useNavigate } from "react-router-dom";
 import GroupPurchaseList from "../components/GroupPurchase/GroupPurchaseList.tsx";
@@ -26,6 +26,9 @@ import { PopupNotification } from "../types/popup-notifications.ts";
 import { getMobilePlatform } from "../utils/getMobilePlatform.ts";
 import ModalContent_AppInstall from "../components/common/ModalContent_AppInstall.tsx";
 import CommonBottomModal from "../components/modal/CommonBottomModal.tsx";
+import ServiceBox from "../components/home/ServiceBox.tsx";
+import 민원아이콘 from "../assets/home/민원아이콘.webp";
+import 폼아이콘 from "../assets/home/폼아이콘.webp";
 
 export default function HomePage() {
   const { tokenInfo } = useUserStore();
@@ -158,6 +161,29 @@ export default function HomePage() {
       <HomeBanner />
 
       <ContentWrapper>
+        <TitleContentArea title={""}>
+          <ServiceWrapper>
+            <ServiceBox
+              title={"생활원 민원"}
+              imgsrc={민원아이콘}
+              onClick={() => {
+                if (!isLoggedIn) {
+                  alert("로그인 후 사용할 수 있습니다.");
+                  navigate("/login");
+                  return;
+                }
+                navigate("/complain");
+              }}
+            />
+            <ServiceBox
+              title={"폼"}
+              imgsrc={폼아이콘}
+              onClick={() => {
+                navigate("/form");
+              }}
+            />
+          </ServiceWrapper>
+        </TitleContentArea>
         <TitleContentArea
           title={"공지사항"}
           description={
@@ -196,7 +222,7 @@ export default function HomePage() {
         <GridContainer>
           <TitleContentArea
             title="오늘의 Best 꿀팁"
-            description={"다양한 기숙사 꿀팁을 알아보세요!"}
+            // description={"다양한 기숙사 꿀팁을 알아보세요!"}
             link={"/tips"}
           >
             {isTipsLoading ? (
@@ -215,8 +241,8 @@ export default function HomePage() {
             )}
           </TitleContentArea>
           <TitleContentArea
-            title={"캘린더 이벤트"}
-            description={"인천대학교 생활원에서 알려드리는 일정입니다."}
+            title={"생활원 일정"}
+            // description={"인천대학교 생활원에서 알려드리는 일정입니다."}
             children={<ThreeWeekCalendar />}
             link={"/calendar"}
           />
@@ -234,18 +260,18 @@ export default function HomePage() {
       </ContentWrapper>
 
       <img className="appcenter-logo" src={앱센터로고가로} />
-      <FloatingButton
-        onClick={() => {
-          if (!isLoggedIn) {
-            alert("로그인 후 사용할 수 있습니다.");
-            navigate("/login");
-            return;
-          }
-          navigate("/complain");
-        }}
-      >
-        <img src={민원접수} />
-      </FloatingButton>
+      {/*<FloatingButton*/}
+      {/*  onClick={() => {*/}
+      {/*    if (!isLoggedIn) {*/}
+      {/*      alert("로그인 후 사용할 수 있습니다.");*/}
+      {/*      navigate("/login");*/}
+      {/*      return;*/}
+      {/*    }*/}
+      {/*    navigate("/complain");*/}
+      {/*  }}*/}
+      {/*>*/}
+      {/*  <img src={민원접수} />*/}
+      {/*</FloatingButton>*/}
 
       <CommonBottomModal
         id={"이벤트 당첨"}
@@ -297,12 +323,12 @@ const HomePageWrapper = styled.div`
 `;
 
 const ContentWrapper = styled.div`
-  padding: 0 16px;
-  padding-top: 32px;
+  padding: 16px;
+  //padding-top: 16px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 16px;
   border-radius: 16px 16px 0 0;
   background: #fafafa;
   width: 100%; // 🖥️ 너비 100% 명시
@@ -370,23 +396,23 @@ const NotiWrapper = styled.div`
   //}
 `;
 
-const FloatingButton = styled.button`
-  border: none;
-  background: none;
-  width: fit-content;
-  height: fit-content;
-  position: fixed;
-  bottom: 100px;
-  right: 24px;
-  cursor: pointer;
-  z-index: 100;
-
-  // 🖥️ PC 화면에서는 위치를 조금 더 안쪽으로 조정할 수 있음
-  @media (min-width: 768px) {
-    right: 48px;
-    //bottom: 50px;
-  }
-`;
+// const FloatingButton = styled.button`
+//   border: none;
+//   background: none;
+//   width: fit-content;
+//   height: fit-content;
+//   position: fixed;
+//   bottom: 100px;
+//   right: 24px;
+//   cursor: pointer;
+//   z-index: 100;
+//
+//   // 🖥️ PC 화면에서는 위치를 조금 더 안쪽으로 조정할 수 있음
+//   @media (min-width: 768px) {
+//     right: 48px;
+//     //bottom: 50px;
+//   }
+// `;
 
 const PopupModalContent = styled.div`
   display: flex;
@@ -430,4 +456,12 @@ const GradientRight = styled.div`
   @media (min-width: 768px) {
     display: none;
   }
+`;
+
+const ServiceWrapper = styled.div`
+  width: 100%;
+  height: 78px;
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
 `;
