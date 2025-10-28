@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { fetchDailyRandomTips } from "../apis/tips.ts";
 import { Tip } from "../types/tips.ts";
 import BottomBar from "../components/common/BottomBar/BottomBar.tsx";
-import 민원접수 from "../assets/민원접수.svg";
+// import 민원접수 from "../assets/민원접수.svg";
 import 앱센터로고가로 from "../assets/앱센터로고가로.svg";
 import { useNavigate } from "react-router-dom";
 import GroupPurchaseList from "../components/GroupPurchase/GroupPurchaseList.tsx";
@@ -167,6 +167,11 @@ export default function HomePage() {
               title={"생활원 민원"}
               imgsrc={민원아이콘}
               onClick={() => {
+                if (!isLoggedIn) {
+                  alert("로그인 후 사용할 수 있습니다.");
+                  navigate("/login");
+                  return;
+                }
                 navigate("/complain");
               }}
             />
@@ -255,18 +260,18 @@ export default function HomePage() {
       </ContentWrapper>
 
       <img className="appcenter-logo" src={앱센터로고가로} />
-      <FloatingButton
-        onClick={() => {
-          if (!isLoggedIn) {
-            alert("로그인 후 사용할 수 있습니다.");
-            navigate("/login");
-            return;
-          }
-          navigate("/complain");
-        }}
-      >
-        <img src={민원접수} />
-      </FloatingButton>
+      {/*<FloatingButton*/}
+      {/*  onClick={() => {*/}
+      {/*    if (!isLoggedIn) {*/}
+      {/*      alert("로그인 후 사용할 수 있습니다.");*/}
+      {/*      navigate("/login");*/}
+      {/*      return;*/}
+      {/*    }*/}
+      {/*    navigate("/complain");*/}
+      {/*  }}*/}
+      {/*>*/}
+      {/*  <img src={민원접수} />*/}
+      {/*</FloatingButton>*/}
 
       <CommonBottomModal
         id={"이벤트 당첨"}
@@ -391,23 +396,23 @@ const NotiWrapper = styled.div`
   //}
 `;
 
-const FloatingButton = styled.button`
-  border: none;
-  background: none;
-  width: fit-content;
-  height: fit-content;
-  position: fixed;
-  bottom: 100px;
-  right: 24px;
-  cursor: pointer;
-  z-index: 100;
-
-  // 🖥️ PC 화면에서는 위치를 조금 더 안쪽으로 조정할 수 있음
-  @media (min-width: 768px) {
-    right: 48px;
-    //bottom: 50px;
-  }
-`;
+// const FloatingButton = styled.button`
+//   border: none;
+//   background: none;
+//   width: fit-content;
+//   height: fit-content;
+//   position: fixed;
+//   bottom: 100px;
+//   right: 24px;
+//   cursor: pointer;
+//   z-index: 100;
+//
+//   // 🖥️ PC 화면에서는 위치를 조금 더 안쪽으로 조정할 수 있음
+//   @media (min-width: 768px) {
+//     right: 48px;
+//     //bottom: 50px;
+//   }
+// `;
 
 const PopupModalContent = styled.div`
   display: flex;

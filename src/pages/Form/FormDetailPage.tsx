@@ -13,13 +13,16 @@ import {
   getSurveyDetail,
   submitSurveyResponse,
 } from "../../apis/formApis.ts";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import { Input } from "../../styles/complain.ts";
 import { FormBoxGray } from "../../styles/form.ts";
 
 const FormDetailPage = () => {
   const navigate = useNavigate();
+
+  const location = useLocation();
+  const { hasSubmitted } = location.state || {}; // 수정할 민원 데이터
 
   const { formId } = useParams<{ formId: string }>();
   const [form, setForm] = useState<SurveyDetail | null>(null);
@@ -83,6 +86,10 @@ const FormDetailPage = () => {
 
   const handleSubmit = async () => {
     if (!form || !form.questions) return;
+    if (isBlockSubmit()) {
+      alert("진행 기간이 아니거나, 이미 제출한 폼입니다.");
+      return;
+    }
 
     const hasMissingRequired = form.questions.some((q, i) => {
       if (!q.required) return false;
@@ -236,6 +243,20 @@ const FormDetailPage = () => {
     },
   ];
 
+  const isBlockSubmit = () => {
+    if (!form) {
+      return true;
+    }
+    if (form.status === "진행전" || form.status === "마감") {
+      return true;
+    }
+    if (hasSubmitted) {
+      return true;
+    }
+
+    return false;
+  };
+
   return (
     <PageWrapper>
       <Header title={"폼 상세"} hasBack={true} menuItems={menuItems} />
@@ -254,75 +275,86 @@ const FormDetailPage = () => {
               description={form.description}
               miniView={false}
             />
+            {form.status === "진행전" || form.status === "마감" ? (
+              <EmptyMessage>진행 기간이 아닙니다.</EmptyMessage>
+            ) : !hasSubmitted ? ( //제출하지 않은 사용자인 경우에만 폼 필드 보여줌
+              <>
+                {/* 질문 리스트 */}
+                {form.questions.map((question, index) => {
+                  if (question.questionType === "SHORT_ANSWER") {
+                    return (
+                      <FormField
+                        label={`${index + 1}. ${question.questionText}`}
+                        required={question.required}
+                        key={index}
+                      >
+                        <Input
+                          placeholder="답변을 입력하세요"
+                          value={(answers[index] as string) || ""}
+                          onChange={(e) =>
+                            handleTextChange(index, e.target.value)
+                          }
+                        />
+                      </FormField>
+                    );
+                  }
 
-            {/* 질문 리스트 */}
-            {form.questions.map((question, index) => {
-              if (question.questionType === "SHORT_ANSWER") {
-                return (
-                  <FormField
-                    label={`${index + 1}. ${question.questionText}`}
-                    required={question.required}
-                    key={index}
-                  >
-                    <Input
-                      placeholder="답변을 입력하세요"
-                      value={(answers[index] as string) || ""}
-                      onChange={(e) => handleTextChange(index, e.target.value)}
-                    />
-                  </FormField>
-                );
-              }
+                  if (question.questionType === "MULTIPLE_CHOICE") {
+                    const options = question.options.map(
+                      (opt) => opt.optionText,
+                    );
+                    if (question.allowMultipleSelection) {
+                      // 다중 선택
+                      return (
+                        <FormField
+                          label={`${index + 1}. ${question.questionText}`}
+                          required={question.required}
+                          key={index}
+                        >
+                          <SelectableChipGroup
+                            Groups={options}
+                            selectedIndices={(answers[index] as number[]) || []}
+                            onSelect={(selectedIndices) =>
+                              handleMultiChipSelect(index, selectedIndices)
+                            }
+                            multi={true}
+                          />
+                        </FormField>
+                      );
+                    } else {
+                      // 단일 선택
+                      return (
+                        <FormField
+                          label={`${index + 1}. ${question.questionText}`}
+                          required={question.required}
+                          key={index}
+                        >
+                          <SelectableChipGroup
+                            Groups={options}
+                            selectedIndex={answers[index] as number | null}
+                            onSelect={(chipIndex) =>
+                              handleSingleChipSelect(index, chipIndex)
+                            }
+                            multi={false}
+                          />
+                        </FormField>
+                      );
+                    }
+                  }
 
-              if (question.questionType === "MULTIPLE_CHOICE") {
-                const options = question.options.map((opt) => opt.optionText);
-                if (question.allowMultipleSelection) {
-                  // 다중 선택
-                  return (
-                    <FormField
-                      label={`${index + 1}. ${question.questionText}`}
-                      required={question.required}
-                      key={index}
-                    >
-                      <SelectableChipGroup
-                        Groups={options}
-                        selectedIndices={(answers[index] as number[]) || []}
-                        onSelect={(selectedIndices) =>
-                          handleMultiChipSelect(index, selectedIndices)
-                        }
-                        multi={true}
-                      />
-                    </FormField>
-                  );
-                } else {
-                  // 단일 선택
-                  return (
-                    <FormField
-                      label={`${index + 1}. ${question.questionText}`}
-                      required={question.required}
-                      key={index}
-                    >
-                      <SelectableChipGroup
-                        Groups={options}
-                        selectedIndex={answers[index] as number | null}
-                        onSelect={(chipIndex) =>
-                          handleSingleChipSelect(index, chipIndex)
-                        }
-                        multi={false}
-                      />
-                    </FormField>
-                  );
-                }
-              }
-
-              return null;
-            })}
+                  return null;
+                })}
+              </>
+            ) : (
+              <EmptyMessage>이미 제출한 폼입니다.</EmptyMessage>
+            )}
           </>
         ) : (
           <EmptyMessage>삭제된 폼이거나, 오류가 발생했습니다.</EmptyMessage>
         )}
 
         <LastLine>
-          <Button onClick={handleSubmit}>
+          <Button onClick={handleSubmit} disabled={isBlockSubmit()}>
             신청 <img src={arrowright} />
           </Button>
         </LastLine>
@@ -357,17 +389,17 @@ const LastLine = styled.div`
   width: 100%;
   justify-content: end;
 `;
-const Button = styled.button`
+const Button = styled.button<{ disabled: boolean }>`
   display: flex;
   flex-direction: row;
   align-items: center;
 
   border-radius: 23px;
-  background: var(--m-1, #0a84ff);
+  background: ${({ disabled }) => (disabled ? "#cecece" : "#0a84ff")};
   padding: 4px 16px;
   box-sizing: border-box;
 
-  color: var(--7, #f4f4f4);
+  color: #f4f4f4;
   font-size: 14px;
   font-style: normal;
   font-weight: 400;
