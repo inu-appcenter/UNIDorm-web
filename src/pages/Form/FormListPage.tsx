@@ -10,9 +10,11 @@ import FormCard from "../../components/form/FormCard.tsx";
 import { SurveySummary } from "../../types/formTypes.ts";
 import { getAllSurveys } from "../../apis/formApis.ts";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
+import { useIsAdminRole } from "../../hooks/useIsAdminRole.ts";
 
 const FormListPage = () => {
   const navigate = useNavigate();
+  const { isAdmin } = useIsAdminRole();
 
   const [forms, setForms] = useState<SurveySummary[]>([]);
   const [isListLoading, setIsListLoading] = useState(false);
@@ -106,11 +108,11 @@ const FormListPage = () => {
         </TitleContentArea>
       </MainContent>
 
-      {/*{isLoggedIn && (*/}
-      <WriteButton onClick={() => navigate("/admin/form/create")}>
-        ✏️ 폼 등록
-      </WriteButton>
-      {/*)}*/}
+      {isAdmin && (
+        <WriteButton onClick={() => navigate("/admin/form/create")}>
+          ✏️ 폼 등록
+        </WriteButton>
+      )}
     </PageWrapper>
   );
 };
