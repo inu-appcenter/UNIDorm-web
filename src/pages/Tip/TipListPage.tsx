@@ -39,8 +39,8 @@ export default function TipListPage() {
       <Header title="기숙사 꿀팁" hasBack={true} />
 
       <TitleContentArea
-        title="기숙사 꿀팁"
         description={"다양한 기숙사 꿀팁을 알아보세요!"}
+        margin={"16px"}
       >
         {isLoading ? (
           <LoadingSpinner message="꿀팁 목록을 불러오는 중..." />
@@ -99,7 +99,7 @@ export default function TipListPage() {
 }
 
 const TipPageWrapper = styled.div`
-  padding: 90px 16px 40px 16px;
+  padding: 80px 16px 40px 16px;
   display: flex;
   flex-direction: column;
   gap: 16px;

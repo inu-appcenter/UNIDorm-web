@@ -43,13 +43,13 @@ export default function AnnouncementPage() {
 
   return (
     <NoticePageWrapper>
-      <Header title="생활원 공지사항" hasBack={true} />
+      <Header title="공지사항" hasBack={true} />
 
       <TitleContentArea
-        title="생활원 공지사항"
         description={
           "생활원과 서포터즈에서 알려드리는 공지사항을 확인해보세요."
         }
+        margin={"16px"}
       >
         {/* 🔽 로딩 상태에 따라 스피너, 공지사항 목록, 빈 메시지를 조건부 렌더링합니다. */}
         {loading ? (
