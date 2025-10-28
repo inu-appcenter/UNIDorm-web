@@ -5,10 +5,10 @@ import FullCalendar from "../components/calendar/FullCalendar.tsx";
 
 const CalendarPage = () => (
   <CalendarPageWrapper>
-    <Header title={"캘린더 이벤트"} hasBack={true} />
+    <Header title={"생활원 일정"} hasBack={true} />
     <TitleContentArea
-      title={"캘린더 이벤트"}
-      description={"인천대학교 생활원에서 알려드리는 일정입니다."}
+      title={""}
+      description={"인천대학교 생활원 각종 행사 일정입니다."}
       children={<FullCalendar />}
     />
   </CalendarPageWrapper>

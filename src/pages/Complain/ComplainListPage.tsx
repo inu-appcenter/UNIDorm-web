@@ -157,15 +157,20 @@ const ComplainListPage = () => {
         />
       )}
 
-      <span className="description">
-        인천대학교 생활원 민원을 작성할 수 있습니다.
-        <br />
-        유니돔 앱 관련 문의는 마이페이지의 1대1 문의를 이용해주세요.
-      </span>
+      {/*<span className="description">*/}
+      {/*  인천대학교 생활원 민원을 작성할 수 있습니다.*/}
+      {/*  <br />*/}
+      {/*  유니돔 앱 관련 문의는 마이페이지의 1대1 문의를 이용해주세요.*/}
+      {/*</span>*/}
       <MainContent>
         {/* 최근 민원 현황: 로딩 중이거나 데이터가 있을 때만 섹션을 표시 */}
         {(isRecentLoading || recentComplain) && (
           <LeftSection>
+            <TitleContentArea
+              description={
+                "인천대학교 생활원 민원을 작성할 수 있습니다.\n유니돔 앱 관련 문의는 마이페이지의 1대1 문의를 이용해주세요."
+              }
+            />
             <TitleContentArea title={"최근 민원 현황"}>
               {isRecentLoading ? (
                 <LoadingSpinner />
@@ -246,7 +251,8 @@ const ComplainListPage = () => {
 export default ComplainListPage;
 
 const ComplainListPageWrapper = styled.div`
-  padding: 90px 16px;
+  padding: 80px 16px;
+  padding-bottom: 100px;
   display: flex;
   flex-direction: column;
   gap: 32px;
@@ -282,6 +288,9 @@ const MainContent = styled.div`
 
 // 🔽 추가된 스타일: 좌측 섹션 (최근 민원 현황)
 const LeftSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
   width: 100%;
   @media (min-width: 1024px) {
     flex: 1; /* 너비 비율 1 */

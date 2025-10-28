@@ -2,11 +2,11 @@ import styled from "styled-components";
 import TitleLine from "../home/TitleLine.tsx";
 
 interface TitleContentAreaProps {
-  title: string; // 공지사항, 기숙사 꿀팁 등
+  title?: string; // 공지사항, 기숙사 꿀팁 등
   link?: string;
   description?: string;
   margin?: string;
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 const TitleContentArea = ({
@@ -46,5 +46,7 @@ const DescriptionText = styled.p<{ $margin?: string }>`
   color: #666;
   text-align: start;
   width: 100%;
-  margin: ${({ $margin }) => $margin || "0"};
+  margin: 0;
+  margin-bottom: ${({ $margin }) => $margin || "0"};
+  white-space: pre-line; /* ← 이 부분 추가 */
 `;
