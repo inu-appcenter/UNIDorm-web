@@ -72,7 +72,7 @@ const FormListPage = () => {
 
   return (
     <PageWrapper>
-      <Header title={"폼 목록"} hasBack={true} />
+      <Header title={"폼"} hasBack={true} />
       <MainContent>
         <TitleContentArea title={""}>
           <Wrapper2>

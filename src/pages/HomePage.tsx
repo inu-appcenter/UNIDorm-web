@@ -26,6 +26,9 @@ import { PopupNotification } from "../types/popup-notifications.ts";
 import { getMobilePlatform } from "../utils/getMobilePlatform.ts";
 import ModalContent_AppInstall from "../components/common/ModalContent_AppInstall.tsx";
 import CommonBottomModal from "../components/modal/CommonBottomModal.tsx";
+import ServiceBox from "../components/home/ServiceBox.tsx";
+import 민원아이콘 from "../assets/home/민원아이콘.webp";
+import 폼아이콘 from "../assets/home/폼아이콘.webp";
 
 export default function HomePage() {
   const { tokenInfo } = useUserStore();
@@ -158,6 +161,24 @@ export default function HomePage() {
       <HomeBanner />
 
       <ContentWrapper>
+        <TitleContentArea title={""}>
+          <ServiceWrapper>
+            <ServiceBox
+              title={"생활원 민원"}
+              imgsrc={민원아이콘}
+              onClick={() => {
+                navigate("/complain");
+              }}
+            />
+            <ServiceBox
+              title={"폼"}
+              imgsrc={폼아이콘}
+              onClick={() => {
+                navigate("/form");
+              }}
+            />
+          </ServiceWrapper>
+        </TitleContentArea>
         <TitleContentArea
           title={"공지사항"}
           description={
@@ -196,7 +217,7 @@ export default function HomePage() {
         <GridContainer>
           <TitleContentArea
             title="오늘의 Best 꿀팁"
-            description={"다양한 기숙사 꿀팁을 알아보세요!"}
+            // description={"다양한 기숙사 꿀팁을 알아보세요!"}
             link={"/tips"}
           >
             {isTipsLoading ? (
@@ -215,8 +236,8 @@ export default function HomePage() {
             )}
           </TitleContentArea>
           <TitleContentArea
-            title={"캘린더 이벤트"}
-            description={"인천대학교 생활원에서 알려드리는 일정입니다."}
+            title={"생활원 일정"}
+            // description={"인천대학교 생활원에서 알려드리는 일정입니다."}
             children={<ThreeWeekCalendar />}
             link={"/calendar"}
           />
@@ -297,12 +318,12 @@ const HomePageWrapper = styled.div`
 `;
 
 const ContentWrapper = styled.div`
-  padding: 0 16px;
-  padding-top: 32px;
+  padding: 16px;
+  //padding-top: 16px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 16px;
   border-radius: 16px 16px 0 0;
   background: #fafafa;
   width: 100%; // 🖥️ 너비 100% 명시
@@ -430,4 +451,12 @@ const GradientRight = styled.div`
   @media (min-width: 768px) {
     display: none;
   }
+`;
+
+const ServiceWrapper = styled.div`
+  width: 100%;
+  height: 78px;
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
 `;

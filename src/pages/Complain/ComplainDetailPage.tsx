@@ -275,7 +275,7 @@ const ComplainDetailPage = () => {
 export default ComplainDetailPage;
 
 const ComplainListPageWrapper = styled.div`
-  padding: 90px 16px 40px 16px;
+  padding: 90px 16px 90px 16px;
   display: flex;
   flex-direction: column;
   gap: 16px;

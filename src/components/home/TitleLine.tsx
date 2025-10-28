@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import FaRight from "../../assets/FaRight.svg";
 
 interface TitleLineProps {
-  title: string;
+  title?: string;
   link?: string;
 }
 
