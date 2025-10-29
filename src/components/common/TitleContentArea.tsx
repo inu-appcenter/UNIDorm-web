@@ -42,7 +42,7 @@ const TitleContentAreaWrapper = styled.div`
 `;
 
 const DescriptionText = styled.p<{ $margin?: string }>`
-  font-size: 14px;
+  font-size: 12px;
   color: #666;
   text-align: start;
   width: 100%;

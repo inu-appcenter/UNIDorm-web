@@ -2,7 +2,7 @@ import styled from "styled-components";
 import Header from "../../components/common/Header/Header.tsx";
 import { useEffect, useState } from "react";
 import { SurveyResults } from "../../types/formTypes.ts"; // OptionResult 임포트 제거 (차트 컴포넌트로 이동)
-import { getSurveyResults } from "../../apis/formApis.ts";
+import { getSurveyResultExcel, getSurveyResults } from "../../apis/formApis.ts";
 import { useParams } from "react-router-dom";
 import { FormBoxBlue } from "../../styles/form.ts";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
@@ -15,6 +15,7 @@ import FormResultQuestionHeader from "../../components/form/FormResultQuestionHe
 import MultipleChoiceResultChart, {
   COLORS,
 } from "../../components/form/MultipleChoiceResultChart.tsx";
+import { formatDeadlineDate } from "../../utils/dateUtils.ts";
 
 // --- 차트 색상 --- (제거)
 // --- 차트 내부 커스텀 라벨 --- (제거)
@@ -49,8 +50,42 @@ const FormResultPage = () => {
   const menuItems = [
     {
       label: "엑셀 파일로 다운로드",
-      onClick: () => {
-        alert("엑셀 다운로드 기능 구현 예정");
+      onClick: async () => {
+        if (
+          !window.confirm(
+            "엑셀 파일로 다운로드할까요?\n데이터 양에 따라 시간이 소요될 수 있습니다.",
+          )
+        )
+          return;
+        try {
+          // 1️⃣ CSV 데이터 요청
+          const res = await getSurveyResultExcel(Number(formId));
+          console.log("엑셀 파일 다운로드 요청 성공", res);
+
+          // 2️⃣ Blob으로 변환 (CSV 파일 타입)
+          const blob = new Blob([res.data], {
+            type: "text/csv;charset=utf-8;",
+          });
+
+          // 3️⃣ 파일 이름 설정
+          const fileName = `폼 결과_${formResultData?.surveyTitle}.csv`;
+
+          // 4️⃣ 다운로드 트리거
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.setAttribute("download", fileName);
+          document.body.appendChild(link);
+          link.click();
+
+          // 5️⃣ 정리
+          link.remove();
+          window.URL.revokeObjectURL(url);
+
+          console.log("CSV 파일 다운로드 완료");
+        } catch (error) {
+          console.error("엑셀 파일 다운로드 실패:", error);
+        }
       },
     },
   ];
@@ -65,10 +100,7 @@ const FormResultPage = () => {
           <>
             <FormResultHeader
               status={"진행중"} // API 응답에 status가 없어서 임시 하드코딩
-              duration={
-                "1.10 ~ 1.13" // API 응답에 날짜가 없어서 임시 하드코딩
-                // `${formatDeadlineDate(formResultData.startDate)} ~ ${formatDeadlineDate(formResultData.endDate)}`
-              }
+              duration={`${formatDeadlineDate(formResultData.startDate)} ~ ${formatDeadlineDate(formResultData.endDate)}`}
               title={formResultData.surveyTitle}
               viewCount={formResultData.totalResponses}
             />
