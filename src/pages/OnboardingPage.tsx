@@ -10,11 +10,11 @@ import onboarding4 from "../assets/onboarding/onboarding4.webp";
 // import onboarding5 from "../assets/onboarding/onboarding5.webp";
 import 민원접수 from "../assets/민원접수.svg";
 
-import { useNavigate } from "react-router-dom";
 import 로고 from "../assets/unidorm-logo.webp";
 import TermOfUse from "../components/TermOfUse.tsx";
+import { useNavigate } from "react-router-dom";
 
-const SLIDE_DURATION = 5000;
+const SLIDE_DURATION = 3000;
 
 const slides = [
   {
@@ -100,12 +100,12 @@ const LogoInText = styled.img`
 `;
 
 const OnboardingPage: React.FC = () => {
+  const navigate = useNavigate();
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const isLastSlide = currentIndex === slides.length - 1;
   const isFirstSlide = currentIndex === 0;
-
-  const navigate = useNavigate();
 
   const goToNextSlide = () => {
     if (!isLastSlide) {
@@ -145,9 +145,15 @@ const OnboardingPage: React.FC = () => {
   };
 
   const handleStart = () => {
-    localStorage.setItem("isFirstVisit(10.20)", "false");
+    localStorage.setItem("isFirstVisit(10.20)", "false"); //온보딩페이지 변경돼서 다른 사람들한테도 보이게 하려면 로컬스토리지에 날짜를 기록하여 관리
 
     navigate("/home");
+  };
+
+  const handleJump = (e?: React.MouseEvent<HTMLButtonElement>) => {
+    if (e) e.stopPropagation();
+
+    setCurrentIndex(slides.length - 1);
   };
 
   const { id, title, content, subContent, image } = slides[currentIndex];
@@ -172,9 +178,11 @@ const OnboardingPage: React.FC = () => {
           })}
         </ProgressContainer>
 
-        {/*<TopRight>*/}
-        {/*  <SkipButton onClick={handleStart}>건너뛰기</SkipButton>*/}
-        {/*</TopRight>*/}
+        {!isLastSlide && (
+          <TopRight>
+            <SkipButton onClick={(e) => handleJump(e)}>건너뛰기</SkipButton>
+          </TopRight>
+        )}
       </TopSection>
 
       {id === 0 ? (
@@ -220,13 +228,13 @@ const Wrapper = styled.div`
   width: 100%;
 `;
 
-// const TopRight = styled.div`
-//   width: 100%;
-//   display: flex;
-//   justify-content: flex-end;
-//   //padding: 1rem;
-//   box-sizing: border-box;
-// `;
+const TopRight = styled.div`
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  //padding: 1rem;
+  box-sizing: border-box;
+`;
 
 const TopSection = styled.div`
   width: 100%;
@@ -235,14 +243,14 @@ const TopSection = styled.div`
   box-sizing: border-box;
 `;
 
-// const SkipButton = styled.button`
-//   font-size: 16px;
-//   color: black;
-//   font-weight: 600;
-//   background: none;
-//   border: none;
-//   cursor: pointer;
-// `;
+const SkipButton = styled.button`
+  font-size: 16px;
+  color: black;
+  font-weight: 600;
+  background: none;
+  border: none;
+  cursor: pointer;
+`;
 
 const Content = styled.div`
   width: 100%;
