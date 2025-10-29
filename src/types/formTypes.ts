@@ -113,6 +113,7 @@ export interface SurveyCreateRequest {
   description: string;
   startDate: string;
   endDate: string;
+  recruitmentCount: string;
   questions: QuestionCreateRequest[];
 }
 
