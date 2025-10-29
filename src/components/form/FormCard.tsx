@@ -43,8 +43,34 @@ const FormCard = ({
     }
   };
 
+  const handleCardClick = () => {
+    if (!isLoggedIn) {
+      alert("로그인 후 사용할 수 있습니다.");
+      navigate("/login");
+      return;
+    }
+    if (!isAdmin) {
+      //관리자인 경우 무조건 폼 접근 가능
+      navigate(`${SurveySummary.id}`);
+    } else {
+      //일반 사용자인 경우,
+      if (SurveySummary.hasSubmitted) {
+        //제출하지 않은 사용자인 경우(서버가 반대로 보내주고 있음)
+        navigate(`${SurveySummary.id}`, {
+          state: { hasSubmitted: true },
+        });
+        return;
+      } else {
+        navigate(`${SurveySummary.id}`, {
+          state: { hasSubmitted: false },
+        });
+        return;
+      }
+    }
+  };
+
   return (
-    <FormBox>
+    <FormBox onClick={handleCardClick}>
       <FormContent
         status={SurveySummary.status}
         duration={`${formatDeadlineDate(SurveySummary.startDate)} ~ ${formatDeadlineDate(SurveySummary.endDate)}`}
@@ -53,34 +79,7 @@ const FormCard = ({
         miniView={miniView}
       />
       <LastLine>
-        <Button
-          status={currentStatus}
-          onClick={() => {
-            if (!isLoggedIn) {
-              alert("로그인 후 사용할 수 있습니다.");
-              navigate("/login");
-              return;
-            }
-            if (!isAdmin) {
-              //관리자인 경우 무조건 폼 접근 가능
-              navigate(`${SurveySummary.id}`);
-            } else {
-              //일반 사용자인 경우,
-              if (SurveySummary.hasSubmitted) {
-                //제출하지 않은 사용자인 경우(서버가 반대로 보내주고 있음)
-                navigate(`${SurveySummary.id}`, {
-                  state: { hasSubmitted: true },
-                });
-                return;
-              } else {
-                navigate(`${SurveySummary.id}`, {
-                  state: { hasSubmitted: false },
-                });
-                return;
-              }
-            }
-          }}
-        >
+        <Button status={currentStatus}>
           {ButtonText()}
           <img src={arrowright} />
         </Button>

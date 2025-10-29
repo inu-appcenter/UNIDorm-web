@@ -17,9 +17,11 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import { Input } from "../../styles/complain.ts";
 import { FormBoxGray } from "../../styles/form.ts";
+import { useIsAdminRole } from "../../hooks/useIsAdminRole.ts";
 
 const FormDetailPage = () => {
   const navigate = useNavigate();
+  const { isAdmin } = useIsAdminRole();
 
   const location = useLocation();
   const { hasSubmitted } = location.state || {}; // 수정할 민원 데이터
@@ -170,7 +172,8 @@ const FormDetailPage = () => {
     } catch (e) {
       console.error("폼 제출 실패", e);
       if ((e as any).status === 409) {
-        alert("이미 제출한 폼입니다.");
+        //이미 제출한 폼이거나, 마감된 경우
+        alert((e as any).response.data.message);
         return;
       }
       alert("제출 중 오류가 발생했습니다. 다시 시도해주세요.");
@@ -259,7 +262,11 @@ const FormDetailPage = () => {
 
   return (
     <PageWrapper>
-      <Header title={"폼 상세"} hasBack={true} menuItems={menuItems} />
+      <Header
+        title={"폼 상세"}
+        hasBack={true}
+        menuItems={isAdmin ? menuItems : undefined}
+      />
       {isSubmitLoading && (
         <LoadingSpinner overlay={true} message={"폼 제출 중 ..."} />
       )}
@@ -355,7 +362,7 @@ const FormDetailPage = () => {
 
         <LastLine>
           <Button onClick={handleSubmit} disabled={isBlockSubmit()}>
-            신청 <img src={arrowright} />
+            제출 <img src={arrowright} />
           </Button>
         </LastLine>
       </FormBoxGray>

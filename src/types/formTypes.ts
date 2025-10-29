@@ -79,6 +79,8 @@ export interface QuestionResult {
 export interface SurveyResults {
   surveyId: number;
   surveyTitle: string;
+  startDate: string;
+  endDate: string;
   totalResponses: number;
   questionResults: QuestionResult[];
 }
@@ -113,6 +115,7 @@ export interface SurveyCreateRequest {
   description: string;
   startDate: string;
   endDate: string;
+  recruitmentCount: string;
   questions: QuestionCreateRequest[];
 }
 

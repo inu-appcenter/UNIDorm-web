@@ -53,9 +53,9 @@ const HomeCardWrapper = styled.div`
   padding: 8px 16px;
   gap: 5px;
 
-  width: 50vw;
-  max-width: 180px;
-  height: 175px;
+  width: 45vw;
+  max-width: 170px;
+  height: 150px;
 
   flex-shrink: 0; /* width가 줄지 않도록 고정 */
 
@@ -77,8 +77,8 @@ const FirstLine = styled.div`
 
   .title {
     font-style: normal;
-    font-weight: 700;
-    font-size: 15px;
+    font-weight: 600;
+    font-size: 14px;
     line-height: 24px;
     display: -webkit-box;
     -webkit-line-clamp: 2; /* 최대 두 줄 */
@@ -101,8 +101,8 @@ const SecondLine = styled.div`
   width: 100%;
   height: fit-content;
   font-style: normal;
-  font-weight: 500;
-  font-size: 14px;
+  font-weight: 400;
+  font-size: 12px;
   line-height: 24px;
   letter-spacing: 0.38px;
 

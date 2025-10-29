@@ -27,7 +27,7 @@ const TitleLineWrapper = styled.div`
   display: flex;
   flex-direction: row;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   padding: 0px;
   gap: 8px;
 
@@ -37,32 +37,28 @@ const TitleLineWrapper = styled.div`
   .title {
     font-style: normal;
     font-weight: 600;
-    font-size: 20px;
+    font-size: 18px;
     line-height: 28px;
     /* 상자 높이와 동일 또는 175% */
 
     color: #1c1c1e;
   }
 
-  .body {
-    font-style: normal;
-    font-weight: 400;
-    font-size: 14px;
-    line-height: 28px;
-    /* 상자 높이와 동일 또는 200% */
-
-    color: #8e8e93;
-  }
-
   .more {
+    font-size: 14px;
+
     color: #8e8e93;
     display: flex;
     flex-direction: row;
-    align-content: start;
+    align-items: center;
     justify-content: start;
     height: fit-content;
     gap: 8px;
 
     cursor: pointer;
+  }
+
+  img {
+    height: 12px;
   }
 `;

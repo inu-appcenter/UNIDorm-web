@@ -83,11 +83,11 @@ const MenuContent = styled.div`
 
 // 기존 MenuItem 스타일을 MenuLabel로 변경
 const MenuLabel = styled.div`
-  font-size: 18px;
+  font-size: 16px;
 `;
 
 // 새로 추가된 메뉴 설명 스타일
 const MenuDescription = styled.div`
-  font-size: 14px;
+  font-size: 12px;
   color: #8e8e93; // 회색 계열 색상
 `;

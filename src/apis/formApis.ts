@@ -133,3 +133,17 @@ export const submitSurveyResponse = async (
   console.log("POST /surveys/responses", response);
   return response;
 };
+
+/**
+ * 설문 결과 엑셀 파일 다운로드
+ * GET /surveys/{surveyId}
+ */
+export const getSurveyResultExcel = async (
+  surveyId: number,
+): Promise<AxiosResponse<string>> => {
+  const response = await tokenInstance.get<string>(
+    `/surveys/${surveyId}/export/csv`,
+    { responseType: "text" },
+  );
+  return response;
+};

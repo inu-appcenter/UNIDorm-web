@@ -83,7 +83,6 @@ const Title = styled.div`
   letter-spacing: 0.38px;
 `;
 
-// 변경된 부분: miniView prop 타입 및 조건부 스타일 추가
 const Description = styled.div<{ miniView?: boolean }>`
   overflow: hidden;
   color: var(--4, #48484a);
@@ -94,7 +93,9 @@ const Description = styled.div<{ miniView?: boolean }>`
   line-height: 24px;
   letter-spacing: 0.38px;
 
-  /* miniView가 true일 때 2줄 말줄임표 스타일 적용 */
+  /* 줄바꿈(\n) 처리 */
+  white-space: pre-line;
+
   ${({ miniView }) =>
     miniView &&
     `

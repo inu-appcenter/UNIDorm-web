@@ -57,6 +57,11 @@ const AdminMainPage: React.FC = () => {
       description: "앱 접속 시 나타날 팝업 공지를 관리할 수 있습니다.",
     },
     {
+      label: "폼 관리",
+      path: "/form",
+      description: "앱 접속 시 나타날 팝업 공지를 관리할 수 있습니다.",
+    },
+    {
       label: "푸시알림 보내기",
       path: "/admin/notification/create",
       description: "유저를 대상으로 푸시알림을 보낼 수 있습니다.",
@@ -71,6 +76,7 @@ const AdminMainPage: React.FC = () => {
           "캘린더 관리",
           "TIP 관리",
           "홈 화면 팝업 공지 관리",
+          "폼 관리",
         ].includes(page.label),
       )
     : allAdminPages;

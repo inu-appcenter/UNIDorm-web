@@ -52,7 +52,7 @@ const TopRow = styled.div`
 
 const Title = styled.div`
   font-weight: 600;
-  font-size: 16px;
+  font-size: 14px;
   color: #1c1c1e;
 `;
 
