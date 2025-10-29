@@ -13,8 +13,6 @@ import {
   SurveyCreateRequest,
   QuestionType,
   OptionCreateRequest,
-  // [가정] SurveyUpdateRequest 타입을 import (SurveyCreateRequest와 동일하다고 가정)
-  // 만약 타입이 다르다면, 해당 타입을 import 해야 합니다.
   SurveyCreateRequest as SurveyUpdateRequest,
 } from "../../types/formTypes.ts";
 // [수정] 2. updateSurvey API 임포트
@@ -166,6 +164,10 @@ const FormCreatePage = () => {
         alert("인원은 0 이상의 숫자여야 합니다.");
         return;
       }
+      if (maxParticipants === "") {
+        //빈 값이면 0으로 보냄
+        setMaxParticipants("0");
+      }
     }
     // --- 유효성 검사 끝 ---
 
@@ -288,7 +290,6 @@ const FormCreatePage = () => {
         </FormField>
         <FormField label="최대 인원">
           <Input
-            type="number"
             placeholder="0 또는 입력하지 않으면 무제한입니다."
             value={maxParticipants}
             onChange={(e) => setMaxParticipants(e.target.value)}

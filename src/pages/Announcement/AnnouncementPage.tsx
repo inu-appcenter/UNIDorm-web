@@ -142,7 +142,7 @@ const NoticeTop = styled.div`
 
 const NoticeTitle = styled.div`
   font-weight: 600;
-  font-size: 16px;
+  font-size: 14px;
   color: #1c1c1e;
 
   display: -webkit-box;
@@ -153,7 +153,7 @@ const NoticeTitle = styled.div`
 `;
 
 const NoticeContent = styled.div`
-  font-size: 16px;
+  font-size: 12px;
   color: #444;
 
   display: -webkit-box;
