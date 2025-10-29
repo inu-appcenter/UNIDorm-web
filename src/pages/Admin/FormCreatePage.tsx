@@ -42,6 +42,8 @@ const FormCreatePage = () => {
   const [content, setContent] = useState(""); // (description)
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [maxParticipants, setMaxParticipants] = useState<string>("");
+
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -81,6 +83,7 @@ const FormCreatePage = () => {
 
       setStartDate(toLocalISOString(form.startDate));
       setEndDate(toLocalISOString(form.endDate));
+      setMaxParticipants(form.recruitmentCount);
 
       // [중요] form.questions가 FormFieldState[]와 호환되는 구조여야 함
       // (React key를 위한 id 필드가 포함되어 있어야 함)
@@ -152,6 +155,18 @@ const FormCreatePage = () => {
       alert("선택형 질문에는 최소 1개 이상의 옵션이 필요합니다.");
       return;
     }
+    // ✅ [추가] 인원 입력값 유효성 검사
+    if (maxParticipants !== undefined && maxParticipants !== null) {
+      // 비어 있지 않을 때만 검사
+      if (isNaN(Number(maxParticipants))) {
+        alert("인원은 숫자만 입력할 수 있습니다.");
+        return;
+      }
+      if (Number(maxParticipants) < 0) {
+        alert("인원은 0 이상의 숫자여야 합니다.");
+        return;
+      }
+    }
     // --- 유효성 검사 끝 ---
 
     // [수정] 6. 모드에 따른 확인 메시지
@@ -203,6 +218,7 @@ const FormCreatePage = () => {
         startDate: isoStartDate,
         endDate: isoEndDate,
         questions: questionsForApi,
+        recruitmentCount: maxParticipants,
       };
 
       // [수정] 7. 모드에 따라 다른 API 호출
@@ -268,6 +284,14 @@ const FormCreatePage = () => {
             type="datetime-local"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
+          />
+        </FormField>
+        <FormField label="최대 인원">
+          <Input
+            type="number"
+            placeholder="0 또는 입력하지 않으면 무제한입니다."
+            value={maxParticipants}
+            onChange={(e) => setMaxParticipants(e.target.value)}
           />
         </FormField>
       </FormBoxBlue>
