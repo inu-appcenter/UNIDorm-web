@@ -27,7 +27,7 @@ const TitleLineWrapper = styled.div`
 
   .title {
     font-weight: 600;
-    font-size: 20px;
+    font-size: 18px;
     line-height: 24px;
     letter-spacing: 0.38px;
 
