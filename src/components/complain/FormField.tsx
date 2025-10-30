@@ -6,6 +6,8 @@ interface Props {
   label: string;
   required?: boolean;
   description?: string;
+  descriptionGray?: string;
+
   children: ReactNode;
 }
 
@@ -13,6 +15,7 @@ export default function FormField({
   label,
   required,
   description,
+  descriptionGray,
   children,
 }: Props) {
   return (
@@ -24,43 +27,56 @@ export default function FormField({
         </Label>
       </LabelWrapper>
 
-      <Description>
-        {description?.split("\n").map((line, index) => (
-          <span key={index}>
-            {line}
-            <br />
-          </span>
-        ))}
-        {label === "유형" && (
-          <>
-            시설 민원은{" "}
-            <a
-              href="https://portal.inu.ac.kr"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              포털
-            </a>
-            을 통해 접수해주세요. <br />* 아래 유형 이외의 민원은 1기숙사는{" "}
-            <a
-              href="https://portal.inu.ac.kr"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              포털
-            </a>
-            , 2/3기숙사는{" "}
-            <a
-              href="https://edumac.kr/mon/index.do?schlType=Univ"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              EDUFMS
-            </a>
-            에서 접수해주세요.
-          </>
-        )}
-      </Description>
+      {description && (
+        <Description>
+          {description?.split("\n").map((line, index) => (
+            <span key={index}>
+              {line}
+              <br />
+            </span>
+          ))}
+          {label === "유형" && (
+            <>
+              시설 민원은{" "}
+              <a
+                href="https://portal.inu.ac.kr"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                포털
+              </a>
+              을 통해 접수해주세요. <br />* 아래 유형 이외의 민원은 1기숙사는{" "}
+              <a
+                href="https://portal.inu.ac.kr"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                포털
+              </a>
+              , 2/3기숙사는{" "}
+              <a
+                href="https://edumac.kr/mon/index.do?schlType=Univ"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                EDUFMS
+              </a>
+              에서 접수해주세요.
+            </>
+          )}
+        </Description>
+      )}
+
+      {descriptionGray && (
+        <DescriptionGray>
+          {descriptionGray?.split("\n").map((line, index) => (
+            <span key={index}>
+              {line}
+              <br />
+            </span>
+          ))}
+        </DescriptionGray>
+      )}
 
       {children}
     </Wrapper>
@@ -91,6 +107,18 @@ const Label = styled.label`
 const Description = styled.span`
   color: #eb0000;
   font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+
+  a {
+    color: #0a84ff;
+  }
+`;
+
+const DescriptionGray = styled.span`
+  color: #48484a;
+  font-size: 14px;
   font-style: normal;
   font-weight: 400;
   line-height: normal;

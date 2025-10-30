@@ -20,6 +20,7 @@ export interface QuestionOption {
 export interface SurveyQuestion {
   id: number;
   questionText: string;
+  questionDescription: string;
   questionType: QuestionType;
   questionOrder: number;
   allowMultipleSelection: boolean;
@@ -99,7 +100,9 @@ export interface OptionCreateRequest {
  * 설문 생성 시 개별 질문 (POST /surveys)
  */
 export interface QuestionCreateRequest {
+  questionId?: number;
   questionText: string;
+  questionDescription: string;
   questionType: QuestionType;
   questionOrder: number;
   isRequired: boolean; // POST 요청 스키마 기준

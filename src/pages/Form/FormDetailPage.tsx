@@ -292,6 +292,7 @@ const FormDetailPage = () => {
                     return (
                       <FormField
                         label={`${index + 1}. ${question.questionText}`}
+                        descriptionGray={question.questionDescription}
                         required={question.required}
                         key={index}
                       >
@@ -315,6 +316,7 @@ const FormDetailPage = () => {
                       return (
                         <FormField
                           label={`${index + 1}. ${question.questionText}`}
+                          descriptionGray={question.questionDescription}
                           required={question.required}
                           key={index}
                         >
@@ -333,6 +335,7 @@ const FormDetailPage = () => {
                       return (
                         <FormField
                           label={`${index + 1}. ${question.questionText}`}
+                          descriptionGray={question.questionDescription}
                           required={question.required}
                           key={index}
                         >
