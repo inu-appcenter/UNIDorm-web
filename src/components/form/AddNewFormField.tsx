@@ -84,6 +84,7 @@ const AddNewFormField = ({
           value={fieldData.questionText} // 👈 부모 상태 바인딩
           onChange={(e) => onUpdate({ questionText: e.target.value })} // 👈 onUpdate 호출
         />
+
         <Dropdown
           value={fieldData.questionType} // 👈 부모 상태 바인딩
           onChange={handleTypeChange} // 👈 타입 변경 핸들러
@@ -96,7 +97,11 @@ const AddNewFormField = ({
           ))}
         </Dropdown>
       </FirstLine>
-
+      <Input
+        placeholder="(선택)설명을 입력해주세요."
+        value={fieldData.questionDescription} // 👈 부모 상태 바인딩
+        onChange={(e) => onUpdate({ questionDescription: e.target.value })} // 👈 onUpdate 호출
+      />
       {/* --- 2. 토글 / 질문 삭제 버튼 --- */}
       <SecondLine>
         <ToggleWrapper>
@@ -126,13 +131,11 @@ const AddNewFormField = ({
           X
         </RemoveQuestionButton>
       </SecondLine>
-
       {/* --- 3. 주관식 / 객관식 UI --- */}
       {/* '주관식' 선택 시 */}
       {fieldData.questionType === "SHORT_ANSWER" && (
         <SubjectiveMessage>주관식 텍스트를 받습니다</SubjectiveMessage>
       )}
-
       {/* '객관식' 선택 시 */}
       {fieldData.questionType === "MULTIPLE_CHOICE" && (
         <ObjectiveOptionsWrapper>
