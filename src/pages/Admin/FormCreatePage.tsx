@@ -28,10 +28,12 @@ export interface FormOptionState {
 export interface FormFieldState {
   id: number;
   questionText: string;
+  questionDescription: string;
   questionType: QuestionType;
   isRequired: boolean;
   allowMultipleSelection: boolean;
   options: FormOptionState[];
+  isNew?: boolean; // 새로 추가된 필드임을 표시
 }
 
 const FormCreatePage = () => {
@@ -50,10 +52,12 @@ const FormCreatePage = () => {
     {
       id: Date.now(),
       questionText: "",
+      questionDescription: "",
       questionType: "SHORT_ANSWER",
       isRequired: true,
       allowMultipleSelection: false,
       options: [],
+      isNew: true, // 새로 추가된 필드임을 표시
     },
   ]);
 
@@ -96,10 +100,12 @@ const FormCreatePage = () => {
       {
         id: Date.now(),
         questionText: "",
+        questionDescription: "",
         questionType: "SHORT_ANSWER",
         isRequired: true,
         allowMultipleSelection: false,
         options: [],
+        isNew: true, // 새로 추가된 필드임을 표시
       },
     ]);
   };
@@ -186,13 +192,17 @@ const FormCreatePage = () => {
         (field, index) => {
           const optionsForApi: OptionCreateRequest[] = field.options.map(
             (opt, index) => ({
+              optionId: opt.id ? opt.id : undefined,
               optionText: opt.optionText,
               optionOrder: index + 1,
             }),
           );
 
+          // 새로 추가된 필드는 questionId를 제외
           const apiQuestionData: QuestionCreateRequest = {
+            ...(field.isNew ? {} : { questionId: field.id }),
             questionText: field.questionText,
+            questionDescription: field.questionDescription,
             questionType: field.questionType,
             questionOrder: index + 1,
             isRequired: field.isRequired,
