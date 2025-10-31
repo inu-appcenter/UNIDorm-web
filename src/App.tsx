@@ -158,11 +158,12 @@ function App() {
           // alert(`FCM 토큰 등록 성공 ${fcmToken}`);
         } catch (tokenError) {
           console.error("FCM 토큰 등록 실패", tokenError);
-          alert(
-            "푸시알림 활성화 중 오류가 발생했어요. 앱을 완전히 닫고 다시 실행해주시고, 오류가 반복되면 문의해주세요.",
-          );
+          // alert(
+          //   "푸시알림 활성화 중 오류가 발생했어요. 앱을 완전히 닫고 다시 실행해주시고, 오류가 반복되면 문의해주세요.",
+          // );
         }
       } else if (platform === "ios_webview") {
+        //아이폰 앱 문제로 인해 fcm토큰이 최초 앱 실행시에만 발급돼서, 처음에 로컬스토리지에 저장해둔 값을 이용해야 함(임시... 앱 해결해봅시다)
         const localstorageFcmToken = localStorage.getItem("fcmToken");
         if (localstorageFcmToken && isLoggedIn) {
           try {
@@ -173,9 +174,9 @@ function App() {
             // alert(`ios FCM 토큰 등록 성공 ${localstorageFcmToken}`);
           } catch (tokenError) {
             console.error("FCM 토큰 등록 실패", tokenError);
-            alert(
-              "푸시알림 활성화 중 오류가 발생했어요. 앱을 완전히 닫고 다시 실행해주시고, 오류가 반복되면 문의해주세요.",
-            );
+            // alert(
+            //   "푸시알림 활성화 중 오류가 발생했어요. 앱을 완전히 닫고 다시 실행해주시고, 오류가 반복되면 문의해주세요.",
+            // );
           }
         }
       }
