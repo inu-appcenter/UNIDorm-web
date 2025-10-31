@@ -38,3 +38,21 @@ export const Input = styled.input`
     color: #aeaeae;
   }
 `;
+
+export const Textarea = styled.textarea`
+  width: 100%;
+  min-height: 150px;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #eee;
+  background: #f8f8f8;
+  resize: vertical;
+  color: #1c1c1e;
+  font-size: 15px;
+  font-weight: 500;
+  box-sizing: border-box;
+
+  &::placeholder {
+    color: #aeaeae;
+  }
+`;
