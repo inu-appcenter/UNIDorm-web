@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { Dropdown, Input } from "../../styles/complain"; // 기존 경로
+import { Dropdown, Input, Textarea } from "../../styles/complain"; // 기존 경로
 import { QuestionType } from "../../types/formTypes.ts";
 import { FormFieldState } from "../../pages/Admin/FormCreatePage.tsx";
 import { AddButton, AddButtonArea } from "../../styles/form.ts";
@@ -97,7 +97,7 @@ const AddNewFormField = ({
           ))}
         </Dropdown>
       </FirstLine>
-      <Input
+      <Textarea
         placeholder="(선택)설명을 입력해주세요."
         value={fieldData.questionDescription} // 👈 부모 상태 바인딩
         onChange={(e) => onUpdate({ questionDescription: e.target.value })} // 👈 onUpdate 호출

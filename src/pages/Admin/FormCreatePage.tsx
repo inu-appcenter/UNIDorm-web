@@ -3,7 +3,7 @@ import Header from "../../components/common/Header/Header.tsx";
 import FormField from "../../components/complain/FormField.tsx";
 import { useEffect, useState } from "react";
 import arrowright from "../../assets/arrow-right.svg";
-import { Input } from "../../styles/complain.ts";
+import { Input, Textarea } from "../../styles/complain.ts";
 import AddNewFormField from "../../components/form/AddNewFormField.tsx";
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -387,23 +387,5 @@ const Button = styled.button`
   &:disabled {
     background: #aaa;
     cursor: not-allowed;
-  }
-`;
-
-const Textarea = styled.textarea`
-  width: 100%;
-  min-height: 150px;
-  padding: 12px;
-  border-radius: 8px;
-  border: 1px solid #eee;
-  background: #f8f8f8;
-  resize: vertical;
-  color: #1c1c1e;
-  font-size: 15px;
-  font-weight: 500;
-  box-sizing: border-box;
-
-  &::placeholder {
-    color: #aeaeae;
   }
 `;
