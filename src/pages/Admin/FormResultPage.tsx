@@ -58,19 +58,22 @@ const FormResultPage = () => {
         )
           return;
         try {
-          // 1️⃣ CSV 데이터 요청
           const res = await getSurveyResultExcel(Number(formId));
           console.log("엑셀 파일 다운로드 요청 성공", res);
 
-          // 2️⃣ Blob으로 변환 (CSV 파일 타입)
-          const blob = new Blob([res.data], {
-            type: "text/csv;charset=utf-8;",
-          });
+          // 🔹 UTF-8 BOM 추가 (Excel에서 한글 깨짐 방지)
+          const BOM = "\uFEFF";
 
-          // 3️⃣ 파일 이름 설정
+          // 🔹 CSV 문자열 조합
+          const csvData = BOM + res.data;
+
+          // 🔹 Blob 생성
+          const blob = new Blob([csvData], { type: "text/csv;charset=utf-8;" });
+
+          // 🔹 파일명 지정
           const fileName = `폼 결과_${formResultData?.surveyTitle}.csv`;
 
-          // 4️⃣ 다운로드 트리거
+          // 🔹 다운로드 처리
           const url = window.URL.createObjectURL(blob);
           const link = document.createElement("a");
           link.href = url;
@@ -78,7 +81,7 @@ const FormResultPage = () => {
           document.body.appendChild(link);
           link.click();
 
-          // 5️⃣ 정리
+          // 🔹 정리
           link.remove();
           window.URL.revokeObjectURL(url);
 
