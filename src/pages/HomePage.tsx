@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import TitleContentArea from "../components/common/TitleContentArea.tsx";
 import HomeNoticeCard from "../components/home/HomeNoticeCard.tsx";
-import ThreeWeekCalendar from "../components/home/ThreeWeekCalendar.tsx";
+import ThreeWeekCalendar from "../components/calendar/ThreeWeekCalendar.tsx";
 import Header from "../components/common/Header/Header.tsx";
 import HomeTipsCard from "../components/home/HomeTipsCard.tsx";
 import { useEffect, useState } from "react";
@@ -29,6 +29,7 @@ import CommonBottomModal from "../components/modal/CommonBottomModal.tsx";
 import ServiceBox from "../components/home/ServiceBox.tsx";
 import 민원아이콘 from "../assets/home/민원아이콘.webp";
 import 폼아이콘 from "../assets/home/폼아이콘.webp";
+import TopPopupNotification from "../components/common/TopPopupNotification.tsx";
 
 export default function HomePage() {
   const { tokenInfo } = useUserStore();
@@ -136,6 +137,24 @@ export default function HomePage() {
     fetchAnnouncements();
   }, []);
 
+  // 알림에 표시할 데이터의 타입 (예시)
+  interface NotificationData {
+    title: string;
+    message: string;
+  }
+
+  // 1. 알림 데이터를 관리할 state.
+  const [notification, setNotification] = useState<NotificationData | null>({
+    title: "서비스 장애 안내",
+    message: `학교 인터넷 문제로 서비스에 장애가 발생하고 있습니다. 학교 인터넷이 복구되는대로 정상화 예정이니 참고 부탁드립니다.`,
+  });
+
+  // 3. 알림이 닫힐 때 호출될 함수 (onClose prop으로 전달)
+  const handleCloseNotification = () => {
+    // 1. UI에서 즉시 숨김
+    setNotification(null);
+  };
+
   return (
     <HomePageWrapper>
       <Header title="유니돔" hasBack={false} showAlarm={true} />
@@ -157,6 +176,18 @@ export default function HomePage() {
             </PopupModalContent>
           </HomeNoticeBottomModal>
         ))}
+
+      {/* 4. state에 notification 데이터가 있을 때만 렌더링 */}
+      {notification && (
+        <TopPopupNotification
+          title={notification.title}
+          message={notification.message}
+          onClose={handleCloseNotification}
+          // (선택 사항) 앱 아이콘이나 이름을 바꿀 수 있습니다.
+          // appName="내 앱"
+          // appIcon="🚀"
+        />
+      )}
 
       <HomeBanner />
 
