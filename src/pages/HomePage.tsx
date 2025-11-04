@@ -30,6 +30,7 @@ import ServiceBox from "../components/home/ServiceBox.tsx";
 import 민원아이콘 from "../assets/home/민원아이콘.webp";
 import 폼아이콘 from "../assets/home/폼아이콘.webp";
 import TopPopupNotification from "../components/common/TopPopupNotification.tsx";
+import useNetworkStore from "../stores/useNetworkStore.ts";
 
 export default function HomePage() {
   const { tokenInfo } = useUserStore();
@@ -143,11 +144,23 @@ export default function HomePage() {
     message: string;
   }
 
-  // 1. 알림 데이터를 관리할 state.
-  const [notification, setNotification] = useState<NotificationData | null>({
-    title: "서비스 장애 안내",
-    message: `학교 인터넷 문제로 서비스에 장애가 발생하고 있습니다. 학교 인터넷이 복구되는대로 정상화 예정이니 참고 부탁드립니다.`,
-  });
+  const { isNetworkError } = useNetworkStore();
+  const [notification, setNotification] = useState<NotificationData | null>(
+    null,
+  );
+
+  useEffect(() => {
+    if (isNetworkError) {
+      // ⚠️ 네트워크 장애 발생 시 알림 표시
+      setNotification({
+        title: "서비스 장애 안내",
+        message: `학교 인터넷에 문제가 발생했거나, 서버 점검 중입니다. 이용에 불편을 드려 죄송합니다.`,
+      });
+    } else {
+      // ✅ 네트워크 정상 시 알림 제거
+      setNotification(null);
+    }
+  }, [isNetworkError]);
 
   // 3. 알림이 닫힐 때 호출될 함수 (onClose prop으로 전달)
   const handleCloseNotification = () => {
@@ -183,9 +196,7 @@ export default function HomePage() {
           title={notification.title}
           message={notification.message}
           onClose={handleCloseNotification}
-          // (선택 사항) 앱 아이콘이나 이름을 바꿀 수 있습니다.
-          // appName="내 앱"
-          // appIcon="🚀"
+          duration={10000}
         />
       )}
 

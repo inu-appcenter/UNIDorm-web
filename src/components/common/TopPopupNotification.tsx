@@ -173,6 +173,7 @@ interface TopPopupNotificationProps {
   message: string;
   appName?: string;
   appIcon?: ReactNode;
+  duration?: number;
 }
 
 const TopPopupNotification: FC<TopPopupNotificationProps> = ({
@@ -181,6 +182,7 @@ const TopPopupNotification: FC<TopPopupNotificationProps> = ({
   message,
   appName,
   appIcon,
+  duration = 5000,
 }) => {
   const [isClosing, setIsClosing] = useState(false);
   const [swipeDirection, setSwipeDirection] = useState<"up" | "side" | "none">(
@@ -199,7 +201,7 @@ const TopPopupNotification: FC<TopPopupNotificationProps> = ({
   };
 
   useEffect(() => {
-    const timer = setTimeout(() => handleClose("up"), 5000);
+    const timer = setTimeout(() => handleClose("up"), duration);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
