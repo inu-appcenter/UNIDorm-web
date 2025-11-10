@@ -3,7 +3,7 @@ import Header from "../../components/common/Header/Header.tsx";
 import FormField from "../../components/complain/FormField.tsx";
 import { useEffect, useState } from "react";
 import arrowright from "../../assets/arrow-right.svg";
-import { Input, Textarea } from "../../styles/complain.ts";
+import { Input, Textarea } from "../../styles/common.ts";
 import AddNewFormField from "../../components/form/AddNewFormField.tsx";
 import { useLocation, useNavigate } from "react-router-dom";
 

@@ -9,7 +9,7 @@ import {
   ComplainType,
   dormitoryBlocks,
 } from "../../constants/constants.ts"; // 'as const'로 선언된 상수들
-import { Dropdown, DropdownContainer, Input } from "../../styles/complain.ts";
+import { Dropdown, DropdownContainer, Input } from "../../styles/common.ts";
 import { ComplaintSearchDto } from "../../types/complain.ts";
 import { useEffect, useState } from "react"; // ⭐ useState, useEffect 추가
 

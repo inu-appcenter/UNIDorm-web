@@ -5,12 +5,7 @@ import { FiX } from "react-icons/fi";
 import CommonBottomModal from "../../components/modal/CommonBottomModal.tsx";
 import modalContent from "../../components/GroupPurchase/keywordSetting/ModalContent.tsx";
 import CategorySetting from "../../components/GroupPurchase/keywordSetting/CategorySetting.tsx";
-import {
-  RecentSearchWrapper,
-  TagList,
-  Tag,
-} from "../../styles/groupPurchase.ts";
-// ✅ CATEGORY_LIST 임포트 제거, CategoryType만 사용 (string 또는 유니언 타입이라고 가정)
+
 import { CategoryType } from "../../constants/groupPurchase.ts";
 import RegisteredKeywordItem from "../../components/GroupPurchase/keywordSetting/RegisteredKeywordItem.tsx";
 import {
@@ -21,6 +16,7 @@ import {
   getGroupOrderKeywordNotifications,
   addGroupOrderKeywordNotification,
 } from "../../apis/groupPurchaseKeywordSetting.ts";
+import { RecentSearchWrapper, Tag, TagList } from "../../styles/common.ts";
 
 // --- ✅ 상수 정의 ---
 // ✅ API와 통신할 실제 카테고리 목록

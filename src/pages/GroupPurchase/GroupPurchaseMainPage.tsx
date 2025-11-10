@@ -13,18 +13,21 @@ import { getGroupPurchaseList } from "../../apis/groupPurchase.ts";
 import useUserStore from "../../stores/useUserStore.ts";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../../constants/EmptyMessage.tsx";
-import {
-  RecentSearchWrapper,
-  TagList,
-  Tag,
-  Label,
-} from "../../styles/groupPurchase.ts";
 import { FiX } from "react-icons/fi";
 import { CATEGORY_LIST, SORT_OPTIONS } from "../../constants/groupPurchase.ts";
 import { getMobilePlatform } from "../../utils/getMobilePlatform.ts";
 import TopPopupNotification from "../../components/common/TopPopupNotification.tsx";
-
-// --- 🔽 [수정] 헬퍼 함수 로직 (요청사항 3가지 모두 적용) ---
+import { CategoryItem, CategoryWrapper } from "../../styles/header.ts";
+import {
+  Label,
+  RecentSearchWrapper,
+  SearchArea,
+  SearchBar,
+  SortButton,
+  SortFilterWrapper,
+  Tag,
+  TagList,
+} from "../../styles/common.ts";
 
 /**
  * 로컬 스토리지에 저장될 알림 상태
@@ -368,68 +371,6 @@ const PageWrapper = styled.div`
   }
 `;
 
-const CategoryWrapper = styled.div`
-  display: flex;
-  gap: 16px;
-  width: 100%;
-  border-bottom: 1px solid silver;
-
-  @media (min-width: 1024px) {
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-`;
-
-const CategoryItem = styled.div`
-  flex: 1;
-  text-align: center;
-  font-size: 16px;
-  color: #aaa;
-  cursor: pointer;
-  padding: 6px 0;
-
-  &.active {
-    color: black;
-    font-weight: bold;
-    border-bottom: 2px solid black;
-    padding-bottom: 2px;
-  }
-`;
-
-const SearchArea = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-`;
-
-const SearchBar = styled.div`
-  height: fit-content;
-  background-color: #f4f4f4;
-  border-radius: 999px;
-  padding: 12px 12px;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  overflow: hidden;
-
-  input {
-    border: none;
-    background: none;
-    width: 100%;
-    font-size: 14px;
-    color: #333;
-
-    ::placeholder {
-      color: #999;
-    }
-
-    :focus {
-      outline: none;
-    }
-  }
-`;
-
 const WriteButton = styled.button`
   position: fixed;
   bottom: 90px;
@@ -443,39 +384,4 @@ const WriteButton = styled.button`
   cursor: pointer;
   box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.2);
   z-index: 100;
-`;
-
-const SortFilterWrapper = styled.div`
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  white-space: nowrap;
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
-`;
-
-const SortButton = styled.button`
-  background-color: transparent;
-  border: 1px solid #007aff;
-  border-radius: 999px;
-  padding: 4px 16px;
-  cursor: pointer;
-  box-sizing: border-box;
-
-  color: var(--m-1, #0a84ff);
-  font-size: 14px;
-  font-style: normal;
-  font-weight: 400;
-  line-height: 24px;
-  letter-spacing: 0.38px;
-
-  &.active {
-    background-color: #007bff;
-    color: white;
-    font-weight: bold;
-  }
 `;
