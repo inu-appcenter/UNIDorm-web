@@ -15,7 +15,7 @@ import {
 } from "../../apis/formApis.ts";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
-import { Input } from "../../styles/complain.ts";
+import { Input } from "../../styles/common.ts";
 import { FormBoxGray } from "../../styles/form.ts";
 import { useIsAdminRole } from "../../hooks/useIsAdminRole.ts";
 

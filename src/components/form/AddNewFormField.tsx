@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { Dropdown, Input, Textarea } from "../../styles/complain"; // 기존 경로
+import { Dropdown, Input, Textarea } from "../../styles/common"; // 기존 경로
 import { QuestionType } from "../../types/formTypes.ts";
 import { FormFieldState } from "../../pages/Admin/FormCreatePage.tsx";
 import { AddButton, AddButtonArea } from "../../styles/form.ts";

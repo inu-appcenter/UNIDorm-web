@@ -12,10 +12,22 @@ import {
 import axiosInstance from "./axiosInstance.ts";
 import { ManagedFile } from "../hooks/useFileHandler.ts";
 
-export const getAnnouncements = async (): Promise<
-  AxiosResponse<Announcement[]>
-> => {
-  return await axiosInstance.get("/announcements");
+/**
+ * 모든 공지사항을 조회합니다.
+ *
+ * @param type 공지사항 작성 주체 (DORMITORY, UNI_DORM, SUPPORTERS)
+ * @param category 공지사항 카테고리 (ALL, LIFE_GUIDANCE, FACILITY, EVENT_LECTURE, BTL_DORMITORY, MOVE_IN_OUT, ETC)
+ * @param search 검색어 (옵션)
+ */
+export const getAnnouncements = async (
+  type: string = "DORMITORY",
+  category: string = "ALL",
+  search?: string,
+): Promise<AxiosResponse<Announcement[]>> => {
+  const params: Record<string, string> = { type, category };
+  if (search) params.search = search;
+
+  return await axiosInstance.get("/announcements", { params });
 };
 
 export const getAnnouncementDetail = async (

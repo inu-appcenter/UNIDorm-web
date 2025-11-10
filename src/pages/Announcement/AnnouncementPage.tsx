@@ -1,6 +1,5 @@
 import styled from "styled-components";
 import Header from "../../components/common/Header/Header.tsx";
-import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import { useNavigate } from "react-router-dom";
 import { BsEye } from "react-icons/bs";
 import { useEffect, useState } from "react";
@@ -15,6 +14,23 @@ import {
   TypeBadge,
   UrgentBadge,
 } from "../../styles/announcement.ts";
+import {
+  ANNOUNCE_CATEGORY_LIST,
+  ANNOUNCE_SUB_CATEGORY_LIST,
+} from "../../constants/announcement.ts";
+import { CategoryItem, CategoryWrapper } from "../../styles/header.ts";
+import { FaSearch } from "react-icons/fa";
+import { FiX } from "react-icons/fi";
+import {
+  Label,
+  RecentSearchWrapper,
+  SearchArea,
+  SearchBar,
+  SortButton,
+  SortFilterWrapper,
+  Tag,
+  TagList,
+} from "../../styles/common.ts";
 
 export default function AnnouncementPage() {
   const navigate = useNavigate();
@@ -23,72 +39,195 @@ export default function AnnouncementPage() {
   const [notices, setNotices] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function fetchData() {
-      // 🔽 로딩 상태를 명시적으로 true로 설정 (초기값이 true이므로 생략 가능)
-      setLoading(true);
-      try {
-        const response = await getAnnouncements();
-        console.log("공지사항 불러오기 성공:", response);
-        setNotices(response.data);
-      } catch (error) {
-        console.error("공지사항 불러오기 실패", error);
-      } finally {
-        setLoading(false);
-      }
-    }
+  const [selectedCategory, setSelectedCategory] =
+    useState<(typeof ANNOUNCE_CATEGORY_LIST)[number]["value"]>("DORMITORY");
 
+  const [selectedSubCategory, setSelectedSubCategory] =
+    useState<(typeof ANNOUNCE_SUB_CATEGORY_LIST)[number]["value"]>("ALL");
+
+  const handleCategoryClick = (
+    category: (typeof ANNOUNCE_CATEGORY_LIST)[number]["value"],
+  ) => {
+    setSelectedCategory(category);
+    setSelectedSubCategory("ALL");
+  };
+
+  const [search, setSearch] = useState("");
+  const [recentSearches, setRecentSearches] = useState<string[]>(
+    JSON.parse(localStorage.getItem("recentSearches_announcement") || "[]"),
+  );
+
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+
+  async function fetchData(search?: string) {
+    setLoading(true);
+    try {
+      const response = await getAnnouncements(
+        selectedCategory,
+        selectedSubCategory,
+        search,
+      );
+      console.log("공지사항 불러오기 성공:", response);
+      setNotices(response.data);
+    } catch (error) {
+      console.error("공지사항 불러오기 실패", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  //공지사항 불러오기
+  useEffect(() => {
     fetchData();
-  }, []);
+  }, [selectedCategory, selectedSubCategory]);
+
+  //검색 실행 시
+  const handleSearchSubmit = () => {
+    const rawTerm = search;
+    const trimmedTerm = search.trim();
+
+    if (rawTerm.trim() === "") return;
+    fetchData(trimmedTerm);
+
+    const updatedSearches = [
+      trimmedTerm,
+      ...recentSearches.filter((item) => item !== trimmedTerm),
+    ].slice(0, 5);
+
+    setRecentSearches(updatedSearches);
+    localStorage.setItem(
+      "recentSearches_announcement",
+      JSON.stringify(updatedSearches),
+    );
+
+    setSearch("");
+  };
+
+  // 최근 검색어 삭제
+  const handleDeleteRecent = (e: React.MouseEvent, term: string) => {
+    e.stopPropagation(); // 클릭 이벤트 전파 막기
+
+    const updatedSearches = recentSearches.filter((item) => item !== term);
+    setRecentSearches(updatedSearches);
+    localStorage.setItem(
+      "recentSearches_announcement",
+      JSON.stringify(updatedSearches),
+    );
+  };
 
   return (
     <NoticePageWrapper>
-      <Header title="공지사항" hasBack={true} />
-
-      <TitleContentArea
-        description={
-          "생활원과 서포터즈에서 알려드리는 공지사항을 확인해보세요."
-        }
-        margin={"16px"}
-      >
-        {/* 🔽 로딩 상태에 따라 스피너, 공지사항 목록, 빈 메시지를 조건부 렌더링합니다. */}
-        {loading ? (
-          <LoadingSpinner message="공지사항을 불러오는 중..." />
-        ) : notices.length > 0 ? (
-          <NoticeList>
-            {notices.map((notice) => (
-              <NoticeCard
-                key={notice.id}
-                onClick={() => {
-                  navigate(`/announcements/${notice.id}`);
-                }}
+      <Header
+        title="공지사항"
+        hasBack={true}
+        secondHeader={
+          <CategoryWrapper>
+            {ANNOUNCE_CATEGORY_LIST.map((category) => (
+              <CategoryItem
+                key={category.label.ko}
+                className={selectedCategory === category.value ? "active" : ""}
+                onClick={() => handleCategoryClick(category.value)}
               >
-                <NoticeTop>
-                  <NoticeTitle>{notice.title}</NoticeTitle>
-                  <NoticeTagWrapper>
-                    {notice.emergency && <UrgentBadge>긴급</UrgentBadge>}
-                    {/* 🔽 props로 announcementType 전달 */}
-                    <TypeBadge type={notice.announcementType}>
-                      {notice.announcementType}
-                    </TypeBadge>
-                  </NoticeTagWrapper>
-                </NoticeTop>
-                <NoticeContent>{notice.content}</NoticeContent>
-                <NoticeBottom>
-                  <div className="viewCount">
-                    <BsEye size={16} /> {notice.viewCount}
-                  </div>
-                  <div className="createdDate">
-                    {formatTimeAgo(notice.createdDate)}
-                  </div>
-                </NoticeBottom>
-              </NoticeCard>
+                {category.label.ko}
+              </CategoryItem>
             ))}
-          </NoticeList>
-        ) : (
-          <EmptyMessage message="등록된 공지사항이 없습니다." />
+          </CategoryWrapper>
+        }
+      />
+      {selectedCategory === "DORMITORY" && (
+        <SortFilterWrapper>
+          {ANNOUNCE_SUB_CATEGORY_LIST.map((option) => (
+            <SortButton
+              key={option.label.ko}
+              className={selectedSubCategory === option.value ? "active" : ""}
+              onClick={() => setSelectedSubCategory(option.value)}
+            >
+              {option.label.ko}
+            </SortButton>
+          ))}
+        </SortFilterWrapper>
+      )}
+
+      <SearchArea>
+        <SearchBar>
+          <FaSearch size={16} color="#999" />
+          <input
+            type="text"
+            placeholder="검색어를 입력하세요"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleSearchSubmit();
+            }}
+            onFocus={() => setIsSearchFocused(true)}
+            // onBlur={() => {
+            //   setTimeout(() => {
+            //     setIsSearchFocused(false);
+            //   }, 100);
+            // }}
+          />
+        </SearchBar>
+
+        {isSearchFocused && recentSearches.length > 0 && (
+          <RecentSearchWrapper>
+            <Label>최근 검색어</Label>
+            <TagList>
+              {recentSearches.map((term) => (
+                <Tag
+                  key={term}
+                  onClick={() => {
+                    setSearch(term);
+                  }}
+                >
+                  {term}{" "}
+                  <FiX
+                    size="14"
+                    color="#1C1C1E"
+                    onClick={(e) => handleDeleteRecent(e, term)}
+                  />
+                </Tag>
+              ))}
+            </TagList>
+          </RecentSearchWrapper>
         )}
-      </TitleContentArea>
+      </SearchArea>
+      {/* 🔽 로딩 상태에 따라 스피너, 공지사항 목록, 빈 메시지를 조건부 렌더링합니다. */}
+      {loading ? (
+        <LoadingSpinner message="공지사항을 불러오는 중..." />
+      ) : notices.length > 0 ? (
+        <NoticeList>
+          {notices.map((notice) => (
+            <NoticeCard
+              key={notice.id}
+              onClick={() => {
+                navigate(`/announcements/${notice.id}`);
+              }}
+            >
+              <NoticeTop>
+                <NoticeTitle>{notice.title}</NoticeTitle>
+                <NoticeTagWrapper>
+                  {notice.emergency && <UrgentBadge>긴급</UrgentBadge>}
+                  {/* 🔽 props로 announcementType 전달 */}
+                  <TypeBadge type={notice.announcementType}>
+                    {notice.announcementType}
+                  </TypeBadge>
+                </NoticeTagWrapper>
+              </NoticeTop>
+              <NoticeContent>{notice.content}</NoticeContent>
+              <NoticeBottom>
+                <div className="viewCount">
+                  <BsEye size={16} /> {notice.viewCount}
+                </div>
+                <div className="createdDate">
+                  {formatTimeAgo(notice.createdDate)}
+                </div>
+              </NoticeBottom>
+            </NoticeCard>
+          ))}
+        </NoticeList>
+      ) : (
+        <EmptyMessage message="등록된 공지사항이 없습니다." />
+      )}
       {isAdmin && (
         <WriteButton onClick={() => navigate("/announcements/write")}>
           ✏️ 공지사항 작성하기
@@ -99,13 +238,15 @@ export default function AnnouncementPage() {
 }
 
 const NoticePageWrapper = styled.div`
-  padding: 90px 16px 90px 16px;
+  padding: 122px 16px 90px 16px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 16px;
   box-sizing: border-box;
   overflow-y: auto;
   background: #fafafa;
+
+  flex: 1;
 `;
 
 const NoticeList = styled.div`
