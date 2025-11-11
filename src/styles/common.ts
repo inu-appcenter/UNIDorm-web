@@ -14,28 +14,6 @@ export const FilterWrapper = styled.div`
   }
 `;
 
-export const FilterButton = styled.button`
-  background-color: transparent;
-  border: 1px solid #007aff;
-  border-radius: 999px;
-  padding: 4px 16px;
-  cursor: pointer;
-  box-sizing: border-box;
-
-  color: var(--m-1, #0a84ff);
-  font-size: 14px;
-  font-style: normal;
-  font-weight: 400;
-  line-height: 24px;
-  letter-spacing: 0.38px;
-
-  &.active {
-    background-color: #007bff;
-    color: white;
-    font-weight: bold;
-  }
-`;
-
 export const SearchArea = styled.div`
   display: flex;
   flex-direction: column;
