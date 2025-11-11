@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { SurveyResults } from "../../types/formTypes.ts"; // OptionResult 임포트 제거 (차트 컴포넌트로 이동)
 import { getSurveyResultExcel, getSurveyResults } from "../../apis/formApis.ts";
 import { useParams } from "react-router-dom";
-import { FormBoxBlue } from "../../styles/form.ts";
+import { FormBoxBlue, FormBoxGray } from "../../styles/form.ts";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import FormResultHeader from "../../components/form/FormResultHeader.tsx";
 import FormResultQuestionHeader from "../../components/form/FormResultQuestionHeader.tsx";
@@ -96,7 +96,7 @@ const FormResultPage = () => {
   return (
     <PageWrapper>
       <Header hasBack={true} title="폼 결과 보기" menuItems={menuItems} />
-      <FormBoxBlue>
+      <FormBoxGray>
         {isLoading ? (
           <LoadingSpinner message={"폼을 불러오는 중 ..."} />
         ) : formResultData ? (
@@ -190,7 +190,7 @@ const FormResultPage = () => {
         ) : (
           <EmptyMessage>삭제된 폼이거나, 오류가 발생했습니다.</EmptyMessage>
         )}
-      </FormBoxBlue>
+      </FormBoxGray>
     </PageWrapper>
   );
 };

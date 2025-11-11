@@ -23,11 +23,11 @@ import {
   RecentSearchWrapper,
   SearchArea,
   SearchBar,
-  SortButton,
-  SortFilterWrapper,
+  FilterWrapper,
   Tag,
   TagList,
 } from "../../styles/common.ts";
+import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
 
 /**
  * 로컬 스토리지에 저장될 알림 상태
@@ -132,8 +132,7 @@ export default function GroupPurchaseMainPage() {
     useState<GetGroupPurchaseListParams["type"]>("전체");
   const [search, setSearch] = useState("");
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
-  const [sortOption, setSortOption] =
-    useState<GetGroupPurchaseListParams["sort"]>("마감임박순");
+  const [selectedSortOptionIndex, setSelectedSortOptionIndex] = useState(0);
   // 게시글 상태
   const [groupOrders, setGroupOrders] = useState<GroupOrder[]>([]);
   const [loading, setLoading] = useState(false);
@@ -148,7 +147,7 @@ export default function GroupPurchaseMainPage() {
     setLoading(true);
     try {
       const params: GetGroupPurchaseListParams = {
-        sort: sortOption,
+        sort: SORT_OPTIONS[selectedSortOptionIndex],
         type: selectedCategory,
         search: searchTerm || undefined,
       };
@@ -199,7 +198,7 @@ export default function GroupPurchaseMainPage() {
   // 게시글 목록 불러오기
   useEffect(() => {
     fetchGroupOrders();
-  }, [selectedCategory, sortOption]);
+  }, [selectedCategory, selectedSortOptionIndex]);
 
   const handleKeywordSettingButton = () => {
     const platform = getMobilePlatform();
@@ -285,17 +284,15 @@ export default function GroupPurchaseMainPage() {
         }
         settingOnClick={handleKeywordSettingButton}
       />
-      <SortFilterWrapper>
-        {SORT_OPTIONS.map((option) => (
-          <SortButton
-            key={option}
-            className={sortOption === option ? "active" : ""}
-            onClick={() => setSortOption(option)}
-          >
-            {option}
-          </SortButton>
-        ))}
-      </SortFilterWrapper>
+      <FilterWrapper>
+        <SelectableChipGroup
+          Groups={SORT_OPTIONS.map((option) => option)}
+          selectedIndex={selectedSortOptionIndex}
+          onSelect={setSelectedSortOptionIndex}
+          unselectable
+          rowScrollable={true} //가로 한줄로 스크롤
+        />
+      </FilterWrapper>
       <SearchArea>
         <SearchBar>
           <FaSearch size={16} color="#999" />

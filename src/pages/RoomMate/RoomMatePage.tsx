@@ -74,11 +74,11 @@ export default function RoomMatePage() {
     <RoomMatePageWrapper>
       <Header title="룸메이트" hasBack={false} showAlarm={true} />
       <ComingSoonOverlay
-        message={"2025년 1학기 룸메이트 매칭 종료!"}
+        message={"2025년 2학기 룸메이트 매칭 종료!"}
         subMessage={"다음 룸메이트 매칭을 기대해 주세요."}
       />
       <TitleContentArea
-        title={"2025년 1학기 룸메이트 모집"}
+        title={"2025년 2학기 룸메이트 모집"}
         description={"룸메이트를 구하고 있는 다양한 UNI들을 찾아보세요!"}
         link={"list"}
       >

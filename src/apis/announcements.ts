@@ -15,12 +15,12 @@ import { ManagedFile } from "../hooks/useFileHandler.ts";
 /**
  * 모든 공지사항을 조회합니다.
  *
- * @param type 공지사항 작성 주체 (DORMITORY, UNI_DORM, SUPPORTERS)
+ * @param type 공지사항 작성 주체 (ALL, DORMITORY, UNI_DORM, SUPPORTERS)
  * @param category 공지사항 카테고리 (ALL, LIFE_GUIDANCE, FACILITY, EVENT_LECTURE, BTL_DORMITORY, MOVE_IN_OUT, ETC)
  * @param search 검색어 (옵션)
  */
 export const getAnnouncements = async (
-  type: string = "DORMITORY",
+  type: string = "ALL",
   category: string = "ALL",
   search?: string,
 ): Promise<AxiosResponse<Announcement[]>> => {

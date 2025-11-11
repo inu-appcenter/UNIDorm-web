@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import Header from "../components/common/Header/Header.tsx";
 import TitleContentArea from "../components/common/TitleContentArea.tsx";
-import FullCalendar from "../components/calendar/FullCalendar.tsx";
+import Calendar from "../components/calendar/Calendar.tsx";
 
 const CalendarPage = () => (
   <CalendarPageWrapper>
@@ -9,7 +9,7 @@ const CalendarPage = () => (
     <TitleContentArea
       title={""}
       description={"인천대학교 생활원 각종 행사 일정입니다."}
-      children={<FullCalendar />}
+      children={<Calendar />}
     />
   </CalendarPageWrapper>
 );

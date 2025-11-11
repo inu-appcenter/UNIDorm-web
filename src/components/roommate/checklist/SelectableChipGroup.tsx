@@ -10,6 +10,8 @@ interface BaseProps {
   selectedColor?: string;
   borderColor?: string; // borderColor prop 추가
   selectedBorderColor?: string; // selectedBorderColor prop 추가
+  unselectable?: boolean; // 해제 불가 여부 추가
+  rowScrollable?: boolean; // 가로 한줄 스크롤로 할 경우
 }
 
 type SingleSelectProps = BaseProps & {
@@ -51,12 +53,16 @@ const SelectableChipGroup = (props: SelectableChipProps) => {
     if (disabled) return;
 
     if (isMultiProps(props)) {
+      if (props.unselectable && props.selectedIndices.includes(index)) return;
+
       const newSelected = props.selectedIndices.includes(index)
         ? props.selectedIndices.filter((i) => i !== index)
         : [...props.selectedIndices, index];
 
       props.onSelect(newSelected);
     } else {
+      if (props.unselectable && props.selectedIndex === index) return;
+
       if (props.selectedIndex === index) {
         props.onSelect(null);
       } else {
@@ -66,7 +72,7 @@ const SelectableChipGroup = (props: SelectableChipProps) => {
   };
 
   return (
-    <SelectableChipGroupWrapper>
+    <SelectableChipGroupWrapper rowScrollable={props.rowScrollable}>
       {Groups.map((content, index) => {
         const isSelected = multi
           ? (selectedIndices?.includes(index) ?? false)
@@ -95,9 +101,9 @@ const SelectableChipGroup = (props: SelectableChipProps) => {
 
 export default SelectableChipGroup;
 
-const SelectableChipGroupWrapper = styled.div`
+const SelectableChipGroupWrapper = styled.div<{ rowScrollable?: boolean }>`
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: ${({ rowScrollable }) => (rowScrollable ? "nowrap" : "wrap")};
   gap: 8px;
   width: 100%;
 `;

@@ -24,6 +24,7 @@ import {
   UrgentBadge,
 } from "../../styles/announcement.ts";
 import CommonBottomModal from "../../components/modal/CommonBottomModal.tsx";
+import { getLabelByValue } from "../../utils/announceUtils.ts";
 
 export default function AnnounceDetailPage() {
   const { boardId } = useParams<{ boardId: string }>();
@@ -152,7 +153,7 @@ export default function AnnounceDetailPage() {
                 <NoticeTagWrapper>
                   {announce.emergency && <UrgentBadge>긴급</UrgentBadge>}
                   <TypeBadge type={announce.announcementType}>
-                    {announce.announcementType}
+                    {getLabelByValue(announce.announcementType)}
                   </TypeBadge>
                 </NoticeTagWrapper>
               </TitleArea>
@@ -283,12 +284,15 @@ const BodyText = styled.p`
 
 const ImageSlider = styled.div`
   width: 100%;
-  height: 200px;
+  max-width: 500px;
+  height: 240px;
   background: #f0f0f0;
   position: relative;
   overflow: hidden;
   margin-bottom: 24px;
   border-radius: 10px;
+
+  align-self: center;
 `;
 
 const SliderItem = styled.div`

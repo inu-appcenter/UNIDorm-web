@@ -26,11 +26,12 @@ import {
   RecentSearchWrapper,
   SearchArea,
   SearchBar,
-  SortButton,
-  SortFilterWrapper,
+  FilterWrapper,
   Tag,
   TagList,
 } from "../../styles/common.ts";
+import { getLabelByValue } from "../../utils/announceUtils.ts";
+import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
 
 export default function AnnouncementPage() {
   const navigate = useNavigate();
@@ -40,16 +41,15 @@ export default function AnnouncementPage() {
   const [loading, setLoading] = useState(true);
 
   const [selectedCategory, setSelectedCategory] =
-    useState<(typeof ANNOUNCE_CATEGORY_LIST)[number]["value"]>("DORMITORY");
+    useState<(typeof ANNOUNCE_CATEGORY_LIST)[number]["value"]>("ALL");
 
-  const [selectedSubCategory, setSelectedSubCategory] =
-    useState<(typeof ANNOUNCE_SUB_CATEGORY_LIST)[number]["value"]>("ALL");
+  const [selectedSubCategory, setSelectedSubCategory] = useState(0);
 
   const handleCategoryClick = (
     category: (typeof ANNOUNCE_CATEGORY_LIST)[number]["value"],
   ) => {
     setSelectedCategory(category);
-    setSelectedSubCategory("ALL");
+    setSelectedSubCategory(0);
   };
 
   const [search, setSearch] = useState("");
@@ -64,7 +64,7 @@ export default function AnnouncementPage() {
     try {
       const response = await getAnnouncements(
         selectedCategory,
-        selectedSubCategory,
+        ANNOUNCE_SUB_CATEGORY_LIST[selectedSubCategory]["value"],
         search,
       );
       console.log("공지사항 불러오기 성공:", response);
@@ -135,17 +135,15 @@ export default function AnnouncementPage() {
         }
       />
       {selectedCategory === "DORMITORY" && (
-        <SortFilterWrapper>
-          {ANNOUNCE_SUB_CATEGORY_LIST.map((option) => (
-            <SortButton
-              key={option.label.ko}
-              className={selectedSubCategory === option.value ? "active" : ""}
-              onClick={() => setSelectedSubCategory(option.value)}
-            >
-              {option.label.ko}
-            </SortButton>
-          ))}
-        </SortFilterWrapper>
+        <FilterWrapper>
+          <SelectableChipGroup
+            Groups={ANNOUNCE_SUB_CATEGORY_LIST.map((option) => option.label.ko)}
+            selectedIndex={selectedSubCategory}
+            onSelect={setSelectedSubCategory}
+            unselectable
+            rowScrollable={true} //가로 한줄로 스크롤
+          />
+        </FilterWrapper>
       )}
 
       <SearchArea>
@@ -207,9 +205,9 @@ export default function AnnouncementPage() {
                 <NoticeTitle>{notice.title}</NoticeTitle>
                 <NoticeTagWrapper>
                   {notice.emergency && <UrgentBadge>긴급</UrgentBadge>}
-                  {/* 🔽 props로 announcementType 전달 */}
-                  <TypeBadge type={notice.announcementType}>
-                    {notice.announcementType}
+                  {/* props로 announcementType 전달 */}
+                  <TypeBadge type={notice.type}>
+                    {getLabelByValue(notice.type)}
                   </TypeBadge>
                 </NoticeTagWrapper>
               </NoticeTop>

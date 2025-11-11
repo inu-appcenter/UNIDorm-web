@@ -65,6 +65,7 @@ const FileMeta = styled.span`
 
 const LeftArea = styled.div`
   width: fit-content;
+  min-width: fit-content;
   height: 100%;
   display: flex;
   justify-content: center;
