@@ -141,6 +141,7 @@ export default function AnnouncementPage() {
             selectedIndex={selectedSubCategory}
             onSelect={setSelectedSubCategory}
             unselectable
+            rowScrollable={true} //가로 한줄로 스크롤
           />
         </FilterWrapper>
       )}

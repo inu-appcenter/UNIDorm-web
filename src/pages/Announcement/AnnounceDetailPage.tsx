@@ -285,7 +285,7 @@ const BodyText = styled.p`
 const ImageSlider = styled.div`
   width: 100%;
   max-width: 500px;
-  height: 220px;
+  height: 240px;
   background: #f0f0f0;
   position: relative;
   overflow: hidden;

@@ -3,6 +3,7 @@ import styled from "styled-components";
 export const FilterWrapper = styled.div`
   display: flex;
   gap: 8px;
+  width: 100%;
   overflow-x: auto;
   white-space: nowrap;
   -ms-overflow-style: none;
