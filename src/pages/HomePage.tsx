@@ -1,7 +1,6 @@
 import styled from "styled-components";
 import TitleContentArea from "../components/common/TitleContentArea.tsx";
 import HomeNoticeCard from "../components/home/HomeNoticeCard.tsx";
-import ThreeWeekCalendar from "../components/calendar/ThreeWeekCalendar.tsx";
 import Header from "../components/common/Header/Header.tsx";
 import HomeTipsCard from "../components/home/HomeTipsCard.tsx";
 import { useEffect, useState } from "react";
@@ -31,6 +30,7 @@ import 민원아이콘 from "../assets/home/민원아이콘.webp";
 import 폼아이콘 from "../assets/home/폼아이콘.webp";
 import TopPopupNotification from "../components/common/TopPopupNotification.tsx";
 import useNetworkStore from "../stores/useNetworkStore.ts";
+import Calendar from "../components/calendar/Calendar.tsx";
 
 export default function HomePage() {
   const { tokenInfo } = useUserStore();
@@ -286,7 +286,7 @@ export default function HomePage() {
           <TitleContentArea
             title={"생활원 일정"}
             // description={"인천대학교 생활원에서 알려드리는 일정입니다."}
-            children={<ThreeWeekCalendar />}
+            children={<Calendar mode={"week"} />}
             link={"/calendar"}
           />
         </GridContainer>

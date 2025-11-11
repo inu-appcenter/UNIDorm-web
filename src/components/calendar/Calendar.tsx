@@ -7,21 +7,90 @@ import {
   isSameDay,
   parseISO,
   startOfWeek,
+  startOfMonth,
+  endOfMonth,
+  endOfWeek,
+  differenceInDays,
+  addMonths,
+  subMonths,
+  subDays,
 } from "date-fns";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getCalendarByMonth } from "../../apis/calendar.ts";
 import { CalendarItem } from "../../types/calendar.ts";
 
-export default function WeeklyCalendar() {
-  const today = new Date();
-  const weekStart = startOfWeek(today, { weekStartsOn: 0 });
-  const startDate = addDays(weekStart, -7);
-  const dates = Array.from({ length: 21 }, (_, i) => addDays(startDate, i));
+interface CalendarProps {
+  mode?: "month" | "week";
+}
 
-  // 7일 단위로 잘라서 weeks 배열 생성
-  const weeks = Array.from({ length: 3 }, (_, i) =>
-    dates.slice(i * 7, i * 7 + 7),
-  );
+// --- 모던한 디자인을 위한 SVG 아이콘 ---
+const ChevronLeft = () => (
+  <svg
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M15 6L9 12L15 18"
+      stroke="#333333"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+const ChevronRight = () => (
+  <svg
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M9 18L15 12L9 6"
+      stroke="#333333"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+// --- ------------------------- ---
+
+export default function Calendar({ mode = "month" }: CalendarProps) {
+  const today = new Date();
+  const [currentDate, setCurrentDate] = useState(new Date());
+
+  const currentMonth = currentDate.getMonth();
+
+  const { dates, weeks } = useMemo(() => {
+    let dates: Date[] = [];
+
+    if (mode === "week") {
+      const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 });
+      const startDate = addDays(weekStart, -7);
+      dates = Array.from({ length: 21 }, (_, i) => addDays(startDate, i));
+    } else {
+      const monthStart = startOfMonth(currentDate);
+      const monthEnd = endOfMonth(currentDate);
+      const startDate = startOfWeek(monthStart, { weekStartsOn: 0 });
+      const endDate = endOfWeek(monthEnd, { weekStartsOn: 0 });
+      const daysCount = differenceInDays(endDate, startDate) + 1;
+      dates = Array.from({ length: daysCount }, (_, i) =>
+        addDays(startDate, i),
+      );
+    }
+
+    const totalWeeks = Math.ceil(dates.length / 7);
+    const weeks = Array.from({ length: totalWeeks }, (_, i) =>
+      dates.slice(i * 7, i * 7 + 7),
+    );
+    return { dates, weeks };
+  }, [currentDate, mode]);
 
   const [eventsByWeek, setEventsByWeek] = useState<
     {
@@ -42,14 +111,27 @@ export default function WeeklyCalendar() {
         months.add(`${y}-${m}`);
       });
 
-      const events: CalendarItem[] = [];
+      // ---
+      // Map을 사용해 이벤트 ID 기준 중복 제거
+      // ---
+      const eventMap = new Map<string | number, CalendarItem>(); // (id가 number일 수도 있으므로)
+
       await Promise.all(
         Array.from(months).map(async (ym) => {
           const [year, month] = ym.split("-").map(Number);
           const res = await getCalendarByMonth(year, month);
-          res.data.forEach((item: CalendarItem) => events.push(item));
+
+          // 데이터를 가져올 때마다 Map에 저장 (id가 없으면 추가)
+          res.data.forEach((item: CalendarItem) => {
+            if (!eventMap.has(item.id)) {
+              eventMap.set(item.id, item);
+            }
+          });
         }),
       );
+
+      // Map의 값들만 배열로 변환하여 중복 없는 이벤트 리스트 생성
+      const events = Array.from(eventMap.values());
 
       const parsedEvents: {
         weekIndex: number;
@@ -136,7 +218,7 @@ export default function WeeklyCalendar() {
     };
 
     fetchEvents();
-  }, []);
+  }, [dates]); // [mode] -> [dates] (dates가 변경될 때마다 fetch)
 
   const maxRowsByWeek = weeks.map((_, weekIdx) => {
     const rows = eventsByWeek
@@ -145,9 +227,36 @@ export default function WeeklyCalendar() {
     return rows.length > 0 ? Math.max(...rows) + 1 : 1;
   });
 
+  const goToNext = () => {
+    if (mode === "month") {
+      setCurrentDate((prev) => addMonths(prev, 1));
+    } else {
+      setCurrentDate((prev) => addDays(prev, 7));
+    }
+  };
+
+  const goToPrev = () => {
+    if (mode === "month") {
+      setCurrentDate((prev) => subMonths(prev, 1));
+    } else {
+      setCurrentDate((prev) => subDays(prev, 7));
+    }
+  };
+
   return (
     <CalendarContainer>
-      {/* 요일 헤더는 테두리 밖 */}
+      {mode === "month" && (
+        <CalendarHeader>
+          <ArrowButton onClick={goToPrev}>
+            <ChevronLeft />
+          </ArrowButton>
+          <MonthDisplay>{format(currentDate, "yyyy. MM.")}</MonthDisplay>
+          <ArrowButton onClick={goToNext}>
+            <ChevronRight />
+          </ArrowButton>
+        </CalendarHeader>
+      )}
+
       <Weekdays>
         {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d, i) => (
           <WeekdayCell key={i} $index={i}>
@@ -156,7 +265,6 @@ export default function WeeklyCalendar() {
         ))}
       </Weekdays>
 
-      {/* 테두리와 둥근 모서리는 이 부분만 */}
       <CalendarBody>
         {weeks.map((week, weekIdx) => {
           const maxRows = maxRowsByWeek[weekIdx];
@@ -165,10 +273,18 @@ export default function WeeklyCalendar() {
               {week.map((date, idx) => {
                 const isToday = isSameDay(date, today);
                 const isLastRow = weekIdx === weeks.length - 1;
+                const isCurrentMonth = date.getMonth() === currentMonth;
                 return (
-                  <DayCell key={idx} $isLastRow={isLastRow}>
+                  <DayCell
+                    key={idx}
+                    $isLastRow={isLastRow}
+                    $isCurrentMonth={mode === "month" ? isCurrentMonth : true}
+                  >
                     {isToday && <TodayCircle />}
-                    <DateNumber $isToday={isToday}>
+                    <DateNumber
+                      $isToday={isToday}
+                      $isCurrentMonth={mode === "month" ? isCurrentMonth : true}
+                    >
                       {format(date, "d")}
                     </DateNumber>
                   </DayCell>
@@ -195,12 +311,40 @@ export default function WeeklyCalendar() {
   );
 }
 
-/* 요일 헤더와 본체를 분리 */
 const CalendarContainer = styled.div`
   display: flex;
   flex-direction: column;
   width: 100%;
   max-width: 480px;
+`;
+
+const CalendarHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 8px;
+`;
+
+const MonthDisplay = styled.h2`
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+  color: #222;
+`;
+
+const ArrowButton = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    background-color: #f0f0f0;
+  }
 `;
 
 const Weekdays = styled.div`
@@ -214,11 +358,7 @@ const WeekdayCell = styled.div<{ $index: number }>`
   font-size: 14px;
   font-weight: 500;
   color: ${({ $index }) =>
-    $index === 0
-      ? "#F97171" // 일요일
-      : $index === 6
-        ? "#0A84FF" // 토요일
-        : "#4C4C4C"}; // 평일
+    $index === 0 ? "#F97171" : $index === 6 ? "#0A84FF" : "#4C4C4C"};
 `;
 
 const CalendarBody = styled.div`
@@ -239,9 +379,10 @@ const WeekRow = styled.div<{ $maxRows: number }>`
   }
 `;
 
-const DayCell = styled.div<{ $isLastRow?: boolean }>`
+const DayCell = styled.div<{ $isLastRow?: boolean; $isCurrentMonth?: boolean }>`
   padding: 6px;
-  background-color: #fff;
+  background-color: ${({ $isCurrentMonth }) =>
+    $isCurrentMonth ? "#fff" : "#f9f9f9"};
   text-align: center;
   position: relative;
   display: flex;
@@ -257,7 +398,6 @@ const DayCell = styled.div<{ $isLastRow?: boolean }>`
   }
 `;
 
-// 오늘 표시용 원 컴포넌트
 const TodayCircle = styled.div`
   position: absolute;
   top: 16px;
@@ -270,8 +410,9 @@ const TodayCircle = styled.div`
   z-index: 1;
 `;
 
-const DateNumber = styled.div<{ $isToday: boolean }>`
-  color: ${({ $isToday }) => ($isToday ? "#F4F4F4" : "#000")};
+const DateNumber = styled.div<{ $isToday: boolean; $isCurrentMonth?: boolean }>`
+  color: ${({ $isToday, $isCurrentMonth }) =>
+    $isToday ? "#F4F4F4" : $isCurrentMonth ? "#000" : "#c3c3c3"};
   position: relative;
   z-index: 2;
 `;
