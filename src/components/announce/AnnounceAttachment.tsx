@@ -91,4 +91,8 @@ const RightArea = styled.div`
   letter-spacing: 0.38px;
 
   color: #8e8e93;
+
+  /* 줄바꿈 허용 */
+  word-break: break-all;
+  white-space: normal;
 `;
