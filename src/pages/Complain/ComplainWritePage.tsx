@@ -13,7 +13,7 @@ import {
 import { createComplaint, updateComplaint } from "../../apis/complain.ts";
 import { ComplaintCreateDto } from "../../types/complain.ts";
 import FormField from "../../components/complain/FormField.tsx";
-import { Dropdown, DropdownContainer, Input } from "../../styles/complain.ts";
+import { Dropdown, DropdownContainer, Input } from "../../styles/common.ts";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import { useFileHandler } from "../../hooks/useFileHandler.ts";
 import FileUploader from "../../components/common/FileUploader.tsx";

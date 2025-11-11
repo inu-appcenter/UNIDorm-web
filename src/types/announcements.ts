@@ -1,3 +1,5 @@
+import { ANNOUNCE_SUB_CATEGORY_LIST } from "../constants/announcement.ts";
+
 export interface Announcement {
   announcementType: string;
   viewCount: number;
@@ -31,6 +33,7 @@ export interface AnnouncementFile {
 }
 
 export interface RequestAnnouncementDto {
+  category: (typeof ANNOUNCE_SUB_CATEGORY_LIST)[number]["value"];
   title: string;
   writer: string;
   content: string;
