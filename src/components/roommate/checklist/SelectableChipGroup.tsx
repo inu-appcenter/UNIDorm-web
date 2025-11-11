@@ -10,6 +10,7 @@ interface BaseProps {
   selectedColor?: string;
   borderColor?: string; // borderColor prop 추가
   selectedBorderColor?: string; // selectedBorderColor prop 추가
+  unselectable?: boolean; // 해제 불가 여부 추가
 }
 
 type SingleSelectProps = BaseProps & {
@@ -51,12 +52,16 @@ const SelectableChipGroup = (props: SelectableChipProps) => {
     if (disabled) return;
 
     if (isMultiProps(props)) {
+      if (props.unselectable && props.selectedIndices.includes(index)) return;
+
       const newSelected = props.selectedIndices.includes(index)
         ? props.selectedIndices.filter((i) => i !== index)
         : [...props.selectedIndices, index];
 
       props.onSelect(newSelected);
     } else {
+      if (props.unselectable && props.selectedIndex === index) return;
+
       if (props.selectedIndex === index) {
         props.onSelect(null);
       } else {

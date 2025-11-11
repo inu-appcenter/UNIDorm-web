@@ -108,7 +108,9 @@ export default function AnnounceWritePage() {
           descriptionGray="로그인한 계정의 권한으로 자동 설정됩니다."
         >
           <SelectableChipGroup
-            Groups={ANNOUNCE_CATEGORY_LIST.map((item) => item.label.ko)}
+            Groups={ANNOUNCE_CATEGORY_LIST.slice(1).map(
+              (item) => item.label.ko,
+            )}
             selectedIndex={selectedAnnounceCategoryIndex}
             onSelect={setSelectedAnnounceCategoryIndex}
             disabled={true}

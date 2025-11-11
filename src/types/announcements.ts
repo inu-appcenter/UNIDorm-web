@@ -1,7 +1,12 @@
-import { ANNOUNCE_SUB_CATEGORY_LIST } from "../constants/announcement.ts";
+import {
+  ANNOUNCE_CATEGORY_LIST,
+  ANNOUNCE_SUB_CATEGORY_LIST,
+} from "../constants/announcement.ts";
 
 export interface Announcement {
-  announcementType: string;
+  type: (typeof ANNOUNCE_CATEGORY_LIST)[number]["value"];
+  category: (typeof ANNOUNCE_SUB_CATEGORY_LIST)[number]["value"];
+
   viewCount: number;
   emergency: boolean;
   content: string;
@@ -12,7 +17,7 @@ export interface Announcement {
 }
 
 export interface AnnouncementDetail {
-  announcementType: string;
+  announcementType: (typeof ANNOUNCE_CATEGORY_LIST)[number]["value"];
   emergency: boolean;
 
   id: number;

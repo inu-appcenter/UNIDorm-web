@@ -1,7 +1,10 @@
 import styled from "styled-components";
-import getTypeBackgroundColor from "../utils/getTypeBackgroundColor.ts";
+import { getTypeBackgroundColor } from "../utils/announceUtils.ts";
+import { ANNOUNCE_CATEGORY_LIST } from "../constants/announcement.ts";
 
-export const TypeBadge = styled.div<{ type: string }>`
+export const TypeBadge = styled.div<{
+  type: (typeof ANNOUNCE_CATEGORY_LIST)[number]["value"];
+}>`
   border-radius: 16px;
   background: ${(props) => getTypeBackgroundColor(props.type)};
   padding: 4px 8px;

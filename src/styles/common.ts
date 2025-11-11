@@ -1,6 +1,6 @@
 import styled from "styled-components";
 
-export const SortFilterWrapper = styled.div`
+export const FilterWrapper = styled.div`
   display: flex;
   gap: 8px;
   overflow-x: auto;
@@ -13,7 +13,7 @@ export const SortFilterWrapper = styled.div`
   }
 `;
 
-export const SortButton = styled.button`
+export const FilterButton = styled.button`
   background-color: transparent;
   border: 1px solid #007aff;
   border-radius: 999px;

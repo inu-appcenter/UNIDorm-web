@@ -23,8 +23,8 @@ import {
   RecentSearchWrapper,
   SearchArea,
   SearchBar,
-  SortButton,
-  SortFilterWrapper,
+  FilterButton,
+  FilterWrapper,
   Tag,
   TagList,
 } from "../../styles/common.ts";
@@ -285,17 +285,17 @@ export default function GroupPurchaseMainPage() {
         }
         settingOnClick={handleKeywordSettingButton}
       />
-      <SortFilterWrapper>
+      <FilterWrapper>
         {SORT_OPTIONS.map((option) => (
-          <SortButton
+          <FilterButton
             key={option}
             className={sortOption === option ? "active" : ""}
             onClick={() => setSortOption(option)}
           >
             {option}
-          </SortButton>
+          </FilterButton>
         ))}
-      </SortFilterWrapper>
+      </FilterWrapper>
       <SearchArea>
         <SearchBar>
           <FaSearch size={16} color="#999" />

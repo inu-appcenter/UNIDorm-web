@@ -3,6 +3,9 @@ import { AiOutlineClockCircle } from "react-icons/ai";
 import { useNavigate } from "react-router-dom";
 import TagIconBlueBackground from "../common/TagIconBlueBackground.tsx";
 import { formatTimeAgo } from "../../utils/dateUtils.ts";
+import { ANNOUNCE_CATEGORY_LIST } from "../../constants/announcement.ts";
+import { TypeBadge } from "../../styles/announcement.ts";
+import { getLabelByValue } from "../../utils/announceUtils.ts";
 
 interface HomeCardProps {
   id: number;
@@ -10,6 +13,7 @@ interface HomeCardProps {
   content: string;
   isEmergency: boolean;
   createdDate: string;
+  type: (typeof ANNOUNCE_CATEGORY_LIST)[number]["value"];
 }
 
 const HomeNoticeCard = ({
@@ -18,6 +22,7 @@ const HomeNoticeCard = ({
   content,
   isEmergency,
   createdDate,
+  type,
 }: HomeCardProps) => {
   const navigate = useNavigate();
   return (
@@ -26,9 +31,14 @@ const HomeNoticeCard = ({
         navigate("/announcements/" + id);
       }}
     >
-      <div className="emergency">
-        {isEmergency && <TagIconBlueBackground tagTitle={"긴급"} />}
-      </div>
+      <TagLine>
+        <TypeBadge type={type}>{getLabelByValue(type)}</TypeBadge>
+        {isEmergency && (
+          <div className="emergency">
+            <TagIconBlueBackground tagTitle={"긴급"} />
+          </div>
+        )}
+      </TagLine>
 
       <FirstLine>
         <div className="title">{title}</div>
@@ -64,6 +74,13 @@ const HomeCardWrapper = styled.div`
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
 
   cursor: pointer;
+`;
+
+const TagLine = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: 4px;
+  justify-content: center;
 `;
 
 const FirstLine = styled.div`

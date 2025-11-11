@@ -9,7 +9,7 @@ import { fetchDailyRandomTips } from "../apis/tips.ts";
 import { Tip } from "../types/tips.ts";
 import BottomBar from "../components/common/BottomBar/BottomBar.tsx";
 // import 민원접수 from "../assets/민원접수.svg";
-import 앱센터로고가로 from "../assets/앱센터로고가로.svg";
+import 앱센터로고가로 from "../assets/앱센터로고가로.webp";
 import { useNavigate } from "react-router-dom";
 import GroupPurchaseList from "../components/GroupPurchase/GroupPurchaseList.tsx";
 import { GetGroupPurchaseListParams, GroupOrder } from "../types/grouporder.ts";
@@ -250,6 +250,7 @@ export default function HomePage() {
                         content={notice.content}
                         isEmergency={notice.emergency}
                         createdDate={notice.createdDate}
+                        type={notice.type}
                       />
                     ))
                 ) : (

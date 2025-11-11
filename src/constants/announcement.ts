@@ -1,5 +1,13 @@
 // 공지사항 작성 주체 (type)
+//리스트 순서 바뀌면 안됩니더.. (공지작성 페이지에서 인덱스로 확인 중임)
 export const ANNOUNCE_CATEGORY_LIST = [
+  {
+    value: "ALL",
+    label: {
+      ko: "전체",
+      en: "All",
+    },
+  },
   {
     value: "DORMITORY",
     label: {
