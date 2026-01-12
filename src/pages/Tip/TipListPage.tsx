@@ -1,5 +1,4 @@
 import styled from "styled-components";
-import Header from "../../components/common/Header/Header.tsx";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import TipCard from "../../components/tip/TipCard";
 import { useNavigate } from "react-router-dom";
@@ -9,6 +8,7 @@ import { fetchTips } from "@/apis/tips";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../../constants/EmptyMessage.tsx";
 import { useIsAdminRole } from "@/hooks/useIsAdminRole";
+import { useSetHeader } from "@/hooks/useSetHeader";
 
 export default function TipListPage() {
   const navigate = useNavigate();
@@ -34,10 +34,10 @@ export default function TipListPage() {
     loadTips();
   }, []);
 
+  useSetHeader({ title: "기숙사 꿀팁" });
+
   return (
     <TipPageWrapper>
-      <Header title="기숙사 꿀팁" hasBack={true} />
-
       <TitleContentArea
         description={"다양한 기숙사 꿀팁을 알아보세요!"}
         margin={"16px"}
@@ -99,7 +99,7 @@ export default function TipListPage() {
 }
 
 const TipPageWrapper = styled.div`
-  padding: 80px 16px 40px 16px;
+  padding: 0 16px 100px;
   display: flex;
   flex-direction: column;
   gap: 16px;

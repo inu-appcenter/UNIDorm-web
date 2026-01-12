@@ -4,7 +4,6 @@ import { useLocation, useParams } from "react-router-dom";
 
 import profileimg from "../../assets/profileimg.png";
 import RoomMateBottomBar from "../../components/roommate/RoomMateBottomBar";
-import Header from "../../components/common/Header/Header.tsx";
 import { getOpponentChecklist, getRoomMateDetail } from "@/apis/roommate";
 import { RoommatePost } from "@/types/roommates";
 import UseUserStore from "../../stores/useUserStore.ts";
@@ -107,8 +106,6 @@ export default function RoomMateBoardDetailPage() {
 
   return (
     <RoomMateDetailPageWrapper>
-      <Header title={"게시글"} hasBack={true} />
-
       <TitleArea>
         <UserArea>
           <img

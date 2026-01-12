@@ -3,7 +3,6 @@ import styled from "styled-components";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
 import ToggleGroup from "../../components/roommate/checklist/ToggleGroup.tsx";
-import Header from "../../components/common/Header/Header.tsx";
 import SquareButton from "../../components/common/SquareButton.tsx";
 import {
   bedtime,
@@ -163,8 +162,6 @@ export default function RoomMateFilterPage() {
 
   return (
     <RoomMateChecklistPageWrapper>
-      <Header title={"룸메이트 필터"} hasBack={true} showAlarm={false} />
-
       <TitleContentArea
         title={"기숙사 종류"}
         children={

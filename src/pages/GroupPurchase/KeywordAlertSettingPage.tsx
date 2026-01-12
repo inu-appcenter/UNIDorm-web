@@ -1,5 +1,4 @@
 import styled from "styled-components";
-import Header from "../../components/common/Header/Header.tsx";
 import { useEffect, useState } from "react";
 import { FiX } from "react-icons/fi";
 import CommonBottomModal from "../../components/modal/CommonBottomModal.tsx";
@@ -251,8 +250,6 @@ const KeywordAlertSettingPage = () => {
 
   return (
     <Wrapper>
-      <Header title={"키워드 알림 설정"} hasBack={true} />
-
       <InputWrapper>
         <StyledInput
           placeholder="알림 받을 키워드를 입력해주세요."

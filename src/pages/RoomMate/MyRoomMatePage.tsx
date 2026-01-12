@@ -1,7 +1,5 @@
 import styled from "styled-components";
 import { useEffect, useRef, useState } from "react";
-
-import Header from "../../components/common/Header/Header.tsx";
 import IconTextButton from "../../components/button/IconTextButton.tsx";
 import StyledTextArea from "../../components/roommate/StyledTextArea.tsx";
 import RoomMateInfoArea from "../../components/roommate/RoomMateInfoArea.tsx";
@@ -24,6 +22,7 @@ import {
 import RoundSquareWhiteButton from "../../components/button/RoundSquareWhiteButton.tsx";
 import { useNavigate } from "react-router-dom";
 import BottomBar from "../../components/common/BottomBar/BottomBar.tsx";
+import { useSetHeader } from "@/hooks/useSetHeader";
 
 export default function MyRoomMatePage() {
   const [roommateInfo, setRoommateInfo] =
@@ -45,7 +44,7 @@ export default function MyRoomMatePage() {
   // 룸메이트 없을 때 overlay 표시 및 클릭 막기
   const isDisabled = notFound;
 
-  const headerMenuItems = [
+  const menuItems = [
     {
       label: "룸메이트 끊기",
       onClick: () => {
@@ -239,13 +238,10 @@ export default function MyRoomMatePage() {
     };
   }, []);
 
+  useSetHeader({ title: "내 룸메이트", menuItems });
+
   return (
     <MyRoomMatePageWrapper>
-      <Header
-        title={"내 룸메이트"}
-        showAlarm={false}
-        menuItems={headerMenuItems}
-      />
       {showImgConfirmModal && previewUrl && (
         <ModalBackGround>
           <Modal>
@@ -425,7 +421,7 @@ export default function MyRoomMatePage() {
 }
 
 const MyRoomMatePageWrapper = styled.div`
-  padding: 90px 20px;
+  padding: 0 16px 100px;
 
   display: flex;
   flex-direction: column;

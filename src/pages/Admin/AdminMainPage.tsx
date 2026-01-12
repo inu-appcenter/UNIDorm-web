@@ -1,9 +1,9 @@
-import Header from "../../components/common/Header/Header.tsx";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import useUserStore from "../../stores/useUserStore.ts";
 import { useEffect } from "react";
 import { useIsAdminRole } from "@/hooks/useIsAdminRole";
+import { useSetHeader } from "@/hooks/useSetHeader";
 
 const AdminMainPage: React.FC = () => {
   const navigate = useNavigate();
@@ -28,6 +28,8 @@ const AdminMainPage: React.FC = () => {
       },
     },
   ];
+
+  useSetHeader({ title: "관리자 페이지", menuItems });
 
   // 전체 관리자 페이지 목록
   const allAdminPages = [
@@ -83,7 +85,6 @@ const AdminMainPage: React.FC = () => {
 
   return (
     <Wrapper>
-      <Header title={"관리자 페이지"} hasBack={true} menuItems={menuItems} />
       <Title>관리자 기능 선택</Title>
       <MenuGrid>
         {adminPages.map((page) => (
@@ -112,8 +113,7 @@ const AdminMainPage: React.FC = () => {
 export default AdminMainPage;
 
 export const Wrapper = styled.div`
-  padding: 30px;
-  padding-top: 80px;
+  padding: 0 16px 100px;
   box-sizing: border-box;
   max-width: 800px;
   margin: 0 auto;

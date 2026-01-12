@@ -1,5 +1,4 @@
 import styled from "styled-components";
-import Header from "../components/common/Header/Header.tsx";
 import NotiItem from "../components/notification/NotiItem.tsx";
 import { useEffect, useState } from "react";
 import { getNotifications } from "@/apis/notification"; // 새로 만든 알림 API 임포트
@@ -14,6 +13,7 @@ import {
 } from "@/apis/roommate";
 import axios from "axios";
 import { ReceivedMatchingRequest } from "@/types/roommates";
+import { useSetHeader } from "@/hooks/useSetHeader";
 
 const NotificationPage = () => {
   // 표시될 모든 알림을 저장하는 상태
@@ -91,18 +91,20 @@ const NotificationPage = () => {
     }
   }, [isLoggedIn]);
 
-  const menuItems = [
-    {
-      label: "알림 수신 설정",
-      onClick: () => {
-        navigate("/notification-setting");
+  useSetHeader({
+    title: "알림",
+    menuItems: [
+      {
+        label: "알림 수신 설정",
+        onClick: () => {
+          navigate("/notification-setting");
+        },
       },
-    },
-  ];
+    ],
+  });
 
   return (
     <NotificationPageWrapper>
-      <Header hasBack={true} menuItems={menuItems} />
       <ContentWrapper>
         {receivedRoommateRequests.length > 0 &&
           receivedRoommateRequests.map((receivedRoommateRequest) => (
@@ -129,7 +131,7 @@ export default NotificationPage;
 
 // Styled-components (기존과 동일)
 const NotificationPageWrapper = styled.div`
-  padding: 70px 0;
+  //padding: 70px 0;
   display: flex;
   flex-direction: column;
   gap: 20px;

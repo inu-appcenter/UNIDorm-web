@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import Header from "../../components/common/Header/Header.tsx";
 import SquareButton from "../../components/common/SquareButton.tsx";
 import { putUserAgreement } from "@/apis/members";
 import { useNavigate } from "react-router-dom";
@@ -95,7 +94,6 @@ const AgreementPage: React.FC = () => {
 
   return (
     <Container>
-      <Header title={"약관 동의"} />
       <span className="description">
         유니돔 서비스 약관이 개정되어 재동의가 필요합니다.
       </span>
@@ -143,9 +141,7 @@ export default AgreementPage;
 
 // --- Styled Components 정의 ---
 const Container = styled.div`
-  padding: 16px;
-  padding-top: 80px;
-  padding-bottom: 160px;
+  padding: 100px 16px;
   display: flex;
   flex-direction: column;
   gap: 20px;

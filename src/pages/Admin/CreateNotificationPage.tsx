@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import styled from "styled-components";
-import Header from "../../components/common/Header/Header.tsx";
 import { NotificationPayload } from "@/types/notifications";
 import { createNotification } from "@/apis/notification";
+import { useSetHeader } from "@/hooks/useSetHeader";
 
 const CreateNotificationPage = () => {
   const [title, setTitle] = useState("");
@@ -42,9 +42,10 @@ const CreateNotificationPage = () => {
     }
   };
 
+  useSetHeader({ title: "푸시 알림 보내기" });
+
   return (
     <PageWrapper>
-      <Header hasBack={true} title="알림 생성" />
       <FormContainer onSubmit={handleSubmit}>
         <InputGroup>
           <Label>알림 타입</Label>
@@ -103,7 +104,7 @@ export default CreateNotificationPage;
 const PageWrapper = styled.div`
   width: 100%;
   height: 100%;
-  padding-top: 60px; /* 헤더 높이만큼 패딩 */
+
   box-sizing: border-box;
 `;
 

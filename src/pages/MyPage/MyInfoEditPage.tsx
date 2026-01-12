@@ -14,10 +14,10 @@ import useUserStore from "../../stores/useUserStore.ts";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import ToggleGroup from "../../components/roommate/checklist/ToggleGroup.tsx";
 import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
-import Header from "../../components/common/Header/Header.tsx";
 import { colleges, dormitory } from "@/constants/constants";
 import axios from "axios";
 import profile from "../../assets/profileimg.png";
+import { useSetHeader } from "@/hooks/useSetHeader";
 
 const menuItems = [
   {
@@ -198,15 +198,10 @@ export default function MyInfoEditPage() {
     }
   };
 
+  useSetHeader({ title: "내 정보 수정", menuItems });
+
   return (
     <MyInfoEditPageWrapper>
-      <Header
-        title={isFirstVisit ? "회원정보 입력" : "회원정보 수정"}
-        hasBack={!isFirstVisit}
-        showAlarm={false}
-        menuItems={!isFirstVisit ? menuItems : undefined}
-      />
-
       <ContentWrapper>
         {/* 프로필 이미지 업로드 */}
         {!isFirstVisit && (
@@ -315,9 +310,7 @@ export default function MyInfoEditPage() {
   );
 }
 const MyInfoEditPageWrapper = styled.div`
-  padding: 16px;
-  padding-top: 90px;
-  padding-bottom: 150px;
+  padding: 0 16px 120px;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;

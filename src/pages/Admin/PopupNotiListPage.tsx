@@ -9,7 +9,7 @@ import {
   getAllPopupNotifications,
 } from "@/apis/popup-notification";
 import { PopupNotification } from "@/types/popup-notifications";
-import Header from "../../components/common/Header/Header.tsx";
+import { useSetHeader } from "@/hooks/useSetHeader";
 
 const PopupNotiListPage = () => {
   const [notifications, setNotifications] = useState<PopupNotification[]>([]);
@@ -52,13 +52,14 @@ const PopupNotiListPage = () => {
     }
   };
 
+  useSetHeader({ title: "홈 화면 팝업 공지 관리" });
+
   if (loading) {
     return <Message>불러오는 중입니다...</Message>;
   }
 
   return (
     <Wrapper>
-      <Header title={"홈 화면 팝업 공지 관리"} hasBack={true} />
       <ButtonContainer>
         <CreateButton onClick={handleCreateClick}>
           팝업 공지 등록하기
@@ -114,8 +115,7 @@ const Wrapper = styled.div`
   width: 100%;
   max-width: 900px;
   margin: 0 auto;
-  padding: 40px 16px;
-  padding-top: 80px;
+  padding: 0 16px 100px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;

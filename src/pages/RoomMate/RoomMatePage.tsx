@@ -1,10 +1,8 @@
 import styled from "styled-components";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import RoomMateCard from "../../components/roommate/RoomMateCard.tsx";
-import Header from "../../components/common/Header/Header.tsx";
 import { useNavigate } from "react-router-dom";
 import useUserStore from "../../stores/useUserStore.ts";
-import BottomBar from "../../components/common/BottomBar/BottomBar.tsx";
 import { useEffect, useState } from "react";
 import { RoommatePost, SimilarRoommatePost } from "@/types/roommates";
 import { getRoomMateList, getSimilarRoomMateList } from "@/apis/roommate";
@@ -71,7 +69,6 @@ export default function RoomMatePage() {
 
   return (
     <RoomMatePageWrapper>
-      <Header title="룸메이트" hasBack={false} showAlarm={true} />
       {featureFlag && (
         <ComingSoonOverlay
           message={"2025년 2학기 룸메이트 매칭 종료!"}
@@ -168,13 +165,12 @@ export default function RoomMatePage() {
           하기
         </WriteButton>
       )}
-      <BottomBar />
     </RoomMatePageWrapper>
   );
 }
 
 const RoomMatePageWrapper = styled.div`
-  padding: 90px 16px;
+  padding: 0 16px;
   padding-bottom: 300px;
   display: flex;
   flex-direction: column;

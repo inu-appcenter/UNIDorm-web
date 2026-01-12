@@ -1,7 +1,6 @@
 import styled from "styled-components";
 import { FaRegHeart } from "react-icons/fa";
 import { useEffect, useState } from "react";
-import Header from "../../components/common/Header/Header.tsx";
 import { GroupOrderDetail, GroupOrderImage } from "@/types/grouporder";
 import {
   cancelGroupPurchaseCompletion,
@@ -32,6 +31,7 @@ import EmptyMessage from "../../constants/EmptyMessage.tsx";
 import { Dday, DividerBar, MetaInfo, People } from "@/styles/groupPurchase";
 import useMediaQuery from "../../hooks/useMediaQuery.ts";
 import ToolTipMessage from "../../components/GroupPurchase/TooltipMessage.tsx";
+import { useSetHeader } from "@/hooks/useSetHeader";
 
 export default function GroupPurchasePostPage() {
   const { tokenInfo } = useUserStore();
@@ -199,13 +199,13 @@ export default function GroupPurchasePostPage() {
     { label: "삭제하기", onClick: handleDelete },
   ];
 
+  useSetHeader({
+    title: "게시글 상세",
+    menuItems,
+  });
+
   return (
     <Wrapper>
-      <Header
-        title="공동구매 게시글"
-        hasBack={true}
-        menuItems={post?.myPost ? menuItems : undefined}
-      />
       {isLoading ? (
         <LoadingSpinner message="게시글을 불러오는 중..." />
       ) : post ? (
@@ -441,7 +441,7 @@ export default function GroupPurchasePostPage() {
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
-  padding: 80px 16px;
+  padding: 0 16px 100px;
   min-height: 100vh;
   box-sizing: border-box;
 

@@ -1,5 +1,4 @@
 import styled from "styled-components";
-import Header from "../../components/common/Header/Header.tsx";
 import FormField from "../../components/complain/FormField.tsx";
 import { useEffect, useState } from "react";
 import arrowright from "../../assets/arrow-right.svg";
@@ -267,7 +266,7 @@ const FormCreatePage = () => {
   return (
     <PageWrapper>
       {/* [수정] 9. 헤더 타이틀 동적 변경 */}
-      <Header title={isEditMode ? "폼 수정하기" : "폼 만들기"} hasBack={true} />
+
       <FormBoxBlue>
         {/* --- 기본 설문 정보 입력 (폼은 동일) --- */}
         <FormField label="제목">

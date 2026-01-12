@@ -1,7 +1,6 @@
 import { useState } from "react";
 import styled from "styled-components";
 import { useLocation, useNavigate } from "react-router-dom";
-import Header from "../../components/common/Header/Header.tsx";
 import CommonBottomModal from "../../components/modal/CommonBottomModal";
 import useUserStore from "../../stores/useUserStore";
 import { createGroupPurchase, updateGroupPurchase } from "@/apis/groupPurchase";
@@ -15,6 +14,7 @@ import { useFileHandler } from "@/hooks/useFileHandler";
 import FileUploader from "../../components/common/FileUploader.tsx";
 import Modal from "../../components/modal/Modal.tsx";
 import { CheckBeforeDeal2 } from "@/constants/CheckBeforeDeal2";
+import { useSetHeader } from "@/hooks/useSetHeader";
 
 export default function GroupPurchaseWritePage() {
   const navigate = useNavigate();
@@ -101,19 +101,12 @@ export default function GroupPurchaseWritePage() {
     }
   };
 
-  const handleTempSave = () => {
-    alert("임시 저장되었습니다.");
-  };
+  useSetHeader({
+    title: `공동구매 ${isEditMode ? "수정" : "작성"}`, // 문자열 템플릿 리터럴 사용
+  });
 
   return (
     <Wrapper>
-      <Header
-        title={`공동구매 ${isEditMode ? "수정" : "작성"}`}
-        hasBack={true}
-        rightContent={
-          <TempSaveButton onClick={handleTempSave}>임시저장</TempSaveButton>
-        }
-      />
       {isLoading && <LoadingSpinner overlay message="글 쓰는 중..." />}
       {/*거래 전 확인하세요 모달*/}
       {/*<CommonBottomModal*/}
@@ -234,9 +227,7 @@ const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  padding: 70px 16px;
-  padding-bottom: 100px;
-
+  padding: 0 16px 100px;
   .required {
     color: red;
   }
@@ -305,14 +296,5 @@ const SubmitButton = styled.button`
   border-radius: 8px;
   font-size: 16px;
   font-weight: bold;
-  cursor: pointer;
-`;
-
-const TempSaveButton = styled.button`
-  background: none;
-  border: none;
-  color: #888;
-  font-size: 14px;
-  font-weight: 500;
   cursor: pointer;
 `;

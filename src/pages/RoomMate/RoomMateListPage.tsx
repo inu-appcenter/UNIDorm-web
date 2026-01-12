@@ -1,7 +1,6 @@
 import styled from "styled-components";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import RoomMateCard from "../../components/roommate/RoomMateCard.tsx";
-import Header from "../../components/common/Header/Header.tsx";
 import { useEffect, useState } from "react";
 import { RoommatePost } from "@/types/roommates";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -137,11 +136,6 @@ export default function RoomMateListPage() {
 
   return (
     <RoomMateListPageWrapper>
-      <Header
-        title={"룸메이트 둘러보기"}
-        hasBack={true}
-        backPath={"/roommate"}
-      />
       <TitleContentArea
         title={"최신순"}
         description={"룸메이트를 구하고 있는 다양한 UNI들을 찾아보세요!"}

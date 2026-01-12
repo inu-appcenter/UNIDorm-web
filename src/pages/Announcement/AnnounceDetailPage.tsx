@@ -1,7 +1,6 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
-import Header from "../../components/common/Header/Header.tsx";
 import {
   deleteAnnouncement,
   getAnnouncementDetail,
@@ -22,6 +21,7 @@ import {
 } from "@/styles/announcement";
 import CommonBottomModal from "../../components/modal/CommonBottomModal.tsx";
 import { getLabelByValue } from "@/utils/announceUtils";
+import { useSetHeader } from "@/hooks/useSetHeader";
 
 export default function AnnounceDetailPage() {
   const { boardId } = useParams<{ boardId: string }>();
@@ -82,38 +82,6 @@ export default function AnnounceDetailPage() {
     window.scrollTo(0, 0);
   }, [boardId]);
 
-  const baseMenuItems = [
-    {
-      label: "수정하기",
-      onClick: () => {
-        navigate("/announcements/write", {
-          state: { announce, announceFiles: images },
-        });
-      },
-    },
-    {
-      label: "삭제하기",
-      onClick: () => {
-        handleDelete();
-      },
-    },
-  ];
-
-  const optionalItems = announce?.link
-    ? [
-        {
-          label: "생활원 홈페이지에서 보기",
-          onClick: () => {
-            window.open(announce?.link, "_blank");
-          },
-        },
-      ]
-    : [];
-
-  const menuItems = isAdmin
-    ? [...baseMenuItems, ...optionalItems]
-    : optionalItems;
-
   const handleDelete = async () => {
     if (!boardId) return;
     if (!window.confirm("정말 삭제하시겠습니까?")) return;
@@ -127,6 +95,47 @@ export default function AnnounceDetailPage() {
     }
   };
 
+  const headerConfig = useMemo(() => {
+    // 기본 메뉴 (수정/삭제)
+    const baseMenuItems = [
+      {
+        label: "수정하기",
+        onClick: () => {
+          navigate("/announcements/write", {
+            state: { announce, announceFiles: images },
+          });
+        },
+      },
+      {
+        label: "삭제하기",
+        onClick: handleDelete,
+      },
+    ];
+
+    // 선택적 메뉴 (링크가 있을 경우)
+    const optionalItems = announce?.link
+      ? [
+          {
+            label: "생활원 홈페이지에서 보기",
+            onClick: () => window.open(announce.link, "_blank"),
+          },
+        ]
+      : [];
+
+    // 권한별 메뉴 최종 조립
+    const menuItems = isAdmin
+      ? [...baseMenuItems, ...optionalItems]
+      : optionalItems;
+
+    return {
+      title: "공지사항 상세",
+      menuItems: menuItems.length > 0 ? menuItems : null, // 메뉴가 없으면 null 처리
+    };
+  }, [announce, images, isAdmin, navigate, handleDelete]); // 의존성 배열에 모두 추가
+
+  /* 3. 헤더 주입 */
+  useSetHeader(headerConfig);
+
   const [currentImage, setCurrentImage] = useState(0);
   const handlers = useSwipeable({
     onSwipedLeft: () =>
@@ -137,72 +146,70 @@ export default function AnnounceDetailPage() {
 
   return (
     <Wrapper>
-      <Header title="공지사항 상세" hasBack={true} menuItems={menuItems} />
+      {/*<ScrollArea>*/}
+      <Content>
+        {isLoading ? (
+          <LoadingSpinner message="공지사항을 불러오는 중..." />
+        ) : announce ? (
+          <>
+            <TitleArea>
+              <Title>{announce.title}</Title>
+              <NoticeTagWrapper>
+                {announce.emergency && <UrgentBadge>긴급</UrgentBadge>}
+                <TypeBadge type={announce.announcementType}>
+                  {getLabelByValue(announce.announcementType)}
+                </TypeBadge>
+              </NoticeTagWrapper>
+            </TitleArea>
 
-      <ScrollArea>
-        <Content>
-          {isLoading ? (
-            <LoadingSpinner message="공지사항을 불러오는 중..." />
-          ) : announce ? (
-            <>
-              <TitleArea>
-                <Title>{announce.title}</Title>
-                <NoticeTagWrapper>
-                  {announce.emergency && <UrgentBadge>긴급</UrgentBadge>}
-                  <TypeBadge type={announce.announcementType}>
-                    {getLabelByValue(announce.announcementType)}
-                  </TypeBadge>
-                </NoticeTagWrapper>
-              </TitleArea>
+            <UserInfo>
+              <UserText>
+                <Nickname>{announce.writer}</Nickname>
+                <Date>{announce?.createdDate || "날짜 불러오는 중..."}</Date>
+              </UserText>
+            </UserInfo>
+            <GrayDivider margin={"16px 0"} />
 
-              <UserInfo>
-                <UserText>
-                  <Nickname>{announce.writer}</Nickname>
-                  <Date>{announce?.createdDate || "날짜 불러오는 중..."}</Date>
-                </UserText>
-              </UserInfo>
-              <GrayDivider margin={"16px 0"} />
-
-              {images.length > 0 && (
-                <ImageSlider {...handlers} style={{ touchAction: "pan-y" }}>
-                  <SliderItem
-                    onClick={() => {
-                      setPreviewUrl(images[currentImage].filePath);
-                      setShowInfoModal(true);
+            {images.length > 0 && (
+              <ImageSlider {...handlers} style={{ touchAction: "pan-y" }}>
+                <SliderItem
+                  onClick={() => {
+                    setPreviewUrl(images[currentImage].filePath);
+                    setShowInfoModal(true);
+                  }}
+                >
+                  <img
+                    src={images[currentImage].filePath}
+                    alt={`공지사항 이미지 ${currentImage + 1}`}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      borderRadius: "10px",
+                      userSelect: "none",
+                      pointerEvents: "none",
                     }}
-                  >
-                    <img
-                      src={images[currentImage].filePath}
-                      alt={`공지사항 이미지 ${currentImage + 1}`}
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                        borderRadius: "10px",
-                        userSelect: "none",
-                        pointerEvents: "none",
-                      }}
-                      draggable={false}
-                    />
-                  </SliderItem>
-                  <SliderIndicator>
-                    {images.map((_, idx) => (
-                      <Dot key={idx} $active={idx === currentImage} />
-                    ))}
-                  </SliderIndicator>
-                </ImageSlider>
-              )}
-              {attachments.length > 0 && (
-                <AnnounceAttachment attachments={attachments} />
-              )}
+                    draggable={false}
+                  />
+                </SliderItem>
+                <SliderIndicator>
+                  {images.map((_, idx) => (
+                    <Dot key={idx} $active={idx === currentImage} />
+                  ))}
+                </SliderIndicator>
+              </ImageSlider>
+            )}
+            {attachments.length > 0 && (
+              <AnnounceAttachment attachments={attachments} />
+            )}
 
-              <BodyText>{linkify(announce.content)}</BodyText>
-            </>
-          ) : (
-            <EmptyMessage message="공지사항을 불러올 수 없습니다." />
-          )}
-        </Content>
-      </ScrollArea>
+            <BodyText>{linkify(announce.content)}</BodyText>
+          </>
+        ) : (
+          <EmptyMessage message="공지사항을 불러올 수 없습니다." />
+        )}
+      </Content>
+      {/*</ScrollArea>*/}
 
       <CommonBottomModal
         id={"이미지보기"}
@@ -225,16 +232,10 @@ const Wrapper = styled.div`
   position: relative;
   display: flex;
   flex-direction: column;
-  background: white;
-  padding-top: 56px;
-  height: 100vh;
   box-sizing: border-box;
-`;
 
-const ScrollArea = styled.div`
   flex: 1;
-  overflow-y: auto;
-  padding: 24px 16px 100px;
+  padding: 0 16px 100px;
 `;
 
 const Content = styled.div`

@@ -11,7 +11,7 @@ import {
   updatePopupNotification,
 } from "@/apis/popup-notification";
 import { RequestPopupNotificationDto } from "@/types/popup-notifications";
-import Header from "../../components/common/Header/Header.tsx";
+import { useSetHeader } from "@/hooks/useSetHeader";
 
 const PopupNotiFormPage = () => {
   const { popupNotificationId } = useParams<{ popupNotificationId: string }>();
@@ -134,9 +134,10 @@ const PopupNotiFormPage = () => {
   const submitButtonText = isEditMode ? "수정하기" : "등록하기";
   const loadingButtonText = isEditMode ? "수정 중..." : "등록 중...";
 
+  useSetHeader({ title: pageTitle });
+
   return (
     <Wrapper>
-      <Header title={pageTitle} hasBack={true} />
       <Form onSubmit={handleSubmit}>
         <Label>제목</Label>
         <Input
@@ -228,8 +229,7 @@ const Wrapper = styled.div`
   width: 100%;
   max-width: 700px;
   margin: 0 auto;
-  padding: 40px 16px;
-  padding-top: 80px;
+  padding: 0 16px 100px;
   box-sizing: border-box;
 `;
 

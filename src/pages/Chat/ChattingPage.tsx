@@ -1,5 +1,4 @@
 import styled from "styled-components";
-import Header from "../../components/common/Header/Header.tsx";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import ChatInfo from "../../components/chat/ChatInfo.tsx";
@@ -9,8 +8,9 @@ import send from "../../assets/chat/send.svg";
 import { useRoommateChat } from "./useRoommateChat.ts";
 import useUserStore from "../../stores/useUserStore.ts";
 import { getRoommateChatHistory } from "@/apis/chat";
-import { deleteRoommateChatRoom } from "@/apis/roommate";
 import TopNoticeBanner from "../../components/chat/TopNoticeBanner.tsx";
+import { useSetHeader } from "@/hooks/useSetHeader";
+import { deleteRoommateChatRoom } from "@/apis/roommate";
 
 type MessageType = {
   id: number;
@@ -34,20 +34,17 @@ export default function ChattingPage() {
     location.state?.partnerProfileImageUrl ?? undefined;
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
 
   const roomId = Number(id);
   const userId = userInfo.id;
   const token = tokenInfo.accessToken;
 
-  // 하단 스크롤 이동 함수
+  // 하단 스크롤 이동
   const scrollToBottom = () => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTo({
-        top: scrollRef.current.scrollHeight,
-        behavior: "smooth",
-      });
-    }
+    window.scrollTo({
+      top: document.documentElement.scrollHeight,
+      behavior: "smooth",
+    });
   };
 
   // 메시지 리스트 변경 시 자동 스크롤
@@ -169,27 +166,39 @@ export default function ChattingPage() {
         );
         if (!confirmed) return;
         try {
-          if (roomId === undefined) throw new Error("채팅방 id 미정의");
+          if (roomId === undefined)
+            throw new Error("채팅방 id가 undefined입니다.");
           const response = await deleteRoommateChatRoom(roomId);
           if (response.status === 201) {
             alert("채팅방에서 나왔어요.");
+            console.log("채팅방 나가기 성공, 채팅방이 삭제되었습니다.");
+            // 추가 처리(예: 화면 이동, 상태 업데이트 등)
             navigate("/chat");
           }
         } catch (error: any) {
-          alert("채팅방 나가기 실패");
+          alert("채팅방 나가기를 실패했어요." + error);
+          if (error.response) {
+            if (error.response.status === 403) {
+              console.error("게스트가 아닌 사용자의 접근입니다.");
+            } else if (error.response.status === 404) {
+              console.error("유저 또는 채팅방을 찾을 수 없습니다.");
+            } else {
+              console.error("알 수 없는 오류가 발생했습니다.");
+            }
+          } else {
+            console.error("네트워크 오류 또는 서버 응답 없음");
+          }
         }
       },
     },
   ];
 
+  useSetHeader({ title: "룸메이트 채팅", menuItems });
+
   return (
     <ChatPageWrapper>
-      <Header
-        hasBack={true}
-        title={typeString + " 채팅"}
-        menuItems={menuItems}
-      />
-      <ContentWrapper>
+      {/* 상단 고정 영역 */}
+      <FixedHeaderContainer>
         <ChatInfo
           selectedTab={typeString}
           partnerName={partnerName}
@@ -204,74 +213,81 @@ export default function ChattingPage() {
               : "자유롭게 채팅을 나누며 서로를 알아가보세요!"
           }
         />
+      </FixedHeaderContainer>
 
-        <ChattingWrapper ref={scrollRef}>
-          {messageList.map((msg) =>
-            msg.sender === "me" ? (
-              <ChatItemMy key={msg.id} content={msg.content} time={msg.time} />
-            ) : (
-              <ChatItemOtherPerson
-                key={msg.id}
-                content={msg.content}
-                time={msg.time}
-              />
-            ),
-          )}
-        </ChattingWrapper>
+      {/* 스크롤 채팅 영역 */}
+      <ChattingWrapper>
+        {messageList.map((msg) =>
+          msg.sender === "me" ? (
+            <ChatItemMy key={msg.id} content={msg.content} time={msg.time} />
+          ) : (
+            <ChatItemOtherPerson
+              key={msg.id}
+              content={msg.content}
+              time={msg.time}
+            />
+          ),
+        )}
+      </ChattingWrapper>
 
-        <InputArea>
-          <Input
-            placeholder={"메시지 입력"}
-            ref={inputRef}
-            onInput={handleInput}
-            rows={1}
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleSendMessage();
-              }
-            }}
-          />
-          <SendButton onClick={handleSendMessage}>
-            <img src={send} alt={"send"} />
-          </SendButton>
-        </InputArea>
-      </ContentWrapper>
+      {/* 하단 고정 입력창 */}
+      <FixedInputArea>
+        <Input
+          placeholder={"메시지 입력"}
+          ref={inputRef}
+          onInput={handleInput}
+          rows={1}
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              handleSendMessage();
+            }
+          }}
+        />
+        <SendButton onClick={handleSendMessage}>
+          <img src={send} alt={"send"} />
+        </SendButton>
+      </FixedInputArea>
     </ChatPageWrapper>
   );
 }
 
 const ChatPageWrapper = styled.div`
   width: 100%;
-  height: 100dvh; /* 뷰포트 높이 고정 */
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
+  background: #f4f4f4;
+  min-height: 100vh;
+  position: relative;
 `;
 
-const ContentWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  overflow: hidden;
+const FixedHeaderContainer = styled.div`
+  position: fixed;
+  /* 부모 레이아웃 상단 패딩값 */
+  top: 70px;
+  left: 0;
+  right: 0;
+  z-index: 10;
   background: #f4f4f4;
-  padding-top: 70px;
 `;
 
 const ChattingWrapper = styled.div`
-  flex: 1; /* 가용 공간 점유 */
-  overflow-y: auto; /* 독립 스크롤 */
   display: flex;
   flex-direction: column;
-  padding: 10px 0 20px 0;
+  /* 상단 고정 요소(ChatInfo + Banner) 높이만큼 여백 */
+  padding-top: 70px;
+  /* 하단 입력창 높이만큼 여백 */
+  padding-bottom: 70px;
+  box-sizing: border-box;
   background: #f4f4f4;
 `;
 
-const InputArea = styled.div`
-  width: 100%;
+const FixedInputArea = styled.div`
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
   min-height: 56px;
   background-color: #fafafa;
   display: flex;
@@ -302,4 +318,5 @@ const SendButton = styled.button`
   cursor: pointer;
   display: flex;
   align-items: center;
+  flex-shrink: 0;
 `;

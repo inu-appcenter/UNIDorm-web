@@ -2,7 +2,6 @@ import styled from "styled-components";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import SquareButton from "../../components/common/SquareButton.tsx";
-import Header from "../../components/common/Header/Header.tsx";
 import { ComplaintReplyDto } from "@/types/complain";
 import {
   createComplaintReply,
@@ -13,6 +12,7 @@ import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import FileUploader from "../../components/common/FileUploader.tsx";
 import { useFileHandler } from "@/hooks/useFileHandler";
 import LabeledField from "../../components/complain/LabeledField.tsx";
+import { useSetHeader } from "@/hooks/useSetHeader";
 
 export default function ComplainAnswerWritePage() {
   const { complainId } = useParams<{ complainId: string }>();
@@ -92,10 +92,10 @@ export default function ComplainAnswerWritePage() {
     }
   };
 
+  useSetHeader({ title: "민원 답변 작성/수정" });
+
   return (
     <Wrapper>
-      <Header title={"민원 답변 작성"} hasBack={true} />
-
       {isLoading && <LoadingSpinner overlay message="글 쓰는 중..." />}
 
       <Content>
@@ -160,7 +160,7 @@ const Wrapper = styled.div`
 
 const Content = styled.div`
   flex: 1;
-  padding: 90px 20px 120px;
+  padding: 0 16px 100px;
   display: flex;
   flex-direction: column;
   gap: 16px;

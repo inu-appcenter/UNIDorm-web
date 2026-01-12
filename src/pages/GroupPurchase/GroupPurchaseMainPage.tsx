@@ -1,10 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import GroupPurchaseList from "../../components/GroupPurchase/GroupPurchaseList";
 import { useNavigate } from "react-router-dom";
 import { FaSearch } from "react-icons/fa";
-import Header from "../../components/common/Header/Header.tsx";
-import BottomBar from "../../components/common/BottomBar/BottomBar.tsx";
 import { GetGroupPurchaseListParams, GroupOrder } from "@/types/grouporder";
 import { getGroupPurchaseList } from "@/apis/groupPurchase";
 import useUserStore from "../../stores/useUserStore.ts";
@@ -25,6 +23,7 @@ import {
   TagList,
 } from "@/styles/common";
 import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
+import { useSetHeader } from "@/hooks/useSetHeader";
 
 /**
  * 로컬 스토리지에 저장될 알림 상태
@@ -250,6 +249,36 @@ export default function GroupPurchaseMainPage() {
     }
   };
 
+  const headerConfig = useMemo(
+    () => ({
+      title: "공동구매",
+      menuItems: [
+        {
+          label: "알림 수신 설정",
+          onClick: () => navigate("/notification-setting"),
+        },
+      ],
+      secondHeader: (
+        <CategoryWrapper>
+          {CATEGORY_LIST.map((category) => (
+            <CategoryItem
+              key={category}
+              className={selectedCategory === category ? "active" : ""}
+              onClick={() => handleCategoryClick(category)} // 클릭 핸들러
+            >
+              {category}
+            </CategoryItem>
+          ))}
+        </CategoryWrapper>
+      ),
+      settingOnClick: handleKeywordSettingButton,
+    }),
+    [selectedCategory, navigate],
+  ); // selectedCategory 필수 포함
+
+  /* 안정된 config 전달 */
+  useSetHeader(headerConfig);
+
   return (
     <PageWrapper>
       {/* 4. state에 notification 데이터가 있을 때만 렌더링 */}
@@ -263,24 +292,7 @@ export default function GroupPurchaseMainPage() {
           // appIcon="🚀"
         />
       )}
-      <Header
-        title="공동구매"
-        hasBack={false}
-        secondHeader={
-          <CategoryWrapper>
-            {CATEGORY_LIST.map((category) => (
-              <CategoryItem
-                key={category}
-                className={selectedCategory === category ? "active" : ""}
-                onClick={() => handleCategoryClick(category)}
-              >
-                {category}
-              </CategoryItem>
-            ))}
-          </CategoryWrapper>
-        }
-        settingOnClick={handleKeywordSettingButton}
-      />
+
       <FilterWrapper>
         <SelectableChipGroup
           Groups={SORT_OPTIONS.map((option) => option)}
@@ -344,13 +356,12 @@ export default function GroupPurchaseMainPage() {
       >
         ✏️ 글쓰기
       </WriteButton>
-      <BottomBar />
     </PageWrapper>
   );
 }
 
 const PageWrapper = styled.div`
-  padding: 122px 16px 140px;
+  padding: 40px 16px 140px;
   box-sizing: border-box;
   overflow-y: auto;
   display: flex;

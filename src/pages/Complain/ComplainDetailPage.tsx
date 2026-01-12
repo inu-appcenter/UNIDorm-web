@@ -1,9 +1,8 @@
 import styled from "styled-components";
-import Header from "../../components/common/Header/Header.tsx";
 import StepFlow from "../../components/complain/StepFlow.tsx";
 import ComplainCard from "../../components/complain/ComplainCard.tsx";
 import ComplainAnswerCard from "../../components/complain/ComplainAnswerCard.tsx";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { deleteComplaint, getComplaintDetail } from "@/apis/complain";
 import { ComplaintDetail } from "@/types/complain";
@@ -18,6 +17,7 @@ import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../../constants/EmptyMessage.tsx";
 import { useIsAdminRole } from "@/hooks/useIsAdminRole";
 import { TipImage } from "@/types/tips";
+import { useSetHeader } from "@/hooks/useSetHeader";
 
 const ComplainDetailPage = () => {
   const { isAdmin } = useIsAdminRole();
@@ -132,28 +132,31 @@ const ComplainDetailPage = () => {
     }
   };
 
-  const menuItems = [
-    {
-      label: "수정하기",
-      onClick: () => {
-        navigate("/complain/write", {
-          state: { complain: complaint, complainImages: complainImages },
-        });
-      },
-    },
-    {
-      label: "삭제하기",
-      onClick: handleDelete,
-    },
-  ];
+  const headerConfig = useMemo(
+    () => ({
+      title: "민원 상세",
+      menuItems: [
+        {
+          label: "수정하기",
+          onClick: () => {
+            navigate("/complain/write", {
+              state: { complain: complaint, complainImages: complainImages },
+            });
+          },
+        },
+        {
+          label: "삭제하기",
+          onClick: handleDelete,
+        },
+      ],
+    }),
+    [complainImages, complaint, handleDelete, navigate],
+  );
+
+  useSetHeader(headerConfig);
 
   return (
     <ComplainListPageWrapper>
-      <Header
-        title={"민원 상세"}
-        hasBack={true}
-        menuItems={complaint?.status === "대기중" ? menuItems : undefined}
-      />
       {isLoading ? (
         <LoadingSpinner message="민원 상세 정보를 불러오는 중..." />
       ) : complaint ? (
@@ -275,7 +278,7 @@ const ComplainDetailPage = () => {
 export default ComplainDetailPage;
 
 const ComplainListPageWrapper = styled.div`
-  padding: 90px 16px 90px 16px;
+  padding: 0 16px 100px;
   display: flex;
   flex-direction: column;
   gap: 16px;

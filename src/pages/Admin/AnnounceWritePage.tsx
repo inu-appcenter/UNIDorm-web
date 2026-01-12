@@ -8,7 +8,6 @@ import {
   updateAnnouncement,
   updateAnnouncementWithFiles,
 } from "@/apis/announcements";
-import Header from "../../components/common/Header/Header.tsx";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import FileUploader from "../../components/common/FileUploader.tsx";
 import { useFileHandler } from "@/hooks/useFileHandler";
@@ -20,6 +19,7 @@ import {
   ANNOUNCE_SUB_CATEGORY_LIST,
 } from "@/constants/announcement";
 import { useIsAdminRole } from "@/hooks/useIsAdminRole";
+import { useSetHeader } from "@/hooks/useSetHeader";
 
 export default function AnnounceWritePage() {
   const navigate = useNavigate();
@@ -94,12 +94,10 @@ export default function AnnounceWritePage() {
     }
   };
 
+  useSetHeader({ title: "공지사항 작성/수정" });
+
   return (
     <Wrapper>
-      <Header
-        title={announce ? "공지사항 수정" : "공지사항 작성"}
-        hasBack={true}
-      />
       {isLoading && <LoadingSpinner overlay message="글 쓰는 중..." />}
 
       <Content>
@@ -203,11 +201,11 @@ const Wrapper = styled.div`
   height: 100vh;
   background: #fafafa;
   flex: 1;
+  padding: 0 16px 120px;
 `;
 
 const Content = styled.div`
   flex: 1;
-  padding: 90px 16px 120px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;

@@ -5,7 +5,6 @@ import SquareButton from "../components/common/SquareButton.tsx";
 import React, { useState } from "react";
 import { login } from "@/apis/members";
 import useUserStore from "../stores/useUserStore.ts";
-import Header from "../components/common/Header/Header.tsx";
 import LoadingSpinner from "../components/common/LoadingSpinner.tsx";
 
 export default function LoginPage() {
@@ -57,7 +56,6 @@ export default function LoginPage() {
 
   return (
     <LoginFormWrapper onSubmit={handleLogin}>
-      <Header title={"로그인"} hasBack={true} />
       {isLoading && <LoadingSpinner overlay message="로그인 중..." />}
 
       <div>

@@ -1,5 +1,4 @@
 import styled from "styled-components";
-import Header from "../../components/common/Header/Header.tsx";
 import MenuGroup from "../../components/mypage/MenuGroup.tsx";
 import {
   addNotificationPreferences,
@@ -9,6 +8,7 @@ import {
 import { useEffect, useState } from "react";
 import { NotificationPreferences } from "@/types/notifications";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
+import { useSetHeader } from "@/hooks/useSetHeader";
 
 // 알림 항목 목록 (로컬 이름과 API 키를 매핑하여 관리)
 const initialMenus = [
@@ -139,9 +139,10 @@ const NotificationSettingPage = () => {
     checked: notificationStatus[menu.type] ?? false, // 로딩 후 데이터가 없을 경우를 대비해 기본값 설정
   }));
 
+  useSetHeader({ title: "앱 알림 설정" });
+
   return (
     <Wrapper>
-      <Header title={"알림 수신 설정"} hasBack={true} />
       {isLoading ? (
         <LoadingSpinner
           overlay={true}
@@ -164,8 +165,7 @@ export default NotificationSettingPage;
 // --- 스타일 컴포넌트 ---
 const Wrapper = styled.div`
   flex: 1;
-  padding: 90px 16px;
-  padding-bottom: 150px;
+  padding: 0 16px 100px;
 
   display: flex;
   flex-direction: column;

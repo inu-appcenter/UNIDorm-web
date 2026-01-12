@@ -1,5 +1,4 @@
 import styled from "styled-components";
-import Header from "../../components/common/Header/Header.tsx";
 import RoundSquareButton from "../../components/button/RoundSquareButton.tsx";
 import friends from "../../assets/roommate/Friends.svg";
 import { useNavigate } from "react-router-dom";
@@ -52,7 +51,6 @@ export default function RoomMateAddPage() {
 
   return (
     <RoomMateAddPageWrapper>
-      <Header title={"룸메이트 등록하기"} hasBack={true} showAlarm={false} />
       <Wrapper>
         <TopArea>
           <img src={friends} />

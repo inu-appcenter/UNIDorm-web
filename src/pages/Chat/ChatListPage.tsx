@@ -2,12 +2,11 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { GroupOrderChatRoom, RoommateChatRoom } from "@/types/chats";
 import { getGroupOrderChatRooms, getRoommateChatRooms } from "@/apis/chat";
-import Header from "../../components/common/Header/Header.tsx";
 import ChatListItem from "../../components/chat/ChatListItem.tsx";
 import styled from "styled-components";
 import useUserStore from "../../stores/useUserStore.ts";
-// import TopNoticeBanner from "../../components/chat/TopNoticeBanner.tsx";
 import BottomBar from "../../components/common/BottomBar/BottomBar.tsx";
+import { useSetHeader } from "@/hooks/useSetHeader";
 
 export default function ChatListPage() {
   const navigate = useNavigate();
@@ -60,21 +59,12 @@ export default function ChatListPage() {
     }
   };
 
+  useSetHeader({
+    title: "채팅",
+  });
+
   return (
     <ChatListPageWrapper>
-      <Header
-        title="채팅"
-        hasBack={false}
-        showAlarm={true}
-        // secondHeader={
-        //   <Tab
-        //     tabItems={tabItems}
-        //     selectedTab={selectedTab}
-        //     setSelectedTab={setSelectedTab}
-        //   />
-        // }
-      />
-
       <ContentWrapper>
         {/*<TopNoticeBanner />*/}
         {selectedTab === "공동구매" ? (
@@ -166,7 +156,7 @@ export default function ChatListPage() {
 }
 
 const ChatListPageWrapper = styled.div`
-  padding: 30px 0;
+  padding-bottom: 100px;
 
   display: flex;
   flex-direction: column;
@@ -187,7 +177,7 @@ const ChatListPageWrapper = styled.div`
 `;
 
 const ContentWrapper = styled.div`
-  padding-top: 50px;
+  //padding-top: 50px;
   padding-bottom: 100px;
   display: flex;
   flex-direction: column;

@@ -1,7 +1,6 @@
 // 📄 ComplainAdminPage.tsx
 
 import styled from "styled-components";
-import Header from "../../components/common/Header/Header.tsx";
 import SearchInput from "../../components/complain/SearchInput.tsx";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import ComplainListTable from "../../components/complain/ComplainListTable.tsx";
@@ -11,7 +10,8 @@ import { AdminComplaint, ComplaintSearchDto } from "@/types/complain";
 import { getAllComplaints, searchComplaints } from "@/apis/complainAdmin";
 import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
 import ComplainFilter from "../../components/complain/ComplainFilter.tsx";
-import LoadingSpinner from "../../components/common/LoadingSpinner.tsx"; // 로딩 스피너 추가
+import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
+import { useSetHeader } from "@/hooks/useSetHeader"; // 로딩 스피너 추가
 
 const ComplainAdminPage = () => {
   const { tokenInfo } = useUserStore();
@@ -160,9 +160,10 @@ const ComplainAdminPage = () => {
     return list;
   }, [searchTerm, complaints, selectedMenuIndex]);
 
+  useSetHeader({ title: "전체 민원 목록(관리자)" });
+
   return (
     <ComplainListPageWrapper>
-      <Header title={"생활원 민원 관리"} hasBack={true} />
       <TitleContentArea
         title={"민원 목록"}
         children={
@@ -226,7 +227,7 @@ export default ComplainAdminPage;
 
 // (styled-components 코드는 이전과 동일)
 const ComplainListPageWrapper = styled.div`
-  padding: 90px 16px 40px 16px;
+  padding: 0 16px 100px;
   display: flex;
   flex-direction: column;
   gap: 32px;

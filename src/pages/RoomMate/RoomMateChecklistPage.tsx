@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import styled from "styled-components";
-import Header from "../../components/common/Header/Header";
 import SquareButton from "../../components/common/SquareButton";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import Step1BasicInfo from "../../components/roommate/checklist/steps/Step1BasicInfo";
@@ -34,6 +33,7 @@ import {
   snoring,
   toothgrinding,
 } from "@/constants/constants";
+import { useSetHeader } from "@/hooks/useSetHeader";
 
 export default function RoomMateChecklistPage() {
   const { setUserInfo, userInfo } = useUserStore();
@@ -251,9 +251,10 @@ export default function RoomMateChecklistPage() {
 
   const headerInfo = getStepHeader();
 
+  useSetHeader({ title: "사전 체크리스트 작성/수정" });
+
   return (
     <Wrapper>
-      <Header title={"사전 체크리스트"} hasBack={true} showAlarm={false} />
       {isLoading && <LoadingSpinner overlay message="저장 중..." />}
 
       <ProgressBarContainer>
@@ -312,7 +313,6 @@ export default function RoomMateChecklistPage() {
 
 // Styled Components
 const Wrapper = styled.div`
-  padding-top: 60px;
   padding-bottom: 100px;
   display: flex;
   flex-direction: column;

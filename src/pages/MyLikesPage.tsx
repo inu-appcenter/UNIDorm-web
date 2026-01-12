@@ -1,5 +1,4 @@
 import styled from "styled-components";
-import Header from "../components/common/Header/Header.tsx";
 import TitleContentArea from "../components/common/TitleContentArea.tsx";
 import MyPostLikeCard from "../components/mypage/MyPostLikeCard.tsx";
 import { useEffect, useState } from "react";
@@ -25,8 +24,6 @@ export default function MyLikesPage() {
 
   return (
     <MyScrapPageWrapper>
-      <Header title="좋아요한 글" hasBack={true} showAlarm={true} />
-
       <TitleContentArea title="">
         <CardList>
           {posts.length > 0 ? (
@@ -46,7 +43,7 @@ export default function MyLikesPage() {
 }
 
 const MyScrapPageWrapper = styled.div`
-  padding: 90px 20px 90px 20px;
+  padding: 0 16px 100px;
   display: flex;
   flex-direction: column;
   gap: 16px;
