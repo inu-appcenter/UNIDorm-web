@@ -1,0 +1,70 @@
+export const PATHS = {
+  ROOT: "/",
+  LOGIN: "/login",
+  LOGOUT: "/logout",
+  ONBOARDING: "/onboarding",
+  HOME: "/home",
+  MYPAGE: "/mypage",
+  MYINFO_EDIT: "/myinfoedit",
+  AGREEMENT: "/agreement",
+  NOTI_SETTING: "/notification-setting",
+  MY_POSTS: "/myposts",
+  MY_LIKES: "/liked",
+  ROOMMATE: {
+    ROOT: "/roommate",
+    MY: "/roommate/my",
+    LIST: "/roommate/list",
+    DETAIL: (id: string | number = ":boardId") => `/roommate/list/${id}`,
+    FILTER: "/roommate/filter",
+    CHECKLIST: "/roommate/checklist",
+    ADD: "/roommate/add",
+  },
+  CHAT: {
+    ROOT: "/chat",
+    DETAIL: (chatType = ":chatType", id = ":id") => `/chat/${chatType}/${id}`,
+  },
+  GROUP_PURCHASE: {
+    ROOT: "/groupPurchase",
+    COMING_SOON: "/groupPurchase/comingsoon",
+    DETAIL: (id: string | number = ":boardId") => `/groupPurchase/${id}`,
+    WRITE: "/groupPurchase/write",
+    KEYWORD_SETTING: "/groupPurchase/keywordSetting",
+  },
+  ANNOUNCEMENTS: {
+    ROOT: "/announcements",
+    DETAIL: (id: string | number = ":boardId") => `/announcements/${id}`,
+    WRITE: "/announcements/write",
+  },
+  NOTIFICATION: "/notification",
+  TIPS: {
+    ROOT: "/tips",
+    WRITE: "/tips/write",
+    DETAIL: (id: string | number = ":boardId") => `/tips/${id}`,
+  },
+  CALENDAR: "/calendar",
+  COMPLAIN: {
+    ROOT: "/complain",
+    DETAIL: (id: string | number = ":complainId") => `/complain/${id}`,
+    WRITE: "/complain/write",
+  },
+  FORM: {
+    ROOT: "/form",
+    DETAIL: (id: string | number = ":formId") => `/form/${id}`,
+  },
+  ADMIN: {
+    ROOT: "/admin",
+    CALENDAR: "/admin/calendar",
+    COMPLAIN: "/admin/complain",
+    COMPLAIN_ANSWER: (id: string | number = ":complainId") =>
+      `/admin/complain/answer/${id}`,
+    POPUP_NOTI: "/admin/popup-notifications",
+    POPUP_CREATE: "/admin/popup-notifications/create",
+    POPUP_EDIT: (id: string | number = ":popupNotificationId") =>
+      `/admin/popup-notifications/edit/${id}`,
+    NOTI_CREATE: "/admin/notification/create",
+    FORM_CREATE: "/admin/form/create",
+    FORM_RESULT: (id: string | number = ":formId") =>
+      `/admin/form/${id}/result`,
+    FCM: "/admin/fcm",
+  },
+} as const;
