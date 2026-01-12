@@ -5,13 +5,13 @@ import { useEffect, useState } from "react";
 import Header from "../components/common/Header/Header.tsx";
 import useUserStore from "../stores/useUserStore.ts";
 import { useNavigate } from "react-router-dom";
-import { createMenuGroups } from "../stores/menuGroupsFactory.ts";
+import { createMenuGroups } from "@/stores/menuGroupsFactory";
 import RoomMateInfoArea from "../components/roommate/RoomMateInfoArea.tsx";
-import { getMyRoommateInfo } from "../apis/roommate.ts";
-import { MyRoommateInfoResponse } from "../types/roommates.ts";
+import { getMyRoommateInfo } from "@/apis/roommate";
+import { MyRoommateInfoResponse } from "@/types/roommates";
 import TitleContentArea from "../components/common/TitleContentArea.tsx";
 import BottomBar from "../components/common/BottomBar/BottomBar.tsx";
-import { useIsAdminRole } from "../hooks/useIsAdminRole.ts";
+import { useIsAdminRole } from "@/hooks/useIsAdminRole";
 
 const MyPage = () => {
   const { tokenInfo } = useUserStore();

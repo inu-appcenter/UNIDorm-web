@@ -8,9 +8,9 @@ import {
   AnnouncementUpdateRequest,
   AnnouncementUpdateResponse,
   RequestAnnouncementDto,
-} from "../types/announcements.ts";
+} from "@/types/announcements";
 import axiosInstance from "./axiosInstance.ts";
-import { ManagedFile } from "../hooks/useFileHandler.ts";
+import { ManagedFile } from "@/hooks/useFileHandler";
 
 /**
  * 모든 공지사항을 조회합니다.

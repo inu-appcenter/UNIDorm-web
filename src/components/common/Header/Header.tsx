@@ -7,11 +7,10 @@ import TopRightDropdownMenu from "../TopRightDropdownMenu.tsx";
 
 import logo from "../../../assets/unidorm-logo.webp";
 
-import { Bell } from "lucide-react";
-import { Settings } from "lucide-react";
+import { Bell, Settings } from "lucide-react";
 import useUserStore from "../../../stores/useUserStore.ts";
-import { useIsAdminRole } from "../../../hooks/useIsAdminRole.ts";
-import { getMobilePlatform } from "../../../utils/getMobilePlatform.ts";
+import { useIsAdminRole } from "@/hooks/useIsAdminRole";
+import { getMobilePlatform } from "@/utils/getMobilePlatform";
 import TooltipMessage from "./TooltipMessage.tsx";
 
 interface MenuItemType {

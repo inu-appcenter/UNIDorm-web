@@ -1,7 +1,7 @@
 import axiosInstance from "../apis/axiosInstance";
 import tokenInstance from "../apis/tokenInstance";
-import { ApiResponse } from "../types/common";
-import { MyPost_GroupOrder, TokenInfo, UserInfo } from "../types/members";
+import { ApiResponse } from "@/types/common";
+import { MyPost_GroupOrder, TokenInfo, UserInfo } from "@/types/members";
 import { AxiosResponse } from "axios";
 
 // 회원 가져오기

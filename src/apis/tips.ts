@@ -1,6 +1,6 @@
 // src/apis/tips.ts
 import axiosInstance from "./axiosInstance";
-import { Tip } from "../types/tips.ts";
+import { Tip } from "@/types/tips";
 import tokenInstance from "./tokenInstance.ts";
 
 export const fetchTips = async (): Promise<Tip[]> => {

@@ -1,10 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { GroupOrderChatRoom, RoommateChatRoom } from "../../types/chats";
-import {
-  getGroupOrderChatRooms,
-  getRoommateChatRooms,
-} from "../../apis/chat.ts";
+import { GroupOrderChatRoom, RoommateChatRoom } from "@/types/chats";
+import { getGroupOrderChatRooms, getRoommateChatRooms } from "@/apis/chat";
 import Header from "../../components/common/Header/Header.tsx";
 import ChatListItem from "../../components/chat/ChatListItem.tsx";
 import styled from "styled-components";

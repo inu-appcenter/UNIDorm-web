@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import { CalendarItem, CreateCalendarDto } from "../../types/calendar.ts";
+import { CalendarItem, CreateCalendarDto } from "@/types/calendar";
 import {
   createCalendar,
   deleteCalendar,
   getAllCalendars,
   updateCalendar,
-} from "../../apis/calendar.ts";
+} from "@/apis/calendar";
 import Header from "../../components/common/Header/Header.tsx";
 import { useNavigate } from "react-router-dom";
 

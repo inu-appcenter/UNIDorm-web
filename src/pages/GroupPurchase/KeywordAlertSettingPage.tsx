@@ -6,17 +6,17 @@ import CommonBottomModal from "../../components/modal/CommonBottomModal.tsx";
 import modalContent from "../../components/GroupPurchase/keywordSetting/ModalContent.tsx";
 import CategorySetting from "../../components/GroupPurchase/keywordSetting/CategorySetting.tsx";
 
-import { CategoryType } from "../../constants/groupPurchase.ts";
+import { CategoryType } from "@/constants/groupPurchase";
 import RegisteredKeywordItem from "../../components/GroupPurchase/keywordSetting/RegisteredKeywordItem.tsx";
 import {
   addGroupOrderCategoryNotification,
+  addGroupOrderKeywordNotification,
   deleteGroupOrderCategoryNotification,
   deleteGroupOrderKeywordNotification,
   getGroupOrderCategoryNotifications,
   getGroupOrderKeywordNotifications,
-  addGroupOrderKeywordNotification,
-} from "../../apis/groupPurchaseKeywordSetting.ts";
-import { RecentSearchWrapper, Tag, TagList } from "../../styles/common.ts";
+} from "@/apis/groupPurchaseKeywordSetting";
+import { RecentSearchWrapper, Tag, TagList } from "@/styles/common";
 
 // --- ✅ 상수 정의 ---
 // ✅ API와 통신할 실제 카테고리 목록

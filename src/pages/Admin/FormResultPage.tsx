@@ -1,21 +1,20 @@
 import styled from "styled-components";
 import Header from "../../components/common/Header/Header.tsx";
 import { useEffect, useState } from "react";
-import { SurveyResults } from "../../types/formTypes.ts"; // OptionResult 임포트 제거 (차트 컴포넌트로 이동)
-import { getSurveyResultExcel, getSurveyResults } from "../../apis/formApis.ts";
+import { SurveyResults } from "@/types/formTypes"; // OptionResult 임포트 제거 (차트 컴포넌트로 이동)
+import { getSurveyResultExcel, getSurveyResults } from "@/apis/formApis";
 import { useParams } from "react-router-dom";
-import { FormBoxBlue, FormBoxGray } from "../../styles/form.ts";
+import { FormBoxBlue, FormBoxGray } from "@/styles/form";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import FormResultHeader from "../../components/form/FormResultHeader.tsx";
 import FormResultQuestionHeader from "../../components/form/FormResultQuestionHeader.tsx";
 // recharts 임포트 제거 (차트 컴포넌트로 이동)
-
 // 분리한 차트 컴포넌트와 COLORS 배열을 임포트합니다.
 // (경로는 실제 파일 위치에 맞게 조정하세요)
 import MultipleChoiceResultChart, {
   COLORS,
 } from "../../components/form/MultipleChoiceResultChart.tsx";
-import { formatDeadlineDate } from "../../utils/dateUtils.ts";
+import { formatDeadlineDate } from "@/utils/dateUtils";
 
 // --- 차트 색상 --- (제거)
 // --- 차트 내부 커스텀 라벨 --- (제거)

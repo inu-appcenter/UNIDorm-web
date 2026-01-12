@@ -3,8 +3,8 @@ import TitleContentArea from "../../../common/TitleContentArea";
 import ToggleGroup from "../ToggleGroup";
 import StyledTextInput from "../../StyledTextInput";
 import StyledTextArea from "../../StyledTextArea";
-import { mbti1, mbti2, mbti3, mbti4 } from "../../../../constants/constants";
-import { StepProps } from "../../../../types/roommates";
+import { mbti1, mbti2, mbti3, mbti4 } from "@/constants/constants";
+import { StepProps } from "@/types/roommates";
 
 interface Step4Props extends StepProps {
   randomTitles: string[];

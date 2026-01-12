@@ -1,4 +1,4 @@
-import { GetGroupPurchaseListParams } from "../types/grouporder.ts";
+import { GetGroupPurchaseListParams } from "@/types/grouporder";
 
 export const CATEGORY_LIST: GetGroupPurchaseListParams["type"][] = [
   "전체",

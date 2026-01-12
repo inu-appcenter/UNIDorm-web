@@ -1,4 +1,4 @@
-import { ANNOUNCE_CATEGORY_LIST } from "../constants/announcement.ts";
+import { ANNOUNCE_CATEGORY_LIST } from "@/constants/announcement";
 
 type Language = "ko" | "en";
 

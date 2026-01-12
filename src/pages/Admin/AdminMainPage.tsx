@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import useUserStore from "../../stores/useUserStore.ts";
 import { useEffect } from "react";
-import { useIsAdminRole } from "../../hooks/useIsAdminRole.ts";
+import { useIsAdminRole } from "@/hooks/useIsAdminRole";
 
 const AdminMainPage: React.FC = () => {
   const navigate = useNavigate();

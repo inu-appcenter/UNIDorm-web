@@ -1,8 +1,8 @@
 import TitleContentArea from "../../../common/TitleContentArea";
 import SelectableChipGroup from "../SelectableChipGroup";
 import ToggleGroup from "../ToggleGroup";
-import { colleges, days, dormitory } from "../../../../constants/constants";
-import { StepProps } from "../../../../types/roommates";
+import { colleges, days, dormitory } from "@/constants/constants";
+import { StepProps } from "@/types/roommates";
 
 export default function Step1BasicInfo({ data, onChange }: StepProps) {
   return (

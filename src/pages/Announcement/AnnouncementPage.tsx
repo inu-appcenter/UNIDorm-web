@@ -3,34 +3,34 @@ import Header from "../../components/common/Header/Header.tsx";
 import { useNavigate } from "react-router-dom";
 import { BsEye } from "react-icons/bs";
 import { useEffect, useState } from "react";
-import { Announcement } from "../../types/announcements.ts";
-import { getAnnouncements } from "../../apis/announcements.ts";
+import { Announcement } from "@/types/announcements";
+import { getAnnouncements } from "@/apis/announcements";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../../constants/EmptyMessage.tsx";
-import { useIsAdminRole } from "../../hooks/useIsAdminRole.ts";
-import { formatTimeAgo } from "../../utils/dateUtils.ts";
+import { useIsAdminRole } from "@/hooks/useIsAdminRole";
+import { formatTimeAgo } from "@/utils/dateUtils";
 import {
   NoticeTagWrapper,
   TypeBadge,
   UrgentBadge,
-} from "../../styles/announcement.ts";
+} from "@/styles/announcement";
 import {
   ANNOUNCE_CATEGORY_LIST,
   ANNOUNCE_SUB_CATEGORY_LIST,
-} from "../../constants/announcement.ts";
-import { CategoryItem, CategoryWrapper } from "../../styles/header.ts";
+} from "@/constants/announcement";
+import { CategoryItem, CategoryWrapper } from "@/styles/header";
 import { FaSearch } from "react-icons/fa";
 import { FiX } from "react-icons/fi";
 import {
+  FilterWrapper,
   Label,
   RecentSearchWrapper,
   SearchArea,
   SearchBar,
-  FilterWrapper,
   Tag,
   TagList,
-} from "../../styles/common.ts";
-import { getLabelByValue } from "../../utils/announceUtils.ts";
+} from "@/styles/common";
+import { getLabelByValue } from "@/utils/announceUtils";
 import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
 
 export default function AnnouncementPage() {

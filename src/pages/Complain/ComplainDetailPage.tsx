@@ -5,19 +5,19 @@ import ComplainCard from "../../components/complain/ComplainCard.tsx";
 import ComplainAnswerCard from "../../components/complain/ComplainAnswerCard.tsx";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { deleteComplaint, getComplaintDetail } from "../../apis/complain.ts";
-import { ComplaintDetail } from "../../types/complain.ts";
+import { deleteComplaint, getComplaintDetail } from "@/apis/complain";
+import { ComplaintDetail } from "@/types/complain";
 import {
   assignComplaintOfficer,
   getAdminComplaintDetail,
   updateComplaintStatus,
-} from "../../apis/complainAdmin.ts";
+} from "@/apis/complainAdmin";
 import RoundSquareWhiteButton from "../../components/button/RoundSquareWhiteButton.tsx";
 import RoundSquareButton from "../../components/button/RoundSquareButton.tsx";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../../constants/EmptyMessage.tsx";
-import { useIsAdminRole } from "../../hooks/useIsAdminRole.ts";
-import { TipImage } from "../../types/tips.ts";
+import { useIsAdminRole } from "@/hooks/useIsAdminRole";
+import { TipImage } from "@/types/tips";
 
 const ComplainDetailPage = () => {
   const { isAdmin } = useIsAdminRole();

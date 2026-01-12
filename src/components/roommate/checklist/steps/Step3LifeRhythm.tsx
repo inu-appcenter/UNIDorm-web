@@ -5,8 +5,8 @@ import {
   isLightSleeper,
   showerDuration,
   showertime,
-} from "../../../../constants/constants";
-import { StepProps } from "../../../../types/roommates";
+} from "@/constants/constants";
+import { StepProps } from "@/types/roommates";
 
 export default function Step3LifeRhythm({ data, onChange }: StepProps) {
   return (

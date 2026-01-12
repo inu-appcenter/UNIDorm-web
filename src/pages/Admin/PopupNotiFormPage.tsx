@@ -2,15 +2,15 @@
  * 파일 경로: src/pages/admin/PopupNotiFormPage.tsx
  * (기존의 PopupNotiCreatePage.tsx와 PopupNotiEditPage.tsx를 이 파일로 대체합니다)
  */
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   createPopupNotification,
   getPopupNotificationById,
   updatePopupNotification,
-} from "../../apis/popup-notification";
-import { RequestPopupNotificationDto } from "../../types/popup-notifications";
+} from "@/apis/popup-notification";
+import { RequestPopupNotificationDto } from "@/types/popup-notifications";
 import Header from "../../components/common/Header/Header.tsx";
 
 const PopupNotiFormPage = () => {

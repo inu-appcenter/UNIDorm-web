@@ -3,17 +3,12 @@ import {
   MyPost_GroupOrder,
   MyPost_RoommateBoard,
   MyPost_TipBoard,
-} from "../../types/members";
+} from "@/types/members";
 import TagIconWhiteBackground from "../common/TagIconWhiteBackground.tsx";
 import { FaHeart } from "react-icons/fa";
-import { getDeadlineText } from "../../utils/dateUtils.ts";
+import { getDeadlineText } from "@/utils/dateUtils";
 import 사람 from "../../assets/chat/human.svg";
-import {
-  Dday,
-  DividerBar,
-  MetaInfo,
-  People,
-} from "../../styles/groupPurchase.ts";
+import { Dday, DividerBar, MetaInfo, People } from "@/styles/groupPurchase";
 import { useNavigate } from "react-router-dom";
 
 interface MyPostLikeCardProps {

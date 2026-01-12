@@ -1,10 +1,10 @@
 import type { AxiosResponse } from "axios";
 import tokenInstance from "./tokenInstance.ts";
 import {
+  Notification,
   NotificationPayload,
   NotificationPreferences,
-} from "../types/notifications.ts";
-import { Notification } from "../types/notifications.ts";
+} from "@/types/notifications";
 
 /**
  * 새로운 알림을 생성합니다. (POST /notifications)

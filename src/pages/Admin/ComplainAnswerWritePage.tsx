@@ -3,15 +3,15 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import SquareButton from "../../components/common/SquareButton.tsx";
 import Header from "../../components/common/Header/Header.tsx";
-import { ComplaintReplyDto } from "../../types/complain.ts";
+import { ComplaintReplyDto } from "@/types/complain";
 import {
   createComplaintReply,
   updateComplaintReply,
   updateComplaintStatus,
-} from "../../apis/complainAdmin.ts";
+} from "@/apis/complainAdmin";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import FileUploader from "../../components/common/FileUploader.tsx";
-import { useFileHandler } from "../../hooks/useFileHandler.ts";
+import { useFileHandler } from "@/hooks/useFileHandler";
 import LabeledField from "../../components/complain/LabeledField.tsx";
 
 export default function ComplainAnswerWritePage() {

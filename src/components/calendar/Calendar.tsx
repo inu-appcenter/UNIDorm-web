@@ -1,23 +1,23 @@
 import styled from "styled-components";
 import {
   addDays,
+  addMonths,
+  differenceInDays,
+  endOfMonth,
+  endOfWeek,
   format,
   isAfter,
   isBefore,
   isSameDay,
   parseISO,
-  startOfWeek,
   startOfMonth,
-  endOfMonth,
-  endOfWeek,
-  differenceInDays,
-  addMonths,
-  subMonths,
+  startOfWeek,
   subDays,
+  subMonths,
 } from "date-fns";
 import { useEffect, useMemo, useState } from "react";
-import { getCalendarByMonth } from "../../apis/calendar.ts";
-import { CalendarItem } from "../../types/calendar.ts";
+import { getCalendarByMonth } from "@/apis/calendar";
+import { CalendarItem } from "@/types/calendar";
 
 interface CalendarProps {
   mode?: "month" | "week";

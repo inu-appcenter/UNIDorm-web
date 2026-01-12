@@ -7,9 +7,9 @@ import {
   ComplaintReplyResponse,
   ComplaintResponse,
   ComplaintSearchDto,
-} from "../types/complain.ts";
+} from "@/types/complain";
 import { AxiosResponse } from "axios";
-import { ManagedFile } from "../hooks/useFileHandler.ts";
+import { ManagedFile } from "@/hooks/useFileHandler";
 
 export const deleteComplaintReply = async (
   complaintId: number,

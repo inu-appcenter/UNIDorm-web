@@ -6,12 +6,9 @@ import SearchInput from "../../components/complain/SearchInput.tsx";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import ComplainListTable from "../../components/complain/ComplainListTable.tsx";
 import useUserStore from "../../stores/useUserStore.ts";
-import { useEffect, useState, useRef, useMemo } from "react"; // useMemo 추가
-import { AdminComplaint, ComplaintSearchDto } from "../../types/complain.ts";
-import {
-  getAllComplaints,
-  searchComplaints,
-} from "../../apis/complainAdmin.ts";
+import { useEffect, useMemo, useRef, useState } from "react"; // useMemo 추가
+import { AdminComplaint, ComplaintSearchDto } from "@/types/complain";
+import { getAllComplaints, searchComplaints } from "@/apis/complainAdmin";
 import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
 import ComplainFilter from "../../components/complain/ComplainFilter.tsx";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx"; // 로딩 스피너 추가

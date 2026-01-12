@@ -8,8 +8,8 @@ import ChatItemMy from "../../components/chat/ChatItemMy.tsx";
 import send from "../../assets/chat/send.svg";
 import { useRoommateChat } from "./useRoommateChat.ts";
 import useUserStore from "../../stores/useUserStore.ts";
-import { getRoommateChatHistory } from "../../apis/chat.ts";
-import { deleteRoommateChatRoom } from "../../apis/roommate.ts";
+import { getRoommateChatHistory } from "@/apis/chat";
+import { deleteRoommateChatRoom } from "@/apis/roommate";
 import TopNoticeBanner from "../../components/chat/TopNoticeBanner.tsx";
 
 type MessageType = {

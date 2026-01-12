@@ -6,8 +6,8 @@ import {
   ComplaintDetail,
   ComplaintResponse,
   MyComplaint,
-} from "../types/complain.ts";
-import { ManagedFile } from "../hooks/useFileHandler.ts";
+} from "@/types/complain";
+import { ManagedFile } from "@/hooks/useFileHandler";
 
 export const deleteComplaint = async (
   complaintId: number,

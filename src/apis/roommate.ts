@@ -13,7 +13,7 @@ import {
   RoommateRulesResponse,
   RoommateRulesUpdateRequest,
   SimilarRoommatePost,
-} from "../types/roommates.ts";
+} from "@/types/roommates";
 import axiosInstance from "./axiosInstance.ts";
 
 export const getRoomMateList = async (): Promise<

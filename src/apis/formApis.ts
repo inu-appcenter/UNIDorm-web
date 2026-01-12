@@ -8,7 +8,7 @@ import {
   SurveyResults,
   SurveySummary,
   SurveyUpdateRequest,
-} from "../types/formTypes";
+} from "@/types/formTypes";
 import tokenInstance from "./tokenInstance";
 
 //

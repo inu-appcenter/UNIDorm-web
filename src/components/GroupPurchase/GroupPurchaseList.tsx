@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import GroupPurchaseItem from "./GroupPurchaseItem";
-import { GroupOrder } from "../../types/grouporder.ts";
+import { GroupOrder } from "@/types/grouporder";
 import { useNavigate } from "react-router-dom";
 
 interface GroupPurchaseListProps {

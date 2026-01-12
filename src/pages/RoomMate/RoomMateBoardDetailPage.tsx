@@ -5,8 +5,8 @@ import { useLocation, useParams } from "react-router-dom";
 import profileimg from "../../assets/profileimg.png";
 import RoomMateBottomBar from "../../components/roommate/RoomMateBottomBar";
 import Header from "../../components/common/Header/Header.tsx";
-import { getOpponentChecklist, getRoomMateDetail } from "../../apis/roommate";
-import { RoommatePost } from "../../types/roommates.ts";
+import { getOpponentChecklist, getRoomMateDetail } from "@/apis/roommate";
+import { RoommatePost } from "@/types/roommates";
 import UseUserStore from "../../stores/useUserStore.ts";
 
 const InfoCard = ({

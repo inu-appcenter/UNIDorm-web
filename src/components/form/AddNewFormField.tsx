@@ -1,8 +1,8 @@
 import styled from "styled-components";
-import { Dropdown, Input, Textarea } from "../../styles/common"; // 기존 경로
-import { QuestionType } from "../../types/formTypes.ts";
-import { FormFieldState } from "../../pages/Admin/FormCreatePage.tsx";
-import { AddButton, AddButtonArea } from "../../styles/form.ts";
+import { Dropdown, Input, Textarea } from "@/styles/common"; // 기존 경로
+import { QuestionType } from "@/types/formTypes";
+import { FormFieldState } from "@/pages/Admin/FormCreatePage";
+import { AddButton, AddButtonArea } from "@/styles/form";
 
 // [수정] 1. 부모로부터 받을 props 타입 정의
 interface AddNewFormFieldProps {

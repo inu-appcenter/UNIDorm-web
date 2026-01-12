@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
-import { urlToFile } from "../utils/fileUtils";
+import { useCallback, useEffect, useState } from "react";
+import { urlToFile } from "@/utils/fileUtils";
 
 // 서버에서 받아오는 초기 파일 데이터 타입 (모드별 DTO 형태 반영)
 export interface InitialFile {

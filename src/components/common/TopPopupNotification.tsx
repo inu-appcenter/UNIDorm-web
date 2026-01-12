@@ -1,12 +1,5 @@
-import React, {
-  useState,
-  useEffect,
-  useRef,
-  FC,
-  ReactNode,
-  // MouseEvent와 TouchEvent를 react에서 import하지 않습니다.
-} from "react";
-import styled, { keyframes, css } from "styled-components";
+import React, { FC, ReactNode, useEffect, useRef, useState } from "react";
+import styled, { css, keyframes } from "styled-components";
 
 // --- STYLED COMPONENTS ---
 

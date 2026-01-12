@@ -6,11 +6,8 @@ import { useNavigate } from "react-router-dom";
 import useUserStore from "../../stores/useUserStore.ts";
 import BottomBar from "../../components/common/BottomBar/BottomBar.tsx";
 import { useEffect, useState } from "react";
-import { RoommatePost, SimilarRoommatePost } from "../../types/roommates.ts";
-import {
-  getRoomMateList,
-  getSimilarRoomMateList,
-} from "../../apis/roommate.ts";
+import { RoommatePost, SimilarRoommatePost } from "@/types/roommates";
+import { getRoomMateList, getSimilarRoomMateList } from "@/apis/roommate";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import ComingSoonOverlay from "../../components/common/ComingSoonOverlay.tsx";
 

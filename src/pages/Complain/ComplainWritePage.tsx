@@ -9,13 +9,13 @@ import {
   ComplainType,
   dormitoryBlocks,
   dormStructure,
-} from "../../constants/constants.ts";
-import { createComplaint, updateComplaint } from "../../apis/complain.ts";
-import { ComplaintCreateDto } from "../../types/complain.ts";
+} from "@/constants/constants";
+import { createComplaint, updateComplaint } from "@/apis/complain";
+import { ComplaintCreateDto } from "@/types/complain";
 import FormField from "../../components/complain/FormField.tsx";
-import { Dropdown, DropdownContainer, Input } from "../../styles/common.ts";
+import { Dropdown, DropdownContainer, Input } from "@/styles/common";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
-import { useFileHandler } from "../../hooks/useFileHandler.ts";
+import { useFileHandler } from "@/hooks/useFileHandler";
 import FileUploader from "../../components/common/FileUploader.tsx";
 
 // ---  옵션 배열 생성 헬퍼 함수 ---

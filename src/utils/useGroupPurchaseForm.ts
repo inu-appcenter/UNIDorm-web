@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
-import { CreateGroupOrderRequest } from "../types/grouporder.ts";
+import { useEffect, useState } from "react";
+import { CreateGroupOrderRequest } from "@/types/grouporder";
 import {
   DESCRIPTION_MAX_LENGTH,
   MAX_IMAGE_COUNT,
   MAX_IMAGE_SIZE_BYTES,
   TITLE_MAX_LENGTH,
-} from "../constants/groupPurchase.ts";
+} from "@/constants/groupPurchase";
 
 const getDefaultDeadline = () => {
   const now = new Date();

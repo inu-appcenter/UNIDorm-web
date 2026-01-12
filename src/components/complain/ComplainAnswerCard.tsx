@@ -1,8 +1,8 @@
 // NoticeCard.tsx
 import React from "react";
 import styled from "styled-components";
-import { Files } from "../../types/complain.ts";
-import { useIsAdminRole } from "../../hooks/useIsAdminRole.ts";
+import { Files } from "@/types/complain";
+import { useIsAdminRole } from "@/hooks/useIsAdminRole";
 
 interface NoticeCardProps {
   date: string;

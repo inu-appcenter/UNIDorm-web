@@ -2,11 +2,10 @@ import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import StyledInput from "../components/common/StyledInput.tsx";
 import SquareButton from "../components/common/SquareButton.tsx";
-import { useState } from "react";
-import { login } from "../apis/members.ts";
+import React, { useState } from "react";
+import { login } from "@/apis/members";
 import useUserStore from "../stores/useUserStore.ts";
 import Header from "../components/common/Header/Header.tsx";
-import React from "react";
 import LoadingSpinner from "../components/common/LoadingSpinner.tsx";
 
 export default function LoginPage() {

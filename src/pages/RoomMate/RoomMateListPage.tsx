@@ -3,10 +3,10 @@ import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import RoomMateCard from "../../components/roommate/RoomMateCard.tsx";
 import Header from "../../components/common/Header/Header.tsx";
 import { useEffect, useState } from "react";
-import { RoommatePost } from "../../types/roommates.ts";
+import { RoommatePost } from "@/types/roommates";
 import { useLocation, useNavigate } from "react-router-dom";
 import FilterButton from "../../components/button/FilterButton.tsx";
-import { getRoomMateList } from "../../apis/roommate.ts";
+import { getRoomMateList } from "@/apis/roommate";
 // 🔽 로딩 스피너 컴포넌트를 import 합니다.
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 

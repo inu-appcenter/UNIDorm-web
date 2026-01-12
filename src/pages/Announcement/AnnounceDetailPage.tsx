@@ -6,25 +6,22 @@ import {
   deleteAnnouncement,
   getAnnouncementDetail,
   getAnnouncementFiles,
-} from "../../apis/announcements.ts";
-import {
-  AnnouncementDetail,
-  AnnouncementFile,
-} from "../../types/announcements.ts";
+} from "@/apis/announcements";
+import { AnnouncementDetail, AnnouncementFile } from "@/types/announcements";
 import AnnounceAttachment from "../../components/announce/AnnounceAttachment.tsx";
 import GrayDivider from "../../components/common/GrayDivider.tsx";
 import { useSwipeable } from "react-swipeable";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../../constants/EmptyMessage.tsx";
-import { useIsAdminRole } from "../../hooks/useIsAdminRole.ts";
+import { useIsAdminRole } from "@/hooks/useIsAdminRole";
 import linkify from "../../utils/linkfy.tsx";
 import {
   NoticeTagWrapper,
   TypeBadge,
   UrgentBadge,
-} from "../../styles/announcement.ts";
+} from "@/styles/announcement";
 import CommonBottomModal from "../../components/modal/CommonBottomModal.tsx";
-import { getLabelByValue } from "../../utils/announceUtils.ts";
+import { getLabelByValue } from "@/utils/announceUtils";
 
 export default function AnnounceDetailPage() {
   const { boardId } = useParams<{ boardId: string }>();

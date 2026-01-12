@@ -1,4 +1,4 @@
-import styled, { keyframes, css } from "styled-components";
+import styled, { css, keyframes } from "styled-components";
 
 // 스피너 회전 애니메이션
 const spin = keyframes`

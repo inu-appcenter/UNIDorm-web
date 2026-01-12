@@ -9,12 +9,12 @@ import useUserStore from "../../stores/useUserStore.ts";
 import UserInfo from "../../components/common/UserInfo.tsx";
 import CommentSection from "../../components/comment/CommentSection.tsx";
 import CommentInputBox from "../../components/comment/CommentInputBox.tsx";
-import { ReplyProps } from "../../types/comment.ts";
-import { deleteTipComment } from "../../apis/tips.ts";
-import { TipDetail, TipImage } from "../../types/tips.ts";
+import { ReplyProps } from "@/types/comment";
+import { deleteTipComment } from "@/apis/tips";
+import { TipDetail, TipImage } from "@/types/tips";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../../constants/EmptyMessage.tsx";
-import { useIsAdminRole } from "../../hooks/useIsAdminRole.ts";
+import { useIsAdminRole } from "@/hooks/useIsAdminRole";
 import CommonBottomModal from "../../components/modal/CommonBottomModal.tsx";
 
 export default function TipDetailPage() {

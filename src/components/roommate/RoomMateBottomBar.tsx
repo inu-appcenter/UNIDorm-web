@@ -3,13 +3,13 @@ import RoundSquareButton from "../button/RoundSquareButton.tsx";
 import { FaHeart, FaRegHeart } from "react-icons/fa";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { createRoommateChatRoom } from "../../apis/chat.ts";
+import { createRoommateChatRoom } from "@/apis/chat";
 import useUserStore from "../../stores/useUserStore.ts";
 import {
   getRoommateLiked,
   likeRoommateBoard,
   unlikeRoommateBoard,
-} from "../../apis/roommate.ts";
+} from "@/apis/roommate";
 
 const RoomMateBottomBar = ({
   partnerName,

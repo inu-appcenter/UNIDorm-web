@@ -1,5 +1,5 @@
 // hooks/useScreenWidth.ts (새 파일)
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const useScreenWidth = () => {
   // 초기값은 마운트 시에만 설정되도록 함수형으로 전달

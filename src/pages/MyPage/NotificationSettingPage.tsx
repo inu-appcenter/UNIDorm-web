@@ -3,11 +3,11 @@ import Header from "../../components/common/Header/Header.tsx";
 import MenuGroup from "../../components/mypage/MenuGroup.tsx";
 import {
   addNotificationPreferences,
-  deleteNotificationPreferences, // DELETE API 함수 추가
+  deleteNotificationPreferences,
   getUserNotificationPreferences,
-} from "../../apis/notification.ts";
-import { useState, useEffect } from "react";
-import { NotificationPreferences } from "../../types/notifications.ts";
+} from "@/apis/notification";
+import { useEffect, useState } from "react";
+import { NotificationPreferences } from "@/types/notifications";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 
 // 알림 항목 목록 (로컬 이름과 API 키를 매핑하여 관리)

@@ -1,7 +1,7 @@
 import {
   PopupNotification,
   RequestPopupNotificationDto,
-} from "../types/popup-notifications.ts";
+} from "@/types/popup-notifications";
 import { AxiosResponse } from "axios";
 import tokenInstance from "./tokenInstance.ts";
 import axiosInstance from "./axiosInstance.ts";

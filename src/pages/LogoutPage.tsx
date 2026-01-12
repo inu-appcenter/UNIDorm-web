@@ -2,7 +2,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import useUserStore from "../stores/useUserStore.ts";
-import { TokenInfo } from "../types/members.ts";
+import { TokenInfo } from "@/types/members";
 
 const LogoutPage = () => {
   const navigate = useNavigate();

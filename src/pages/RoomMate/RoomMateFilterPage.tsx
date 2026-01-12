@@ -22,7 +22,7 @@ import {
   smoking,
   snoring,
   toothgrinding,
-} from "../../constants/constants.ts";
+} from "@/constants/constants";
 import useUserStore from "../../stores/useUserStore.ts";
 import { useLocation, useNavigate } from "react-router-dom";
 

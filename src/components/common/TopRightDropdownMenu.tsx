@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import styled, { keyframes } from "styled-components";
 import { MoreVertical } from "lucide-react";
-import { TipComment } from "../../types/tips.ts";
+import { TipComment } from "@/types/tips";
 
 type MenuItemType = {
   label: string;

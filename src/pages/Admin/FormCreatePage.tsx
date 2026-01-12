@@ -3,21 +3,21 @@ import Header from "../../components/common/Header/Header.tsx";
 import FormField from "../../components/complain/FormField.tsx";
 import { useEffect, useState } from "react";
 import arrowright from "../../assets/arrow-right.svg";
-import { Input, Textarea } from "../../styles/common.ts";
+import { Input, Textarea } from "@/styles/common";
 import AddNewFormField from "../../components/form/AddNewFormField.tsx";
 import { useLocation, useNavigate } from "react-router-dom";
 
 // [수정] 1. 요청하신 임포트 구문으로 변경 (updateSurvey 추가)
 import {
-  QuestionCreateRequest,
-  SurveyCreateRequest,
-  QuestionType,
   OptionCreateRequest,
+  QuestionCreateRequest,
+  QuestionType,
+  SurveyCreateRequest,
   SurveyCreateRequest as SurveyUpdateRequest,
 } from "../../types/formTypes.ts";
 // [수정] 2. updateSurvey API 임포트
-import { createSurvey, updateSurvey } from "../../apis/formApis.ts";
-import { AddButton, AddButtonArea, FormBoxBlue } from "../../styles/form.ts";
+import { createSurvey, updateSurvey } from "@/apis/formApis";
+import { AddButton, AddButtonArea, FormBoxBlue } from "@/styles/form";
 
 // (FormOptionState, FormFieldState 인터페이스는 동일)
 export interface FormOptionState {

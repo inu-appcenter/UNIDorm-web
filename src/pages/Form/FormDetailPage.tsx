@@ -5,19 +5,19 @@ import FormField from "../../components/complain/FormField.tsx";
 import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
 import { useEffect, useState } from "react";
 import arrowright from "../../assets/arrow-right.svg";
-import { formatDeadlineDate } from "../../utils/dateUtils.ts";
-import { SurveyDetail } from "../../types/formTypes.ts";
+import { formatDeadlineDate } from "@/utils/dateUtils";
+import { SurveyDetail } from "@/types/formTypes";
 import {
   closeSurvey,
   deleteSurvey,
   getSurveyDetail,
   submitSurveyResponse,
-} from "../../apis/formApis.ts";
+} from "@/apis/formApis";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
-import { Input } from "../../styles/common.ts";
-import { FormBoxGray } from "../../styles/form.ts";
-import { useIsAdminRole } from "../../hooks/useIsAdminRole.ts";
+import { Input } from "@/styles/common";
+import { FormBoxGray } from "@/styles/form";
+import { useIsAdminRole } from "@/hooks/useIsAdminRole";
 
 const FormDetailPage = () => {
   const navigate = useNavigate();

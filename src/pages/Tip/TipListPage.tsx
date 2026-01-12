@@ -4,11 +4,11 @@ import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import TipCard from "../../components/tip/TipCard";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Tip } from "../../types/tips.ts";
-import { fetchTips } from "../../apis/tips.ts";
+import { Tip } from "@/types/tips";
+import { fetchTips } from "@/apis/tips";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../../constants/EmptyMessage.tsx";
-import { useIsAdminRole } from "../../hooks/useIsAdminRole.ts";
+import { useIsAdminRole } from "@/hooks/useIsAdminRole";
 
 export default function TipListPage() {
   const navigate = useNavigate();

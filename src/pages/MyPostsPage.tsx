@@ -5,8 +5,8 @@ import { useEffect, useState } from "react";
 import Header from "../components/common/Header/Header.tsx";
 import TitleContentArea from "../components/common/TitleContentArea.tsx";
 import MyPostLikeCard from "../components/mypage/MyPostLikeCard.tsx";
-import { MyPost_GroupOrder } from "../types/members.ts";
-import { getMemberPosts } from "../apis/members.ts";
+import { MyPost_GroupOrder } from "@/types/members";
+import { getMemberPosts } from "@/apis/members";
 
 export default function MyPostsPage() {
   const [posts, setPosts] = useState<MyPost_GroupOrder[]>([]);

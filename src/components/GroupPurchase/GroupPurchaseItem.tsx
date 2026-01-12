@@ -5,8 +5,8 @@ import 배달 from "../../assets/groupPurchase/default-image/배달.webp";
 import 생활용품 from "../../assets/groupPurchase/default-image/생활용품.webp";
 import 식자재 from "../../assets/groupPurchase/default-image/식자재.webp";
 
-import { GroupOrder } from "../../types/grouporder.ts";
-import { getDeadlineText } from "../../utils/dateUtils.ts";
+import { GroupOrder } from "@/types/grouporder";
+import { getDeadlineText } from "@/utils/dateUtils";
 
 interface GroupPurchaseItemProps {
   groupOrder: GroupOrder;

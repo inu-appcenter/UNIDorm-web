@@ -2,24 +2,24 @@ import styled from "styled-components";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import SquareButton from "../../components/common/SquareButton.tsx";
-import { RequestAnnouncementDto } from "../../types/announcements.ts";
+import { RequestAnnouncementDto } from "@/types/announcements";
 import {
   createAnnouncement,
   updateAnnouncement,
   updateAnnouncementWithFiles,
-} from "../../apis/announcements.ts";
+} from "@/apis/announcements";
 import Header from "../../components/common/Header/Header.tsx";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import FileUploader from "../../components/common/FileUploader.tsx";
-import { useFileHandler } from "../../hooks/useFileHandler.ts";
+import { useFileHandler } from "@/hooks/useFileHandler";
 import FormField from "../../components/complain/FormField.tsx";
 import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
-import { Input, Textarea } from "../../styles/common.ts";
+import { Input, Textarea } from "@/styles/common";
 import {
   ANNOUNCE_CATEGORY_LIST,
   ANNOUNCE_SUB_CATEGORY_LIST,
-} from "../../constants/announcement.ts";
-import { useIsAdminRole } from "../../hooks/useIsAdminRole.ts";
+} from "@/constants/announcement";
+import { useIsAdminRole } from "@/hooks/useIsAdminRole";
 
 export default function AnnounceWritePage() {
   const navigate = useNavigate();

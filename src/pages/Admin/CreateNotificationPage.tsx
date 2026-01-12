@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 import Header from "../../components/common/Header/Header.tsx";
-import { NotificationPayload } from "../../types/notifications.ts";
-import { createNotification } from "../../apis/notification.ts";
+import { NotificationPayload } from "@/types/notifications";
+import { createNotification } from "@/apis/notification";
 
 const CreateNotificationPage = () => {
   const [title, setTitle] = useState("");

@@ -2,18 +2,18 @@ import styled from "styled-components";
 import Header from "../components/common/Header/Header.tsx";
 import NotiItem from "../components/notification/NotiItem.tsx";
 import { useEffect, useState } from "react";
-import { getNotifications } from "../apis/notification.ts"; // 새로 만든 알림 API 임포트
+import { getNotifications } from "@/apis/notification"; // 새로 만든 알림 API 임포트
 import useUserStore from "../stores/useUserStore.ts";
-import { Notification } from "../types/notifications.ts";
+import { Notification } from "@/types/notifications";
 import { useNavigate } from "react-router-dom";
 import BottomBar from "../components/common/BottomBar/BottomBar.tsx";
 import {
   acceptRoommateMatching,
   getReceivedRoommateRequests,
   rejectRoommateMatching,
-} from "../apis/roommate.ts";
+} from "@/apis/roommate";
 import axios from "axios";
-import { ReceivedMatchingRequest } from "../types/roommates.ts";
+import { ReceivedMatchingRequest } from "@/types/roommates";
 
 const NotificationPage = () => {
   // 표시될 모든 알림을 저장하는 상태

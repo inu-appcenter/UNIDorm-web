@@ -3,8 +3,8 @@ import Header from "../components/common/Header/Header.tsx";
 import TitleContentArea from "../components/common/TitleContentArea.tsx";
 import MyPostLikeCard from "../components/mypage/MyPostLikeCard.tsx";
 import { useEffect, useState } from "react";
-import { MyPost_GroupOrder } from "../types/members.ts";
-import { getMemberLikePosts } from "../apis/members.ts";
+import { MyPost_GroupOrder } from "@/types/members";
+import { getMemberLikePosts } from "@/apis/members";
 
 export default function MyLikesPage() {
   const [posts, setPosts] = useState<MyPost_GroupOrder[]>([]);

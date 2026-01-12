@@ -8,9 +8,9 @@ import {
   GroupOrderDetail,
   GroupOrderImage,
   GroupOrderPopularSearch,
-} from "../types/grouporder.ts";
+} from "@/types/grouporder";
 import tokenInstance from "./tokenInstance.ts";
-import { ManagedFile } from "../hooks/useFileHandler.ts";
+import { ManagedFile } from "@/hooks/useFileHandler";
 
 //공동구매 게시글 목록 조회
 export const getGroupPurchaseList = async (

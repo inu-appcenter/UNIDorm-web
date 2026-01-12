@@ -7,13 +7,13 @@ import Step1BasicInfo from "../../components/roommate/checklist/steps/Step1Basic
 import Step2LifeStyle from "../../components/roommate/checklist/steps/Step2LifeStyle";
 import Step3LifeRhythm from "../../components/roommate/checklist/steps/Step3LifeRhythm";
 import Step4Personality from "../../components/roommate/checklist/steps/Step4Personality";
-import { CheckListForm, INITIAL_FORM_STATE } from "../../types/roommates";
+import { CheckListForm, INITIAL_FORM_STATE } from "@/types/roommates";
 import {
   createRoommatePost,
   getMyChecklist,
   putRoommatePost,
-} from "../../apis/roommate";
-import { getMemberInfo } from "../../apis/members";
+} from "@/apis/roommate";
+import { getMemberInfo } from "@/apis/members";
 import useUserStore from "../../stores/useUserStore";
 import { useNavigate } from "react-router-dom";
 import {
@@ -33,7 +33,7 @@ import {
   smoking,
   snoring,
   toothgrinding,
-} from "../../constants/constants";
+} from "@/constants/constants";
 
 export default function RoomMateChecklistPage() {
   const { setUserInfo, userInfo } = useUserStore();

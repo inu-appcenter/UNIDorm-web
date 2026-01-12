@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import { MdAttachFile } from "react-icons/md";
-import { AnnouncementFile } from "../../types/announcements.ts";
+import { AnnouncementFile } from "@/types/announcements";
 
 interface AnnounceAttachmentProps {
   attachments: AnnouncementFile[];

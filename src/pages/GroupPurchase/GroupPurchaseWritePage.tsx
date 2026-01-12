@@ -4,20 +4,17 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../../components/common/Header/Header.tsx";
 import CommonBottomModal from "../../components/modal/CommonBottomModal";
 import useUserStore from "../../stores/useUserStore";
-import {
-  createGroupPurchase,
-  updateGroupPurchase,
-} from "../../apis/groupPurchase";
-import { CreateGroupOrderRequest } from "../../types/grouporder";
-import { useGroupPurchaseForm } from "../../utils/useGroupPurchaseForm.ts";
+import { createGroupPurchase, updateGroupPurchase } from "@/apis/groupPurchase";
+import { CreateGroupOrderRequest } from "@/types/grouporder";
+import { useGroupPurchaseForm } from "@/utils/useGroupPurchaseForm";
 import CategorySelector from "../../components/GroupPurchase/CategorySelector.tsx";
 import DeadlineSelector from "../../components/GroupPurchase/DeadlineSelector.tsx";
 import HowToCreateOpenChat from "../../components/GroupPurchase/HowToCreateOpenChat.tsx";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
-import { useFileHandler } from "../../hooks/useFileHandler.ts";
+import { useFileHandler } from "@/hooks/useFileHandler";
 import FileUploader from "../../components/common/FileUploader.tsx";
 import Modal from "../../components/modal/Modal.tsx";
-import { CheckBeforeDeal2 } from "../../constants/CheckBeforeDeal2.tsx";
+import { CheckBeforeDeal2 } from "@/constants/CheckBeforeDeal2";
 
 export default function GroupPurchaseWritePage() {
   const navigate = useNavigate();

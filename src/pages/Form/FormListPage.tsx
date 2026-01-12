@@ -4,13 +4,13 @@ import SearchInput from "../../components/complain/SearchInput.tsx";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import { useNavigate } from "react-router-dom";
 // 1. useMemo 임포트 추가
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
 import FormCard from "../../components/form/FormCard.tsx";
-import { SurveySummary } from "../../types/formTypes.ts";
-import { getAllSurveys } from "../../apis/formApis.ts";
+import { SurveySummary } from "@/types/formTypes";
+import { getAllSurveys } from "@/apis/formApis";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
-import { useIsAdminRole } from "../../hooks/useIsAdminRole.ts";
+import { useIsAdminRole } from "@/hooks/useIsAdminRole";
 
 const FormListPage = () => {
   const navigate = useNavigate();

@@ -5,7 +5,7 @@ import SquareButton from "../../components/common/SquareButton.tsx";
 import tokenInstance from "../../apis/tokenInstance.ts";
 import Header from "../../components/common/Header/Header.tsx";
 import FileUploader from "../../components/common/FileUploader.tsx";
-import { useFileHandler } from "../../hooks/useFileHandler.ts";
+import { useFileHandler } from "@/hooks/useFileHandler";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 
 export default function TipWritePage() {

@@ -8,12 +8,12 @@ import { useNavigate } from "react-router-dom";
 import ComplainListTable from "../../components/complain/ComplainListTable.tsx";
 import useUserStore from "../../stores/useUserStore.ts";
 import { useEffect, useMemo, useState } from "react";
-import { ComplaintDetail, MyComplaint } from "../../types/complain.ts";
-import { getComplaintDetail, getMyComplaints } from "../../apis/complain.ts";
+import { ComplaintDetail, MyComplaint } from "@/types/complain";
+import { getComplaintDetail, getMyComplaints } from "@/apis/complain";
 import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import TopPopupNotification from "../../components/common/TopPopupNotification.tsx";
-import { getMobilePlatform } from "../../utils/getMobilePlatform.ts";
+import { getMobilePlatform } from "@/utils/getMobilePlatform";
 
 const ComplainListPage = () => {
   const navigate = useNavigate();

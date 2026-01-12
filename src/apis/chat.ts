@@ -2,7 +2,7 @@ import {
   GroupOrderChatRoom,
   RoommateChat,
   RoommateChatRoom,
-} from "../types/chats.ts";
+} from "@/types/chats";
 import { AxiosResponse } from "axios";
 import tokenInstance from "./tokenInstance.ts";
 

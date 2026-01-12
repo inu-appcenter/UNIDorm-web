@@ -7,8 +7,8 @@ import {
   smoking,
   snoring,
   toothgrinding,
-} from "../../../../constants/constants";
-import { StepProps } from "../../../../types/roommates";
+} from "@/constants/constants";
+import { StepProps } from "@/types/roommates";
 
 export default function Step2LifeStyle({ data, onChange }: StepProps) {
   return (

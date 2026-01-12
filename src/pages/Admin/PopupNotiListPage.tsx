@@ -7,8 +7,8 @@ import { useNavigate } from "react-router-dom";
 import {
   deletePopupNotification,
   getAllPopupNotifications,
-} from "../../apis/popup-notification";
-import { PopupNotification } from "../../types/popup-notifications";
+} from "@/apis/popup-notification";
+import { PopupNotification } from "@/types/popup-notifications";
 import Header from "../../components/common/Header/Header.tsx";
 
 const PopupNotiListPage = () => {

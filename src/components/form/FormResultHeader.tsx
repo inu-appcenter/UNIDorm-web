@@ -1,6 +1,6 @@
 import styled from "styled-components";
-import { statusText } from "../../utils/formUtils.ts";
-import { DividerBar, People } from "../../styles/groupPurchase.ts";
+import { statusText } from "@/utils/formUtils";
+import { DividerBar, People } from "@/styles/groupPurchase";
 import 사람 from "../../assets/chat/human.svg";
 
 type Props = {

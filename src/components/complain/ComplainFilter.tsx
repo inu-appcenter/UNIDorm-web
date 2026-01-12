@@ -8,9 +8,9 @@ import {
   complainStatus,
   ComplainType,
   dormitoryBlocks,
-} from "../../constants/constants.ts"; // 'as const'로 선언된 상수들
-import { Dropdown, DropdownContainer, Input } from "../../styles/common.ts";
-import { ComplaintSearchDto } from "../../types/complain.ts";
+} from "@/constants/constants"; // 'as const'로 선언된 상수들
+import { Dropdown, DropdownContainer, Input } from "@/styles/common";
+import { ComplaintSearchDto } from "@/types/complain";
 import { useEffect, useState } from "react"; // ⭐ useState, useEffect 추가
 
 // --- 1. 타입 정의 추가 (ComplainWritePage와 동일) ---

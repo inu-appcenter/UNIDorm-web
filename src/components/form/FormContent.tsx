@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { statusText } from "../../utils/formUtils.ts";
+import { statusText } from "@/utils/formUtils";
 
 type FormContentProps = {
   status: string;

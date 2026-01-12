@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import Header from "../../components/common/Header/Header.tsx";
 import SquareButton from "../../components/common/SquareButton.tsx";
-import { putUserAgreement } from "../../apis/members.ts";
+import { putUserAgreement } from "@/apis/members";
 import { useNavigate } from "react-router-dom";
 
 // --- 약관 정보 ---

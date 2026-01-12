@@ -4,8 +4,8 @@ import RoundSquareButton from "../../components/button/RoundSquareButton.tsx";
 import friends from "../../assets/roommate/Friends.svg";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { RoommateMatchingRequest } from "../../types/roommates.ts";
-import { requestRoommateMatching } from "../../apis/roommate.ts";
+import { RoommateMatchingRequest } from "@/types/roommates";
+import { requestRoommateMatching } from "@/apis/roommate";
 
 export default function RoomMateAddPage() {
   const navigate = useNavigate();
