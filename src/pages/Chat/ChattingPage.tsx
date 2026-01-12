@@ -21,7 +21,6 @@ type MessageType = {
 
 export default function ChattingPage() {
   const isLeavingRef = useRef(false);
-
   const { chatType, id } = useParams();
   const [typeString, setTypeString] = useState<string>("");
   const [messageList, setMessageList] = useState<MessageType[]>([]);
@@ -30,7 +29,6 @@ export default function ChattingPage() {
   const navigate = useNavigate();
 
   const location = useLocation();
-  // navigate 시 넘긴 state 객체에서 partnerName 꺼내기
   const partnerName = location.state?.partnerName ?? undefined;
   const partnerProfileImageUrl =
     location.state?.partnerProfileImageUrl ?? undefined;
@@ -41,6 +39,24 @@ export default function ChattingPage() {
   const roomId = Number(id);
   const userId = userInfo.id;
   const token = tokenInfo.accessToken;
+
+  // 하단 스크롤 이동 함수
+  const scrollToBottom = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  };
+
+  // 메시지 리스트 변경 시 자동 스크롤
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      scrollToBottom();
+    }, 50);
+    return () => clearTimeout(timer);
+  }, [messageList]);
 
   const { connect, disconnect, sendMessage, isConnected } = useRoommateChat({
     roomId,
@@ -60,7 +76,6 @@ export default function ChattingPage() {
           }),
         },
       ]);
-      scrollToBottom();
     },
     onConnect: () => {
       console.log("✅ WebSocket 연결됨");
@@ -80,11 +95,9 @@ export default function ChattingPage() {
     const init = async () => {
       if (chatType === "roommate") {
         setTypeString("룸메이트");
-
         try {
           const response = await getRoommateChatHistory(roomId);
           const chats = response.data;
-
           const formattedMessages: MessageType[] = chats.map((chat) => ({
             id: chat.roommateChatId,
             sender: chat.userId === userId ? "me" : "other",
@@ -95,27 +108,19 @@ export default function ChattingPage() {
               hour12: true,
             }),
           }));
-
           setMessageList(formattedMessages);
-          scrollToBottom();
         } catch (error) {
           console.error("채팅 내역 불러오기 실패:", error);
         }
-
-        connect(); // WebSocket 연결
+        connect();
       } else if (chatType === "groupPurchase") {
         setTypeString("공동구매");
-        // 추후 WebSocket 연결
       }
     };
-
     init();
-
     return () => {
-      isLeavingRef.current = true; // 페이지 떠나는 상태로 설정
-      if (isConnected) {
-        disconnect();
-      }
+      isLeavingRef.current = true;
+      if (isConnected) disconnect();
     };
   }, [chatType]);
 
@@ -123,57 +128,30 @@ export default function ChattingPage() {
     const el = inputRef.current;
     if (el) {
       el.style.height = "auto";
-      const newHeight = Math.min(el.scrollHeight, 96);
-      el.style.height = `${newHeight}px`;
+      el.style.height = `${Math.min(el.scrollHeight, 96)}px`;
     }
   };
 
   const handleSendMessage = () => {
-    if (!inputValue.trim()) return;
-
-    // ✅ 웹소켓 연결 상태 확인
-    if (!isConnected) {
-      console.error("웹소켓이 연결되지 않았습니다. 메시지를 보낼 수 없습니다.");
-      alert(
-        "메시지 전송 실패!\n채팅방을 나갔다가 다시 들어와서 시도해 보세요.",
-      );
-      // 사용자에게 메시지 전송 실패를 알리는 추가 로직 (예: 알림창)
+    if (!inputValue.trim() || !isConnected) {
+      if (!isConnected) alert("채팅 연결을 확인해주세요.");
       return;
     }
-
     const now = new Date().toLocaleTimeString("ko-KR", {
       hour: "2-digit",
       minute: "2-digit",
       hour12: true,
     });
-
     const newMessage: MessageType = {
       id: Date.now(),
       sender: "me",
       content: inputValue.trim(),
       time: now,
     };
-
     setMessageList((prev) => [...prev, newMessage]);
-    sendMessage(inputValue.trim()); // ✅ WebSocket 전송
+    sendMessage(inputValue.trim());
     setInputValue("");
-
     if (inputRef.current) inputRef.current.style.height = "auto";
-
-    scrollToBottom();
-  };
-
-  const scrollToBottom = () => {
-    setTimeout(() => {
-      if (scrollRef.current) {
-        scrollRef.current.scrollTo?.({
-          top: scrollRef.current.scrollHeight,
-          behavior: "smooth",
-        });
-        // fallback
-        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-      }
-    }, 50);
   };
 
   const menuItems = [
@@ -191,28 +169,14 @@ export default function ChattingPage() {
         );
         if (!confirmed) return;
         try {
-          if (roomId === undefined)
-            throw new Error("채팅방 id가 undefined입니다.");
+          if (roomId === undefined) throw new Error("채팅방 id 미정의");
           const response = await deleteRoommateChatRoom(roomId);
           if (response.status === 201) {
             alert("채팅방에서 나왔어요.");
-            console.log("채팅방 나가기 성공, 채팅방이 삭제되었습니다.");
-            // 추가 처리(예: 화면 이동, 상태 업데이트 등)
             navigate("/chat");
           }
         } catch (error: any) {
-          alert("채팅방 나가기를 실패했어요." + error);
-          if (error.response) {
-            if (error.response.status === 403) {
-              console.error("게스트가 아닌 사용자의 접근입니다.");
-            } else if (error.response.status === 404) {
-              console.error("유저 또는 채팅방을 찾을 수 없습니다.");
-            } else {
-              console.error("알 수 없는 오류가 발생했습니다.");
-            }
-          } else {
-            console.error("네트워크 오류 또는 서버 응답 없음");
-          }
+          alert("채팅방 나가기 실패");
         }
       },
     },
@@ -233,25 +197,13 @@ export default function ChattingPage() {
           isChatted={messageList.length > 0}
           partnerProfileImageUrl={partnerProfileImageUrl}
         />
-        <div
-          style={{
-            marginTop: "10px",
-            marginBottom: "10px",
-            width: "100%",
-            height: "fit-content",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <TopNoticeBanner
-            message={
-              messageList.length > 0
-                ? "서로 룸메이트를 하기로 마음먹었다면,\n룸메 신청 버튼을 눌러 룸메이트가 되어보세요!"
-                : "자유롭게 채팅을 나누며 서로를 알아가보세요!"
-            }
-          />
-        </div>
+        <TopNoticeBanner
+          message={
+            messageList.length > 0
+              ? "서로 룸메이트를 하기로 마음먹었다면,\n룸메 신청 버튼을 눌러 룸메이트가 되어보세요!"
+              : "자유롭게 채팅을 나누며 서로를 알아가보세요!"
+          }
+        />
 
         <ChattingWrapper ref={scrollRef}>
           {messageList.map((msg) =>
@@ -266,6 +218,7 @@ export default function ChattingPage() {
             ),
           )}
         </ChattingWrapper>
+
         <InputArea>
           <Input
             placeholder={"메시지 입력"}
@@ -292,81 +245,61 @@ export default function ChattingPage() {
 
 const ChatPageWrapper = styled.div`
   width: 100%;
-  height: 100%;
-  padding-top: 70px;
+  height: 100dvh; /* 뷰포트 높이 고정 */
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 20px;
   box-sizing: border-box;
-
-  overflow-y: auto;
 `;
 
 const ContentWrapper = styled.div`
-  //padding-bottom: 70px;
   display: flex;
   flex-direction: column;
-  height: 100%;
-  box-sizing: border-box;
+  flex: 1;
+  overflow: hidden;
   background: #f4f4f4;
+  padding-top: 70px;
 `;
 
 const ChattingWrapper = styled.div`
-  flex: 1;
-  height: 100%;
-
-  overflow-y: scroll;
+  flex: 1; /* 가용 공간 점유 */
+  overflow-y: auto; /* 독립 스크롤 */
   display: flex;
   flex-direction: column;
+  padding: 10px 0 20px 0;
   background: #f4f4f4;
-
-  padding-bottom: 56px;
 `;
-const InputArea = styled.div`
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: fit-content;
-  min-height: 56px;
 
+const InputArea = styled.div`
+  width: 100%;
+  min-height: 56px;
   background-color: #fafafa;
   display: flex;
-  flex-direction: row;
-  justify-content: center;
   align-items: center;
-
   padding: 8px 16px;
   box-sizing: border-box;
-
   gap: 8px;
+  border-top: 1px solid #e0e0e0;
 `;
 
 const Input = styled.textarea`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
+  width: 100%;
   padding: 8px;
   box-sizing: border-box;
-  gap: 10px;
-
-  width: 100%;
-  height: 100%;
-
   background: #ffffff;
   border-radius: 4px;
   border: none;
-
-  font-style: normal;
-  font-weight: 400;
   font-size: 16px;
   line-height: 24px;
-
-  letter-spacing: 0.38px;
-
   color: #1c1c1e;
+  resize: none;
+  outline: none;
 `;
+
 const SendButton = styled.button`
   background: none;
   border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
 `;
