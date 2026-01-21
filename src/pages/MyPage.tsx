@@ -167,11 +167,9 @@ const MenuGroupsWrapper = styled.div`
 
 const Divider = styled.div`
   height: 1px;
-  width: 100vw;
+  /* 부모의 좌우 패딩 16px을 음수 마진으로 상쇄 */
+  margin: 0 -16px;
   background: #0000001a;
-  position: relative;
-  left: 50%;
-  transform: translateX(-50%);
 `;
 
 const LoginButton = styled.button`
