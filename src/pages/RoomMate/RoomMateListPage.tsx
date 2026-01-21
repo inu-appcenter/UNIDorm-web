@@ -185,7 +185,7 @@ export default function RoomMateListPage() {
 }
 
 const RoomMateListPageWrapper = styled.div`
-  padding: 90px 16px;
+  padding: 0 16px 100px;
   display: flex;
   flex-direction: column;
   gap: 16px;
