@@ -197,7 +197,6 @@ const ComplainFilter = ({
           onSelect={onBlockChange}
         />
       </FormField>
-
       {/* --- 6. JSX 드롭다운 수정 --- */}
       <FormField label="층/호수/침대">
         <DropdownContainer>
@@ -251,6 +250,9 @@ const ComplainFilter = ({
           </Dropdown>
         </DropdownContainer>
       </FormField>
+      민원 내역 다운로드는 우측 상단 점 세개 메뉴에서 할 수 있어요.
+      <br />
+      현재 적용된 필터에 해당하는 민원이 다운로드됩니다.
       <ButtonWrapper>
         <Button onClick={onReset} isReset>
           초기화

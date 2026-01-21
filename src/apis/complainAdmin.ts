@@ -141,3 +141,35 @@ export const searchComplaints = async (
   console.log(response);
   return response;
 };
+
+// 민원 목록 CSV 다운로드
+export const downloadComplaintsCSV = async (): Promise<AxiosResponse<Blob>> => {
+  const response = await tokenInstance.get<Blob>(
+    `/admin/complaints/export/csv`,
+    {
+      responseType: "blob", // 바이너리 데이터 수신
+      headers: {
+        Accept: "application/octet-stream",
+      },
+    },
+  );
+  console.log(response);
+  return response;
+};
+
+// 검색 조건에 맞는 민원 CSV 다운로드
+export const downloadFilteredComplaintsCSV = async (
+  params: ComplaintSearchDto,
+): Promise<AxiosResponse<Blob>> => {
+  const response = await tokenInstance.get<Blob>(
+    `/admin/complaints/export/csv/search`,
+    {
+      params,
+      responseType: "blob",
+      headers: {
+        Accept: "application/octet-stream",
+      },
+    },
+  );
+  return response;
+};
