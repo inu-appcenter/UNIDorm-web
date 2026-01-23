@@ -24,6 +24,21 @@ export const getRoomMateList = async (): Promise<
   return response;
 };
 
+export const getRoomMateScrollList = async (
+  lastId?: number,
+  size: number = 10,
+): Promise<RoommatePost[]> => {
+  const response = await axiosInstance.get<RoommatePost[]>(
+    `/roommates/list/scroll`,
+    {
+      params: { lastId, size },
+    },
+  );
+
+  // 데이터 본문 반환
+  return response.data;
+};
+
 export const getSimilarRoomMateList = async (): Promise<
   AxiosResponse<SimilarRoommatePost[]>
 > => {

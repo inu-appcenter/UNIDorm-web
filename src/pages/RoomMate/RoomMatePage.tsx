@@ -9,6 +9,7 @@ import { getRoomMateList, getSimilarRoomMateList } from "@/apis/roommate";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import ComingSoonOverlay from "../../components/common/ComingSoonOverlay.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
+import { getFeatureFlagByKey } from "@/apis/featureFlag";
 
 export default function RoomMatePage() {
   const navigate = useNavigate();
@@ -22,12 +23,24 @@ export default function RoomMatePage() {
     SimilarRoommatePost[]
   >([]);
 
-  // 로딩 상태를 각 섹션별로 분리
   const [isLatestLoading, setIsLatestLoading] = useState<boolean>(false);
   const [isSimilarLoading, setIsSimilarLoading] = useState<boolean>(false);
 
+  // 피처 플래그 상태 관리
+  const [isMatchingActive, setIsMatchingActive] = useState<boolean>(true);
+
   useEffect(() => {
-    // 최신 룸메이트 목록을 불러오는 함수
+    // 피처 플래그 확인 함수
+    const checkFeatureFlag = async () => {
+      try {
+        const response = await getFeatureFlagByKey("ROOMMATE_MATCHING");
+        // 응답 값 기준 매칭 활성화 여부 설정
+        setIsMatchingActive(response.data.flag);
+      } catch (error) {
+        console.error("피처 플래그 확인 실패:", error);
+      }
+    };
+
     const loadRoommates = async () => {
       setIsLatestLoading(true);
       try {
@@ -40,10 +53,9 @@ export default function RoomMatePage() {
       }
     };
 
-    // 비슷한 룸메이트 목록을 불러오는 함수
     const loadSimilarRoommates = async () => {
       if (!isLoggedIn) {
-        setSimilarRoommates([]); // 로그아웃 시 목록 비우기
+        setSimilarRoommates([]);
         return;
       }
       setIsSimilarLoading(true);
@@ -58,21 +70,21 @@ export default function RoomMatePage() {
       }
     };
 
+    checkFeatureFlag();
     loadRoommates();
     loadSimilarRoommates();
-  }, [isLoggedIn]); // 로그인 상태가 변경될 때마다 데이터를 다시 불러옴
+  }, [isLoggedIn]);
 
   const filteredSimilarRoommates = similarRoommates.filter(
     (post) => post.dormType === userInfo.dormType,
   );
 
-  const [featureFlag] = useState<boolean>(false);
-
   useSetHeader({ title: "룸메이트" });
 
   return (
     <RoomMatePageWrapper>
-      {featureFlag && (
+      {/* 매칭 비활성 시 오버레이 표시 */}
+      {!isMatchingActive && (
         <ComingSoonOverlay
           message={"2025년 2학기 룸메이트 매칭 종료!"}
           subMessage={"다음 룸메이트 매칭을 기대해 주세요."}
@@ -115,7 +127,6 @@ export default function RoomMatePage() {
         description={"모아보기 조건에 해당하는 룸메이트를 보여드려요."}
       >
         <>
-          {/* 배너는 로딩 상태와 관계없이 표시 */}
           {isLoggedIn && !hasChecklist && (
             <ChecklistBanner onClick={() => navigate("/roommate/checklist")}>
               아직 사전 체크리스트를 작성하지 않으셨네요! <br /> 체크리스트를
@@ -130,7 +141,6 @@ export default function RoomMatePage() {
             </ChecklistBanner>
           )}
 
-          {/* 비슷한 룸메이트 목록 영역만 조건부 렌더링 */}
           {isSimilarLoading ? (
             <LoadingSpinner message="추천 목록을 불러오는 중..." />
           ) : isLoggedIn &&
@@ -204,7 +214,7 @@ const ChecklistBanner = styled.div`
   font-size: 14px;
   line-height: 1.5;
   cursor: pointer;
-  margin-bottom: 8px; /* 배너와 목록 사이에 약간의 간격 추가 */
+  margin-bottom: 8px;
 
   strong {
     display: block;
