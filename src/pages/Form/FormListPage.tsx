@@ -1,16 +1,16 @@
 import styled from "styled-components";
-import Header from "../../components/common/Header/Header.tsx";
 import SearchInput from "../../components/complain/SearchInput.tsx";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import { useNavigate } from "react-router-dom";
 // 1. useMemo 임포트 추가
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
 import FormCard from "../../components/form/FormCard.tsx";
-import { SurveySummary } from "../../types/formTypes.ts";
-import { getAllSurveys } from "../../apis/formApis.ts";
+import { SurveySummary } from "@/types/formTypes";
+import { getAllSurveys } from "@/apis/formApis";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
-import { useIsAdminRole } from "../../hooks/useIsAdminRole.ts";
+import { useIsAdminRole } from "@/hooks/useIsAdminRole";
+import { useSetHeader } from "@/hooks/useSetHeader";
 
 const FormListPage = () => {
   const navigate = useNavigate();
@@ -72,9 +72,10 @@ const FormListPage = () => {
     }
   }, [forms, selectedFilterIndex, searchTerm]);
 
+  useSetHeader({ title: "폼" });
+
   return (
     <PageWrapper>
-      <Header title={"폼"} hasBack={true} />
       <MainContent>
         <TitleContentArea title={""}>
           <Wrapper2>
@@ -119,7 +120,7 @@ const FormListPage = () => {
 export default FormListPage;
 
 const PageWrapper = styled.div`
-  padding: 90px 16px;
+  padding: 0 16px 100px;
   display: flex;
   flex-direction: column;
   gap: 32px;

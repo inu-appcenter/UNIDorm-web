@@ -1,20 +1,22 @@
 // 📄 ComplainAdminPage.tsx
 
 import styled from "styled-components";
-import Header from "../../components/common/Header/Header.tsx";
 import SearchInput from "../../components/complain/SearchInput.tsx";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import ComplainListTable from "../../components/complain/ComplainListTable.tsx";
 import useUserStore from "../../stores/useUserStore.ts";
-import { useEffect, useState, useRef, useMemo } from "react"; // useMemo 추가
-import { AdminComplaint, ComplaintSearchDto } from "../../types/complain.ts";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { AdminComplaint, ComplaintSearchDto } from "@/types/complain";
 import {
   getAllComplaints,
   searchComplaints,
-} from "../../apis/complainAdmin.ts";
+  downloadComplaintsCSV,
+  downloadFilteredComplaintsCSV,
+} from "@/apis/complainAdmin";
 import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
 import ComplainFilter from "../../components/complain/ComplainFilter.tsx";
-import LoadingSpinner from "../../components/common/LoadingSpinner.tsx"; // 로딩 스피너 추가
+import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
+import { useSetHeader } from "@/hooks/useSetHeader";
 
 const ComplainAdminPage = () => {
   const { tokenInfo } = useUserStore();
@@ -24,15 +26,18 @@ const ComplainAdminPage = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const filterGroupRef = useRef<HTMLDivElement>(null);
 
-  // 🔽 검색어 상태 추가
+  // 검색어 및 로딩 상태
   const [searchTerm, setSearchTerm] = useState<string>("");
-  // 🔽 로딩 상태 추가
   const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  // 서버 필터링 적용 상태 (CSV 다운로드 시 사용)
+  const [appliedFilters, setAppliedFilters] =
+    useState<ComplaintSearchDto | null>(null);
 
   const menus = ["최근 3개월", "2025"];
   const [selectedMenuIndex, setSelectedMenuIndex] = useState(0);
 
-  // ⭐ 필터 상태들을 부모 컴포넌트에서 관리 (상태 끌어올리기)
+  // 필터 UI 상태 (필터 컴포넌트와 동기화)
   const [selectedDormitoryIndex, setSelectedDormitoryIndex] = useState<
     number | null
   >(null);
@@ -51,24 +56,26 @@ const ComplainAdminPage = () => {
   const [selectedBed, setSelectedBed] = useState("");
 
   // 초기 민원 목록 로드
+  const fetchAllComplaints = async () => {
+    setIsLoading(true);
+    try {
+      const response = await getAllComplaints();
+      setComplaints(response.data);
+      setAppliedFilters(null); // 초기화 시 적용 필터도 없음
+    } catch (error) {
+      console.error("민원 목록 불러오기 실패:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchAllComplaints = async () => {
-      setIsLoading(true); // 로딩 시작
-      try {
-        const response = await getAllComplaints();
-        setComplaints(response.data);
-      } catch (error) {
-        console.error("민원 목록 불러오기 실패:", error);
-      } finally {
-        setIsLoading(false); // 로딩 완료
-      }
-    };
     if (isLoggedIn) {
       fetchAllComplaints();
     }
   }, [isLoggedIn]);
 
-  // 외부 클릭 감지 로직
+  // 외부 클릭 시 필터 닫기
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
       if (
@@ -90,25 +97,22 @@ const ComplainAdminPage = () => {
     setIsFilterOpen(!isFilterOpen);
   };
 
-  // 필터 적용 핸들러 (서버 필터링)
+  // 필터 적용 핸들러 (서버 필터링 API 호출)
   const handleApplyFilters = async (filters: ComplaintSearchDto) => {
-    console.log("적용할 필터:", filters);
-    setIsLoading(true); // 로딩 시작
+    setIsLoading(true);
     try {
-      // ⚠️ 주의: 서버 필터링(searchComplaints) 시에는 클라이언트 필터링 로직(useMemo)이 필요하지 않을 수 있습니다.
-      // 여기서는 searchComplaints를 호출하여 서버에서 필터링된 데이터를 가져옵니다.
       const response = await searchComplaints(filters);
-      console.log("필터 응답 결과: ", response);
       setComplaints(response.data);
+      setAppliedFilters(filters); // 현재 적용된 필터 상태 저장
       setIsFilterOpen(false);
     } catch (error) {
       console.error("민원 검색 실패:", error);
     } finally {
-      setIsLoading(false); // 로딩 완료
+      setIsLoading(false);
     }
   };
 
-  // ⭐ 필터 초기화 핸들러
+  // 필터 초기화 핸들러
   const handleResetFilters = () => {
     setSelectedDormitoryIndex(null);
     setSelectedTypeIndex(null);
@@ -118,13 +122,50 @@ const ComplainAdminPage = () => {
     setSelectedFloor("");
     setSelectedRoom("");
     setSelectedBed("");
-    // 필터 초기화 후, 전체 목록을 다시 불러올지 여부는 API 스펙에 따라 결정됩니다.
-    // 여기서는 일단 상태만 초기화하고, 목록을 다시 로드하려면 getAllComplaints를 호출해야 합니다.
-    // 예: fetchAllComplaints();
+    setAppliedFilters(null);
+    fetchAllComplaints(); // 필터 초기화 후 전체 목록 재조회
   };
 
+  // CSV 다운로드 통합 핸들러
+  const handleDownloadCSV = async () => {
+    try {
+      if (!window.confirm("현재 필터링된 민원을 다운로드할까요?")) {
+        return;
+      }
+
+      // 적용된 필터 조건이 있으면 검색 API, 없으면 전체 API 호출
+      const response = appliedFilters
+        ? await downloadFilteredComplaintsCSV(appliedFilters)
+        : await downloadComplaintsCSV();
+
+      const blob = new Blob([response.data]);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+
+      const now = new Date();
+      const timestamp = now.toISOString().replace(/[:T]/g, "_").split(".")[0];
+      const fileName = appliedFilters
+        ? `민원목록_검색결과_${timestamp}.csv`
+        : `민원목록_전체_${timestamp}.csv`;
+
+      link.setAttribute("download", fileName);
+      document.body.appendChild(link);
+      link.click();
+
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("CSV 다운로드 실패:", error);
+      alert("다운로드 중 오류가 발생했습니다.");
+    }
+  };
+
+  // 클라이언트 측 필터링 (검색어 및 기간)
   const filteredComplaints = useMemo(() => {
     let list = complaints;
+
+    // 검색어 필터링
     if (searchTerm) {
       list = list.filter((complaint) =>
         complaint.title.toLowerCase().includes(searchTerm.toLowerCase()),
@@ -135,25 +176,19 @@ const ComplainAdminPage = () => {
     const threeMonthsAgo = new Date();
     threeMonthsAgo.setMonth(now.getMonth() - 3);
 
-    /**
-     * ❗ 아이폰(Safari) 호환성을 위한 날짜 파싱 헬퍼 함수
-     * '2025.10.23' 형식을 '2025/10/23' 형식으로 변경합니다.
-     */
     const parseSafeDate = (dateString: string) => {
-      // 🔽 수정된 부분: 모든 점(.)을 슬래시(/)로 변경 (g: global)
       const safariSafeFormat = dateString.replace(/\./g, "/");
       return new Date(safariSafeFormat);
     };
 
+    // 상단 칩 그룹 필터링 (기간)
     if (selectedMenuIndex === 0) {
       list = list.filter((complaint) => {
-        // 🔽 수정된 헬퍼 함수 사용
         const complaintDate = parseSafeDate(complaint.date);
         return complaintDate >= threeMonthsAgo;
       });
     } else if (selectedMenuIndex === 1) {
       list = list.filter((complaint) => {
-        // 🔽 수정된 헬퍼 함수 사용
         const complaintDate = parseSafeDate(complaint.date);
         const year = complaintDate.getFullYear();
         return year === 2025;
@@ -163,14 +198,18 @@ const ComplainAdminPage = () => {
     return list;
   }, [searchTerm, complaints, selectedMenuIndex]);
 
+  // 헤더 우측 메뉴 설정
+  const menuItems = [
+    { label: "민원 목록 다운로드", onClick: handleDownloadCSV },
+  ];
+  useSetHeader({ title: "전체 민원 목록(관리자)", menuItems });
+
   return (
     <ComplainListPageWrapper>
-      <Header title={"생활원 민원 관리"} hasBack={true} />
       <TitleContentArea
         title={"민원 목록"}
         children={
           <Wrapper2>
-            {/* 🔽 SearchInput에 value와 onChange 핸들러 연결 */}
             <SearchInput
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -184,7 +223,6 @@ const ComplainAdminPage = () => {
               />
               {isFilterOpen && (
                 <FilterDropdownWrapper>
-                  {/* ⭐ 자식 컴포넌트에 상태와 핸들러를 모두 props로 전달 */}
                   <ComplainFilter
                     dormitoryIndex={selectedDormitoryIndex}
                     typeIndex={selectedTypeIndex}
@@ -209,11 +247,9 @@ const ComplainAdminPage = () => {
               )}
             </FilterGroup>
 
-            {/* 🔽 로딩 중이거나, 필터링된 목록을 표시 */}
             {isLoading ? (
               <LoadingSpinner message="민원 목록을 불러오는 중..." />
             ) : filteredComplaints.length > 0 ? (
-              // 🔽 필터링된 목록(filteredComplaints)을 테이블에 전달
               <ComplainListTable data={filteredComplaints} isAdmin={true} />
             ) : (
               <EmptyMessage>조회된 민원이 없습니다.</EmptyMessage>
@@ -227,9 +263,8 @@ const ComplainAdminPage = () => {
 
 export default ComplainAdminPage;
 
-// (styled-components 코드는 이전과 동일)
 const ComplainListPageWrapper = styled.div`
-  padding: 90px 16px 40px 16px;
+  padding: 0 16px 100px;
   display: flex;
   flex-direction: column;
   gap: 32px;

@@ -1,5 +1,4 @@
 import styled from "styled-components";
-import Header from "../../components/common/Header/Header.tsx";
 import { useState } from "react";
 
 const FCMPage = () => {
@@ -15,7 +14,6 @@ const FCMPage = () => {
   };
   return (
     <FCMPageWrapper>
-      <Header title={"FCM 토큰 정보"} hasBack={true} />
       <div>
         <p>{token}</p>
       </div>

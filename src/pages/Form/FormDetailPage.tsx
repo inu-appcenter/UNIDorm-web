@@ -1,27 +1,25 @@
 import styled from "styled-components";
-import Header from "../../components/common/Header/Header.tsx";
 import FormContent from "../../components/form/FormContent.tsx";
 import FormField from "../../components/complain/FormField.tsx";
 import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import arrowright from "../../assets/arrow-right.svg";
-import { formatDeadlineDate } from "../../utils/dateUtils.ts";
-import { SurveyDetail } from "../../types/formTypes.ts";
+import { formatDeadlineDate } from "@/utils/dateUtils";
+import { SurveyDetail } from "@/types/formTypes";
 import {
   closeSurvey,
   deleteSurvey,
   getSurveyDetail,
   submitSurveyResponse,
-} from "../../apis/formApis.ts";
+} from "@/apis/formApis";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
-import { Input } from "../../styles/common.ts";
-import { FormBoxGray } from "../../styles/form.ts";
-import { useIsAdminRole } from "../../hooks/useIsAdminRole.ts";
+import { Input } from "@/styles/common";
+import { FormBoxGray } from "@/styles/form";
+import { useSetHeader } from "@/hooks/useSetHeader";
 
 const FormDetailPage = () => {
   const navigate = useNavigate();
-  const { isAdmin } = useIsAdminRole();
 
   const location = useLocation();
   const { hasSubmitted } = location.state || {}; // 수정할 민원 데이터
@@ -222,30 +220,6 @@ const FormDetailPage = () => {
     }
   };
 
-  const menuItems = [
-    {
-      label: "응답 결과 보기",
-      onClick: () => {
-        navigate(`/admin/form/${formId}/result`);
-      },
-    },
-    {
-      label: "폼 마감하기",
-      onClick: handleFormClose,
-    },
-    {
-      label: "폼 수정하기",
-      onClick: () => {
-        navigate("/admin/form/create", { state: { form: form } });
-      },
-    },
-
-    {
-      label: "폼 삭제하기",
-      onClick: handleDelete,
-    },
-  ];
-
   const isBlockSubmit = () => {
     if (!form) {
       return true;
@@ -260,13 +234,39 @@ const FormDetailPage = () => {
     return false;
   };
 
+  const headerConfig = useMemo(
+    () => ({
+      title: "폼 상세",
+      menuItems: [
+        {
+          label: "응답 결과 보기",
+          onClick: () => {
+            navigate(`/admin/form/${formId}/result`);
+          },
+        },
+        {
+          label: "폼 마감하기",
+          onClick: handleFormClose,
+        },
+        {
+          label: "폼 수정하기",
+          onClick: () => {
+            navigate("/admin/form/create", { state: { form: form } });
+          },
+        },
+
+        {
+          label: "폼 삭제하기",
+          onClick: handleDelete,
+        },
+      ],
+    }),
+    [form, formId, handleDelete, handleFormClose, navigate],
+  );
+  useSetHeader(headerConfig);
+
   return (
     <PageWrapper>
-      <Header
-        title={"폼 상세"}
-        hasBack={true}
-        menuItems={isAdmin ? menuItems : undefined}
-      />
       {isSubmitLoading && (
         <LoadingSpinner overlay={true} message={"폼 제출 중 ..."} />
       )}
@@ -377,7 +377,7 @@ export default FormDetailPage;
 
 // ... (styled-components 코드는 동일)
 const PageWrapper = styled.div`
-  padding: 90px 16px;
+  padding: 0 16px 100px;
   display: flex;
   flex-direction: column;
   gap: 32px;

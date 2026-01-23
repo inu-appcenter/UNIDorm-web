@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { POST_CATEGORIES } from "../../constants/groupPurchase.ts";
+import { POST_CATEGORIES } from "@/constants/groupPurchase";
 
 interface CategorySelectorProps {
   selectedCategory: string;

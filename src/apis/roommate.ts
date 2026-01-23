@@ -13,7 +13,7 @@ import {
   RoommateRulesResponse,
   RoommateRulesUpdateRequest,
   SimilarRoommatePost,
-} from "../types/roommates.ts";
+} from "@/types/roommates";
 import axiosInstance from "./axiosInstance.ts";
 
 export const getRoomMateList = async (): Promise<
@@ -22,6 +22,21 @@ export const getRoomMateList = async (): Promise<
   const response = await axiosInstance.get<RoommatePost[]>(`/roommates/list`);
   console.log(response);
   return response;
+};
+
+export const getRoomMateScrollList = async (
+  lastId?: number,
+  size: number = 10,
+): Promise<RoommatePost[]> => {
+  const response = await axiosInstance.get<RoommatePost[]>(
+    `/roommates/list/scroll`,
+    {
+      params: { lastId, size },
+    },
+  );
+
+  // 데이터 본문 반환
+  return response.data;
 };
 
 export const getSimilarRoomMateList = async (): Promise<

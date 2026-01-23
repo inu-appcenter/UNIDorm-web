@@ -1,14 +1,13 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import { CalendarItem, CreateCalendarDto } from "../../types/calendar.ts";
+import { CalendarItem, CreateCalendarDto } from "@/types/calendar";
 import {
   createCalendar,
   deleteCalendar,
   getAllCalendars,
   updateCalendar,
-} from "../../apis/calendar.ts";
-import Header from "../../components/common/Header/Header.tsx";
-import { useNavigate } from "react-router-dom";
+} from "@/apis/calendar";
+import { useSetHeader } from "@/hooks/useSetHeader";
 
 // --- 페이지 컴포넌트 ---
 const CalendarAdminPage: React.FC = () => {
@@ -20,8 +19,6 @@ const CalendarAdminPage: React.FC = () => {
     startDate: "",
     endDate: "",
   });
-
-  const navigate = useNavigate();
 
   useEffect(() => {
     fetchCalendar();
@@ -92,18 +89,10 @@ const CalendarAdminPage: React.FC = () => {
     setFormData({ title: "", link: "", startDate: "", endDate: "" });
   };
 
-  const menuItems = [
-    {
-      label: "로그아웃",
-      onClick: () => {
-        navigate("/logout");
-      },
-    },
-  ];
+  useSetHeader({ title: "캘린더 관리자 페이지" });
 
   return (
     <Wrapper>
-      <Header title={"캘린더 관리"} hasBack={true} menuItems={menuItems} />
       <MainContent>
         <Section>
           <Title>📅 이벤트 목록</Title>
@@ -216,7 +205,7 @@ const Wrapper = styled.div`
   --color-surface: #ffffff;
   --color-border: #e5e7eb;
 
-  padding: 90px 16px 40px 16px;
+  padding: 0 16px 100px;
   display: flex;
   flex-direction: column;
   gap: 32px;

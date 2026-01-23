@@ -137,3 +137,48 @@ export interface ReceivedMatchingRequest {
 export interface RoommateMatchingByChatRoomRequest {
   chatRoomId: number;
 }
+
+export interface CheckListForm {
+  title: string;
+  comment: string;
+  // 기본 정보
+  dormType: number | null;
+  college: number | null;
+  dormPeriod: number[];
+  // 생활 습관
+  smoking: number | null;
+  snoring: number | null;
+  toothGrind: number | null;
+  arrangement: number | null;
+  religion: number | null;
+  // 생활 리듬
+  sleeper: number | null;
+  showerHour: number | null;
+  showerTime: number | null;
+  bedTime: number | null;
+  // MBTI
+  mbti: (number | null)[];
+}
+
+export const INITIAL_FORM_STATE: CheckListForm = {
+  title: "",
+  comment: "",
+  dormType: null,
+  college: null,
+  dormPeriod: [],
+  smoking: null,
+  snoring: null,
+  toothGrind: null,
+  arrangement: null,
+  religion: null,
+  sleeper: null,
+  showerHour: null,
+  showerTime: null,
+  bedTime: null,
+  mbti: [null, null, null, null],
+};
+
+export interface StepProps {
+  data: CheckListForm;
+  onChange: (key: keyof CheckListForm, value: any) => void;
+}

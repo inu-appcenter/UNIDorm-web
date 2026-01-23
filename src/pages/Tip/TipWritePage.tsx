@@ -3,10 +3,10 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import SquareButton from "../../components/common/SquareButton.tsx";
 import tokenInstance from "../../apis/tokenInstance.ts";
-import Header from "../../components/common/Header/Header.tsx";
 import FileUploader from "../../components/common/FileUploader.tsx";
-import { useFileHandler } from "../../hooks/useFileHandler.ts";
+import { useFileHandler } from "@/hooks/useFileHandler";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
+import { useSetHeader } from "@/hooks/useSetHeader";
 
 export default function TipWritePage() {
   const navigate = useNavigate();
@@ -92,12 +92,10 @@ export default function TipWritePage() {
     }
   };
 
+  useSetHeader({ title: "TIP 등록/수정" });
+
   return (
     <Wrapper>
-      <Header
-        title={`기숙사 꿀팁 ${isEditMode ? "수정" : "작성"}`}
-        hasBack={true}
-      />
       {isLoading && <LoadingSpinner message="글 쓰는 중..." overlay={true} />}
 
       <Content>
@@ -143,17 +141,15 @@ export default function TipWritePage() {
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  background: #fafafa;
+  flex: 1;
+  padding: 0 16px 120px;
 `;
 
 const Content = styled.div`
   flex: 1;
-  padding: 90px 20px 120px;
   display: flex;
   flex-direction: column;
   gap: 16px;
-  overflow-y: auto;
 `;
 
 const Label = styled.label`

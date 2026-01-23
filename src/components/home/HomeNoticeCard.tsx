@@ -2,10 +2,10 @@ import styled from "styled-components";
 import { AiOutlineClockCircle } from "react-icons/ai";
 import { useNavigate } from "react-router-dom";
 import TagIconBlueBackground from "../common/TagIconBlueBackground.tsx";
-import { formatTimeAgo } from "../../utils/dateUtils.ts";
-import { ANNOUNCE_CATEGORY_LIST } from "../../constants/announcement.ts";
-import { TypeBadge } from "../../styles/announcement.ts";
-import { getLabelByValue } from "../../utils/announceUtils.ts";
+import { formatTimeAgo } from "@/utils/dateUtils";
+import { ANNOUNCE_CATEGORY_LIST } from "@/constants/announcement";
+import { TypeBadge } from "@/styles/announcement";
+import { getLabelByValue } from "@/utils/announceUtils";
 
 interface HomeCardProps {
   id: number;

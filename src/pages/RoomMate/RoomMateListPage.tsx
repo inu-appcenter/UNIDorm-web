@@ -1,16 +1,15 @@
 import styled from "styled-components";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import RoomMateCard from "../../components/roommate/RoomMateCard.tsx";
-import Header from "../../components/common/Header/Header.tsx";
-import { useEffect, useState } from "react";
-import { RoommatePost } from "../../types/roommates.ts";
+import { useEffect, useMemo } from "react";
+import { RoommatePost } from "@/types/roommates"; // 타입 임포트
 import { useLocation, useNavigate } from "react-router-dom";
 import FilterButton from "../../components/button/FilterButton.tsx";
-import { getRoomMateList } from "../../apis/roommate.ts";
-// 🔽 로딩 스피너 컴포넌트를 import 합니다.
+import { getRoomMateScrollList } from "@/apis/roommate";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
-
-// ... (FilterTags 컴포넌트 및 스타일은 동일)
+import { useSetHeader } from "@/hooks/useSetHeader";
+import { useInView } from "react-intersection-observer";
+import { useInfiniteQuery } from "@tanstack/react-query";
 
 function FilterTags({ filters }: { filters: Record<string, any> }) {
   const filteredTags = Object.values(filters).filter((value) => {
@@ -25,11 +24,7 @@ function FilterTags({ filters }: { filters: Record<string, any> }) {
   return (
     <TagsWrapper>
       <div className="filtertitle">적용된 필터</div>
-
       {filteredTags.map((value, idx) => {
-        if (idx < 0) {
-          return null;
-        }
         const displayValue = Array.isArray(value) ? value.join(", ") : value;
         return <Tag key={idx}>#{displayValue}</Tag>;
       })}
@@ -42,7 +37,6 @@ const TagsWrapper = styled.div`
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 8px;
-
   .filtertitle {
     font-size: 14px;
     font-weight: 600;
@@ -58,49 +52,47 @@ const Tag = styled.div`
 `;
 
 export default function RoomMateListPage() {
-  const [roommates, setRoommates] = useState<RoommatePost[]>([]);
-  // 🔽 로딩 상태를 관리할 state를 추가합니다.
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-
-  const loadRoommates = async () => {
-    // 🔽 데이터 로딩 시작
-    setIsLoading(true);
-    try {
-      const data = await getRoomMateList();
-      setRoommates(data.data);
-    } catch (error) {
-      console.error("룸메이트 리스트 불러오기 실패:", error);
-    } finally {
-      // 🔽 데이터 로딩 완료 (성공/실패 무관)
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadRoommates();
-  }, []);
-
-  const [filteredRoommates, setFilteredRoommates] = useState<RoommatePost[]>(
-    [],
-  );
   const location = useLocation();
   const navigate = useNavigate();
+  const { ref, inView } = useInView();
 
-  const [filters, setFilters] = useState<Record<string, any>>(
-    location.state?.filters || {},
+  const filters = useMemo(
+    () => location.state?.filters || {},
+    [location.state?.filters],
   );
 
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isError,
+  } = useInfiniteQuery({
+    queryKey: ["roommates", "scroll"],
+    // queryFn 결과값이 RoommatePost[] 배열임
+    queryFn: ({ pageParam }) => getRoomMateScrollList(pageParam, 10),
+    initialPageParam: undefined as number | undefined,
+    getNextPageParam: (lastPage) => {
+      // lastPage가 배열이므로 length 접근 가능
+      if (lastPage.length < 10) return undefined;
+      // 마지막 요소의 boardId 추출
+      return lastPage[lastPage.length - 1].boardId;
+    },
+    staleTime: 1000 * 60 * 5,
+  });
+
   useEffect(() => {
-    if (location.state?.filters) {
-      setFilters(location.state.filters);
+    if (inView && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
     }
-  }, [location.state?.filters]);
+  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  useEffect(() => {
-    if (!Array.isArray(roommates) || roommates.length === 0) return;
+  // 1. useMemo 반환 타입에 RoommatePost[] 명시
+  const allRoommates = useMemo<RoommatePost[]>(() => {
+    const combined = data?.pages.flat() || [];
 
-    const filtered = roommates.filter((post) => {
-      // ... (filtering logic is the same)
+    return combined.filter((post: RoommatePost) => {
       if (filters.dormType && post.dormType !== filters.dormType) return false;
       if (filters.college && post.college !== filters.college) return false;
       if (filters.dormPeriod && filters.dormPeriod.length > 0) {
@@ -131,17 +123,12 @@ export default function RoomMateListPage() {
       if (filters.religion && post.religion !== filters.religion) return false;
       return true;
     });
+  }, [data, filters]);
 
-    setFilteredRoommates(filtered);
-  }, [roommates, filters]);
+  useSetHeader({ title: "2026년 1학기 룸메이트" });
 
   return (
     <RoomMateListPageWrapper>
-      <Header
-        title={"룸메이트 둘러보기"}
-        hasBack={true}
-        backPath={"/roommate"}
-      />
       <TitleContentArea
         title={"최신순"}
         description={"룸메이트를 구하고 있는 다양한 UNI들을 찾아보세요!"}
@@ -158,13 +145,12 @@ export default function RoomMateListPage() {
             <FilterTags filters={filters} />
           </FilterArea>
 
-          {/* 🔽 로딩 중일 때 스피너를, 로딩 완료 후 목록을 보여줍니다. */}
-          {isLoading ? (
-            <LoadingSpinner message="룸메이트 목록을 불러오는 중..." />
-          ) : (filteredRoommates.length > 0 ? filteredRoommates : roommates)
-              .length > 0 ? (
-            (filteredRoommates.length > 0 ? filteredRoommates : roommates).map(
-              (post) => (
+          {isLoading && <LoadingSpinner message="목록 로딩 중..." />}
+          {isError && <EmptyMessage>데이터 로딩 오류 발생</EmptyMessage>}
+
+          {!isLoading && allRoommates.length > 0
+            ? // 2. map 콜백 매개변수에 RoommatePost 타입 명시
+              allRoommates.map((post: RoommatePost) => (
                 <RoomMateCard
                   key={post.boardId}
                   title={post.title}
@@ -179,11 +165,14 @@ export default function RoomMateListPage() {
                   roommateBoardLike={post.roommateBoardLike}
                   matched={post.matched}
                 />
-              ),
-            )
-          ) : (
-            <EmptyMessage>게시글이 없습니다.</EmptyMessage>
-          )}
+              ))
+            : !isLoading && <EmptyMessage>게시글이 없습니다.</EmptyMessage>}
+
+          <div ref={ref} style={{ height: "20px" }}>
+            {isFetchingNextPage && (
+              <LoadingSpinner message="추가 데이터 로딩 중..." />
+            )}
+          </div>
         </>
       </TitleContentArea>
     </RoomMateListPageWrapper>
@@ -191,7 +180,7 @@ export default function RoomMateListPage() {
 }
 
 const RoomMateListPageWrapper = styled.div`
-  padding: 90px 16px;
+  padding: 0 16px 100px;
   display: flex;
   flex-direction: column;
   gap: 16px;

@@ -1,7 +1,7 @@
 import axios, { AxiosError } from "axios";
 import useUserStore from "../stores/useUserStore";
 import useNetworkStore from "../stores/useNetworkStore";
-import { refresh } from "../apis/members";
+import { refresh } from "@/apis/members";
 
 const BASE_URL = `https://${import.meta.env.VITE_API_SUBDOMAIN}.inuappcenter.kr/`;
 

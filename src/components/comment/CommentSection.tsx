@@ -2,12 +2,12 @@ import { useState } from "react";
 import styled from "styled-components";
 import { BsSend } from "react-icons/bs";
 import TopRightDropdownMenu from "../common/TopRightDropdownMenu.tsx";
-import { TipComment } from "../../types/tips.ts";
-import { ReplyProps } from "../../types/comment.ts";
-import { GroupOrderComment } from "../../types/grouporder.ts";
+import { TipComment } from "@/types/tips";
+import { ReplyProps } from "@/types/comment";
+import { GroupOrderComment } from "@/types/grouporder";
 import useUserStore from "../../stores/useUserStore.ts";
 import profileimg from "../../assets/profileimg.png";
-import { formatTimeAgo } from "../../utils/dateUtils.ts";
+import { formatTimeAgo } from "@/utils/dateUtils";
 
 interface CommentSectionProps {
   CommentDtoList: TipComment[] | GroupOrderComment[];

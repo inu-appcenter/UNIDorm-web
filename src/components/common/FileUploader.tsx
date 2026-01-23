@@ -1,7 +1,7 @@
-import React, { useRef, ChangeEvent } from "react";
+import React, { ChangeEvent, useRef } from "react";
 import styled from "styled-components";
 import LoadingSpinner from "./LoadingSpinner.tsx";
-import { ManagedFile } from "../../hooks/useFileHandler.ts";
+import { ManagedFile } from "@/hooks/useFileHandler";
 
 interface FileUploaderProps {
   images: ManagedFile[];

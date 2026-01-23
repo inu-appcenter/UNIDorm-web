@@ -1,6 +1,6 @@
 import styled from "styled-components";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
-import { OptionResult } from "../../types/formTypes.ts";
+import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import { OptionResult } from "@/types/formTypes";
 
 // --- 차트 색상 (요청하신 색상 포함 및 계열 색상 추가) ---
 export const COLORS = [

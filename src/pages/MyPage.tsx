@@ -2,16 +2,16 @@ import styled from "styled-components";
 import MyInfoArea from "../components/mypage/MyInfoArea.tsx";
 import MenuGroup from "../components/mypage/MenuGroup.tsx";
 import { useEffect, useState } from "react";
-import Header from "../components/common/Header/Header.tsx";
 import useUserStore from "../stores/useUserStore.ts";
 import { useNavigate } from "react-router-dom";
-import { createMenuGroups } from "../stores/menuGroupsFactory.ts";
+import { createMenuGroups } from "@/stores/menuGroupsFactory";
 import RoomMateInfoArea from "../components/roommate/RoomMateInfoArea.tsx";
-import { getMyRoommateInfo } from "../apis/roommate.ts";
-import { MyRoommateInfoResponse } from "../types/roommates.ts";
+import { getMyRoommateInfo } from "@/apis/roommate";
+import { MyRoommateInfoResponse } from "@/types/roommates";
 import TitleContentArea from "../components/common/TitleContentArea.tsx";
 import BottomBar from "../components/common/BottomBar/BottomBar.tsx";
-import { useIsAdminRole } from "../hooks/useIsAdminRole.ts";
+import { useIsAdminRole } from "@/hooks/useIsAdminRole";
+import { useSetHeader } from "@/hooks/useSetHeader";
 
 const MyPage = () => {
   const { tokenInfo } = useUserStore();
@@ -46,9 +46,13 @@ const MyPage = () => {
   }, []);
   const isProtected = !isLoggedIn;
 
+  useSetHeader({
+    title: "마이페이지",
+    showAlarm: true,
+  });
+
   return (
     <MyPageWrapper>
-      <Header title={"마이페이지"} showAlarm={true} />
       <InfoAreaWrapper>
         {isLoggedIn ? (
           <MyInfoArea />
@@ -132,8 +136,7 @@ const MyPage = () => {
 export default MyPage;
 
 const MyPageWrapper = styled.div`
-  padding: 90px 16px;
-  padding-bottom: 150px;
+  padding: 0 16px 100px;
 
   display: flex;
   flex-direction: column;
@@ -164,11 +167,9 @@ const MenuGroupsWrapper = styled.div`
 
 const Divider = styled.div`
   height: 1px;
-  width: 100vw;
+  /* 부모의 좌우 패딩 16px을 음수 마진으로 상쇄 */
+  margin: 0 -16px;
   background: #0000001a;
-  position: relative;
-  left: 50%;
-  transform: translateX(-50%);
 `;
 
 const LoginButton = styled.button`

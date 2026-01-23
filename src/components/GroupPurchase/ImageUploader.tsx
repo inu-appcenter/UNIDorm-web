@@ -3,7 +3,7 @@
 import React, { useRef } from "react";
 import styled from "styled-components";
 import { MdImage } from "react-icons/md";
-import { MAX_IMAGE_COUNT } from "../../constants/groupPurchase.ts";
+import { MAX_IMAGE_COUNT } from "@/constants/groupPurchase";
 
 interface ImageUploaderProps {
   images: File[];

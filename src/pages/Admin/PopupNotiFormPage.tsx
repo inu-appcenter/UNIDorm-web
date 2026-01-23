@@ -2,16 +2,16 @@
  * 파일 경로: src/pages/admin/PopupNotiFormPage.tsx
  * (기존의 PopupNotiCreatePage.tsx와 PopupNotiEditPage.tsx를 이 파일로 대체합니다)
  */
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   createPopupNotification,
   getPopupNotificationById,
   updatePopupNotification,
-} from "../../apis/popup-notification";
-import { RequestPopupNotificationDto } from "../../types/popup-notifications";
-import Header from "../../components/common/Header/Header.tsx";
+} from "@/apis/popup-notification";
+import { RequestPopupNotificationDto } from "@/types/popup-notifications";
+import { useSetHeader } from "@/hooks/useSetHeader";
 
 const PopupNotiFormPage = () => {
   const { popupNotificationId } = useParams<{ popupNotificationId: string }>();
@@ -134,9 +134,10 @@ const PopupNotiFormPage = () => {
   const submitButtonText = isEditMode ? "수정하기" : "등록하기";
   const loadingButtonText = isEditMode ? "수정 중..." : "등록 중...";
 
+  useSetHeader({ title: pageTitle });
+
   return (
     <Wrapper>
-      <Header title={pageTitle} hasBack={true} />
       <Form onSubmit={handleSubmit}>
         <Label>제목</Label>
         <Input
@@ -228,8 +229,7 @@ const Wrapper = styled.div`
   width: 100%;
   max-width: 700px;
   margin: 0 auto;
-  padding: 40px 16px;
-  padding-top: 80px;
+  padding: 0 16px 100px;
   box-sizing: border-box;
 `;
 

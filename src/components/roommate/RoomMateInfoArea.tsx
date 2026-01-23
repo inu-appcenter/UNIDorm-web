@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
-import { MyRoommateInfoResponse } from "../../types/roommates.ts";
+import { MyRoommateInfoResponse } from "@/types/roommates";
 import default_profile_img from "../../assets/profileimg.png";
 import { MdKeyboardArrowRight } from "react-icons/md";
 

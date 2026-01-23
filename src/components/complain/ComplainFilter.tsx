@@ -8,9 +8,9 @@ import {
   complainStatus,
   ComplainType,
   dormitoryBlocks,
-} from "../../constants/constants.ts"; // 'as const'로 선언된 상수들
-import { Dropdown, DropdownContainer, Input } from "../../styles/common.ts";
-import { ComplaintSearchDto } from "../../types/complain.ts";
+} from "@/constants/constants"; // 'as const'로 선언된 상수들
+import { Dropdown, DropdownContainer, Input } from "@/styles/common";
+import { ComplaintSearchDto } from "@/types/complain";
 import { useEffect, useState } from "react"; // ⭐ useState, useEffect 추가
 
 // --- 1. 타입 정의 추가 (ComplainWritePage와 동일) ---
@@ -197,7 +197,6 @@ const ComplainFilter = ({
           onSelect={onBlockChange}
         />
       </FormField>
-
       {/* --- 6. JSX 드롭다운 수정 --- */}
       <FormField label="층/호수/침대">
         <DropdownContainer>
@@ -251,6 +250,9 @@ const ComplainFilter = ({
           </Dropdown>
         </DropdownContainer>
       </FormField>
+      민원 내역 다운로드는 우측 상단 점 세개 메뉴에서 할 수 있어요.
+      <br />
+      현재 적용된 필터에 해당하는 민원이 다운로드됩니다.
       <ButtonWrapper>
         <Button onClick={onReset} isReset>
           초기화

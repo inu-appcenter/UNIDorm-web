@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { DividerBar, People } from "../../styles/groupPurchase.ts";
+import { DividerBar, People } from "@/styles/groupPurchase";
 import 사람 from "../../assets/chat/human.svg";
 
 type Props = {

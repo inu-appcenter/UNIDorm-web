@@ -2,7 +2,7 @@ import styled from "styled-components";
 import profile from "../../assets/profileimg.png";
 import GroupPurchaseInfo from "./GroupPurchaseInfo.tsx";
 import RoundSquareButton from "../button/RoundSquareButton.tsx";
-import { requestRoommateMatchingByChatRoom } from "../../apis/roommate.ts";
+import { requestRoommateMatchingByChatRoom } from "@/apis/roommate";
 import { MdHelpOutline } from "react-icons/md";
 import RoundSquareWhiteButton from "../button/RoundSquareWhiteButton.tsx";
 import { useState } from "react";

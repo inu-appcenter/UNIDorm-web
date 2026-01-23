@@ -1,5 +1,5 @@
 import tokenInstance from "./tokenInstance.ts";
-import { CategoryType } from "../constants/groupPurchase.ts";
+import { CategoryType } from "@/constants/groupPurchase";
 
 // 공동구매 키워드 알림 삭제
 export const deleteGroupOrderKeywordNotification = async (keyword: string) => {

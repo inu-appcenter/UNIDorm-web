@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import useUserStore from "../../stores/useUserStore.ts";
 import { useEffect, useState } from "react";
-import { getMemberImage } from "../../apis/members.ts";
+import { getMemberImage } from "@/apis/members";
 import profile from "../../assets/profileimg.png";
 
 const MyInfoArea = () => {

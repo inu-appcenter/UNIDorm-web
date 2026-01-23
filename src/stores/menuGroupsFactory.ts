@@ -1,7 +1,7 @@
 // menuGroupsFactory.ts
 
-import { MenuGroup } from "../types/mypage.ts";
-import { getMobilePlatform } from "../utils/getMobilePlatform.ts";
+import { MenuGroup } from "@/types/mypage";
+import { getMobilePlatform } from "@/utils/getMobilePlatform";
 
 export const createMenuGroups = (
   isLoggedIn: boolean,

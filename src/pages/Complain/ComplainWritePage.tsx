@@ -2,21 +2,21 @@ import styled from "styled-components";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import SquareButton from "../../components/common/SquareButton.tsx";
-import Header from "../../components/common/Header/Header.tsx";
 import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
 import {
   complainDormitory,
   ComplainType,
   dormitoryBlocks,
   dormStructure,
-} from "../../constants/constants.ts";
-import { createComplaint, updateComplaint } from "../../apis/complain.ts";
-import { ComplaintCreateDto } from "../../types/complain.ts";
+} from "@/constants/constants";
+import { createComplaint, updateComplaint } from "@/apis/complain";
+import { ComplaintCreateDto } from "@/types/complain";
 import FormField from "../../components/complain/FormField.tsx";
-import { Dropdown, DropdownContainer, Input } from "../../styles/common.ts";
+import { Dropdown, DropdownContainer, Input } from "@/styles/common";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
-import { useFileHandler } from "../../hooks/useFileHandler.ts";
+import { useFileHandler } from "@/hooks/useFileHandler";
 import FileUploader from "../../components/common/FileUploader.tsx";
+import { useSetHeader } from "@/hooks/useSetHeader";
 
 // ---  옵션 배열 생성 헬퍼 함수 ---
 const generateOptions = (min: number, max: number, suffix: string) => {
@@ -224,10 +224,10 @@ export default function ComplainWritePage() {
     }
   };
 
+  useSetHeader({ title: "생활원 민원 작성" });
+
   return (
     <Wrapper>
-      <Header title={isEditMode ? "민원 수정" : "민원 접수"} hasBack={true} />
-
       {isLoading && <LoadingSpinner overlay message="글 쓰는 중..." />}
 
       <Content>
@@ -395,7 +395,7 @@ const Wrapper = styled.div`
 
 const Content = styled.div`
   flex: 1;
-  padding: 80px 20px 120px;
+  padding: 0 16px 120px;
   display: flex;
   flex-direction: column;
   gap: 24px;

@@ -1,5 +1,4 @@
 import styled from "styled-components";
-import Header from "../../components/common/Header/Header.tsx";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import ChatInfo from "../../components/chat/ChatInfo.tsx";
@@ -8,9 +7,10 @@ import ChatItemMy from "../../components/chat/ChatItemMy.tsx";
 import send from "../../assets/chat/send.svg";
 import { useRoommateChat } from "./useRoommateChat.ts";
 import useUserStore from "../../stores/useUserStore.ts";
-import { getRoommateChatHistory } from "../../apis/chat.ts";
-import { deleteRoommateChatRoom } from "../../apis/roommate.ts";
+import { getRoommateChatHistory } from "@/apis/chat";
 import TopNoticeBanner from "../../components/chat/TopNoticeBanner.tsx";
+import { useSetHeader } from "@/hooks/useSetHeader";
+import { deleteRoommateChatRoom } from "@/apis/roommate";
 
 type MessageType = {
   id: number;
@@ -21,7 +21,6 @@ type MessageType = {
 
 export default function ChattingPage() {
   const isLeavingRef = useRef(false);
-
   const { chatType, id } = useParams();
   const [typeString, setTypeString] = useState<string>("");
   const [messageList, setMessageList] = useState<MessageType[]>([]);
@@ -30,17 +29,31 @@ export default function ChattingPage() {
   const navigate = useNavigate();
 
   const location = useLocation();
-  // navigate 시 넘긴 state 객체에서 partnerName 꺼내기
   const partnerName = location.state?.partnerName ?? undefined;
   const partnerProfileImageUrl =
     location.state?.partnerProfileImageUrl ?? undefined;
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
 
   const roomId = Number(id);
   const userId = userInfo.id;
   const token = tokenInfo.accessToken;
+
+  // 하단 스크롤 이동
+  const scrollToBottom = () => {
+    window.scrollTo({
+      top: document.documentElement.scrollHeight,
+      behavior: "smooth",
+    });
+  };
+
+  // 메시지 리스트 변경 시 자동 스크롤
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      scrollToBottom();
+    }, 50);
+    return () => clearTimeout(timer);
+  }, [messageList]);
 
   const { connect, disconnect, sendMessage, isConnected } = useRoommateChat({
     roomId,
@@ -60,7 +73,6 @@ export default function ChattingPage() {
           }),
         },
       ]);
-      scrollToBottom();
     },
     onConnect: () => {
       console.log("✅ WebSocket 연결됨");
@@ -80,11 +92,9 @@ export default function ChattingPage() {
     const init = async () => {
       if (chatType === "roommate") {
         setTypeString("룸메이트");
-
         try {
           const response = await getRoommateChatHistory(roomId);
           const chats = response.data;
-
           const formattedMessages: MessageType[] = chats.map((chat) => ({
             id: chat.roommateChatId,
             sender: chat.userId === userId ? "me" : "other",
@@ -95,27 +105,19 @@ export default function ChattingPage() {
               hour12: true,
             }),
           }));
-
           setMessageList(formattedMessages);
-          scrollToBottom();
         } catch (error) {
           console.error("채팅 내역 불러오기 실패:", error);
         }
-
-        connect(); // WebSocket 연결
+        connect();
       } else if (chatType === "groupPurchase") {
         setTypeString("공동구매");
-        // 추후 WebSocket 연결
       }
     };
-
     init();
-
     return () => {
-      isLeavingRef.current = true; // 페이지 떠나는 상태로 설정
-      if (isConnected) {
-        disconnect();
-      }
+      isLeavingRef.current = true;
+      if (isConnected) disconnect();
     };
   }, [chatType]);
 
@@ -123,57 +125,30 @@ export default function ChattingPage() {
     const el = inputRef.current;
     if (el) {
       el.style.height = "auto";
-      const newHeight = Math.min(el.scrollHeight, 96);
-      el.style.height = `${newHeight}px`;
+      el.style.height = `${Math.min(el.scrollHeight, 96)}px`;
     }
   };
 
   const handleSendMessage = () => {
-    if (!inputValue.trim()) return;
-
-    // ✅ 웹소켓 연결 상태 확인
-    if (!isConnected) {
-      console.error("웹소켓이 연결되지 않았습니다. 메시지를 보낼 수 없습니다.");
-      alert(
-        "메시지 전송 실패!\n채팅방을 나갔다가 다시 들어와서 시도해 보세요.",
-      );
-      // 사용자에게 메시지 전송 실패를 알리는 추가 로직 (예: 알림창)
+    if (!inputValue.trim() || !isConnected) {
+      if (!isConnected) alert("채팅 연결을 확인해주세요.");
       return;
     }
-
     const now = new Date().toLocaleTimeString("ko-KR", {
       hour: "2-digit",
       minute: "2-digit",
       hour12: true,
     });
-
     const newMessage: MessageType = {
       id: Date.now(),
       sender: "me",
       content: inputValue.trim(),
       time: now,
     };
-
     setMessageList((prev) => [...prev, newMessage]);
-    sendMessage(inputValue.trim()); // ✅ WebSocket 전송
+    sendMessage(inputValue.trim());
     setInputValue("");
-
     if (inputRef.current) inputRef.current.style.height = "auto";
-
-    scrollToBottom();
-  };
-
-  const scrollToBottom = () => {
-    setTimeout(() => {
-      if (scrollRef.current) {
-        scrollRef.current.scrollTo?.({
-          top: scrollRef.current.scrollHeight,
-          behavior: "smooth",
-        });
-        // fallback
-        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-      }
-    }, 50);
   };
 
   const menuItems = [
@@ -218,14 +193,12 @@ export default function ChattingPage() {
     },
   ];
 
+  useSetHeader({ title: "룸메이트 채팅", menuItems });
+
   return (
     <ChatPageWrapper>
-      <Header
-        hasBack={true}
-        title={typeString + " 채팅"}
-        menuItems={menuItems}
-      />
-      <ContentWrapper>
+      {/* 상단 고정 영역 */}
+      <FixedHeaderContainer>
         <ChatInfo
           selectedTab={typeString}
           partnerName={partnerName}
@@ -233,140 +206,117 @@ export default function ChattingPage() {
           isChatted={messageList.length > 0}
           partnerProfileImageUrl={partnerProfileImageUrl}
         />
-        <div
-          style={{
-            marginTop: "10px",
-            marginBottom: "10px",
-            width: "100%",
-            height: "fit-content",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <TopNoticeBanner
-            message={
-              messageList.length > 0
-                ? "서로 룸메이트를 하기로 마음먹었다면,\n룸메 신청 버튼을 눌러 룸메이트가 되어보세요!"
-                : "자유롭게 채팅을 나누며 서로를 알아가보세요!"
-            }
-          />
-        </div>
+        <TopNoticeBanner
+          message={
+            messageList.length > 0
+              ? "서로 룸메이트를 하기로 마음먹었다면,\n룸메 신청 버튼을 눌러 룸메이트가 되어보세요!"
+              : "자유롭게 채팅을 나누며 서로를 알아가보세요!"
+          }
+        />
+      </FixedHeaderContainer>
 
-        <ChattingWrapper ref={scrollRef}>
-          {messageList.map((msg) =>
-            msg.sender === "me" ? (
-              <ChatItemMy key={msg.id} content={msg.content} time={msg.time} />
-            ) : (
-              <ChatItemOtherPerson
-                key={msg.id}
-                content={msg.content}
-                time={msg.time}
-              />
-            ),
-          )}
-        </ChattingWrapper>
-        <InputArea>
-          <Input
-            placeholder={"메시지 입력"}
-            ref={inputRef}
-            onInput={handleInput}
-            rows={1}
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleSendMessage();
-              }
-            }}
-          />
-          <SendButton onClick={handleSendMessage}>
-            <img src={send} alt={"send"} />
-          </SendButton>
-        </InputArea>
-      </ContentWrapper>
+      {/* 스크롤 채팅 영역 */}
+      <ChattingWrapper>
+        {messageList.map((msg) =>
+          msg.sender === "me" ? (
+            <ChatItemMy key={msg.id} content={msg.content} time={msg.time} />
+          ) : (
+            <ChatItemOtherPerson
+              key={msg.id}
+              content={msg.content}
+              time={msg.time}
+            />
+          ),
+        )}
+      </ChattingWrapper>
+
+      {/* 하단 고정 입력창 */}
+      <FixedInputArea>
+        <Input
+          placeholder={"메시지 입력"}
+          ref={inputRef}
+          onInput={handleInput}
+          rows={1}
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              handleSendMessage();
+            }
+          }}
+        />
+        <SendButton onClick={handleSendMessage}>
+          <img src={send} alt={"send"} />
+        </SendButton>
+      </FixedInputArea>
     </ChatPageWrapper>
   );
 }
 
 const ChatPageWrapper = styled.div`
   width: 100%;
-  height: 100%;
-  padding-top: 70px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  box-sizing: border-box;
-
-  overflow-y: auto;
+  background: #f4f4f4;
+  min-height: 100vh;
+  position: relative;
 `;
 
-const ContentWrapper = styled.div`
-  //padding-bottom: 70px;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  box-sizing: border-box;
+const FixedHeaderContainer = styled.div`
+  position: fixed;
+  /* 부모 레이아웃 상단 패딩값 */
+  top: 70px;
+  left: 0;
+  right: 0;
+  z-index: 10;
   background: #f4f4f4;
 `;
 
 const ChattingWrapper = styled.div`
-  flex: 1;
-  height: 100%;
-
-  overflow-y: scroll;
   display: flex;
   flex-direction: column;
+  /* 상단 고정 요소(ChatInfo + Banner) 높이만큼 여백 */
+  padding-top: 70px;
+  /* 하단 입력창 높이만큼 여백 */
+  padding-bottom: 70px;
+  box-sizing: border-box;
   background: #f4f4f4;
-
-  padding-bottom: 56px;
 `;
-const InputArea = styled.div`
+
+const FixedInputArea = styled.div`
   position: fixed;
   bottom: 0;
   left: 0;
-  width: 100%;
-  height: fit-content;
+  right: 0;
+  z-index: 50;
   min-height: 56px;
-
   background-color: #fafafa;
   display: flex;
-  flex-direction: row;
-  justify-content: center;
   align-items: center;
-
   padding: 8px 16px;
   box-sizing: border-box;
-
   gap: 8px;
+  border-top: 1px solid #e0e0e0;
 `;
 
 const Input = styled.textarea`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
+  width: 100%;
   padding: 8px;
   box-sizing: border-box;
-  gap: 10px;
-
-  width: 100%;
-  height: 100%;
-
   background: #ffffff;
   border-radius: 4px;
   border: none;
-
-  font-style: normal;
-  font-weight: 400;
   font-size: 16px;
   line-height: 24px;
-
-  letter-spacing: 0.38px;
-
   color: #1c1c1e;
+  resize: none;
+  outline: none;
 `;
+
 const SendButton = styled.button`
   background: none;
   border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
 `;

@@ -2,10 +2,10 @@ import styled from "styled-components";
 import arrowright from "../../assets/arrow-right.svg";
 import FormContent from "./FormContent.tsx";
 import { useNavigate } from "react-router-dom";
-import { SurveySummary } from "../../types/formTypes.ts";
-import { formatDeadlineDate } from "../../utils/dateUtils.ts";
-import { statusText } from "../../utils/formUtils.ts";
-import { useIsAdminRole } from "../../hooks/useIsAdminRole.ts";
+import { SurveySummary } from "@/types/formTypes";
+import { formatDeadlineDate } from "@/utils/dateUtils";
+import { statusText } from "@/utils/formUtils";
+import { useIsAdminRole } from "@/hooks/useIsAdminRole";
 import useUserStore from "../../stores/useUserStore.ts";
 
 interface FormCardProps {

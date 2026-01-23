@@ -1,28 +1,25 @@
 import styled from "styled-components";
 import TitleContentArea from "../components/common/TitleContentArea.tsx";
 import HomeNoticeCard from "../components/home/HomeNoticeCard.tsx";
-import Header from "../components/common/Header/Header.tsx";
 import HomeTipsCard from "../components/home/HomeTipsCard.tsx";
 import { useEffect, useState } from "react";
-import { fetchDailyRandomTips } from "../apis/tips.ts";
-import { Tip } from "../types/tips.ts";
-import BottomBar from "../components/common/BottomBar/BottomBar.tsx";
-// import 민원접수 from "../assets/민원접수.svg";
+import { fetchDailyRandomTips } from "@/apis/tips";
+import { Tip } from "@/types/tips";
 import 앱센터로고가로 from "../assets/앱센터로고가로.webp";
 import { useNavigate } from "react-router-dom";
 import GroupPurchaseList from "../components/GroupPurchase/GroupPurchaseList.tsx";
-import { GetGroupPurchaseListParams, GroupOrder } from "../types/grouporder.ts";
-import { getGroupPurchaseList } from "../apis/groupPurchase.ts";
+import { GetGroupPurchaseListParams, GroupOrder } from "@/types/grouporder";
+import { getGroupPurchaseList } from "@/apis/groupPurchase";
 import HomeNoticeBottomModal from "../components/modal/HomeNoticeBottomModal.tsx";
 import HomeBanner from "../components/home/HomeBanner.tsx";
 import LoadingSpinner from "../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../constants/EmptyMessage.tsx";
-import { getAnnouncements } from "../apis/announcements.ts";
-import { Announcement } from "../types/announcements.ts";
+import { getAnnouncements } from "@/apis/announcements";
+import { Announcement } from "@/types/announcements";
 import useUserStore from "../stores/useUserStore.ts";
-import { getPopupNotifications } from "../apis/popup-notification.ts";
-import { PopupNotification } from "../types/popup-notifications.ts";
-import { getMobilePlatform } from "../utils/getMobilePlatform.ts";
+import { getPopupNotifications } from "@/apis/popup-notification";
+import { PopupNotification } from "@/types/popup-notifications";
+import { getMobilePlatform } from "@/utils/getMobilePlatform";
 import ModalContent_AppInstall from "../components/common/ModalContent_AppInstall.tsx";
 import CommonBottomModal from "../components/modal/CommonBottomModal.tsx";
 import ServiceBox from "../components/home/ServiceBox.tsx";
@@ -31,6 +28,7 @@ import 폼아이콘 from "../assets/home/폼아이콘.webp";
 import TopPopupNotification from "../components/common/TopPopupNotification.tsx";
 import useNetworkStore from "../stores/useNetworkStore.ts";
 import Calendar from "../components/calendar/Calendar.tsx";
+import { useSetHeader } from "@/hooks/useSetHeader";
 
 export default function HomePage() {
   const { tokenInfo } = useUserStore();
@@ -175,9 +173,12 @@ export default function HomePage() {
     setNotification(null);
   };
 
+  useSetHeader({
+    showAlarm: true,
+  });
+
   return (
     <HomePageWrapper>
-      <Header title="유니돔" hasBack={false} showAlarm={true} />
       {!isPopupLoading &&
         popupNotices.map((popup) => (
           <HomeNoticeBottomModal
@@ -310,18 +311,6 @@ export default function HomePage() {
       </ContentWrapper>
 
       <img className="appcenter-logo" src={앱센터로고가로} />
-      {/*<FloatingButton*/}
-      {/*  onClick={() => {*/}
-      {/*    if (!isLoggedIn) {*/}
-      {/*      alert("로그인 후 사용할 수 있습니다.");*/}
-      {/*      navigate("/login");*/}
-      {/*      return;*/}
-      {/*    }*/}
-      {/*    navigate("/complain");*/}
-      {/*  }}*/}
-      {/*>*/}
-      {/*  <img src={민원접수} />*/}
-      {/*</FloatingButton>*/}
 
       <CommonBottomModal
         id={"이벤트 당첨"}
@@ -345,8 +334,6 @@ export default function HomePage() {
           }
         }}
       />
-
-      <BottomBar />
     </HomePageWrapper>
   );
 }
@@ -355,7 +342,7 @@ const HomePageWrapper = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center; // 🖥️ PC 레이아웃을 위해 중앙 정렬 추가
-  padding-top: 16px;
+  //padding-top: 16px;
   padding-bottom: 120px;
   box-sizing: border-box;
   overflow-y: auto;
@@ -436,33 +423,7 @@ const NotiWrapper = styled.div`
   &::-webkit-scrollbar {
     display: none; /* Chrome, Safari, Opera */
   }
-
-  //// 🖥️ PC 화면에서는 스크롤 대신 그리드로 표시
-  //@media (min-width: 768px) {
-  //  display: grid;
-  //  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  //  overflow-x: hidden;
-  //  padding: 8px 0 0 0;
-  //}
 `;
-
-// const FloatingButton = styled.button`
-//   border: none;
-//   background: none;
-//   width: fit-content;
-//   height: fit-content;
-//   position: fixed;
-//   bottom: 100px;
-//   right: 24px;
-//   cursor: pointer;
-//   z-index: 100;
-//
-//   // 🖥️ PC 화면에서는 위치를 조금 더 안쪽으로 조정할 수 있음
-//   @media (min-width: 768px) {
-//     right: 48px;
-//     //bottom: 50px;
-//   }
-// `;
 
 const PopupModalContent = styled.div`
   display: flex;

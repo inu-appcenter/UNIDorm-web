@@ -4,10 +4,10 @@ import { useLocation, useParams } from "react-router-dom";
 
 import profileimg from "../../assets/profileimg.png";
 import RoomMateBottomBar from "../../components/roommate/RoomMateBottomBar";
-import Header from "../../components/common/Header/Header.tsx";
-import { getOpponentChecklist, getRoomMateDetail } from "../../apis/roommate";
-import { RoommatePost } from "../../types/roommates.ts";
+import { getOpponentChecklist, getRoomMateDetail } from "@/apis/roommate";
+import { RoommatePost } from "@/types/roommates";
 import UseUserStore from "../../stores/useUserStore.ts";
+import { useSetHeader } from "@/hooks/useSetHeader";
 
 const InfoCard = ({
   color,
@@ -103,12 +103,12 @@ export default function RoomMateBoardDetailPage() {
     fetchOpponentChecklist();
   }, [roomId]);
 
+  useSetHeader({ title: "게시글 상세" });
+
   if (!boardData) return <div>로딩 중...</div>;
 
   return (
     <RoomMateDetailPageWrapper>
-      <Header title={"게시글"} hasBack={true} />
-
       <TitleArea>
         <UserArea>
           <img
@@ -238,7 +238,7 @@ export default function RoomMateBoardDetailPage() {
 }
 
 const RoomMateDetailPageWrapper = styled.div`
-  padding: 90px 20px;
+  padding: 0 16px 100px;
 
   display: flex;
   flex-direction: column;

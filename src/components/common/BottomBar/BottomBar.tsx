@@ -16,9 +16,9 @@ import mypageClicked from "../../../assets/bottombar/mypage-clicked.svg";
 import TooltipMessage from "./TooltipMessage.tsx";
 import { useEffect, useState } from "react";
 import useUserStore from "../../../stores/useUserStore.ts";
-import { getMyRoommateInfo } from "../../../apis/roommate.ts";
-import { getRoommateChatRooms } from "../../../apis/chat.ts";
-import { getMobilePlatform } from "../../../utils/getMobilePlatform.ts";
+import { getMyRoommateInfo } from "@/apis/roommate";
+import { getRoommateChatRooms } from "@/apis/chat";
+import { getMobilePlatform } from "@/utils/getMobilePlatform";
 
 interface ButtonProps {
   defaultImg: string;

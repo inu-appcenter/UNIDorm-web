@@ -1,18 +1,15 @@
 import styled from "styled-components";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import RoomMateCard from "../../components/roommate/RoomMateCard.tsx";
-import Header from "../../components/common/Header/Header.tsx";
 import { useNavigate } from "react-router-dom";
 import useUserStore from "../../stores/useUserStore.ts";
-import BottomBar from "../../components/common/BottomBar/BottomBar.tsx";
 import { useEffect, useState } from "react";
-import { RoommatePost, SimilarRoommatePost } from "../../types/roommates.ts";
-import {
-  getRoomMateList,
-  getSimilarRoomMateList,
-} from "../../apis/roommate.ts";
+import { RoommatePost, SimilarRoommatePost } from "@/types/roommates";
+import { getRoomMateList, getSimilarRoomMateList } from "@/apis/roommate";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import ComingSoonOverlay from "../../components/common/ComingSoonOverlay.tsx";
+import { useSetHeader } from "@/hooks/useSetHeader";
+import { getFeatureFlagByKey } from "@/apis/featureFlag";
 
 export default function RoomMatePage() {
   const navigate = useNavigate();
@@ -26,12 +23,24 @@ export default function RoomMatePage() {
     SimilarRoommatePost[]
   >([]);
 
-  // 로딩 상태를 각 섹션별로 분리
   const [isLatestLoading, setIsLatestLoading] = useState<boolean>(false);
   const [isSimilarLoading, setIsSimilarLoading] = useState<boolean>(false);
 
+  // 피처 플래그 상태 관리
+  const [isMatchingActive, setIsMatchingActive] = useState<boolean>(true);
+
   useEffect(() => {
-    // 최신 룸메이트 목록을 불러오는 함수
+    // 피처 플래그 확인 함수
+    const checkFeatureFlag = async () => {
+      try {
+        const response = await getFeatureFlagByKey("ROOMMATE_MATCHING");
+        // 응답 값 기준 매칭 활성화 여부 설정
+        setIsMatchingActive(response.data.flag);
+      } catch (error) {
+        console.error("피처 플래그 확인 실패:", error);
+      }
+    };
+
     const loadRoommates = async () => {
       setIsLatestLoading(true);
       try {
@@ -44,10 +53,9 @@ export default function RoomMatePage() {
       }
     };
 
-    // 비슷한 룸메이트 목록을 불러오는 함수
     const loadSimilarRoommates = async () => {
       if (!isLoggedIn) {
-        setSimilarRoommates([]); // 로그아웃 시 목록 비우기
+        setSimilarRoommates([]);
         return;
       }
       setIsSimilarLoading(true);
@@ -62,23 +70,29 @@ export default function RoomMatePage() {
       }
     };
 
+    checkFeatureFlag();
     loadRoommates();
     loadSimilarRoommates();
-  }, [isLoggedIn]); // 로그인 상태가 변경될 때마다 데이터를 다시 불러옴
+  }, [isLoggedIn]);
 
   const filteredSimilarRoommates = similarRoommates.filter(
     (post) => post.dormType === userInfo.dormType,
   );
 
+  useSetHeader({ title: "룸메이트" });
+
   return (
     <RoomMatePageWrapper>
-      <Header title="룸메이트" hasBack={false} showAlarm={true} />
-      <ComingSoonOverlay
-        message={"2025년 2학기 룸메이트 매칭 종료!"}
-        subMessage={"다음 룸메이트 매칭을 기대해 주세요."}
-      />
+      {/* 매칭 비활성 시 오버레이 표시 */}
+      {!isMatchingActive && (
+        <ComingSoonOverlay
+          message={"2025년 2학기 룸메이트 매칭 종료!"}
+          subMessage={"다음 룸메이트 매칭을 기대해 주세요."}
+        />
+      )}
+
       <TitleContentArea
-        title={"2025년 2학기 룸메이트 모집"}
+        title={"2026년 1학기 룸메이트 모집"}
         description={"룸메이트를 구하고 있는 다양한 UNI들을 찾아보세요!"}
         link={"list"}
       >
@@ -109,13 +123,10 @@ export default function RoomMatePage() {
       </TitleContentArea>
 
       <TitleContentArea
-        title={"나와 비슷한 룸메이트"}
-        description={
-          "작성한 사전 체크리스트를 바탕으로 생활 패턴이 비슷한 룸메이트를 추천해드려요."
-        }
+        title={"모아보기한 룸메이트"}
+        description={"모아보기 조건에 해당하는 룸메이트를 보여드려요."}
       >
         <>
-          {/* 배너는 로딩 상태와 관계없이 표시 */}
           {isLoggedIn && !hasChecklist && (
             <ChecklistBanner onClick={() => navigate("/roommate/checklist")}>
               아직 사전 체크리스트를 작성하지 않으셨네요! <br /> 체크리스트를
@@ -125,12 +136,11 @@ export default function RoomMatePage() {
           )}
           {!isLoggedIn && (
             <ChecklistBanner onClick={() => navigate("/login")}>
-              로그인하시면 나와 생활패턴이 비슷한 룸메이트를 추천받을 수 있어요.
-              <strong>지금 바로 로그인하러 가기 →</strong>
+              로그인하시면 모아보기한 룸메이트를 찾아볼 수 있어요.
+              <strong>인천대학교 포털 로그인 →</strong>
             </ChecklistBanner>
           )}
 
-          {/* 비슷한 룸메이트 목록 영역만 조건부 렌더링 */}
           {isSimilarLoading ? (
             <LoadingSpinner message="추천 목록을 불러오는 중..." />
           ) : isLoggedIn &&
@@ -166,13 +176,12 @@ export default function RoomMatePage() {
           하기
         </WriteButton>
       )}
-      <BottomBar />
     </RoomMatePageWrapper>
   );
 }
 
 const RoomMatePageWrapper = styled.div`
-  padding: 90px 16px;
+  padding: 0 16px;
   padding-bottom: 300px;
   display: flex;
   flex-direction: column;
@@ -205,7 +214,7 @@ const ChecklistBanner = styled.div`
   font-size: 14px;
   line-height: 1.5;
   cursor: pointer;
-  margin-bottom: 8px; /* 배너와 목록 사이에 약간의 간격 추가 */
+  margin-bottom: 8px;
 
   strong {
     display: block;

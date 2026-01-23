@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { messaging } from "../firebase";
+import { messaging } from "@/firebase";
 import { getToken, onMessage } from "firebase/messaging";
 import axiosInstance from "../apis/axiosInstance.ts";
 

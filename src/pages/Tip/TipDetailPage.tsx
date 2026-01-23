@@ -2,26 +2,24 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { FaRegHeart } from "react-icons/fa";
-import Header from "../../components/common/Header/Header.tsx";
 import tokenInstance from "../../apis/tokenInstance";
 import { useSwipeable } from "react-swipeable";
 import useUserStore from "../../stores/useUserStore.ts";
 import UserInfo from "../../components/common/UserInfo.tsx";
 import CommentSection from "../../components/comment/CommentSection.tsx";
 import CommentInputBox from "../../components/comment/CommentInputBox.tsx";
-import { ReplyProps } from "../../types/comment.ts";
-import { deleteTipComment } from "../../apis/tips.ts";
-import { TipDetail, TipImage } from "../../types/tips.ts";
+import { ReplyProps } from "@/types/comment";
+import { deleteTipComment } from "@/apis/tips";
+import { TipDetail, TipImage } from "@/types/tips";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../../constants/EmptyMessage.tsx";
-import { useIsAdminRole } from "../../hooks/useIsAdminRole.ts";
 import CommonBottomModal from "../../components/modal/CommonBottomModal.tsx";
+import { useSetHeader } from "@/hooks/useSetHeader";
 
 export default function TipDetailPage() {
   const { boardId } = useParams<{ boardId: string }>();
   const [tip, setTip] = useState<TipDetail | null>(null);
   const navigate = useNavigate();
-  const { isAdmin } = useIsAdminRole();
 
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -152,98 +150,94 @@ export default function TipDetailPage() {
     trackMouse: true,
   });
 
-  const menuItems = [
-    {
-      label: "수정하기",
-      onClick: () =>
-        navigate("/tips/write", { state: { tip: tip, tipImages: images } }),
-    },
-    {
-      label: "삭제하기",
-      onClick: handleDelete,
-    },
-  ];
+  useSetHeader({
+    title: "게시글 상세",
+    menuItems: [
+      {
+        label: "수정하기",
+        onClick: () =>
+          navigate("/tips/write", { state: { tip: tip, tipImages: images } }),
+      },
+      {
+        label: "삭제하기",
+        onClick: handleDelete,
+      },
+    ],
+  });
 
   return (
     <Wrapper>
-      <Header
-        title="기숙사 꿀팁"
-        hasBack={true}
-        menuItems={isAdmin ? menuItems : undefined}
-      />
-      <ScrollArea>
-        <Content>
-          {isLoading ? (
-            <LoadingSpinner message="꿀팁을 불러오는 중..." />
-          ) : tip ? (
-            <>
-              <UserInfo
-                username={tip.name}
-                createDate={tip.createDate}
-                authorImagePath={tip.writerImageFile}
-              />
+      <Content>
+        {isLoading ? (
+          <LoadingSpinner message="꿀팁을 불러오는 중..." />
+        ) : tip ? (
+          <>
+            <UserInfo
+              username={tip.name}
+              createDate={tip.createDate}
+              authorImagePath={tip.writerImageFile}
+            />
 
-              {images.length > 0 && (
-                <ImageSlider {...handlers} style={{ touchAction: "pan-y" }}>
-                  <SliderItem
-                    onClick={() => {
-                      setPreviewUrl(images[currentImage].imageUrl);
-                      setShowInfoModal(true);
+            {images.length > 0 && (
+              <ImageSlider {...handlers} style={{ touchAction: "pan-y" }}>
+                <SliderItem
+                  onClick={() => {
+                    setPreviewUrl(images[currentImage].imageUrl);
+                    setShowInfoModal(true);
+                  }}
+                >
+                  <img
+                    src={images[currentImage].imageUrl}
+                    alt={`팁 이미지 ${currentImage + 1}`}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      borderRadius: "10px",
+                      userSelect: "none",
+                      pointerEvents: "none",
                     }}
-                  >
-                    <img
-                      src={images[currentImage].imageUrl}
-                      alt={`팁 이미지 ${currentImage + 1}`}
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                        borderRadius: "10px",
-                        userSelect: "none",
-                        pointerEvents: "none",
-                      }}
-                      draggable={false}
-                    />
-                  </SliderItem>
-                  <SliderIndicator>
-                    {images.map((_, idx) => (
-                      <Dot key={idx} $active={idx === currentImage} />
-                    ))}
-                  </SliderIndicator>
-                </ImageSlider>
-              )}
+                    draggable={false}
+                  />
+                </SliderItem>
+                <SliderIndicator>
+                  {images.map((_, idx) => (
+                    <Dot key={idx} $active={idx === currentImage} />
+                  ))}
+                </SliderIndicator>
+              </ImageSlider>
+            )}
 
-              <Title>{tip.title}</Title>
-              <BodyText>
-                {tip.content.split("\n").map((line, index) => (
-                  <span key={index}>
-                    {line}
-                    <br />
-                  </span>
-                ))}
-              </BodyText>
-              <Divider />
+            <Title>{tip.title}</Title>
+            <BodyText>
+              {tip.content.split("\n").map((line, index) => (
+                <span key={index}>
+                  {line}
+                  <br />
+                </span>
+              ))}
+            </BodyText>
+            <Divider />
 
-              <LikeBox onClick={handleLike} style={{ cursor: "pointer" }}>
-                <FaRegHeart
-                  style={{ color: liked ? "#e25555" : "#bbb" }}
-                  size={18}
-                />
-                좋아요 {likeCount}
-              </LikeBox>
-              <Divider />
-              <CommentSection
-                CommentDtoList={tip.tipCommentDtoList}
-                setisneedupdate={setisneedupdate}
-                handleReplySubmit={handleReplySubmit}
-                handleDeleteComment={deleteTipComment}
+            <LikeBox onClick={handleLike} style={{ cursor: "pointer" }}>
+              <FaRegHeart
+                style={{ color: liked ? "#e25555" : "#bbb" }}
+                size={18}
               />
-            </>
-          ) : (
-            <EmptyMessage message="꿀팁 정보를 불러올 수 없습니다." />
-          )}
-        </Content>
-      </ScrollArea>
+              좋아요 {likeCount}
+            </LikeBox>
+            <Divider />
+            <CommentSection
+              CommentDtoList={tip.tipCommentDtoList}
+              setisneedupdate={setisneedupdate}
+              handleReplySubmit={handleReplySubmit}
+              handleDeleteComment={deleteTipComment}
+            />
+          </>
+        ) : (
+          <EmptyMessage message="꿀팁 정보를 불러올 수 없습니다." />
+        )}
+      </Content>
       <CommentInputBox
         commentInput={commentInput}
         setCommentInput={setCommentInput}
@@ -272,15 +266,10 @@ const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
   background: white;
-  padding-top: 56px;
-  height: 100vh; /* 화면 전체 높이 */
   box-sizing: border-box;
-`;
 
-const ScrollArea = styled.div`
   flex: 1;
-  overflow-y: auto;
-  padding: 24px 16px 100px;
+  padding: 0 16px 100px;
 `;
 
 const Content = styled.div`

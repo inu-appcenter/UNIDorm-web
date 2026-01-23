@@ -1,7 +1,7 @@
 import {
   ANNOUNCE_CATEGORY_LIST,
   ANNOUNCE_SUB_CATEGORY_LIST,
-} from "../constants/announcement.ts";
+} from "@/constants/announcement";
 
 export interface Announcement {
   type: (typeof ANNOUNCE_CATEGORY_LIST)[number]["value"];

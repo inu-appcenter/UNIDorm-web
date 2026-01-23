@@ -1,6 +1,6 @@
 import axiosInstance from "./axiosInstance.ts";
 import { AxiosResponse } from "axios";
-import { CalendarItem, CreateCalendarDto } from "../types/calendar.ts";
+import { CalendarItem, CreateCalendarDto } from "@/types/calendar";
 import tokenInstance from "./tokenInstance.ts";
 
 export const getAllCalendars = async (): Promise<

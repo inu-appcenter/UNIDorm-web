@@ -1,7 +1,7 @@
 import HeartIcon from "../../assets/heart.svg";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { RoomMateCardProps } from "../../types/roommates.ts";
+import { RoomMateCardProps } from "@/types/roommates";
 import 매칭완료 from "../../assets/roommate/매칭완료2.svg";
 
 const RoomMateCard = ({

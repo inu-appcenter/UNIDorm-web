@@ -1,13 +1,13 @@
 import styled from "styled-components";
-import { Notification } from "../../types/notifications.ts";
+import { Notification } from "@/types/notifications";
 import announce from "../../assets/notification/announce.svg";
 import roommate from "../../assets/notification/roommate.svg";
 import purchase from "../../assets/notification/purchase.svg";
 // import chat from "../../assets/notification/chat.svg";
-import { formatTimeAgo } from "../../utils/dateUtils.ts";
+import { formatTimeAgo } from "@/utils/dateUtils";
 import { useNavigate } from "react-router-dom";
-import { ReceivedMatchingRequest } from "../../types/roommates.ts";
-import { useCouponStore } from "../../stores/useCouponStore.ts";
+import { ReceivedMatchingRequest } from "@/types/roommates";
+import { useCouponStore } from "@/stores/useCouponStore";
 
 interface NotiItemProps {
   notidata?: Notification;

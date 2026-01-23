@@ -1,5 +1,4 @@
 import styled from "styled-components";
-import Header from "../../components/common/Header/Header.tsx";
 import SearchInput from "../../components/complain/SearchInput.tsx";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import StepFlow from "../../components/complain/StepFlow.tsx";
@@ -8,12 +7,13 @@ import { useNavigate } from "react-router-dom";
 import ComplainListTable from "../../components/complain/ComplainListTable.tsx";
 import useUserStore from "../../stores/useUserStore.ts";
 import { useEffect, useMemo, useState } from "react";
-import { ComplaintDetail, MyComplaint } from "../../types/complain.ts";
-import { getComplaintDetail, getMyComplaints } from "../../apis/complain.ts";
+import { ComplaintDetail, MyComplaint } from "@/types/complain";
+import { getComplaintDetail, getMyComplaints } from "@/apis/complain";
 import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import TopPopupNotification from "../../components/common/TopPopupNotification.tsx";
-import { getMobilePlatform } from "../../utils/getMobilePlatform.ts";
+import { getMobilePlatform } from "@/utils/getMobilePlatform";
+import { useSetHeader } from "@/hooks/useSetHeader";
 
 const ComplainListPage = () => {
   const navigate = useNavigate();
@@ -142,10 +142,12 @@ const ComplainListPage = () => {
     setNotification(null);
   };
 
+  useSetHeader({
+    title: "생활원 민원",
+  });
+
   return (
     <ComplainListPageWrapper>
-      <Header title={"생활원 민원"} hasBack={true} backPath={"/home"} />
-
       {notification && (
         <TopPopupNotification
           title={notification.title}
@@ -251,8 +253,7 @@ const ComplainListPage = () => {
 export default ComplainListPage;
 
 const ComplainListPageWrapper = styled.div`
-  padding: 80px 16px;
-  padding-bottom: 100px;
+  padding: 0 16px 100px;
   display: flex;
   flex-direction: column;
   gap: 32px;

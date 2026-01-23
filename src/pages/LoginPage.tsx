@@ -2,12 +2,11 @@ import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import StyledInput from "../components/common/StyledInput.tsx";
 import SquareButton from "../components/common/SquareButton.tsx";
-import { useState } from "react";
-import { login } from "../apis/members.ts";
+import React, { useState } from "react";
+import { login } from "@/apis/members";
 import useUserStore from "../stores/useUserStore.ts";
-import Header from "../components/common/Header/Header.tsx";
-import React from "react";
 import LoadingSpinner from "../components/common/LoadingSpinner.tsx";
+import { useSetHeader } from "@/hooks/useSetHeader";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -56,9 +55,10 @@ export default function LoginPage() {
     }
   };
 
+  useSetHeader({ title: "로그인" });
+
   return (
     <LoginFormWrapper onSubmit={handleLogin}>
-      <Header title={"로그인"} hasBack={true} />
       {isLoading && <LoadingSpinner overlay message="로그인 중..." />}
 
       <div>
@@ -93,8 +93,8 @@ export default function LoginPage() {
 }
 
 const LoginFormWrapper = styled.form`
-  padding: 20px;
-  padding-top: 80px;
+  padding: 0 16px;
+  //padding-top: 80px;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -104,9 +104,6 @@ const LoginFormWrapper = styled.form`
   flex: 1;
   //height: 100%;
   overflow-y: auto;
-  justify-content: space-between;
-
-  background: #f4f4f4;
 
   .description {
     font-size: 14px;
@@ -114,14 +111,19 @@ const LoginFormWrapper = styled.form`
 `;
 
 const ButtonWrapper = styled.div`
-  width: 100%;
-  height: fit-content;
-  //position: fixed;
-  //bottom: 0;
-  //left: 0;
-  //padding: 16px;
+  /* 하단 고정 및 중앙 정렬 */
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  padding: 16px;
   box-sizing: border-box;
-  background: rgba(244, 244, 244, 0.6);
+  //background: rgba(244, 244, 244, 0.6);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 `;

@@ -1,22 +1,21 @@
 import styled from "styled-components";
-import Header from "../../components/common/Header/Header.tsx";
 import { useEffect, useState } from "react";
 import { FiX } from "react-icons/fi";
 import CommonBottomModal from "../../components/modal/CommonBottomModal.tsx";
 import modalContent from "../../components/GroupPurchase/keywordSetting/ModalContent.tsx";
 import CategorySetting from "../../components/GroupPurchase/keywordSetting/CategorySetting.tsx";
 
-import { CategoryType } from "../../constants/groupPurchase.ts";
+import { CategoryType } from "@/constants/groupPurchase";
 import RegisteredKeywordItem from "../../components/GroupPurchase/keywordSetting/RegisteredKeywordItem.tsx";
 import {
   addGroupOrderCategoryNotification,
+  addGroupOrderKeywordNotification,
   deleteGroupOrderCategoryNotification,
   deleteGroupOrderKeywordNotification,
   getGroupOrderCategoryNotifications,
   getGroupOrderKeywordNotifications,
-  addGroupOrderKeywordNotification,
-} from "../../apis/groupPurchaseKeywordSetting.ts";
-import { RecentSearchWrapper, Tag, TagList } from "../../styles/common.ts";
+} from "@/apis/groupPurchaseKeywordSetting";
+import { RecentSearchWrapper, Tag, TagList } from "@/styles/common";
 
 // --- ✅ 상수 정의 ---
 // ✅ API와 통신할 실제 카테고리 목록
@@ -251,8 +250,6 @@ const KeywordAlertSettingPage = () => {
 
   return (
     <Wrapper>
-      <Header title={"키워드 알림 설정"} hasBack={true} />
-
       <InputWrapper>
         <StyledInput
           placeholder="알림 받을 키워드를 입력해주세요."
