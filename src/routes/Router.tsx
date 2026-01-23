@@ -67,6 +67,7 @@ import CreateNotificationPage from "@/pages/Admin/CreateNotificationPage";
 import FormCreatePage from "@/pages/Admin/FormCreatePage";
 import FormResultPage from "@/pages/Admin/FormResultPage";
 import FCMPage from "@/pages/Admin/FCMPage";
+import FeatureFlagManagePage from "@/pages/Admin/FeatureFlagManagePage";
 
 export const router = createBrowserRouter([
   {
@@ -78,13 +79,8 @@ export const router = createBrowserRouter([
         element: <OutPage />,
         children: [
           { index: true, element: <Navigate to="/home" replace /> },
-          { path: "login", element: <LoginPage /> },
           { path: "logout", element: <LogoutPage /> },
           { path: "onboarding", element: <OnboardingPage /> },
-          {
-            path: "agreement",
-            element: <AgreementPage />,
-          },
         ],
       },
 
@@ -102,6 +98,17 @@ export const router = createBrowserRouter([
       },
 
       /* 3. SubPage: 상세 페이지 (바텀바 숨김, 뒤로가기 헤더 노출) */
+      {
+        element: <SubPage />,
+        children: [
+          { path: "login", element: <LoginPage /> },
+          {
+            path: "agreement",
+            element: <AgreementPage />,
+          },
+        ],
+      },
+
       {
         children: [
           // 마이페이지 서브
@@ -233,6 +240,7 @@ export const router = createBrowserRouter([
               { path: "form/create", element: <FormCreatePage /> },
               { path: "form/:formId/result", element: <FormResultPage /> },
               { path: "fcm", element: <FCMPage /> },
+              { path: "feature-flag", element: <FeatureFlagManagePage /> },
             ],
           },
         ],

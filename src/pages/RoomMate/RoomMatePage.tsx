@@ -8,6 +8,7 @@ import { RoommatePost, SimilarRoommatePost } from "@/types/roommates";
 import { getRoomMateList, getSimilarRoomMateList } from "@/apis/roommate";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import ComingSoonOverlay from "../../components/common/ComingSoonOverlay.tsx";
+import { useSetHeader } from "@/hooks/useSetHeader";
 
 export default function RoomMatePage() {
   const navigate = useNavigate();
@@ -67,6 +68,8 @@ export default function RoomMatePage() {
 
   const [featureFlag] = useState<boolean>(false);
 
+  useSetHeader({ title: "룸메이트" });
+
   return (
     <RoomMatePageWrapper>
       {featureFlag && (
@@ -77,7 +80,7 @@ export default function RoomMatePage() {
       )}
 
       <TitleContentArea
-        title={"2025년 2학기 룸메이트 모집"}
+        title={"2026년 1학기 룸메이트 모집"}
         description={"룸메이트를 구하고 있는 다양한 UNI들을 찾아보세요!"}
         link={"list"}
       >
@@ -108,10 +111,8 @@ export default function RoomMatePage() {
       </TitleContentArea>
 
       <TitleContentArea
-        title={"나와 비슷한 룸메이트"}
-        description={
-          "작성한 사전 체크리스트를 바탕으로 생활 패턴이 비슷한 룸메이트를 추천해드려요."
-        }
+        title={"모아보기한 룸메이트"}
+        description={"모아보기 조건에 해당하는 룸메이트를 보여드려요."}
       >
         <>
           {/* 배너는 로딩 상태와 관계없이 표시 */}
@@ -124,8 +125,8 @@ export default function RoomMatePage() {
           )}
           {!isLoggedIn && (
             <ChecklistBanner onClick={() => navigate("/login")}>
-              로그인하시면 나와 생활패턴이 비슷한 룸메이트를 추천받을 수 있어요.
-              <strong>지금 바로 로그인하러 가기 →</strong>
+              로그인하시면 모아보기한 룸메이트를 찾아볼 수 있어요.
+              <strong>인천대학교 포털 로그인 →</strong>
             </ChecklistBanner>
           )}
 

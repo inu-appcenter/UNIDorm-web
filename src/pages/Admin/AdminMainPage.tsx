@@ -68,6 +68,11 @@ const AdminMainPage: React.FC = () => {
       path: "/admin/notification/create",
       description: "유저를 대상으로 푸시알림을 보낼 수 있습니다.",
     },
+    {
+      label: "Feature Flag 관리",
+      path: "/admin/feature-flag",
+      description: "기능 오픈 여부를 관리할 수 있습니다.",
+    },
   ];
 
   // SUPPORTERS인 경우 특정 페이지만 표시

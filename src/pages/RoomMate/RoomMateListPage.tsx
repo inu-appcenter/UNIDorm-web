@@ -8,6 +8,7 @@ import FilterButton from "../../components/button/FilterButton.tsx";
 import { getRoomMateList } from "@/apis/roommate";
 // 🔽 로딩 스피너 컴포넌트를 import 합니다.
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
+import { useSetHeader } from "@/hooks/useSetHeader";
 
 // ... (FilterTags 컴포넌트 및 스타일은 동일)
 
@@ -133,6 +134,8 @@ export default function RoomMateListPage() {
 
     setFilteredRoommates(filtered);
   }, [roommates, filters]);
+
+  useSetHeader({ title: "2026년 1학기 룸메이트" });
 
   return (
     <RoomMateListPageWrapper>
