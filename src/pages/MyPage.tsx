@@ -109,7 +109,7 @@ const MyPage = () => {
         <MenuGroup title={menuGroups[4].title} menus={menuGroups[4].menus} />
         <Divider />
 
-        <MenuGroup title={"앱 버전"} menus={[{ label: "v 1.5.0" }]} />
+        <MenuGroup title={"앱 버전"} menus={[{ label: "v 1.6.0" }]} />
         
         <MenuGroup menus={[{label: "앱 최적화 (버전 업데이트)",
           onClick: () => {
