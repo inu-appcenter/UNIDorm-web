@@ -109,15 +109,21 @@ const MyPage = () => {
         <MenuGroup title={menuGroups[4].title} menus={menuGroups[4].menus} />
         <Divider />
 
-        <MenuGroup title={"앱 버전"} menus={[{ label: "v 1.5.0" }]} />
+        <MenuGroup title={"앱 버전"} menus={[{ label: "v 1.6.1" }]} />
         
-        <MenuGroup menus={[{label: "앱 최적화 (버전 업데이트)",
+        <MenuGroup menus={[{label: "업데이트 하기",
           onClick: () => {
+            // 1. 안드로이드 브릿지 체크
             if (window.AndroidBridge?.requestAppUpdate) {
               window.AndroidBridge.requestAppUpdate();
-            } else {
-              // 웹 브라우저 환경일 경우 일반 새로고침
-              if (window.confirm("페이지를 새로고침하시겠습니까?")) {
+            }
+            // 2. iOS 브릿지 체크 (유니돔 iOS 앱에서 'requestAppUpdate'라는 이름을 등록해야 함)
+            else if (window.webkit?.messageHandlers?.requestAppUpdate) {
+              window.webkit.messageHandlers.requestAppUpdate.postMessage(null);
+            }
+            // 3. 일반 웹 브라우저
+            else {
+              if (confirm("페이지를 새로고침하시겠습니까?")) {
                 window.location.reload();
               }
             }
