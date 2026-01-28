@@ -18,6 +18,7 @@ export const PATHS = {
     FILTER: "/roommate/filter",
     CHECKLIST: "/roommate/checklist",
     ADD: "/roommate/add",
+    FIND_SETTING: "/roommate/find/settings",
   },
   CHAT: {
     ROOT: "/chat",
