@@ -83,3 +83,8 @@ export const ANNOUNCE_SUB_CATEGORY_LIST = [
     },
   },
 ] as const;
+
+export type AnnounceType = (typeof ANNOUNCE_CATEGORY_LIST)[number]["value"];
+
+export type AnnounceSubCategory =
+  (typeof ANNOUNCE_SUB_CATEGORY_LIST)[number]["value"];
