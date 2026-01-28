@@ -8,6 +8,7 @@ import {
   AnnouncementUpdateRequest,
   AnnouncementUpdateResponse,
   RequestAnnouncementDto,
+  AnnouncementPost,
 } from "@/types/announcements";
 import axiosInstance from "./axiosInstance.ts";
 import { ManagedFile } from "@/hooks/useFileHandler";
@@ -114,4 +115,22 @@ export const deleteAnnouncementFile = async (
   return await tokenInstance.delete(`/announcements/${announcementId}/file`, {
     params: { filePath },
   });
+};
+
+export const getAnnouncementScrollList = async (
+  type: string,
+  category: string,
+  search: string,
+  lastId?: number,
+  size: number = 10,
+): Promise<AnnouncementPost[]> => {
+  const response = await axiosInstance.get<AnnouncementPost[]>(
+    `/announcements/scroll`,
+    {
+      params: { type, category, search, lastId, size },
+    },
+  );
+
+  // 데이터 본문 반환
+  return response.data;
 };
