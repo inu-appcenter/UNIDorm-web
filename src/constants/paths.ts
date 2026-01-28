@@ -5,6 +5,7 @@ export const PATHS = {
   ONBOARDING: "/onboarding",
   HOME: "/home",
   MYPAGE: "/mypage",
+  SETTINGS: "/settings",
   MYINFO_EDIT: "/myinfoedit",
   AGREEMENT: "/agreement",
   NOTI_SETTING: "/notification-setting",
@@ -18,6 +19,7 @@ export const PATHS = {
     FILTER: "/roommate/filter",
     CHECKLIST: "/roommate/checklist",
     ADD: "/roommate/add",
+    FIND_SETTING: "/roommate/find/settings",
   },
   CHAT: {
     ROOT: "/chat",

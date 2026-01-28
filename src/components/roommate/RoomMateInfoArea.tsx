@@ -18,20 +18,32 @@ const RoomMateInfoArea = ({
   if (notFound) {
     return (
       <ChecklistBanner>
-        등록된 내 룸메이트가 없어요! 😢 <br />
-        지금 바로 룸메이트 탭에서 룸메이트를 찾아보세요.
-        <div className="button-group">
-          <button onClick={() => navigate("/roommate")}>
-            룸메이트 찾으러 가기 →
-          </button>
-        </div>
-        <br />
-        이미 같이 하기로 한 룸메이트가 있다면?
-        <div className="button-group">
-          <button onClick={() => navigate("/roommate/add")}>
-            학번으로 룸메이트 등록하러 가기 →
-          </button>
-        </div>
+        {/* 상단 섹션 */}
+        <BannerSection>
+          <TextGroup>
+            <MainText>현재 등록된 맞춤형 룸메이트가 없어요!</MainText>
+            <SubText>지금 바로 나와 맞는 룸메이트를 찾아보세요!</SubText>
+          </TextGroup>
+          <ButtonGroup>
+            <StyledButton onClick={() => navigate("/roommate")}>
+              내게 꼭 맞는 룸메이트 찾으러 가기
+            </StyledButton>
+          </ButtonGroup>
+        </BannerSection>
+
+        <Divider />
+
+        {/* 하단 섹션 */}
+        <BannerSection>
+          <TextGroup>
+            <SubText>함께 하기로한 룸메이트가 있다면?</SubText>
+          </TextGroup>
+          <ButtonGroup>
+            <StyledButton onClick={() => navigate("/roommate/add")}>
+              학번으로 룸메이트 등록하러 가기
+            </StyledButton>
+          </ButtonGroup>
+        </BannerSection>
       </ChecklistBanner>
     );
   }
@@ -134,56 +146,87 @@ const LeftArea = styled.div`
 `;
 
 const ChecklistBanner = styled.div`
-  background-color: #fff3cd;
-  color: #856404;
-  padding: 16px;
+  margin: 0 16px;
   border-radius: 12px;
-  border: 1px solid #ffeeba;
-  font-size: 14px;
-  line-height: 1.5;
-  cursor: pointer;
-  width: 100%;
+  border: 0 solid #e5e7eb;
+  background: linear-gradient(
+    90deg,
+    rgba(99, 102, 241, 0.1) 0%,
+    rgba(139, 92, 246, 0.1) 100%
+  );
+  padding: 16px;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+`;
 
-  strong {
-    display: block;
-    margin-top: 6px;
-    font-weight: 600;
-    color: #8a6d3b;
+// 섹션 단위
+const BannerSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+`;
+
+// 텍스트 그룹
+const TextGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+`;
+
+// 메인 문구
+const MainText = styled.div`
+  color: #111827;
+  font-family: Pretendard, sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: normal;
+`;
+
+// 작은 문구
+const SubText = styled.div`
+  color: #4b5563;
+  font-family: Pretendard, sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: normal;
+`;
+
+// 버튼 정렬 컨테이너
+const ButtonGroup = styled.div`
+  display: flex;
+  justify-content: flex-end;
+`;
+
+// 공통 버튼 스타일
+const StyledButton = styled.button`
+  cursor: pointer;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
+  padding: 8px 16px;
+
+  // 버튼 글씨 스타일
+  color: #fafafa;
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  letter-spacing: -0.5px;
+  transition: opacity 0.2s;
+
+  &:hover {
+    opacity: 0.9;
   }
+`;
 
-  button {
-    margin-top: 8px;
-    margin-bottom: 8px;
-    padding: 8px 12px;
-    background-color: #0a84ff;
-    color: white;
-    border: 1.5px solid #076fd6;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition:
-      background-color 0.3s ease,
-      border-color 0.3s ease;
-
-    &:hover {
-      background-color: #3399ff;
-      border-color: #2a85e0;
-    }
-
-    &:active {
-      background-color: #076fd6;
-      border-color: #0557a1;
-    }
-  }
-
-  /* 버튼들을 감싸는 div를 추가했을 때 */
-  > div.button-group {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-  }
+// 가로 구분선
+const Divider = styled.hr`
+  border: 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  margin: 4px 0;
 `;
 
 const Penalty = styled.div`

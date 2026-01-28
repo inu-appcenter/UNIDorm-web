@@ -68,6 +68,8 @@ import FormCreatePage from "@/pages/Admin/FormCreatePage";
 import FormResultPage from "@/pages/Admin/FormResultPage";
 import FCMPage from "@/pages/Admin/FCMPage";
 import FeatureFlagManagePage from "@/pages/Admin/FeatureFlagManagePage";
+import RoomMateFindSettingPage from "@/pages/RoomMate/RoomMateFindSettingPage";
+import SettingsPage from "@/pages/MyPage/SettingsPage";
 
 export const router = createBrowserRouter([
   {
@@ -133,6 +135,11 @@ export const router = createBrowserRouter([
             element: <SubPage />,
             children: [{ index: true, element: <MyLikesPage /> }],
           },
+          {
+            path: "settings",
+            element: <SubPage />,
+            children: [{ index: true, element: <SettingsPage /> }],
+          },
 
           // 룸메이트 상세
           {
@@ -144,6 +151,7 @@ export const router = createBrowserRouter([
               { path: "filter", element: <RoomMateFilterPage /> },
               { path: "checklist", element: <RoomMateChecklistPage /> },
               { path: "add", element: <RoomMateAddPage /> },
+              { path: "find/settings", element: <RoomMateFindSettingPage /> },
             ],
           },
 

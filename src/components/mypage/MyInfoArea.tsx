@@ -4,23 +4,25 @@ import { useEffect, useState } from "react";
 import { getMemberImage } from "@/apis/members";
 import profile from "../../assets/profileimg.png";
 
+import { useNavigate } from "react-router-dom";
+import { PATHS } from "@/constants/paths";
+
 const MyInfoArea = () => {
+  const navigate = useNavigate();
   const userInfo = useUserStore((state) => state.userInfo);
   const [userProfileImg, setUserProfileImg] = useState<string>("");
 
   useEffect(() => {
     const getUserProfileImg = async () => {
       const result = await getMemberImage();
-      console.log(result.data);
       setUserProfileImg(result.data.imageUrl);
     };
-
     getUserProfileImg();
-    // setUserProfileImg(result.data)
   }, [userInfo]);
 
   return (
-    <MyInfoAreaWrapper>
+    /* 영역 전체 클릭 이벤트 핸들러 */
+    <MyInfoAreaWrapper onClick={() => navigate(PATHS.MYINFO_EDIT)}>
       <LeftArea>
         <div className="profile">
           <img
@@ -38,7 +40,8 @@ const MyInfoArea = () => {
           </div>
         </div>
       </LeftArea>
-      {/*<Penalty>벌점 {userInfo.penalty ?? 0}점</Penalty>*/}
+      {/* 우측 화살표 아이콘 등 추가 가능 공간 */}
+      <ArrowIcon>〉</ArrowIcon>
     </MyInfoAreaWrapper>
   );
 };
@@ -53,6 +56,21 @@ const MyInfoAreaWrapper = styled.div`
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
+  //padding: 16px 12px;
+  //border-radius: 12px;
+  box-sizing: border-box;
+
+  /* 클릭 가능 스타일 */
+  cursor: pointer;
+  transition: background 0.2s ease-in-out;
+
+  &:hover {
+    background-color: #f9fafb;
+  }
+
+  &:active {
+    background-color: #f3f4f6;
+  }
 
   .profile {
     width: 70px;
@@ -70,8 +88,6 @@ const MyInfoAreaWrapper = styled.div`
     width: 100%;
     height: 100%;
     object-fit: cover;
-    aspect-ratio: 1 / 1;
-    display: block;
   }
 `;
 
@@ -81,7 +97,7 @@ const LeftArea = styled.div`
   justify-content: center;
   min-width: fit-content;
   height: fit-content;
-  gap: 8px;
+  gap: 12px;
 
   .description {
     display: flex;
@@ -100,32 +116,17 @@ const LeftArea = styled.div`
       font-weight: 700;
     }
 
-    .createdDate {
+    .college {
       font-weight: 400;
+      color: #6b7280;
+      font-size: 14px;
     }
   }
 `;
-//
-// const Penalty = styled.div`
-//   display: flex;
-//   flex-direction: row;
-//   justify-content: center;
-//   align-items: center;
-//   padding: 8px 16px;
-//   gap: 5px;
-//
-//   min-width: fit-content;
-//   height: fit-content;
-//
-//   background: #0a84ff;
-//   border-radius: 23px;
-//
-//   font-style: normal;
-//   font-weight: 500;
-//   font-size: 16px;
-//   line-height: 24px;
-//
-//   letter-spacing: 0.38px;
-//
-//   color: #f4f4f4;
-// `;
+
+const ArrowIcon = styled.div`
+  color: #9ca3af;
+  font-size: 18px;
+  font-weight: 300;
+  margin-right: 4px;
+`;
