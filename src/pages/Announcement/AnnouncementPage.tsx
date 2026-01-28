@@ -2,8 +2,6 @@ import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { BsEye } from "react-icons/bs";
 import { useEffect, useMemo, useState } from "react";
-import { Announcement } from "@/types/announcements";
-import { getAnnouncements } from "@/apis/announcements";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../../constants/EmptyMessage.tsx";
 import { useIsAdminRole } from "@/hooks/useIsAdminRole";
@@ -33,12 +31,16 @@ import { getLabelByValue } from "@/utils/announceUtils";
 import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
 
+import { useInView } from "react-intersection-observer";
+import { useInfiniteQuery } from "@tanstack/react-query";
+
+import { getAnnouncementScrollList } from "@/apis/announcements";
+import type { AnnouncementPost } from "@/types/announcements";
+
 export default function AnnouncementPage() {
   const navigate = useNavigate();
   const { isAdmin } = useIsAdminRole();
-
-  const [notices, setNotices] = useState<Announcement[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { ref, inView } = useInView();
 
   const [selectedCategory, setSelectedCategory] =
     useState<(typeof ANNOUNCE_CATEGORY_LIST)[number]["value"]>("ALL");
@@ -59,27 +61,52 @@ export default function AnnouncementPage() {
 
   const [isSearchFocused, setIsSearchFocused] = useState(false);
 
-  async function fetchData(search?: string) {
-    setLoading(true);
-    try {
-      const response = await getAnnouncements(
-        selectedCategory,
-        ANNOUNCE_SUB_CATEGORY_LIST[selectedSubCategory]["value"],
-        search,
-      );
-      console.log("공지사항 불러오기 성공:", response);
-      setNotices(response.data);
-    } catch (error) {
-      console.error("공지사항 불러오기 실패", error);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  //공지사항 불러오기
-  useEffect(() => {
-    fetchData();
+  const subCategoryValue = useMemo(() => {
+    if (selectedCategory !== "DORMITORY") return "ALL";
+    return ANNOUNCE_SUB_CATEGORY_LIST[selectedSubCategory]?.value ?? "ALL";
   }, [selectedCategory, selectedSubCategory]);
+
+  const pageSize = 10;
+
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isError,
+  } = useInfiniteQuery({
+    queryKey: [
+      "announcements",
+      "scroll",
+      selectedCategory,
+      subCategoryValue,
+      search.trim(),
+    ],
+    queryFn: ({ pageParam }) =>
+      getAnnouncementScrollList(
+        selectedCategory,
+        subCategoryValue,
+        search.trim(),
+        pageParam as number | undefined,
+        pageSize,
+      ),
+    initialPageParam: undefined as number | undefined,
+    getNextPageParam: (lastPage: AnnouncementPost[]) => {
+      if (!lastPage || lastPage.length < pageSize) return undefined;
+      return lastPage[lastPage.length - 1].id; // ✅ lastId
+    },
+    staleTime: 1000 * 60 * 5,
+  });
+
+  // 바닥으로 오면 다음 페이지로
+  useEffect(() => {
+    if (inView && hasNextPage && !isFetchingNextPage) fetchNextPage();
+  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  const notices = useMemo(() => {
+    return (data?.pages.flat() ?? []) as AnnouncementPost[];
+  }, [data]);
 
   //검색 실행 시
   const handleSearchSubmit = () => {
@@ -87,7 +114,6 @@ export default function AnnouncementPage() {
     const trimmedTerm = search.trim();
 
     if (rawTerm.trim() === "") return;
-    fetchData(trimmedTerm);
 
     const updatedSearches = [
       trimmedTerm,
@@ -100,7 +126,7 @@ export default function AnnouncementPage() {
       JSON.stringify(updatedSearches),
     );
 
-    setSearch("");
+    setSearch(trimmedTerm); //이거 다시 한번 체크
   };
 
   // 최근 검색어 삭제
@@ -178,7 +204,7 @@ export default function AnnouncementPage() {
                 <Tag
                   key={term}
                   onClick={() => {
-                    setSearch(term);
+                    setSearch(term); //클릭하면 자동으로 로딩??
                   }}
                 >
                   {term}{" "}
@@ -193,43 +219,54 @@ export default function AnnouncementPage() {
           </RecentSearchWrapper>
         )}
       </SearchArea>
-      {/* 🔽 로딩 상태에 따라 스피너, 공지사항 목록, 빈 메시지를 조건부 렌더링합니다. */}
-      {loading ? (
+      {/* 로딩 상태에 따라 스피너, 공지사항 목록, 빈 메시지를 조건부 렌더링합니다. */}
+      {isLoading ? (
         <LoadingSpinner message="공지사항을 불러오는 중..." />
+      ) : isError ? (
+        <EmptyMessage message="공지사항을 불러오지 못했습니다." />
       ) : notices.length > 0 ? (
-        <NoticeList>
-          {notices.map((notice) => (
-            <NoticeCard
-              key={notice.id}
-              onClick={() => {
-                navigate(`/announcements/${notice.id}`);
-              }}
-            >
-              <NoticeTop>
-                <NoticeTitle>{notice.title}</NoticeTitle>
-                <NoticeTagWrapper>
-                  {notice.emergency && <UrgentBadge>긴급</UrgentBadge>}
-                  {/* props로 announcementType 전달 */}
-                  <TypeBadge type={notice.type}>
-                    {getLabelByValue(notice.type)}
-                  </TypeBadge>
-                </NoticeTagWrapper>
-              </NoticeTop>
-              <NoticeContent>{notice.content}</NoticeContent>
-              <NoticeBottom>
-                <div className="viewCount">
-                  <BsEye size={16} /> {notice.viewCount}
-                </div>
-                <div className="createdDate">
-                  {formatTimeAgo(notice.createdDate)}
-                </div>
-              </NoticeBottom>
-            </NoticeCard>
-          ))}
-        </NoticeList>
+        <>
+          <NoticeList>
+            {notices.map((notice) => (
+              <NoticeCard
+                key={notice.id}
+                onClick={() => navigate(`/announcements/${notice.id}`)}
+              >
+                <NoticeTop>
+                  <NoticeTitle>{notice.title}</NoticeTitle>
+                  <NoticeTagWrapper>
+                    {notice.emergency && <UrgentBadge>긴급</UrgentBadge>}
+                    <TypeBadge type={notice.type}>
+                      {getLabelByValue(notice.type)}
+                    </TypeBadge>
+                  </NoticeTagWrapper>
+                </NoticeTop>
+
+                <NoticeContent>{notice.content}</NoticeContent>
+
+                <NoticeBottom>
+                  <div className="viewCount">
+                    <BsEye size={16} /> {notice.viewCount}
+                  </div>
+                  <div className="createdDate">
+                    {formatTimeAgo(notice.createdDate)}
+                  </div>
+                </NoticeBottom>
+              </NoticeCard>
+            ))}
+          </NoticeList>
+
+          {/* sentinel */}
+          <div ref={ref} style={{ height: "20px" }}>
+            {isFetchingNextPage && (
+              <LoadingSpinner message="추가 데이터 로딩 중..." />
+            )}
+          </div>
+        </>
       ) : (
         <EmptyMessage message="등록된 공지사항이 없습니다." />
       )}
+
       {isAdmin && (
         <WriteButton onClick={() => navigate("/announcements/write")}>
           ✏️ 공지사항 작성하기
