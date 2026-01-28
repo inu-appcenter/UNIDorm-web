@@ -69,6 +69,7 @@ import FormResultPage from "@/pages/Admin/FormResultPage";
 import FCMPage from "@/pages/Admin/FCMPage";
 import FeatureFlagManagePage from "@/pages/Admin/FeatureFlagManagePage";
 import RoomMateFindSettingPage from "@/pages/RoomMate/RoomMateFindSettingPage";
+import SettingsPage from "@/pages/MyPage/SettingsPage";
 
 export const router = createBrowserRouter([
   {
@@ -133,6 +134,11 @@ export const router = createBrowserRouter([
             path: "liked",
             element: <SubPage />,
             children: [{ index: true, element: <MyLikesPage /> }],
+          },
+          {
+            path: "settings",
+            element: <SubPage />,
+            children: [{ index: true, element: <SettingsPage /> }],
           },
 
           // 룸메이트 상세

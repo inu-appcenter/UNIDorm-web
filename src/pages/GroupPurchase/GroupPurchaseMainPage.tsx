@@ -252,12 +252,12 @@ export default function GroupPurchaseMainPage() {
   const headerConfig = useMemo(
     () => ({
       title: "공동구매",
-      menuItems: [
-        {
-          label: "알림 수신 설정",
-          onClick: () => navigate("/notification-setting"),
-        },
-      ],
+      // menuItems: [
+      //   {
+      //     label: "알림 수신 설정",
+      //     onClick: () => navigate("/notification-setting"),
+      //   },
+      // ],
       secondHeader: (
         <CategoryWrapper>
           {CATEGORY_LIST.map((category) => (

@@ -8,25 +8,30 @@ interface SwitchProps {
 }
 
 const SwitchContainer = styled(HeadlessSwitch)<{ checked: boolean }>`
-  position: relative;
   display: inline-flex;
   align-items: center;
-  height: 24px;
-  width: 44px;
+  /* 전체 사이즈 축소 */
+  height: 20px;
+  width: 36px;
+  padding: 0 2px;
   border-radius: 9999px;
   border: none;
-  transition: background-color 0.2s ease-in-out;
   background-color: ${({ checked }) => (checked ? "#0A84FF" : "#E7E7E7")};
+  transition: background-color 0.2s ease-in-out;
+  cursor: pointer;
 `;
 
 const SwitchHandle = styled.span<{ checked: boolean }>`
-  position: relative;
+  /* 컨테이너 높이에 맞춘 핸들 크기 */
   height: 16px;
   width: 16px;
   border-radius: 9999px;
   background-color: white;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+
+  /* 이동 거리: 36px(너비) - 4px(좌우패딩) - 16px(핸들) = 16px */
   transform: ${({ checked }) =>
-    checked ? "translateX(20px)" : "translateX(4px)"};
+    checked ? "translateX(16px)" : "translateX(0px)"};
   transition: transform 0.2s ease-in-out;
 `;
 

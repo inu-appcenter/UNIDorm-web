@@ -32,7 +32,7 @@ export default function Header({ hasBack = false, backPath }: HeaderProps) {
 
   const isHome = location.pathname === "/home" || location.pathname === "/";
 
-  /* 앱 설치 핸들러 */
+  /* 설치 핸들러 */
   const handleInstallClick = () => {
     if (platform === "ios_browser") {
       window.open(
@@ -47,7 +47,7 @@ export default function Header({ hasBack = false, backPath }: HeaderProps) {
     }
   };
 
-  /* 알림 클릭 핸들러 */
+  /* 알림 핸들러 */
   const handleNotificationClick = () => {
     setUserInfo({ ...userInfo, hasUnreadNotifications: false });
     navigate("/notification");
@@ -69,7 +69,7 @@ export default function Header({ hasBack = false, backPath }: HeaderProps) {
           </div>
         </Left>
         <Right>
-          {/* 앱 설치 버튼: 비관리자 및 모바일 브라우저 환경 */}
+          {/* 앱 설치 버튼: 비관리자 및 모바일 브라우저 */}
           {!isAdmin &&
             (platform === "ios_browser" || platform === "android_browser") && (
               <RoundButton onClick={handleInstallClick}>앱 설치</RoundButton>
@@ -85,12 +85,12 @@ export default function Header({ hasBack = false, backPath }: HeaderProps) {
           {/* 알림 아이콘 */}
           {showAlarm && (
             <BellWrapper onClick={handleNotificationClick}>
-              <Bell size={22} />
+              <Bell size={24} />
               {userInfo.hasUnreadNotifications && <Badge />}
             </BellWrapper>
           )}
 
-          {/* 드롭다운 메뉴 */}
+          {/* 메뉴 */}
           {menuItems && <TopRightDropdownMenu items={menuItems} />}
 
           {/* 설정 아이콘 및 툴팁 */}
@@ -138,10 +138,11 @@ const StyledHeader = styled.header<{ $isHome: boolean }>`
     width: 24px;
     height: 24px;
     cursor: pointer;
+    display: block;
   }
   .logo {
     width: 60px;
-    height: 100%;
+    height: auto;
   }
   .Title {
     font-weight: 600;
@@ -149,6 +150,7 @@ const StyledHeader = styled.header<{ $isHome: boolean }>`
     color: #1c1c1e;
     display: flex;
     align-items: center;
+    line-height: 1;
   }
 `;
 
@@ -157,18 +159,22 @@ const MainLine = styled.div`
   justify-content: space-between;
   align-items: center;
   padding: 16px 20px;
+  height: 70px;
+  box-sizing: border-box;
 `;
 
 const Left = styled.div`
   display: flex;
   align-items: center;
   gap: 12px;
+  height: 100%;
 `;
 
 const Right = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
+  height: 100%;
 `;
 
 const SecondLine = styled.div`
@@ -178,30 +184,38 @@ const SecondLine = styled.div`
 const BellWrapper = styled.div`
   position: relative;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
 `;
 
 const Badge = styled.div`
   position: absolute;
-  top: 0;
+  top: 2px;
   right: 0;
   width: 8px;
   height: 8px;
   background: #ffd60a;
   border-radius: 50%;
+  border: 1.5px solid white;
 `;
 
 const RoundButton = styled.button`
-  padding: 8px 16px;
+  padding: 6px 14px;
   background: linear-gradient(135deg, #0a84ff, #4aa3ff);
   color: white;
   border: none;
   border-radius: 25px;
   font-weight: 600;
-  font-size: 15px;
+  font-size: 14px;
   cursor: pointer;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   transition: all 0.2s ease;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   &:hover {
     background: linear-gradient(135deg, #0980f8, #3794f5);
@@ -213,5 +227,7 @@ const SettingWrapper = styled.div`
   position: relative;
   display: flex;
   align-items: center;
+  justify-content: center;
   cursor: pointer;
+  height: 100%;
 `;

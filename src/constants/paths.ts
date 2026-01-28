@@ -5,6 +5,7 @@ export const PATHS = {
   ONBOARDING: "/onboarding",
   HOME: "/home",
   MYPAGE: "/mypage",
+  SETTINGS: "/settings",
   MYINFO_EDIT: "/myinfoedit",
   AGREEMENT: "/agreement",
   NOTI_SETTING: "/notification-setting",
