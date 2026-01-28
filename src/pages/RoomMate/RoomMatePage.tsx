@@ -3,87 +3,62 @@ import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import RoomMateCard from "../../components/roommate/RoomMateCard.tsx";
 import { useNavigate } from "react-router-dom";
 import useUserStore from "../../stores/useUserStore.ts";
-import { useEffect, useState } from "react";
-import { RoommatePost, SimilarRoommatePost } from "@/types/roommates";
-import { getRoomMateList, getSimilarRoomMateList } from "@/apis/roommate";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { getRoomMateScrollList, getMatchingPostList } from "@/apis/roommate";
+import { getFeatureFlagByKey } from "@/apis/featureFlag";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import ComingSoonOverlay from "../../components/common/ComingSoonOverlay.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
-import { getFeatureFlagByKey } from "@/apis/featureFlag";
+import { PATHS } from "@/constants/paths";
 
 export default function RoomMatePage() {
   const navigate = useNavigate();
-
   const { tokenInfo, userInfo } = useUserStore();
+
   const isLoggedIn = Boolean(tokenInfo.accessToken);
   const hasChecklist = userInfo.roommateCheckList;
 
-  const [roommates, setRoommates] = useState<RoommatePost[]>([]);
-  const [similarRoommates, setSimilarRoommates] = useState<
-    SimilarRoommatePost[]
-  >([]);
-
-  const [isLatestLoading, setIsLatestLoading] = useState<boolean>(false);
-  const [isSimilarLoading, setIsSimilarLoading] = useState<boolean>(false);
-
-  // 피처 플래그 상태 관리
-  const [isMatchingActive, setIsMatchingActive] = useState<boolean>(true);
-
-  useEffect(() => {
-    // 피처 플래그 확인 함수
-    const checkFeatureFlag = async () => {
-      try {
-        const response = await getFeatureFlagByKey("ROOMMATE_MATCHING");
-        // 응답 값 기준 매칭 활성화 여부 설정
-        setIsMatchingActive(response.data.flag);
-      } catch (error) {
-        console.error("피처 플래그 확인 실패:", error);
-      }
-    };
-
-    const loadRoommates = async () => {
-      setIsLatestLoading(true);
-      try {
-        const response = await getRoomMateList();
-        setRoommates(response.data);
-      } catch (error) {
-        console.error("룸메이트 리스트 불러오기 실패:", error);
-      } finally {
-        setIsLatestLoading(false);
-      }
-    };
-
-    const loadSimilarRoommates = async () => {
-      if (!isLoggedIn) {
-        setSimilarRoommates([]);
-        return;
-      }
-      setIsSimilarLoading(true);
-      try {
-        const response = await getSimilarRoomMateList();
-        const list = Array.isArray(response.data) ? response.data : [];
-        setSimilarRoommates(list);
-      } catch (error) {
-        console.error("유사한 룸메이트 리스트 불러오기 실패:", error);
-      } finally {
-        setIsSimilarLoading(false);
-      }
-    };
-
-    checkFeatureFlag();
-    loadRoommates();
-    loadSimilarRoommates();
-  }, [isLoggedIn]);
-
-  const filteredSimilarRoommates = similarRoommates.filter(
-    (post) => post.dormType === userInfo.dormType,
-  );
-
   useSetHeader({ title: "룸메이트" });
+
+  // 피처 플래그 조회 (매칭 활성화 여부)
+  const { data: isMatchingActive } = useQuery({
+    queryKey: ["featureFlag", "ROOMMATE_MATCHING"],
+    queryFn: async () => {
+      const response = await getFeatureFlagByKey("ROOMMATE_MATCHING");
+      return response.data.flag;
+    },
+    initialData: true,
+  });
+
+  // 최신 룸메이트 목록 (무한 스크롤)
+  const { data: scrollData, isLoading: isLatestLoading } = useInfiniteQuery({
+    queryKey: ["roommates", "scroll"],
+    queryFn: ({ pageParam }) => getRoomMateScrollList(pageParam, 10),
+    initialPageParam: undefined as number | undefined,
+    getNextPageParam: (lastPage) => {
+      if (lastPage.length < 10) return undefined;
+      return lastPage[lastPage.length - 1].boardId;
+    },
+    staleTime: 1000 * 60 * 5,
+  });
+
+  // 필터 조건에 맞는 게시글 목록 조회
+  const { data: matchingRoommates, isLoading: isMatchingLoading } = useQuery({
+    queryKey: ["roommates", "matching"],
+    queryFn: async () => {
+      const response = await getMatchingPostList();
+      console.log("필터 룸메이트 목록", response);
+      return response.data;
+    },
+    enabled: isLoggedIn && hasChecklist,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  // 데이터 평탄화
+  const allRoommates = scrollData?.pages.flat() || [];
 
   return (
     <RoomMatePageWrapper>
-      {/* 매칭 비활성 시 오버레이 표시 */}
       {!isMatchingActive && (
         <ComingSoonOverlay
           message={"2025년 2학기 룸메이트 매칭 종료!"}
@@ -91,15 +66,16 @@ export default function RoomMatePage() {
         />
       )}
 
+      {/* 섹션 1: 최신 모집 공고 */}
       <TitleContentArea
         title={"2026년 1학기 룸메이트 모집"}
         description={"룸메이트를 구하고 있는 다양한 UNI들을 찾아보세요!"}
-        link={"list"}
+        link={PATHS.ROOMMATE.LIST} // 경로 상수 적용
       >
         {isLatestLoading ? (
           <LoadingSpinner message="최신 목록을 불러오는 중..." />
-        ) : roommates.length > 0 ? (
-          roommates
+        ) : allRoommates.length > 0 ? (
+          allRoommates
             .slice(0, 2)
             .map((post) => (
               <RoomMateCard
@@ -122,31 +98,41 @@ export default function RoomMatePage() {
         )}
       </TitleContentArea>
 
+      {/* 섹션 2: 필터 기반 모아보기 */}
       <TitleContentArea
         title={"모아보기한 룸메이트"}
-        description={"모아보기 조건에 해당하는 룸메이트를 보여드려요."}
+        description={"설정한 알림 필터 조건에 맞는 룸메이트를 보여드려요."}
       >
         <>
+          <SectionActionArea>
+            <SettingButton
+              onClick={() => navigate(PATHS.ROOMMATE.FIND_SETTING)}
+            >
+              ⚙️ 모아보기 설정
+            </SettingButton>
+          </SectionActionArea>
+
           {isLoggedIn && !hasChecklist && (
-            <ChecklistBanner onClick={() => navigate("/roommate/checklist")}>
+            <ChecklistBanner onClick={() => navigate(PATHS.ROOMMATE.CHECKLIST)}>
               아직 사전 체크리스트를 작성하지 않으셨네요! <br /> 체크리스트를
               작성하면 나와 생활패턴이 비슷한 룸메이트를 추천받을 수 있어요.
               <strong>지금 바로 체크리스트 작성하러 가기 →</strong>
             </ChecklistBanner>
           )}
           {!isLoggedIn && (
-            <ChecklistBanner onClick={() => navigate("/login")}>
+            <ChecklistBanner onClick={() => navigate(PATHS.LOGIN)}>
               로그인하시면 모아보기한 룸메이트를 찾아볼 수 있어요.
               <strong>인천대학교 포털 로그인 →</strong>
             </ChecklistBanner>
           )}
 
-          {isSimilarLoading ? (
+          {isMatchingLoading ? (
             <LoadingSpinner message="추천 목록을 불러오는 중..." />
           ) : isLoggedIn &&
             hasChecklist &&
-            filteredSimilarRoommates.length > 0 ? (
-            filteredSimilarRoommates.map((post) => (
+            matchingRoommates &&
+            matchingRoommates.length > 0 ? (
+            matchingRoommates.map((post) => (
               <RoomMateCard
                 key={post.boardId}
                 title={post.title}
@@ -159,19 +145,20 @@ export default function RoomMatePage() {
                 stayDays={post.dormPeriod || ["요일 정보가 없어요."]}
                 description={post.comment}
                 roommateBoardLike={post.roommateBoardLike}
-                percentage={post.similarityPercentage}
                 matched={post.matched}
               />
             ))
           ) : (
             isLoggedIn &&
-            hasChecklist && <EmptyMessage>추천 게시글이 없습니다.</EmptyMessage>
+            hasChecklist && (
+              <EmptyMessage>필터 조건에 맞는 게시글이 없습니다.</EmptyMessage>
+            )
           )}
         </>
       </TitleContentArea>
 
       {isLoggedIn && (
-        <WriteButton onClick={() => navigate("/roommate/checklist")}>
+        <WriteButton onClick={() => navigate(PATHS.ROOMMATE.CHECKLIST)}>
           ✏️ 사전 체크리스트 {!hasChecklist ? "작성" : "수정"}
           하기
         </WriteButton>
@@ -195,6 +182,29 @@ const RoomMatePageWrapper = styled.div`
   @media (min-width: 1024px) {
     max-width: 1200px;
     margin: 0 auto;
+  }
+`;
+
+// 섹션 내 상단 액션 영역
+const SectionActionArea = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+`;
+
+// 모아보기 설정 버튼
+const SettingButton = styled.button`
+  background: #eee;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #555;
+  cursor: pointer;
+  font-weight: 500;
+
+  &:hover {
+    background: #e2e2e2;
   }
 `;
 

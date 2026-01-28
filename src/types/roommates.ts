@@ -1,51 +1,46 @@
-export interface RoommatePost {
-  boardId: number;
-  title: string;
-  dormPeriod: string[]; // 예: ["월요일", "화요일"]
-  dormType: string; // 예: "2기숙사"
-  college: string; // 예: "인문대학"
-  mbti: string; // 예: "INFP"
-  smoking: string; // 예: "피워요"
-  snoring: string; // 예: "골아요"
-  toothGrind: string; // 예: "갈아요"
-  sleeper: string; // 예: "밝아요"
-  showerHour: string; // 예: "아침"
-  showerTime: string; // 예: "10분 이내"
-  bedTime: string; // 예: "일찍 자요"
-  arrangement: string; // 예: "깔끔해요"
+// --- 공통 기반 타입 ---
+interface RoommateBase {
+  dormType: string;
+  dormPeriod: string[];
+  college: string;
+  mbti: string;
+  smoking: string;
+  snoring: string;
+  toothGrind: string;
+  sleeper: string;
+  showerHour: string;
+  showerTime: string;
+  bedTime: string;
+  arrangement: string;
   religion: string;
+}
+
+// --- 게시글 관련 타입 ---
+export interface RoommatePostRequest extends RoommateBase {
+  title: string;
+  comment: string;
+}
+
+export interface RoommatePost extends RoommatePostRequest {
+  boardId: number;
   matched: boolean;
   roommateBoardLike: number;
   userName: string;
   userProfileImageUrl: string;
   createDate: string;
-
-  comment: string; // 추가 설명
 }
 
-export interface SimilarRoommatePost {
-  boardId: number;
-  title: string;
-  dormPeriod: string[]; // 예: ["월요일", "화요일"]
-  dormType: string; // 예: "2기숙사"
-  college: string; // 예: "인문대학"
-  mbti: string; // 예: "INFP"
-  smoking: string; // 예: "피워요"
-  snoring: string; // 예: "골아요"
-  toothGrind: string; // 예: "갈아요"
-  sleeper: string; // 예: "밝아요"
-  showerHour: string; // 예: "아침"
-  showerTime: string; // 예: "10분 이내"
-  bedTime: string; // 예: "일찍 자요"
-  arrangement: string; // 예: "깔끔해요"
-  religion: string;
-  matched: boolean;
-  roommateBoardLike: number;
+export interface RoommatePostResponse extends RoommatePost {}
 
-  comment: string; // 본문 요약 or 한줄 코멘트
-  similarityPercentage: number; // 유사도 (예: 85)
+export interface SimilarRoommatePost
+  extends Omit<
+    RoommatePost,
+    "userName" | "userProfileImageUrl" | "createDate"
+  > {
+  similarityPercentage: number;
 }
 
+// --- UI 및 컴포넌트 Props ---
 export interface RoomMateCardProps {
   boardId: number;
   title: string;
@@ -61,53 +56,21 @@ export interface RoomMateCardProps {
   percentage?: number;
 }
 
-export interface RoommatePostRequest {
-  title: string;
-  dormPeriod: string[];
-  dormType: string;
-  college: string;
-  mbti: string;
-  smoking: string;
-  snoring: string;
-  toothGrind: string;
-  sleeper: string;
-  showerHour: string;
-  showerTime: string;
-  bedTime: string;
-  arrangement: string;
-  religion: string;
-  comment: string;
+// --- 알림 필터 관련 ---
+export interface RoommateNotificationFilter
+  extends Partial<Omit<RoommateBase, "dormPeriod" | "college" | "religion">> {
+  dormPeriodDays?: string[];
+  colleges?: string[];
+  religions?: string[];
 }
 
-export interface RoommatePostResponse {
-  boardId: number;
-  title: string;
-  dormPeriod: string[];
-  dormType: string;
-  college: string;
-  mbti: string;
-  smoking: string;
-  snoring: string;
-  toothGrind: string;
-  sleeper: string;
-  showerHour: string;
-  showerTime: string;
-  bedTime: string;
-  arrangement: string;
-  religion: string;
-  matched: boolean;
-  roommateBoardLike: number;
-
-  comment: string;
-}
-
-// types.ts (또는 적절한 타입 정의 파일에 추가)
+// --- 매칭 관련 타입 ---
 export interface RoommateMatchingRequest {
   receiverStudentNumber: string;
 }
 
 export interface RoommateMatchingResponse {
-  reciverId: number; // 오타가 아니라면 그대로 사용
+  reciverId: number; // API 명세상의 오타 유지
   status: "REQUEST";
   matchingId: number;
 }
@@ -118,13 +81,6 @@ export interface MyRoommateInfoResponse {
   college: string;
   imagePath: string;
   matchingId: number;
-}
-
-export interface RoommateRulesResponse {
-  rules: string[] | null;
-}
-export interface RoommateRulesUpdateRequest {
-  rules: string[];
 }
 
 export interface ReceivedMatchingRequest {
@@ -138,25 +94,31 @@ export interface RoommateMatchingByChatRoomRequest {
   chatRoomId: number;
 }
 
+// --- 규칙 관련 타입 ---
+export interface RoommateRulesResponse {
+  rules: string[] | null;
+}
+
+export interface RoommateRulesUpdateRequest {
+  rules: string[];
+}
+
+// --- 입력 폼 관련 타입 ---
 export interface CheckListForm {
   title: string;
   comment: string;
-  // 기본 정보
   dormType: number | null;
   college: number | null;
   dormPeriod: number[];
-  // 생활 습관
   smoking: number | null;
   snoring: number | null;
   toothGrind: number | null;
   arrangement: number | null;
   religion: number | null;
-  // 생활 리듬
   sleeper: number | null;
   showerHour: number | null;
   showerTime: number | null;
   bedTime: number | null;
-  // MBTI
   mbti: (number | null)[];
 }
 

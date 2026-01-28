@@ -7,6 +7,7 @@ import {
   RoommateMatchingByChatRoomRequest,
   RoommateMatchingRequest,
   RoommateMatchingResponse,
+  RoommateNotificationFilter,
   RoommatePost,
   RoommatePostRequest,
   RoommatePostResponse,
@@ -220,5 +221,50 @@ export const sendQuickMessage = async (
     {}, // 본문은 비워두고
     { params: { message } }, // 쿼리스트링으로 전달
   );
+  return response;
+};
+
+// 룸메이트 알림 필터 삭제
+export const deleteNotificationFilter = async (): Promise<
+  AxiosResponse<void>
+> => {
+  const response = await tokenInstance.delete<void>(
+    `/roommates/notification-filter`,
+  );
+  console.log(response);
+  return response;
+};
+
+// 룸메이트 알림 필터 조회
+export const getNotificationFilter = async (): Promise<
+  AxiosResponse<RoommateNotificationFilter>
+> => {
+  const response = await tokenInstance.get<RoommateNotificationFilter>(
+    `/roommates/notification-filter`,
+  );
+  console.log(response);
+  return response;
+};
+
+// 필터 조건에 맞는 게시글 목록 조회
+export const getMatchingPostList = async (): Promise<
+  AxiosResponse<RoommatePost[]>
+> => {
+  const response = await tokenInstance.get<RoommatePost[]>(
+    `/roommates/notification-filter/matching-posts`,
+  );
+  console.log(response);
+  return response;
+};
+
+// 룸메이트 알림 필터 설정 및 수정
+export const updateNotificationFilter = async (
+  filterData: RoommateNotificationFilter,
+): Promise<AxiosResponse<void>> => {
+  const response = await tokenInstance.post<void>(
+    `/roommates/notification-filter`,
+    filterData,
+  );
+  console.log(response);
   return response;
 };

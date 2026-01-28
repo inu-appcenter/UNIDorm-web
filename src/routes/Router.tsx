@@ -68,6 +68,7 @@ import FormCreatePage from "@/pages/Admin/FormCreatePage";
 import FormResultPage from "@/pages/Admin/FormResultPage";
 import FCMPage from "@/pages/Admin/FCMPage";
 import FeatureFlagManagePage from "@/pages/Admin/FeatureFlagManagePage";
+import RoomMateFindSettingPage from "@/pages/RoomMate/RoomMateFindSettingPage";
 
 export const router = createBrowserRouter([
   {
@@ -144,6 +145,7 @@ export const router = createBrowserRouter([
               { path: "filter", element: <RoomMateFilterPage /> },
               { path: "checklist", element: <RoomMateChecklistPage /> },
               { path: "add", element: <RoomMateAddPage /> },
+              { path: "find/settings", element: <RoomMateFindSettingPage /> },
             ],
           },
 
