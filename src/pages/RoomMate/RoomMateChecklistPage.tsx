@@ -313,7 +313,7 @@ export default function RoomMateChecklistPage() {
 
 // Styled Components
 const Wrapper = styled.div`
-  padding-bottom: 100px;
+  //padding-bottom: 100px;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
@@ -325,14 +325,20 @@ const ProgressBarContainer = styled.div`
   width: 100%;
   height: 4px;
   background-color: #eee;
-  position: relative;
+  position: fixed;
+  top: 70px;
+  left: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
 `;
 
 const ProgressFill = styled.div<{ width: number }>`
-  height: 100%;
+  height: 6px;
   width: ${(props) => props.width}%;
-  background-color: #ffd700;
-  transition: width 0.3s ease-in-out;
+  background-color: #ffc107;
+  border-radius: 4px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 `;
 
 const StepHeader = styled.div`

@@ -24,6 +24,8 @@ import {
 } from "@/constants/constants";
 import useUserStore from "../../stores/useUserStore.ts";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useSetHeader } from "@/hooks/useSetHeader";
+import { PATHS } from "@/constants/paths";
 
 export default function RoomMateFilterPage() {
   const { userInfo } = useUserStore();
@@ -157,8 +159,14 @@ export default function RoomMateFilterPage() {
       Object.entries(filters).filter(([, v]) => v !== null && v !== undefined),
     );
 
-    navigate("/roommate/list", { state: { filters: filteredFilters } });
+    navigate(`${PATHS.ROOMMATE.ROOT}?tab=전체+글`, {
+      state: {
+        filters: filteredFilters,
+      },
+    });
   };
+
+  useSetHeader({ title: "필터" });
 
   return (
     <RoomMateChecklistPageWrapper>
@@ -338,8 +346,7 @@ export default function RoomMateFilterPage() {
 }
 
 const RoomMateChecklistPageWrapper = styled.div`
-  padding: 80px 16px;
-  padding-bottom: 150px;
+  padding: 0 16px 120px;
   display: flex;
   flex-direction: column;
   gap: 16px;

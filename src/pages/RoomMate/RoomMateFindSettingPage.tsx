@@ -12,9 +12,8 @@ import {
   updateNotificationFilter,
   deleteNotificationFilter,
 } from "@/apis/roommate";
-import useUserStore from "../../stores/useUserStore";
 import { useNavigate } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query"; // queryClient 임포트
+import { useQueryClient } from "@tanstack/react-query";
 import {
   bedtime,
   colleges,
@@ -31,13 +30,14 @@ import {
 } from "@/constants/constants";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import { PATHS } from "@/constants/paths";
+import ToggleLine from "@/components/common/ToggleLine";
 
 export default function RoomMateFilterPage() {
-  const { userInfo } = useUserStore();
   const navigate = useNavigate();
-  const queryClient = useQueryClient(); // queryClient 인스턴스 생성
+  const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
+  const [isFilterActive, setIsFilterActive] = useState(true);
   const TOTAL_STEPS = 4;
 
   const [formData, setFormData] = useState<CheckListForm>({
@@ -53,7 +53,40 @@ export default function RoomMateFilterPage() {
       setIsLoading(true);
       try {
         const { data } = await getNotificationFilter();
+
         if (data) {
+          // 필드 설정 여부 확인
+          const hasAnySetting = [
+            data.dormPeriodDays?.length,
+            data.colleges?.length,
+            data.religions?.length,
+            data.dormType,
+            data.smoking,
+            data.snoring,
+            data.toothGrind,
+            data.sleeper,
+            data.showerHour,
+            data.showerTime,
+            data.bedTime,
+            data.arrangement,
+          ].some((value) => {
+            if (Array.isArray(value)) return value.length > 0;
+            if (typeof value === "number") return value > 0;
+            return value !== null && value !== undefined;
+          });
+
+          setIsFilterActive(hasAnySetting);
+
+          // 사용 안함 상태(설정 없음)일 때만 안내 문구 출력
+          if (!hasAnySetting) {
+            setTimeout(() => {
+              alert(
+                "필터에 해당하는 새 글이 올라오면 푸시 알림으로 알려드려요.\n너무 많은 필터 선택은 룸메이트를 구하기 어려울 수 있으니, 꼭 필요한 필터만 선택해주세요!",
+              );
+            }, 100);
+          }
+
+          // 폼 데이터 바인딩
           setFormData({
             ...INITIAL_FORM_STATE,
             dormType: data.dormType ? dormitory.indexOf(data.dormType) : null,
@@ -91,7 +124,7 @@ export default function RoomMateFilterPage() {
           });
         }
       } catch (error) {
-        console.error("필터 데이터 로드 실패", error);
+        console.error("데이터 로드 실패", error);
       } finally {
         setIsLoading(false);
       }
@@ -100,39 +133,61 @@ export default function RoomMateFilterPage() {
   }, []);
 
   const handleFormChange = (key: keyof CheckListForm, value: any) => {
+    if (!isFilterActive) return;
     setFormData((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleReset = async () => {
-    if (window.confirm("설정한 모든 필터가 삭제됩니다. 정말 초기화할까요?")) {
-      try {
-        setIsLoading(true);
-        await deleteNotificationFilter();
+  const processReset = async (silent = false) => {
+    try {
+      setIsLoading(true);
+      await deleteNotificationFilter();
+      await queryClient.invalidateQueries({
+        queryKey: ["roommates", "matching"],
+      });
 
-        // 필터 삭제 후 추천 목록 무효화
-        await queryClient.invalidateQueries({
-          queryKey: ["roommates", "matching"],
-        });
+      setFormData({
+        ...INITIAL_FORM_STATE,
+        college: [] as any,
+        religion: [] as any,
+      });
 
-        setFormData({
-          ...INITIAL_FORM_STATE,
-          college: [] as any,
-          religion: [] as any,
-        });
+      if (!silent) {
         alert("필터가 초기화되었습니다.");
-        navigate(PATHS.ROOMMATE.ROOT);
-      } catch (err) {
-        alert("초기화 실패");
-      } finally {
-        setIsLoading(false);
+        navigate({
+          pathname: PATHS.ROOMMATE.ROOT,
+          search: "?tab=맞춤+룸메이트",
+        });
       }
+    } catch (err) {
+      if (!silent) alert("처리 실패");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleReset = () => {
+    if (window.confirm("설정한 모든 필터가 삭제됩니다. 정말 초기화할까요?")) {
+      processReset();
+    }
+  };
+
+  const handleToggle = async (checked: boolean) => {
+    if (!checked) {
+      if (
+        window.confirm("필터를 비활성화하면 설정이 초기화됩니다. 진행할까요?")
+      ) {
+        await processReset(true);
+        setIsFilterActive(false);
+      }
+    } else {
+      setIsFilterActive(true);
     }
   };
 
   const handleSubmit = async () => {
     const f = formData;
-
     const filterBody = {
+      isActive: isFilterActive,
       dormType: f.dormType !== null ? dormitory[f.dormType] : null,
       dormPeriodDays: f.dormPeriod.map((i) => days[i]),
       colleges: Array.isArray(f.college)
@@ -155,14 +210,15 @@ export default function RoomMateFilterPage() {
     try {
       setIsLoading(true);
       await updateNotificationFilter(filterBody as any);
-
-      // 저장 성공 후 추천 목록 데이터 무효화 및 리페칭 유도
       await queryClient.invalidateQueries({
         queryKey: ["roommates", "matching"],
       });
 
       alert("맞춤 필터 설정이 완료되었습니다!");
-      navigate(PATHS.ROOMMATE.ROOT);
+      navigate({
+        pathname: PATHS.ROOMMATE.ROOT,
+        search: "?tab=맞춤+룸메이트",
+      });
     } catch (err) {
       alert("저장 실패");
     } finally {
@@ -171,6 +227,7 @@ export default function RoomMateFilterPage() {
   };
 
   const handleNext = () => {
+    if (!isFilterActive) return;
     if (currentStep < TOTAL_STEPS) setCurrentStep((prev) => prev + 1);
     else handleSubmit();
   };
@@ -180,23 +237,22 @@ export default function RoomMateFilterPage() {
   };
 
   const getHeaderInfo = () => {
-    const name = userInfo.name || "UNI";
     const headers = [
       {
-        step: "[STEP 1] 희망 상대 정보",
-        desc: `${name}님이 찾고 있는\n상대방의 기숙사 및 비상주 조건을 설정해주세요!`,
+        step: "[STEP 1] 기본 정보",
+        desc: `원하는 룸메이트의 정보를 입력해보세요!`,
       },
       {
-        step: "[STEP 2] 희망 생활 습관",
-        desc: `상대방의 흡연 여부나 잠귀 등\n내가 수용 가능한 습관 조건을 설정해주세요!`,
+        step: "[STEP 2] 생활 습관",
+        desc: `원하는 룸메이트의 생활 습관을 입력해보세요!`,
       },
       {
-        step: "[STEP 3] 희망 생활 리듬",
-        desc: `상대방의 취침 및 샤워 시간 등\n나와 잘 맞았으면 하는 리듬을 선택해주세요!`,
+        step: "[STEP 3] 생활 리듬",
+        desc: `원하는 룸메이트의 생활 리듬을 입력해보세요!`,
       },
       {
-        step: "[STEP 4] 희망 성향",
-        desc: `상대방의 정리 습관과 종교 등\n추가적으로 고려하고 싶은 조건을 설정해주세요!`,
+        step: "[STEP 4] 성향",
+        desc: `원하는 룸메이트의 성향을 입력해보세요!`,
       },
     ];
     return headers[currentStep - 1];
@@ -211,12 +267,18 @@ export default function RoomMateFilterPage() {
         <ProgressFill width={(currentStep / TOTAL_STEPS) * 100} />
       </ProgressBarContainer>
 
-      <StepHeaderArea>
+      {currentStep === 1 && (
+        <StickyToggleArea>
+          <ToggleLine checked={isFilterActive} onToggle={handleToggle} />
+        </StickyToggleArea>
+      )}
+
+      <StepHeaderArea $disabled={!isFilterActive}>
         <StepLabel>{header.step}</StepLabel>
         <StepDesc>{header.desc}</StepDesc>
       </StepHeaderArea>
 
-      <ContentArea>
+      <ContentArea $disabled={!isFilterActive}>
         {currentStep === 1 && (
           <Step1BasicInfo data={formData} onChange={handleFormChange} />
         )}
@@ -237,6 +299,7 @@ export default function RoomMateFilterPage() {
             variant="secondary"
             text={currentStep === 1 ? "초기화" : "이전"}
             onClick={currentStep === 1 ? handleReset : handlePrev}
+            disabled={!isFilterActive}
           />
         </ButtonContainer>
         <ButtonContainer $flex={3}>
@@ -244,6 +307,7 @@ export default function RoomMateFilterPage() {
             variant="primary"
             text={currentStep === TOTAL_STEPS ? "설정 완료" : "다음 단계"}
             onClick={handleNext}
+            disabled={!isFilterActive}
           />
         </ButtonContainer>
       </BottomNav>
@@ -252,7 +316,7 @@ export default function RoomMateFilterPage() {
 }
 
 const Wrapper = styled.div`
-  padding-bottom: 100px;
+  padding-top: 4px;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
@@ -263,17 +327,30 @@ const ProgressBarContainer = styled.div`
   width: 100%;
   height: 4px;
   background-color: #eee;
+  position: fixed;
+  top: 70px;
+  left: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
 `;
 
 const ProgressFill = styled.div<{ width: number }>`
-  height: 100%;
+  height: 6px;
   width: ${(props) => props.width}%;
-  background-color: #ffd700;
-  transition: width 0.3s ease;
+  background-color: #ffc107;
+  border-radius: 4px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 `;
 
-const StepHeaderArea = styled.div`
+const StickyToggleArea = styled.div`
+  padding: 16px 16px 0;
+  background: #fafafa;
+`;
+
+const StepHeaderArea = styled.div<{ $disabled?: boolean }>`
   padding: 24px 16px 0;
+  opacity: ${(props) => (props.$disabled ? 0.5 : 1)};
 `;
 
 const StepLabel = styled.div`
@@ -289,11 +366,18 @@ const StepDesc = styled.div`
   white-space: pre-wrap;
 `;
 
-const ContentArea = styled.div`
+const ContentArea = styled.div<{ $disabled?: boolean }>`
   padding: 20px 16px;
   display: flex;
   flex-direction: column;
   gap: 24px;
+  ${(props) =>
+    props.$disabled &&
+    `
+    pointer-events: none;
+    opacity: 0.5;
+    filter: grayscale(1);
+  `}
 `;
 
 const BottomNav = styled.div`

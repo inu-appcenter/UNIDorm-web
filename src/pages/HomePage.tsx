@@ -347,6 +347,7 @@ const HomePageWrapper = styled.div`
   box-sizing: border-box;
   overflow-y: auto;
   width: 100%; // 🖥️ 너비 100% 명시
+  overflow-x: hidden; // 가로 스크롤 방지 추가
 
   .appcenter-logo {
     margin-top: 36px;
@@ -394,17 +395,17 @@ const GridContainer = styled.div`
 
 const NotiArea = styled.div`
   position: relative;
-  left: -16px;
-  right: -16px;
+  left: -32px;
+  right: -32px;
   width: calc(100% + 32px);
   height: fit-content;
 
-  // 🖥️ PC 화면에서는 좌우 패딩을 제거
-  @media (min-width: 768px) {
-    left: 0;
-    right: 0;
-    width: 100%;
-  }
+  //// 🖥️ PC 화면에서는 좌우 패딩을 제거
+  //@media (min-width: 768px) {
+  //  left: 0;
+  //  right: 0;
+  //  width: 100%;
+  //}
 `;
 
 const NotiWrapper = styled.div`

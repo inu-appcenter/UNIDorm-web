@@ -1,63 +1,108 @@
 import React, { useState } from "react";
 import styled from "styled-components";
+import { AxiosError } from "axios";
 import { NotificationPayload } from "@/types/notifications";
-import { createNotification } from "@/apis/notification";
+import {
+  createNotification,
+  createNotificationByStudentNumber,
+} from "@/apis/notification";
 import { useSetHeader } from "@/hooks/useSetHeader";
+
+// 알림 타겟 타입 정의
+const TARGET_TYPES = {
+  UNIDORM: "UNIDORM", // 전체
+  DORMITORY: "DORMITORY", // 생활원
+  INDIVIDUAL: "INDIVIDUAL", // 개인
+} as const;
 
 const CreateNotificationPage = () => {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
-  // API 명세에 따라 '유니돔', '생활원', '기타' 타입을 선택할 수 있도록 합니다.
-  const [notificationType, setNotificationType] = useState("유니돔");
+  const [targetType, setTargetType] = useState<string>(TARGET_TYPES.UNIDORM);
+  const [studentNumber, setStudentNumber] = useState("");
   const [boardId, setBoardId] = useState("");
 
+  // 헤더 설정
+  useSetHeader({ title: "푸시 알림 보내기" });
+
+  // 전송 핸들러
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // 기본 유효성 검사
+    // 필수값 검증
     if (!title.trim() || !body.trim()) {
       alert("제목과 내용은 필수 입력 항목입니다.");
       return;
     }
 
+    if (targetType === TARGET_TYPES.INDIVIDUAL && !studentNumber.trim()) {
+      alert("개별 전송 시 학번은 필수입니다.");
+      return;
+    }
+
+    // 페이로드 구성
     const payload: NotificationPayload = {
       title,
       body,
-      notificationType,
-      // boardId가 비어있으면 0으로, 값이 있으면 숫자로 변환하여 전송
+      notificationType: targetType,
       boardId: boardId ? parseInt(boardId, 10) : 0,
     };
 
     try {
-      await createNotification(payload);
-      alert("알림이 성공적으로 생성되었습니다.");
-      // 성공 후 폼 초기화
-      setTitle("");
-      setBody("");
-      setNotificationType("유니돔");
-      setBoardId("");
+      if (targetType === TARGET_TYPES.INDIVIDUAL) {
+        // 개별 알림 API 호출
+        await createNotificationByStudentNumber(studentNumber, payload);
+      } else {
+        // 단체 알림 API 호출
+        await createNotification(payload);
+      }
+
+      alert("알림이 성공적으로 전송되었습니다.");
+      resetForm();
     } catch (error) {
-      console.error("알림 생성 실패:", error);
-      alert("알림 생성 중 오류가 발생했습니다. 다시 시도해주세요.");
+      const axiosError = error as AxiosError;
+      console.error("알림 전송 실패:", axiosError);
+      alert("알림 전송 중 오류가 발생했습니다.");
     }
   };
 
-  useSetHeader({ title: "푸시 알림 보내기" });
+  // 폼 초기화
+  const resetForm = () => {
+    setTitle("");
+    setBody("");
+    setTargetType(TARGET_TYPES.UNIDORM);
+    setStudentNumber("");
+    setBoardId("");
+  };
 
   return (
     <PageWrapper>
       <FormContainer onSubmit={handleSubmit}>
         <InputGroup>
-          <Label>알림 타입</Label>
+          <Label>전송 대상</Label>
           <Select
-            value={notificationType}
-            onChange={(e) => setNotificationType(e.target.value)}
+            value={targetType}
+            onChange={(e) => setTargetType(e.target.value)}
           >
-            <option value="유니돔">유니돔 (전체 사용자)</option>
-            <option value="생활원">생활원 (기숙사생)</option>
-            <option value="기타">기타 (개별)</option>
+            <option value={TARGET_TYPES.UNIDORM}>유니돔 (전체 사용자)</option>
+            <option value={TARGET_TYPES.DORMITORY}>생활원 (기숙사생)</option>
+            <option value={TARGET_TYPES.INDIVIDUAL}>개인 (학번 지정)</option>
           </Select>
         </InputGroup>
+
+        {/* 개별 전송 선택 시 학번 입력 필드 노출 */}
+        {targetType === TARGET_TYPES.INDIVIDUAL && (
+          <InputGroup>
+            <Label>학번</Label>
+            <Input
+              type="text"
+              value={studentNumber}
+              onChange={(e) => setStudentNumber(e.target.value)}
+              placeholder="전송할 대상의 학번을 입력하세요"
+              required
+            />
+          </InputGroup>
+        )}
 
         <InputGroup>
           <Label>제목</Label>
@@ -65,7 +110,7 @@ const CreateNotificationPage = () => {
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="알림의 제목을 입력하세요"
+            placeholder="알림 제목"
             required
           />
         </InputGroup>
@@ -75,23 +120,23 @@ const CreateNotificationPage = () => {
           <Textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
-            placeholder="알림의 상세 내용을 입력하세요"
+            placeholder="알림 상세 내용"
             rows={8}
             required
           />
         </InputGroup>
 
         <InputGroup>
-          <Label>게시글 ID (선택 사항)</Label>
+          <Label>관련 게시글 ID (선택)</Label>
           <Input
             type="number"
             value={boardId}
             onChange={(e) => setBoardId(e.target.value)}
-            placeholder="알림과 연결할 게시글의 ID"
+            placeholder="이동할 게시글 ID"
           />
         </InputGroup>
 
-        <SubmitButton type="submit">알림 생성하기</SubmitButton>
+        <SubmitButton type="submit">알림 보내기</SubmitButton>
       </FormContainer>
     </PageWrapper>
   );
@@ -104,7 +149,6 @@ export default CreateNotificationPage;
 const PageWrapper = styled.div`
   width: 100%;
   height: 100%;
-
   box-sizing: border-box;
 `;
 
@@ -176,6 +220,7 @@ const SubmitButton = styled.button`
   font-size: 18px;
   font-weight: 700;
   cursor: pointer;
+  transition: background-color 0.2s;
 
   &:hover {
     background-color: #0056b3;

@@ -16,7 +16,7 @@ const SwitchContainer = styled(HeadlessSwitch)<{ checked: boolean }>`
   padding: 0 2px;
   border-radius: 9999px;
   border: none;
-  background-color: ${({ checked }) => (checked ? "#0A84FF" : "#E7E7E7")};
+  background-color: ${({ checked }) => (checked ? "#0A84FF" : "#A2A1A5")};
   transition: background-color 0.2s ease-in-out;
   cursor: pointer;
 `;

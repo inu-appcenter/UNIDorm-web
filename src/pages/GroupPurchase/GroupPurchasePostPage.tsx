@@ -30,7 +30,7 @@ import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../../constants/EmptyMessage.tsx";
 import { Dday, DividerBar, MetaInfo, People } from "@/styles/groupPurchase";
 import useMediaQuery from "../../hooks/useMediaQuery.ts";
-import ToolTipMessage from "../../components/GroupPurchase/TooltipMessage.tsx";
+import ToolTipMessage from "../../components/common/TooltipMessage.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
 
 export default function GroupPurchasePostPage() {
@@ -336,9 +336,10 @@ export default function GroupPurchasePostPage() {
                         {showToolTip && (
                           <ToolTipMessage
                             message={
-                              "같이 구매하실 분이 나타났다면,\n오픈채팅방을 개설해주세요"
+                              "같이 구매하실 분이\n나타났다면,\n오픈채팅방을 개설해주세요"
                             }
                             onClose={() => setShowToolTip(false)}
+                            width={"fit-content"}
                           />
                         )}
                       </RelativeButtonWrapper>

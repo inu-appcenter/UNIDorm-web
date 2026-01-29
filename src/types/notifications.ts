@@ -10,11 +10,13 @@ export interface Notification {
   read: boolean;
 }
 
-// POST, PUT 요청 본문에 사용될 타입
+/**
+ * 알림 데이터 형식
+ */
 export interface NotificationPayload {
   title: string;
   body: string;
-  notificationType: string;
+  notificationType: "UNIDORM" | "DORMITORY" | "INDIVIDUAL" | string; // 알림 타입
   boardId: number;
 }
 
