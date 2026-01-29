@@ -22,6 +22,7 @@ import { RoommatePost } from "@/types/roommates";
 import FilterButton from "../../components/button/FilterButton.tsx";
 import { getMobilePlatform } from "@/utils/getMobilePlatform";
 import TopPopupNotification from "@/components/common/TopPopupNotification";
+import RoundSquareButton from "@/components/button/RoundSquareButton";
 
 function FilterTags({ filters }: { filters: Record<string, any> }) {
   const filteredTags = Object.values(filters).filter((value) => {
@@ -288,18 +289,21 @@ export default function RoomMatePage() {
           title={"맞춤 룸메이트"}
           description={"설정한 알림 필터 조건에 맞는 룸메이트를 보여드려요."}
           rightAction={
-            <SettingButton
-              onClick={() => navigate(PATHS.ROOMMATE.FIND_SETTING)}
-            >
-              ⚙️ 모아보기 설정
-            </SettingButton>
+            isLoggedIn && (
+              <RoundSquareButton
+                onClick={() => navigate(PATHS.ROOMMATE.FIND_SETTING)}
+                btnName={"⚙️ 옵션"}
+              />
+            )
           }
         >
           <>
             {!isLoggedIn ? (
               <ChecklistBanner onClick={() => navigate(PATHS.LOGIN)}>
-                로그인하시면 모아보기한 룸메이트를 찾아볼 수 있어요.
-                <strong>인천대학교 포털 로그인 →</strong>
+                로그인하시면,
+                <br />
+                맞춤 룸메이트가 올라왔을 때 푸시알림을 받을 수 있어요.
+                <strong>인천대학교 포털로 로그인 →</strong>
               </ChecklistBanner>
             ) : !hasChecklist ? (
               <ChecklistBanner
@@ -383,21 +387,6 @@ const RoomMatePageWrapper = styled.div`
   background: #fafafa;
   width: 100%;
   flex: 1;
-`;
-
-const SettingButton = styled.button`
-  background: #eee;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 12px;
-  color: #555;
-  cursor: pointer;
-  font-weight: 500;
-  white-space: nowrap;
-  &:hover {
-    background: #e2e2e2;
-  }
 `;
 
 const EmptyStateContainer = styled.div`

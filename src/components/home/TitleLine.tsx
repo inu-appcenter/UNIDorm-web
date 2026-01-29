@@ -28,7 +28,6 @@ const TitleLineWrapper = styled.div`
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  padding: 0px;
   gap: 8px;
 
   width: 100%;
