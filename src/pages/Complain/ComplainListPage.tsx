@@ -216,7 +216,7 @@ const ComplainListPage = () => {
 
         {/* 민원 목록 */}
         <RightSection>
-          <TitleContentArea title={"민원 목록"}>
+          <TitleContentArea title={"내 민원 목록"}>
             <Wrapper2>
               <SearchInput
                 value={searchTerm}
