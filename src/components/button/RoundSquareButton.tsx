@@ -26,7 +26,7 @@ export default RoundSquareButton;
 const RoundSquareButtonWrapper = styled.button<{ color: string }>`
   flex: 1;
   width: 100%;
-  min-width: 80px;
+  min-width: fit-content;
   height: 100%;
   min-height: 50px;
   padding: 0 16px;
@@ -49,4 +49,11 @@ const RoundSquareButtonWrapper = styled.button<{ color: string }>`
   letter-spacing: 0.38px;
 
   color: #f4f4f4;
+
+  /* 줄바꿈 방지 설정 */
+  white-space: nowrap;
+  /* 텍스트 넘침 제어 (필요 시) */
+  overflow: hidden;
+  /* 넘치는 텍스트 말줄임 표시 (필요 시) */
+  text-overflow: ellipsis;
 `;

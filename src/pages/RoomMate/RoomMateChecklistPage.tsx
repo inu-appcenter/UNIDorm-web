@@ -313,7 +313,7 @@ export default function RoomMateChecklistPage() {
 
 // Styled Components
 const Wrapper = styled.div`
-  //padding-bottom: 100px;
+  padding-bottom: 100px;
   display: flex;
   flex-direction: column;
   min-height: 100vh;

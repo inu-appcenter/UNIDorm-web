@@ -10,7 +10,7 @@ import { useSetHeader } from "@/hooks/useSetHeader";
 
 // 알림 타겟 타입 정의
 const TARGET_TYPES = {
-  UNIDORM: "UNIDORM", // 전체
+  UNIDORM: "UNI_DORM", // 전체
   DORMITORY: "DORMITORY", // 생활원
   INDIVIDUAL: "INDIVIDUAL", // 개인
 } as const;
@@ -29,6 +29,10 @@ const CreateNotificationPage = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    if (!window.confirm("푸시알림을 보낼까요?")) {
+      return;
+    }
+
     // 필수값 검증
     if (!title.trim() || !body.trim()) {
       alert("제목과 내용은 필수 입력 항목입니다.");
@@ -44,7 +48,7 @@ const CreateNotificationPage = () => {
     const payload: NotificationPayload = {
       title,
       body,
-      notificationType: targetType,
+      notificationType: TARGET_TYPES.UNIDORM,
       boardId: boardId ? parseInt(boardId, 10) : 0,
     };
 

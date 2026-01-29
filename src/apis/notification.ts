@@ -18,16 +18,19 @@ export const createNotification = async (
 };
 
 /**
- * 학번 기준 개별 알림 전송 (POST /notifications/student-number/{studentNumber})
- * 대상: 특정 학번 사용자
+ * 학번 기준 개별 알림 전송
+ * 경로 변수 및 쿼리 파라미터 중복 적용
  */
 export const createNotificationByStudentNumber = async (
   studentNumber: string,
   payload: NotificationPayload,
 ): Promise<AxiosResponse<void>> => {
   const response = await tokenInstance.post<void>(
-    `/notifications/student-number/${studentNumber}`,
+    `/notifications/student-number/{studentNumber}`,
     payload,
+    {
+      params: { studentNumber }, // 쿼리 스트링 추가 (?studentNumber=...)
+    },
   );
   return response;
 };
