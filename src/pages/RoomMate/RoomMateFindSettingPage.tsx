@@ -316,6 +316,7 @@ export default function RoomMateFilterPage() {
 }
 
 const Wrapper = styled.div`
+  padding-bottom: 100px;
   padding-top: 4px;
   display: flex;
   flex-direction: column;
