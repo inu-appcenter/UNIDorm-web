@@ -7,9 +7,8 @@ import {
 } from "@/types/notifications";
 
 /**
- * 새로운 알림을 생성합니다. (POST /notifications)
- * @param payload 생성할 알림의 정보
- * @returns AxiosResponse<void>
+ * 알림 생성 및 푸시 전송 (POST /notifications)
+ * 대상: 유니돔(전체), 생활원(사생), 기타(개별)
  */
 export const createNotification = async (
   payload: NotificationPayload,
@@ -18,6 +17,20 @@ export const createNotification = async (
   return response;
 };
 
+/**
+ * 학번 기준 개별 알림 전송 (POST /notifications/student-number/{studentNumber})
+ * 대상: 특정 학번 사용자
+ */
+export const createNotificationByStudentNumber = async (
+  studentNumber: string,
+  payload: NotificationPayload,
+): Promise<AxiosResponse<void>> => {
+  const response = await tokenInstance.post<void>(
+    `/notifications/student-number/${studentNumber}`,
+    payload,
+  );
+  return response;
+};
 /**
  * 현재 로그인한 사용자의 모든 알림을 최신순으로 조회합니다. (GET /notifications)
  * @returns AxiosResponse<Notification[]>
