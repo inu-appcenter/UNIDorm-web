@@ -23,6 +23,7 @@ import FilterButton from "../../components/button/FilterButton.tsx";
 import { getMobilePlatform } from "@/utils/getMobilePlatform";
 import TopPopupNotification from "@/components/common/TopPopupNotification";
 import RoundSquareButton from "@/components/button/RoundSquareButton";
+import TooltipMessage from "@/components/common/TooltipMessage.tsx";
 
 function FilterTags({ filters }: { filters: Record<string, any> }) {
   const filteredTags = Object.values(filters).filter((value) => {
@@ -52,6 +53,22 @@ export default function RoomMatePage() {
   const { ref, inView } = useInView();
   const { tokenInfo, userInfo } = useUserStore();
 
+  // 툴팁 노출 상태 관리
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  // 최초 1회 노출 확인 및 닫기 핸들러
+  useEffect(() => {
+    const hasSeenTooltip = localStorage.getItem("hasSeenRoommateTooltip");
+    if (!hasSeenTooltip) {
+      setShowTooltip(true);
+    }
+  }, []);
+
+  const handleCloseTooltip = () => {
+    setShowTooltip(false);
+    localStorage.setItem("hasSeenRoommateTooltip", "true");
+  };
+
   const isLoggedIn = Boolean(tokenInfo.accessToken);
   const hasChecklist = userInfo.roommateCheckList;
 
@@ -70,17 +87,28 @@ export default function RoomMatePage() {
     title: "룸메이트",
     secondHeader: (
       <CategoryWrapper>
-        {CATEGORY_LIST.map((category) => (
+        {CATEGORY_LIST.map((category, index) => (
           <CategoryItem
             key={category}
             className={selectedCategory === category ? "active" : ""}
             onClick={() => handleCategoryClick(category)}
+            style={{ position: "relative" }}
           >
             {category}
+            {index === 1 && showTooltip && (
+              <TooltipMessage
+                message="새 글 알림을\n받아보세요"
+                onClose={handleCloseTooltip}
+                position="bottom" // 하단 배치
+                align="center" // 우측 정렬 (화살표도 우측 상단에 위치)
+                width={"60px"}
+              />
+            )}
           </CategoryItem>
         ))}
       </CategoryWrapper>
     ),
+    showAlarm: true,
   });
 
   const { data: isMatchingActive } = useQuery({

@@ -272,6 +272,7 @@ export default function GroupPurchaseMainPage() {
         </CategoryWrapper>
       ),
       settingOnClick: handleKeywordSettingButton,
+      showAlarm: true,
     }),
     [selectedCategory, navigate],
   ); // selectedCategory 필수 포함

@@ -61,6 +61,7 @@ export default function ChatListPage() {
 
   useSetHeader({
     title: "채팅",
+    showAlarm: true,
   });
 
   return (

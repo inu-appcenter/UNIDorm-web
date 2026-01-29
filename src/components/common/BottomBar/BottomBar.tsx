@@ -7,18 +7,19 @@ import home from "../../../assets/bottombar/home.svg";
 import roommate from "../../../assets/bottombar/roommate.svg";
 import mypage from "../../../assets/bottombar/mypage.svg";
 
-// 클릭된 이미지 import
 import buyClicked from "../../../assets/bottombar/buy-clicked.svg";
 import chatClicked from "../../../assets/bottombar/chat-clicked.svg";
 import homeClicked from "../../../assets/bottombar/home-clicked.svg";
 import roommateClicked from "../../../assets/bottombar/roommate-clicked.svg";
 import mypageClicked from "../../../assets/bottombar/mypage-clicked.svg";
-import TooltipMessage from "./TooltipMessage.tsx";
 import { useEffect, useState } from "react";
 import useUserStore from "../../../stores/useUserStore.ts";
 import { getMyRoommateInfo } from "@/apis/roommate";
 import { getRoommateChatRooms } from "@/apis/chat";
 import { getMobilePlatform } from "@/utils/getMobilePlatform";
+import TooltipMessage from "@/components/common/TooltipMessage";
+import { useQuery } from "@tanstack/react-query";
+import { getFeatureFlagByKey } from "@/apis/featureFlag";
 
 interface ButtonProps {
   defaultImg: string;
@@ -39,28 +40,25 @@ const Button = ({
   onClick,
   showTooltip = false,
   onTooltipClose,
-  // badgeCount,
 }: ButtonProps) => {
   const handleClick = () => {
     onClick();
   };
-  // console.log(badgeCount);
+
   return (
     <ButtonWrapper onClick={handleClick}>
       {showTooltip && onTooltipClose && (
         <TooltipMessage
-          message="공동구매할 물건이나 음식을 찾아보세요!"
+          message="26년 1학기\n룸메이트 매칭 중!"
           onClose={onTooltipClose}
+          position={"top"}
+          align={"center"}
+          width={"90px"}
         />
       )}
 
       <BadgeWrapper>
         <img src={isActive ? clickedImg : defaultImg} alt={buttonName} />
-        {/*{badgeCount && badgeCount > 0 ? (*/}
-        {/*  <Badge>{badgeCount > 9 ? "9+" : badgeCount}</Badge>*/}
-        {/*) : (*/}
-        {/*  <></>*/}
-        {/*)}*/}
       </BadgeWrapper>
 
       <div className={`BtnName ${isActive ? "active" : ""}`}>{buttonName}</div>
@@ -69,7 +67,7 @@ const Button = ({
 };
 
 const ButtonWrapper = styled.div`
-  position: relative; /* Tooltip 위치 기준 */
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -95,27 +93,6 @@ const BadgeWrapper = styled.div`
   display: inline-block;
 `;
 
-// const Badge = styled.div`
-//   position: absolute;
-//   top: -8px;
-//   right: -8px;
-//   min-width: 16px;
-//   height: 16px;
-//   //padding: 0 4px;
-//
-//   background-color: #ffc400; /* 노란색 */
-//   color: black; /* 검정 글자 */
-//   font-size: 10px;
-//   font-weight: 500;
-//   border-radius: 50%;
-//
-//   display: flex;
-//   align-items: center;
-//   justify-content: center;
-//
-//   //box-shadow: 0 0 0 1px white; /* 흰색 외곽선으로 뱃지가 더 잘 보이게 */
-// `;
-
 export default function BottomBar() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -124,9 +101,9 @@ export default function BottomBar() {
   const isLoggedIn = Boolean(tokenInfo.accessToken);
   const [roommateChatCount, setRoommateChatCount] = useState<number>(0);
 
+  // 채팅방 개수 조회
   useEffect(() => {
     if (!isLoggedIn) return;
-    console.log("채팅방 수 받아오기 시도");
 
     getRoommateChatRooms()
       .then((res) => {
@@ -135,20 +112,31 @@ export default function BottomBar() {
       .catch((err) => {
         console.error("룸메이트 채팅방 목록 조회 실패", err);
       });
-  }, [pathname]);
+  }, [pathname, isLoggedIn]);
 
+  // 툴팁 표시 상태 관리
   const [showTooltip, setShowTooltip] = useState(() => {
-    // return false;
     const stored = localStorage.getItem("showRoommateTooltip");
-    return stored !== "false"; // 기본값 true
+    return stored !== "false";
   });
 
   const hideTooltip = () => {
-    console.log("툴팁 숨김 처리");
     setShowTooltip(false);
     localStorage.setItem("showRoommateTooltip", "false");
   };
 
+  // 피처 플래그 조회 (Early Return 이전에 배치)
+  const { data: isMatchingActive } = useQuery({
+    queryKey: ["featureFlag", "ROOMMATE_MATCHING"],
+    queryFn: async () => {
+      const response = await getFeatureFlagByKey("ROOMMATE_MATCHING");
+      return response.data.flag;
+    },
+    initialData: true,
+    staleTime: Infinity,
+  });
+
+  // 특정 페이지에서 하단바 숨김 처리
   if (
     pathname.includes("/chat/roommate") ||
     pathname.includes("/chat/groupPurchase")
@@ -186,8 +174,8 @@ export default function BottomBar() {
           };
           fetchRoommateInfo();
         }}
-        // showTooltip={showTooltip}
-        // onTooltipClose={hideTooltip}
+        showTooltip={showTooltip && isMatchingActive}
+        onTooltipClose={hideTooltip}
       />
       <Button
         defaultImg={buy}
@@ -195,8 +183,6 @@ export default function BottomBar() {
         buttonName="공동구매"
         isActive={pathname === "/groupPurchase"}
         onClick={() => navigate("/groupPurchase")}
-        showTooltip={showTooltip}
-        onTooltipClose={hideTooltip}
       />
       <Button
         defaultImg={chat}
@@ -236,13 +222,12 @@ const StyledBottomBar = styled.footer`
   padding: 8px 20px;
   box-sizing: border-box;
 
-  background: rgba(244, 244, 244, 0.6); /* 반투명 */
-  backdrop-filter: blur(10px); /* 블러 효과 */
-  -webkit-backdrop-filter: blur(10px); /* Safari 지원 */
+  background: rgba(244, 244, 244, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
 
-  /* iOS WebView 환경에서는 padding-bottom 추가 */
   padding-bottom: ${platform === "ios_webview" && "24px"};
 
   @media (min-width: 1024px) {

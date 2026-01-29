@@ -8,7 +8,7 @@ import useUserStore from "@/stores/useUserStore";
 import useHeaderStore from "@/stores/useHeaderStore";
 import { useIsAdminRole } from "@/hooks/useIsAdminRole";
 import { getMobilePlatform } from "@/utils/getMobilePlatform";
-import TooltipMessage from "./TooltipMessage";
+import TooltipMessage from "src/components/common/TooltipMessage";
 import TopRightDropdownMenu from "../TopRightDropdownMenu";
 
 interface HeaderProps {
@@ -31,6 +31,8 @@ export default function Header({ hasBack = false, backPath }: HeaderProps) {
   });
 
   const isHome = location.pathname === "/home" || location.pathname === "/";
+  // 공동구매 페이지 여부 확인
+  const isGroupPurchase = location.pathname === "/groupPurchase";
 
   /* 설치 핸들러 */
   const handleInstallClick = () => {
@@ -93,17 +95,18 @@ export default function Header({ hasBack = false, backPath }: HeaderProps) {
           {/* 메뉴 */}
           {menuItems && <TopRightDropdownMenu items={menuItems} />}
 
-          {/* 설정 아이콘 및 툴팁 */}
+          {/* 설정 아이콘 및 툴팁: 공동구매 페이지에서만 툴팁 노출 */}
           {settingOnClick && (
             <SettingWrapper>
               <Settings size={24} onClick={settingOnClick} />
-              {showSettingTooltip && (
+              {showSettingTooltip && isGroupPurchase && (
                 <TooltipMessage
                   message={"키워드 / 카테고리\n알림을 설정해보세요."}
                   onClose={() => {
                     setShowSettingTooltip(false);
                     localStorage.setItem("showKeywordSettingTooltip", "false");
                   }}
+                  width={"100px"}
                 />
               )}
             </SettingWrapper>
