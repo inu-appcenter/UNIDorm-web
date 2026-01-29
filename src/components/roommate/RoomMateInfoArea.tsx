@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { MyRoommateInfoResponse } from "@/types/roommates";
 import default_profile_img from "../../assets/profileimg.png";
 import { MdKeyboardArrowRight } from "react-icons/md";
+import { PATHS } from "@/constants/paths";
 
 interface RoomMateInfoAreaProps {
   roommateInfo: MyRoommateInfoResponse | null;
@@ -21,12 +22,19 @@ const RoomMateInfoArea = ({
         {/* 상단 섹션 */}
         <BannerSection>
           <TextGroup>
-            <MainText>현재 등록된 맞춤형 룸메이트가 없어요!</MainText>
+            <MainText>현재 등록된 룸메이트가 없어요!</MainText>
             <SubText>지금 바로 나와 맞는 룸메이트를 찾아보세요!</SubText>
           </TextGroup>
           <ButtonGroup>
-            <StyledButton onClick={() => navigate("/roommate")}>
-              내게 꼭 맞는 룸메이트 찾으러 가기
+            <StyledButton
+              onClick={() =>
+                navigate({
+                  pathname: PATHS.ROOMMATE.ROOT,
+                  search: "?tab=맞춤+룸메이트",
+                })
+              }
+            >
+              맞춤 룸메이트 찾기
             </StyledButton>
           </ButtonGroup>
         </BannerSection>
@@ -40,7 +48,7 @@ const RoomMateInfoArea = ({
           </TextGroup>
           <ButtonGroup>
             <StyledButton onClick={() => navigate("/roommate/add")}>
-              학번으로 룸메이트 등록하러 가기
+              학번으로 룸메이트 등록
             </StyledButton>
           </ButtonGroup>
         </BannerSection>
@@ -146,7 +154,7 @@ const LeftArea = styled.div`
 `;
 
 const ChecklistBanner = styled.div`
-  margin: 0 16px;
+  //margin: 0 16px;
   border-radius: 12px;
   border: 0 solid #e5e7eb;
   background: linear-gradient(

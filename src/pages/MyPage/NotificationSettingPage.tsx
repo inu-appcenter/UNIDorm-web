@@ -35,7 +35,7 @@ const initialMenus = [
     label: "룸메이트 알림",
     type: "룸메이트",
     apiKey: "roommateNotification" as keyof NotificationPreferences,
-    description: "퀵 메시지",
+    description: "모아보기한 룸메이트 새 글 알림, 퀵 메시지",
   },
   {
     label: "공동구매 알림",
