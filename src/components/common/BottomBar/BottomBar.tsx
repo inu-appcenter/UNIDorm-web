@@ -18,7 +18,6 @@ import { getMyRoommateInfo } from "@/apis/roommate";
 import { getRoommateChatRooms } from "@/apis/chat";
 import { getMobilePlatform } from "@/utils/getMobilePlatform";
 import TooltipMessage from "@/components/common/TooltipMessage";
-import { useQuery } from "@tanstack/react-query";
 import { getFeatureFlagByKey } from "@/apis/featureFlag";
 
 interface ButtonProps {
@@ -125,16 +124,31 @@ export default function BottomBar() {
     localStorage.setItem("showRoommateTooltip", "false");
   };
 
-  // 피처 플래그 조회 (Early Return 이전에 배치)
-  const { data: isMatchingActive } = useQuery({
-    queryKey: ["featureFlag", "ROOMMATE_MATCHING"],
-    queryFn: async () => {
-      const response = await getFeatureFlagByKey("ROOMMATE_MATCHING");
-      return response.data.flag;
-    },
-    initialData: true,
-    staleTime: Infinity,
-  });
+  /* 피처 플래그 상태 관리 */
+  const [isMatchingActive, setIsMatchingActive] = useState<boolean>(true);
+
+  useEffect(() => {
+    /* 채팅방 개수 및 피처 플래그 조회 */
+    const fetchData = async () => {
+      if (isLoggedIn) {
+        try {
+          const chatRes = await getRoommateChatRooms();
+          setRoommateChatCount(chatRes.data.length);
+        } catch (err) {
+          console.error("룸메이트 채팅방 목록 조회 실패", err);
+        }
+      }
+
+      try {
+        const flagRes = await getFeatureFlagByKey("ROOMMATE_MATCHING");
+        setIsMatchingActive(flagRes.data.flag);
+      } catch (err) {
+        console.error("피처 플래그 조회 실패", err);
+      }
+    };
+
+    fetchData();
+  }, [pathname, isLoggedIn]);
 
   // 특정 페이지에서 하단바 숨김 처리
   if (
