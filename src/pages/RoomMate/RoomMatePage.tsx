@@ -53,10 +53,10 @@ export default function RoomMatePage() {
   const { ref, inView } = useInView();
   const { tokenInfo, userInfo } = useUserStore();
 
-  // 툴팁 노출 상태 관리
+  // 툴팁 노출 상태
   const [showTooltip, setShowTooltip] = useState(false);
 
-  // 최초 1회 노출 확인 및 닫기 핸들러
+  // 툴팁 초기 노출 확인
   useEffect(() => {
     const hasSeenTooltip = localStorage.getItem("hasSeenRoommateTooltip");
     if (!hasSeenTooltip) {
@@ -99,8 +99,8 @@ export default function RoomMatePage() {
               <TooltipMessage
                 message="새 글 알림을\n받아보세요"
                 onClose={handleCloseTooltip}
-                position="bottom" // 하단 배치
-                align="center" // 우측 정렬 (화살표도 우측 상단에 위치)
+                position="bottom"
+                align="center"
                 width={"60px"}
               />
             )}
@@ -115,11 +115,14 @@ export default function RoomMatePage() {
     queryKey: ["featureFlag", "ROOMMATE_MATCHING"],
     queryFn: async () => {
       const response = await getFeatureFlagByKey("ROOMMATE_MATCHING");
+      console.log("featureFlag 응답 확인:", response);
       return response.data.flag;
     },
-    initialData: true,
-    staleTime: Infinity,
+    staleTime: 1000 * 60 * 30,
   });
+
+  // 배경 잠금 상태 정의
+  const isLocked = isMatchingActive === false;
 
   const { data: notificationFilterData } = useQuery({
     queryKey: ["roommateNotificationFilter"],
@@ -233,7 +236,6 @@ export default function RoomMatePage() {
 
   useEffect(() => {
     const platform = getMobilePlatform();
-    // 맞춤 룸메이트 탭이고 웹 환경일 때만 알림 노출
     if (
       selectedCategory === CATEGORY_LIST[1] &&
       platform !== "ios_webview" &&
@@ -249,7 +251,7 @@ export default function RoomMatePage() {
   }, [selectedCategory]);
 
   return (
-    <RoomMatePageWrapper>
+    <RoomMatePageWrapper $isLocked={isLocked}>
       {notification && (
         <TopPopupNotification
           title={notification.title}
@@ -405,13 +407,15 @@ export default function RoomMatePage() {
   );
 }
 
-const RoomMatePageWrapper = styled.div`
+// 스크롤 및 터치 차단 속성 추가
+const RoomMatePageWrapper = styled.div<{ $isLocked?: boolean }>`
   padding: 40px 16px 140px;
   display: flex;
   flex-direction: column;
   gap: 16px;
   box-sizing: border-box;
-  overflow-y: auto;
+  overflow-y: ${({ $isLocked }) => ($isLocked ? "hidden" : "auto")};
+  touch-action: ${({ $isLocked }) => ($isLocked ? "none" : "auto")};
   background: #fafafa;
   width: 100%;
   flex: 1;
