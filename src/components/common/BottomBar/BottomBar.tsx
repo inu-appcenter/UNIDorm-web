@@ -100,18 +100,18 @@ export default function BottomBar() {
   const isLoggedIn = Boolean(tokenInfo.accessToken);
   const [roommateChatCount, setRoommateChatCount] = useState<number>(0);
 
-  // 채팅방 개수 조회
-  useEffect(() => {
-    if (!isLoggedIn) return;
-
-    getRoommateChatRooms()
-      .then((res) => {
-        setRoommateChatCount(res.data.length);
-      })
-      .catch((err) => {
-        console.error("룸메이트 채팅방 목록 조회 실패", err);
-      });
-  }, [pathname, isLoggedIn]);
+  // // 채팅방 개수 조회
+  // useEffect(() => {
+  //   if (!isLoggedIn) return;
+  //
+  //   getRoommateChatRooms()
+  //     .then((res) => {
+  //       setRoommateChatCount(res.data.length);
+  //     })
+  //     .catch((err) => {
+  //       console.error("룸메이트 채팅방 목록 조회 실패", err);
+  //     });
+  // }, [pathname, isLoggedIn]);
 
   // 툴팁 표시 상태 관리
   const [showTooltip, setShowTooltip] = useState(() => {
