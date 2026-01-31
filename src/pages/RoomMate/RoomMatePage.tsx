@@ -127,7 +127,7 @@ export default function RoomMatePage() {
     /* 피처 플래그 데이터 페칭 */
     const fetchFeatureFlag = async () => {
       try {
-        return; //피쳐플래그 버그로 인해 임시로 작동 해제
+        // return; //피쳐플래그 버그로 인해 임시로 작동 해제
         const response = await getFeatureFlagByKey("ROOMMATE_MATCHING");
         setIsMatchingActive(response.data.flag);
       } catch (error) {
