@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import { useEffect, useState } from "react";
 import { FiX } from "react-icons/fi";
-import CommonBottomModal from "../../components/modal/CommonBottomModal.tsx";
+import CommonBottomSheet from "src/components/modal/CommonBottomSheet.tsx";
 import modalContent from "../../components/GroupPurchase/keywordSetting/ModalContent.tsx";
 import CategorySetting from "../../components/GroupPurchase/keywordSetting/CategorySetting.tsx";
 
@@ -316,7 +316,7 @@ const KeywordAlertSettingPage = () => {
         Groups={DISPLAY_CATEGORY_LIST}
       />
 
-      <CommonBottomModal
+      <CommonBottomSheet
         id={"키워드 알림 설정 안내"}
         isOpen={isOpen}
         setIsOpen={setIsOpen}

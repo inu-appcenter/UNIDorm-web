@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { GroupOrderChatRoom, RoommateChatRoom } from "@/types/chats";
-import { getGroupOrderChatRooms, getRoommateChatRooms } from "@/apis/chat";
-import ChatListItem from "../../components/chat/ChatListItem.tsx";
 import styled from "styled-components";
+import { GroupOrderChatRoom, RoommateChatRoom } from "@/types/chats";
+import {
+  getGroupOrderChatRooms,
+  getRoommateChatRooms,
+  patchRoommateChatRead, // API 임포트
+} from "@/apis/chat";
+import ChatListItem from "../../components/chat/ChatListItem.tsx";
 import useUserStore from "../../stores/useUserStore.ts";
 import BottomBar from "../../components/common/BottomBar/BottomBar.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
@@ -13,8 +17,7 @@ export default function ChatListPage() {
   const { tokenInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo?.accessToken ?? "");
 
-  // const tabItems = ["룸메이트", "공동구매"];
-  const [selectedTab] = useState("룸메이트");
+  const [selectedTab] = useState("룸메이트"); // 탭 로직 유지
 
   const [groupOrderChatRooms, setGroupOrderChatRooms] = useState<
     GroupOrderChatRoom[]
@@ -43,14 +46,22 @@ export default function ChatListPage() {
           console.error("룸메이트 채팅방 목록 조회 실패", err);
         });
     }
-  }, [selectedTab, isLoggedIn]); // isLoggedIn도 dependency에 추가
+  }, [selectedTab, isLoggedIn]);
 
-  const handleChatClick = (
+  const handleChatClick = async (
     chatRoomId: number,
     partnerName?: string,
     partnerProfileImageUrl?: string,
   ) => {
     if (selectedTab === "룸메이트") {
+      try {
+        // 채팅방 진입 시 읽음 처리 API 호출
+        await patchRoommateChatRead(chatRoomId);
+      } catch (err) {
+        console.error("채팅 읽음 처리 실패", err);
+        // 에러가 나더라도 채팅방 입장은 가능하게 할지 여부에 따라 처리
+      }
+
       navigate(`/chat/roommate/${chatRoomId}`, {
         state: { partnerName, partnerProfileImageUrl },
       });
@@ -67,12 +78,12 @@ export default function ChatListPage() {
   return (
     <ChatListPageWrapper>
       <ContentWrapper>
-        {/*<TopNoticeBanner />*/}
         {selectedTab === "공동구매" ? (
           groupOrderChatRooms.length > 0 ? (
             groupOrderChatRooms.map((room) => (
               <ChatListItem
                 key={room.chatRoomId}
+                chatRoomId={room.chatRoomId} // ID 전달
                 selectedTab={selectedTab}
                 onClick={() => handleChatClick(room.chatRoomId)}
                 title={room.chatRoomTitle}
@@ -107,6 +118,7 @@ export default function ChatListPage() {
           roommateChatRooms.map((room) => (
             <ChatListItem
               key={room.chatRoomId}
+              chatRoomId={room.chatRoomId} // ID 전달
               selectedTab={selectedTab}
               onClick={() =>
                 handleChatClick(
@@ -158,17 +170,12 @@ export default function ChatListPage() {
 
 const ChatListPageWrapper = styled.div`
   padding-bottom: 100px;
-
   display: flex;
   flex-direction: column;
   gap: 20px;
   box-sizing: border-box;
-  //padding-bottom: 500px;
-
   width: 100%;
   flex: 1;
-  //height: 100%;
-
   overflow-y: auto;
 
   @media (min-width: 1024px) {
@@ -178,11 +185,9 @@ const ChatListPageWrapper = styled.div`
 `;
 
 const ContentWrapper = styled.div`
-  //padding-top: 50px;
   padding-bottom: 100px;
   display: flex;
   flex-direction: column;
-  //overflow-y: scroll;
   height: 100%;
   box-sizing: border-box;
 `;

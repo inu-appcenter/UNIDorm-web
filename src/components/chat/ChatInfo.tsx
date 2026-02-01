@@ -5,8 +5,12 @@ import RoundSquareButton from "../button/RoundSquareButton.tsx";
 import { requestRoommateMatchingByChatRoom } from "@/apis/roommate";
 import { MdHelpOutline } from "react-icons/md";
 import RoundSquareWhiteButton from "../button/RoundSquareWhiteButton.tsx";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import 궁금해하는횃불이 from "../../assets/roommate/궁금해하는횃불이.webp";
+import TooltipMessage from "../common/TooltipMessage.tsx";
+
+// 로컬 스토리지 키 정의
+const TOOLTIP_CLOSED_STORAGE_KEY = "roommate_chat_tooltip_closed_list";
 
 interface ChatInfoProps {
   selectedTab: string;
@@ -25,6 +29,54 @@ const ChatInfo = ({
 }: ChatInfoProps) => {
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [isRequestMode, setIsRequestMode] = useState(false);
+  // 초기값은 false로 두고, useEffect에서 확인 후 true로 변경
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  // roomId가 바뀌면 해당 방에서 툴팁을 닫은 적이 있는지 확인
+  useEffect(() => {
+    if (!roomId) return;
+
+    const checkTooltipStatus = () => {
+      try {
+        const storedList = localStorage.getItem(TOOLTIP_CLOSED_STORAGE_KEY);
+        const closedList: number[] = storedList ? JSON.parse(storedList) : [];
+
+        // 이 방 ID가 닫은 목록에 없으면 툴팁 표시
+        if (!closedList.includes(roomId)) {
+          setShowTooltip(true);
+        } else {
+          setShowTooltip(false);
+        }
+      } catch (error) {
+        console.error("로컬 스토리지 파싱 에러", error);
+        setShowTooltip(true);
+      }
+    };
+
+    checkTooltipStatus();
+  }, [roomId]);
+
+  // 툴팁 닫기 핸들러 (영구 저장)
+  const handleCloseTooltip = () => {
+    setShowTooltip(false);
+    if (!roomId) return;
+
+    try {
+      const storedList = localStorage.getItem(TOOLTIP_CLOSED_STORAGE_KEY);
+      const closedList: number[] = storedList ? JSON.parse(storedList) : [];
+
+      // 중복되지 않게 현재 roomId 추가
+      if (!closedList.includes(roomId)) {
+        closedList.push(roomId);
+        localStorage.setItem(
+          TOOLTIP_CLOSED_STORAGE_KEY,
+          JSON.stringify(closedList),
+        );
+      }
+    } catch (error) {
+      console.error("툴팁 상태 저장 실패", error);
+    }
+  };
 
   const handleMatchingRequest = async () => {
     if (!window.confirm(`${partnerName}님에게 룸메이트 요청을 보낼까요?`)) {
@@ -41,9 +93,8 @@ const ChatInfo = ({
       });
       console.log("매칭 요청 성공:", response.data);
       alert(
-        "상대방에게 룸메이트 매칭 요청을 보냈습니다!\n상대방에게 매칭 수락을 요청해보세요.",
+        "상대방에게 룸메이트 매칭 요청을 보냈습니다!\n상대방에게 매칭 수락을 요청해보세요.\n서로 요청을 보내는 경우에도 자동으로 매칭 처리됩니다.",
       );
-      // 예시 출력: { reciverId: 12, status: "REQUEST", matchingId: 45 }
     } catch (error: any) {
       if (error.response?.status === 404) {
         alert("채팅방 또는 사용자를 찾을 수 없습니다.");
@@ -57,6 +108,7 @@ const ChatInfo = ({
       }
     }
   };
+
   return (
     <ChatInfoWrapper>
       <ImgWrapper>
@@ -75,25 +127,39 @@ const ChatInfo = ({
       </ContentWrapper>
       <FunctionWrapper>
         {selectedTab === "룸메이트" && (
-          <RoundSquareButton
-            btnName={"룸메 신청"}
-            onClick={() => {
-              if (!isChatted) {
-                alert(
-                  "대화를 나누지 않고 룸메이트를 신청할 수 없어요.\n상대방과 룸메이트를 하기로 약속한 뒤 눌러주세요.",
-                );
-                return;
-              }
-              setIsRequestMode(true);
-              setShowInfoModal(true);
-            }}
-          />
+          <RelativeWrapper>
+            <RoundSquareButton
+              btnName={"룸메 신청"}
+              onClick={() => {
+                if (!isChatted) {
+                  alert(
+                    "대화를 나누지 않고 룸메이트를 신청할 수 없어요.\n상대방과 룸메이트를 하기로 약속한 뒤 눌러주세요.",
+                  );
+                  return;
+                }
+                setIsRequestMode(true);
+                setShowInfoModal(true);
+              }}
+            />
+            {showTooltip && (
+              <TooltipMessage
+                message={
+                  "서로 룸메이트를 하기로 마음먹었다면,\n룸메이트를 신청하세요!"
+                }
+                onClose={handleCloseTooltip} // 닫기 버튼 클릭 시 저장 로직 실행
+                position="bottom"
+                align="right"
+                width="110px"
+              />
+            )}
+          </RelativeWrapper>
         )}
       </FunctionWrapper>
       <div style={{ display: "flex", alignItems: "center" }}>
         <MdHelpOutline
           color={"gray"}
           size={24}
+          style={{ cursor: "pointer" }}
           onClick={() => setShowInfoModal(true)}
         />
       </div>
@@ -112,27 +178,29 @@ const ChatInfo = ({
                 <h3>룸메이트 신청이 뭔가요?</h3>
                 <p>
                   UNI Dorm에서의 룸메이트 매칭은{" "}
-                  <strong>실제 기숙사 룸메이트 지정과 무관</strong>하며,
-                  룸메이트를 구하는데 도움을 드리는 서비스입니다.
+                  <strong>실제 기숙사 룸메이트 지정과 무관</strong>
+                  하며, 룸메이트를 구하는데 도움을 드리는 서비스입니다.
                 </p>
 
                 <p>
-                  상대방이 수락하여 UniDorm에서 룸메이트 매칭이 완료되면
-                  룸메이트 탭은 "내 룸메이트" 화면으로 전환되며, 룸메이트와
-                  시간표 공유, 퀵 메시지 등 다양한 편의 기능을 제공합니다.
+                  상대방이 수락하여 매칭이 되면, 룸메이트 탭은 "내 룸메이트"
+                  화면으로 전환되며, 룸메이트와 시간표 공유, 퀵 메시지 등 다양한
+                  편의 기능을 제공합니다.
                   <br />
                   또한,{" "}
                   <strong>
                     더이상 다른 UNI에게 룸메이트를 구하는 메시지를 받지
                     않습니다.
                     <br />
-                    채팅으로 서로의 학번을 알아두고 아래 방법에 따라 실제
-                    룸메이트를 신청하세요!
+                    <span style={{ color: "red" }}>
+                      채팅으로 서로의 학번을 알아두고, 아래 방법에 따라 실제
+                      룸메이트를 신청하세요!
+                    </span>
                   </strong>
                 </p>
                 <h3>실제 기숙사 룸메이트 신청은 어떻게 하나요?</h3>
                 <p>
-                  <strong>
+                  <strong style={{ color: "red" }}>
                     반드시 룸메이트 사전 지정 기간에 인천대학교 포털에서
                     신청해주세요!!!!
                     <br />❍ 신청기간 : 2026. 02. 14(토) 00:00 ~ 02. 18(수) 23:59
@@ -162,7 +230,7 @@ const ChatInfo = ({
                   <br />
                   기타 자세한 사항은{" "}
                   <a
-                    href="https://dorm.inu.ac.kr/dorm/6521/subview.do?enc=Zm5jdDF8QEB8JTJGYmJzJTJGZG9ybSUyRjIwMDMlMkY0MTAwNjIlMkZhcnRjbFZpZXcuZG8lM0Y%3D"
+                    href="https://dorm.inu.ac.kr/dorm/6521/subview.do?enc=Zm5jdDF8QEB8JTJGYmJzJTJGZG9ybSUyRjIwMDMlMkY0MTc4MDglMkZhcnRjbFZpZXcuZG8lM0ZwYWdlJTNEMSUyNnNyY2hDb2x1bW4lM0QlMjZzcmNoV3JkJTNEJTI2YmJzQ2xTZXElM0QlMjZiYnNPcGVuV3JkU2VxJTNEJTI2cmdzQmduZGVTdHIlM0QlMjZyZ3NFbmRkZVN0ciUzRCUyNmlzVmlld01pbmUlM0RmYWxzZSUyNnBhc3N3b3JkJTNEJTI2"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -173,7 +241,9 @@ const ChatInfo = ({
               </ModalScrollArea>
             </ModalContentWrapper>
             {isRequestMode && (
-              <div>{partnerName}님에게 룸메이트 요청을 보낼까요?</div>
+              <div style={{ padding: "10px 0", textAlign: "center" }}>
+                {partnerName}님에게 룸메이트 요청을 보낼까요?
+              </div>
             )}
             <ButtonGroupWrapper>
               <RoundSquareWhiteButton
@@ -211,6 +281,8 @@ const ChatInfoWrapper = styled.div`
   gap: 16px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   background: white;
+  position: relative; /* z-index 컨텍스트 생성 */
+  z-index: 100;
 `;
 
 const ImgWrapper = styled.div`
@@ -247,6 +319,12 @@ const FunctionWrapper = styled.div`
   display: flex;
   align-items: center;
   gap: 16px;
+`;
+
+const RelativeWrapper = styled.div`
+  position: relative;
+  display: flex;
+  align-items: center;
 `;
 
 const ModalBackGround = styled.div`
@@ -286,13 +364,6 @@ const Modal = styled.div`
     z-index: 1000;
   }
 
-  .title {
-    width: 100%;
-    flex: 1;
-    //height: 100%;
-    overflow-y: auto;
-  }
-
   @keyframes fadeIn {
     from {
       opacity: 0;
@@ -309,16 +380,16 @@ const ModalContentWrapper = styled.div`
   display: flex;
   flex-direction: column;
   flex: 1;
-  overflow: hidden; /* 내부에서만 스크롤 생기도록 */
+  overflow: hidden;
 `;
 
 const ModalHeader = styled.div`
-  flex-shrink: 0; /* 스크롤 시 줄어들지 않게 고정 */
+  flex-shrink: 0;
   margin-bottom: 12px;
   justify-content: space-between;
   padding-right: 50px;
-  overflow-wrap: break-word; // 또는 wordWrap
-  word-break: keep-all; // 단어 중간이 아니라 단어 단위로 줄바꿈
+  overflow-wrap: break-word;
+  word-break: keep-all;
 
   h2 {
     margin: 0;
@@ -332,7 +403,7 @@ const ModalHeader = styled.div`
 const ModalScrollArea = styled.div`
   flex: 1;
   overflow-y: auto;
-  padding-right: 8px; /* 스크롤바 여백 */
+  padding-right: 8px;
 `;
 
 const ButtonGroupWrapper = styled.div`

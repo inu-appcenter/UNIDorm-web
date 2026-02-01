@@ -10,7 +10,7 @@ import { useNavigate } from "react-router-dom";
 import GroupPurchaseList from "../components/GroupPurchase/GroupPurchaseList.tsx";
 import { GetGroupPurchaseListParams, GroupOrder } from "@/types/grouporder";
 import { getGroupPurchaseList } from "@/apis/groupPurchase";
-import HomeNoticeBottomModal from "../components/modal/HomeNoticeBottomModal.tsx";
+import HomeNoticeBottomSheet from "src/components/modal/HomeNoticeBottomSheet.tsx";
 import HomeBanner from "../components/home/HomeBanner.tsx";
 import LoadingSpinner from "../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../constants/EmptyMessage.tsx";
@@ -21,7 +21,7 @@ import { getPopupNotifications } from "@/apis/popup-notification";
 import { PopupNotification } from "@/types/popup-notifications";
 import { getMobilePlatform } from "@/utils/getMobilePlatform";
 import ModalContent_AppInstall from "../components/common/ModalContent_AppInstall.tsx";
-import CommonBottomModal from "../components/modal/CommonBottomModal.tsx";
+import CommonBottomSheet from "src/components/modal/CommonBottomSheet.tsx";
 import ServiceBox from "../components/home/ServiceBox.tsx";
 import 민원아이콘 from "../assets/home/민원아이콘.webp";
 import 폼아이콘 from "../assets/home/폼아이콘.webp";
@@ -181,7 +181,7 @@ export default function HomePage() {
     <HomePageWrapper>
       {!isPopupLoading &&
         popupNotices.map((popup) => (
-          <HomeNoticeBottomModal
+          <HomeNoticeBottomSheet
             key={popup.id}
             id={popup.id?.toString() ?? ""}
             isOpen={modalOpenStates[popup.id ?? 0]}
@@ -195,7 +195,7 @@ export default function HomePage() {
                 <img key={idx} src={img} alt={popup.title} />
               ))}
             </PopupModalContent>
-          </HomeNoticeBottomModal>
+          </HomeNoticeBottomSheet>
         ))}
 
       {/* 4. state에 notification 데이터가 있을 때만 렌더링 */}
@@ -312,7 +312,7 @@ export default function HomePage() {
 
       <img className="appcenter-logo" src={앱센터로고가로} />
 
-      <CommonBottomModal
+      <CommonBottomSheet
         id={"이벤트 당첨"}
         isOpen={isAppInstallOpen}
         setIsOpen={setIsAppInstallOpen}

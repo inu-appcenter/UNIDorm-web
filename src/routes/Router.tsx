@@ -70,6 +70,7 @@ import FCMPage from "@/pages/Admin/FCMPage";
 import FeatureFlagManagePage from "@/pages/Admin/FeatureFlagManagePage";
 import RoomMateFindSettingPage from "@/pages/RoomMate/RoomMateFindSettingPage";
 import SettingsPage from "@/pages/MyPage/SettingsPage";
+import StatisticsPage from "@/pages/Admin/StatisticsPage";
 
 export const router = createBrowserRouter([
   {
@@ -249,6 +250,7 @@ export const router = createBrowserRouter([
               { path: "form/:formId/result", element: <FormResultPage /> },
               { path: "fcm", element: <FCMPage /> },
               { path: "feature-flag", element: <FeatureFlagManagePage /> },
+              { path: "statistics", element: <StatisticsPage /> },
             ],
           },
         ],

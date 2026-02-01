@@ -68,5 +68,6 @@ export const PATHS = {
     FORM_RESULT: (id: string | number = ":formId") =>
       `/admin/form/${id}/result`,
     FCM: "/admin/fcm",
+    STATISTICS: "/admin/statistics",
   },
 } as const;
