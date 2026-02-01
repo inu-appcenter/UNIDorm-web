@@ -25,7 +25,7 @@ import useUserStore from "../../stores/useUserStore.ts";
 import CommentSection from "../../components/comment/CommentSection.tsx";
 import { CheckBeforeDeal2 } from "@/constants/CheckBeforeDeal2";
 import Modal from "../../components/modal/Modal.tsx";
-import CommonBottomModal from "../../components/modal/CommonBottomModal.tsx";
+import CommonBottomSheet from "src/components/modal/CommonBottomSheet.tsx";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../../constants/EmptyMessage.tsx";
 import { Dday, DividerBar, MetaInfo, People } from "@/styles/groupPurchase";
@@ -406,7 +406,7 @@ export default function GroupPurchasePostPage() {
             handleCommentSubmit={handleCommentSubmit}
           />
 
-          <CommonBottomModal
+          <CommonBottomSheet
             id={"이미지보기"}
             isOpen={showInfoModal}
             setIsOpen={setShowInfoModal}
@@ -418,7 +418,7 @@ export default function GroupPurchasePostPage() {
                 alt="미리보기"
               />
             </div>
-          </CommonBottomModal>
+          </CommonBottomSheet>
 
           <Modal
             onClose={() => setShowModal(false)}

@@ -13,7 +13,7 @@ import { deleteTipComment } from "@/apis/tips";
 import { TipDetail, TipImage } from "@/types/tips";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../../constants/EmptyMessage.tsx";
-import CommonBottomModal from "../../components/modal/CommonBottomModal.tsx";
+import CommonBottomSheet from "src/components/modal/CommonBottomSheet.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
 
 export default function TipDetailPage() {
@@ -244,7 +244,7 @@ export default function TipDetailPage() {
         handleCommentSubmit={handleCommentSubmit}
       />
 
-      <CommonBottomModal
+      <CommonBottomSheet
         id={"이미지보기"}
         isOpen={showInfoModal}
         setIsOpen={setShowInfoModal}
@@ -256,7 +256,7 @@ export default function TipDetailPage() {
             alt="미리보기"
           />
         </div>
-      </CommonBottomModal>
+      </CommonBottomSheet>
     </Wrapper>
   );
 }

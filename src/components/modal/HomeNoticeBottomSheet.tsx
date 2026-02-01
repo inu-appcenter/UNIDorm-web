@@ -19,7 +19,7 @@ interface Props {
   setIsOpen: (isOpen: boolean) => void;
 }
 
-export default function HomeNoticeBottomModal({
+export default function HomeNoticeBottomSheet({
   id,
   title,
   text,
