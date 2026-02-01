@@ -1,7 +1,7 @@
 import { useState } from "react";
 import styled from "styled-components";
 import { useLocation, useNavigate } from "react-router-dom";
-import CommonBottomModal from "../../components/modal/CommonBottomModal";
+import CommonBottomSheet from "src/components/modal/CommonBottomSheet";
 import useUserStore from "../../stores/useUserStore";
 import { createGroupPurchase, updateGroupPurchase } from "@/apis/groupPurchase";
 import { CreateGroupOrderRequest } from "@/types/grouporder";
@@ -109,13 +109,13 @@ export default function GroupPurchaseWritePage() {
     <Wrapper>
       {isLoading && <LoadingSpinner overlay message="글 쓰는 중..." />}
       {/*거래 전 확인하세요 모달*/}
-      {/*<CommonBottomModal*/}
+      {/*<CommonBottomSheet*/}
       {/*  id={"checkbefore"}*/}
       {/*  isOpen={isModalOpen}*/}
       {/*  setIsOpen={setIsModalOpen}*/}
       {/*  children={<CheckBeforeContent />}*/}
       {/*/>*/}
-      <CommonBottomModal
+      <CommonBottomSheet
         id={"howToCreateOpenChat"}
         title={"오픈채팅 생성 매뉴얼"}
         isOpen={isHowtoModalOpen}

@@ -27,7 +27,7 @@ interface Props {
 }
 // ---------------------------------------------
 
-export default function CommonBottomModal({
+export default function CommonBottomSheet({
   id,
   children,
   isOpen,
