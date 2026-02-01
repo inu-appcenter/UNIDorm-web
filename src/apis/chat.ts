@@ -45,3 +45,33 @@ export const getRoommateChatHistory = async (
   console.log(response); // 디버깅용
   return response;
 };
+
+/** 특정 채팅방 미확인 메시지 수 조회 */
+export const getRoommateChatUnreadCount = async (
+  roomId: number,
+): Promise<AxiosResponse<number>> => {
+  const response = await tokenInstance.get<number>(
+    `/roommate/chat/${roomId}/unread-count`,
+  );
+  return response;
+};
+
+/** 모든 채팅방 미확인 메시지 총합 조회 */
+export const getAllRoommateChatUnreadCount = async (): Promise<
+  AxiosResponse<number>
+> => {
+  const response = await tokenInstance.get<number>(
+    `/roommate/chat/unread-count`,
+  );
+  return response;
+};
+
+/** 특정 채팅방 메시지 읽음 처리 */
+export const patchRoommateChatRead = async (
+  roomId: number,
+): Promise<AxiosResponse<void>> => {
+  const response = await tokenInstance.patch<void>(
+    `/roommate/chat/${roomId}/read`,
+  );
+  return response;
+};
