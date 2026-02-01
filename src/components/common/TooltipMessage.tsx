@@ -58,7 +58,12 @@ const TooltipContainer = styled.div<{
   font-size: 12px;
   text-align: center;
   cursor: pointer;
-  white-space: pre-line;
+
+  /* 텍스트 줄바꿈 설정 수정 */
+  white-space: pre-line; /* \\n은 줄바꿈으로 인정하고, 내용이 넘치면 자동 줄바꿈 */
+  word-break: keep-all; /* 단어 중간에서 끊기지 않도록 설정 (한글에 필수) */
+  overflow-wrap: break-word; /* 혹시라도 너무 긴 단어가 있으면 그건 쪼개서 줄바꿈 */
+  line-height: 1.5; /* 줄간격을 살짝 띄워 가독성 확보 */
 
   /* 유리 효과 및 불투명도 강화 */
   background-color: ${TOOLTIP_BG};

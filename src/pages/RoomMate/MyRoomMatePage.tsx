@@ -37,11 +37,11 @@ export default function MyRoomMatePage() {
 
   const [showQuickModal, setShowQuickModal] = useState(false);
 
-  const [showImgConfirmModal, setShowImgConfirmModal] = useState(false); //모달창 열림 여부
+  const [showImgConfirmModal, setShowImgConfirmModal] = useState(false); // 모달 표시 상태
   const [myTimetableImageUrl, setMyTimetableImageUrl] = useState<string>();
   const [roommateTimetableImageUrl, setRoommateTimetableImageUrl] =
     useState<string>();
-  // 룸메이트 없을 때 overlay 표시 및 클릭 막기
+  // 룸메이트 부재 시 비활성화
   const isDisabled = notFound;
 
   const menuItems = [
@@ -75,7 +75,7 @@ export default function MyRoomMatePage() {
     },
   ];
 
-  // 룸메이트 없으면 빈 배열로 처리
+  // 빈 배열 처리
   const ruleMenuItems = notFound
     ? []
     : [
@@ -146,7 +146,7 @@ export default function MyRoomMatePage() {
     const fetchUserTimetable = async () => {
       try {
         const res = await getUserTimetableImage();
-        setMyTimetableImageUrl(res.data.fileName);
+        setMyTimetableImageUrl(res.data.imageUrl);
       } catch (error: any) {
         console.log("내 시간표 이미지 불러오기 실패:", error);
       } finally {
@@ -157,7 +157,7 @@ export default function MyRoomMatePage() {
     const fetchRoommateTimetable = async () => {
       try {
         const res = await getMyRoommateTimeTableImage();
-        setRoommateTimetableImageUrl(res.data.fileName);
+        setRoommateTimetableImageUrl(res.data.imageUrl);
       } catch (error: any) {
         console.log("룸메이트 시간표 이미지 불러오기 실패:", error);
       } finally {
@@ -176,6 +176,11 @@ export default function MyRoomMatePage() {
 
   const [currentIndex, setCurrentIndex] = useState(0);
 
+  // 슬라이더 참조
+  const sliderRef = useRef<HTMLDivElement>(null);
+  const indexRef = useRef(0);
+  const totalSlides = 2;
+
   const handleUploadImage = async () => {
     console.log("이미지 업로드 시도");
 
@@ -192,6 +197,14 @@ export default function MyRoomMatePage() {
         setMyTimetableImageUrl(newImageUrl);
         setShowImgConfirmModal(false);
         setIsNeedReload(!isNeedReload);
+
+        // 내 시간표 슬라이드로 이동
+        if (sliderRef.current) {
+          sliderRef.current.scrollTo({
+            left: sliderRef.current.clientWidth, // 인덱스 1 위치로 스크롤
+            behavior: "smooth",
+          });
+        }
       } else {
         alert("이미지 업로드 실패");
       }
@@ -201,7 +214,7 @@ export default function MyRoomMatePage() {
     }
   };
 
-  // 이미지 선택 핸들러
+  // 이미지 선택 처리
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -214,10 +227,6 @@ export default function MyRoomMatePage() {
     }
   };
 
-  const sliderRef = useRef<HTMLDivElement>(null);
-  const indexRef = useRef(0);
-  const totalSlides = 2;
-
   useEffect(() => {
     const slider = sliderRef.current;
     if (!slider) return;
@@ -226,7 +235,7 @@ export default function MyRoomMatePage() {
       if (!slider) return;
       const newIndex = Math.round(slider.scrollLeft / slider.clientWidth);
       indexRef.current = newIndex;
-      setCurrentIndex(newIndex); // ← 상태 업데이트
+      setCurrentIndex(newIndex); // 상태 업데이트
     };
 
     slider.addEventListener("scroll", handleManualScroll);
@@ -307,11 +316,11 @@ export default function MyRoomMatePage() {
           style={{ display: "none" }}
           onChange={(e) => {
             handleImageChange(e);
-            e.target.value = ""; // 이거 추가해서 input 초기화
+            e.target.value = ""; // 입력값 초기화
           }}
         />
 
-        {/* 시간표 추가 버튼 (input 트리거) */}
+        {/* 시간표 추가 버튼 */}
         <IconTextButton type="addtimetable" menuItems={timetableMenuItems} />
 
         <div
@@ -371,7 +380,7 @@ export default function MyRoomMatePage() {
           </IndicatorWrapper>
         </div>
 
-        {/* 규칙 편집 관련 버튼 기능 제거 */}
+        {/* 규칙 편집 버튼 */}
         <IconTextButton
           type="createrules"
           onClick={() => {
@@ -436,7 +445,7 @@ const MyRoomMatePageWrapper = styled.div`
   background: #fafafa;
 `;
 
-// 클릭 막고, 회색 반투명 오버레이 씌우는 래퍼
+// 비활성화 래퍼
 const DisabledWrapper = styled.div<{ disabled: boolean }>`
   position: relative;
 
@@ -462,7 +471,7 @@ const FullWidthSlider = styled.div`
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
   width: 100%;
-  position: relative; /* ← 플로팅을 위한 설정 */
+  position: relative; /* 플로팅 설정 */
   -ms-overflow-style: none; /* IE */
   scrollbar-width: none; /* Firefox */
 
@@ -544,7 +553,7 @@ const Modal = styled.div`
   img {
     width: 100%;
     height: auto;
-    max-height: 300px; // 버튼 영역 침범 방지
+    max-height: 300px; // 영역 침범 방지
     object-fit: contain;
   }
 
