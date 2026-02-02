@@ -97,7 +97,7 @@ export default function BottomBar() {
       }
 
       try {
-        return;
+        // return; //피쳐플래그 버그로 인해 임시로 작동 해제
         const flagRes = await getFeatureFlagByKey("ROOMMATE_MATCHING");
         setIsMatchingActive(flagRes.data.flag);
       } catch (err) {
