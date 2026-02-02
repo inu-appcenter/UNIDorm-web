@@ -281,8 +281,10 @@ export default function RoomMatePage() {
       )}
       {!isMatchingActive && (
         <ComingSoonOverlay
-          message={"2025년 2학기 룸메이트 매칭 종료!"}
-          subMessage={"다음 룸메이트 매칭을 기대해 주세요."}
+          message={"2026년 1학기 룸메이트 매칭이 곧 시작돼요!"}
+          subMessage={
+            "2월 4일(수)부터 진행될 예정이에요. 오픈되면 푸시알림으로 알려드릴게요."
+          }
         />
       )}
 
