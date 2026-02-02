@@ -39,7 +39,7 @@ const FilterButton: React.FC<FilterButtonProps> = ({
       >
         <path d="M3 5h18v2l-7 7v5l-4-2v-3L3 7V5z" />
       </svg>
-      필터
+      검색
     </StyledButton>
   );
 };

@@ -18,6 +18,7 @@ type MessageType = {
   content: string;
   time: string; // 화면 표시용 시간 (예: 오후 2:30)
   createdAt: string; // 날짜 비교용 원본 날짜 문자열 (ISO 등)
+  userImageUrl?: string | null; // 프로필 이미지 URL NULL 구분
 };
 
 export default function ChattingPage() {
@@ -94,10 +95,12 @@ export default function ChattingPage() {
         try {
           const response = await getRoommateChatHistory(roomId);
           const chats = response.data;
+          // 기존 API 데이터
           const formattedMessages: MessageType[] = chats.map((chat) => ({
             id: chat.roommateChatId,
             sender: chat.userId === userId ? "me" : "other",
             content: chat.content,
+            userImageUrl: chat.userImageUrl, // 프로필 이미지 URL 추가
             time: new Date(chat.createdDate).toLocaleTimeString("ko-KR", {
               hour: "2-digit",
               minute: "2-digit",
@@ -105,6 +108,7 @@ export default function ChattingPage() {
             }),
             createdAt: chat.createdDate, // API에서 받은 날짜 저장
           }));
+
           setMessageList(formattedMessages);
         } catch (error) {
           console.error("채팅 내역 불러오기 실패:", error);
@@ -243,7 +247,11 @@ export default function ChattingPage() {
               {msg.sender === "me" ? (
                 <ChatItemMy content={msg.content} time={msg.time} />
               ) : (
-                <ChatItemOtherPerson content={msg.content} time={msg.time} />
+                <ChatItemOtherPerson
+                  content={msg.content}
+                  time={msg.time}
+                  userImageUrl={msg.userImageUrl}
+                />
               )}
             </React.Fragment>
           );

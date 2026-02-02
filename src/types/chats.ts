@@ -27,4 +27,5 @@ export interface RoommateChat {
   userId: number;
   content: string;
   read: boolean;
+  userImageUrl: string | null;
 }
