@@ -4,12 +4,19 @@ import profile from "../../assets/profileimg.png";
 type Props = {
   content: string;
   time: string;
+  userImageUrl?: string | null;
 };
 
-const ChatItemOtherPerson = ({ content, time }: Props) => {
+const ChatItemOtherPerson = ({ content, time, userImageUrl }: Props) => {
   return (
     <ChatItemOtherPersonWrapper>
-      <ProfileImg src={profile} alt="상대방"></ProfileImg>
+      <ProfileImg
+        src={userImageUrl && userImageUrl !== "string" ? userImageUrl : profile}
+        alt="상대방"
+        onError={(e) => {
+          e.currentTarget.src = profile;
+        }}
+      />
       <ContentArea>
         <div className="message">{content}</div>
       </ContentArea>
@@ -38,6 +45,8 @@ const ProfileImg = styled.img`
   width: 30px;
   height: 30px;
   border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
 `;
 const ContentArea = styled.div`
   //flex: 1;
