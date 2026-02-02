@@ -1,8 +1,8 @@
 import styled from "styled-components";
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import { Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { OptionResult } from "@/types/formTypes";
 
-// --- 차트 색상 (요청하신 색상 포함 및 계열 색상 추가) ---
+// --- 차트 색상 ---
 export const COLORS = [
   "#1F78B4", // 요청
   "#A6CEE3", // 요청
@@ -22,16 +22,17 @@ interface ChartProps {
 }
 
 const MultipleChoiceResultChart: React.FC<ChartProps> = ({ data }) => {
-  // 데이터가 비어있거나 모든 카운트가 0인 경우 차트 대신 메시지 표시
+  // 데이터 유무 확인
   const hasData = data.some((item) => item.count > 0);
 
   if (!hasData) {
     return <EmptyChartMessage>응답 기록이 없습니다.</EmptyChartMessage>;
   }
 
-  // [수정 1] TS2322 해결: recharts가 인식할 수 있도록 데이터를 새 배열로 매핑
-  const chartData = data.map((item) => ({
+  // 데이터 가공 및 색상 주입 (Cell 컴포넌트 대체)
+  const chartData = data.map((item, index) => ({
     ...item,
+    fill: COLORS[index % COLORS.length],
   }));
 
   return (
@@ -39,28 +40,26 @@ const MultipleChoiceResultChart: React.FC<ChartProps> = ({ data }) => {
       <ResponsiveContainer width="100%" height={300}>
         <PieChart>
           <Pie
-            data={chartData} // [수정 2] data 대신 chartData 사용
+            data={chartData}
             cx="50%"
             cy="50%"
             labelLine={false}
             outerRadius={100}
-            fill="#8884d8"
             dataKey="count"
             nameKey="optionText"
-          >
-            {/* [수정 3] chartData로 매핑하고, TS6133 해결 (entry -> _) */}
-            {chartData.map((_, index) => (
-              <Cell
-                key={`cell-${index}`}
-                fill={COLORS[index % COLORS.length]}
-              />
-            ))}
-          </Pie>
+            // fill 속성은 데이터 객체 내부 값 자동 적용
+          />
           <Tooltip
-            formatter={(value: number, name: string) => {
-              // 툴팁 로직은 원본 data를 사용해도 문제없습니다.
-              const item = data.find((d) => d.optionText === name);
-              return `${value}명 (${item?.percentage.toFixed(1)}%)`;
+            // [수정] TS2322 해결: value와 name 모두 undefined 허용 타입으로 변경
+            formatter={(
+              value: number | string | undefined,
+              name: string | number | undefined,
+            ) => {
+              const safeValue = Number(value) || 0;
+              const safeName = String(name || "");
+              const item = data.find((d) => d.optionText === safeName);
+
+              return `${safeValue}명 (${item?.percentage.toFixed(1)}%)`;
             }}
           />
         </PieChart>
@@ -75,7 +74,7 @@ export default MultipleChoiceResultChart;
 
 const ChartWrapper = styled.div`
   width: 100%;
-  height: 300px; // 차트 높이 고정
+  height: 300px;
   margin-top: 16px;
 `;
 

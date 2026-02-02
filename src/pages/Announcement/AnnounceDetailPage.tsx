@@ -19,7 +19,7 @@ import {
   TypeBadge,
   UrgentBadge,
 } from "@/styles/announcement";
-import CommonBottomModal from "../../components/modal/CommonBottomModal.tsx";
+import CommonBottomSheet from "src/components/modal/CommonBottomSheet.tsx";
 import { getLabelByValue } from "@/utils/announceUtils";
 import { useSetHeader } from "@/hooks/useSetHeader";
 
@@ -211,7 +211,7 @@ export default function AnnounceDetailPage() {
       </Content>
       {/*</ScrollArea>*/}
 
-      <CommonBottomModal
+      <CommonBottomSheet
         id={"이미지보기"}
         isOpen={showInfoModal}
         setIsOpen={setShowInfoModal}
@@ -223,7 +223,7 @@ export default function AnnounceDetailPage() {
             alt="미리보기"
           />
         </div>
-      </CommonBottomModal>
+      </CommonBottomSheet>
     </Wrapper>
   );
 }

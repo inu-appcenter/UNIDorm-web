@@ -73,6 +73,11 @@ const AdminMainPage: React.FC = () => {
       path: "/admin/feature-flag",
       description: "기능 오픈 여부를 관리할 수 있습니다.",
     },
+    {
+      label: "서비스 이용 통계",
+      path: "/admin/statistics",
+      description: "서비스 이용 통계를 조회할 수 있습니다.",
+    },
   ];
 
   // SUPPORTERS인 경우 특정 페이지만 표시
@@ -90,7 +95,6 @@ const AdminMainPage: React.FC = () => {
 
   return (
     <Wrapper>
-      <Title>관리자 기능 선택</Title>
       <MenuGrid>
         {adminPages.map((page) => (
           <MenuCard key={page.path} onClick={() => navigate(page.path)}>
@@ -124,13 +128,6 @@ export const Wrapper = styled.div`
   margin: 0 auto;
   flex: 1;
   width: 100%;
-`;
-
-const Title = styled.h2`
-  margin-bottom: 20px;
-  font-weight: 700;
-  font-size: 1.5rem;
-  color: #333;
 `;
 
 const MenuGrid = styled.div`
