@@ -2,7 +2,7 @@
 
 import { FC } from "react";
 import styled from "styled-components";
-import 눈물닦아주는횃불이 from "../../assets/눈물 닦아주는 횃불이.webp";
+import 횃불이이미지 from "../../assets/호랑이 횃불이_2.webp";
 
 // 1. Props 타입 정의 (스타일 컴포넌트에도 사용됨)
 interface ComingSoonOverlayProps {
@@ -26,7 +26,7 @@ const ComingSoonOverlay: FC<ComingSoonOverlayProps> = ({
 
       {/* 2. 중앙 콘텐츠 */}
       <ContentContainer>
-        <ComingSoonImage src={눈물닦아주는횃불이} alt={imageAlt} />
+        <ComingSoonImage src={횃불이이미지} alt={imageAlt} />
         <MessageWrapper>
           <MessageText>{message}</MessageText>
           <SubMessageText>{subMessage}</SubMessageText>
@@ -73,26 +73,27 @@ const BlurryBackground = styled.div`
 
 // 2-3. 중앙에 위치할 이미지와 메시지를 감싸는 컨테이너
 const ContentContainer = styled.div`
-  z-index: 2; /* 블러 배경보다 위에 위치 */
+  z-index: 2;
   text-align: center;
-  //padding: 30px 40px;
-  //box-sizing: border-box;
-  //background-color: #ffffff;
-  //border-radius: 12px;
-  //box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  padding: 0 16px;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
-  /* 애니메이션 추가 (선택 사항) */
+
   transform: translateY(0);
   transition: transform 0.3s ease-out;
 
   gap: 24px;
+
+  word-break: keep-all; /* 단어 단위 줄바꿈 */
+  overflow-wrap: break-word; /* 너무 긴 단어만 예외적으로 줄바꿈 */
 `;
 
 // 2-4. Coming Soon 이미지 스타일
 const ComingSoonImage = styled.img`
-  width: 50%;
+  width: 60%;
+  max-width: 600px;
   //height: 120px;
   object-fit: contain;
 `;
