@@ -51,12 +51,11 @@ const MultipleChoiceResultChart: React.FC<ChartProps> = ({ data }) => {
           />
           <Tooltip
             // [수정] TS2322 해결: value와 name 모두 undefined 허용 타입으로 변경
-            formatter={(
-              value: number | string | undefined,
-              name: string | number | undefined,
-            ) => {
+            formatter={(value: number | string, name: string) => {
+              // undefined 체크를 제거하거나 기본값 처리를 함수 내부에서 수행
               const safeValue = Number(value) || 0;
               const safeName = String(name || "");
+
               const item = data.find((d) => d.optionText === safeName);
 
               return `${safeValue}명 (${item?.percentage.toFixed(1)}%)`;
