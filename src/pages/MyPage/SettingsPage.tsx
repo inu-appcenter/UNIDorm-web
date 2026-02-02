@@ -55,7 +55,7 @@ const SettingsPage = () => {
           title="앱 정보"
           menus={[
             {
-              label: "버전 v 1.7.0",
+              label: "버전 v 1.7.1",
               onClick: () => setClickCount((prev) => prev + 1),
             },
             ...(showFcm
