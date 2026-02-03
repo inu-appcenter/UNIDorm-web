@@ -46,6 +46,28 @@ export const getNotifications = async (): Promise<
 };
 
 /**
+ * 사용자 알림 목록 무한스크롤 조회 (조회 시 자동 읽음 처리)
+ * @param lastId 마지막 조회 알림 ID (커서)
+ * @param size 조회 개수
+ * @returns AxiosResponse<Notification[]>
+ */
+export const getNotificationsScroll = async (
+  lastId: number | null,
+  size: number = 20,
+): Promise<AxiosResponse<Notification[]>> => {
+  const response = await tokenInstance.get<Notification[]>(
+    "/notifications/scroll",
+    {
+      params: {
+        lastId,
+        size,
+      },
+    },
+  );
+  return response;
+};
+
+/**
  * 알림 ID로 특정 알림의 상세 정보를 조회합니다. (GET /notifications/{notificationId})
  * @param notificationId 조회할 알림의 ID
  * @returns AxiosResponse<Notification>

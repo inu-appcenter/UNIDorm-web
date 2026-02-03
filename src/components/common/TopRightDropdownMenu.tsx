@@ -87,7 +87,7 @@ const Dropdown = styled.div`
   position: absolute;
   top: 36px; /* 메뉴 버튼 아래로 */
   right: 0;
-  z-index: 1000;
+  z-index: 9999;
 
   background-color: white;
   border-radius: 16px;

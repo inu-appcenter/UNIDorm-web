@@ -20,9 +20,11 @@ import {
 } from "@/constants/announcement";
 import { useIsAdminRole } from "@/hooks/useIsAdminRole";
 import { useSetHeader } from "@/hooks/useSetHeader";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function AnnounceWritePage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const location = useLocation();
   const { announce, announceFiles } = location.state || {};
 
@@ -85,6 +87,13 @@ export default function AnnounceWritePage() {
         await createAnnouncement(data, files);
         alert("공지사항이 성공적으로 등록되었습니다.");
       }
+
+      // ✅ 성공 시 무한 스크롤 쿼리 키 무효화
+      // ["announcements", "scroll"]로 시작하는 모든 카테고리/검색 결과 쿼리를 새로고침함
+      await queryClient.invalidateQueries({
+        queryKey: ["announcements", "scroll"],
+      });
+
       navigate(-1);
     } catch (error) {
       console.error("공지사항 처리 실패:", error);

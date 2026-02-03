@@ -421,7 +421,7 @@ export default function RoomMatePage() {
 
       {isLoggedIn && (
         <WriteButton onClick={() => navigate(PATHS.ROOMMATE.CHECKLIST)}>
-          ✏️ 내 사전 체크리스트 {!hasChecklist ? "작성" : "수정"}
+          ✏️ 내 체크리스트 {!hasChecklist ? "작성" : "수정"}
         </WriteButton>
       )}
     </RoomMatePageWrapper>

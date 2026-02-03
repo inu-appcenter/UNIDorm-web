@@ -18,7 +18,7 @@ export const ContentContainer = styled.main<{
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding-top: ${({ $hasHeader }) => ($hasHeader ? "80px" : "0")};
+  padding-top: ${({ $hasHeader }) => ($hasHeader ? "70px" : "0")};
   padding-bottom: ${({ $hasBottomBar }) => ($hasBottomBar ? "90px" : "0")};
   box-sizing: border-box;
 
