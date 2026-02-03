@@ -1,7 +1,7 @@
 import styled from "styled-components";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { BsEye } from "react-icons/bs";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../../constants/EmptyMessage.tsx";
 import { useIsAdminRole } from "@/hooks/useIsAdminRole";
@@ -39,19 +39,44 @@ import type { AnnouncementPost } from "@/types/announcements";
 
 export default function AnnouncementPage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { isAdmin } = useIsAdminRole();
   const { ref, inView } = useInView();
 
-  const [selectedCategory, setSelectedCategory] =
-    useState<(typeof ANNOUNCE_CATEGORY_LIST)[number]["value"]>("ALL");
+  // 스크롤 컨테이너 ref
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  const [selectedSubCategory, setSelectedSubCategory] = useState(0);
+  const selectedCategory = (searchParams.get("tab") ||
+    "ALL") as (typeof ANNOUNCE_CATEGORY_LIST)[number]["value"];
+
+  const selectedSubValue = searchParams.get("sub");
+
+  const selectedSubCategoryIndex = useMemo(() => {
+    if (!selectedSubValue) return 0;
+    const index = ANNOUNCE_SUB_CATEGORY_LIST.findIndex(
+      (item) => item.value === selectedSubValue,
+    );
+    return index >= 0 ? index : 0;
+  }, [selectedSubValue]);
 
   const handleCategoryClick = (
     category: (typeof ANNOUNCE_CATEGORY_LIST)[number]["value"],
   ) => {
-    setSelectedCategory(category);
-    setSelectedSubCategory(0);
+    setSearchParams({ tab: category }, { replace: true });
+  };
+
+  const handleSubCategoryClick = (index: number) => {
+    const subValue = ANNOUNCE_SUB_CATEGORY_LIST[index]?.value;
+
+    setSearchParams((prev) => {
+      const newParams = new URLSearchParams(prev);
+      if (subValue && subValue !== "ALL") {
+        newParams.set("sub", subValue);
+      } else {
+        newParams.delete("sub");
+      }
+      return newParams;
+    });
   };
 
   const [search, setSearch] = useState("");
@@ -63,8 +88,19 @@ export default function AnnouncementPage() {
 
   const subCategoryValue = useMemo(() => {
     if (selectedCategory !== "DORMITORY") return "ALL";
-    return ANNOUNCE_SUB_CATEGORY_LIST[selectedSubCategory]?.value ?? "ALL";
-  }, [selectedCategory, selectedSubCategory]);
+    return selectedSubValue || ANNOUNCE_SUB_CATEGORY_LIST[0].value;
+  }, [selectedCategory, selectedSubValue]);
+
+  // 탭/서브탭 변경 시 스크롤 최상단 이동 (Window + Element 모두 대응)
+  useEffect(() => {
+    // 1. 전체 윈도우 스크롤 초기화
+    window.scrollTo(0, 0);
+
+    // 2. 내부 컨테이너 스크롤 초기화
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = 0;
+    }
+  }, [selectedCategory, subCategoryValue]);
 
   const pageSize = 10;
 
@@ -94,12 +130,11 @@ export default function AnnouncementPage() {
     initialPageParam: undefined as number | undefined,
     getNextPageParam: (lastPage: AnnouncementPost[]) => {
       if (!lastPage || lastPage.length < pageSize) return undefined;
-      return lastPage[lastPage.length - 1].id; // ✅ lastId
+      return lastPage[lastPage.length - 1].id;
     },
     staleTime: 1000 * 60 * 5,
   });
 
-  // 바닥으로 오면 다음 페이지로
   useEffect(() => {
     if (inView && hasNextPage && !isFetchingNextPage) fetchNextPage();
   }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
@@ -108,7 +143,6 @@ export default function AnnouncementPage() {
     return (data?.pages.flat() ?? []) as AnnouncementPost[];
   }, [data]);
 
-  //검색 실행 시
   const handleSearchSubmit = () => {
     const rawTerm = search;
     const trimmedTerm = search.trim();
@@ -126,12 +160,11 @@ export default function AnnouncementPage() {
       JSON.stringify(updatedSearches),
     );
 
-    setSearch(trimmedTerm); //이거 다시 한번 체크
+    setSearch(trimmedTerm);
   };
 
-  // 최근 검색어 삭제
   const handleDeleteRecent = (e: React.MouseEvent, term: string) => {
-    e.stopPropagation(); // 클릭 이벤트 전파 막기
+    e.stopPropagation();
 
     const updatedSearches = recentSearches.filter((item) => item !== term);
     setRecentSearches(updatedSearches);
@@ -163,15 +196,15 @@ export default function AnnouncementPage() {
   useSetHeader(headerConfig);
 
   return (
-    <NoticePageWrapper>
+    <NoticePageWrapper ref={scrollRef}>
       {selectedCategory === "DORMITORY" && (
         <FilterWrapper>
           <SelectableChipGroup
             Groups={ANNOUNCE_SUB_CATEGORY_LIST.map((option) => option.label.ko)}
-            selectedIndex={selectedSubCategory}
-            onSelect={setSelectedSubCategory}
+            selectedIndex={selectedSubCategoryIndex}
+            onSelect={handleSubCategoryClick}
             unselectable
-            rowScrollable={true} //가로 한줄로 스크롤
+            rowScrollable={true}
           />
         </FilterWrapper>
       )}
@@ -188,11 +221,6 @@ export default function AnnouncementPage() {
               if (e.key === "Enter") handleSearchSubmit();
             }}
             onFocus={() => setIsSearchFocused(true)}
-            // onBlur={() => {
-            //   setTimeout(() => {
-            //     setIsSearchFocused(false);
-            //   }, 100);
-            // }}
           />
         </SearchBar>
 
@@ -204,7 +232,7 @@ export default function AnnouncementPage() {
                 <Tag
                   key={term}
                   onClick={() => {
-                    setSearch(term); //클릭하면 자동으로 로딩??
+                    setSearch(term);
                   }}
                 >
                   {term}{" "}
@@ -219,7 +247,7 @@ export default function AnnouncementPage() {
           </RecentSearchWrapper>
         )}
       </SearchArea>
-      {/* 로딩 상태에 따라 스피너, 공지사항 목록, 빈 메시지를 조건부 렌더링합니다. */}
+
       {isLoading ? (
         <LoadingSpinner message="공지사항을 불러오는 중..." />
       ) : isError ? (
@@ -256,7 +284,6 @@ export default function AnnouncementPage() {
             ))}
           </NoticeList>
 
-          {/* sentinel */}
           <div ref={ref} style={{ height: "20px" }}>
             {isFetchingNextPage && (
               <LoadingSpinner message="추가 데이터 로딩 중..." />
@@ -284,10 +311,10 @@ const NoticePageWrapper = styled.div`
   box-sizing: border-box;
   overflow-y: auto;
   background: #fafafa;
-
   flex: 1;
 `;
 
+// ... 나머지 스타일 컴포넌트 생략 (이전과 동일)
 const NoticeList = styled.div`
   display: flex;
   flex-direction: column;
@@ -324,9 +351,10 @@ const NoticeTitle = styled.div`
   font-weight: 600;
   font-size: 14px;
   color: #1c1c1e;
+  padding-right: 8px;
 
   display: -webkit-box;
-  -webkit-line-clamp: 1; /* 한 줄 */
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -337,7 +365,7 @@ const NoticeContent = styled.div`
   color: #444;
 
   display: -webkit-box;
-  -webkit-line-clamp: 2; /* 두 줄 */
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
