@@ -14,7 +14,10 @@ import HomeNoticeBottomSheet from "src/components/modal/HomeNoticeBottomSheet.ts
 import HomeBanner from "../components/home/HomeBanner.tsx";
 import LoadingSpinner from "../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../constants/EmptyMessage.tsx";
-import { getAnnouncements } from "@/apis/announcements";
+import {
+  getAnnouncements,
+  getAnnouncementScrollList,
+} from "@/apis/announcements";
 import { Announcement } from "@/types/announcements";
 import useUserStore from "../stores/useUserStore.ts";
 import { getPopupNotifications } from "@/apis/popup-notification";
@@ -120,9 +123,14 @@ export default function HomePage() {
     async function fetchAnnouncements() {
       setIsAnnounceLoading(true);
       try {
-        const response = await getAnnouncements();
+        const response = await getAnnouncementScrollList(
+          "ALL",
+          "ALL",
+          "",
+          undefined,
+        );
         console.log("공지사항 불러오기 성공:", response);
-        setNotices(response.data);
+        setNotices(response);
       } catch (error) {
         console.error("공지사항 불러오기 실패", error);
       } finally {
