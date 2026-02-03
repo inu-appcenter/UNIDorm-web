@@ -299,6 +299,7 @@ const FixedHeaderContainer = styled.div`
   background: #f4f4f4;
   /* 크기가 줄어들거나 늘어나지 않도록 고정 */
   flex-shrink: 0;
+  z-index: 0;
 `;
 
 const ChattingWrapper = styled.div`
