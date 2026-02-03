@@ -46,7 +46,7 @@ export default function RoomMateFilterPage() {
     religion: [] as any,
   });
 
-  useSetHeader({ title: "맞춤 룸메이트 찾기 설정" });
+  useSetHeader({ title: "맞춤 룸메이트 설정" });
 
   useEffect(() => {
     const fetchFilterData = async () => {
@@ -214,7 +214,9 @@ export default function RoomMateFilterPage() {
         queryKey: ["roommates", "matching"],
       });
 
-      alert("맞춤 필터 설정이 완료되었습니다!");
+      alert(
+        "맞춤 필터 설정이 완료되었습니다!\n조건이 일치하는 새 글이 올라오면 알려드릴게요😊",
+      );
       navigate({
         pathname: PATHS.ROOMMATE.ROOT,
         search: "?tab=맞춤+룸메이트",
@@ -270,6 +272,11 @@ export default function RoomMateFilterPage() {
       {currentStep === 1 && (
         <StickyToggleArea>
           <ToggleLine checked={isFilterActive} onToggle={handleToggle} />
+          <DescriptionArea>
+            원하는 조건과 일치하는 글을 모아보고, 새 글이 올라오면 알림을 받을
+            수 있습니다. 너무 많은 필터 선택은 룸메이트를 구하기 어려울 수
+            있으니, 꼭 필요한 필터만 선택해주세요.
+          </DescriptionArea>
         </StickyToggleArea>
       )}
 
@@ -347,6 +354,16 @@ const ProgressFill = styled.div<{ width: number }>`
 const StickyToggleArea = styled.div`
   padding: 16px 16px 0;
   background: #fafafa;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+const DescriptionArea = styled.div`
+  padding: 0 16px;
+  box-sizing: border-box;
+  font-size: small;
+  color: gray;
 `;
 
 const StepHeaderArea = styled.div<{ $disabled?: boolean }>`

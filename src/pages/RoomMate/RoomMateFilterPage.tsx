@@ -31,28 +31,33 @@ export default function RoomMateFilterPage() {
   const { userInfo } = useUserStore();
   const navigate = useNavigate();
   const location = useLocation();
-  const roomId = location.state?.roomId;
-  const isViewerMode = !!roomId; // roomId 있으면 뷰어 모드
 
-  const getIndex = (
-    arr: string[],
-    value: string | undefined | null,
-  ): number | null => {
+  const roomId = location.state?.roomId;
+  const isViewerMode = !!roomId;
+  const filters = location.state?.filters;
+
+  /** Helper Functions */
+  const getIndex = (arr: string[], value: string | undefined | null) => {
     if (!value) return null;
     const idx = arr.indexOf(value);
     return idx === -1 ? null : idx;
   };
 
-  const getIndices = (
-    arr: string[],
-    values: string[] | undefined | null,
-  ): number[] => {
+  const getIndices = (arr: string[], values: string[] | undefined | null) => {
     if (!values) return [];
     return values.map((v) => arr.indexOf(v)).filter((i) => i !== -1);
   };
 
-  const filters = location.state?.filters;
+  const getMbtiIndex = (
+    group: string[],
+    savedMbti: string | undefined | null,
+  ) => {
+    if (!savedMbti) return null;
+    const found = group.find((g) => savedMbti.includes(g));
+    return found ? group.indexOf(found) : null;
+  };
 
+  // --- State ---
   const [dayIndices, setDayIndices] = useState<number[]>(() =>
     getIndices(days, filters?.dormPeriod),
   );
@@ -60,68 +65,83 @@ export default function RoomMateFilterPage() {
   const [domitoryIndex, setDomitoryIndex] = useState<number | null>(
     () =>
       getIndex(dormitory, filters?.dormType) ??
-      dormitory.indexOf(userInfo.dormType),
+      (isViewerMode ? null : dormitory.indexOf(userInfo.dormType)),
   );
 
   const [collegeIndex, setCollegeIndex] = useState<number | null>(() =>
     getIndex(colleges, filters?.college),
   );
 
-  // MBTI는 문자열이 4글자로 온다고 가정
   const [mbtiIndex1, setMbtiIndex1] = useState<number | null>(() =>
-    filters?.mbti ? getIndex(mbti1, filters.mbti[0]) : null,
+    getMbtiIndex(mbti1, filters?.mbti),
   );
   const [mbtiIndex2, setMbtiIndex2] = useState<number | null>(() =>
-    filters?.mbti ? getIndex(mbti2, filters.mbti[1]) : null,
+    getMbtiIndex(mbti2, filters?.mbti),
   );
   const [mbtiIndex3, setMbtiIndex3] = useState<number | null>(() =>
-    filters?.mbti ? getIndex(mbti3, filters.mbti[2]) : null,
+    getMbtiIndex(mbti3, filters?.mbti),
   );
   const [mbtiIndex4, setMbtiIndex4] = useState<number | null>(() =>
-    filters?.mbti ? getIndex(mbti4, filters.mbti[3]) : null,
+    getMbtiIndex(mbti4, filters?.mbti),
   );
 
   const [smokingIndex, setSmokingIndex] = useState<number | null>(() =>
     getIndex(smoking, filters?.smoking),
   );
-
   const [snoringIndex, setSnoringIndex] = useState<number | null>(() =>
     getIndex(snoring, filters?.snoring),
   );
-
   const [toothgrindingIndex, setToothgrindingIndex] = useState<number | null>(
     () => getIndex(toothgrinding, filters?.toothGrind),
   );
-
   const [isLightSleeperIndex, setIsLightSleeperIndex] = useState<number | null>(
     () => getIndex(isLightSleeper, filters?.sleeper),
   );
-
   const [showertimeIndex, setShowertimeIndex] = useState<number | null>(() =>
     getIndex(showertime, filters?.showerHour),
   );
-
   const [showerDurationIndex, setShowerDurationIndex] = useState<number | null>(
     () => getIndex(showerDuration, filters?.showerTime),
   );
-
   const [bedtimeIndex, setBedtimeIndex] = useState<number | null>(() =>
     getIndex(bedtime, filters?.bedTime),
   );
-
   const [organizationLevelIndex, setOrganizationLevelIndex] = useState<
     number | null
   >(() => getIndex(organizationLevel, filters?.arrangement));
-
   const [religionIndex, setReligionIndex] = useState<number | null>(() =>
     getIndex(religion, filters?.religion),
   );
 
+  /** ✅ 초기화 핸들러: 모든 선택 상태를 null/Empty로 변경 */
+  const handleReset = () => {
+    // 사용자 경험을 위해 confirm 없이 즉시 초기화하거나, 필요시 추가 가능
+    setDayIndices([]);
+    setDomitoryIndex(null); // 내 정보가 아닌 '전체'로 초기화
+    setCollegeIndex(null);
+    setMbtiIndex1(null);
+    setMbtiIndex2(null);
+    setMbtiIndex3(null);
+    setMbtiIndex4(null);
+    setSmokingIndex(null);
+    setSnoringIndex(null);
+    setToothgrindingIndex(null);
+    setIsLightSleeperIndex(null);
+    setShowertimeIndex(null);
+    setShowerDurationIndex(null);
+    setBedtimeIndex(null);
+    setOrganizationLevelIndex(null);
+    setReligionIndex(null);
+  };
+
+  /** ✅ 필터 적용 핸들러 */
   const handleSubmit = () => {
-    const filters = {
+    const selectedDays = dayIndices.map((i) => days[i]);
+
+    const filtersData = {
       dormType: domitoryIndex !== null ? dormitory[domitoryIndex] : null,
       college: collegeIndex !== null ? colleges[collegeIndex] : null,
-      dormPeriod: dayIndices.map((i) => days[i]),
+      dormPeriod: selectedDays.length > 0 ? selectedDays : null,
       mbti:
         [mbtiIndex1, mbtiIndex2, mbtiIndex3, mbtiIndex4]
           .map((idx, i) => {
@@ -130,6 +150,7 @@ export default function RoomMateFilterPage() {
             if (i === 1) return mbti2[idx];
             if (i === 2) return mbti3[idx];
             if (i === 3) return mbti4[idx];
+            return null;
           })
           .filter((v) => v !== null)
           .join("") || null,
@@ -152,18 +173,27 @@ export default function RoomMateFilterPage() {
         organizationLevelIndex !== null
           ? organizationLevel[organizationLevelIndex]
           : null,
-      religion: religionIndex !== null ? religion[religionIndex] : null, // ✅ 종교 필터 추가
+      religion: religionIndex !== null ? religion[religionIndex] : null,
     };
 
+    // 유효한 필터만 남김
     const filteredFilters = Object.fromEntries(
-      Object.entries(filters).filter(([, v]) => v !== null && v !== undefined),
+      Object.entries(filtersData).filter(
+        ([, v]) => v !== null && v !== undefined && v !== "",
+      ),
     );
 
-    navigate(`${PATHS.ROOMMATE.ROOT}?tab=전체+글`, {
-      state: {
-        filters: filteredFilters,
-      },
-    });
+    // ✅ 필터가 비어있다면 state 없이 이동 (초기화 효과)
+    if (Object.keys(filteredFilters).length === 0) {
+      navigate(`${PATHS.ROOMMATE.ROOT}?tab=전체`);
+    } else {
+      // 필터가 있다면 state에 담아서 이동
+      navigate(`${PATHS.ROOMMATE.ROOT}?tab=전체`, {
+        state: {
+          filters: filteredFilters,
+        },
+      });
+    }
   };
 
   useSetHeader({ title: "필터" });
@@ -177,6 +207,7 @@ export default function RoomMateFilterPage() {
             Groups={dormitory}
             selectedIndex={domitoryIndex}
             onSelect={setDomitoryIndex}
+            disabled={isViewerMode}
           />
         }
       />
@@ -187,6 +218,7 @@ export default function RoomMateFilterPage() {
             Groups={colleges}
             selectedIndex={collegeIndex}
             onSelect={setCollegeIndex}
+            disabled={isViewerMode}
           />
         }
       />
@@ -199,10 +231,12 @@ export default function RoomMateFilterPage() {
             selectedIndices={dayIndices}
             onSelect={setDayIndices}
             multi={true}
-            disabled={isViewerMode} // 뷰어 모드면 비활성화
+            disabled={isViewerMode}
           />
         }
       />
+
+      {/* MBTI 및 기타 필터 컴포넌트들 (기존 코드와 동일) */}
       <TitleContentArea
         title={"MBTI"}
         children={
@@ -234,7 +268,7 @@ export default function RoomMateFilterPage() {
           </>
         }
       />
-      {/* 나머지 항목들도 모두 disabled={isViewerMode} 처리 */}
+
       <TitleContentArea
         title={"흡연 여부"}
         children={
@@ -323,7 +357,6 @@ export default function RoomMateFilterPage() {
           />
         }
       />
-
       <TitleContentArea
         title={"종교"}
         children={
@@ -336,9 +369,25 @@ export default function RoomMateFilterPage() {
         }
       />
 
+      {/* ✅ 버튼 영역 수정: 초기화 & 적용하기 */}
       {!isViewerMode && (
         <ButtonWrapper>
-          <SquareButton text={"필터 적용하기"} onClick={handleSubmit} />
+          <ButtonGroup>
+            <div style={{ flex: 1 }}>
+              <SquareButton
+                variant="secondary"
+                text="초기화"
+                onClick={handleReset}
+              />
+            </div>
+            <div style={{ flex: 2.5 }}>
+              <SquareButton
+                variant="primary"
+                text="필터 적용하기"
+                onClick={handleSubmit}
+              />
+            </div>
+          </ButtonGroup>
         </ButtonWrapper>
       )}
     </RoomMateChecklistPageWrapper>
@@ -367,4 +416,10 @@ const ButtonWrapper = styled.div`
   background: rgba(244, 244, 244, 0.6);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+`;
+
+const ButtonGroup = styled.div`
+  display: flex;
+  gap: 8px;
+  width: 100%;
 `;

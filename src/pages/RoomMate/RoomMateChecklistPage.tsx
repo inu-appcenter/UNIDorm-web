@@ -34,10 +34,12 @@ import {
   toothgrinding,
 } from "@/constants/constants";
 import { useSetHeader } from "@/hooks/useSetHeader";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function RoomMateChecklistPage() {
   const { setUserInfo, userInfo } = useUserStore();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const TOTAL_STEPS = 4;
@@ -217,6 +219,10 @@ export default function RoomMateChecklistPage() {
 
       const { data } = await getMemberInfo();
       setUserInfo(data);
+
+      await queryClient.invalidateQueries({
+        queryKey: ["roommates", "matching"],
+      });
 
       alert(`체크리스트 ${userInfo.roommateCheckList ? "수정" : "등록"} 완료!`);
       navigate("/roommate");
