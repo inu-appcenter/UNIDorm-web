@@ -6,6 +6,7 @@ interface TitleContentAreaProps {
   link?: string;
   description?: string;
   margin?: string;
+  padding?: string;
   rightAction?: React.ReactNode; // 우측 배치용 프롭 추가
   children?: React.ReactNode;
 }
@@ -15,6 +16,7 @@ const TitleContentArea = ({
   link,
   description,
   margin,
+  padding,
   rightAction,
   children,
 }: TitleContentAreaProps) => {
@@ -24,7 +26,9 @@ const TitleContentArea = ({
         <TextGroup>
           <TitleLine title={title} link={link} />
           {description && (
-            <DescriptionText $margin={margin}>{description}</DescriptionText>
+            <DescriptionText $margin={margin} $padding={padding}>
+              {description}
+            </DescriptionText>
           )}
         </TextGroup>
         {rightAction && <ActionGroup>{rightAction}</ActionGroup>}
@@ -64,12 +68,13 @@ const ActionGroup = styled.div`
   margin-left: 16px;
 `;
 
-const DescriptionText = styled.p<{ $margin?: string }>`
+const DescriptionText = styled.p<{ $margin?: string; $padding?: string }>`
   font-size: 12px;
   color: #666;
   text-align: start;
   width: 100%;
-  margin: 0;
-  margin-bottom: ${({ $margin }) => $margin || "0"};
+  margin: ${({ $margin }) => $margin || "0"};
+  padding: ${({ $padding }) => $padding || "0"};
+  box-sizing: border-box;
   white-space: pre-line;
 `;

@@ -14,10 +14,7 @@ import HomeNoticeBottomSheet from "src/components/modal/HomeNoticeBottomSheet.ts
 import HomeBanner from "../components/home/HomeBanner.tsx";
 import LoadingSpinner from "../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../constants/EmptyMessage.tsx";
-import {
-  getAnnouncements,
-  getAnnouncementScrollList,
-} from "@/apis/announcements";
+import { getAnnouncementScrollList } from "@/apis/announcements";
 import { Announcement } from "@/types/announcements";
 import useUserStore from "../stores/useUserStore.ts";
 import { getPopupNotifications } from "@/apis/popup-notification";

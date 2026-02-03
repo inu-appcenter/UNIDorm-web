@@ -31,6 +31,7 @@ import {
 import { useSetHeader } from "@/hooks/useSetHeader";
 import { PATHS } from "@/constants/paths";
 import ToggleLine from "@/components/common/ToggleLine";
+import TitleContentArea from "@/components/common/TitleContentArea";
 
 export default function RoomMateFilterPage() {
   const navigate = useNavigate();
@@ -272,11 +273,12 @@ export default function RoomMateFilterPage() {
       {currentStep === 1 && (
         <StickyToggleArea>
           <ToggleLine checked={isFilterActive} onToggle={handleToggle} />
-          <DescriptionArea>
-            원하는 조건과 일치하는 글을 모아보고, 새 글이 올라오면 알림을 받을
-            수 있습니다. 너무 많은 필터 선택은 룸메이트를 구하기 어려울 수
-            있으니, 꼭 필요한 필터만 선택해주세요.
-          </DescriptionArea>
+          <TitleContentArea
+            description={
+              "원하는 조건과 일치하는 글을 모아보고, 새 글이 올라오면 알림을 받을 수 있습니다. 너무 많은 필터 선택은 룸메이트를 구하기 어려울 수 있으니, 꼭 필요한 필터만 선택해주세요."
+            }
+            padding={"0 16px"}
+          />
         </StickyToggleArea>
       )}
 
@@ -357,13 +359,6 @@ const StickyToggleArea = styled.div`
   display: flex;
   flex-direction: column;
   gap: 8px;
-`;
-
-const DescriptionArea = styled.div`
-  padding: 0 16px;
-  box-sizing: border-box;
-  font-size: small;
-  color: gray;
 `;
 
 const StepHeaderArea = styled.div<{ $disabled?: boolean }>`
