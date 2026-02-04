@@ -88,7 +88,7 @@ export const getRoomMateDetail = async (
 export const getRoommateLiked = async (
   boardId: number,
 ): Promise<AxiosResponse<boolean>> => {
-  const response = await axiosInstance.get<boolean>(
+  const response = await tokenInstance.get<boolean>(
     `/roommates/${boardId}/liked`,
   );
   console.log(response);

@@ -10,6 +10,7 @@ import {
   likeRoommateBoard,
   unlikeRoommateBoard,
 } from "@/apis/roommate";
+import { useQueryClient } from "@tanstack/react-query";
 
 const RoomMateBottomBar = ({
   partnerName,
@@ -19,6 +20,7 @@ const RoomMateBottomBar = ({
   userProfileImageUrl: string;
 }) => {
   const { boardId } = useParams<{ boardId: string }>();
+  const queryClient = useQueryClient();
 
   const { tokenInfo, userInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
@@ -65,6 +67,10 @@ const RoomMateBottomBar = ({
         setLiked(false);
         // 현재 좋아요 개수(res.data)를 필요하면 활용 가능
       }
+
+      await queryClient.invalidateQueries({
+        queryKey: ["roommates", "scroll"],
+      });
     } catch (error: any) {
       if (error.response) {
         const code = error.response.status;
