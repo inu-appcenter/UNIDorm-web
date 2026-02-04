@@ -221,7 +221,7 @@ export default function RoomMateChecklistPage() {
       setUserInfo(data);
 
       await queryClient.invalidateQueries({
-        queryKey: ["roommates", "matching"],
+        queryKey: ["roommates", "scroll"],
       });
 
       alert(`체크리스트 ${userInfo.roommateCheckList ? "수정" : "등록"} 완료!`);
