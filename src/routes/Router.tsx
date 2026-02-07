@@ -13,6 +13,7 @@ import OutPage from "@/pages/layouts/OutPage";
 import LoginPage from "@/pages/LoginPage";
 import LogoutPage from "@/pages/LogoutPage";
 import OnboardingPage from "@/pages/OnboardingPage";
+import FreshmanLoginPage from "@/pages/FreshmanLoginPage";
 
 /* 페이지 - 메인 5개 탭 (RootPage 하위) */
 import HomePage from "@/pages/HomePage";
@@ -104,7 +105,13 @@ export const router = createBrowserRouter([
       {
         element: <SubPage />,
         children: [
-          { path: "login", element: <LoginPage /> },
+          {
+            path: "login",
+            children: [
+              { path: "", element: <LoginPage /> }, // 기본 /login 경로
+              { path: "freshman", element: <FreshmanLoginPage /> }, // /login/freshman 경로 추가
+            ],
+          },
           {
             path: "agreement",
             element: <AgreementPage />,

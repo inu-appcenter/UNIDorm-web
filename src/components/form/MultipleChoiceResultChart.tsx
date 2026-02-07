@@ -51,16 +51,17 @@ const MultipleChoiceResultChart: React.FC<ChartProps> = ({ data }) => {
           <Tooltip
             // TS2322 해결: 인자 타입에 undefined 허용 및 안전한 형변환 적용
             formatter={(
-              value: number | string | undefined,
-              name: string | number | undefined,
+              value: any, // 기존 number | string | undefined 대신 any 사용
+              name: any,
             ) => {
               const safeValue = Number(value) || 0;
               const safeName = String(name || "");
-
               const item = data.find((d) => d.optionText === safeName);
-              const percentage = item ? item.percentage.toFixed(1) : "0.0";
 
-              return `${safeValue}명 (${percentage}%)`;
+              return [
+                `${safeValue}명 (${item?.percentage.toFixed(1)}%)`,
+                "", // name을 그대로 두려면 두 번째 인자로 전달하거나, 튜플 형태로 반환
+              ];
             }}
           />
         </PieChart>
