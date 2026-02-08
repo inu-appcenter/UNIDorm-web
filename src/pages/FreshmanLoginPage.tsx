@@ -59,7 +59,7 @@ export default function FreshmanLoginPage() {
     }
   };
 
-  useSetHeader({ title: "신입생 임시 계정 발급/로그인" });
+  useSetHeader({ title: "신입생 임시 로그인" });
 
   return (
     <FormWrapper onSubmit={handleIntegrateLogin}>
@@ -70,9 +70,8 @@ export default function FreshmanLoginPage() {
           학번이 없는 신입생을 위한 임시 로그인(가입)입니다. <br />
           신규 아이디인 경우 자동으로 회원가입 및 로그인됩니다.
           <br />
-          추후 학번이 부여되면 계정 통합 관련 안내가 진행될 예정입니다.
-          <br />
-          현재 로그인하신 아이디와 비밀번호를 꼭 기억해주세요!
+          추후 학번이 부여되면 계정 통합 관련 안내가 진행될 예정입니다. 현재
+          로그인하신 아이디와 비밀번호를 꼭 기억해주세요!
         </span>
 
         <InputGroup>
