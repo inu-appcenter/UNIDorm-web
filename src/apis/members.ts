@@ -73,8 +73,8 @@ export const deleteMembers = async (): Promise<number> => {
 export const signupFreshman = async (
   studentNumber: string,
   password: string,
-): Promise<AxiosResponse<void>> => {
-  const response = await axiosInstance.post<void>(`/users/freshman`, {
+): Promise<AxiosResponse<TokenInfo>> => {
+  const response = await axiosInstance.post<TokenInfo>(`/users/freshman`, {
     studentNumber,
     password,
   });
