@@ -55,16 +55,11 @@ export default function LoginPage() {
           인천대학교 포털 아이디, 비밀번호로 간편하게 로그인할 수 있어요.
         </span>
 
-        <h3>아이디</h3>
-        <StyledInput
-          placeholder="아이디를 입력하세요."
-          value={id}
-          onChange={(e) => setId(e.target.value)}
-        />
+        <h3>학번(사번)</h3>
+        <StyledInput value={id} onChange={(e) => setId(e.target.value)} />
         <h3>비밀번호</h3>
         <StyledInput
           type="password"
-          placeholder="영문, 숫자 조합 8~16자"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
@@ -81,7 +76,7 @@ export default function LoginPage() {
         <FreshmanLinkWrapper>
           <span>신입생이신가요?</span>
           <button type="button" onClick={() => navigate("/login/freshman")}>
-            신입생 로그인 및 회원가입
+            신입생 임시 계정 발급/로그인
           </button>
         </FreshmanLinkWrapper>
       </ButtonWrapper>

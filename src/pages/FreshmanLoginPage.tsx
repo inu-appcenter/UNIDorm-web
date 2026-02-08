@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import StyledInput from "../components/common/StyledInput.tsx";
 import SquareButton from "../components/common/SquareButton.tsx";
 import React, { useState } from "react";
-import { signupFreshman, login } from "@/apis/members";
+import { signupFreshman } from "@/apis/members";
 import useUserStore from "../stores/useUserStore.ts";
 import LoadingSpinner from "../components/common/LoadingSpinner.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
@@ -12,50 +12,54 @@ export default function FreshmanLoginPage() {
   const navigate = useNavigate();
   const { setTokenInfo } = useUserStore();
 
-  // API 명세(studentNumber)에 맞춰 상태 이름 변경
   const [studentNumber, setStudentNumber] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const isFilled = () => studentNumber.trim() !== "" && password.trim() !== "";
+  // 영문 또는 영문+숫자 5자 이상
+  const idRegex = /^[a-zA-Z0-9]{5,}$/;
+  // 영문, 숫자 필수 포함 및 특수문자 허용 5자 이상
+  const pwRegex = /^(?=.*[a-zA-Z])(?=.*[0-9]).{5,}$/;
+
+  const isValidId = idRegex.test(studentNumber);
+  const isValidPw = pwRegex.test(password);
 
   const handleIntegrateLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isFilled()) return;
+    if (!isValidId || !isValidPw) return;
 
-    setIsLoading(true);
+    if (
+      !window.confirm(
+        `입력하신 정보는 다음과 같습니다.\n아이디:${studentNumber}\n비밀번호:${password}\n입력하신 아이디와 비밀번호는 수정이 어렵고 분실 시 찾기 어려우니, 다시한번 꼭 확인해주세요.\n추후 학번이 부여되면 계정 통합에 대해 안내 드리겠습니다.\n\n입력하신 정보로 로그인(회원가입)할까요?`,
+      )
+    ) {
+      return;
+    }
+
     try {
-      // 1. 회원가입 시도 (이미 가입된 경우 에러가 발생하므로 try-catch로 감싸기)
-      try {
-        await signupFreshman(studentNumber, password);
-      } catch (signupError: any) {
-        // 400(Bad Request)이나 409(Conflict) 등 이미 가입된 계정인 경우 무시하고 진행
-        console.log("이미 가입된 계정이거나 가입 단계 건너뜀");
-      }
+      setIsLoading(true);
 
-      // 2. 로그인 시도
-      const response = await login(studentNumber, password);
-
-      if (response.status === 201 || response.status === 200) {
+      const response = await signupFreshman(studentNumber, password);
+      if (response.status === 201) {
         const tokenInfo = response.data;
-
-        // 토큰 및 사용자 정보 저장
         localStorage.setItem("accessToken", tokenInfo.accessToken);
         localStorage.setItem("refreshToken", tokenInfo.refreshToken);
         localStorage.setItem("role", tokenInfo.role);
-
         setTokenInfo(tokenInfo);
+
         navigate("/home");
+      } else {
+        alert("로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.");
       }
-    } catch (loginError: any) {
-      // 회원가입 실패 후 로그인도 실패한 경우 (비밀번호 불일치 등)
-      alert("로그인에 실패했습니다. 비밀번호를 확인하거나 다시 시도해주세요.");
+    } catch (error) {
+      alert("로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.");
+      console.error(error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  useSetHeader({ title: "신입생 로그인/가입" });
+  useSetHeader({ title: "신입생 임시 계정 발급/로그인" });
 
   return (
     <FormWrapper onSubmit={handleIntegrateLogin}>
@@ -63,31 +67,49 @@ export default function FreshmanLoginPage() {
 
       <div>
         <span className="description">
-          학번이 없는 신입생을 위한 전용 페이지입니다.
+          학번이 없는 신입생을 위한 임시 로그인(가입)입니다. <br />
+          신규 아이디인 경우 자동으로 회원가입 및 로그인됩니다.
           <br />
-          아이디가 없으면 자동으로 생성 후 로그인됩니다.
+          추후 학번이 부여되면 계정 통합 관련 안내가 진행될 예정입니다.
+          <br />
+          현재 로그인하신 아이디와 비밀번호를 꼭 기억해주세요!
         </span>
 
-        <h3>아이디 (임시)</h3>
-        <StyledInput
-          placeholder="아이디를 입력하세요."
-          value={studentNumber}
-          onChange={(e) => setStudentNumber(e.target.value)}
-        />
-        <h3>비밀번호</h3>
-        <StyledInput
-          type="password"
-          placeholder="비밀번호를 입력하세요."
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+        <InputGroup>
+          <h3>아이디 (임시)</h3>
+          <StyledInput
+            placeholder="영문 또는 영문+숫자 5자 이상"
+            value={studentNumber}
+            onChange={(e) => setStudentNumber(e.target.value)}
+          />
+          {studentNumber.length > 0 && !isValidId && (
+            <ErrorMessage>
+              영문 또는 숫자를 포함하여 5자리 이상 입력해주세요.
+            </ErrorMessage>
+          )}
+        </InputGroup>
+
+        <InputGroup>
+          <h3>비밀번호</h3>
+          <StyledInput
+            type="password"
+            placeholder="영문, 숫자 포함 5자 이상 (특수문자 가능)"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          {password.length > 0 && !isValidPw && (
+            <ErrorMessage>
+              영문과 숫자를 조합하여 5자리 이상 입력해주세요. (특수문자 가능)
+            </ErrorMessage>
+          )}
+        </InputGroup>
       </div>
 
       <ButtonWrapper>
         <SquareButton
           text="로그인 및 시작하기"
           type="submit"
-          disabled={!isFilled() || isLoading}
+          disabled={!isValidId || !isValidPw || isLoading}
         />
       </ButtonWrapper>
     </FormWrapper>
@@ -96,6 +118,7 @@ export default function FreshmanLoginPage() {
 
 const FormWrapper = styled.form`
   padding: 0 16px;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -104,7 +127,24 @@ const FormWrapper = styled.form`
     font-size: 14px;
     color: #666;
     line-height: 1.5;
+    margin-bottom: 10px;
+    display: block;
   }
+`;
+
+const InputGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 15px;
+  h3 {
+    margin-bottom: 8px;
+  }
+`;
+
+const ErrorMessage = styled.span`
+  color: #ff4d4f;
+  font-size: 12px;
+  margin-top: 4px;
 `;
 
 const ButtonWrapper = styled.div`
