@@ -69,6 +69,18 @@ export const deleteMembers = async (): Promise<number> => {
   return response.status;
 };
 
+// 신입생 회원가입 및 로그인
+export const signupFreshman = async (
+  studentNumber: string,
+  password: string,
+): Promise<AxiosResponse<TokenInfo>> => {
+  const response = await axiosInstance.post<TokenInfo>(`/users/freshman`, {
+    studentNumber,
+    password,
+  });
+  return response;
+};
+
 // 로그인
 export const login = async (
   studentNumber: string,

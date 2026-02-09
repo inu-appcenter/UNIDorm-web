@@ -12,7 +12,7 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const [id, setId] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false); // 로딩 상태
+  const [isLoading, setIsLoading] = useState(false);
   const { setTokenInfo } = useUserStore();
 
   const isFilled = () => {
@@ -21,28 +21,17 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isFilled()) return;
 
-    if (!isFilled()) {
-      return;
-    }
-
-    setIsLoading(true); // ✅ 로그인 시작 시 로딩 상태 true 설정
-
+    setIsLoading(true);
     try {
       const response = await login(id, password);
-      console.log(response);
-
       if (response.status === 201) {
         const tokenInfo = response.data;
-        console.log(tokenInfo);
-
-        // 토큰 로컬스토리지에 저장
         localStorage.setItem("accessToken", tokenInfo.accessToken);
         localStorage.setItem("refreshToken", tokenInfo.refreshToken);
         localStorage.setItem("role", tokenInfo.role);
-
         setTokenInfo(tokenInfo);
-
         navigate("/home");
       } else {
         alert("로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.");
@@ -66,16 +55,11 @@ export default function LoginPage() {
           인천대학교 포털 아이디, 비밀번호로 간편하게 로그인할 수 있어요.
         </span>
 
-        <h3>아이디</h3>
-        <StyledInput
-          placeholder="아이디를 입력하세요."
-          value={id}
-          onChange={(e) => setId(e.target.value)}
-        />
+        <h3>학번(사번)</h3>
+        <StyledInput value={id} onChange={(e) => setId(e.target.value)} />
         <h3>비밀번호</h3>
         <StyledInput
           type="password"
-          placeholder="영문, 숫자 조합 8~16자"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
@@ -87,6 +71,14 @@ export default function LoginPage() {
           type="submit"
           disabled={!isFilled() || isLoading}
         />
+
+        {/* 추가된 신입생 전용 링크 섹션 */}
+        <FreshmanLinkWrapper>
+          <span>신입생이신가요?</span>
+          <button type="button" onClick={() => navigate("/login/freshman")}>
+            신입생 임시 계정 발급/로그인
+          </button>
+        </FreshmanLinkWrapper>
       </ButtonWrapper>
     </LoginFormWrapper>
   );
@@ -94,36 +86,49 @@ export default function LoginPage() {
 
 const LoginFormWrapper = styled.form`
   padding: 0 16px;
-  //padding-top: 80px;
   display: flex;
   flex-direction: column;
   gap: 20px;
   box-sizing: border-box;
-
   width: 100%;
   flex: 1;
-  //height: 100%;
   overflow-y: auto;
 
   .description {
     font-size: 14px;
+    color: #666;
   }
 `;
 
 const ButtonWrapper = styled.div`
-  /* 하단 고정 및 중앙 정렬 */
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-
   display: flex;
-  justify-content: center;
+  flex-direction: column; /* 버튼과 링크를 세로로 배치 */
   align-items: center;
-
   padding: 16px;
+  padding-bottom: 30px; /* 하단 여유 공간 추가 */
   box-sizing: border-box;
-  //background: rgba(244, 244, 244, 0.6);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+`;
+
+const FreshmanLinkWrapper = styled.div`
+  margin-top: 16px;
+  display: flex;
+  gap: 8px;
+  font-size: 14px;
+  color: #999;
+
+  button {
+    background: none;
+    border: none;
+    color: #333;
+    font-weight: 600;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 0;
+  }
 `;
