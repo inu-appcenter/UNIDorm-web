@@ -101,7 +101,7 @@ export default function RoomMatePage() {
                 onClose={handleCloseTooltip}
                 position="bottom"
                 align="center"
-                width={"60px"}
+                width={"80px"}
               />
             )}
           </CategoryItem>
@@ -281,9 +281,9 @@ export default function RoomMatePage() {
       )}
       {!isMatchingActive && (
         <ComingSoonOverlay
-          message={"2026년 1학기 룸메이트 매칭이 곧 시작돼요!"}
+          message={"2026년 1학기 룸메이트 매칭 종료!"}
           subMessage={
-            "2월 4일(수)부터 진행될 예정이에요. 오픈되면 푸시알림으로 알려드릴게요."
+            "다음 룸메이트 매칭을 기대해 주세요!\n오픈되면 푸시알림으로 알려드릴게요."
           }
         />
       )}
