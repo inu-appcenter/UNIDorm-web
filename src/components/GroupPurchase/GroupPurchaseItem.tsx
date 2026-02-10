@@ -66,6 +66,7 @@ const GroupPurchaseItemWrapper = styled.div`
   height: fit-content;
   gap: 4px;
   width: 100%;
+  max-width: 200px;
 
   cursor: pointer;
 `;

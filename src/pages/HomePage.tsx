@@ -29,6 +29,10 @@ import TopPopupNotification from "../components/common/TopPopupNotification.tsx"
 import useNetworkStore from "../stores/useNetworkStore.ts";
 import Calendar from "../components/calendar/Calendar.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
+import RoomMateCard from "@/components/roommate/RoomMateCard.tsx";
+import { useQuery } from "@tanstack/react-query";
+import { getRoomMateScrollList } from "@/apis/roommate.ts";
+import { getFeatureFlagByKey } from "@/apis/featureFlag.ts";
 
 export default function HomePage() {
   const { tokenInfo } = useUserStore();
@@ -141,7 +145,31 @@ export default function HomePage() {
     fetchAnnouncements();
   }, []);
 
-  // 알림에 표시할 데이터의 타입 (예시)
+  /* 피처 플래그 상태 관리 */
+  const [isMatchingActive, setIsMatchingActive] = useState<boolean>(false);
+  useEffect(() => {
+    /* 피처 플래그 데이터 페칭 */
+    const fetchFeatureFlag = async () => {
+      try {
+        const response = await getFeatureFlagByKey("ROOMMATE_MATCHING");
+        setIsMatchingActive(response.data.flag);
+      } catch (error) {
+        console.error("피처 플래그 조회 실패:", error);
+        setIsMatchingActive(false); // 에러 발생 시 기본값 설정
+      }
+    };
+
+    fetchFeatureFlag();
+  }, []);
+
+  // 룸메이트 데이터 단일 페이지 조회
+  const { data: roommates, isLoading: isRoommateLoading } = useQuery({
+    queryKey: ["roommates", "home"],
+    queryFn: () => getRoomMateScrollList(undefined, 10),
+    staleTime: 1000 * 60 * 5,
+    enabled: isMatchingActive,
+  });
+
   interface NotificationData {
     title: string;
     message: string;
@@ -154,27 +182,16 @@ export default function HomePage() {
 
   useEffect(() => {
     if (isNetworkError) {
-      // ⚠️ 네트워크 장애 발생 시 알림 표시
       setNotification({
         title: "서비스 장애 안내",
         message: `학교 인터넷에 문제가 발생했거나, 서버 점검 중입니다. 이용에 불편을 드려 죄송합니다.`,
       });
     } else {
-      // ✅ 네트워크 정상 시 알림 제거
       setNotification(null);
     }
   }, [isNetworkError]);
 
-  // useEffect(() => {
-  //   setNotification({
-  //     title: "서비스 점검 안내",
-  //     message: `12월 26일(금) 18시부터 12월 29일(월) 08시까지 정보전산원 시스템 점검으로 인해 서비스 이용이 어렵습니다. 이용에 불편을 드려 죄송합니다.`,
-  //   });
-  // }, []);
-
-  // 3. 알림이 닫힐 때 호출될 함수 (onClose prop으로 전달)
   const handleCloseNotification = () => {
-    // 1. UI에서 즉시 숨김
     setNotification(null);
   };
 
@@ -203,7 +220,6 @@ export default function HomePage() {
           </HomeNoticeBottomSheet>
         ))}
 
-      {/* 4. state에 notification 데이터가 있을 때만 렌더링 */}
       {notification && (
         <TopPopupNotification
           title={notification.title}
@@ -239,6 +255,41 @@ export default function HomePage() {
             />
           </ServiceWrapper>
         </TitleContentArea>
+        {isMatchingActive && (
+          <TitleContentArea
+            title={"2026년 1학기 룸메이트 모집"}
+            description={"룸메이트를 구하고 있는 다양한 UNI들을 찾아보세요!"}
+            link={"/roommate"}
+          >
+            <>
+              {isRoommateLoading ? (
+                <LoadingSpinner message="최신 목록을 불러오는 중..." />
+              ) : roommates && roommates.length > 0 ? (
+                roommates
+                  .slice(0, 2)
+                  .map((post) => (
+                    <RoomMateCard
+                      key={post.boardId}
+                      title={post.title}
+                      boardId={post.boardId}
+                      dormType={post.dormType}
+                      mbti={post.mbti}
+                      college={post.college}
+                      isSmoker={post.smoking === "피워요"}
+                      isClean={post.arrangement === "깔끔해요"}
+                      stayDays={post.dormPeriod}
+                      description={post.comment}
+                      roommateBoardLike={post.roommateBoardLike}
+                      matched={post.matched}
+                    />
+                  ))
+              ) : (
+                <EmptyMessage>게시글이 없습니다.</EmptyMessage>
+              )}
+            </>
+          </TitleContentArea>
+        )}
+
         <TitleContentArea
           title={"공지사항"}
           description={
@@ -274,13 +325,8 @@ export default function HomePage() {
             </NotiArea>
           )}
         </TitleContentArea>
-        {/* PC에서는 '꿀팁'과 '캘린더'를 묶어서 그리드 아이템으로 처리 */}
         <GridContainer>
-          <TitleContentArea
-            title="오늘의 Best 꿀팁"
-            // description={"다양한 기숙사 꿀팁을 알아보세요!"}
-            link={"/tips"}
-          >
+          <TitleContentArea title="오늘의 Best 꿀팁" link={"/tips"}>
             {isTipsLoading ? (
               <LoadingSpinner message={"꿀팁을 불러오고 있어요!"} />
             ) : dailyTips.length > 0 ? (
@@ -298,7 +344,6 @@ export default function HomePage() {
           </TitleContentArea>
           <TitleContentArea
             title={"생활원 일정"}
-            // description={"인천대학교 생활원에서 알려드리는 일정입니다."}
             children={<Calendar mode={"week"} />}
             link={"/calendar"}
           />
@@ -346,13 +391,12 @@ export default function HomePage() {
 const HomePageWrapper = styled.div`
   display: flex;
   flex-direction: column;
-  align-items: center; // 🖥️ PC 레이아웃을 위해 중앙 정렬 추가
-  //padding-top: 16px;
+  align-items: center;
   padding-bottom: 120px;
   box-sizing: border-box;
   overflow-y: auto;
-  width: 100%; // 🖥️ 너비 100% 명시
-  overflow-x: hidden; // 가로 스크롤 방지 추가
+  width: 100%;
+  overflow-x: hidden;
 
   .appcenter-logo {
     margin-top: 36px;
@@ -367,33 +411,27 @@ const HomePageWrapper = styled.div`
 
 const ContentWrapper = styled.div`
   padding: 16px;
-  //padding-top: 16px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: 16px;
   border-radius: 16px 16px 0 0;
   background: #fafafa;
-  width: 100%; // 🖥️ 너비 100% 명시
+  width: 100%;
 
-  // 🖥️ PC (태블릿 포함) 화면에서는 최대 너비를 지정하여 콘텐츠가 너무 넓어지는 것을 방지
   @media (min-width: 768px) {
     max-width: 1200px;
     padding: 32px;
   }
 `;
 
-// 🖥️ PC에서 꿀팁, 캘린더를 묶기 위한 새로운 그리드 컨테이너
 const GridContainer = styled.div`
-  display: contents; // 기본적으로는 아무런 스타일도 가지지 않음
+  display: contents;
 
-  // 🖥️ PC 화면에서 그리드 레이아웃 적용
   @media (min-width: 1024px) {
     display: grid;
-    grid-template-columns: 1fr 1fr; // 1:1 비율의 2열 그리드
+    grid-template-columns: 1fr 1fr;
     gap: 32px;
-
-    // 이 컨테이너가 '공지사항'보다 위에 오도록 순서 변경
     order: -1;
   }
 `;
@@ -404,13 +442,6 @@ const NotiArea = styled.div`
   right: -32px;
   width: calc(100% + 32px);
   height: fit-content;
-
-  //// 🖥️ PC 화면에서는 좌우 패딩을 제거
-  //@media (min-width: 768px) {
-  //  left: 0;
-  //  right: 0;
-  //  width: 100%;
-  //}
 `;
 
 const NotiWrapper = styled.div`
@@ -421,13 +452,11 @@ const NotiWrapper = styled.div`
   padding: 16px 48px 16px 32px;
   padding-top: 8px;
   box-sizing: border-box;
-  overflow-x: auto; /* 스크롤 가능 */
-
-  /* 스크롤바 숨기기 (크로스브라우저 대응) */
-  -ms-overflow-style: none; /* IE, Edge */
-  scrollbar-width: none; /* Firefox */
+  overflow-x: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
   &::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, Opera */
+    display: none;
   }
 `;
 
@@ -469,7 +498,6 @@ const GradientRight = styled.div`
   );
   pointer-events: none;
 
-  // 🖥️ PC 화면에서는 가로 스크롤이 없으므로 그라데이션을 숨김
   @media (min-width: 768px) {
     display: none;
   }

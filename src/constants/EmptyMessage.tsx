@@ -12,12 +12,14 @@ const EmptyMessageWrapper = styled.div`
 
 interface EmptyMessageProps {
   message?: string;
+  children?: React.ReactNode;
 }
 
 const EmptyMessage: React.FC<EmptyMessageProps> = ({
   message = "데이터가 없습니다.",
+  children,
 }) => {
-  return <EmptyMessageWrapper>{message}</EmptyMessageWrapper>;
+  return <EmptyMessageWrapper>{message || children}</EmptyMessageWrapper>;
 };
 
 export default EmptyMessage;

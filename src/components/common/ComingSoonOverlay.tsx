@@ -112,6 +112,8 @@ const MessageText = styled.div`
   font-weight: 700;
   line-height: 160.5%; /* 32.1px */
   letter-spacing: 0.38px;
+
+  white-space: pre-line;
 `;
 
 const SubMessageText = styled.div`
@@ -121,4 +123,5 @@ const SubMessageText = styled.div`
   font-weight: 600;
   line-height: 160.5%;
   letter-spacing: 0.38px;
+  white-space: pre-line;
 `;
