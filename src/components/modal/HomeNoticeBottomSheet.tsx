@@ -1,6 +1,6 @@
-import { Drawer } from "vaul";
-import styled from "styled-components";
 import React, { useEffect, useRef } from "react";
+import styled from "styled-components";
+import { motion, AnimatePresence, PanInfo } from "framer-motion";
 import linkify from "../../utils/linkfy.tsx";
 
 interface LinkItem {
@@ -9,7 +9,7 @@ interface LinkItem {
 }
 
 interface Props {
-  id: string; // 각 모달 구분용 ID
+  id: string;
   title?: string;
   text?: string;
   children?: React.ReactNode;
@@ -30,182 +30,282 @@ export default function HomeNoticeBottomSheet({
 }: Props) {
   const initialized = useRef(false);
 
+  // 1. 로컬 스토리지 체크 (숨김 처리 확인)
   useEffect(() => {
     if (initialized.current) return;
-    const hiddenModals = JSON.parse(
-      localStorage.getItem("hiddenModals") || "[]",
-    );
-    if (hiddenModals.includes(id)) {
-      setIsOpen(false);
+    try {
+      const hiddenModals = JSON.parse(
+        localStorage.getItem("hiddenModals") || "[]",
+      );
+      if (hiddenModals.includes(id)) {
+        setIsOpen(false);
+      }
+    } catch (e) {
+      console.error("Local storage error", e);
     }
     initialized.current = true;
   }, [id, setIsOpen]);
 
+  // 2. '다시 보지 않기' 처리
   const handleHideForever = () => {
-    const hiddenModals = JSON.parse(
-      localStorage.getItem("hiddenModals") || "[]",
-    );
-    if (!hiddenModals.includes(id)) {
-      hiddenModals.push(id);
-      localStorage.setItem("hiddenModals", JSON.stringify(hiddenModals));
+    try {
+      const hiddenModals = JSON.parse(
+        localStorage.getItem("hiddenModals") || "[]",
+      );
+      if (!hiddenModals.includes(id)) {
+        hiddenModals.push(id);
+        localStorage.setItem("hiddenModals", JSON.stringify(hiddenModals));
+      }
+    } catch (e) {
+      console.error("Local storage error", e);
     }
     setIsOpen(false);
   };
 
-  return (
-    <Drawer.Root open={isOpen} onOpenChange={setIsOpen}>
-      <Drawer.Portal>
-        <Overlay />
-        <Content>
-          <SwipeHandle />
-          <ModalHeader>
-            <h2>{title}</h2>
-            {text && <span>{linkify(text)}</span>}
-          </ModalHeader>
-          <ScrollContent>
-            {children}
+  // 3. 드래그로 닫기 로직
+  const onDragEnd = (
+    _event: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo,
+  ) => {
+    if (info.offset.y > 100) {
+      setIsOpen(false);
+    }
+  };
 
-            {links.length > 0 && (
-              <LinksWrapper>
-                {links.map((item, index) => (
-                  <LinkButton
-                    key={index}
-                    onClick={() => window.open(item.link, "_blank")}
-                  >
-                    {item.title}
-                  </LinkButton>
-                ))}
-              </LinksWrapper>
-            )}
-          </ScrollContent>
-          <CloseMenus>
-            <button onClick={handleHideForever}>다시 보지 않기</button>
-            <button onClick={() => setIsOpen(false)}>닫기</button>
-          </CloseMenus>
-        </Content>
-      </Drawer.Portal>
-    </Drawer.Root>
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          {/* 배경 오버레이 (클릭 시 닫힘) */}
+          <Overlay
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsOpen(false)}
+          />
+
+          {/* 바텀시트 컨테이너 */}
+          <SheetContainer
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            drag="y"
+            dragConstraints={{ top: 0 }} // 위로는 못 올라감
+            dragElastic={0.2} // 탄성 효과
+            onDragEnd={onDragEnd}
+          >
+            {/* 드래그 핸들 (시각적 요소) */}
+            <HandleArea>
+              <HandleBar />
+            </HandleArea>
+
+            {/* [1] 상단 고정: 타이틀 */}
+            <FixedHeader>
+              <h2>{title}</h2>
+            </FixedHeader>
+
+            {/* [2] 중간 스크롤: 텍스트 + 자식 컴포넌트 */}
+            <ScrollContent>
+              <ContentInner>
+                {/* 텍스트 설명 */}
+                {text && <DescriptionText>{linkify(text)}</DescriptionText>}
+
+                {/* 메인 컨텐츠 */}
+                <BodyContent>
+                  {children}
+
+                  {links.length > 0 && (
+                    <LinksWrapper>
+                      {links.map((item, index) => (
+                        <LinkButton
+                          key={index}
+                          onClick={() => window.open(item.link, "_blank")}
+                        >
+                          {item.title}
+                        </LinkButton>
+                      ))}
+                    </LinksWrapper>
+                  )}
+                </BodyContent>
+              </ContentInner>
+            </ScrollContent>
+
+            {/* [3] 하단 고정: 버튼 영역 */}
+            <FixedFooter>
+              <CloseMenus>
+                <button onClick={handleHideForever}>다시 보지 않기</button>
+                <button onClick={() => setIsOpen(false)}>닫기</button>
+              </CloseMenus>
+            </FixedFooter>
+          </SheetContainer>
+        </>
+      )}
+    </AnimatePresence>
   );
 }
 
-const Overlay = styled(Drawer.Overlay)`
+// --- Styled Components ---
+
+const Overlay = styled(motion.div)`
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background-color: rgba(0, 0, 0, 0.4);
-  z-index: 40;
+  z-index: 50;
 `;
 
-const Content = styled(Drawer.Content)`
+const SheetContainer = styled(motion.div)`
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
   z-index: 9999;
-  margin: 6rem auto 0 auto;
+  background-color: white;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+
+  /* 화면 높이의 최대 85%까지만 차지 */
+  max-height: 85vh;
+  height: auto;
+
+  /* ✨ 핵심: Flexbox Layout */
   display: flex;
   flex-direction: column;
-  border-top-left-radius: 10px;
-  border-top-right-radius: 10px;
-  background-color: white;
-  max-height: 80vh;
-  /* 스마트폰이 아닐 때만 적용 */
+
+  /* PC 대응 */
   @media (min-width: 769px) {
     max-width: 50vw;
+    margin: 0 auto;
   }
 `;
 
-const SwipeHandle = styled.div`
-  margin: 1rem auto;
-  width: 3rem;
-  height: 0.375rem;
-  flex-shrink: 0;
-  border-radius: 9999px;
+const HandleArea = styled.div`
+  width: 100%;
+  padding: 12px 0;
+  display: flex;
+  justify-content: center;
+  flex-shrink: 0; /* 크기 고정 */
+  cursor: grab;
+`;
+
+const HandleBar = styled.div`
+  width: 48px;
+  height: 4px;
+  border-radius: 99px;
   background-color: #d1d5db;
 `;
 
+// [1] 고정 헤더
+const FixedHeader = styled.div`
+  flex-shrink: 0; /* 높이 절대 줄어들지 않음 */
+  padding: 0 20px 16px 20px;
+  text-align: center;
+
+  h2 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+    color: #1c408c;
+    word-break: keep-all;
+  }
+`;
+
+// [2] 스크롤 영역
 const ScrollContent = styled.div`
-  flex: 1;
-  overflow-y: auto;
-  white-space: pre-wrap; /* ✅ 변경: \n 엔터 처리 */
-  padding: 0 16px; /* ✅ 추가: 내용 좌우 여백 */
-  word-break: keep-all; /* ✅ 추가: 단어 단위 줄바꿈 */
+  flex: 1; /* 남은 공간을 모두 차지함 */
+  overflow-y: auto; /* 내용이 넘치면 스크롤 발생 */
+  min-height: 0; /* Flexbox 내 스크롤 버그 방지 */
+
+  /* 스크롤바 숨김 처리 */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+`;
+
+const ContentInner = styled.div`
+  padding: 0 20px 20px 20px;
+  display: flex;
+  flex-direction: column;
+`;
+
+const DescriptionText = styled.span`
+  display: block;
+  margin-bottom: 20px;
+  text-align: center;
+  font-size: 14px;
+  color: #6c6c74;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: keep-all;
+`;
+
+const BodyContent = styled.div`
+  white-space: pre-wrap;
+  word-break: keep-all;
+  line-height: 1.6;
+  color: #333;
 
   img {
     width: 100%;
+    border-radius: 8px;
+    margin-bottom: 10px;
   }
 `;
 
 const LinksWrapper = styled.div`
-  margin-top: 1rem;
+  margin-top: 24px;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  /* padding: 0 16px; ScrollContent로 이동 */
+  gap: 8px;
 `;
 
 const LinkButton = styled.button`
   background: #f3f4f6;
   border: none;
   border-radius: 8px;
-  padding: 10px 14px;
+  padding: 14px;
   font-size: 14px;
+  font-weight: 500;
+  color: #1f2937;
   cursor: pointer;
   text-align: left;
+  transition: background 0.2s;
 
   &:hover {
     background: #e5e7eb;
   }
 `;
 
-const CloseMenus = styled.div`
-  width: 100%;
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
+// [3] 고정 푸터
+const FixedFooter = styled.div`
+  flex-shrink: 0; /* 높이 절대 줄어들지 않음 */
+  background-color: white;
+  border-top: 1px solid #f3f4f6;
+  padding-bottom: env(safe-area-inset-bottom); /* 아이폰 하단바 대응 */
+`;
 
-  padding: 20px;
-  box-sizing: border-box;
+const CloseMenus = styled.div`
+  display: flex;
+  justify-content: space-between;
+  padding: 16px 20px;
 
   button {
     background: none;
     border: none;
-    color: #000;
-    font-size: 16px;
-    font-style: normal;
-    font-weight: 400;
-    line-height: 24px;
-    letter-spacing: 0.38px;
+    color: #4b5563;
+    font-size: 15px;
+    font-weight: 500;
     cursor: pointer;
-  }
-`;
+    padding: 8px;
 
-const ModalHeader = styled.div`
-  flex-shrink: 0;
-  margin-bottom: 12px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: 0 16px; /* ✅ 추가: 헤더 좌우 여백 */
-  word-break: keep-all;
-  white-space: pre-wrap;
-
-  color: #1c408c;
-  width: 100%;
-  box-sizing: border-box; /* ✅ 추가: 패딩 계산 포함 */
-
-  img {
-    width: 60%;
-    margin-bottom: 12px;
-  }
-
-  h2 {
-    margin: 0;
-    font-size: 24px;
-  }
-
-  span {
-    font-size: 14px;
-    color: #6c6c74;
+    &:last-child {
+      color: #111827;
+      font-weight: 600;
+    }
   }
 `;
