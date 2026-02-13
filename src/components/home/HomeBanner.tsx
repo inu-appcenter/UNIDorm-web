@@ -16,9 +16,9 @@ export default function HomeBanner() {
 
   /* 설치 핸들러 */
   const handleIntipBannerClick = () => {
-    if (platform === "ios_browser") {
+    if (platform === "ios_webview") {
       window.open("https://apps.apple.com/kr/app/intip/id6740070975", "_blank");
-    } else if (platform === "android_browser") {
+    } else if (platform === "android_webview") {
       window.open(
         "https://play.google.com/store/apps/details?id=inu.appcenter.intip_android",
         "_blank",
