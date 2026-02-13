@@ -39,10 +39,6 @@ export default function HomeBanner() {
         loop={true}
         className="home-swiper"
       >
-        {/* 슬라이드 구조 유지 */}
-        <SwiperSlide>
-          <img className="banner-img" src={배너3} alt="배너 이미지 3" />
-        </SwiperSlide>
         <SwiperSlide>
           <img className="banner-img" src={배너1} alt="배너 이미지 1" />
         </SwiperSlide>
@@ -61,6 +57,9 @@ export default function HomeBanner() {
             alt="학과공지알리미배너"
             onClick={handleIntipBannerClick}
           />
+        </SwiperSlide>
+        <SwiperSlide>
+          <img className="banner-img" src={배너3} alt="배너 이미지 3" />
         </SwiperSlide>
       </Swiper>
     </BannerWrapper>
