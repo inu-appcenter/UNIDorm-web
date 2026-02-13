@@ -4,11 +4,29 @@ import styled from "styled-components";
 
 import 배너1 from "../../assets/banner/포스터1.webp";
 import 배너3 from "../../assets/banner/포스터3.webp";
+import 인입런배너 from "@/assets/banner/인입런 배너.webp";
+import 학과공지알리미배너 from "@/assets/banner/학과 공지 알리미 배너.webp";
 
 import "swiper/css";
 import "swiper/css/pagination";
+import { getMobilePlatform } from "@/utils/getMobilePlatform.ts";
 
 export default function HomeBanner() {
+  const platform = getMobilePlatform();
+
+  /* 설치 핸들러 */
+  const handleIntipBannerClick = () => {
+    if (platform === "ios_browser") {
+      window.open("https://apps.apple.com/kr/app/intip/id6740070975", "_blank");
+    } else if (platform === "android_browser") {
+      window.open(
+        "https://play.google.com/store/apps/details?id=inu.appcenter.intip_android",
+        "_blank",
+      );
+    } else {
+      window.open("https://intip.inuappcenter.kr", "_blank");
+    }
+  };
   return (
     <BannerWrapper>
       <Swiper
@@ -27,6 +45,22 @@ export default function HomeBanner() {
         </SwiperSlide>
         <SwiperSlide>
           <img className="banner-img" src={배너1} alt="배너 이미지 1" />
+        </SwiperSlide>
+        <SwiperSlide>
+          <img
+            className="banner-img"
+            src={인입런배너}
+            alt="인입런배너"
+            onClick={handleIntipBannerClick}
+          />
+        </SwiperSlide>
+        <SwiperSlide>
+          <img
+            className="banner-img"
+            src={학과공지알리미배너}
+            alt="학과공지알리미배너"
+            onClick={handleIntipBannerClick}
+          />
         </SwiperSlide>
       </Swiper>
     </BannerWrapper>
