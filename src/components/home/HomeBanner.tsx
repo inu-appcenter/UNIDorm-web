@@ -40,7 +40,12 @@ export default function HomeBanner() {
         className="home-swiper"
       >
         <SwiperSlide>
-          <img className="banner-img" src={배너1} alt="배너 이미지 1" />
+          <img
+            className="banner-img"
+            src={학과공지알리미배너}
+            alt="학과공지알리미배너"
+            onClick={handleIntipBannerClick}
+          />
         </SwiperSlide>
         <SwiperSlide>
           <img
@@ -51,15 +56,10 @@ export default function HomeBanner() {
           />
         </SwiperSlide>
         <SwiperSlide>
-          <img
-            className="banner-img"
-            src={학과공지알리미배너}
-            alt="학과공지알리미배너"
-            onClick={handleIntipBannerClick}
-          />
+          <img className="banner-img" src={배너3} alt="배너 이미지 3" />
         </SwiperSlide>
         <SwiperSlide>
-          <img className="banner-img" src={배너3} alt="배너 이미지 3" />
+          <img className="banner-img" src={배너1} alt="배너 이미지 1" />
         </SwiperSlide>
       </Swiper>
     </BannerWrapper>
