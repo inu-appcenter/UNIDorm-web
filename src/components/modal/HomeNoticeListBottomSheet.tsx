@@ -1,4 +1,3 @@
-import React from "react";
 import styled from "styled-components";
 import { Drawer } from "vaul";
 import { PopupNotification } from "@/types/popup-notifications";
@@ -40,7 +39,9 @@ export default function HomeNoticeListBottomSheet({
                   <NotiItem key={noti.id} onClick={() => onSelect(noti)}>
                     <div className="top">
                       <span className="type">{noti.notificationType}</span>
-                      <span className="date">{formatTimeAgo(noti.createdDate)}</span>
+                      <span className="date">
+                        {formatTimeAgo(noti.createdDate)}
+                      </span>
                     </div>
                     <div className="title">{noti.title}</div>
                     <div className="preview">{noti.content}</div>
@@ -57,14 +58,18 @@ export default function HomeNoticeListBottomSheet({
   );
 }
 
-const Overlay = styled(({ overlay, ...props }) => <Drawer.Overlay {...props} />)`
+const Overlay = styled(({ overlay, ...props }) => (
+  <Drawer.Overlay {...props} />
+))`
   position: fixed;
   inset: 0;
   background-color: rgba(0, 0, 0, 0.4);
   z-index: 9990;
 `;
 
-const Content = styled(({ overlay, ...props }) => <Drawer.Content {...props} />)`
+const Content = styled(({ overlay, ...props }) => (
+  <Drawer.Content {...props} />
+))`
   position: fixed;
   bottom: 0;
   left: 0;
@@ -141,7 +146,7 @@ const NotiItem = styled.div`
     display: flex;
     justify-content: space-between;
     margin-bottom: 6px;
-    
+
     .type {
       font-size: 12px;
       color: #007aff;
