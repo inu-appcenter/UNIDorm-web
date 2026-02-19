@@ -124,14 +124,18 @@ export default function HomeNoticeBottomSheet({
 
 // --- Styled Components ---
 
-const Overlay = styled(({ overlay, ...props }) => <Drawer.Overlay {...props} />)`
+const Overlay = styled(({ overlay, ...props }) => (
+  <Drawer.Overlay {...props} />
+))`
   position: fixed;
   inset: 0;
   background-color: rgba(0, 0, 0, 0.4);
   z-index: 50;
 `;
 
-const Content = styled(({ overlay, ...props }) => <Drawer.Content {...props} />)`
+const Content = styled(({ overlay, ...props }) => (
+  <Drawer.Content {...props} />
+))`
   position: fixed;
   bottom: 0;
   left: 0;
@@ -172,7 +176,7 @@ const HandleBar = styled.div`
 // [1] 고정 헤더
 const FixedHeader = styled.div`
   flex-shrink: 0;
-  padding: 0 20px 16px 20px;
+  padding: 0 20px;
   text-align: center;
 
   h2 {
@@ -280,4 +284,3 @@ const CloseMenus = styled.div`
     }
   }
 `;
-

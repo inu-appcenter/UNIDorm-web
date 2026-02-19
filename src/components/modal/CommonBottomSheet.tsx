@@ -90,14 +90,18 @@ export default function CommonBottomSheet({
   );
 }
 
-const Overlay = styled(({ overlay, ...props }) => <Drawer.Overlay {...props} />)`
+const Overlay = styled(({ overlay, ...props }) => (
+  <Drawer.Overlay {...props} />
+))`
   position: fixed;
   inset: 0;
   background-color: rgba(0, 0, 0, 0.4);
   z-index: 40;
 `;
 
-const Content = styled(({ overlay, ...props }) => <Drawer.Content {...props} />)`
+const Content = styled(({ overlay, ...props }) => (
+  <Drawer.Content {...props} />
+))`
   position: fixed;
   bottom: 0;
   left: 0;
@@ -127,7 +131,7 @@ const SwipeHandle = styled.div`
 
 const ModalHeader = styled.div`
   flex-shrink: 0;
-  margin-bottom: 12px;
+  //margin-bottom: 12px;
   display: flex;
   flex-direction: column;
   align-items: center; /* 중앙 정렬 */
@@ -136,7 +140,7 @@ const ModalHeader = styled.div`
   word-break: keep-all;
   white-space: pre-wrap; /* 줄바꿈 유지 + 자동 줄바꿈 */
 
-  gap: 12px;
+  //gap: 12px;
 
   color: #1c408c;
   width: 100%;
