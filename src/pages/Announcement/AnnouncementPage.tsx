@@ -1,7 +1,9 @@
 import styled from "styled-components";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { BsEye } from "react-icons/bs";
+import { Bell } from "lucide-react";
 import { useEffect, useMemo, useState, useRef } from "react";
+import useUserStore from "@/stores/useUserStore";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../../constants/EmptyMessage.tsx";
 import { useIsAdminRole } from "@/hooks/useIsAdminRole";
@@ -320,7 +322,7 @@ export default function AnnouncementPage() {
 
       {isAdmin && (
         <WriteButton onClick={() => navigate("/announcements/write")}>
-          ✏️ 공지사항 작성하기
+          ✏️ 공지사항 작성
         </WriteButton>
       )}
 
@@ -349,6 +351,20 @@ export default function AnnouncementPage() {
           ))}
         </HomeNoticeBottomSheet>
       )}
+
+      {/* 키워드 알림 설정 플로팅 버튼 */}
+      <FloatingAlertButton
+        onClick={() => {
+          if (!useUserStore.getState().tokenInfo.accessToken) {
+            alert("로그인 후 사용 가능합니다.");
+            navigate("/login");
+            return;
+          }
+          navigate("/notification-setting");
+        }}
+      >
+        <Bell size={18} />새 글 알림 설정
+      </FloatingAlertButton>
     </NoticePageWrapper>
   );
 }
@@ -362,6 +378,35 @@ const NoticePageWrapper = styled.div`
   overflow-y: auto;
   background: #fafafa;
   flex: 1;
+`;
+
+const FloatingAlertButton = styled.button`
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #212121;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 30px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 100;
+  cursor: pointer;
+  transition:
+    transform 0.2s,
+    background-color 0.2s;
+  white-space: nowrap;
+
+  &:active {
+    transform: translateX(-50%) scale(0.95);
+    background-color: #000;
+  }
 `;
 
 const NoticeList = styled.div`

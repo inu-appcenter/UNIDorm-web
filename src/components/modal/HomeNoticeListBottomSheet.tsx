@@ -57,18 +57,14 @@ export default function HomeNoticeListBottomSheet({
   );
 }
 
-const Overlay = styled(Drawer.Overlay).withConfig({
-  shouldForwardProp: (prop) => !["overlay"].includes(prop),
-})`
+const Overlay = styled(({ overlay, ...props }) => <Drawer.Overlay {...props} />)`
   position: fixed;
   inset: 0;
   background-color: rgba(0, 0, 0, 0.4);
   z-index: 9990;
 `;
 
-const Content = styled(Drawer.Content).withConfig({
-  shouldForwardProp: (prop) => !["overlay"].includes(prop),
-})`
+const Content = styled(({ overlay, ...props }) => <Drawer.Content {...props} />)`
   position: fixed;
   bottom: 0;
   left: 0;

@@ -16,17 +16,17 @@ const initialMenus = [
     label: "유니돔 앱 알림",
     type: "유니돔",
     apiKey: "unidormNotification" as keyof NotificationPreferences,
-    description: "유니돔 앱 공지사항",
+    description: "유니돔 공지사항",
   },
   {
-    label: "생활원 알림",
+    label: "생활원 공지사항 알림",
     type: "생활원",
     apiKey: "dormitoryNotification" as keyof NotificationPreferences,
     description: "생활원 공지사항",
   },
 
   {
-    label: "서포터즈 알림",
+    label: "서포터즈 공지사항 알림",
     type: "서포터즈",
     apiKey: "supportersNotification" as keyof NotificationPreferences,
     description: "서포터즈 공지사항",
@@ -35,7 +35,7 @@ const initialMenus = [
     label: "룸메이트 알림",
     type: "룸메이트",
     apiKey: "roommateNotification" as keyof NotificationPreferences,
-    description: "모아보기한 룸메이트 새 글 알림, 퀵 메시지",
+    description: "퀵 메시지",
   },
   {
     label: "공동구매 알림",
@@ -69,6 +69,18 @@ const NotificationSettingPage = () => {
         },
         {} as Record<string, boolean>,
       );
+
+      // ✨ [추가] 유니돔 앱 알림이 꺼져 있는데 다른 알림이 켜져 있는 경우 (버그 방지)
+      const isUnidormEnabled = newStatus["유니돔"];
+      const hasOtherEnabled = Object.entries(newStatus).some(
+        ([type, enabled]) => type !== "유니돔" && enabled,
+      );
+
+      if (!isUnidormEnabled && hasOtherEnabled) {
+        newStatus["유니돔"] = true;
+        // 서버에도 동기화
+        addSingleNotificationPreference("유니돔");
+      }
 
       setNotificationStatus(newStatus);
     } catch (error) {
@@ -116,20 +128,50 @@ const NotificationSettingPage = () => {
 
   // --- 🔄 개별 토글 변경 시 실행 (메인 로직) ---
   const handleToggleChange = (type: string, enabled: boolean) => {
-    // 1. 로컬 상태 업데이트
+    // 1. 유니돔 앱 알림 의존성 체크
+    if (type !== "유니돔" && !notificationStatus["유니돔"]) {
+      alert("유니돔 앱 알림을 먼저 켜주세요.");
+      return;
+    }
+
+    // 2. 로컬 상태 업데이트
     const newStatus = {
       ...notificationStatus,
       [type]: enabled,
     };
+
+    // 만약 '유니돔' 알림을 끄는 경우, 다른 모든 알림도 시각적으로 꺼짐 처리하거나
+    // 혹은 여기서는 유니돔만 끄고 다른 토글을 막는 정책을 취할 수 있습니다.
+    // 여기서는 유니돔을 끌 때 다른 모든 알림도 함께 비활성화(서버 연동 포함) 하도록 구현합니다.
+    if (type === "유니돔" && !enabled) {
+      const confirmed = window.confirm(
+        "유니돔 앱 알림을 끄면 모든 알림을 받을 수 없습니다. 진행하시겠습니까?",
+      );
+      if (!confirmed) return;
+
+      // 모든 상태 false로 변경
+      Object.keys(newStatus).forEach((key) => {
+        newStatus[key] = false;
+      });
+
+      // 서버에도 모든 알림 삭제 요청 (기존 API가 배열을 받으므로 한 번에 보낼 수 있는지 확인 필요)
+      // 여기서는 기존 로직대로 개별 삭제 혹은 전체 삭제 API가 있다면 그것을 사용해야 함.
+      // 현재 add/deleteSingle... 함수는 하나씩 처리하므로 루프를 돌거나,
+      // API가 지원한다면 전체 타입을 배열로 보내야 함.
+      initialMenus.forEach((menu) => {
+        deleteSingleNotificationPreference(menu.type);
+      });
+    }
+
     setNotificationStatus(newStatus);
 
-    // 2. 토글 상태에 따라 적절한 API 호출
-    if (enabled) {
-      // ON으로 변경: 알림 활성화 (POST)
-      addSingleNotificationPreference(type);
-    } else {
-      // OFF로 변경: 알림 비활성화 (DELETE)
-      deleteSingleNotificationPreference(type);
+    // 3. 토글 상태에 따라 적절한 API 호출 (유니돔을 끈 경우는 위에서 처리했으므로 제외)
+    if (!(type === "유니돔" && !enabled)) {
+      if (enabled) {
+        addSingleNotificationPreference(type);
+      } else {
+        deleteSingleNotificationPreference(type);
+      }
     }
   };
 
