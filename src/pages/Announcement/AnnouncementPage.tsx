@@ -32,16 +32,34 @@ import SelectableChipGroup from "../../components/roommate/checklist/SelectableC
 import { useSetHeader } from "@/hooks/useSetHeader";
 
 import { useInView } from "react-intersection-observer";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 
 import { getAnnouncementScrollList } from "@/apis/announcements";
 import type { AnnouncementPost } from "@/types/announcements";
+import HomeNoticeListBottomSheet from "@/components/modal/HomeNoticeListBottomSheet";
+import HomeNoticeBottomSheet from "@/components/modal/HomeNoticeBottomSheet";
+import { getPopupNotifications } from "@/apis/popup-notification";
+import { PopupNotification } from "@/types/popup-notifications";
 
 export default function AnnouncementPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { isAdmin } = useIsAdminRole();
   const { ref, inView } = useInView();
+
+  // 홈 공지사항 리스트 및 상세 바텀시트 상태
+  const [isListOpen, setIsListOpen] = useState(false);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [selectedHomeNoti, setSelectedHomeNoti] =
+    useState<PopupNotification | null>(null);
+
+  const { data: homeNotis = [] } = useQuery({
+    queryKey: ["home-notifications"],
+    queryFn: async () => {
+      const res = await getPopupNotifications();
+      return res.data;
+    },
+  });
 
   // 스크롤 컨테이너 ref
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -177,6 +195,12 @@ export default function AnnouncementPage() {
   const headerConfig = useMemo(
     () => ({
       title: "공지사항",
+      menuItems: [
+        {
+          label: "홈 화면 공지 목록",
+          onClick: () => setIsListOpen(true),
+        },
+      ],
       secondHeader: (
         <CategoryWrapper>
           {ANNOUNCE_CATEGORY_LIST.map((category) => (
@@ -299,6 +323,32 @@ export default function AnnouncementPage() {
           ✏️ 공지사항 작성하기
         </WriteButton>
       )}
+
+      {/* 홈 공지사항 리스트 바텀시트 */}
+      <HomeNoticeListBottomSheet
+        isOpen={isListOpen}
+        onOpenChange={setIsListOpen}
+        notifications={homeNotis}
+        onSelect={(noti) => {
+          setSelectedHomeNoti(noti);
+          setIsDetailOpen(true);
+        }}
+      />
+
+      {/* 홈 공지사항 상세 바텀시트 */}
+      {selectedHomeNoti && (
+        <HomeNoticeBottomSheet
+          id={`manual-${selectedHomeNoti.id}`}
+          isOpen={isDetailOpen}
+          setIsOpen={setIsDetailOpen}
+          title={selectedHomeNoti.title}
+          text={selectedHomeNoti.content}
+        >
+          {selectedHomeNoti.imagePath?.map((path, idx) => (
+            <img key={idx} src={path} alt="notice detail" />
+          ))}
+        </HomeNoticeBottomSheet>
+      )}
     </NoticePageWrapper>
   );
 }
@@ -314,7 +364,6 @@ const NoticePageWrapper = styled.div`
   flex: 1;
 `;
 
-// ... 나머지 스타일 컴포넌트 생략 (이전과 동일)
 const NoticeList = styled.div`
   display: flex;
   flex-direction: column;

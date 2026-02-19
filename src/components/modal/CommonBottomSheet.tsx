@@ -61,9 +61,12 @@ export default function CommonBottomSheet({
           <SwipeHandle />
           <ModalHeader>
             <div className="title-area">
-              <h2>{title}</h2>
+              <Drawer.Title asChild>
+                <h2>{title}</h2>
+              </Drawer.Title>
               {subtitle && <span>{subtitle}</span>}
             </div>
+            <Drawer.Description />
             {headerImage && <img src={headerImage} alt="modal header" />}
           </ModalHeader>
           <ScrollContent>{children}</ScrollContent>
@@ -87,14 +90,18 @@ export default function CommonBottomSheet({
   );
 }
 
-const Overlay = styled(Drawer.Overlay)`
+const Overlay = styled(Drawer.Overlay).withConfig({
+  shouldForwardProp: (prop) => !["overlay"].includes(prop),
+})`
   position: fixed;
   inset: 0;
   background-color: rgba(0, 0, 0, 0.4);
   z-index: 40;
 `;
 
-const Content = styled(Drawer.Content)`
+const Content = styled(Drawer.Content).withConfig({
+  shouldForwardProp: (prop) => !["overlay"].includes(prop),
+})`
   position: fixed;
   bottom: 0;
   left: 0;

@@ -77,7 +77,10 @@ export default function HomeNoticeBottomSheet({
 
           {/* [1] 상단 고정: 타이틀 */}
           <FixedHeader>
-            <h2>{title}</h2>
+            <Drawer.Title asChild>
+              <h2>{title}</h2>
+            </Drawer.Title>
+            <Drawer.Description />
           </FixedHeader>
 
           {/* [2] 중간 스크롤: 텍스트 + 자식 컴포넌트 */}
@@ -121,14 +124,18 @@ export default function HomeNoticeBottomSheet({
 
 // --- Styled Components ---
 
-const Overlay = styled(Drawer.Overlay)`
+const Overlay = styled(Drawer.Overlay).withConfig({
+  shouldForwardProp: (prop) => !["overlay"].includes(prop),
+})`
   position: fixed;
   inset: 0;
   background-color: rgba(0, 0, 0, 0.4);
   z-index: 50;
 `;
 
-const Content = styled(Drawer.Content)`
+const Content = styled(Drawer.Content).withConfig({
+  shouldForwardProp: (prop) => !["overlay"].includes(prop),
+})`
   position: fixed;
   bottom: 0;
   left: 0;
