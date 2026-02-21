@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import useUserStore from "../stores/useUserStore";
 import { getMemberInfo } from "@/apis/members";
 import tokenInstance from "../apis/tokenInstance";
-import { getMobilePlatform } from "@/utils/getMobilePlatform";
+// import { getMobilePlatform } from "@/utils/getMobilePlatform";
 import { PATHS } from "@/constants/paths";
 
 export const useAppInit = () => {
@@ -11,7 +11,7 @@ export const useAppInit = () => {
   const isLoggedIn = Boolean(tokenInfo.accessToken);
   const navigate = useNavigate();
   const [fcmToken, setFcmToken] = useState("");
-  const platform = getMobilePlatform();
+  // const platform = getMobilePlatform();
 
   // 프로덕션 로그 제거
   useEffect(() => {
@@ -46,7 +46,7 @@ export const useAppInit = () => {
           navigate(PATHS.AGREEMENT, { replace: true });
         }
       } catch (error) {
-        console.error("회원 정보 로드 실패", error);
+        // 회원 정보 로드 실패
       }
     };
 
@@ -63,30 +63,34 @@ export const useAppInit = () => {
   // 웹뷰 FCM 토큰 수신 설정
   useEffect(() => {
     (window as any).onReceiveFcmToken = async function (token: string) {
-      setFcmToken(token);
+      // 수신 즉시 로컬 스토리지 저장 및 상태 업데이트
       localStorage.setItem("fcmToken", token);
+      setFcmToken(token);
     };
     return () => {
       (window as any).onReceiveFcmToken = null;
     };
   }, []);
 
-  // FCM 토큰 서버 등록
+  // FCM 토큰 서버 등록 (로컬 스토리지 기반 무조건 전송)
   useEffect(() => {
     const registerFcmToken = async () => {
-      const currentToken =
-        fcmToken ||
-        (platform === "ios_webview" ? localStorage.getItem("fcmToken") : null);
-      if (currentToken && isLoggedIn) {
+      // 로컬 스토리지에서 토큰 조회
+      const storedToken = localStorage.getItem("fcmToken");
+
+      // 토큰이 존재하고 로그인된 상태라면 플랫폼 구분 없이 전송
+      if (storedToken && isLoggedIn) {
         try {
-          await tokenInstance.post("/fcm/token", { fcmToken: currentToken });
+          await tokenInstance.post("/fcm/token", { fcmToken: storedToken });
         } catch (error) {
-          console.error("FCM 등록 실패", error);
+          console.log(error);
         }
       }
     };
+
     registerFcmToken();
-  }, []);
+    // fcmToken 상태 변경(새로 받았을 때) 혹은 로그인 성공 시 즉시 실행
+  }, [fcmToken, isLoggedIn]);
 
   return { isLoggedIn };
 };
