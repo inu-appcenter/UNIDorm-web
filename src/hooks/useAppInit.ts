@@ -86,7 +86,7 @@ export const useAppInit = () => {
       }
     };
     registerFcmToken();
-  }, [fcmToken, isLoggedIn, platform]);
+  }, []);
 
   return { isLoggedIn };
 };
