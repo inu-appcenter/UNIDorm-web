@@ -63,9 +63,11 @@ export const useAppInit = () => {
   // 웹뷰 FCM 토큰 수신 설정
   useEffect(() => {
     (window as any).onReceiveFcmToken = async function (token: string) {
-      // 수신 즉시 로컬 스토리지 저장 및 상태 업데이트
-      localStorage.setItem("fcmToken", token);
-      setFcmToken(token);
+      // 토큰이 존재하고 빈 문자열이 아닌 경우에만 처리
+      if (token && token.trim() !== "") {
+        localStorage.setItem("fcmToken", token);
+        setFcmToken(token);
+      }
     };
     return () => {
       (window as any).onReceiveFcmToken = null;
@@ -83,13 +85,13 @@ export const useAppInit = () => {
         try {
           await tokenInstance.post("/fcm/token", { fcmToken: storedToken });
         } catch (error) {
-          console.log(error);
+          // FCM 등록 실패
         }
       }
     };
 
     registerFcmToken();
-    // fcmToken 상태 변경(새로 받았을 때) 혹은 로그인 성공 시 즉시 실행
+    // fcmToken 상태 변경 혹은 로그인 성공 시 즉시 실행
   }, [fcmToken, isLoggedIn]);
 
   return { isLoggedIn };
