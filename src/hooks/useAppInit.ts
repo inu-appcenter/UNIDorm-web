@@ -84,6 +84,7 @@ export const useAppInit = () => {
       if (storedToken && isLoggedIn) {
         try {
           await tokenInstance.post("/fcm/token", { fcmToken: storedToken });
+          alert("토큰이 전송되었습니다.");
         } catch (error) {
           // FCM 등록 실패
         }
@@ -92,7 +93,7 @@ export const useAppInit = () => {
 
     registerFcmToken();
     // fcmToken 상태 변경 혹은 로그인 성공 시 즉시 실행
-  }, [fcmToken, isLoggedIn]);
+  }, [fcmToken, isLoggedIn, tokenInfo]);
 
   return { isLoggedIn };
 };
