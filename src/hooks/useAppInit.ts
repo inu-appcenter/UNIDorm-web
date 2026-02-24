@@ -84,7 +84,6 @@ export const useAppInit = () => {
       if (storedToken && isLoggedIn) {
         try {
           await tokenInstance.post("/fcm/token", { fcmToken: storedToken });
-          alert("토큰이 전송되었습니다.");
         } catch (error) {
           // FCM 등록 실패
         }
