@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import IconTextButton from "../../components/button/IconTextButton.tsx";
 import StyledTextArea from "../../components/roommate/StyledTextArea.tsx";
 import RoomMateInfoArea from "../../components/roommate/RoomMateInfoArea.tsx";
@@ -23,6 +23,7 @@ import RoundSquareWhiteButton from "../../components/button/RoundSquareWhiteButt
 import { useNavigate } from "react-router-dom";
 import BottomBar from "../../components/common/BottomBar/BottomBar.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
+import CommonBottomSheet from "../../components/modal/CommonBottomSheet.tsx";
 
 export default function MyRoomMatePage() {
   const [roommateInfo, setRoommateInfo] =
@@ -37,11 +38,14 @@ export default function MyRoomMatePage() {
 
   const [showQuickModal, setShowQuickModal] = useState(false);
 
-  const [showImgConfirmModal, setShowImgConfirmModal] = useState(false); // 모달 표시 상태
+  const [showImgConfirmModal, setShowImgConfirmModal] = useState(false);
   const [myTimetableImageUrl, setMyTimetableImageUrl] = useState<string>();
   const [roommateTimetableImageUrl, setRoommateTimetableImageUrl] =
     useState<string>();
-  // 룸메이트 부재 시 비활성화
+
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string>("");
+
   const isDisabled = notFound;
 
   const menuItems = [
@@ -75,7 +79,6 @@ export default function MyRoomMatePage() {
     },
   ];
 
-  // 빈 배열 처리
   const ruleMenuItems = notFound
     ? []
     : [
@@ -176,10 +179,27 @@ export default function MyRoomMatePage() {
 
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  // 슬라이더 참조
+  // 슬라이드 요소 참조 배열
   const sliderRef = useRef<HTMLDivElement>(null);
+  const slideRefs = useRef<(HTMLDivElement | null)[]>([]);
   const indexRef = useRef(0);
   const totalSlides = 2;
+
+  // 동적 높이 상태
+  const [sliderHeight, setSliderHeight] = useState<number | string>("auto");
+
+  // 슬라이더 높이 업데이트
+  const updateSliderHeight = useCallback(() => {
+    if (slideRefs.current[currentIndex]) {
+      setSliderHeight(slideRefs.current[currentIndex]?.offsetHeight || "auto");
+    }
+  }, [currentIndex]);
+
+  useEffect(() => {
+    updateSliderHeight();
+    window.addEventListener("resize", updateSliderHeight);
+    return () => window.removeEventListener("resize", updateSliderHeight);
+  }, [updateSliderHeight, myTimetableImageUrl, roommateTimetableImageUrl]);
 
   const handleUploadImage = async () => {
     console.log("이미지 업로드 시도");
@@ -198,10 +218,9 @@ export default function MyRoomMatePage() {
         setShowImgConfirmModal(false);
         setIsNeedReload(!isNeedReload);
 
-        // 내 시간표 슬라이드로 이동
         if (sliderRef.current) {
           sliderRef.current.scrollTo({
-            left: sliderRef.current.clientWidth, // 인덱스 1 위치로 스크롤
+            left: sliderRef.current.clientWidth,
             behavior: "smooth",
           });
         }
@@ -214,16 +233,12 @@ export default function MyRoomMatePage() {
     }
   };
 
-  // 이미지 선택 처리
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setImageFile(file);
       setPreviewUrl(URL.createObjectURL(file));
       setShowImgConfirmModal(true);
-      // if (window.confirm("이 이미지로 업로드하시겠어요?")) {
-      //   handleUploadImage();
-      // }
     }
   };
 
@@ -235,14 +250,12 @@ export default function MyRoomMatePage() {
       if (!slider) return;
       const newIndex = Math.round(slider.scrollLeft / slider.clientWidth);
       indexRef.current = newIndex;
-      setCurrentIndex(newIndex); // 상태 업데이트
+      setCurrentIndex(newIndex);
     };
 
     slider.addEventListener("scroll", handleManualScroll);
 
     return () => {
-      // clearInterval(autoSlideTimer);
-      // clearTimeout(delayTimer);
       slider.removeEventListener("scroll", handleManualScroll);
     };
   }, []);
@@ -307,7 +320,6 @@ export default function MyRoomMatePage() {
             }}
           />
         )}
-        {/*<GrayDivider />*/}
 
         <input
           type="file"
@@ -316,28 +328,37 @@ export default function MyRoomMatePage() {
           style={{ display: "none" }}
           onChange={(e) => {
             handleImageChange(e);
-            e.target.value = ""; // 입력값 초기화
+            e.target.value = "";
           }}
         />
 
-        {/* 시간표 추가 버튼 */}
         <IconTextButton type="addtimetable" menuItems={timetableMenuItems} />
 
         <div
           style={{ position: "relative", width: "100%", overflow: "hidden" }}
         >
-          <FullWidthSlider ref={sliderRef}>
-            <FullWidthSlide>
+          <FullWidthSlider ref={sliderRef} style={{ height: sliderHeight }}>
+            {/* ref 할당 변경 */}
+            <FullWidthSlide
+              ref={(el) => {
+                slideRefs.current[0] = el;
+              }}
+            >
               <div className="timetableTitle">룸메이트 시간표</div>
               {roommateTimetableImageUrl ? (
                 <img
                   src={roommateTimetableImageUrl}
                   alt="룸메이트 시간표"
+                  onLoad={updateSliderHeight}
+                  onClick={() => {
+                    setSelectedImageUrl(roommateTimetableImageUrl);
+                    setShowImageModal(true);
+                  }}
                   style={{
                     width: "100%",
-                    height: "250px",
-                    objectFit: "cover",
+                    height: "auto",
                     borderRadius: "8px",
+                    cursor: "pointer",
                   }}
                 />
               ) : (
@@ -349,17 +370,27 @@ export default function MyRoomMatePage() {
               )}
             </FullWidthSlide>
 
-            <FullWidthSlide>
+            {/* ref 할당 변경 */}
+            <FullWidthSlide
+              ref={(el) => {
+                slideRefs.current[1] = el;
+              }}
+            >
               <div className="timetableTitle">내 시간표</div>
               {myTimetableImageUrl ? (
                 <img
                   src={myTimetableImageUrl}
                   alt={`내 시간표`}
+                  onLoad={updateSliderHeight}
+                  onClick={() => {
+                    setSelectedImageUrl(myTimetableImageUrl);
+                    setShowImageModal(true);
+                  }}
                   style={{
                     width: "100%",
-                    height: "250px",
-                    objectFit: "cover",
+                    height: "auto",
                     borderRadius: "8px",
+                    cursor: "pointer",
                   }}
                 />
               ) : (
@@ -372,7 +403,6 @@ export default function MyRoomMatePage() {
             </FullWidthSlide>
           </FullWidthSlider>
 
-          {/* 인디케이터 */}
           <IndicatorWrapper>
             {Array.from({ length: totalSlides }).map((_, idx) => (
               <Dot key={idx} active={idx === currentIndex} />
@@ -380,7 +410,6 @@ export default function MyRoomMatePage() {
           </IndicatorWrapper>
         </div>
 
-        {/* 규칙 편집 버튼 */}
         <IconTextButton
           type="createrules"
           onClick={() => {
@@ -425,6 +454,20 @@ export default function MyRoomMatePage() {
         )}
       </DisabledWrapper>
       <BottomBar />
+
+      <CommonBottomSheet
+        id={"이미지보기"}
+        isOpen={showImageModal}
+        setIsOpen={setShowImageModal}
+      >
+        <div style={{ textAlign: "center" }}>
+          <img
+            src={selectedImageUrl}
+            style={{ maxWidth: "100%" }}
+            alt="시간표 원본"
+          />
+        </div>
+      </CommonBottomSheet>
     </MyRoomMatePageWrapper>
   );
 }
@@ -445,7 +488,6 @@ const MyRoomMatePageWrapper = styled.div`
   background: #fafafa;
 `;
 
-// 비활성화 래퍼
 const DisabledWrapper = styled.div<{ disabled: boolean }>`
   position: relative;
 
@@ -465,18 +507,22 @@ const DisabledWrapper = styled.div<{ disabled: boolean }>`
   `}
 `;
 
+// 높이 전환 애니메이션, 수직 스크롤 방지 추가
 const FullWidthSlider = styled.div`
   display: flex;
+  align-items: flex-start;
   overflow-x: scroll;
+  overflow-y: hidden;
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
   width: 100%;
-  position: relative; /* 플로팅 설정 */
-  -ms-overflow-style: none; /* IE */
-  scrollbar-width: none; /* Firefox */
+  position: relative;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  transition: height 0.3s ease-in-out;
 
   &::-webkit-scrollbar {
-    display: none; /* Chrome */
+    display: none;
   }
 `;
 
@@ -484,12 +530,12 @@ const FullWidthSlide = styled.div`
   flex: 0 0 100%;
   scroll-snap-align: start;
   width: 100%;
-  height: 100%;
   box-sizing: border-box;
 
   .timetableTitle {
     font-weight: 500;
     font-size: 14px;
+    margin-bottom: 8px;
   }
 `;
 
@@ -497,6 +543,7 @@ const IndicatorWrapper = styled.div`
   width: 100%;
   display: flex;
   pointer-events: none;
+  margin-top: 8px;
 `;
 
 const Dot = styled.div<{ active: boolean }>`
@@ -512,7 +559,8 @@ const Dot = styled.div<{ active: boolean }>`
 
 const Placeholder = styled.div`
   width: 100%;
-  height: 250px;
+  height: auto;
+  min-height: 250px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -553,7 +601,7 @@ const Modal = styled.div`
   img {
     width: 100%;
     height: auto;
-    max-height: 300px; // 영역 침범 방지
+    max-height: 300px;
     object-fit: contain;
   }
 
