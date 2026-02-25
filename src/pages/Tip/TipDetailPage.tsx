@@ -15,6 +15,7 @@ import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../../constants/EmptyMessage.tsx";
 import CommonBottomSheet from "src/components/modal/CommonBottomSheet.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
+import { useIsAdminRole } from "../../hooks/useIsAdminRole";
 
 export default function TipDetailPage() {
   const { boardId } = useParams<{ boardId: string }>();
@@ -27,6 +28,10 @@ export default function TipDetailPage() {
   const { tokenInfo } = useUserStore();
   const [images, setImages] = useState<TipImage[]>([]);
   const isLoggedIn = Boolean(tokenInfo.accessToken);
+
+  // 관리자 권한 확인
+  const { isAdmin } = useIsAdminRole();
+
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [isneedupdate, setisneedupdate] = useState(false);
@@ -42,29 +47,22 @@ export default function TipDetailPage() {
         return;
       }
 
-      setIsLoading(true); // 데이터 로딩 시작
+      setIsLoading(true);
       try {
-        // 두 API 호출을 병렬로 처리하고 둘 다 완료될 때까지 기다립니다.
         const [tipResponse, imagesResponse] = await Promise.all([
           tokenInstance.get(`/tips/${boardId}`),
           tokenInstance.get(`/tips/${boardId}/image`),
         ]);
 
-        console.log("tipResponse", tipResponse);
-        console.log("tipimage", imagesResponse);
-        // 팁 상세 정보 설정
         setTip(tipResponse.data);
         setLikeCount(tipResponse.data.tipLikeCount);
         setLiked(tipResponse.data.checkLikeCurrentUser ?? false);
 
-        // 이미지 정보 설정
-        // const urls = imagesResponse.data.map((img: any) => img.fileName);
         setImages(imagesResponse.data);
       } catch (err) {
         console.error("게시글 또는 이미지 불러오기 실패", err);
-        // setTip(null); // 에러 발생 시 데이터 초기화
       } finally {
-        setIsLoading(false); // 데이터 로딩 완료
+        setIsLoading(false);
       }
     };
 
@@ -136,7 +134,7 @@ export default function TipDetailPage() {
       });
       setReplyInputs((prev) => ({ ...prev, [parentCommentId]: "" }));
       setReplyInputOpen((prev) => ({ ...prev, [parentCommentId]: false }));
-      setisneedupdate(!isneedupdate); // 대댓글 등록 후 isneedupdate 상태 변경
+      setisneedupdate(!isneedupdate);
     } catch (err) {
       alert("대댓글 등록 실패");
     }
@@ -150,20 +148,48 @@ export default function TipDetailPage() {
     trackMouse: true,
   });
 
+  // 관리자 권한이 있는 경우에만 헤더 메뉴 노출
   useSetHeader({
     title: "게시글 상세",
-    menuItems: [
-      {
-        label: "수정하기",
-        onClick: () =>
-          navigate("/tips/write", { state: { tip: tip, tipImages: images } }),
-      },
-      {
-        label: "삭제하기",
-        onClick: handleDelete,
-      },
-    ],
+    menuItems:
+      isLoggedIn && isAdmin
+        ? [
+            {
+              label: "수정하기",
+              onClick: () =>
+                navigate("/tips/write", {
+                  state: { tip: tip, tipImages: images },
+                }),
+            },
+            {
+              label: "삭제하기",
+              onClick: handleDelete,
+            },
+          ]
+        : undefined,
   });
+
+  // 텍스트 내 URL 감지 및 링크 변환
+  const renderContentWithLinks = (content: string) => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = content.split(urlRegex);
+
+    return parts.map((part, index) => {
+      if (part.match(urlRegex)) {
+        return (
+          <StyledLink
+            key={index}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {part}
+          </StyledLink>
+        );
+      }
+      return part;
+    });
+  };
 
   return (
     <Wrapper>
@@ -192,7 +218,7 @@ export default function TipDetailPage() {
                     style={{
                       width: "100%",
                       height: "100%",
-                      objectFit: "cover",
+                      objectFit: "contain", // 원본 비율 유지하며 전체 노출
                       borderRadius: "10px",
                       userSelect: "none",
                       pointerEvents: "none",
@@ -209,14 +235,7 @@ export default function TipDetailPage() {
             )}
 
             <Title>{tip.title}</Title>
-            <BodyText>
-              {tip.content.split("\n").map((line, index) => (
-                <span key={index}>
-                  {line}
-                  <br />
-                </span>
-              ))}
-            </BodyText>
+            <BodyText>{renderContentWithLinks(tip.content)}</BodyText>
             <Divider />
 
             <LikeBox onClick={handleLike} style={{ cursor: "pointer" }}>
@@ -279,8 +298,8 @@ const Content = styled.div`
 
 const ImageSlider = styled.div`
   width: 100%;
-  height: 200px;
-  background: #f0f0f0;
+  height: 250px;
+  background: #f8f8f8; // 배경색을 살짝 조정하여 이미지 경계 구분
   position: relative;
   overflow: hidden;
   margin-bottom: 24px;
@@ -291,6 +310,9 @@ const SliderItem = styled.div`
   width: 100%;
   height: 100%;
   cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 `;
 
 const SliderIndicator = styled.div`
@@ -306,9 +328,18 @@ const Title = styled.h2`
   margin: 8px 0;
 `;
 
-const BodyText = styled.p`
+const BodyText = styled.div`
   font-size: 14px;
   line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow-wrap: break-word;
+`;
+
+const StyledLink = styled.a`
+  color: #007bff;
+  text-decoration: underline;
+  word-break: break-all;
 `;
 
 const LikeBox = styled.div`
