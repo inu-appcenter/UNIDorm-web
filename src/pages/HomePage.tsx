@@ -34,10 +34,14 @@ import { useQuery } from "@tanstack/react-query";
 import { getRoomMateScrollList } from "@/apis/roommate.ts";
 import { getFeatureFlagByKey } from "@/apis/featureFlag.ts";
 import YoutubeWidget from "@/components/home/YoutubeWidget.tsx";
+import MigrationBanner from "@/components/common/MigrationBanner.tsx";
 
 export default function HomePage() {
-  const { tokenInfo } = useUserStore();
+  const { tokenInfo, userInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
+
+  const isFreshman =
+    isLoggedIn && !/^[0-9]{8,10}$/.test(userInfo.studentNumber);
 
   const [dailyTips, setDailyTips] = useState<Tip[]>([]);
   const [groupOrders, setGroupOrders] = useState<GroupOrder[]>([]);
@@ -235,6 +239,8 @@ export default function HomePage() {
       )}
 
       <HomeBanner />
+
+      {isFreshman && <StyledMigrationBanner />}
 
       <ContentWrapper>
         <TitleContentArea title={""}>
@@ -522,4 +528,14 @@ const ServiceWrapper = styled.div`
   display: flex;
   flex-direction: row;
   gap: 16px;
+`;
+
+const StyledMigrationBanner = styled(MigrationBanner)`
+  width: calc(100% - 32px);
+  max-width: 1200px;
+  margin: 16px 16px 0;
+
+  @media (min-width: 768px) {
+    margin: 24px auto 0;
+  }
 `;

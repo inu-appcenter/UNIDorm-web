@@ -18,6 +18,7 @@ import { colleges, dormitory } from "@/constants/constants";
 import axios from "axios";
 import profile from "../../assets/profileimg.png";
 import { useSetHeader } from "@/hooks/useSetHeader";
+import MigrationBanner from "@/components/common/MigrationBanner";
 
 const menuItems = [
   {
@@ -256,11 +257,16 @@ export default function MyInfoEditPage() {
         <TitleContentArea
           title={"학번 정보"}
           children={
-            <StyledInput
-              placeholder="학번이 표시되는 자리입니다."
-              value={studentNumber}
-              disabled={true}
-            />
+            <>
+              <StyledInput
+                placeholder="학번이 표시되는 자리입니다."
+                value={studentNumber}
+                disabled={true}
+              />
+              {!/^[0-9]{8,10}$/.test(studentNumber) && (
+                <StyledMigrationBanner />
+              )}
+            </>
           }
         />
 
@@ -401,4 +407,8 @@ const FileInputLabel = styled.label`
 
 const UploadButtonWrapper = styled.div`
   width: 100%;
+`;
+
+const StyledMigrationBanner = styled(MigrationBanner)`
+  margin-top: 12px;
 `;
