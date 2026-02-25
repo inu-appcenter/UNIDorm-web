@@ -10,19 +10,21 @@ interface TitleLineProps {
 
 const TitleLine = ({ title, link, externalLink }: TitleLineProps) => {
   const navigate = useNavigate();
+
+  const handleClickMore = () => {
+    if (link) {
+      navigate(link);
+    } else if (externalLink) {
+      window.open(externalLink, "_blank");
+    }
+  };
   return (
-    <TitleLineWrapper
-      onClick={() => {
-        if (link) {
-          navigate(link);
-        } else if (externalLink) {
-          window.open(externalLink, "_blank");
-        }
-      }}
-    >
-      <div className="title">{title}</div>
+    <TitleLineWrapper>
+      <div className="title" onClick={handleClickMore}>
+        {title}
+      </div>
       {(link || externalLink) && (
-        <div className="more">
+        <div className="more" onClick={handleClickMore}>
           더보기 <img src={FaRight} />
         </div>
       )}
