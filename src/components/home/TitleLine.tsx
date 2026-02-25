@@ -5,15 +5,24 @@ import FaRight from "../../assets/FaRight.svg";
 interface TitleLineProps {
   title?: string;
   link?: string;
+  externalLink?: string;
 }
 
-const TitleLine = ({ title, link }: TitleLineProps) => {
+const TitleLine = ({ title, link, externalLink }: TitleLineProps) => {
   const navigate = useNavigate();
   return (
-    <TitleLineWrapper>
+    <TitleLineWrapper
+      onClick={() => {
+        if (link) {
+          navigate(link);
+        } else if (externalLink) {
+          window.open(externalLink, "_blank");
+        }
+      }}
+    >
       <div className="title">{title}</div>
-      {link && (
-        <div onClick={() => navigate(link)} className="more">
+      {(link || externalLink) && (
+        <div className="more">
           더보기 <img src={FaRight} />
         </div>
       )}

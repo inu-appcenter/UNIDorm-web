@@ -4,6 +4,8 @@ import TitleLine from "../home/TitleLine.tsx";
 interface TitleContentAreaProps {
   title?: string;
   link?: string;
+  externalLink?: string;
+
   description?: string;
   margin?: string;
   padding?: string;
@@ -14,6 +16,7 @@ interface TitleContentAreaProps {
 const TitleContentArea = ({
   title,
   link,
+  externalLink,
   description,
   margin,
   padding,
@@ -24,7 +27,7 @@ const TitleContentArea = ({
     <TitleContentAreaWrapper>
       <HeaderSection>
         <TextGroup>
-          <TitleLine title={title} link={link} />
+          <TitleLine title={title} link={link} externalLink={externalLink} />
           {description && (
             <DescriptionText $margin={margin} $padding={padding}>
               {description}

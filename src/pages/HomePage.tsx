@@ -33,6 +33,7 @@ import RoomMateCard from "@/components/roommate/RoomMateCard.tsx";
 import { useQuery } from "@tanstack/react-query";
 import { getRoomMateScrollList } from "@/apis/roommate.ts";
 import { getFeatureFlagByKey } from "@/apis/featureFlag.ts";
+import YoutubeWidget from "@/components/home/YoutubeWidget.tsx";
 
 export default function HomePage() {
   const { tokenInfo } = useUserStore();
@@ -64,6 +65,8 @@ export default function HomePage() {
     (platform === "ios_browser" || platform === "android_browser") &&
       Math.random() < 0.4,
   );
+
+  const CHANNEL_ID = "UCrpqEmMWCOg6P8FSk6mN5Hw"; //인천대학교 생활원 유튜브 채널 id
 
   useEffect(() => {
     const fetchPopupNotices = async () => {
@@ -195,6 +198,8 @@ export default function HomePage() {
     setNotification(null);
   };
 
+  const [isOpenGroupPurchase] = useState(false);
+
   useSetHeader({
     showAlarm: true,
   });
@@ -325,6 +330,12 @@ export default function HomePage() {
             </NotiArea>
           )}
         </TitleContentArea>
+        <TitleContentArea
+          title={"생활원 YouTube"}
+          externalLink={`https://www.youtube.com/channel/${CHANNEL_ID}`}
+        >
+          <YoutubeWidget />
+        </TitleContentArea>
         <GridContainer>
           <TitleContentArea title="오늘의 Best 꿀팁" link={"/tips"}>
             {isTipsLoading ? (
@@ -349,15 +360,17 @@ export default function HomePage() {
           />
         </GridContainer>
 
-        <TitleContentArea title={"임박한 공동구매"} link={"/groupPurchase"}>
-          {isGroupOrdersLoading ? (
-            <LoadingSpinner message={"공동구매를 불러오고 있어요!"} />
-          ) : groupOrders.length > 0 ? (
-            <GroupPurchaseList groupOrders={groupOrders.slice(0, 4)} />
-          ) : (
-            <EmptyMessage message={"임박한 공동구매가 없습니다."} />
-          )}
-        </TitleContentArea>
+        {isOpenGroupPurchase && (
+          <TitleContentArea title={"임박한 공동구매"} link={"/groupPurchase"}>
+            {isGroupOrdersLoading ? (
+              <LoadingSpinner message={"공동구매를 불러오고 있어요!"} />
+            ) : groupOrders.length > 0 ? (
+              <GroupPurchaseList groupOrders={groupOrders.slice(0, 4)} />
+            ) : (
+              <EmptyMessage message={"임박한 공동구매가 없습니다."} />
+            )}
+          </TitleContentArea>
+        )}
       </ContentWrapper>
 
       <img className="appcenter-logo" src={앱센터로고가로} />
