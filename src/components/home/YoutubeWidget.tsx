@@ -15,23 +15,44 @@ interface VideoData {
 
 const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
 const CHANNEL_ID = "UCrpqEmMWCOg6P8FSk6mN5Hw";
+// 업로드 플레이리스트 ID
+const UPLOADS_PLAYLIST_ID = "UUrpqEmMWCOg6P8FSk6mN5Hw";
 
 // 유튜브 영상 데이터 페칭 함수
 const fetchYoutubeVideos = async (sort: string): Promise<VideoData[]> => {
-  const orderParam = sort === "date" ? "date" : "viewCount";
+  let videoIds = "";
 
-  const searchResponse = await fetch(
-    `https://www.googleapis.com/youtube/v3/search?key=${API_KEY}&channelId=${CHANNEL_ID}&part=id&order=${orderParam}&maxResults=3&type=video`,
-  );
-  const searchData = await searchResponse.json();
+  if (sort === "date") {
+    // 최신순 조회
+    const playlistResponse = await fetch(
+      `https://www.googleapis.com/youtube/v3/playlistItems?key=${API_KEY}&playlistId=${UPLOADS_PLAYLIST_ID}&part=snippet&maxResults=3`,
+    );
+    const playlistData = await playlistResponse.json();
 
-  if (!searchData.items || searchData.items.length === 0) {
-    return [];
+    if (!playlistData.items || playlistData.items.length === 0) {
+      return [];
+    }
+
+    const targetItems = playlistData.items.slice(0, 3);
+    videoIds = targetItems
+      .map((item: any) => item.snippet.resourceId.videoId)
+      .join(",");
+  } else {
+    // 조회수순 조회
+    const searchResponse = await fetch(
+      `https://www.googleapis.com/youtube/v3/search?key=${API_KEY}&channelId=${CHANNEL_ID}&part=id&order=viewCount&maxResults=3&type=video`,
+    );
+    const searchData = await searchResponse.json();
+
+    if (!searchData.items || searchData.items.length === 0) {
+      return [];
+    }
+
+    const targetItems = searchData.items.slice(0, 3);
+    videoIds = targetItems.map((item: any) => item.id.videoId).join(",");
   }
 
-  const targetItems = searchData.items.slice(0, 3);
-  const videoIds = targetItems.map((item: any) => item.id.videoId).join(",");
-
+  // 영상 통계 데이터 조회
   const videosResponse = await fetch(
     `https://www.googleapis.com/youtube/v3/videos?key=${API_KEY}&id=${videoIds}&part=snippet,statistics`,
   );
@@ -91,7 +112,7 @@ const YoutubeListWidget = () => {
                   <Skeleton width="40%" height={12} />
                 </InfoWrapper>
               </VideoItem>
-              {/* 구분선 표시 */}
+              {/* 구분선 */}
               {i < 2 && <Divider margin={"16px 0"} />}
             </div>
           ))}
