@@ -15,9 +15,9 @@ interface VideoData {
 
 const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
 // 대상 채널 ID
-const CHANNEL_ID = "UCqOO8FqoVW6Y87jLnqhdflA";
+const CHANNEL_ID = "UCrpqEmMWCOg6P8FSk6mN5Hw";
 // 업로드 플레이리스트 ID
-const UPLOADS_PLAYLIST_ID = "UUqOO8FqoVW6Y87jLnqhdflA";
+const UPLOADS_PLAYLIST_ID = "UUrpqEmMWCOg6P8FSk6mN5Hw";
 
 // 유튜브 영상 데이터 페칭 함수
 const fetchYoutubeVideos = async (sort: string): Promise<VideoData[]> => {
