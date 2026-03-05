@@ -14,27 +14,61 @@ interface VideoData {
 }
 
 const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
+// 대상 채널 ID
 const CHANNEL_ID = "UCrpqEmMWCOg6P8FSk6mN5Hw";
+// 업로드 플레이리스트 ID
+const UPLOADS_PLAYLIST_ID = "UUrpqEmMWCOg6P8FSk6mN5Hw";
 
 // 유튜브 영상 데이터 페칭 함수
 const fetchYoutubeVideos = async (sort: string): Promise<VideoData[]> => {
-  const orderParam = sort === "date" ? "date" : "viewCount";
+  let videoIds = "";
 
-  const searchResponse = await fetch(
-    `https://www.googleapis.com/youtube/v3/search?key=${API_KEY}&channelId=${CHANNEL_ID}&part=id&order=${orderParam}&maxResults=3&type=video`,
-  );
-  const searchData = await searchResponse.json();
+  if (sort === "date") {
+    // 최신순 조회
+    const playlistResponse = await fetch(
+      `https://www.googleapis.com/youtube/v3/playlistItems?key=${API_KEY}&playlistId=${UPLOADS_PLAYLIST_ID}&part=snippet&maxResults=3`,
+    );
 
-  if (!searchData.items || searchData.items.length === 0) {
-    return [];
+    // 응답 상태 확인
+    if (!playlistResponse.ok) throw new Error("플레이리스트 호출 실패");
+
+    const playlistData = await playlistResponse.json();
+
+    if (!playlistData.items || playlistData.items.length === 0) {
+      return [];
+    }
+
+    const targetItems = playlistData.items.slice(0, 3);
+    videoIds = targetItems
+      .map((item: any) => item.snippet.resourceId.videoId)
+      .join(",");
+  } else {
+    // 조회수순 조회
+    const searchResponse = await fetch(
+      `https://www.googleapis.com/youtube/v3/search?key=${API_KEY}&channelId=${CHANNEL_ID}&part=id&order=viewCount&maxResults=3&type=video`,
+    );
+
+    // 응답 상태 확인
+    if (!searchResponse.ok) throw new Error("검색 호출 실패");
+
+    const searchData = await searchResponse.json();
+
+    if (!searchData.items || searchData.items.length === 0) {
+      return [];
+    }
+
+    const targetItems = searchData.items.slice(0, 3);
+    videoIds = targetItems.map((item: any) => item.id.videoId).join(",");
   }
 
-  const targetItems = searchData.items.slice(0, 3);
-  const videoIds = targetItems.map((item: any) => item.id.videoId).join(",");
-
+  // 영상 통계 데이터 조회
   const videosResponse = await fetch(
     `https://www.googleapis.com/youtube/v3/videos?key=${API_KEY}&id=${videoIds}&part=snippet,statistics`,
   );
+
+  // 응답 상태 확인
+  if (!videosResponse.ok) throw new Error("상세 데이터 호출 실패");
+
   const videosData = await videosResponse.json();
 
   const formattedVideos = videosData.items.map((item: any) => ({
@@ -51,11 +85,16 @@ const fetchYoutubeVideos = async (sort: string): Promise<VideoData[]> => {
 const YoutubeListWidget = () => {
   const [sort, setSort] = useState("date");
 
-  // 리액트 쿼리 설정
-  const { data: videos = [], isLoading } = useQuery({
+  // 리액트 쿼리 설정 및 에러 상태 추출
+  const {
+    data: videos = [],
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ["youtubeVideos", sort],
     queryFn: () => fetchYoutubeVideos(sort),
     staleTime: 1000 * 60 * 60,
+    retry: 1, // 에러 시 1회 재시도
   });
 
   const formatViewCount = (count: string) => {
@@ -72,7 +111,8 @@ const YoutubeListWidget = () => {
     <>
       <SortDropBox sort={sort} setSort={setSort} />
 
-      {isLoading ? (
+      {/* 로딩 혹은 에러 발생 시 스켈레톤 유지 */}
+      {isLoading || isError ? (
         <ListContainer>
           {[...Array(3)].map((_, i) => (
             <div key={i}>
@@ -91,7 +131,7 @@ const YoutubeListWidget = () => {
                   <Skeleton width="40%" height={12} />
                 </InfoWrapper>
               </VideoItem>
-              {/* 구분선 표시 */}
+              {/* 구분선 */}
               {i < 2 && <Divider margin={"16px 0"} />}
             </div>
           ))}
