@@ -2,6 +2,7 @@ import { Outlet } from "react-router-dom";
 import { ErrorBoundary } from "@/ErrorBoundary";
 import ScrollToTop from "../components/layout/ScrollToTop";
 import { useAppInit } from "@/hooks/useAppInit"; // 이전에 만든 인증/FCM 훅
+import AIChatFloatingButton from "@/components/home/AIChatFloatingButton";
 
 const AppInitializer = () => {
   // 전역 초기화 로직 실행
@@ -13,6 +14,8 @@ const AppInitializer = () => {
       <ScrollToTop />
       {/* 2. 하위 레이아웃/페이지 렌더링 */}
       <Outlet />
+      {/* 3. 전역 AI 챗봇 버튼 */}
+      <AIChatFloatingButton />
     </ErrorBoundary>
   );
 };

@@ -14,9 +14,14 @@ import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import TopPopupNotification from "../../components/common/TopPopupNotification.tsx";
 import { getMobilePlatform } from "@/utils/getMobilePlatform";
 import { useSetHeader } from "@/hooks/useSetHeader";
+import useAIChatStore from "@/stores/useAIChatStore";
+import ChatBulButtonImg from "@/assets/ai-chat/챗불이버튼.webp";
+import { useSetAIChat } from "@/hooks/useSetAIChat";
 
 const ComplainListPage = () => {
+  useSetAIChat({ isVisible: true, shouldAnimate: false });
   const navigate = useNavigate();
+  const openChat = useAIChatStore((state) => state.openChat);
   const { tokenInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
 
@@ -159,6 +164,20 @@ const ComplainListPage = () => {
         />
       )}
 
+      <AIChatBanner onClick={openChat}>
+        <div className="banner-content">
+          <div className="banner-text">
+            <span className="banner-title">챗불이에게 먼저 물어보세요!</span>
+            <span className="banner-desc">
+              기숙사 생활 수칙부터 행정 절차까지 바로 답변해드려요.
+            </span>
+          </div>
+          <div className="banner-character">
+            <img src={ChatBulButtonImg} alt="챗불이" />
+          </div>
+        </div>
+      </AIChatBanner>
+
       {/*<span className="description">*/}
       {/*  인천대학교 생활원 민원을 작성할 수 있습니다.*/}
       {/*  <br />*/}
@@ -253,7 +272,7 @@ const ComplainListPage = () => {
 export default ComplainListPage;
 
 const ComplainListPageWrapper = styled.div`
-  padding: 0 16px 100px;
+  padding: 16px 16px 100px;
   display: flex;
   flex-direction: column;
   gap: 32px;
@@ -266,6 +285,79 @@ const ComplainListPageWrapper = styled.div`
 
   .description {
     font-size: 14px;
+  }
+`;
+
+const AIChatBanner = styled.div`
+  width: 100%;
+  max-width: 1200px;
+  background: linear-gradient(135deg, #eef5ff 0%, #f9fbff 100%);
+  border-radius: 16px;
+  padding: 18px 20px;
+  box-sizing: border-box;
+  cursor: pointer;
+  border: 1px solid rgba(0, 122, 255, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.05);
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 122, 255, 0.1);
+  }
+
+  .banner-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .banner-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .banner-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1c408c;
+  }
+
+  .banner-desc {
+    font-size: 12px;
+    color: #5570a6;
+    word-break: keep-all;
+  }
+
+  .banner-character {
+    position: relative;
+    width: 54px;
+    height: 54px;
+    flex-shrink: 0;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .bubble {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      background: white;
+      width: 24px;
+      height: 24px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(0, 122, 255, 0.2);
+    }
   }
 `;
 
