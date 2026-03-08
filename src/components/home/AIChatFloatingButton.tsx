@@ -1,0 +1,205 @@
+import { useState, useEffect } from "react";
+import styled from "styled-components";
+import { motion, AnimatePresence, Variants } from "framer-motion";
+import { MessageSquare, X } from "lucide-react";
+
+const AIChatFloatingButton = () => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
+    }
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, [isOpen]);
+
+  const modalVariants: Variants = {
+    hidden: {
+      scale: 0,
+      opacity: 0,
+      clipPath: "inset(0px round 100px)",
+    },
+    visible: {
+      scale: 1,
+      opacity: 1,
+      clipPath: "inset(0px round 24px)",
+      transition: {
+        type: "spring",
+        stiffness: 450,
+        damping: 35,
+        mass: 1,
+        staggerChildren: 0.1,
+        delayChildren: 0.05,
+      },
+    },
+    exit: {
+      scale: 0,
+      opacity: 0,
+      clipPath: "inset(0px round 100px)",
+      transition: {
+        type: "spring",
+        stiffness: 500,
+        damping: 45,
+        opacity: { duration: 0.15 },
+      },
+    },
+  };
+
+  const itemVariants: Variants = {
+    hidden: { opacity: 0, y: 15 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.3, ease: "easeOut" },
+    },
+  };
+
+  return (
+    <>
+      <AnimatePresence>
+        {isOpen && (
+          <ModalContainer
+            variants={modalVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+          >
+            <FloatingCloseButton
+              onClick={() => setIsOpen(false)}
+              variants={itemVariants}
+            >
+              <X size={20} />
+            </FloatingCloseButton>
+
+            <IframeContainer variants={itemVariants}>
+              <iframe
+                src="https://unidorm-aichat.pages.dev/"
+                title="AI Chat"
+                width="100%"
+                height="100%"
+                frameBorder="0"
+              />
+            </IframeContainer>
+          </ModalContainer>
+        )}
+      </AnimatePresence>
+
+      <FloatingButton
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        onClick={() => setIsOpen(!isOpen)}
+        aria-label="AI 챗봇 열기"
+      >
+        <MessageSquare size={30} color="white" />
+      </FloatingButton>
+    </>
+  );
+};
+
+const FloatingButton = styled(motion.button)`
+  position: fixed;
+  bottom: 90px;
+  right: 20px;
+  width: 60px;
+  height: 60px;
+  border-radius: 30px;
+  background-color: #1c408c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  border: none;
+  cursor: pointer;
+  z-index: 1001;
+
+  @media (min-width: 1024px) {
+    right: calc(50% - 600px + 20px);
+  }
+`;
+
+const ModalContainer = styled(motion.div)`
+  position: fixed;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  z-index: 1002;
+  box-shadow: 0 12px 60px rgba(0, 0, 0, 0.3);
+
+  /* 하드웨어 가속 및 레이어 최적화 */
+  transform: translateZ(0);
+  will-change: transform, opacity, clip-path;
+  isolation: isolate;
+
+  /* Mobile (Default): Origin centered on the floating button */
+  top: 20px;
+  bottom: 20px;
+  left: 12px;
+  right: 12px;
+  transform-origin: calc(100% - 42px) calc(100% - 104px);
+
+  /* Tablet & Desktop: Origin centered on the floating button */
+  @media (min-width: 451px) {
+    top: auto;
+    left: auto;
+    width: 380px;
+    height: 600px;
+    bottom: 90px;
+    right: 20px;
+    max-height: calc(100dvh - 170px);
+    transform-origin: calc(100% - 30px) calc(100% - 30px);
+  }
+
+  /* PC (Large Screens): Origin at button (button is to the right of modal) */
+  @media (min-width: 1024px) {
+    right: calc(50% - 600px + 20px + 75px);
+    bottom: 90px;
+    height: 600px;
+    transform-origin: calc(100% + 45px) calc(100% - 30px);
+  }
+`;
+
+const FloatingCloseButton = styled(motion.button)`
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.05);
+  border: none;
+  color: #333;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 16px;
+  transition: background 0.2s;
+  z-index: 10;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.12);
+  }
+`;
+
+const IframeContainer = styled(motion.div)`
+  flex: 1;
+  width: 100%;
+  background: #f8f9fa;
+  position: relative;
+
+  /* 내부 애니메이션 성능 확보를 위한 독립 레이어 분리 */
+  transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
+
+  iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
+  }
+`;
+
+export default AIChatFloatingButton;
