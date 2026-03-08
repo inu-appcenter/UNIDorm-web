@@ -164,3 +164,18 @@ export const putUserAgreement = async (
   console.log(response);
   return response;
 };
+
+// 신입생 포털 계정 통합
+export const putInuStudent = async (
+  studentNumber: string,
+  password: string,
+): Promise<AxiosResponse<TokenInfo>> => {
+  console.log(studentNumber, password);
+
+  const response = await tokenInstance.put<TokenInfo>(`/users/inu-student`, {
+    studentNumber,
+    password,
+  });
+
+  return response;
+};
