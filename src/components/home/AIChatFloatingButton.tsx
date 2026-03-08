@@ -2,9 +2,12 @@ import { useState, useEffect } from "react";
 import styled from "styled-components";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import { MessageSquare, X } from "lucide-react";
+import useUserStore from "@/stores/useUserStore";
 
 const AIChatFloatingButton = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { tokenInfo } = useUserStore();
+  const accessToken = tokenInfo.accessToken;
 
   useEffect(() => {
     if (isOpen) {
@@ -21,12 +24,10 @@ const AIChatFloatingButton = () => {
     hidden: {
       scale: 0,
       opacity: 0,
-      clipPath: "inset(0px round 100px)",
     },
     visible: {
       scale: 1,
       opacity: 1,
-      clipPath: "inset(0px round 24px)",
       transition: {
         type: "spring",
         stiffness: 450,
@@ -39,7 +40,6 @@ const AIChatFloatingButton = () => {
     exit: {
       scale: 0,
       opacity: 0,
-      clipPath: "inset(0px round 100px)",
       transition: {
         type: "spring",
         stiffness: 500,
@@ -62,29 +62,37 @@ const AIChatFloatingButton = () => {
     <>
       <AnimatePresence>
         {isOpen && (
-          <ModalContainer
-            variants={modalVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-          >
-            <FloatingCloseButton
+          <>
+            <Backdrop
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               onClick={() => setIsOpen(false)}
-              variants={itemVariants}
+            />
+            <ModalContainer
+              variants={modalVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
             >
-              <X size={20} />
-            </FloatingCloseButton>
+              <FloatingCloseButton
+                onClick={() => setIsOpen(false)}
+                variants={itemVariants}
+              >
+                <X size={20} />
+              </FloatingCloseButton>
 
-            <IframeContainer variants={itemVariants}>
-              <iframe
-                src="https://unidorm-aichat.pages.dev/"
-                title="AI Chat"
-                width="100%"
-                height="100%"
-                frameBorder="0"
-              />
-            </IframeContainer>
-          </ModalContainer>
+              <IframeContainer variants={itemVariants}>
+                <iframe
+                  src={`https://unidorm-aichat.pages.dev/?token=${accessToken || ""}`}
+                  title="AI Chat"
+                  width="100%"
+                  height="100%"
+                  frameBorder="0"
+                />
+              </IframeContainer>
+            </ModalContainer>
+          </>
         )}
       </AnimatePresence>
 
@@ -100,6 +108,16 @@ const AIChatFloatingButton = () => {
   );
 };
 
+const Backdrop = styled(motion.div)`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.25);
+  z-index: 1001;
+`;
+
 const FloatingButton = styled(motion.button)`
   position: fixed;
   bottom: 90px;
@@ -114,7 +132,7 @@ const FloatingButton = styled(motion.button)`
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
   border: none;
   cursor: pointer;
-  z-index: 1001;
+  z-index: 1002;
 
   @media (min-width: 1024px) {
     right: calc(50% - 600px + 20px);
@@ -126,12 +144,21 @@ const ModalContainer = styled(motion.div)`
   background: white;
   display: flex;
   flex-direction: column;
-  z-index: 1002;
-  box-shadow: 0 12px 60px rgba(0, 0, 0, 0.3);
+  z-index: 1003;
+  border-radius: 32px;
+  overflow: hidden;
+
+  /* 강력하고 명확한 다층 그림자 */
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.35),
+    0 10px 15px -3px rgba(0, 0, 0, 0.1);
+
+  /* 더욱 선명한 테두리 */
+  border: 1px solid rgba(0, 0, 0, 0.08);
 
   /* 하드웨어 가속 및 레이어 최적화 */
   transform: translateZ(0);
-  will-change: transform, opacity, clip-path;
+  will-change: transform, opacity;
   isolation: isolate;
 
   /* Mobile (Default): Origin centered on the floating button */
