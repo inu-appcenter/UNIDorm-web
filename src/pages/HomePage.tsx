@@ -34,9 +34,10 @@ import { useQuery } from "@tanstack/react-query";
 import { getRoomMateScrollList } from "@/apis/roommate.ts";
 import { getFeatureFlagByKey } from "@/apis/featureFlag.ts";
 import YoutubeWidget from "@/components/home/YoutubeWidget.tsx";
-import AIChatFloatingButton from "../components/home/AIChatFloatingButton.tsx";
+import { useSetAIChat } from "@/hooks/useSetAIChat";
 
 export default function HomePage() {
+  useSetAIChat({ isVisible: true, shouldAnimate: true });
   const { tokenInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
 
@@ -398,7 +399,6 @@ export default function HomePage() {
           }
         }}
       />
-      <AIChatFloatingButton />
     </HomePageWrapper>
   );
 }

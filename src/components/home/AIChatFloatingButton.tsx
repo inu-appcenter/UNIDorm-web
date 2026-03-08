@@ -2,16 +2,26 @@ import { useState, useEffect } from "react";
 import styled from "styled-components";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import { X } from "lucide-react";
+import { useLocation } from "react-router-dom";
 import useUserStore from "@/stores/useUserStore";
 import ChatBulButtonImg from "@/assets/ai-chat/챗불이버튼.webp";
 import TooltipMessage from "@/components/common/TooltipMessage";
+import useAIChatStore from "@/stores/useAIChatStore";
 
 const AIChatFloatingButton = () => {
-  const [isOpen, setIsOpen] = useState(false);
+  const isOpen = useAIChatStore((state) => state.isOpen);
+  const isVisible = useAIChatStore((state) => state.isVisible);
+  const shouldAnimate = useAIChatStore((state) => state.shouldAnimate);
+
+  const toggleChat = useAIChatStore((state) => state.toggleChat);
+  const closeChat = useAIChatStore((state) => state.closeChat);
+  const location = useLocation();
+
   const [showTooltip, setShowTooltip] = useState(() => {
     const stored = localStorage.getItem("showAIChatTooltip");
     return stored !== "false";
   });
+
   const { tokenInfo } = useUserStore();
   const accessToken = tokenInfo.accessToken;
 
@@ -35,11 +45,10 @@ const AIChatFloatingButton = () => {
     localStorage.setItem("showAIChatTooltip", "false");
   };
 
+  if (!isVisible) return null;
+
   const modalVariants: Variants = {
-    hidden: {
-      scale: 0,
-      opacity: 0,
-    },
+    hidden: { scale: 0, opacity: 0 },
     visible: {
       scale: 1,
       opacity: 1,
@@ -82,7 +91,7 @@ const AIChatFloatingButton = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setIsOpen(false)}
+              onClick={closeChat}
             />
             <ModalContainer
               variants={modalVariants}
@@ -90,10 +99,7 @@ const AIChatFloatingButton = () => {
               animate="visible"
               exit="exit"
             >
-              <FloatingCloseButton
-                onClick={() => setIsOpen(false)}
-                variants={itemVariants}
-              >
+              <FloatingCloseButton onClick={closeChat} variants={itemVariants}>
                 <X size={20} />
               </FloatingCloseButton>
 
@@ -112,22 +118,20 @@ const AIChatFloatingButton = () => {
       </AnimatePresence>
 
       <FloatingButton
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        animate={{
-          y: [0, -8, 0],
-        }}
-        transition={{
+        key={location.pathname} // 페이지 변경 시 애니메이션 초기화
+        // 애니메이션이 꺼져있을 때는 명시적으로 y: 0으로 고정
+        animate={shouldAnimate ? { y: [0, -8, 0] } : { y: 0 }}
+        transition={shouldAnimate ? {
           duration: 3,
           repeat: Infinity,
           ease: "easeInOut",
-        }}
-        onClick={() => setIsOpen(!isOpen)}
+        } : { duration: 0 }}
+        onClick={toggleChat}
         aria-label="AI 챗봇 열기"
       >
         <AnimatePresence>
           {showTooltip && (
-            <motion.div
+            <TooltipWrapper
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
@@ -140,7 +144,7 @@ const AIChatFloatingButton = () => {
                 align="right"
                 width="max-content"
               />
-            </motion.div>
+            </TooltipWrapper>
           )}
         </AnimatePresence>
         <img src={ChatBulButtonImg} alt="AI 챗봇" />
@@ -148,6 +152,15 @@ const AIChatFloatingButton = () => {
     </>
   );
 };
+
+const TooltipWrapper = styled(motion.div)`
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  width: max-content;
+  pointer-events: auto;
+  margin-bottom: -10px;
+`;
 
 const Backdrop = styled(motion.div)`
   position: fixed;
