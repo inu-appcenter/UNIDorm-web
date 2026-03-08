@@ -1,24 +1,39 @@
 import { useState, useEffect } from "react";
 import styled from "styled-components";
 import { motion, AnimatePresence, Variants } from "framer-motion";
-import { MessageSquare, X } from "lucide-react";
+import { X } from "lucide-react";
 import useUserStore from "@/stores/useUserStore";
+import ChatBulButtonImg from "@/assets/ai-chat/챗불이버튼.webp";
+import TooltipMessage from "@/components/common/TooltipMessage";
 
 const AIChatFloatingButton = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(() => {
+    const stored = localStorage.getItem("showAIChatTooltip");
+    return stored !== "false";
+  });
   const { tokenInfo } = useUserStore();
   const accessToken = tokenInfo.accessToken;
 
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
+      if (showTooltip) {
+        setShowTooltip(false);
+        localStorage.setItem("showAIChatTooltip", "false");
+      }
     } else {
       document.body.style.overflow = "auto";
     }
     return () => {
       document.body.style.overflow = "auto";
     };
-  }, [isOpen]);
+  }, [isOpen, showTooltip]);
+
+  const handleCloseTooltip = () => {
+    setShowTooltip(false);
+    localStorage.setItem("showAIChatTooltip", "false");
+  };
 
   const modalVariants: Variants = {
     hidden: {
@@ -99,10 +114,36 @@ const AIChatFloatingButton = () => {
       <FloatingButton
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
+        animate={{
+          y: [0, -8, 0],
+        }}
+        transition={{
+          duration: 3,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
         onClick={() => setIsOpen(!isOpen)}
         aria-label="AI 챗봇 열기"
       >
-        <MessageSquare size={30} color="white" />
+        <AnimatePresence>
+          {showTooltip && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              <TooltipMessage
+                message="베타 오픈!\n기숙사에 대해\n무엇이든 물어보세요!"
+                onClose={handleCloseTooltip}
+                position="top"
+                align="right"
+                width="max-content"
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <img src={ChatBulButtonImg} alt="AI 챗봇" />
       </FloatingButton>
     </>
   );
@@ -120,22 +161,27 @@ const Backdrop = styled(motion.div)`
 
 const FloatingButton = styled(motion.button)`
   position: fixed;
-  bottom: 90px;
-  right: 20px;
-  width: 60px;
-  height: 60px;
-  border-radius: 30px;
-  background-color: #1c408c;
+  bottom: 85px;
+  right: 15px;
+  width: 75px;
+  height: 75px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  background: none;
   border: none;
   cursor: pointer;
   z-index: 1002;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.25));
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
 
   @media (min-width: 1024px) {
-    right: calc(50% - 600px + 20px);
+    right: calc(50% - 600px + 15px);
   }
 `;
 
