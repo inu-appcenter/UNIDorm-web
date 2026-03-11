@@ -105,7 +105,7 @@ const AIChatFloatingButton = () => {
 
               <IframeContainer variants={itemVariants}>
                 <iframe
-                  src={`https://unidorm-aichat.pages.dev/?token=${accessToken || ""}`}
+                  src={`https://aichat.unidorm.inuappcenter.kr/?token=${accessToken || ""}`}
                   title="AI Chat"
                   width="100%"
                   height="100%"
@@ -121,11 +121,15 @@ const AIChatFloatingButton = () => {
         key={location.pathname} // 페이지 변경 시 애니메이션 초기화
         // 애니메이션이 꺼져있을 때는 명시적으로 y: 0으로 고정
         animate={shouldAnimate ? { y: [0, -8, 0] } : { y: 0 }}
-        transition={shouldAnimate ? {
-          duration: 3,
-          repeat: Infinity,
-          ease: "easeInOut",
-        } : { duration: 0 }}
+        transition={
+          shouldAnimate
+            ? {
+                duration: 3,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }
+            : { duration: 0 }
+        }
         onClick={toggleChat}
         aria-label="AI 챗봇 열기"
       >
