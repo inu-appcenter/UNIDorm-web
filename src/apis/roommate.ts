@@ -268,3 +268,9 @@ export const updateNotificationFilter = async (
   console.log(response);
   return response;
 };
+
+export const deleteRoommatePost = async (
+  boardId: number,
+): Promise<AxiosResponse<void>> => {
+  return await tokenInstance.delete(`/roommates/${boardId}`);
+};

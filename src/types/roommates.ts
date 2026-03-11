@@ -23,6 +23,7 @@ export interface RoommatePostRequest extends RoommateBase {
 
 export interface RoommatePost extends RoommatePostRequest {
   boardId: number;
+  userId: number;
   matched: boolean;
   roommateBoardLike: number;
   userName: string;

@@ -1,10 +1,14 @@
 import styled from "styled-components";
 import { useEffect, useState } from "react";
-import { useLocation, useParams } from "react-router-dom";
+import { useLocation, useParams, useNavigate } from "react-router-dom";
 
 import profileimg from "../../assets/profileimg.png";
 import RoomMateBottomBar from "../../components/roommate/RoomMateBottomBar";
-import { getOpponentChecklist, getRoomMateDetail } from "@/apis/roommate";
+import {
+  getOpponentChecklist,
+  getRoomMateDetail,
+  deleteRoommatePost,
+} from "@/apis/roommate";
 import { RoommatePost } from "@/types/roommates";
 import UseUserStore from "../../stores/useUserStore.ts";
 import { useSetHeader } from "@/hooks/useSetHeader";
@@ -51,7 +55,9 @@ const religionEmojiMap: Record<string, string> = {
 
 export default function RoomMateBoardDetailPage() {
   const { boardId } = useParams<{ boardId: string }>();
-  const [boardData, setBoardData] = useState<RoommatePost | null>(null);
+  const navigate = useNavigate();
+  // 서버 응답 구조 변경에 대응하기 위해 any 혹은 확장된 타입을 사용합니다.
+  const [boardData, setBoardData] = useState<any | null>(null);
   const [myData, setMyData] = useState<RoommatePost | null>(null);
 
   const location = useLocation();
@@ -65,36 +71,22 @@ export default function RoomMateBoardDetailPage() {
     const fetchBoardData = async () => {
       try {
         const response = await getRoomMateDetail(Number(boardId));
-        console.log(response);
         setBoardData(response.data);
       } catch (error) {
         console.error("게시글 데이터를 불러오지 못했습니다:", error);
       }
     };
-    const fetchMyData = async () => {
-      return;
-      try {
-        const response = await getRoomMateDetail(Number(boardId));
-        console.log(response);
-        setMyData(response.data);
-      } catch (error) {
-        console.error("내 체크리스트를 불러오지 못했습니다:", error);
-      }
-    };
 
     fetchBoardData();
-    fetchMyData();
   }, [boardId]);
 
   useEffect(() => {
-    console.log(roomId);
     if (!roomId) return;
 
     const fetchOpponentChecklist = async () => {
       try {
         const response = await getOpponentChecklist(roomId);
         setBoardData(response.data);
-        console.log(response);
       } catch (error) {
         console.error("상대방 체크리스트 불러오기 실패", error);
       }
@@ -103,7 +95,27 @@ export default function RoomMateBoardDetailPage() {
     fetchOpponentChecklist();
   }, [roomId]);
 
-  useSetHeader({ title: "게시글 상세" });
+  const handleDelete = async () => {
+    if (!boardId || !window.confirm("정말로 이 게시글을 삭제하시겠습니까?"))
+      return;
+    try {
+      await deleteRoommatePost(Number(boardId));
+      alert("게시글이 삭제되었습니다.");
+      navigate("/roommates", { replace: true });
+    } catch (error) {
+      console.error("삭제 실패:", error);
+      alert("삭제 중 오류가 발생했습니다.");
+    }
+  };
+
+  // 핵심 수정 부분: 게시글 작성자의 userId와 로그인한 사용자의 id를 비교합니다.
+  const isMyPost = boardData && userInfo.id === boardData.userId;
+
+  // 헤더 설정: 본인일 때만 '삭제하기' 메뉴를 주입
+  useSetHeader({
+    title: "게시글 상세",
+    menuItems: isMyPost ? [{ label: "삭제하기", onClick: handleDelete }] : [],
+  });
 
   if (!boardData) return <div>로딩 중...</div>;
 
@@ -114,17 +126,19 @@ export default function RoomMateBoardDetailPage() {
           <img
             src={boardData.userProfileImageUrl || profileimg}
             className="profile-img"
+            alt="profile"
           />
           <div className="description">
             <div className="name">{partnerName || boardData.userName}</div>
             <div className="date">
-              {new Date(boardData.createDate).toLocaleTimeString("ko-KR", {
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
+              {boardData.createDate &&
+                new Date(boardData.createDate).toLocaleTimeString("ko-KR", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
             </div>
           </div>
         </UserArea>
@@ -142,7 +156,7 @@ export default function RoomMateBoardDetailPage() {
             color="#EAF4FF"
             icon="🏠"
             title="상주요일"
-            description={boardData.dormPeriod.join(", ")}
+            description={boardData.dormPeriod?.join(", ") || "정보 없음"}
             matched={
               myData?.dormPeriod?.join(",") === boardData.dormPeriod?.join(",")
             }
@@ -151,77 +165,77 @@ export default function RoomMateBoardDetailPage() {
             color="#FCEEF3"
             icon="🎓"
             title="단과대"
-            description={boardData.college}
+            description={boardData.college || "정보 없음"}
             matched={myData?.college === boardData.college}
           />
           <InfoCard
             color="#E4F6ED"
             icon="🧬"
             title="MBTI"
-            description={boardData.mbti}
+            description={boardData.mbti || "정보 없음"}
             matched={myData?.mbti === boardData.mbti}
           />
           <InfoCard
             color="#E8F0FE"
             icon="🚭"
             title="흡연여부"
-            description={boardData.smoking}
+            description={boardData.smoking || "정보 없음"}
             matched={myData?.smoking === boardData.smoking}
           />
           <InfoCard
             color="#F3F4F6"
             icon="😴"
             title="코골이 유무"
-            description={boardData.snoring}
+            description={boardData.snoring || "정보 없음"}
             matched={myData?.snoring === boardData.snoring}
           />
           <InfoCard
             color="#FFF6E9"
             icon="😬"
             title="이갈이 유무"
-            description={boardData.toothGrind}
+            description={boardData.toothGrind || "정보 없음"}
             matched={myData?.toothGrind === boardData.toothGrind}
           />
           <InfoCard
             color="#EAF4FF"
             icon="🛏️"
             title="잠귀"
-            description={boardData.sleeper}
+            description={boardData.sleeper || "정보 없음"}
             matched={myData?.sleeper === boardData.sleeper}
           />
           <InfoCard
             color="#FCEEF3"
             icon="🚿"
             title="샤워 시기"
-            description={boardData.showerHour}
+            description={boardData.showerHour || "정보 없음"}
             matched={myData?.showerHour === boardData.showerHour}
           />
           <InfoCard
             color="#E4F6ED"
             icon="⏰"
             title="샤워 시간"
-            description={boardData.showerTime}
+            description={boardData.showerTime || "정보 없음"}
             matched={myData?.showerTime === boardData.showerTime}
           />
           <InfoCard
             color="#E8F0FE"
             icon="🛌"
             title="취침 시기"
-            description={boardData.bedTime}
+            description={boardData.bedTime || "정보 없음"}
             matched={myData?.bedTime === boardData.bedTime}
           />
           <InfoCard
             color="#F3F4F6"
             icon="🧼"
             title="정리정돈"
-            description={boardData.arrangement}
+            description={boardData.arrangement || "정보 없음"}
             matched={myData?.arrangement === boardData.arrangement}
           />
           <InfoCard
             color="#F3F4F6"
             icon={religionEmojiMap[boardData.religion] || "🙏"}
             title="종교"
-            description={boardData.religion}
+            description={boardData.religion || "정보 없음"}
             matched={myData?.religion === boardData.religion}
           />
         </CardGrid>
@@ -239,14 +253,11 @@ export default function RoomMateBoardDetailPage() {
 
 const RoomMateDetailPageWrapper = styled.div`
   padding: 0 16px 100px;
-
   display: flex;
   flex-direction: column;
   gap: 16px;
   box-sizing: border-box;
-
   overflow-y: auto;
-
   background: #fafafa;
 `;
 
@@ -303,13 +314,10 @@ const ContentArea = styled.div`
     font-weight: 700;
     font-size: 16px;
     line-height: 24px;
-    /* 상자 높이와 동일 또는 150% */
     display: flex;
     align-items: center;
     letter-spacing: 0.38px;
-
     color: #1c1c1e;
-
     margin-bottom: 10px;
   }
 
@@ -318,11 +326,9 @@ const ContentArea = styled.div`
     font-weight: 500;
     font-size: 12px;
     line-height: 24px;
-    /* 또는 200% */
     display: flex;
     align-items: center;
     letter-spacing: 0.38px;
-
     color: #1c1c1e;
     margin-bottom: 16px;
     white-space: pre-line;
@@ -341,7 +347,6 @@ const CardItem = styled.div`
   padding: 16px;
   box-sizing: border-box;
   min-width: 140px;
-
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -349,13 +354,12 @@ const CardItem = styled.div`
 
   .icon-title {
     display: flex;
-    //align-items: center; /* 상하 중앙 정렬 */
     gap: 6px;
   }
 
   .icon {
     font-size: 20px;
-    line-height: 1; /* 아이콘 높이 조절 가능 */
+    line-height: 1;
   }
 
   .title {
@@ -384,6 +388,7 @@ const TitleArea = styled.div`
   align-items: center;
   width: 100%;
 `;
+
 const TopRightBadge = styled.div.withConfig({
   shouldForwardProp: (prop) => prop !== "dormType",
 })<{ dormType: string }>`
