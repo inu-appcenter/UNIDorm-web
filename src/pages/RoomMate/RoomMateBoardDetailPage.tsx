@@ -58,7 +58,7 @@ export default function RoomMateBoardDetailPage() {
   const navigate = useNavigate();
   // 서버 응답 구조 변경에 대응하기 위해 any 혹은 확장된 타입을 사용합니다.
   const [boardData, setBoardData] = useState<any | null>(null);
-  const [myData, setMyData] = useState<RoommatePost | null>(null);
+  const [myData] = useState<RoommatePost | null>(null);
 
   const location = useLocation();
   const partnerName = location.state?.partnerName;
