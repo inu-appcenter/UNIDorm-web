@@ -105,11 +105,12 @@ const AIChatFloatingButton = () => {
 
               <IframeContainer variants={itemVariants}>
                 <iframe
-                  src={`https://aichat.unidorm.inuappcenter.kr/?token=${accessToken || ""}`}
+                  src={`https://aichat.unidorm.inuappcenter.kr/?token=${
+                    accessToken || ""
+                  }&mode=${import.meta.env.MODE === "production" ? "prod" : "dev"}`}
                   title="AI Chat"
                   width="100%"
                   height="100%"
-                  frameBorder="0"
                 />
               </IframeContainer>
             </ModalContainer>
