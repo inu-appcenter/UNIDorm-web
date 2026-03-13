@@ -107,7 +107,7 @@ const AIChatFloatingButton = () => {
                 <iframe
                   src={`https://aichat.unidorm.inuappcenter.kr/?token=${
                     accessToken || ""
-                  }&mode=${import.meta.env.MODE === "production" ? "prod" : "dev"}`}
+                  }&mode=${import.meta.env.VITE_API_SUBDOMAIN === "unidorm-server" ? "prod" : "dev"}`}
                   title="AI Chat"
                   width="100%"
                   height="100%"

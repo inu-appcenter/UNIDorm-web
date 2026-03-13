@@ -15,7 +15,7 @@ export const useAppInit = () => {
 
   // 프로덕션 로그 제거
   useEffect(() => {
-    if (import.meta.env.MODE === "production") {
+    if (import.meta.env.VITE_API_SUBDOMAIN === "unidorm-server") {
       console.log =
         console.debug =
         console.info =
