@@ -24,6 +24,7 @@ import MyPage from "@/pages/MyPage";
 
 /* 페이지 - 서브 상세 (SubPage 하위) */
 import MyInfoEditPage from "@/pages/MyPage/MyInfoEditPage";
+import FreshmanMigrationPage from "@/pages/MyPage/FreshmanMigrationPage";
 import AgreementPage from "@/pages/MyPage/AgreementPage";
 import NotificationSettingPage from "@/pages/MyPage/NotificationSettingPage";
 import MyPostsPage from "@/pages/MyPostsPage";
@@ -125,7 +126,10 @@ export const router = createBrowserRouter([
           {
             path: "myinfoedit",
             element: <SubPage />,
-            children: [{ index: true, element: <MyInfoEditPage /> }],
+            children: [
+              { index: true, element: <MyInfoEditPage /> },
+              { path: "freshman-migration", element: <FreshmanMigrationPage /> },
+            ],
           },
 
           {

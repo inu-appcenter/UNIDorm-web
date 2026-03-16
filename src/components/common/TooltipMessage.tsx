@@ -11,6 +11,7 @@ interface CommonTooltipProps {
   position?: TooltipPosition;
   align?: TooltipAlign;
   width?: string;
+  minWidth?: string;
 }
 
 export default function TooltipMessage({
@@ -19,6 +20,7 @@ export default function TooltipMessage({
   position = "bottom",
   align = "right",
   width = "fit-content",
+  minWidth,
 }: CommonTooltipProps) {
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
@@ -33,6 +35,7 @@ export default function TooltipMessage({
       $position={position}
       $align={align}
       $width={width}
+      $minWidth={minWidth}
       onClick={handleClick}
     >
       <CloseButton onClick={handleClick}>×</CloseButton>
@@ -49,29 +52,30 @@ const TooltipContainer = styled.div<{
   $position: TooltipPosition;
   $align: TooltipAlign;
   $width: string;
+  $minWidth?: string;
 }>`
   position: absolute;
   z-index: 2000;
   width: ${({ $width }) => $width};
+  ${({ $minWidth }) => $minWidth && `min-width: ${$minWidth};`}
   padding: 10px 22px;
   color: #fff;
   font-size: 12px;
   text-align: center;
   cursor: pointer;
 
-  /* 텍스트 줄바꿈 설정 수정 */
-  white-space: pre-line; /* \\n은 줄바꿈으로 인정하고, 내용이 넘치면 자동 줄바꿈 */
-  word-break: keep-all; /* 단어 중간에서 끊기지 않도록 설정 (한글에 필수) */
-  overflow-wrap: break-word; /* 혹시라도 너무 긴 단어가 있으면 그건 쪼개서 줄바꿈 */
-  line-height: 1.5; /* 줄간격을 살짝 띄워 가독성 확보 */
+  /* 텍스트 줄바꿈 설정: 엔터(\n)는 허용하고 자동 줄바꿈은 방지 */
+  white-space: pre-line;
+  word-break: keep-all;
+  line-height: 1.5;
 
-  /* 유리 효과 및 불투명도 강화 */
+  /* 유리 효과 및 불투명도 강화 (디자인 유지) */
   background-color: ${TOOLTIP_BG};
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border-radius: 10px;
 
-  /* 테두리 광택 및 깊이감 */
+  /* 테두리 광택 및 깊이감 (디자인 유지) */
   border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
 
