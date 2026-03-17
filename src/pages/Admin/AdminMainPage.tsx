@@ -151,6 +151,8 @@ const AdminMainPage: React.FC = () => {
   ) as AdminPageItem["category"][];
   if (isMainAdmin) categories = [...categories, "개발 지원"];
 
+  const { roleName } = useIsAdminRole();
+
   return (
     <Wrapper>
       <Container>
@@ -161,10 +163,7 @@ const AdminMainPage: React.FC = () => {
             </UserAvatar>
             <WelcomeText>
               <h2>안녕하세요, {userInfo.name || "관리자"}님</h2>
-              <p>
-                {tokenInfo.role === "ADMIN" ? "총괄 관리자" : "서포터즈"}{" "}
-                권한으로 접속 중입니다.
-              </p>
+              <p>{roleName} 권한으로 접속 중입니다.</p>
             </WelcomeText>
           </WelcomeBox>
           <LogoutButton onClick={() => navigate("/logout")}>
