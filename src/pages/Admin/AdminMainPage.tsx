@@ -102,6 +102,22 @@ const AdminMainPage: React.FC = () => {
             <CardDescription>{page.description}</CardDescription>
           </MenuCard>
         ))}
+        <MenuCard
+          onClick={() =>
+            (window.location.href = `https://unidorm-aichat-admin-console.pages.dev/?token=${
+              tokenInfo.accessToken || ""
+            }&mode=${
+              import.meta.env.VITE_API_SUBDOMAIN === "unidorm-server"
+                ? "prod"
+                : "dev"
+            }`)
+          }
+        >
+          <CardTitle>AI 챗불이 관리</CardTitle>
+          <CardDescription>
+            AI 챗불이의 답변을 관리하고 학습시킬 수 있습니다.
+          </CardDescription>
+        </MenuCard>
         {isMainAdmin && (
           <MenuCard
             onClick={() =>
