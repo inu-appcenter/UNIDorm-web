@@ -19,6 +19,8 @@
     "axios": "^1.8.4",
     "babel-plugin-transform-remove-console": "^6.9.4",
     "date-fns": "^4.1.0",
+    "embla-carousel-autoplay": "^8.6.0",
+    "embla-carousel-react": "^8.6.0",
     "firebase": "^12.1.0",
     "framer-motion": "^12.34.0",
     "intersection-observer": "^0.12.2",

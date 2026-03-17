@@ -11,6 +11,7 @@ import useUserStore from "../../stores/useUserStore.ts";
 import { getRoommateChatHistory } from "@/apis/chat";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import { deleteRoommateChatRoom } from "@/apis/roommate";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 
 type MessageType = {
   id: number;
@@ -27,6 +28,7 @@ export default function ChattingPage() {
   const [typeString, setTypeString] = useState<string>("");
   const [messageList, setMessageList] = useState<MessageType[]>([]);
   const [inputValue, setInputValue] = useState<string>("");
+  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
   const { tokenInfo, userInfo } = useUserStore();
   const navigate = useNavigate();
 
@@ -92,6 +94,7 @@ export default function ChattingPage() {
     const init = async () => {
       if (chatType === "roommate") {
         setTypeString("룸메이트");
+        setIsHistoryLoading(true);
         try {
           const response = await getRoommateChatHistory(roomId);
           const chats = response.data;
@@ -112,6 +115,8 @@ export default function ChattingPage() {
           setMessageList(formattedMessages);
         } catch (error) {
           console.error("채팅 내역 불러오기 실패:", error);
+        } finally {
+          setIsHistoryLoading(false);
         }
         connect();
       } else if (chatType === "groupPurchase") {
@@ -227,35 +232,41 @@ export default function ChattingPage() {
 
       {/* 내부 스크롤 채팅 영역 (Flex Item, grow) */}
       <ChattingWrapper ref={scrollRef}>
-        {messageList.map((msg, index) => {
-          // 날짜 구분선 표시 여부 확인
-          let showDateLine = false;
-          if (index === 0) {
-            showDateLine = true;
-          } else {
-            const prevMsg = messageList[index - 1];
-            if (!isSameDate(prevMsg.createdAt, msg.createdAt)) {
-              showDateLine = true;
-            }
-          }
+        {isHistoryLoading ? (
+          <LoadingSpinner message="채팅 내역을 가져오고 있습니다..." />
+        ) : (
+          <>
+            {messageList.map((msg, index) => {
+              // 날짜 구분선 표시 여부 확인
+              let showDateLine = false;
+              if (index === 0) {
+                showDateLine = true;
+              } else {
+                const prevMsg = messageList[index - 1];
+                if (!isSameDate(prevMsg.createdAt, msg.createdAt)) {
+                  showDateLine = true;
+                }
+              }
 
-          return (
-            <React.Fragment key={msg.id}>
-              {showDateLine && (
-                <DateDivider>{formatDateLine(msg.createdAt)}</DateDivider>
-              )}
-              {msg.sender === "me" ? (
-                <ChatItemMy content={msg.content} time={msg.time} />
-              ) : (
-                <ChatItemOtherPerson
-                  content={msg.content}
-                  time={msg.time}
-                  userImageUrl={msg.userImageUrl}
-                />
-              )}
-            </React.Fragment>
-          );
-        })}
+              return (
+                <React.Fragment key={msg.id}>
+                  {showDateLine && (
+                    <DateDivider>{formatDateLine(msg.createdAt)}</DateDivider>
+                  )}
+                  {msg.sender === "me" ? (
+                    <ChatItemMy content={msg.content} time={msg.time} />
+                  ) : (
+                    <ChatItemOtherPerson
+                      content={msg.content}
+                      time={msg.time}
+                      userImageUrl={msg.userImageUrl}
+                    />
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </>
+        )}
       </ChattingWrapper>
 
       {/* 하단 고정 입력창 (Flex Item) */}

@@ -36,6 +36,7 @@ import { getFeatureFlagByKey } from "@/apis/featureFlag.ts";
 import YoutubeWidget from "@/components/home/YoutubeWidget.tsx";
 import { useSetAIChat } from "@/hooks/useSetAIChat";
 import MigrationBanner from "@/components/common/MigrationBanner.tsx";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function HomePage() {
   useSetAIChat({ isVisible: true, shouldAnimate: true });
@@ -211,6 +212,20 @@ export default function HomePage() {
     showAlarm: true,
   });
 
+  const fadeInUp = {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.5 }
+  };
+
+  const staggerContainer = {
+    animate: {
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
   return (
     <HomePageWrapper>
       {!isPopupLoading &&
@@ -232,157 +247,197 @@ export default function HomePage() {
           </HomeNoticeBottomSheet>
         ))}
 
-      {notification && (
-        <TopPopupNotification
-          title={notification.title}
-          message={notification.message}
-          onClose={handleCloseNotification}
-          duration={10000}
-        />
-      )}
+      <AnimatePresence>
+        {notification && (
+          <motion.div
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -50 }}
+          >
+            <TopPopupNotification
+              title={notification.title}
+              message={notification.message}
+              onClose={handleCloseNotification}
+              duration={10000}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <HomeBanner />
 
-      {isFreshman && <StyledMigrationBanner />}
+      {isFreshman && (
+        <motion.div {...fadeInUp} style={{ width: "100%", display: "flex", justifyContent: "center" }}>
+          <StyledMigrationBanner />
+        </motion.div>
+      )}
 
-      <ContentWrapper>
-        <TitleContentArea title={""}>
-          <ServiceWrapper>
-            <ServiceBox
-              title={"생활원 민원"}
-              imgsrc={민원아이콘}
-              onClick={() => {
-                if (!isLoggedIn) {
-                  alert("로그인 후 사용할 수 있습니다.");
-                  navigate("/login");
-                  return;
-                }
-                navigate("/complain");
-              }}
-            />
-            <ServiceBox
-              title={"폼"}
-              imgsrc={폼아이콘}
-              onClick={() => {
-                navigate("/form");
-              }}
-            />
-          </ServiceWrapper>
-        </TitleContentArea>
-        {isMatchingActive && (
-          <TitleContentArea
-            title={"2026년 1학기 룸메이트 모집"}
-            description={"룸메이트를 구하고 있는 다양한 UNI들을 찾아보세요!"}
-            link={"/roommate"}
-          >
-            <>
-              {isRoommateLoading ? (
-                <LoadingSpinner message="최신 목록을 불러오는 중..." />
-              ) : roommates && roommates.length > 0 ? (
-                roommates
-                  .slice(0, 2)
-                  .map((post) => (
-                    <RoomMateCard
-                      key={post.boardId}
-                      title={post.title}
-                      boardId={post.boardId}
-                      dormType={post.dormType}
-                      mbti={post.mbti}
-                      college={post.college}
-                      isSmoker={post.smoking === "피워요"}
-                      isClean={post.arrangement === "깔끔해요"}
-                      stayDays={post.dormPeriod}
-                      description={post.comment}
-                      roommateBoardLike={post.roommateBoardLike}
-                      matched={post.matched}
-                    />
-                  ))
-              ) : (
-                <EmptyMessage>게시글이 없습니다.</EmptyMessage>
-              )}
-            </>
+      <ContentWrapper
+        as={motion.div}
+        variants={staggerContainer}
+        initial="initial"
+        animate="animate"
+      >
+        <motion.div variants={fadeInUp}>
+          <TitleContentArea title={""}>
+            <ServiceWrapper>
+              <ServiceBox
+                title={"생활원 민원"}
+                imgsrc={민원아이콘}
+                onClick={() => {
+                  if (!isLoggedIn) {
+                    alert("로그인 후 사용할 수 있습니다.");
+                    navigate("/login");
+                    return;
+                  }
+                  navigate("/complain");
+                }}
+              />
+              <ServiceBox
+                title={"폼"}
+                imgsrc={폼아이콘}
+                onClick={() => {
+                  navigate("/form");
+                }}
+              />
+            </ServiceWrapper>
           </TitleContentArea>
-        )}
+        </motion.div>
 
-        <TitleContentArea
-          title={"공지사항"}
-          description={
-            "생활원과 서포터즈에서 알려드리는 공지사항을 확인해보세요."
-          }
-          link={"/announcements"}
-        >
-          {isAnnounceLoading ? (
-            <LoadingSpinner message={"공지사항을 불러오고 있어요!"} />
-          ) : (
-            <NotiArea>
-              <NotiWrapper>
-                {notices.length > 0 ? (
-                  notices
-                    .filter((notice) => notice !== null && notice !== undefined)
-                    .slice(0, 8)
-                    .map((notice) => (
-                      <HomeNoticeCard
-                        key={notice.id ?? notice.title}
-                        id={notice.id}
-                        title={notice.title}
-                        content={notice.content}
-                        isEmergency={notice.emergency}
-                        createdDate={notice.createdDate}
-                        type={notice.type}
+        {isMatchingActive && (
+          <motion.div variants={fadeInUp}>
+            <TitleContentArea
+              title={"2026년 1학기 룸메이트 모집"}
+              description={"룸메이트를 구하고 있는 다양한 UNI들을 찾아보세요!"}
+              link={"/roommate"}
+            >
+              <>
+                {isRoommateLoading ? (
+                  <LoadingSpinner message="최신 목록을 불러오는 중..." />
+                ) : roommates && roommates.length > 0 ? (
+                  roommates
+                    .slice(0, 2)
+                    .map((post) => (
+                      <RoomMateCard
+                        key={post.boardId}
+                        title={post.title}
+                        boardId={post.boardId}
+                        dormType={post.dormType}
+                        mbti={post.mbti}
+                        college={post.college}
+                        isSmoker={post.smoking === "피워요"}
+                        isClean={post.arrangement === "깔끔해요"}
+                        stayDays={post.dormPeriod}
+                        description={post.comment}
+                        roommateBoardLike={post.roommateBoardLike}
+                        matched={post.matched}
                       />
                     ))
                 ) : (
-                  <EmptyMessage message={"공지사항이 없습니다."} />
+                  <EmptyMessage>게시글이 없습니다.</EmptyMessage>
                 )}
-              </NotiWrapper>
-              <GradientRight />
-            </NotiArea>
-          )}
-        </TitleContentArea>
-        <TitleContentArea
-          title={"생활원 YouTube"}
-          externalLink={`https://www.youtube.com/channel/${CHANNEL_ID}`}
-        >
-          <YoutubeWidget />
-        </TitleContentArea>
-        <GridContainer>
-          <TitleContentArea title="오늘의 Best 꿀팁" link={"/tips"}>
-            {isTipsLoading ? (
-              <LoadingSpinner message={"꿀팁을 불러오고 있어요!"} />
-            ) : dailyTips.length > 0 ? (
-              dailyTips.map((tip, key) => (
-                <HomeTipsCard
-                  key={key}
-                  index={key + 1}
-                  id={tip.boardId}
-                  content={tip.title}
-                />
-              ))
+              </>
+            </TitleContentArea>
+          </motion.div>
+        )}
+
+        <motion.div variants={fadeInUp}>
+          <TitleContentArea
+            title={"공지사항"}
+            description={
+              "생활원과 서포터즈에서 알려드리는 공지사항을 확인해보세요."
+            }
+            link={"/announcements"}
+          >
+            {isAnnounceLoading ? (
+              <LoadingSpinner message={"공지사항을 불러오고 있어요!"} />
             ) : (
-              <EmptyMessage message={"오늘의 꿀팁이 없습니다."} />
+              <NotiArea>
+                <NotiWrapper>
+                  {notices.length > 0 ? (
+                    notices
+                      .filter((notice) => notice !== null && notice !== undefined)
+                      .slice(0, 8)
+                      .map((notice) => (
+                        <HomeNoticeCard
+                          key={notice.id ?? notice.title}
+                          id={notice.id}
+                          title={notice.title}
+                          content={notice.content}
+                          isEmergency={notice.emergency}
+                          createdDate={notice.createdDate}
+                          type={notice.type}
+                        />
+                      ))
+                  ) : (
+                    <EmptyMessage message={"공지사항이 없습니다."} />
+                  )}
+                </NotiWrapper>
+                <GradientRight />
+              </NotiArea>
             )}
           </TitleContentArea>
+        </motion.div>
+
+        <motion.div variants={fadeInUp}>
           <TitleContentArea
-            title={"생활원 일정"}
-            children={<Calendar mode={"week"} />}
-            link={"/calendar"}
-          />
+            title={"생활원 YouTube"}
+            externalLink={`https://www.youtube.com/channel/${CHANNEL_ID}`}
+          >
+            <YoutubeWidget />
+          </TitleContentArea>
+        </motion.div>
+
+        <GridContainer>
+          <motion.div variants={fadeInUp}>
+            <TitleContentArea title="오늘의 Best 꿀팁" link={"/tips"}>
+              {isTipsLoading ? (
+                <LoadingSpinner message={"꿀팁을 불러오고 있어요!"} />
+              ) : dailyTips.length > 0 ? (
+                dailyTips.map((tip, key) => (
+                  <HomeTipsCard
+                    key={key}
+                    index={key + 1}
+                    id={tip.boardId}
+                    content={tip.title}
+                  />
+                ))
+              ) : (
+                <EmptyMessage message={"오늘의 꿀팁이 없습니다."} />
+              )}
+            </TitleContentArea>
+          </motion.div>
+          <motion.div variants={fadeInUp}>
+            <TitleContentArea
+              title={"생활원 일정"}
+              children={<Calendar mode={"week"} />}
+              link={"/calendar"}
+            />
+          </motion.div>
         </GridContainer>
 
         {isOpenGroupPurchase && (
-          <TitleContentArea title={"임박한 공동구매"} link={"/groupPurchase"}>
-            {isGroupOrdersLoading ? (
-              <LoadingSpinner message={"공동구매를 불러오고 있어요!"} />
-            ) : groupOrders.length > 0 ? (
-              <GroupPurchaseList groupOrders={groupOrders.slice(0, 4)} />
-            ) : (
-              <EmptyMessage message={"임박한 공동구매가 없습니다."} />
-            )}
-          </TitleContentArea>
+          <motion.div variants={fadeInUp}>
+            <TitleContentArea title={"임박한 공동구매"} link={"/groupPurchase"}>
+              {isGroupOrdersLoading ? (
+                <LoadingSpinner message={"공동구매를 불러오고 있어요!"} />
+              ) : groupOrders.length > 0 ? (
+                <GroupPurchaseList groupOrders={groupOrders.slice(0, 4)} />
+              ) : (
+                <EmptyMessage message={"임박한 공동구매가 없습니다."} />
+              )}
+            </TitleContentArea>
+          </motion.div>
         )}
       </ContentWrapper>
 
-      <img className="appcenter-logo" src={앱센터로고가로} />
+      <motion.img
+        className="appcenter-logo"
+        src={앱센터로고가로}
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        transition={{ delay: 0.5 }}
+      />
 
       <CommonBottomSheet
         id={"이벤트 당첨"}
