@@ -12,6 +12,7 @@ import axios from "axios";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import Modal from "@/components/modal/Modal";
 import { useInfiniteQuery } from "@tanstack/react-query";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 
 const PAGE_SIZE = 20;
 
@@ -28,7 +29,7 @@ const NotificationPage = () => {
   } | null>(null);
 
   // 알림 데이터 무한스크롤 조회
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, refetch } =
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, refetch, isLoading } =
     useInfiniteQuery({
       queryKey: ["notifications", "scroll"],
       queryFn: ({ pageParam }) =>
@@ -128,6 +129,10 @@ const NotificationPage = () => {
     ],
   });
 
+  if (isLoading && !isFetchingNextPage) {
+    return <LoadingSpinner message="알림을 불러오는 중입니다..." />;
+  }
+
   return (
     <NotificationPageWrapper>
       <ContentWrapper>
@@ -142,6 +147,7 @@ const NotificationPage = () => {
             ))}
             {/* 무한스크롤 트리거 지점 */}
             <div ref={observerTarget} style={{ height: "10px" }} />
+            {isFetchingNextPage && <LoadingSpinner message="" />}
           </>
         ) : (
           <EmptyMessage>알림이 없습니다.</EmptyMessage>

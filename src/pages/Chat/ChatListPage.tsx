@@ -11,6 +11,8 @@ import ChatListItem from "../../components/chat/ChatListItem.tsx";
 import useUserStore from "../../stores/useUserStore.ts";
 import BottomBar from "../../components/common/BottomBar/BottomBar.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
+import { motion, AnimatePresence } from "framer-motion";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 
 export default function ChatListPage() {
   const navigate = useNavigate();
@@ -25,10 +27,12 @@ export default function ChatListPage() {
   const [roommateChatRooms, setRoommateChatRooms] = useState<
     RoommateChatRoom[]
   >([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (!isLoggedIn) return;
 
+    setIsLoading(true);
     if (selectedTab === "공동구매") {
       getGroupOrderChatRooms()
         .then((res) => {
@@ -36,7 +40,8 @@ export default function ChatListPage() {
         })
         .catch((err) => {
           console.error("공동구매 채팅방 목록 조회 실패", err);
-        });
+        })
+        .finally(() => setIsLoading(false));
     } else if (selectedTab === "룸메이트") {
       getRoommateChatRooms()
         .then((res) => {
@@ -44,7 +49,8 @@ export default function ChatListPage() {
         })
         .catch((err) => {
           console.error("룸메이트 채팅방 목록 조회 실패", err);
-        });
+        })
+        .finally(() => setIsLoading(false));
     }
   }, [selectedTab, isLoggedIn]);
 
@@ -75,92 +81,130 @@ export default function ChatListPage() {
     showAlarm: true,
   });
 
+  const fadeInUp = {
+    initial: { opacity: 0, y: 15 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.3 }
+  };
+
   return (
-    <ChatListPageWrapper>
+    <ChatListPageWrapper
+      as={motion.div}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+    >
       <ContentWrapper>
-        {selectedTab === "공동구매" ? (
-          groupOrderChatRooms.length > 0 ? (
-            groupOrderChatRooms.map((room) => (
-              <ChatListItem
-                key={room.chatRoomId}
-                chatRoomId={room.chatRoomId} // ID 전달
-                selectedTab={selectedTab}
-                onClick={() => handleChatClick(room.chatRoomId)}
-                title={room.chatRoomTitle}
-                message={room.recentChatContent}
-                time={room.recentChatTime}
-                currentPeople={room.currentPeople}
-                maxPeople={room.maxPeople}
-                deadline={room.deadline}
-              />
-            ))
-          ) : (
-            <EmptyMessage>
-              {isLoggedIn ? (
-                <>
-                  아직 공동구매 채팅이 없습니다. <br />
-                  <br /> 지금 바로 공동구매 탭으로 이동해서
-                  <br />
-                  같이 살 물건을 찾아보세요!
-                </>
-              ) : (
-                <>
-                  공동구매 채팅 목록을 확인하려면 <br />
-                  로그인이 필요합니다.
-                  <br />
-                  <br />
-                  <span className="login">로그인하러 가기</span>
-                </>
-              )}
-            </EmptyMessage>
-          )
-        ) : roommateChatRooms.length > 0 ? (
-          roommateChatRooms.map((room) => (
-            <ChatListItem
-              key={room.chatRoomId}
-              chatRoomId={room.chatRoomId} // ID 전달
-              selectedTab={selectedTab}
-              onClick={() =>
-                handleChatClick(
-                  room.chatRoomId,
-                  room.partnerName,
-                  room.partnerProfileImageUrl,
-                )
-              }
-              title={room.partnerName}
-              message={room.lastMessage}
-              time={room.lastMessageTime}
-              partnerProfileImageUrl={room.partnerProfileImageUrl}
-            />
-          ))
+        {isLoading ? (
+          <LoadingSpinner message="채팅방 목록을 불러오는 중입니다..." />
         ) : (
-          <EmptyMessage>
-            {isLoggedIn ? (
-              <>
-                아직 룸메이트 채팅이 없습니다.
-                <br />
-                <br />
-                지금 바로 룸메이트 탭으로 이동해서
-                <br />
-                룸메이트를 찾아보세요!
-              </>
-            ) : (
-              <>
-                룸메이트 채팅 목록을 확인하려면 <br />
-                로그인이 필요합니다.
-                <br />
-                <br />
-                <span
-                  className="login"
-                  onClick={() => {
-                    navigate("/login");
-                  }}
+          <AnimatePresence>
+            {selectedTab === "공동구매" ? (
+              groupOrderChatRooms.length > 0 ? (
+                groupOrderChatRooms.map((room, index) => (
+                  <motion.div
+                    key={room.chatRoomId}
+                    variants={fadeInUp}
+                    initial="initial"
+                    animate="animate"
+                    transition={{ delay: index * 0.03 }}
+                  >
+                    <ChatListItem
+                      chatRoomId={room.chatRoomId}
+                      selectedTab={selectedTab}
+                      onClick={() => handleChatClick(room.chatRoomId)}
+                      title={room.chatRoomTitle}
+                      message={room.recentChatContent}
+                      time={room.recentChatTime}
+                      currentPeople={room.currentPeople}
+                      maxPeople={room.maxPeople}
+                      deadline={room.deadline}
+                    />
+                  </motion.div>
+                ))
+              ) : (
+                <EmptyMessage
+                  as={motion.div}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
                 >
-                  로그인하러 가기
-                </span>
-              </>
+                  {isLoggedIn ? (
+                    <>
+                      아직 공동구매 채팅이 없습니다. <br />
+                      <br /> 지금 바로 공동구매 탭으로 이동해서
+                      <br />
+                      같이 살 물건을 찾아보세요!
+                    </>
+                  ) : (
+                    <>
+                      공동구매 채팅 목록을 확인하려면 <br />
+                      로그인이 필요합니다.
+                      <br />
+                      <br />
+                      <span className="login">로그인하러 가기</span>
+                    </>
+                  )}
+                </EmptyMessage>
+              )
+            ) : roommateChatRooms.length > 0 ? (
+              roommateChatRooms.map((room, index) => (
+                <motion.div
+                  key={room.chatRoomId}
+                  variants={fadeInUp}
+                  initial="initial"
+                  animate="animate"
+                  transition={{ delay: index * 0.03 }}
+                >
+                  <ChatListItem
+                    chatRoomId={room.chatRoomId}
+                    selectedTab={selectedTab}
+                    onClick={() =>
+                      handleChatClick(
+                        room.chatRoomId,
+                        room.partnerName,
+                        room.partnerProfileImageUrl,
+                      )
+                    }
+                    title={room.partnerName}
+                    message={room.lastMessage}
+                    time={room.lastMessageTime}
+                    partnerProfileImageUrl={room.partnerProfileImageUrl}
+                  />
+                </motion.div>
+              ))
+            ) : (
+              <EmptyMessage
+                as={motion.div}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+              >
+                {isLoggedIn ? (
+                  <>
+                    아직 룸메이트 채팅이 없습니다.
+                    <br />
+                    <br />
+                    지금 바로 룸메이트 탭으로 이동해서
+                    <br />
+                    룸메이트를 찾아보세요!
+                  </>
+                ) : (
+                  <>
+                    룸메이트 채팅 목록을 확인하려면 <br />
+                    로그인이 필요합니다.
+                    <br />
+                    <br />
+                    <span
+                      className="login"
+                      onClick={() => {
+                        navigate("/login");
+                      }}
+                    >
+                      로그인하러 가기
+                    </span>
+                  </>
+                )}
+              </EmptyMessage>
             )}
-          </EmptyMessage>
+          </AnimatePresence>
         )}
       </ContentWrapper>
       <BottomBar />

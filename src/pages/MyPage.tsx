@@ -12,6 +12,7 @@ import TitleContentArea from "../components/common/TitleContentArea.tsx";
 import BottomBar from "../components/common/BottomBar/BottomBar.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import { PATHS } from "@/constants/paths";
+import { motion } from "framer-motion";
 
 const MyPage = () => {
   const { tokenInfo } = useUserStore();
@@ -47,13 +48,36 @@ const MyPage = () => {
     settingOnClick: () => navigate("/settings"),
   });
 
+  const fadeInUp = {
+    initial: { opacity: 0, y: 15 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.4 }
+  };
+
+  const staggerContainer = {
+    animate: {
+      transition: {
+        staggerChildren: 0.08
+      }
+    }
+  };
+
   return (
-    <MyPageWrapper>
-      <InfoAreaWrapper>
+    <MyPageWrapper
+      as={motion.div}
+      variants={staggerContainer}
+      initial="initial"
+      animate="animate"
+    >
+      <InfoAreaWrapper as={motion.div} variants={fadeInUp}>
         {isLoggedIn ? (
           <MyInfoArea />
         ) : (
-          <LoginButton onClick={() => navigate(PATHS.LOGIN)}>
+          <LoginButton 
+            onClick={() => navigate(PATHS.LOGIN)}
+            as={motion.button}
+            whileTap={{ scale: 0.98 }}
+          >
             인천대학교 포털로 <span className="login"> 로그인</span>하세요
             <span className="go">{">"}</span>
           </LoginButton>
@@ -61,17 +85,8 @@ const MyPage = () => {
       </InfoAreaWrapper>
 
       <MenuGroupsWrapper>
-        {/*/!* 내 계정 그룹 *!/*/}
-        {/*<ProtectedMenuWrapper disabled={isProtected}>*/}
-        {/*  <MenuGroup title={menuGroups[0].title} menus={menuGroups[0].menus} />*/}
-        {/*  {isProtected && (*/}
-        {/*    <OverlayMessage>로그인 후 사용 가능해요.</OverlayMessage>*/}
-        {/*  )}*/}
-        {/*</ProtectedMenuWrapper>*/}
-        {/*<Divider />*/}
-
         {/* 룸메이트 정보 섹션 */}
-        <ProtectedMenuWrapper disabled={isProtected}>
+        <ProtectedMenuWrapper disabled={isProtected} as={motion.div} variants={fadeInUp}>
           <TitleContentArea
             title={"내 룸메이트"}
             children={
@@ -82,22 +97,38 @@ const MyPage = () => {
             }
           />
           {isProtected && (
-            <OverlayMessage>로그인 후 사용 가능해요.</OverlayMessage>
+            <OverlayMessage
+              as={motion.div}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.3 }}
+            >
+              로그인 후 사용 가능해요.
+            </OverlayMessage>
           )}
         </ProtectedMenuWrapper>
-        <Divider />
+        <Divider as={motion.div} variants={fadeInUp} />
 
         {/* 커뮤니티 그룹 */}
-        <ProtectedMenuWrapper disabled={isProtected}>
+        <ProtectedMenuWrapper disabled={isProtected} as={motion.div} variants={fadeInUp}>
           <MenuGroup title={menuGroups[1].title} menus={menuGroups[1].menus} />
           {isProtected && (
-            <OverlayMessage>로그인 후 사용 가능해요.</OverlayMessage>
+            <OverlayMessage
+              as={motion.div}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.4 }}
+            >
+              로그인 후 사용 가능해요.
+            </OverlayMessage>
           )}
         </ProtectedMenuWrapper>
-        <Divider />
+        <Divider as={motion.div} variants={fadeInUp} />
 
         {/* 고객지원 및 정보 그룹 */}
-        <MenuGroup title={menuGroups[2].title} menus={menuGroups[2].menus} />
+        <motion.div variants={fadeInUp}>
+          <MenuGroup title={menuGroups[2].title} menus={menuGroups[2].menus} />
+        </motion.div>
       </MenuGroupsWrapper>
       <BottomBar />
     </MyPageWrapper>
@@ -107,7 +138,7 @@ const MyPage = () => {
 export default MyPage;
 
 const MyPageWrapper = styled.div`
-  padding: 0 16px 100px;
+  padding: 24px 16px 100px;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
@@ -139,6 +170,9 @@ const LoginButton = styled.button`
   color: #333;
   height: fit-content;
   cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
   .go {
     font-size: 16px;
     margin-left: 5px;
