@@ -78,6 +78,16 @@ const AdminMainPage: React.FC = () => {
       path: "/admin/statistics",
       description: "서비스 이용 통계를 조회할 수 있습니다.",
     },
+    {
+      label: "AI 챗불이 관리",
+      path: `https://unidorm-aichat-admin-console.pages.dev/?token=${
+        tokenInfo.accessToken || ""
+      }&mode=${
+        import.meta.env.VITE_API_SUBDOMAIN === "unidorm-server" ? "prod" : "dev"
+      }`,
+      description: "AI 챗불이의 답변을 관리하고 학습시킬 수 있습니다.",
+      isExternal: true,
+    },
   ];
 
   // SUPPORTERS인 경우 특정 페이지만 표시
@@ -89,6 +99,7 @@ const AdminMainPage: React.FC = () => {
           "TIP 관리",
           "홈 화면 팝업 공지 관리",
           "폼 관리",
+          "AI 챗불이 관리",
         ].includes(page.label),
       )
     : allAdminPages;
@@ -97,7 +108,12 @@ const AdminMainPage: React.FC = () => {
     <Wrapper>
       <MenuGrid>
         {adminPages.map((page) => (
-          <MenuCard key={page.path} onClick={() => navigate(page.path)}>
+          <MenuCard
+            key={page.path}
+            onClick={() =>
+              page.isExternal ? (window.location.href = page.path) : navigate(page.path)
+            }
+          >
             <CardTitle>{page.label}</CardTitle>
             <CardDescription>{page.description}</CardDescription>
           </MenuCard>
