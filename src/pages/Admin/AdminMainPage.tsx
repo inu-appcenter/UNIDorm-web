@@ -17,7 +17,6 @@ import {
   BarChart3,
   Bot,
   Beaker,
-  LogOut,
   ChevronRight,
   ShieldCheck,
 } from "lucide-react";
@@ -44,16 +43,7 @@ const AdminMainPage: React.FC = () => {
     }
   }, [tokenInfo, userInfo, isLoading, isAdmin, navigate]);
 
-  const menuItems = [
-    {
-      label: "로그아웃",
-      onClick: () => {
-        navigate("/logout");
-      },
-    },
-  ];
-
-  useSetHeader({ title: "관리자 페이지", menuItems });
+  useSetHeader({ title: "관리자 페이지" });
 
   const allAdminPages: AdminPageItem[] = [
     {
@@ -166,10 +156,6 @@ const AdminMainPage: React.FC = () => {
               <p>{roleName} 권한으로 접속 중입니다.</p>
             </WelcomeText>
           </WelcomeBox>
-          <LogoutButton onClick={() => navigate("/logout")}>
-            <LogOut size={18} />
-            <span>로그아웃</span>
-          </LogoutButton>
         </HeaderSection>
 
         <ContentBody>
@@ -321,32 +307,6 @@ const WelcomeText = styled.div`
     p {
       font-size: 0.9rem;
     }
-  }
-`;
-
-const LogoutButton = styled.button`
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 20px;
-  border-radius: 14px;
-  border: 1px solid #e2e8f0;
-  background: white;
-  color: #64748b;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &:hover {
-    background-color: #fef2f2;
-    border-color: #fee2e2;
-    color: #ef4444;
-  }
-
-  @media (max-width: 768px) {
-    width: 100%;
-    justify-content: center;
   }
 `;
 

@@ -1,9 +1,9 @@
 import styled from "styled-components";
 import NotiItem from "../components/notification/NotiItem.tsx";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getNotificationsScroll } from "@/apis/notification";
 import useUserStore from "../stores/useUserStore.ts";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   acceptRoommateMatching,
   rejectRoommateMatching,
@@ -13,6 +13,7 @@ import { useSetHeader } from "@/hooks/useSetHeader";
 import Modal from "@/components/modal/Modal";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
+import { PATHS } from "@/constants/paths";
 
 const PAGE_SIZE = 20;
 
@@ -149,8 +150,15 @@ const NotificationPage = () => {
             <div ref={observerTarget} style={{ height: "10px" }} />
             {isFetchingNextPage && <LoadingSpinner message="" />}
           </>
-        ) : (
+        ) : isLoggedIn ? (
           <EmptyMessage>알림이 없습니다.</EmptyMessage>
+        ) : (
+          <EmptyMessage>
+            로그인 후 알림을 확인할 수 있습니다.
+            <br />
+            <br />
+            <LoginLink to={PATHS.LOGIN}>로그인 하기</LoginLink>
+          </EmptyMessage>
         )}
       </ContentWrapper>
 
@@ -192,6 +200,13 @@ const ContentWrapper = styled.div`
 const EmptyMessage = styled.div`
   padding: 24px;
   text-align: center;
-  color: #aaa;
-  font-size: 14px;
+  color: #777;
+  font-size: 15px;
+  line-height: 1.6;
+`;
+
+const LoginLink = styled(Link)`
+  color: #0070f3;
+  cursor: pointer;
+  text-decoration: underline;
 `;

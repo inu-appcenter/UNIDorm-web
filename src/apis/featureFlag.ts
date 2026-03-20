@@ -1,3 +1,5 @@
+import { AxiosResponse } from "axios";
+import axiosInstance from "@/apis/axiosInstance";
 import tokenInstance from "@/apis/tokenInstance";
 
 export interface FeatureFlag {
@@ -5,14 +7,11 @@ export interface FeatureFlag {
   flag: boolean;
 }
 
-import { AxiosResponse } from "axios";
-import axiosInstance from "@/apis/axiosInstance";
-
 // 전체 기능 플래그 목록 조회
 export const getFeatureFlags = async (): Promise<
   AxiosResponse<FeatureFlag[]>
 > => {
-  const response = await tokenInstance.get<FeatureFlag[]>(`/features`);
+  const response = await axiosInstance.get<FeatureFlag[]>(`/features`);
   console.log(response);
   return response;
 };

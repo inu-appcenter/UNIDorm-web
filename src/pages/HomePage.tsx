@@ -32,7 +32,7 @@ import { useSetHeader } from "@/hooks/useSetHeader";
 import RoomMateCard from "@/components/roommate/RoomMateCard.tsx";
 import { useQuery } from "@tanstack/react-query";
 import { getRoomMateScrollList } from "@/apis/roommate.ts";
-import { getFeatureFlagByKey } from "@/apis/featureFlag.ts";
+import { useFeatureFlag } from "@/hooks/useFeatureFlags";
 import YoutubeWidget from "@/components/home/YoutubeWidget.tsx";
 import { useSetAIChat } from "@/hooks/useSetAIChat";
 import MigrationBanner from "@/components/common/MigrationBanner.tsx";
@@ -40,6 +40,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export default function HomePage() {
   useSetAIChat({ isVisible: true, shouldAnimate: true });
+  const { flag: isMatchingActive } = useFeatureFlag("ROOMMATE_MATCHING");
 
   const { tokenInfo, userInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
@@ -154,23 +155,6 @@ export default function HomePage() {
     getTips();
     fetchGroupOrders();
     fetchAnnouncements();
-  }, []);
-
-  /* 피처 플래그 상태 관리 */
-  const [isMatchingActive, setIsMatchingActive] = useState<boolean>(false);
-  useEffect(() => {
-    /* 피처 플래그 데이터 페칭 */
-    const fetchFeatureFlag = async () => {
-      try {
-        const response = await getFeatureFlagByKey("ROOMMATE_MATCHING");
-        setIsMatchingActive(response.data.flag);
-      } catch (error) {
-        console.error("피처 플래그 조회 실패:", error);
-        setIsMatchingActive(false); // 에러 발생 시 기본값 설정
-      }
-    };
-
-    fetchFeatureFlag();
   }, []);
 
   // 룸메이트 데이터 단일 페이지 조회

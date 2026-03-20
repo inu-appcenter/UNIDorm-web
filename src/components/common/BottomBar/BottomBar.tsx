@@ -19,7 +19,10 @@ import { getMyRoommateInfo } from "@/apis/roommate";
 import { getAllRoommateChatUnreadCount } from "@/apis/chat";
 import { getMobilePlatform } from "@/utils/getMobilePlatform";
 import TooltipMessage from "@/components/common/TooltipMessage";
-import { getFeatureFlagByKey } from "@/apis/featureFlag";
+import { useFeatureFlag } from "@/hooks/useFeatureFlags";
+
+const ROOMMATE_MATCHING_FEATURE_FLAG_KEY = "ROOMMATE_MATCHING";
+const GROUP_PURCHASE_FEATURE_FLAG_KEY = "GROUP_PURCHASE";
 
 interface ButtonProps {
   defaultImg: string;
@@ -46,7 +49,7 @@ const Button = ({
     <ButtonWrapper onClick={onClick}>
       {showTooltip && onTooltipClose && (
         <TooltipMessage
-          message="26년 1학기\n룸메이트 매칭 중!"
+          message={"26년 1학기\n룸메이트 매칭 중!"}
           onClose={onTooltipClose}
           position={"top"}
           align={"center"}
@@ -72,9 +75,14 @@ export default function BottomBar() {
   const pathname = location.pathname;
   const { tokenInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
+  const { flag: isMatchingActive } = useFeatureFlag(
+    ROOMMATE_MATCHING_FEATURE_FLAG_KEY,
+  );
+  const { flag: isGroupPurchaseBottomBarActive } = useFeatureFlag(
+    GROUP_PURCHASE_FEATURE_FLAG_KEY,
+  );
 
   const [unreadCount, setUnreadCount] = useState<number>(0);
-  const [isMatchingActive, setIsMatchingActive] = useState<boolean>(true);
   const [showTooltip, setShowTooltip] = useState(() => {
     const stored = localStorage.getItem("showRoommateTooltip");
     return stored !== "false";
@@ -86,28 +94,22 @@ export default function BottomBar() {
   };
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (isLoggedIn) {
-        try {
-          const chatRes = await getAllRoommateChatUnreadCount();
-          setUnreadCount(chatRes.data);
-        } catch (err) {
-          console.error("미확인 메시지 조회 실패", err);
-        }
+    const fetchUnreadCount = async () => {
+      if (!isLoggedIn) {
+        setUnreadCount(0);
+        return;
       }
 
       try {
-        // return; //피쳐플래그 버그로 인해 임시로 작동 해제
-        const flagRes = await getFeatureFlagByKey("ROOMMATE_MATCHING");
-        setIsMatchingActive(flagRes.data.flag);
+        const chatRes = await getAllRoommateChatUnreadCount();
+        setUnreadCount(chatRes.data);
       } catch (err) {
-        console.error("피처 플래그 조회 실패", err);
+        console.error("미확인 메시지 조회 실패", err);
       }
     };
 
-    fetchData();
+    fetchUnreadCount();
   }, [pathname, isLoggedIn]);
-
   if (
     pathname.includes("/chat/roommate") ||
     pathname.includes("/chat/groupPurchase")
@@ -141,16 +143,18 @@ export default function BottomBar() {
             navigate("/roommate");
           }
         }}
-        showTooltip={showTooltip && isMatchingActive}
+        showTooltip={showTooltip && isMatchingActive === true}
         onTooltipClose={hideTooltip}
       />
-      <Button
-        defaultImg={buy}
-        clickedImg={buyClicked}
-        buttonName="공동구매"
-        isActive={pathname === "/groupPurchase"}
-        onClick={() => navigate("/groupPurchase")}
-      />
+      {isGroupPurchaseBottomBarActive === true && (
+        <Button
+          defaultImg={buy}
+          clickedImg={buyClicked}
+          buttonName="공동구매"
+          isActive={pathname === "/groupPurchase"}
+          onClick={() => navigate("/groupPurchase")}
+        />
+      )}
       <Button
         defaultImg={chat}
         clickedImg={chatClicked}
