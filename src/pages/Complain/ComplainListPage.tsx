@@ -164,6 +164,12 @@ const ComplainListPage = () => {
         />
       )}
 
+      <TitleContentArea
+        description={
+          "생활원 민원을 접수할 수 있습니다.\n통합행정실 근무시간 내 처리되며, 담당자 사정에 따라 확인 및 처리가 늦어질 수 있습니다."
+        }
+      />
+
       <AIChatBanner onClick={openChat}>
         <div className="banner-content">
           <div className="banner-text">
@@ -235,7 +241,10 @@ const ComplainListPage = () => {
 
         {/* 민원 목록 */}
         <RightSection>
-          <TitleContentArea title={"내 민원 목록"}>
+          <TitleContentArea
+            title={"내 민원 목록"}
+            description={"내가 작성한 민원만 조회됩니다."}
+          >
             <Wrapper2>
               <SearchInput
                 value={searchTerm}
@@ -254,7 +263,9 @@ const ComplainListPage = () => {
               ) : filteredComplaints.length > 0 ? (
                 <ComplainListTable data={filteredComplaints} />
               ) : (
-                <EmptyMessage>조회된 민원이 없습니다.</EmptyMessage>
+                <EmptyMessage>
+                  해당 기간에 접수하신 민원이 없습니다.
+                </EmptyMessage>
               )}
             </Wrapper2>
           </TitleContentArea>
@@ -263,7 +274,7 @@ const ComplainListPage = () => {
 
       {isLoggedIn && (
         <WriteButton onClick={() => navigate("/complain/write")}>
-          ✏️ 민원 접수
+          ✏️ 민원 작성
         </WriteButton>
       )}
     </ComplainListPageWrapper>
