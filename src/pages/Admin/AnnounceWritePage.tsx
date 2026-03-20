@@ -1,18 +1,18 @@
 import styled from "styled-components";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import SquareButton from "../../components/common/SquareButton.tsx";
-import { RequestAnnouncementDto } from "@/types/announcements";
+import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
+import FileUploader from "../../components/common/FileUploader.tsx";
+import FormField from "../../components/complain/FormField.tsx";
+import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
 import {
   createAnnouncement,
   updateAnnouncement,
   updateAnnouncementWithFiles,
 } from "@/apis/announcements";
-import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
-import FileUploader from "../../components/common/FileUploader.tsx";
 import { useFileHandler } from "@/hooks/useFileHandler";
-import FormField from "../../components/complain/FormField.tsx";
-import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
 import { Input, Textarea } from "@/styles/common";
 import {
   ANNOUNCE_CATEGORY_LIST,
@@ -20,7 +20,7 @@ import {
 } from "@/constants/announcement";
 import { useIsAdminRole } from "@/hooks/useIsAdminRole";
 import { useSetHeader } from "@/hooks/useSetHeader";
-import { useQueryClient } from "@tanstack/react-query";
+import { RequestAnnouncementDto } from "@/types/announcements";
 
 export default function AnnounceWritePage() {
   const navigate = useNavigate();
@@ -28,16 +28,20 @@ export default function AnnounceWritePage() {
   const location = useLocation();
   const { announce, announceFiles } = location.state || {};
 
+  const announceCategoryOptions = ANNOUNCE_CATEGORY_LIST.slice(1);
+  const announceSubCategoryOptions = ANNOUNCE_SUB_CATEGORY_LIST.slice(1);
   const { isDormAdmin, isSupporters } = useIsAdminRole();
 
   const [title, setTitle] = useState(announce?.title || "");
   const [content, setContent] = useState(announce?.content || "");
-  const [isEmergency, setIsEmergency] = useState(false);
+  const [isEmergency, setIsEmergency] = useState(announce?.emergency ?? false);
   const [isLoading, setIsLoading] = useState(false);
 
   const writerIndex = announce
-    ? ANNOUNCE_CATEGORY_LIST.findIndex(
-        (item) => item.label.ko === announce.announcementType,
+    ? announceCategoryOptions.findIndex(
+        (item) =>
+          item.value === announce.announcementType ||
+          item.label.ko === announce.announcementType,
       )
     : -1;
 
@@ -48,7 +52,7 @@ export default function AnnounceWritePage() {
 
   const [
     selectedAnnounceSubCategoryIndex,
-    setselectedAnnounceSubCategoryIndex,
+    setSelectedAnnounceSubCategoryIndex,
   ] = useState<number>(0);
 
   const { files, addFiles, deleteFile, isFileLoading } = useFileHandler({
@@ -56,26 +60,35 @@ export default function AnnounceWritePage() {
     mode: "file",
   });
 
+  const selectedAnnounceCategory =
+    announceCategoryOptions[selectedAnnounceCategoryIndex];
+  const isDormitoryAnnouncement =
+    selectedAnnounceCategory?.value === "DORMITORY";
+
   useEffect(() => {
     window.scrollTo(0, 0);
-    console.log("announceFiles", announceFiles);
   }, []);
 
   const handleSubmit = async () => {
+    if (!selectedAnnounceCategory) {
+      alert("공지 작성 주체를 확인해주세요.");
+      return;
+    }
+
     const data: RequestAnnouncementDto = {
-      category:
-        ANNOUNCE_SUB_CATEGORY_LIST[selectedAnnounceSubCategoryIndex + 1][
-          "value"
-        ],
+      category: isDormitoryAnnouncement
+        ? announceSubCategoryOptions[selectedAnnounceSubCategoryIndex]?.value ??
+          ANNOUNCE_SUB_CATEGORY_LIST[0].value
+        : ANNOUNCE_SUB_CATEGORY_LIST[0].value,
       title,
-      writer:
-        ANNOUNCE_CATEGORY_LIST[selectedAnnounceCategoryIndex]["label"]["ko"],
+      writer: selectedAnnounceCategory.label.ko,
       content,
       isEmergency,
     };
-    console.log(data);
+
     try {
       setIsLoading(true);
+
       if (announce) {
         if (files.length > 0) {
           await updateAnnouncementWithFiles(announce.id, data, files);
@@ -88,8 +101,6 @@ export default function AnnounceWritePage() {
         alert("공지사항이 성공적으로 등록되었습니다.");
       }
 
-      // ✅ 성공 시 무한 스크롤 쿼리 키 무효화
-      // ["announcements", "scroll"]로 시작하는 모든 카테고리/검색 결과 쿼리를 새로고침함
       await queryClient.invalidateQueries({
         queryKey: ["announcements", "scroll"],
       });
@@ -107,39 +118,31 @@ export default function AnnounceWritePage() {
 
   return (
     <Wrapper>
-      {isLoading && <LoadingSpinner overlay message="글 쓰는 중..." />}
+      {isLoading && <LoadingSpinner overlay message="글 올리는 중..." />}
 
       <Content>
         <FormField
-          label="담당부서"
+          label="작성 주체"
           descriptionGray="로그인한 계정의 권한으로 자동 설정됩니다."
         >
           <SelectableChipGroup
-            Groups={ANNOUNCE_CATEGORY_LIST.slice(1).map(
-              (item) => item.label.ko,
-            )}
+            Groups={announceCategoryOptions.map((item) => item.label.ko)}
             selectedIndex={selectedAnnounceCategoryIndex}
             onSelect={setSelectedAnnounceCategoryIndex}
             disabled={true}
           />
         </FormField>
 
-        {/* 유형 */}
-        {ANNOUNCE_CATEGORY_LIST[selectedAnnounceCategoryIndex]["label"][
-          "ko"
-        ] === "생활원" && (
+        {isDormitoryAnnouncement && (
           <FormField label="카테고리">
             <SelectableChipGroup
-              Groups={ANNOUNCE_SUB_CATEGORY_LIST.slice(1).map(
-                (item) => item.label.ko,
-              )}
+              Groups={announceSubCategoryOptions.map((item) => item.label.ko)}
               selectedIndex={selectedAnnounceSubCategoryIndex}
-              onSelect={setselectedAnnounceSubCategoryIndex}
+              onSelect={setSelectedAnnounceSubCategoryIndex}
             />
           </FormField>
         )}
 
-        {/* 제목 */}
         <FormField label="제목">
           <Input
             placeholder="글 제목을 입력해주세요"
@@ -148,16 +151,6 @@ export default function AnnounceWritePage() {
           />
         </FormField>
 
-        {/*/!* 작성자 *!/*/}
-        {/*<FormField label="작성자">*/}
-        {/*  <Input*/}
-        {/*    placeholder="입력하지 않으면 기본값은 '관리자'입니다."*/}
-        {/*    value={writer}*/}
-        {/*    onChange={(e) => setWriter(e.target.value)}*/}
-        {/*  />*/}
-        {/*</FormField>*/}
-
-        {/* 내용 */}
         <FormField label="내용">
           <Textarea
             placeholder="내용을 입력해주세요"
@@ -166,7 +159,6 @@ export default function AnnounceWritePage() {
           />
         </FormField>
 
-        {/* 첨부파일 */}
         <FormField label="첨부파일">
           {announce && (
             <div className="description">
@@ -183,7 +175,6 @@ export default function AnnounceWritePage() {
           />
         </FormField>
 
-        {/* 긴급 여부 */}
         <FormField label="긴급 여부">
           <CheckBoxWrapper>
             <input
@@ -220,6 +211,7 @@ const Content = styled.div`
   flex-direction: column;
   gap: 16px;
   overflow-y: auto;
+
   .description {
     font-size: 14px;
     color: #555;

@@ -9,7 +9,6 @@ import {
   getMatchingPostList,
   getNotificationFilter,
 } from "@/apis/roommate";
-import { getFeatureFlagByKey } from "@/apis/featureFlag";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import ComingSoonOverlay from "../../components/common/ComingSoonOverlay.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
@@ -24,6 +23,7 @@ import { getMobilePlatform } from "@/utils/getMobilePlatform";
 import TopPopupNotification from "@/components/common/TopPopupNotification";
 import RoundSquareButton from "@/components/button/RoundSquareButton";
 import TooltipMessage from "@/components/common/TooltipMessage.tsx";
+import { useFeatureFlag } from "@/hooks/useFeatureFlags";
 
 function FilterTags({ filters }: { filters: Record<string, any> }) {
   const filteredTags = Object.values(filters).filter((value) => {
@@ -52,6 +52,10 @@ export default function RoomMatePage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { ref, inView } = useInView();
   const { tokenInfo, userInfo } = useUserStore();
+  const {
+    flag: isMatchingActive,
+    isLoading: isFeatureFlagLoading,
+  } = useFeatureFlag("ROOMMATE_MATCHING");
 
   // 툴팁 노출 상태
   const [showTooltip, setShowTooltip] = useState(false);
@@ -111,37 +115,8 @@ export default function RoomMatePage() {
     showAlarm: true,
   });
 
-  /* 피처 플래그 상태 관리 */
-  const [isMatchingActive, setIsMatchingActive] = useState<boolean | null>(
-    null,
-  );
-
-  useEffect(() => {
-    const fetchSeenTooltip = () => {
-      const hasSeenTooltip = localStorage.getItem("hasSeenRoommateTooltip");
-      if (!hasSeenTooltip) {
-        setShowTooltip(true);
-      }
-    };
-
-    /* 피처 플래그 데이터 페칭 */
-    const fetchFeatureFlag = async () => {
-      try {
-        // return; //피쳐플래그 버그로 인해 임시로 작동 해제
-        const response = await getFeatureFlagByKey("ROOMMATE_MATCHING");
-        setIsMatchingActive(response.data.flag);
-      } catch (error) {
-        console.error("피처 플래그 조회 실패:", error);
-        setIsMatchingActive(false); // 에러 발생 시 기본값 설정
-      }
-    };
-
-    fetchSeenTooltip();
-    fetchFeatureFlag();
-  }, []);
-
   // 배경 잠금 상태 정의
-  const isLocked = isMatchingActive === false;
+  const isLocked = !isFeatureFlagLoading && isMatchingActive === false;
 
   const { data: notificationFilterData } = useQuery({
     queryKey: ["roommateNotificationFilter"],
@@ -279,7 +254,7 @@ export default function RoomMatePage() {
           duration={4000}
         />
       )}
-      {!isMatchingActive && (
+      {!isFeatureFlagLoading && !isMatchingActive && (
         <ComingSoonOverlay
           message={"2026년 1학기 룸메이트 매칭 종료!"}
           subMessage={
