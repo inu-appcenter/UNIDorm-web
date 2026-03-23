@@ -18,10 +18,11 @@ const ComplainListTable: React.FC<TableProps> = ({
       <StyledTable>
         <thead>
           <tr>
+            {/* 현황 열을 첫 번째로 이동 */}
+            <TableHeader>현황</TableHeader>
             <TableHeader>날짜</TableHeader>
             <TableHeader>유형</TableHeader>
             <TableHeader>제목</TableHeader>
-            <TableHeader>현황</TableHeader>
             {isAdmin && (
               <>
                 <TableHeader>담당자</TableHeader>
@@ -40,13 +41,15 @@ const ComplainListTable: React.FC<TableProps> = ({
                 navigate(`/complain/${row.id}`);
               }}
             >
-              <TableCell>{row.date}</TableCell>
-              <TableCell>{row.type}</TableCell>
-              <TableCell title={row.title} className="title">
-                {row.title}
-              </TableCell>
+              {/* 현황 데이터 셀 */}
               <TableCell>
                 <Status status={row.status}>{row.status}</Status>
+              </TableCell>
+              <TableCell>{row.date}</TableCell>
+              <TableCell>{row.type}</TableCell>
+              {/* 제목 셀: 말줄임표 적용 대상 */}
+              <TableCell title={row.title} className="title">
+                {row.title}
               </TableCell>
               {isAdmin && (
                 <>
@@ -84,9 +87,6 @@ const StyledTable = styled.table`
   font-size: 14px;
   tr {
     cursor: pointer;
-    .title {
-      text-decoration: underline;
-    }
   }
 `;
 
@@ -95,15 +95,23 @@ const TableHeader = styled.th`
   color: #333;
   padding: 12px;
   border-bottom: 1px solid #ccc;
-  white-space: nowrap; // 추가
+  white-space: nowrap;
 `;
 
 const TableCell = styled.td`
   padding: 12px;
   border-bottom: 1px solid #eee;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+
+  /* 제목 열 전용 스타일 */
+  &.title {
+    text-align: left;
+    text-decoration: underline;
+    max-width: 250px; /* 말줄임표 기준 너비 */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 `;
 
 const Status = styled.span<{ status: string }>`
@@ -117,28 +125,28 @@ const Status = styled.span<{ status: string }>`
     switch (status) {
       case "대기중":
         return `
-          color: #FFA500; // 주황색
-          background-color: #FFF3E0; // 연한 주황색
+          color: #FFA500;
+          background-color: #FFF3E0;
         `;
       case "담당자 배정":
         return `
-          color: #4CAF50; // 초록색 (배정 완료)
-          background-color: #E8F5E9; // 연한 초록색
+          color: #4CAF50;
+          background-color: #E8F5E9;
         `;
       case "처리중":
         return `
-          color: #2196F3; // 파란색
-          background-color: #E3F2FD; // 연한 파란색
+          color: #2196F3;
+          background-color: #E3F2FD;
         `;
       case "처리완료":
         return `
-          color: #4CAF50; // 진한 초록색 (완료)
-          background-color: #E8F5E9; // 연한 초록색
+          color: #4CAF50;
+          background-color: #E8F5E9;
         `;
       case "반려":
         return `
-          color: #F44336; // 빨간색
-          background-color: #FFEBEE; // 연한 빨간색
+          color: #F44336;
+          background-color: #FFEBEE;
         `;
       case "확인":
         return `
@@ -147,8 +155,8 @@ const Status = styled.span<{ status: string }>`
         `;
       default:
         return `
-          color: #607D8B; // 회색 (기본값)
-          background-color: #ECEFF1; // 연한 회색
+          color: #607D8B;
+          background-color: #ECEFF1;
         `;
     }
   }}
