@@ -167,9 +167,14 @@ const AdminMainPage: React.FC = () => {
                   <MenuCard
                     as={motion.div}
                     whileHover={{ scale: 1.02 }}
-                    onClick={() =>
-                      (window.location.href = "https://unidorm-test.pages.dev")
-                    }
+                    onClick={() => {
+                      // 새 탭에서 링크 열기
+                      window.open(
+                        "https://unidorm-test.pages.dev",
+                        "_blank",
+                        "noopener,noreferrer",
+                      );
+                    }}
                   >
                     <IconWrapper
                       style={{ backgroundColor: "#fef3c7", color: "#d97706" }}
@@ -196,11 +201,19 @@ const AdminMainPage: React.FC = () => {
                         initial={{ opacity: 0, y: 15 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.03 }}
-                        onClick={() =>
-                          page.isExternal
-                            ? (window.location.href = page.path)
-                            : navigate(page.path)
-                        }
+                        onClick={() => {
+                          if (page.isExternal) {
+                            // 새 탭에서 외부 링크 열기
+                            window.open(
+                              page.path,
+                              "_blank",
+                              "noopener,noreferrer",
+                            );
+                          } else {
+                            // 내부 페이지 이동
+                            navigate(page.path);
+                          }
+                        }}
                       >
                         <IconWrapper>{page.icon}</IconWrapper>
                         <CardContent>
