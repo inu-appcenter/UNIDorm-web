@@ -7,12 +7,12 @@ import { Tip } from "@/types/tips";
 import { fetchTips } from "@/apis/tips";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../../constants/EmptyMessage.tsx";
-import { useIsAdminRole } from "@/hooks/useIsAdminRole";
+import { useUserRole } from "@/hooks/useUserRole";
 import { useSetHeader } from "@/hooks/useSetHeader";
 
 export default function TipListPage() {
   const navigate = useNavigate();
-  const { isAdmin } = useIsAdminRole();
+  const { isAdmin } = useUserRole();
 
   const [tips, setTips] = useState<Tip[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);

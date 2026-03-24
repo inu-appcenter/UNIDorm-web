@@ -4,7 +4,7 @@ import styled from "styled-components";
 import RoundSquareButton from "../components/button/RoundSquareButton.tsx";
 
 import onboarding1 from "../assets/onboarding/onboarding1.webp";
-import onboarding2 from "../assets/onboarding/onboarding2.webp";
+// import onboarding2 from "../assets/onboarding/onboarding2.webp";
 // import onboarding3 from "../assets/onboarding/onboarding3.webp";
 import onboarding4 from "../assets/onboarding/onboarding4.webp";
 // import onboarding5 from "../assets/onboarding/onboarding5.webp";
@@ -30,12 +30,12 @@ const slides = [
       "UNI Dorm은 개인별 생활 패턴 체크리스트를 기반으로, 나와 가장 비슷한 룸메이트를 추천해줍니다.",
     image: onboarding1,
   },
-  {
-    id: 2,
-    title: "공동구매",
-    content: "배달음식, 식자재, 생활용품 등 함께 공동구매해서 절약해보세요!",
-    image: onboarding2,
-  },
+  // {
+  //   id: 2,
+  //   title: "공동구매",
+  //   content: "배달음식, 식자재, 생활용품 등 함께 공동구매해서 절약해보세요!",
+  //   image: onboarding2,
+  // },
   {
     id: 3,
     title: "생활원 민원 작성",

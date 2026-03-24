@@ -3,10 +3,9 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { BsEye } from "react-icons/bs";
 import { Bell } from "lucide-react";
 import { useEffect, useMemo, useState, useRef } from "react";
-import useUserStore from "@/stores/useUserStore";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../../constants/EmptyMessage.tsx";
-import { useIsAdminRole } from "@/hooks/useIsAdminRole";
+import { useUserRole } from "@/hooks/useUserRole";
 import { formatTimeAgo } from "@/utils/dateUtils";
 import {
   NoticeTagWrapper,
@@ -42,11 +41,12 @@ import HomeNoticeListBottomSheet from "@/components/modal/HomeNoticeListBottomSh
 import HomeNoticeBottomSheet from "@/components/modal/HomeNoticeBottomSheet";
 import { getPopupNotifications } from "@/apis/popup-notification";
 import { PopupNotification } from "@/types/popup-notifications";
+import { guardAppOnly, guardLogin } from "@/utils/guard";
 
 export default function AnnouncementPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { isAdmin } = useIsAdminRole();
+  const { isLoggedIn, isAdmin } = useUserRole();
   const { ref, inView } = useInView();
 
   // 홈 공지사항 리스트 및 상세 바텀시트 상태
@@ -88,15 +88,18 @@ export default function AnnouncementPage() {
   const handleSubCategoryClick = (index: number) => {
     const subValue = ANNOUNCE_SUB_CATEGORY_LIST[index]?.value;
 
-    setSearchParams((prev) => {
-      const newParams = new URLSearchParams(prev);
-      if (subValue && subValue !== "ALL") {
-        newParams.set("sub", subValue);
-      } else {
-        newParams.delete("sub");
-      }
-      return newParams;
-    });
+    setSearchParams(
+      (prev) => {
+        const newParams = new URLSearchParams(prev);
+        if (subValue && subValue !== "ALL") {
+          newParams.set("sub", subValue);
+        } else {
+          newParams.delete("sub");
+        }
+        return newParams;
+      },
+      { replace: true },
+    );
   };
 
   const [search, setSearch] = useState("");
@@ -355,9 +358,12 @@ export default function AnnouncementPage() {
       {/* 키워드 알림 설정 플로팅 버튼 */}
       <FloatingAlertButton
         onClick={() => {
-          if (!useUserStore.getState().tokenInfo.accessToken) {
-            alert("로그인 후 사용 가능합니다.");
-            navigate("/login");
+          if (!guardAppOnly()) {
+            //앱 환경이 아니면 리턴
+            return;
+          }
+          if (!guardLogin(isLoggedIn, navigate)) {
+            //로그인하지 않았으면 리턴
             return;
           }
           navigate("/notification-setting");

@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { SurveySummary } from "@/types/formTypes";
 import { formatDeadlineDate } from "@/utils/dateUtils";
 import { statusText } from "@/utils/formUtils";
-import { useIsAdminRole } from "@/hooks/useIsAdminRole";
+import { useUserRole } from "@/hooks/useUserRole";
 import useUserStore from "../../stores/useUserStore.ts";
 
 interface FormCardProps {
@@ -20,7 +20,7 @@ const FormCard = ({
   buttonText = "상세 보기",
 }: FormCardProps) => {
   const navigate = useNavigate();
-  const { isAdmin } = useIsAdminRole();
+  const { isAdmin } = useUserRole();
   const { tokenInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
 

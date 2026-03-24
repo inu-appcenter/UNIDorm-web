@@ -1,7 +1,7 @@
-// hooks/useIsAdminRole.ts
 import useUserStore from "../stores/useUserStore.ts";
 
 type RoleInfo = {
+  isLoggedIn: boolean;
   isAdmin: boolean;
   isDormAdmin: boolean;
   isSupporters: boolean;
@@ -9,7 +9,7 @@ type RoleInfo = {
   roleName: string;
 };
 
-export const useIsAdminRole = (): RoleInfo => {
+export const useUserRole = (): RoleInfo => {
   const { tokenInfo } = useUserStore();
 
   const roleMap: Record<string, string> = {
@@ -22,22 +22,25 @@ export const useIsAdminRole = (): RoleInfo => {
   };
 
   const role = tokenInfo?.role ?? "ROLE_USER";
+  const isLoggedIn = !!tokenInfo?.accessToken;
+
   const isAdmin =
     role === "ROLE_ADMIN" ||
     role === "ROLE_DORM_MANAGER" ||
     role === "ROLE_DORM_LIFE_MANAGER" ||
     role === "ROLE_DORM_ROOMMATE_MANAGER" ||
     role === "ROLE_DORM_SUPPORTERS";
+
   const isDormAdmin =
     role === "ROLE_DORM_MANAGER" ||
     role === "ROLE_DORM_LIFE_MANAGER" ||
     role === "ROLE_DORM_ROOMMATE_MANAGER";
 
   const isSupporters = role === "ROLE_DORM_SUPPORTERS";
-
   const isMainAdmin = role === "ROLE_ADMIN";
 
   return {
+    isLoggedIn,
     isAdmin,
     isDormAdmin,
     isSupporters,

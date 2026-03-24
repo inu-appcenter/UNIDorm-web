@@ -9,12 +9,12 @@ import FormCard from "../../components/form/FormCard.tsx";
 import { SurveySummary } from "@/types/formTypes";
 import { getAllSurveys } from "@/apis/formApis";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
-import { useIsAdminRole } from "@/hooks/useIsAdminRole";
+import { useUserRole } from "@/hooks/useUserRole";
 import { useSetHeader } from "@/hooks/useSetHeader";
 
 const FormListPage = () => {
   const navigate = useNavigate();
-  const { isAdmin } = useIsAdminRole();
+  const { isAdmin } = useUserRole();
 
   const [forms, setForms] = useState<SurveySummary[]>([]);
   const [isListLoading, setIsListLoading] = useState(false);

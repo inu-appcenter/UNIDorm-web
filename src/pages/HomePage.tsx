@@ -199,15 +199,15 @@ export default function HomePage() {
   const fadeInUp = {
     initial: { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.5 }
+    transition: { duration: 0.5 },
   };
 
   const staggerContainer = {
     animate: {
       transition: {
-        staggerChildren: 0.1
-      }
-    }
+        staggerChildren: 0.1,
+      },
+    },
   };
 
   return (
@@ -251,7 +251,10 @@ export default function HomePage() {
       <HomeBanner />
 
       {isFreshman && (
-        <motion.div {...fadeInUp} style={{ width: "100%", display: "flex", justifyContent: "center" }}>
+        <motion.div
+          {...fadeInUp}
+          style={{ width: "100%", display: "flex", justifyContent: "center" }}
+        >
           <StyledMigrationBanner />
         </motion.div>
       )}
@@ -340,7 +343,9 @@ export default function HomePage() {
                 <NotiWrapper>
                   {notices.length > 0 ? (
                     notices
-                      .filter((notice) => notice !== null && notice !== undefined)
+                      .filter(
+                        (notice) => notice !== null && notice !== undefined,
+                      )
                       .slice(0, 8)
                       .map((notice) => (
                         <HomeNoticeCard
@@ -421,6 +426,10 @@ export default function HomePage() {
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
+        onClick={() => {
+          window.open("https://home.inuappcenter.kr", "_blank");
+        }}
+        style={{ cursor: "pointer" }}
       />
 
       <CommonBottomSheet

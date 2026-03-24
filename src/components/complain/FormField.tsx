@@ -40,15 +40,7 @@ export default function FormField({
 
       {label === "유형" && (
         <Description>
-          시설 민원은{" "}
-          <a
-            href="https://portal.inu.ac.kr"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            포털
-          </a>
-          을 통해 접수해주세요. <br />* 아래 유형 이외의 민원은 1기숙사는{" "}
+          시설 관련 민원은 1기숙사는{" "}
           <a
             href="https://portal.inu.ac.kr"
             target="_blank"
@@ -64,7 +56,7 @@ export default function FormField({
           >
             EDUFMS
           </a>
-          에서 접수해주세요.
+          에서 접수해주세요.(고장 일체 해당)
         </Description>
       )}
 

@@ -2,28 +2,26 @@ import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { createSettingsMenuGroups } from "@/stores/menuGroupsFactory";
-import { useIsAdminRole } from "@/hooks/useIsAdminRole";
+import { useUserRole } from "@/hooks/useUserRole";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import { PATHS } from "@/constants/paths";
 import MenuGroup from "@/components/mypage/MenuGroup";
 
 const SettingsPage = () => {
   const navigate = useNavigate();
-  const { isAdmin } = useIsAdminRole();
+  const { isLoggedIn, isAdmin } = useUserRole();
 
-  // 세션 스토리지 기반 상태 유지
   const [showFcm, setShowFcm] = useState(
     () => sessionStorage.getItem("showFcm") === "true",
   );
   const [clickCount, setClickCount] = useState(0);
 
-  const menuGroups = createSettingsMenuGroups(navigate);
+  const menuGroups = createSettingsMenuGroups(navigate, isLoggedIn);
 
   useSetHeader({
     title: "설정",
   });
 
-  // 클릭 횟수 감시
   useEffect(() => {
     if (clickCount >= 5 && !showFcm) {
       setShowFcm(true);
@@ -46,11 +44,9 @@ const SettingsPage = () => {
   return (
     <SettingsWrapper>
       <MenuGroupsWrapper>
-        {/* 알림 설정 */}
         <MenuGroup title={menuGroups[0].title} menus={menuGroups[0].menus} />
         <Divider />
 
-        {/* 앱 정보 (버전 클릭 시 FCM 토큰 메뉴 노출) */}
         <MenuGroup
           title="앱 정보"
           menus={[
@@ -73,7 +69,6 @@ const SettingsPage = () => {
           ]}
         />
 
-        {/* 관리자 섹션 */}
         {isAdmin && (
           <>
             <Divider />
@@ -96,7 +91,7 @@ const SettingsPage = () => {
 export default SettingsPage;
 
 const SettingsWrapper = styled.div`
-  padding: 0 16px 100px;
+  padding: 24px 16px;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;

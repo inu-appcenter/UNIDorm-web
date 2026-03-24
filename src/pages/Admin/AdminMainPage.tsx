@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import useUserStore from "../../stores/useUserStore.ts";
 import { useEffect } from "react";
-import { useIsAdminRole } from "@/hooks/useIsAdminRole";
+import { useUserRole } from "@/hooks/useUserRole";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import { motion } from "framer-motion";
 import {
@@ -33,7 +33,7 @@ interface AdminPageItem {
 const AdminMainPage: React.FC = () => {
   const navigate = useNavigate();
   const { tokenInfo, userInfo, isLoading } = useUserStore();
-  const { isAdmin, isSupporters, isMainAdmin } = useIsAdminRole();
+  const { isAdmin, isSupporters, isMainAdmin } = useUserRole();
 
   useEffect(() => {
     if (!isLoading) {
@@ -141,7 +141,7 @@ const AdminMainPage: React.FC = () => {
   ) as AdminPageItem["category"][];
   if (isMainAdmin) categories = [...categories, "개발 지원"];
 
-  const { roleName } = useIsAdminRole();
+  const { roleName } = useUserRole();
 
   return (
     <Wrapper>

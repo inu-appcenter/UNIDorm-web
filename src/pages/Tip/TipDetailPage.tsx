@@ -15,7 +15,7 @@ import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../../constants/EmptyMessage.tsx";
 import CommonBottomSheet from "src/components/modal/CommonBottomSheet.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
-import { useIsAdminRole } from "../../hooks/useIsAdminRole";
+import { useUserRole } from "src/hooks/useUserRole";
 
 export default function TipDetailPage() {
   const { boardId } = useParams<{ boardId: string }>();
@@ -30,7 +30,7 @@ export default function TipDetailPage() {
   const isLoggedIn = Boolean(tokenInfo.accessToken);
 
   // 관리자 권한 확인
-  const { isAdmin } = useIsAdminRole();
+  const { isAdmin } = useUserRole();
 
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
@@ -288,7 +288,7 @@ const Wrapper = styled.div`
   box-sizing: border-box;
 
   flex: 1;
-  padding: 0 16px 100px;
+  padding: 16px 16px 100px;
 `;
 
 const Content = styled.div`
