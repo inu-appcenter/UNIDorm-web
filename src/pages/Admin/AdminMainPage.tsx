@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import useUserStore from "../../stores/useUserStore.ts";
 import { useEffect } from "react";
-import { useIsAdminRole } from "@/hooks/useIsAdminRole";
+import { useUserRole } from "@/hooks/useUserRole";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import { motion } from "framer-motion";
 import {
@@ -33,7 +33,7 @@ interface AdminPageItem {
 const AdminMainPage: React.FC = () => {
   const navigate = useNavigate();
   const { tokenInfo, userInfo, isLoading } = useUserStore();
-  const { isAdmin, isSupporters, isMainAdmin } = useIsAdminRole();
+  const { isAdmin, isSupporters, isMainAdmin } = useUserRole();
 
   useEffect(() => {
     if (!isLoading) {
@@ -141,7 +141,7 @@ const AdminMainPage: React.FC = () => {
   ) as AdminPageItem["category"][];
   if (isMainAdmin) categories = [...categories, "개발 지원"];
 
-  const { roleName } = useIsAdminRole();
+  const { roleName } = useUserRole();
 
   return (
     <Wrapper>
@@ -167,9 +167,14 @@ const AdminMainPage: React.FC = () => {
                   <MenuCard
                     as={motion.div}
                     whileHover={{ scale: 1.02 }}
-                    onClick={() =>
-                      (window.location.href = "https://unidorm-test.pages.dev")
-                    }
+                    onClick={() => {
+                      // 새 탭에서 링크 열기
+                      window.open(
+                        "https://unidorm-test.pages.dev",
+                        "_blank",
+                        "noopener,noreferrer",
+                      );
+                    }}
                   >
                     <IconWrapper
                       style={{ backgroundColor: "#fef3c7", color: "#d97706" }}
@@ -196,11 +201,19 @@ const AdminMainPage: React.FC = () => {
                         initial={{ opacity: 0, y: 15 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.03 }}
-                        onClick={() =>
-                          page.isExternal
-                            ? (window.location.href = page.path)
-                            : navigate(page.path)
-                        }
+                        onClick={() => {
+                          if (page.isExternal) {
+                            // 새 탭에서 외부 링크 열기
+                            window.open(
+                              page.path,
+                              "_blank",
+                              "noopener,noreferrer",
+                            );
+                          } else {
+                            // 내부 페이지 이동
+                            navigate(page.path);
+                          }
+                        }}
                       >
                         <IconWrapper>{page.icon}</IconWrapper>
                         <CardContent>

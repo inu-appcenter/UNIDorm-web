@@ -12,7 +12,7 @@ import GrayDivider from "../../components/common/GrayDivider.tsx";
 import { useSwipeable } from "react-swipeable";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../../constants/EmptyMessage.tsx";
-import { useIsAdminRole } from "@/hooks/useIsAdminRole";
+import { useUserRole } from "@/hooks/useUserRole";
 import linkify from "../../utils/linkfy.tsx";
 import {
   NoticeTagWrapper,
@@ -33,7 +33,7 @@ export default function AnnounceDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   const navigate = useNavigate();
-  const { isAdmin } = useIsAdminRole();
+  const { isAdmin } = useUserRole();
 
   useEffect(() => {
     if (!boardId) {

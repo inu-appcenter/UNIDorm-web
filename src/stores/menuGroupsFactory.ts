@@ -1,6 +1,6 @@
 import { MenuGroup } from "@/types/mypage";
-import { getMobilePlatform } from "@/utils/getMobilePlatform";
 import { PATHS } from "@/constants/paths";
+import { guardAppOnly, guardLogin } from "@/utils/guard";
 
 // 마이페이지용 메뉴 그룹
 export const createMyPageMenuGroups = (
@@ -34,7 +34,7 @@ export const createMyPageMenuGroups = (
       },
       { label: "서비스 정보", onClick: () => navigate(PATHS.ONBOARDING) },
       {
-        label: "인천대학교 앱센터",
+        label: "인천대학교 앱센터(IT이노베이션랩)",
         onClick: () => window.open("https://home.inuappcenter.kr", "_blank"),
       },
       ...(isLoggedIn
@@ -56,6 +56,7 @@ export const createMyPageMenuGroups = (
 // 설정 페이지용 메뉴 그룹
 export const createSettingsMenuGroups = (
   navigate: (path: string) => void,
+  isLoggedIn: boolean,
 ): MenuGroup[] => [
   {
     title: "알림 설정",
@@ -63,22 +64,18 @@ export const createSettingsMenuGroups = (
       {
         label: "알림 수신 설정",
         onClick: () => {
-          const platform = getMobilePlatform();
-          if (platform === "android_browser" || platform === "ios_browser") {
-            alert("앱 설치 후 사용할 수 있습니다.");
-            return;
-          }
+          if (!guardLogin(isLoggedIn, navigate)) return;
+          if (!guardAppOnly()) return;
+
           navigate(PATHS.NOTI_SETTING);
         },
       },
       {
         label: "공동구매 키워드 알림 설정",
         onClick: () => {
-          const platform = getMobilePlatform();
-          if (platform === "android_browser" || platform === "ios_browser") {
-            alert("앱 설치 후 사용할 수 있습니다.");
-            return;
-          }
+          if (!guardLogin(isLoggedIn, navigate)) return;
+          if (!guardAppOnly()) return;
+
           navigate(PATHS.GROUP_PURCHASE.KEYWORD_SETTING);
         },
       },

@@ -2,7 +2,7 @@
 import React from "react";
 import styled from "styled-components";
 import { Files } from "@/types/complain";
-import { useIsAdminRole } from "@/hooks/useIsAdminRole";
+import { useUserRole } from "@/hooks/useUserRole";
 
 interface NoticeCardProps {
   date: string;
@@ -21,7 +21,7 @@ const ComplainCard: React.FC<NoticeCardProps> = ({
   content,
   images,
 }) => {
-  const { isAdmin } = useIsAdminRole();
+  const { isAdmin } = useUserRole();
 
   // 날짜 형식을 'YY.MM.DD HH:MM'으로 변경
   const formattedDate = date.replace(

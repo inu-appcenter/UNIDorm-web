@@ -29,4 +29,6 @@ export interface NotificationPreferences {
   dormitoryNotification: boolean;
   unidormNotification: boolean;
   supportersNotification: boolean;
+
+  complaintNotification: boolean; //민원 알림 수신 여부 (관리자용)
 }

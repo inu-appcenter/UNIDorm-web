@@ -15,16 +15,17 @@ import RoundSquareWhiteButton from "../../components/button/RoundSquareWhiteButt
 import RoundSquareButton from "../../components/button/RoundSquareButton.tsx";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../../constants/EmptyMessage.tsx";
-import { useIsAdminRole } from "@/hooks/useIsAdminRole";
+import { useUserRole } from "@/hooks/useUserRole";
 import { TipImage } from "@/types/tips";
 import { useSetHeader } from "@/hooks/useSetHeader";
+import { PATHS } from "@/constants/paths";
 
 const ComplainDetailPage = () => {
-  const { isAdmin } = useIsAdminRole();
+  const { isAdmin } = useUserRole();
 
   const { complainId } = useParams<{ complainId: string }>();
   const [complaint, setComplaint] = useState<ComplaintDetail | null>(null);
-  const [selectedManager, setSelectedManager] = useState("");
+  const [selectedManager, setSelectedManager] = useState("생활원");
   const [isNeedUpdate, setIsNeedUpdate] = useState(false);
   const navigate = useNavigate();
   const [complainImages, setComplainImages] = useState<TipImage[]>([]);
@@ -127,6 +128,7 @@ const ComplainDetailPage = () => {
       await deleteComplaint(complaint?.id);
 
       alert("삭제하였습니다.");
+      navigate(PATHS.COMPLAIN.ROOT, { replace: true });
     } catch (err) {
       console.log(err);
     }
@@ -135,20 +137,26 @@ const ComplainDetailPage = () => {
   const headerConfig = useMemo(
     () => ({
       title: "민원 상세",
-      menuItems: [
-        {
-          label: "수정하기",
-          onClick: () => {
-            navigate("/complain/write", {
-              state: { complain: complaint, complainImages: complainImages },
-            });
-          },
-        },
-        {
-          label: "삭제하기",
-          onClick: handleDelete,
-        },
-      ],
+      menuItems:
+        complaint?.status === "대기중"
+          ? [
+              {
+                label: "수정하기",
+                onClick: () => {
+                  navigate(PATHS.COMPLAIN.WRITE, {
+                    state: {
+                      complain: complaint,
+                      complainImages: complainImages,
+                    },
+                  });
+                },
+              },
+              {
+                label: "삭제하기",
+                onClick: handleDelete,
+              },
+            ]
+          : null,
     }),
     [complainImages, complaint, handleDelete, navigate],
   );

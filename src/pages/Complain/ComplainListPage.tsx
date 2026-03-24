@@ -166,7 +166,7 @@ const ComplainListPage = () => {
 
       <TitleContentArea
         description={
-          "생활원 민원을 접수할 수 있습니다.\n통합행정실 근무시간 내 처리되며, 담당자 사정에 따라 확인 및 처리가 늦어질 수 있습니다."
+          "생활원 민원을 접수할 수 있습니다.\n통합행정실 업무시간 내 처리되며, 담당자 사정에 따라 확인 및 처리가 늦어질 수 있습니다."
         }
       />
 
@@ -175,7 +175,9 @@ const ComplainListPage = () => {
           <div className="banner-text">
             <span className="banner-title">챗불이에게 먼저 물어보세요!</span>
             <span className="banner-desc">
-              기숙사 생활 수칙부터 행정 절차까지 바로 답변해드려요.
+              간단한 질문은 챗불이가 답해드릴 수 있어요.
+              <br />
+              여기를 눌러 챗불이가 무엇을 할 수 있는지 알아보세요.
             </span>
           </div>
           <div className="banner-character">

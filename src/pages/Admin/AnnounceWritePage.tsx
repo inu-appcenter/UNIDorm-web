@@ -18,7 +18,7 @@ import {
   ANNOUNCE_CATEGORY_LIST,
   ANNOUNCE_SUB_CATEGORY_LIST,
 } from "@/constants/announcement";
-import { useIsAdminRole } from "@/hooks/useIsAdminRole";
+import { useUserRole } from "@/hooks/useUserRole";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import { RequestAnnouncementDto } from "@/types/announcements";
 
@@ -30,7 +30,7 @@ export default function AnnounceWritePage() {
 
   const announceCategoryOptions = ANNOUNCE_CATEGORY_LIST.slice(1);
   const announceSubCategoryOptions = ANNOUNCE_SUB_CATEGORY_LIST.slice(1);
-  const { isDormAdmin, isSupporters } = useIsAdminRole();
+  const { isDormAdmin, isSupporters } = useUserRole();
 
   const [title, setTitle] = useState(announce?.title || "");
   const [content, setContent] = useState(announce?.content || "");
@@ -77,8 +77,8 @@ export default function AnnounceWritePage() {
 
     const data: RequestAnnouncementDto = {
       category: isDormitoryAnnouncement
-        ? announceSubCategoryOptions[selectedAnnounceSubCategoryIndex]?.value ??
-          ANNOUNCE_SUB_CATEGORY_LIST[0].value
+        ? (announceSubCategoryOptions[selectedAnnounceSubCategoryIndex]
+            ?.value ?? ANNOUNCE_SUB_CATEGORY_LIST[0].value)
         : ANNOUNCE_SUB_CATEGORY_LIST[0].value,
       title,
       writer: selectedAnnounceCategory.label.ko,

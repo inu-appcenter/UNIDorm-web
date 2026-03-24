@@ -17,6 +17,7 @@ import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import { Input } from "@/styles/common";
 import { FormBoxGray } from "@/styles/form";
 import { useSetHeader } from "@/hooks/useSetHeader";
+import { useUserRole } from "@/hooks/useUserRole";
 
 const FormDetailPage = () => {
   const navigate = useNavigate();
@@ -234,34 +235,37 @@ const FormDetailPage = () => {
     return false;
   };
 
+  const { isAdmin } = useUserRole();
+
   const headerConfig = useMemo(
     () => ({
       title: "폼 상세",
-      menuItems: [
-        {
-          label: "응답 결과 보기",
-          onClick: () => {
-            navigate(`/admin/form/${formId}/result`);
-          },
-        },
-        {
-          label: "폼 마감하기",
-          onClick: handleFormClose,
-        },
-        {
-          label: "폼 수정하기",
-          onClick: () => {
-            navigate("/admin/form/create", { state: { form: form } });
-          },
-        },
-
-        {
-          label: "폼 삭제하기",
-          onClick: handleDelete,
-        },
-      ],
+      menuItems: isAdmin
+        ? [
+            {
+              label: "응답 결과 보기",
+              onClick: () => {
+                navigate(`/admin/form/${formId}/result`);
+              },
+            },
+            {
+              label: "폼 마감하기",
+              onClick: handleFormClose,
+            },
+            {
+              label: "폼 수정하기",
+              onClick: () => {
+                navigate("/admin/form/create", { state: { form } });
+              },
+            },
+            {
+              label: "폼 삭제하기",
+              onClick: handleDelete,
+            },
+          ]
+        : [],
     }),
-    [form, formId, handleDelete, handleFormClose, navigate],
+    [isAdmin, form, formId, handleDelete, handleFormClose, navigate],
   );
   useSetHeader(headerConfig);
 

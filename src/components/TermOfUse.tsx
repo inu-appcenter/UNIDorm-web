@@ -3,8 +3,8 @@ import styled from "styled-components";
 export default function TermOfUse() {
   return (
     <StyledDiv>
-      유니돔은 IT동아리 <strong>인천대학교 앱센터</strong>에서 생활원과 협력하여
-      개발하는 서비스입니다.
+      유니돔은 <strong>인천대학교 앱센터</strong>(IT이노베이션랩)에서 생활원과
+      협력하여 개발하는 서비스입니다.
       {/*서비스 사용 시{" "}*/}
       {/*<a href="/terms-of-use.html" target="_blank" rel="noopener noreferrer">*/}
       {/*  이용약관*/}

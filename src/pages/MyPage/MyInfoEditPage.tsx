@@ -316,7 +316,7 @@ export default function MyInfoEditPage() {
   );
 }
 const MyInfoEditPageWrapper = styled.div`
-  padding: 0 16px 120px;
+  padding: 16px 16px 120px;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;

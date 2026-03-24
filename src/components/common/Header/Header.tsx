@@ -6,7 +6,7 @@ import logo from "@/assets/unidorm-logo.webp";
 import { Bell, Settings } from "lucide-react";
 import useUserStore from "@/stores/useUserStore";
 import useHeaderStore from "@/stores/useHeaderStore";
-import { useIsAdminRole } from "@/hooks/useIsAdminRole";
+import { useUserRole } from "@/hooks/useUserRole";
 import { getMobilePlatform } from "@/utils/getMobilePlatform";
 import TooltipMessage from "src/components/common/TooltipMessage";
 import TopRightDropdownMenu from "../TopRightDropdownMenu";
@@ -19,7 +19,7 @@ interface HeaderProps {
 export default function Header({ hasBack = false, backPath }: HeaderProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAdmin, roleName } = useIsAdminRole();
+  const { isAdmin, roleName } = useUserRole();
   const { userInfo, setUserInfo } = useUserStore();
   const platform = getMobilePlatform();
 

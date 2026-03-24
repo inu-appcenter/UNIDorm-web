@@ -17,6 +17,9 @@ import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import { useFileHandler } from "@/hooks/useFileHandler";
 import FileUploader from "../../components/common/FileUploader.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
+import Box from "@/components/common/Box";
+import TitleContentArea from "@/components/common/TitleContentArea";
+import { PATHS } from "@/constants/paths";
 
 // ---  옵션 배열 생성 헬퍼 함수 ---
 const generateOptions = (min: number, max: number, suffix: string) => {
@@ -110,7 +113,7 @@ export default function ComplainWritePage() {
       setIsEditMode(true);
       setTitle(complain.title);
       setContent(complain.content);
-      setPrivacyAgreed(complain.privacyAgreed || false);
+      // setPrivacyAgreed(complain.privacyAgreed || false); //api에 없음
 
       const typeIndex = ComplainType.indexOf(complain.type);
       if (typeIndex !== -1) setSelectedComplainTypeIndex(typeIndex);
@@ -133,6 +136,12 @@ export default function ComplainWritePage() {
       setIncidentTime(complain.incidentTime || "");
     }
   }, [complain]);
+
+  useEffect(() => {
+    if (isEditMode) {
+      setPrivacyAgreed(true);
+    }
+  }, [isEditMode]);
 
   const handleSubmit = async () => {
     // 필수 값 검사 로직 업데이트
@@ -213,7 +222,7 @@ export default function ComplainWritePage() {
       }
 
       console.log("API 응답:", res.data);
-      navigate("/complain", { replace: true });
+      navigate(PATHS.COMPLAIN.ROOT, { replace: true });
     } catch (err: any) {
       console.error("API 요청 실패:", err);
       const errorMessage =
@@ -224,7 +233,7 @@ export default function ComplainWritePage() {
     }
   };
 
-  useSetHeader({ title: "생활원 민원 작성" });
+  useSetHeader({ title: `생활원 민원 ${isEditMode ? "수정" : "작성"}` });
 
   return (
     <Wrapper>
@@ -239,100 +248,112 @@ export default function ComplainWritePage() {
           />
         </FormField>
 
-        <FormField label="기숙사" required>
-          <SelectableChipGroup
-            Groups={complainDormitory}
-            selectedIndex={selectedDormitoryIndex}
-            onSelect={setSelectedDormitoryIndex}
-          />
-        </FormField>
+        <TitleContentArea title={"민원인 정보"}>
+          <Box>
+            <Content>
+              <FormField label="기숙사" required>
+                <SelectableChipGroup
+                  Groups={complainDormitory}
+                  selectedIndex={selectedDormitoryIndex}
+                  onSelect={setSelectedDormitoryIndex}
+                />
+              </FormField>
 
-        <FormField label="동" required>
-          <SelectableChipGroup
-            Groups={dormitoryBlocks}
-            selectedIndex={selectedDormitoryBlockIndex}
-            onSelect={setSelectedDormitoryBlockIndex}
-          />
-        </FormField>
+              <FormField label="동" required>
+                <SelectableChipGroup
+                  Groups={dormitoryBlocks}
+                  selectedIndex={selectedDormitoryBlockIndex}
+                  onSelect={setSelectedDormitoryBlockIndex}
+                />
+              </FormField>
 
-        {/* ---  동적 옵션(floorOptions) 사용 --- */}
-        <FormField label="층/호수/침대" required>
-          <DropdownContainer>
-            <Dropdown
-              value={selectedFloor}
-              onChange={(e) => setSelectedFloor(e.target.value)}
-              hasValue={!!selectedFloor}
-              disabled={floorOptions.length === 0} // 옵션 없으면 비활성화
-            >
-              <option value="" disabled>
-                층
-              </option>
-              {floorOptions.map((floor) => (
-                <option key={floor} value={floor}>
-                  {floor}
-                </option>
-              ))}
-            </Dropdown>
+              {/* ---  동적 옵션(floorOptions) 사용 --- */}
+              <FormField label="층/호수/침대" required>
+                <DropdownContainer>
+                  <Dropdown
+                    value={selectedFloor}
+                    onChange={(e) => setSelectedFloor(e.target.value)}
+                    hasValue={!!selectedFloor}
+                    disabled={floorOptions.length === 0} // 옵션 없으면 비활성화
+                  >
+                    <option value="" disabled>
+                      층
+                    </option>
+                    {floorOptions.map((floor) => (
+                      <option key={floor} value={floor}>
+                        {floor}
+                      </option>
+                    ))}
+                  </Dropdown>
 
-            {/* ---  동적 옵션(roomOptions) 사용 --- */}
-            <Dropdown
-              value={selectedRoom}
-              onChange={(e) => setSelectedRoom(e.target.value)}
-              hasValue={!!selectedRoom}
-              disabled={roomOptions.length === 0} // 옵션 없으면 비활성화
-            >
-              <option value="" disabled>
-                호수
-              </option>
-              {roomOptions.map((room) => (
-                <option key={room} value={room}>
-                  {room}
-                </option>
-              ))}
-            </Dropdown>
+                  {/* ---  동적 옵션(roomOptions) 사용 --- */}
+                  <Dropdown
+                    value={selectedRoom}
+                    onChange={(e) => setSelectedRoom(e.target.value)}
+                    hasValue={!!selectedRoom}
+                    disabled={roomOptions.length === 0} // 옵션 없으면 비활성화
+                  >
+                    <option value="" disabled>
+                      호수
+                    </option>
+                    {roomOptions.map((room) => (
+                      <option key={room} value={room}>
+                        {room}
+                      </option>
+                    ))}
+                  </Dropdown>
 
-            {/* ---  동적 옵션(bedOptions) 사용 --- */}
-            <Dropdown
-              value={selectedBed}
-              onChange={(e) => setSelectedBed(e.target.value)}
-              hasValue={!!selectedBed}
-              disabled={bedOptions.length === 0} // 옵션 없으면 비활성화
-            >
-              <option value="" disabled>
-                침대
-              </option>
-              {bedOptions.map((bed) => (
-                <option key={bed} value={bed}>
-                  {bed}
-                </option>
-              ))}
-            </Dropdown>
-          </DropdownContainer>
-        </FormField>
+                  {/* ---  동적 옵션(bedOptions) 사용 --- */}
+                  <Dropdown
+                    value={selectedBed}
+                    onChange={(e) => setSelectedBed(e.target.value)}
+                    hasValue={!!selectedBed}
+                    disabled={bedOptions.length === 0} // 옵션 없으면 비활성화
+                  >
+                    <option value="" disabled>
+                      침대
+                    </option>
+                    {bedOptions.map((bed) => (
+                      <option key={bed} value={bed}>
+                        {bed}
+                      </option>
+                    ))}
+                  </Dropdown>
+                </DropdownContainer>
+              </FormField>
+            </Content>
+          </Box>
+        </TitleContentArea>
 
-        <FormField label="세부 위치" required>
-          <Input
-            placeholder="정확한 위치를 입력해주세요 (예: 화장실 앞, 복도 끝 등)"
-            value={specificLocation}
-            onChange={(e) => setSpecificLocation(e.target.value)}
-          />
-        </FormField>
+        <TitleContentArea title={"민원 세부 정보"}>
+          <Box>
+            <Content>
+              <FormField label="세부 위치" required>
+                <Input
+                  placeholder="정확한 위치를 입력해주세요 (예: 화장실 앞, 복도 끝 등)"
+                  value={specificLocation}
+                  onChange={(e) => setSpecificLocation(e.target.value)}
+                />
+              </FormField>
 
-        <FormField label="발생 날짜" required>
-          <Input
-            type="date"
-            value={incidentDate}
-            onChange={(e) => setIncidentDate(e.target.value)}
-          />
-        </FormField>
+              <FormField label="발생 날짜" required>
+                <Input
+                  type="date"
+                  value={incidentDate}
+                  onChange={(e) => setIncidentDate(e.target.value)}
+                />
+              </FormField>
 
-        <FormField label="발생 시간" required>
-          <Input
-            type="time"
-            value={incidentTime}
-            onChange={(e) => setIncidentTime(e.target.value)}
-          />
-        </FormField>
+              <FormField label="발생 시간" required>
+                <Input
+                  type="time"
+                  value={incidentTime}
+                  onChange={(e) => setIncidentTime(e.target.value)}
+                />
+              </FormField>
+            </Content>
+          </Box>
+        </TitleContentArea>
 
         <FormField label="제목" required>
           <Input
@@ -351,7 +372,7 @@ export default function ComplainWritePage() {
         </FormField>
 
         <FormField
-          label="이미지"
+          label="이미지(선택)"
           description="상황 설명에 도움이 되는 이미지가 있으면 첨부해 주세요."
         >
           <FileUploader
@@ -391,19 +412,20 @@ const Wrapper = styled.div`
   flex-direction: column;
   min-height: 100vh;
   background: white;
+  padding: 16px 16px 120px;
 `;
 
 const Content = styled.div`
   flex: 1;
-  padding: 0 16px 120px;
   display: flex;
   flex-direction: column;
   gap: 24px;
+  width: 100%;
 `;
 
 const Textarea = styled.textarea`
   width: 100%;
-  min-height: 150px;
+  min-height: 250px;
   padding: 12px;
   border-radius: 8px;
   border: 1px solid #eee;
