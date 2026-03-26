@@ -18,7 +18,13 @@ export const guardLogin = (
 export const guardAppOnly = (): boolean => {
   const platform = getMobilePlatform();
 
+  if (platform == "android_webview" || platform == "ios_webview") {
+    //앱인 경우 통과
+    return true;
+  }
+
   if (platform === "ios_browser" || platform === "android_browser") {
+    //모바일 웹브라우저인 경우 스토어로 이동
     const isConfirm = confirm(
       "앱 설치 후 사용할 수 있습니다.\n스토어로 이동할까요?",
     );
@@ -32,6 +38,7 @@ export const guardAppOnly = (): boolean => {
     window.open(url, "_blank");
     return false;
   } else {
+    //그 이외(pc인 경우 등)
     alert(
       "유니돔 앱 환경에서만 이용 가능해요.\n스마트폰에서 앱 설치 후 이용해주세요.",
     );
