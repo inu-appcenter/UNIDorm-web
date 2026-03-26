@@ -66,7 +66,7 @@ export default function HomePage() {
       Math.random() < 0.4,
   );
 
-  const CHANNEL_ID = "UCrpqEmMWCOg6P8FSk6mN5Hw"; //인천대학교 생활원 유튜브 채널 id
+  const CHANNEL_ID = "UCrpqEmMWCOg6P8FSk6mN5Hw"; // 인천대학교 생활원 유튜브 채널 id
 
   useEffect(() => {
     const fetchPopupNotices = async () => {
@@ -92,6 +92,7 @@ export default function HomePage() {
         setIsPopupLoading(false);
       }
     };
+
     const getTips = async () => {
       setIsTipsLoading(true);
       try {
@@ -151,21 +152,19 @@ export default function HomePage() {
   /* 피처 플래그 상태 관리 */
   const [isMatchingActive, setIsMatchingActive] = useState<boolean>(false);
   useEffect(() => {
-    /* 피처 플래그 데이터 페칭 */
     const fetchFeatureFlag = async () => {
       try {
         const response = await getFeatureFlagByKey("ROOMMATE_MATCHING");
         setIsMatchingActive(response.data.flag);
       } catch (error) {
         console.error("피처 플래그 조회 실패:", error);
-        setIsMatchingActive(false); // 에러 발생 시 기본값 설정
+        setIsMatchingActive(false);
       }
     };
 
     fetchFeatureFlag();
   }, []);
 
-  // 룸메이트 데이터 단일 페이지 조회
   const { data: roommates, isLoading: isRoommateLoading } = useQuery({
     queryKey: ["roommates", "home"],
     queryFn: () => getRoomMateScrollList(undefined, 10),
@@ -179,23 +178,35 @@ export default function HomePage() {
   }
 
   const { isNetworkError } = useNetworkStore();
-  const [notification, setNotification] = useState<NotificationData | null>(
-    null,
-  );
+
+  const [maintenanceNotification, setMaintenanceNotification] =
+    useState<NotificationData | null>({
+      title: "서비스 점검 예정 안내",
+      message:
+        "3월 27일(금) 17시 30분부터 19시까지 서버 점검이 예정되어 있습니다. 해당 기간동안 서비스 이용이 불가능합니다. 이용에 참고 부탁드립니다. 감사합니다.",
+    });
+
+  const [networkNotification, setNetworkNotification] =
+    useState<NotificationData | null>(null);
 
   useEffect(() => {
     if (isNetworkError) {
-      setNotification({
+      setNetworkNotification({
         title: "서비스 장애 안내",
-        message: `학교 인터넷에 문제가 발생했거나, 서버 점검 중입니다. 이용에 불편을 드려 죄송합니다.`,
+        message:
+          "학교 인터넷에 문제가 발생했거나, 서버 점검 중입니다. 이용에 불편을 드려 죄송합니다.",
       });
     } else {
-      setNotification(null);
+      setNetworkNotification(null);
     }
   }, [isNetworkError]);
 
-  const handleCloseNotification = () => {
-    setNotification(null);
+  const handleCloseMaintenanceNotification = () => {
+    setMaintenanceNotification(null);
+  };
+
+  const handleCloseNetworkNotification = () => {
+    setNetworkNotification(null);
   };
 
   const [isOpenGroupPurchase] = useState(false);
@@ -225,12 +236,19 @@ export default function HomePage() {
           </HomeNoticeBottomSheet>
         ))}
 
-      {notification && (
+      {maintenanceNotification && (
         <TopPopupNotification
-          title={notification.title}
-          message={notification.message}
-          onClose={handleCloseNotification}
-          duration={10000}
+          title={maintenanceNotification.title}
+          message={maintenanceNotification.message}
+          onClose={handleCloseMaintenanceNotification}
+        />
+      )}
+
+      {networkNotification && (
+        <TopPopupNotification
+          title={networkNotification.title}
+          message={networkNotification.message}
+          onClose={handleCloseNetworkNotification}
         />
       )}
 
@@ -260,6 +278,7 @@ export default function HomePage() {
             />
           </ServiceWrapper>
         </TitleContentArea>
+
         {isMatchingActive && (
           <TitleContentArea
             title={"2026년 1학기 룸메이트 모집"}
@@ -330,12 +349,14 @@ export default function HomePage() {
             </NotiArea>
           )}
         </TitleContentArea>
+
         <TitleContentArea
           title={"생활원 YouTube"}
           externalLink={`https://www.youtube.com/channel/${CHANNEL_ID}`}
         >
           <YoutubeWidget />
         </TitleContentArea>
+
         <GridContainer>
           <TitleContentArea title="오늘의 Best 꿀팁" link={"/tips"}>
             {isTipsLoading ? (
@@ -353,6 +374,7 @@ export default function HomePage() {
               <EmptyMessage message={"오늘의 꿀팁이 없습니다."} />
             )}
           </TitleContentArea>
+
           <TitleContentArea
             title={"생활원 일정"}
             children={<Calendar mode={"week"} />}
@@ -416,6 +438,7 @@ const HomePageWrapper = styled.div`
     width: 50%;
     max-width: 250px;
     align-self: start;
+
     @media (min-width: 768px) {
       align-self: center;
     }
@@ -468,6 +491,7 @@ const NotiWrapper = styled.div`
   overflow-x: auto;
   -ms-overflow-style: none;
   scrollbar-width: none;
+
   &::-webkit-scrollbar {
     display: none;
   }
@@ -484,14 +508,17 @@ const PopupModalContent = styled.div`
     max-width: 100%;
     border-radius: 8px;
   }
+
   h3 {
     font-size: 18px;
     font-weight: 600;
   }
+
   p {
     font-size: 14px;
     color: #333;
   }
+
   span {
     font-size: 12px;
     color: #777;
