@@ -1,4 +1,10 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
+import FeatureFlagGate from "@/components/common/FeatureFlagGate";
+import {
+  FRESHMAN_LOGIN_FEATURE_FLAG_KEY,
+  FRESHMAN_MIGRATION_FEATURE_FLAG_KEY,
+  FRESHMAN_SIGNUP_FEATURE_FLAG_KEY,
+} from "@/constants/featureFlags";
 
 /* 상수/경로 */
 import { PATHS } from "@/constants/paths";
@@ -14,6 +20,7 @@ import LoginPage from "@/pages/LoginPage";
 import LogoutPage from "@/pages/LogoutPage";
 import OnboardingPage from "@/pages/OnboardingPage";
 import FreshmanLoginPage from "@/pages/FreshmanLoginPage";
+import FreshmanSignupPage from "@/pages/FreshmanSignupPage";
 
 /* 페이지 - 메인 5개 탭 (RootPage 하위) */
 import HomePage from "@/pages/HomePage";
@@ -110,7 +117,25 @@ export const router = createBrowserRouter([
             path: "login",
             children: [
               { path: "", element: <LoginPage /> }, // 기본 /login 경로
-              { path: "freshman", element: <FreshmanLoginPage /> }, // /login/freshman 경로 추가
+              {
+                path: "freshman",
+                element: (
+                  <FeatureFlagGate flagKey={FRESHMAN_LOGIN_FEATURE_FLAG_KEY}>
+                    <FreshmanLoginPage />
+                  </FeatureFlagGate>
+                ),
+              },
+              {
+                path: "freshman/signup",
+                element: (
+                  <FeatureFlagGate
+                    flagKey={FRESHMAN_SIGNUP_FEATURE_FLAG_KEY}
+                    fallbackPath={PATHS.FRESHMAN_LOGIN}
+                  >
+                    <FreshmanSignupPage />
+                  </FeatureFlagGate>
+                ),
+              },
             ],
           },
           {
@@ -128,7 +153,17 @@ export const router = createBrowserRouter([
             element: <SubPage />,
             children: [
               { index: true, element: <MyInfoEditPage /> },
-              { path: "freshman-migration", element: <FreshmanMigrationPage /> },
+              {
+                path: "freshman-migration",
+                element: (
+                  <FeatureFlagGate
+                    flagKey={FRESHMAN_MIGRATION_FEATURE_FLAG_KEY}
+                    fallbackPath={PATHS.MYINFO_EDIT}
+                  >
+                    <FreshmanMigrationPage />
+                  </FeatureFlagGate>
+                ),
+              },
             ],
           },
 

@@ -57,6 +57,7 @@ const useUserStore = create<UserState>((set) => ({
     set(() => ({ tokenInfo }));
     localStorage.setItem("accessToken", tokenInfo.accessToken);
     localStorage.setItem("refreshToken", tokenInfo.refreshToken);
+    localStorage.setItem("role", tokenInfo.role);
   },
   setUserInfo: (userInfo) => {
     set(() => ({ userInfo }));

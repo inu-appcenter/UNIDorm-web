@@ -1,24 +1,52 @@
 import styled from "styled-components";
-import { useNavigate } from "react-router-dom";
-import { PATHS } from "@/constants/paths";
 import ArrowRight from "@/assets/arrow-right.svg";
 
+export type MigrationBannerVariant = "freshman" | "portal";
+
+const MIGRATION_BANNER_COPY: Record<
+  MigrationBannerVariant,
+  { title: string; description: React.ReactNode }
+> = {
+  freshman: {
+    title: "포털 계정으로 통합하세요",
+    description:
+      "아직 신입생 임시 계정을 사용 중이시라면\n신입생 임시 계정을 학교 포털 계정으로 통합하세요.",
+  },
+  portal: {
+    title: "신입생 임시 계정 통합 안내",
+    description: (
+      <>
+        <strong>이전에 만드셨던 신입생 임시 계정이 있는 경우에만</strong>{" "}
+        통합을 진행해 주세요.
+        {"\n"}일정 기간 이후에는 통합하지 않은 임시 계정은 삭제될 예정입니다.
+      </>
+    ),
+  },
+};
+
 interface MigrationBannerProps {
-  /** 추가적인 여백이나 스타일 조절을 위한 className (optional) */
   className?: string;
+  onClick: () => void;
+  variant: MigrationBannerVariant;
 }
 
-const MigrationBanner = ({ className }: MigrationBannerProps) => {
-  const navigate = useNavigate();
+const MigrationBanner = ({
+  className,
+  onClick,
+  variant,
+}: MigrationBannerProps) => {
+  const copy = MIGRATION_BANNER_COPY[variant];
 
   return (
-    <BannerWrapper 
+    <BannerWrapper
+      type="button"
       className={className}
-      onClick={() => navigate(PATHS.FRESHMAN_MIGRATION)}
+      onClick={onClick}
+      $variant={variant}
     >
       <MigrationText>
-        <h3>학번 계정으로 통합하기</h3>
-        <p>신입생 임시 계정을 학교 포털 계정으로 통합하세요.</p>
+        <h3>{copy.title}</h3>
+        <p>{copy.description}</p>
       </MigrationText>
       <img src={ArrowRight} alt="이동" />
     </BannerWrapper>
@@ -27,7 +55,7 @@ const MigrationBanner = ({ className }: MigrationBannerProps) => {
 
 export default MigrationBanner;
 
-const BannerWrapper = styled.div`
+const BannerWrapper = styled.button<{ $variant: MigrationBannerVariant }>`
   width: 100%;
   padding: 18px 20px;
   box-sizing: border-box;
@@ -42,6 +70,8 @@ const BannerWrapper = styled.div`
   transition: all 0.2s ease-in-out;
   position: relative;
   overflow: hidden;
+  text-align: left;
+  appearance: none;
 
   &::before {
     content: "";
@@ -50,7 +80,8 @@ const BannerWrapper = styled.div`
     top: 0;
     bottom: 0;
     width: 4px;
-    background: #0a84ff;
+    background: ${({ $variant }) =>
+      $variant === "freshman" ? "#0a84ff" : "#8bb8ff"};
   }
 
   &:active {
@@ -62,8 +93,8 @@ const BannerWrapper = styled.div`
   img {
     width: 20px;
     height: 20px;
-    filter: invert(41%) sepia(91%) deg(204deg) saturate(3781%) hue-rotate(195deg)
-      brightness(101%) contrast(105%);
+    filter: invert(41%) sepia(91%) deg(204deg) saturate(3781%)
+      hue-rotate(195deg) brightness(101%) contrast(105%);
     opacity: 0.7;
   }
 `;
@@ -72,25 +103,13 @@ const MigrationText = styled.div`
   display: flex;
   flex-direction: column;
   gap: 2px;
+  word-break: keep-all;
 
   h3 {
     font-size: 16px;
     font-weight: 700;
     margin: 0;
     color: #1a1a1a;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-
-    &::after {
-      content: "NEW";
-      font-size: 10px;
-      background: #0a84ff;
-      color: white;
-      padding: 2px 6px;
-      border-radius: 10px;
-      font-weight: 800;
-    }
   }
 
   p {
@@ -99,5 +118,11 @@ const MigrationText = styled.div`
     color: #666;
     line-height: 1.4;
     text-align: left;
+    white-space: pre-line;
+
+    strong {
+      color: #333;
+      font-weight: 600;
+    }
   }
 `;

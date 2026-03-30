@@ -19,39 +19,8 @@ import axios from "axios";
 import profile from "../../assets/profileimg.png";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import MigrationBanner from "@/components/common/MigrationBanner";
-
-const menuItems = [
-  {
-    label: "회원탈퇴",
-    onClick: async () => {
-      try {
-        const confirmed = window.confirm(
-          "정말 탈퇴하시겠어요? 탈퇴 후에는 모든 회원 정보를 되돌릴 수 없어요.",
-        );
-        if (!confirmed) return;
-
-        const status = await deleteMembers();
-
-        switch (status) {
-          case 204:
-            alert("회원 탈퇴에 성공했어요.");
-            break;
-          case 403:
-            alert("인증되지 않은 사용자입니다. 다시 로그인해 주세요.");
-            break;
-          case 404:
-            alert("사용자를 찾을 수 없습니다. 이미 탈퇴되었을 수 있어요.");
-            break;
-          default:
-            alert("알 수 없는 오류가 발생했습니다.");
-        }
-      } catch (error) {
-        console.error("회원 탈퇴 중 예외 발생:", error);
-        alert("회원 탈퇴 중 네트워크 오류가 발생했습니다.");
-      }
-    },
-  },
-];
+import { useFreshmanMigrationBanner } from "@/hooks/useFreshmanMigrationBanner";
+import { PATHS } from "@/constants/paths";
 
 export default function MyInfoEditPage() {
   const { userInfo, setUserInfo } = useUserStore();
@@ -62,7 +31,12 @@ export default function MyInfoEditPage() {
   const isFirstVisit = queryParams.get("firstvisit") === "true";
 
   const navigate = useNavigate();
-  const [studentNumber] = useState(userInfo.studentNumber);
+  const studentNumber = userInfo.studentNumber;
+  const {
+    bannerVariant,
+    handleMigrationBannerClick,
+    shouldShowMigrationBanner,
+  } = useFreshmanMigrationBanner();
   const [nickname, setNickname] = useState(userInfo.name);
   const [selectedDomitoryIndex, setSelectedDomitoryIndex] = useState<
     number | null
@@ -76,32 +50,102 @@ export default function MyInfoEditPage() {
   }
 
   useEffect(() => {
-    setSelectedCollegeIndex(findIndex(colleges, userInfo.college));
-    setSelectedDomitoryIndex(findIndex(dormitory, userInfo.dormType));
-  }, []);
+    const initialCollegeIndex = findIndex(colleges, userInfo.college);
+    const initialDormitoryIndex = findIndex(dormitory, userInfo.dormType);
+
+    setSelectedCollegeIndex(initialCollegeIndex >= 0 ? initialCollegeIndex : null);
+    setSelectedDomitoryIndex(
+      initialDormitoryIndex >= 0 ? initialDormitoryIndex : null,
+    );
+  }, [userInfo.college, userInfo.dormType]);
+
+  const isValidSelectionIndex = (
+    index: number | null,
+    datas: string[],
+  ): index is number => {
+    return index != null && index >= 0 && index < datas.length;
+  };
+
+  const getMissingFields = () => {
+    const missingFields: string[] = [];
+
+    if (typeof nickname !== "string" || nickname.trim() === "") {
+      missingFields.push("닉네임");
+    }
+
+    if (!isValidSelectionIndex(selectedDomitoryIndex, dormitory)) {
+      missingFields.push("기숙사 종류");
+    }
+
+    if (!isValidSelectionIndex(selectedCollegeIndex, colleges)) {
+      missingFields.push("단과대학");
+    }
+
+    return missingFields;
+  };
+
+  const menuItems = [
+    {
+      label: "회원탈퇴",
+      onClick: async () => {
+        try {
+          const confirmed = window.confirm(
+            "정말 탈퇴하시겠어요? 탈퇴 후에는 모든 회원 정보를 되돌릴 수 없어요.",
+          );
+          if (!confirmed) return;
+
+          const status = await deleteMembers();
+
+          switch (status) {
+            case 204:
+              alert("회원 탈퇴에 성공했어요.");
+              navigate(PATHS.LOGOUT, { replace: true });
+              break;
+            case 403:
+              alert("인증되지 않은 사용자입니다. 다시 로그인해 주세요.");
+              break;
+            case 404:
+              alert("사용자를 찾을 수 없습니다. 이미 탈퇴되었을 수 있어요.");
+              break;
+            default:
+              alert("알 수 없는 오류가 발생했습니다.");
+          }
+        } catch (error) {
+          console.error("회원 탈퇴 중 예외 발생:", error);
+          alert("회원 탈퇴 중 네트워크 오류가 발생했습니다.");
+        }
+      },
+    },
+  ];
 
   const isFilled = () => {
-    return typeof nickname === "string" && nickname.trim() !== "";
+    return getMissingFields().length === 0;
   };
 
   const handleSubmit = async () => {
     try {
-      if (
-        !nickname ||
-        selectedCollegeIndex == null ||
-        selectedDomitoryIndex == null
-      ) {
-        alert("모든 값을 입력해주세요!");
+      const trimmedNickname = nickname.trim();
+      const missingFields = getMissingFields();
+
+      if (missingFields.length > 0) {
+        alert(`${missingFields.join(", ")} 항목을 입력해주세요!`);
         return;
       }
 
-      if (nickname.length < 2 || nickname.length > 10) {
+      if (
+        !isValidSelectionIndex(selectedCollegeIndex, colleges) ||
+        !isValidSelectionIndex(selectedDomitoryIndex, dormitory)
+      ) {
+        return;
+      }
+
+      if (trimmedNickname.length < 2 || trimmedNickname.length > 10) {
         alert("닉네임은 2자 이상 10자 이하로 입력해주세요!");
         return;
       }
 
       const response = await putMember(
-        nickname,
+        trimmedNickname,
         colleges[selectedCollegeIndex],
         dormitory[selectedDomitoryIndex],
         0,
@@ -255,7 +299,7 @@ export default function MyInfoEditPage() {
         )}
 
         <TitleContentArea
-          title={"학번 정보"}
+          title={"학번 정보(아이디)"}
           children={
             <>
               <StyledInput
@@ -263,8 +307,11 @@ export default function MyInfoEditPage() {
                 value={studentNumber}
                 disabled={true}
               />
-              {!/^[0-9]{8,10}$/.test(studentNumber) && (
-                <StyledMigrationBanner />
+              {shouldShowMigrationBanner && (
+                <StyledMigrationBanner
+                  variant={bannerVariant}
+                  onClick={handleMigrationBannerClick}
+                />
               )}
             </>
           }

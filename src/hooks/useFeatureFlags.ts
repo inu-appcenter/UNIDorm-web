@@ -5,9 +5,17 @@ export const FEATURE_FLAGS_QUERY_KEY = ["featureFlags"] as const;
 
 type FeatureFlagMap = Record<string, boolean>;
 
+const normalizeFeatureFlagKey = (key: string) => key.trim();
+
 const toFeatureFlagMap = (featureFlags: FeatureFlag[]): FeatureFlagMap =>
   featureFlags.reduce<FeatureFlagMap>((acc, featureFlag) => {
-    acc[featureFlag.key] = featureFlag.flag;
+    const normalizedKey = normalizeFeatureFlagKey(featureFlag.key);
+
+    if (!normalizedKey) {
+      return acc;
+    }
+
+    acc[normalizedKey] = featureFlag.flag;
     return acc;
   }, {});
 
@@ -18,8 +26,6 @@ export const useFeatureFlags = () =>
       const response = await getFeatureFlags();
       return toFeatureFlagMap(response.data);
     },
-    staleTime: 1000 * 60 * 10,
-    gcTime: 1000 * 60 * 30,
   });
 
 export const useFeatureFlag = (key: string, defaultValue = false) => {

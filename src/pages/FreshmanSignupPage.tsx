@@ -1,17 +1,12 @@
 import React, { useState } from "react";
 import { isAxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
-import { loginFreshman } from "@/apis/members";
+import { signupFreshman } from "@/apis/members";
 import StyledInput from "@/components/common/StyledInput.tsx";
 import SquareButton from "@/components/common/SquareButton.tsx";
 import LoadingSpinner from "@/components/common/LoadingSpinner.tsx";
-import {
-  FRESHMAN_MIGRATION_FEATURE_FLAG_KEY,
-  FRESHMAN_SIGNUP_FEATURE_FLAG_KEY,
-} from "@/constants/featureFlags";
 import { PATHS } from "@/constants/paths";
 import { useSetHeader } from "@/hooks/useSetHeader";
-import { useFeatureFlag } from "@/hooks/useFeatureFlags";
 import useUserStore from "@/stores/useUserStore";
 import {
   AuthButtonWrapper,
@@ -19,56 +14,56 @@ import {
   AuthErrorMessage,
   AuthFormWrapper,
   AuthInputGroup,
-  AuthLinkRow,
 } from "@/styles/auth";
 
 const freshmanIdRegex = /^[a-zA-Z0-9]{5,}$/;
 const freshmanPasswordRegex = /^(?=.*[a-zA-Z])(?=.*[0-9]).{5,}$/;
 
-export default function FreshmanLoginPage() {
+export default function FreshmanSignupPage() {
   const navigate = useNavigate();
   const { setTokenInfo } = useUserStore();
-  const { flag: isFreshmanSignupEnabled } = useFeatureFlag(
-    FRESHMAN_SIGNUP_FEATURE_FLAG_KEY,
-  );
-  const { flag: isFreshmanMigrationEnabled } = useFeatureFlag(
-    FRESHMAN_MIGRATION_FEATURE_FLAG_KEY,
-  );
 
   const [studentNumber, setStudentNumber] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const isValidId = freshmanIdRegex.test(studentNumber);
   const isValidPassword = freshmanPasswordRegex.test(password);
-  const isSubmittable = isValidId && isValidPassword && !isLoading;
+  const isPasswordConfirmed =
+    passwordConfirm.length > 0 && password === passwordConfirm;
+  const isSubmittable =
+    isValidId && isValidPassword && isPasswordConfirmed && !isLoading;
 
-  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!isSubmittable) return;
 
-    try {
-      setIsLoading(true);
-      const response = await loginFreshman(studentNumber, password);
-      setTokenInfo(response.data);
+    const confirmed = window.confirm(
+      [
+        `임시 계정 아이디: ${studentNumber}`,
+        "계정 찾기가 지원되지 않으니 아이디와 비밀번호를 꼭 기억해 주세요.",
+        "이 정보로 신입생 임시 계정을 생성할까요?",
+      ].join("\n"),
+    );
 
-      alert(
-        isFreshmanMigrationEnabled
-          ? "신입생 임시 계정으로 로그인했어요.\n\n홈 화면 배너에서 포털 계정 통합을 진행해 주세요."
-          : "신입생 임시 계정으로 로그인했어요.",
-      );
+    if (!confirmed) return;
+
+    setIsLoading(true);
+    try {
+      const response = await signupFreshman(studentNumber, password);
+      setTokenInfo(response.data);
+      alert("신입생 회원가입이 완료되었습니다. 바로 로그인됩니다.");
       navigate(PATHS.HOME);
     } catch (error) {
       const status = isAxiosError(error) ? error.response?.status : undefined;
 
-      if (status === 401) {
-        alert("비밀번호가 일치하지 않습니다.");
-      } else if (status === 404) {
-        alert("등록되지 않은 신입생 계정입니다.");
+      if (status === 409) {
+        alert("이미 등록된 아이디입니다. 다른 아이디로 다시 시도해 주세요.");
       } else if (status === 400) {
         alert("입력값을 다시 확인해 주세요.");
       } else {
-        alert("로그인에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+        alert("회원가입에 실패했습니다. 잠시 후 다시 시도해 주세요.");
       }
 
       console.error(error);
@@ -77,25 +72,23 @@ export default function FreshmanLoginPage() {
     }
   };
 
-  useSetHeader({ title: "신입생 임시계정 로그인" });
+  useSetHeader({ title: "신입생 회원가입" });
 
   return (
-    <AuthFormWrapper onSubmit={handleLogin}>
-      {isLoading && <LoadingSpinner overlay message="로그인 중..." />}
+    <AuthFormWrapper onSubmit={handleSignup}>
+      {isLoading && <LoadingSpinner overlay message="회원가입 중..." />}
 
       <div>
         <AuthDescription>
-          회원가입으로 만든 신입생 임시 계정으로 로그인할 수 있어요.
-          {isFreshmanMigrationEnabled && (
-            <>
-              <br />
-              임시 계정 로그인 후 홈 화면 배너에서 계정 통합을 진행해 주세요.
-            </>
-          )}
+          포털 계정이 아직 없다면 신입생 임시 계정을 먼저 만들어 주세요.
+          <br />
+          가입이 완료되면 자동으로 로그인됩니다.
+          <br />
+          추후 포털 계정이 발급되면, 포털 계정과 통합 안내를 드릴 예정입니다.
         </AuthDescription>
 
         <AuthInputGroup>
-          <h3>임시 계정 아이디</h3>
+          <h3>아이디</h3>
           <StyledInput
             placeholder="영문 또는 영문+숫자 5자 이상"
             value={studentNumber}
@@ -122,26 +115,29 @@ export default function FreshmanLoginPage() {
             </AuthErrorMessage>
           )}
         </AuthInputGroup>
+
+        <AuthInputGroup>
+          <h3>비밀번호 확인</h3>
+          <StyledInput
+            type="password"
+            placeholder="비밀번호를 한 번 더 입력해 주세요."
+            value={passwordConfirm}
+            onChange={(e) => setPasswordConfirm(e.target.value)}
+          />
+          {passwordConfirm.length > 0 && !isPasswordConfirmed && (
+            <AuthErrorMessage>
+              비밀번호가 일치하지 않습니다. 다시 확인해 주세요.
+            </AuthErrorMessage>
+          )}
+        </AuthInputGroup>
       </div>
 
       <AuthButtonWrapper>
         <SquareButton
-          text="신입생 임시계정 로그인"
+          text="회원가입하고 시작하기"
           type="submit"
           disabled={!isSubmittable}
         />
-
-        {isFreshmanSignupEnabled && (
-          <AuthLinkRow>
-            <span>아직 신입생 계정이 없으신가요?</span>
-            <button
-              type="button"
-              onClick={() => navigate(PATHS.FRESHMAN_SIGNUP)}
-            >
-              신입생 회원가입
-            </button>
-          </AuthLinkRow>
-        )}
       </AuthButtonWrapper>
     </AuthFormWrapper>
   );

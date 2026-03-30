@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import styled from "styled-components";
 import {
   getFeatureFlags,
@@ -6,6 +7,7 @@ import {
   updateFeatureFlag,
   FeatureFlag,
 } from "@/apis/featureFlag";
+import { FEATURE_FLAGS_QUERY_KEY } from "@/hooks/useFeatureFlags";
 import { useSetHeader } from "@/hooks/useSetHeader";
 
 // 인터페이스 정의
@@ -163,6 +165,7 @@ const InputGroup = styled.div`
 `;
 
 const FeatureFlagManagePage = () => {
+  const queryClient = useQueryClient();
   const [flags, setFlags] = useState<FeatureFlag[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newFlag, setNewFlag] = useState<FeatureFlag>({ key: "", flag: false });
@@ -187,6 +190,7 @@ const FeatureFlagManagePage = () => {
       const updated = { ...item, flag: !item.flag };
       await updateFeatureFlag(updated);
       setFlags(flags.map((f) => (f.key === item.key ? updated : f)));
+      await queryClient.invalidateQueries({ queryKey: FEATURE_FLAGS_QUERY_KEY });
     } catch (error) {
       alert("변경 실패");
     }
@@ -194,13 +198,16 @@ const FeatureFlagManagePage = () => {
 
   // 생성 처리
   const handleCreate = async () => {
-    if (!newFlag.key) return;
+    const normalizedKey = newFlag.key.trim();
+
+    if (!normalizedKey) return;
     try {
-      const res = await createFeatureFlag(newFlag);
+      const res = await createFeatureFlag({ ...newFlag, key: normalizedKey });
       console.log(res);
       setIsModalOpen(false);
       setNewFlag({ key: "", flag: false });
       fetchFlags();
+      await queryClient.invalidateQueries({ queryKey: FEATURE_FLAGS_QUERY_KEY });
     } catch (error) {
       alert("생성 실패");
     }
