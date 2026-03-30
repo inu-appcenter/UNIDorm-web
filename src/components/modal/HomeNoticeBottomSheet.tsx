@@ -14,9 +14,12 @@ interface Props {
   text?: string;
   children?: React.ReactNode;
   links?: LinkItem[];
-
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
+  showHideAction?: boolean;
+  useStorage?: boolean;
+  closeButtonText?: string;
+  hideActionText?: string;
 }
 
 export default function HomeNoticeBottomSheet({
@@ -27,55 +30,65 @@ export default function HomeNoticeBottomSheet({
   links = [],
   isOpen,
   setIsOpen,
+  showHideAction = true,
+  useStorage = true,
+  closeButtonText = "닫기",
+  hideActionText = "다시 보지 않기",
 }: Props) {
   const initialized = useRef(false);
 
-  // 1. 로컬 스토리지 체크 (숨김 처리 확인)
   useEffect(() => {
-    if (initialized.current) return;
+    if (!useStorage || initialized.current) {
+      return;
+    }
+
     try {
       const hiddenModals = JSON.parse(
         localStorage.getItem("hiddenModals") || "[]",
       );
+
       if (hiddenModals.includes(id)) {
         setIsOpen(false);
       }
-    } catch (e) {
-      console.error("Local storage error", e);
+    } catch (error) {
+      console.error("Local storage error", error);
     }
-    initialized.current = true;
-  }, [id, setIsOpen]);
 
-  // 2. '다시 보지 않기' 처리
+    initialized.current = true;
+  }, [id, setIsOpen, useStorage]);
+
   const handleHideForever = () => {
+    if (!useStorage) {
+      setIsOpen(false);
+      return;
+    }
+
     try {
       const hiddenModals = JSON.parse(
         localStorage.getItem("hiddenModals") || "[]",
       );
+
       if (!hiddenModals.includes(id)) {
         hiddenModals.push(id);
         localStorage.setItem("hiddenModals", JSON.stringify(hiddenModals));
       }
-    } catch (e) {
-      console.error("Local storage error", e);
+    } catch (error) {
+      console.error("Local storage error", error);
     }
+
     setIsOpen(false);
   };
 
   return (
     <Drawer.Root open={isOpen} onOpenChange={setIsOpen}>
       <Drawer.Portal>
-        {/* 배경 오버레이 */}
         <Overlay />
 
-        {/* 바텀시트 컨테이너 */}
         <Content>
-          {/* 드래그 핸들 */}
           <HandleArea>
             <HandleBar />
           </HandleArea>
 
-          {/* [1] 상단 고정: 타이틀 */}
           <FixedHeader>
             <Drawer.Title asChild>
               <h2>{title}</h2>
@@ -83,13 +96,10 @@ export default function HomeNoticeBottomSheet({
             <Drawer.Description />
           </FixedHeader>
 
-          {/* [2] 중간 스크롤: 텍스트 + 자식 컴포넌트 */}
           <ScrollContent>
             <ContentInner>
-              {/* 텍스트 설명 */}
               {text && <DescriptionText>{linkify(text)}</DescriptionText>}
 
-              {/* 메인 컨텐츠 */}
               <BodyContent>
                 {children}
 
@@ -98,6 +108,7 @@ export default function HomeNoticeBottomSheet({
                     {links.map((item, index) => (
                       <LinkButton
                         key={index}
+                        type="button"
                         onClick={() => window.open(item.link, "_blank")}
                       >
                         {item.title}
@@ -109,11 +120,16 @@ export default function HomeNoticeBottomSheet({
             </ContentInner>
           </ScrollContent>
 
-          {/* [3] 하단 고정: 버튼 영역 */}
           <FixedFooter>
-            <CloseMenus>
-              <button onClick={handleHideForever}>다시 보지 않기</button>
-              <button onClick={() => setIsOpen(false)}>닫기</button>
+            <CloseMenus $singleAction={!showHideAction}>
+              {showHideAction && (
+                <button type="button" onClick={handleHideForever}>
+                  {hideActionText}
+                </button>
+              )}
+              <button type="button" onClick={() => setIsOpen(false)}>
+                {closeButtonText}
+              </button>
             </CloseMenus>
           </FixedFooter>
         </Content>
@@ -121,8 +137,6 @@ export default function HomeNoticeBottomSheet({
     </Drawer.Root>
   );
 }
-
-// --- Styled Components ---
 
 const Overlay = styled(({ overlay, ...props }) => (
   <Drawer.Overlay {...props} />
@@ -144,14 +158,11 @@ const Content = styled(({ overlay, ...props }) => (
   background-color: white;
   border-top-left-radius: 16px;
   border-top-right-radius: 16px;
-
-  /* 화면 높이의 최대 85%까지만 차지 */
   max-height: 85vh;
   display: flex;
   flex-direction: column;
   outline: none;
 
-  /* PC 대응 */
   @media (min-width: 769px) {
     max-width: 50vw;
     margin: 0 auto;
@@ -173,7 +184,6 @@ const HandleBar = styled.div`
   background-color: #d1d5db;
 `;
 
-// [1] 고정 헤더
 const FixedHeader = styled.div`
   flex-shrink: 0;
   padding: 0 20px;
@@ -188,22 +198,20 @@ const FixedHeader = styled.div`
   }
 `;
 
-// [2] 스크롤 영역
 const ScrollContent = styled.div`
   flex: 1;
   overflow-y: auto;
   min-height: 0;
-
-  /* 스크롤바 숨김 처리 */
   -ms-overflow-style: none;
   scrollbar-width: none;
+
   &::-webkit-scrollbar {
     display: none;
   }
 `;
 
 const ContentInner = styled.div`
-  padding: 0 20px 20px 20px;
+  padding: 0 20px 20px;
   display: flex;
   flex-direction: column;
 `;
@@ -256,7 +264,6 @@ const LinkButton = styled.button`
   }
 `;
 
-// [3] 고정 푸터
 const FixedFooter = styled.div`
   flex-shrink: 0;
   background-color: white;
@@ -264,9 +271,10 @@ const FixedFooter = styled.div`
   padding-bottom: env(safe-area-inset-bottom);
 `;
 
-const CloseMenus = styled.div`
+const CloseMenus = styled.div<{ $singleAction?: boolean }>`
   display: flex;
-  justify-content: space-between;
+  justify-content: ${({ $singleAction }) =>
+    $singleAction ? "flex-end" : "space-between"};
   padding: 16px 20px;
 
   button {

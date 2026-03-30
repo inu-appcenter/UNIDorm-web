@@ -8,7 +8,7 @@ interface FileUploaderProps {
   onAddImages: (files: FileList) => void;
   onDeleteImage: (index: number) => void;
   isLoading?: boolean;
-  mode?: "image" | "file"; // ✅ 추가된 prop
+  mode?: "image" | "file";
 }
 
 const FileUploader: React.FC<FileUploaderProps> = ({
@@ -16,15 +16,17 @@ const FileUploader: React.FC<FileUploaderProps> = ({
   onAddImages,
   onDeleteImage,
   isLoading,
-  mode = "image", // ✅ 기본값: 이미지 모드
+  mode = "image",
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
+
     if (files && files.length > 0) {
       onAddImages(files);
     }
+
     if (event.target) {
       event.target.value = "";
     }
@@ -47,7 +49,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
         style={{ display: "none" }}
       />
 
-      <AddButton onClick={triggerFileInput}>
+      <AddButton type="button" onClick={triggerFileInput}>
         {isImageMode ? "이미지 선택" : "파일 선택"}
       </AddButton>
 
@@ -58,15 +60,24 @@ const FileUploader: React.FC<FileUploaderProps> = ({
           {images.map((image, index) =>
             isImageMode && image.preview ? (
               <ImageWrapper key={index}>
-                <PreviewImage src={image.preview} alt={`미리보기 ${index}`} />
-                <DeleteButton onClick={() => onDeleteImage(index)}>
+                <PreviewImage
+                  src={image.preview}
+                  alt={`미리보기 ${index + 1}`}
+                />
+                <DeleteButton
+                  type="button"
+                  onClick={() => onDeleteImage(index)}
+                >
                   X
                 </DeleteButton>
               </ImageWrapper>
             ) : (
               <FileWrapper key={index}>
                 {image.file.name}
-                <DeleteButton onClick={() => onDeleteImage(index)}>
+                <DeleteButton
+                  type="button"
+                  onClick={() => onDeleteImage(index)}
+                >
                   X
                 </DeleteButton>
               </FileWrapper>
@@ -80,15 +91,12 @@ const FileUploader: React.FC<FileUploaderProps> = ({
 
 export default FileUploader;
 
-/* ---------------- Styled Components ---------------- */
-
 const Container = styled.div`
   padding: 20px;
   box-sizing: border-box;
   border: 2px dashed #ccc;
   border-radius: 10px;
   text-align: center;
-
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -125,7 +133,7 @@ const PreviewContainer = styled.div`
 const ImageWrapper = styled.div`
   position: relative;
   width: 30%;
-  aspect-ratio: 1/1;
+  aspect-ratio: 1 / 1;
 `;
 
 const FileWrapper = styled.div`
