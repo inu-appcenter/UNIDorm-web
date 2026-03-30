@@ -19,7 +19,6 @@ import {
   AuthErrorMessage,
   AuthFormWrapper,
   AuthInputGroup,
-  AuthLinkRow,
 } from "@/styles/auth";
 
 const freshmanIdRegex = /^[a-zA-Z0-9]{5,}$/;
@@ -28,9 +27,7 @@ const freshmanPasswordRegex = /^(?=.*[a-zA-Z])(?=.*[0-9]).{5,}$/;
 export default function FreshmanLoginPage() {
   const navigate = useNavigate();
   const { setTokenInfo } = useUserStore();
-  const { flag: isFreshmanSignupEnabled } = useFeatureFlag(
-    FRESHMAN_SIGNUP_FEATURE_FLAG_KEY,
-  );
+
   const { flag: isFreshmanMigrationEnabled } = useFeatureFlag(
     FRESHMAN_MIGRATION_FEATURE_FLAG_KEY,
   );
