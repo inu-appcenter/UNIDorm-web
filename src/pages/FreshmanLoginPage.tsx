@@ -130,18 +130,6 @@ export default function FreshmanLoginPage() {
           type="submit"
           disabled={!isSubmittable}
         />
-
-        {isFreshmanSignupEnabled && (
-          <AuthLinkRow>
-            <span>아직 신입생 계정이 없으신가요?</span>
-            <button
-              type="button"
-              onClick={() => navigate(PATHS.FRESHMAN_SIGNUP)}
-            >
-              신입생 회원가입
-            </button>
-          </AuthLinkRow>
-        )}
       </AuthButtonWrapper>
     </AuthFormWrapper>
   );
