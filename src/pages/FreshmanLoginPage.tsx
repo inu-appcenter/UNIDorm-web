@@ -5,10 +5,7 @@ import { loginFreshman } from "@/apis/members";
 import StyledInput from "@/components/common/StyledInput.tsx";
 import SquareButton from "@/components/common/SquareButton.tsx";
 import LoadingSpinner from "@/components/common/LoadingSpinner.tsx";
-import {
-  FRESHMAN_MIGRATION_FEATURE_FLAG_KEY,
-  FRESHMAN_SIGNUP_FEATURE_FLAG_KEY,
-} from "@/constants/featureFlags";
+import { FRESHMAN_MIGRATION_FEATURE_FLAG_KEY } from "@/constants/featureFlags";
 import { PATHS } from "@/constants/paths";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import { useFeatureFlag } from "@/hooks/useFeatureFlags";
