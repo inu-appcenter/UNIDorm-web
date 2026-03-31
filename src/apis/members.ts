@@ -74,10 +74,13 @@ export const signupFreshman = async (
   studentNumber: string,
   password: string,
 ): Promise<AxiosResponse<TokenInfo>> => {
-  const response = await axiosInstance.post<TokenInfo>(`/users/freshman`, {
-    studentNumber,
-    password,
-  });
+  const response = await axiosInstance.post<TokenInfo>(
+    `/users/freshman/register`,
+    {
+      studentNumber,
+      password,
+    },
+  );
   return response;
 };
 
@@ -86,13 +89,10 @@ export const loginFreshman = async (
   studentNumber: string,
   password: string,
 ): Promise<AxiosResponse<TokenInfo>> => {
-  const response = await axiosInstance.post<TokenInfo>(
-    `/users/freshman/login`,
-    {
-      studentNumber,
-      password,
-    },
-  );
+  const response = await axiosInstance.post<TokenInfo>(`/users/freshman`, {
+    studentNumber,
+    password,
+  });
   return response;
 };
 
