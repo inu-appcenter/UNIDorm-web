@@ -74,6 +74,21 @@ export const signupFreshman = async (
   studentNumber: string,
   password: string,
 ): Promise<AxiosResponse<TokenInfo>> => {
+  const response = await axiosInstance.post<TokenInfo>(
+    `/users/freshman/register`,
+    {
+      studentNumber,
+      password,
+    },
+  );
+  return response;
+};
+
+// 로그인
+export const loginFreshman = async (
+  studentNumber: string,
+  password: string,
+): Promise<AxiosResponse<TokenInfo>> => {
   const response = await axiosInstance.post<TokenInfo>(`/users/freshman`, {
     studentNumber,
     password,
@@ -81,7 +96,6 @@ export const signupFreshman = async (
   return response;
 };
 
-// 로그인
 export const login = async (
   studentNumber: string,
   password: string,

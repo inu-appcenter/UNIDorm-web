@@ -1,6 +1,8 @@
 export const PATHS = {
   ROOT: "/",
   LOGIN: "/login",
+  FRESHMAN_LOGIN: "/login/freshman",
+  FRESHMAN_SIGNUP: "/login/freshman/signup",
   LOGOUT: "/logout",
   ONBOARDING: "/onboarding",
   HOME: "/home",

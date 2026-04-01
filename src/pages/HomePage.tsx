@@ -36,17 +36,15 @@ import { useFeatureFlag } from "@/hooks/useFeatureFlags";
 import YoutubeWidget from "@/components/home/YoutubeWidget.tsx";
 import { useSetAIChat } from "@/hooks/useSetAIChat";
 import MigrationBanner from "@/components/common/MigrationBanner.tsx";
+import { useFreshmanMigrationBanner } from "@/hooks/useFreshmanMigrationBanner";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function HomePage() {
   useSetAIChat({ isVisible: true, shouldAnimate: true });
   const { flag: isMatchingActive } = useFeatureFlag("ROOMMATE_MATCHING");
 
-  const { tokenInfo, userInfo } = useUserStore();
+  const { tokenInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
-
-  const isFreshman =
-    isLoggedIn && !/^[0-9]{8,10}$/.test(userInfo.studentNumber);
 
   const [dailyTips, setDailyTips] = useState<Tip[]>([]);
   const [groupOrders, setGroupOrders] = useState<GroupOrder[]>([]);
@@ -55,6 +53,22 @@ export default function HomePage() {
   const [isPopupLoading, setIsPopupLoading] = useState<boolean>(false);
 
   const navigate = useNavigate();
+  const {
+    bannerVariant,
+    handleMigrationBannerClick,
+    shouldShowMigrationBanner,
+  } = useFreshmanMigrationBanner();
+  /*
+    if (isFreshman) {
+      navigate(PATHS.FRESHMAN_MIGRATION);
+      return;
+    }
+
+    alert(
+      "신입생 로그인 페이지에서 이전에 만드셨던 임시 계정으로 로그인한 뒤, 홈 화면 배너에서 포털 계정 통합을 진행해 주세요.\n\n신입생 임시 계정 로그인 페이지로 이동합니다.",
+    );
+    navigate(PATHS.FRESHMAN_LOGIN);
+  */
 
   const [isTipsLoading, setIsTipsLoading] = useState<boolean>(false);
   const [isAnnounceLoading, setIsAnnounceLoading] = useState<boolean>(false);
@@ -250,12 +264,15 @@ export default function HomePage() {
 
       <HomeBanner />
 
-      {isFreshman && (
+      {shouldShowMigrationBanner && (
         <motion.div
           {...fadeInUp}
           style={{ width: "100%", display: "flex", justifyContent: "center" }}
         >
-          <StyledMigrationBanner />
+          <StyledMigrationBanner
+            variant={bannerVariant}
+            onClick={handleMigrationBannerClick}
+          />
         </motion.div>
       )}
 

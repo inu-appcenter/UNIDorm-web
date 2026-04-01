@@ -19,7 +19,7 @@ export default function FreshmanMigrationPage() {
 
   // 학번은 숫자만 9자리 (인천대 기준 보통 8~9자리)
   const studentNumberRegex = /^[0-9]{8,10}$/;
-  
+
   const isValidStudentNumber = studentNumberRegex.test(studentNumber);
   const isValidPw = password.length > 0;
 
@@ -41,15 +41,10 @@ export default function FreshmanMigrationPage() {
 
       const response = await putInuStudent(studentNumber, password);
       if (response.status === 200) {
-        const tokenInfo = response.data;
-        // 새로운 토큰으로 업데이트 (보통 계정 통합 후 세션 갱신이 필요할 수 있음)
-        localStorage.setItem("accessToken", tokenInfo.accessToken);
-        localStorage.setItem("refreshToken", tokenInfo.refreshToken);
-        localStorage.setItem("role", tokenInfo.role);
-        setTokenInfo(tokenInfo);
+        setTokenInfo(response.data);
 
-        alert("계정 통합이 완료되었습니다. 새로운 계정으로 다시 로그인해주세요.");
-        navigate(PATHS.LOGIN);
+        alert("계정 통합이 완료되었습니다. 바로 로그인됩니다.");
+        navigate(PATHS.HOME, { replace: true });
       } else {
         alert("계정 통합에 실패했습니다. 학번과 포털 비밀번호를 확인해주세요.");
       }

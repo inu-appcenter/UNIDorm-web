@@ -1,43 +1,84 @@
-import styled from "styled-components";
-import { useNavigate } from "react-router-dom";
-import StyledInput from "../components/common/StyledInput.tsx";
-import SquareButton from "../components/common/SquareButton.tsx";
 import React, { useState } from "react";
-import { login } from "@/apis/members";
-import useUserStore from "../stores/useUserStore.ts";
-import LoadingSpinner from "../components/common/LoadingSpinner.tsx";
+import { isAxiosError } from "axios";
+import { useNavigate } from "react-router-dom";
+import { login, loginFreshman } from "@/apis/members";
+import StyledInput from "@/components/common/StyledInput.tsx";
+import SquareButton from "@/components/common/SquareButton.tsx";
+import LoadingSpinner from "@/components/common/LoadingSpinner.tsx";
+import {
+  FRESHMAN_LOGIN_FEATURE_FLAG_KEY,
+  FRESHMAN_SIGNUP_FEATURE_FLAG_KEY,
+} from "@/constants/featureFlags";
+import { PATHS } from "@/constants/paths";
 import { useSetHeader } from "@/hooks/useSetHeader";
+import { useFeatureFlag } from "@/hooks/useFeatureFlags";
+import useUserStore from "@/stores/useUserStore";
+import {
+  AuthButtonWrapper,
+  AuthDescription,
+  AuthFormWrapper,
+  AuthInputGroup,
+  AuthLinkRow,
+} from "@/styles/auth";
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const [id, setId] = useState("");
+  const { setTokenInfo } = useUserStore();
+  const { flag: isFreshmanLoginEnabled } = useFeatureFlag(
+    FRESHMAN_LOGIN_FEATURE_FLAG_KEY,
+  );
+  const { flag: isFreshmanSignupEnabled } = useFeatureFlag(
+    FRESHMAN_SIGNUP_FEATURE_FLAG_KEY,
+  );
+
+  const [studentNumber, setStudentNumber] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { setTokenInfo } = useUserStore();
 
-  const isFilled = () => {
-    return id.trim() !== "" && password.trim() !== "";
-  };
+  const isFilled = studentNumber.trim() !== "" && password.trim() !== "";
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!isFilled()) return;
+    if (!isFilled) return;
 
     setIsLoading(true);
     try {
-      const response = await login(id, password);
-      if (response.status === 201) {
-        const tokenInfo = response.data;
-        localStorage.setItem("accessToken", tokenInfo.accessToken);
-        localStorage.setItem("refreshToken", tokenInfo.refreshToken);
-        localStorage.setItem("role", tokenInfo.role);
-        setTokenInfo(tokenInfo);
-        navigate("/home");
-      } else {
-        alert("로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.");
+      let portalError: unknown;
+
+      try {
+        const response = await login(studentNumber, password);
+        setTokenInfo(response.data);
+        navigate(PATHS.HOME);
+        return;
+      } catch (error) {
+        portalError = error;
+        console.error(error);
       }
+
+      if (!isFreshmanLoginEnabled) {
+        throw portalError;
+      }
+
+      const freshmanResponse = await loginFreshman(studentNumber, password);
+      setTokenInfo(freshmanResponse.data);
+      navigate(PATHS.HOME);
     } catch (error) {
-      alert("로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.");
+      const status = isAxiosError(error) ? error.response?.status : undefined;
+
+      if (status === 401) {
+        alert("비밀번호가 일치하지 않습니다.");
+      } else if (status === 404) {
+        alert(
+          isFreshmanLoginEnabled
+            ? "포털 계정 또는 신입생 임시 계정을 찾을 수 없습니다. 회원가입 여부를 확인해 주세요."
+            : "아이디 또는 비밀번호를 확인해 주세요.",
+        );
+      } else if (status === 400) {
+        alert("아이디 또는 비밀번호를 확인해 주세요.");
+      } else {
+        alert("로그인에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+      }
+
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -47,88 +88,67 @@ export default function LoginPage() {
   useSetHeader({ title: "로그인" });
 
   return (
-    <LoginFormWrapper onSubmit={handleLogin}>
+    <AuthFormWrapper onSubmit={handleLogin}>
       {isLoading && <LoadingSpinner overlay message="로그인 중..." />}
 
       <div>
-        <span className="description">
-          인천대학교 포털 아이디, 비밀번호로 간편하게 로그인할 수 있어요.
-        </span>
+        <AuthDescription>
+          인천대학교 포털 계정으로 로그인할 수 있어요.
+          <br />
+          {isFreshmanLoginEnabled
+            ? "신입생 임시 계정이 있다면, 신입생 계정으로도 로그인할 수 있습니다."
+            : null}
+        </AuthDescription>
 
-        <h3>학번(사번)</h3>
-        <StyledInput value={id} onChange={(e) => setId(e.target.value)} />
-        <h3>비밀번호</h3>
-        <StyledInput
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+        <AuthInputGroup>
+          <h3>아이디</h3>
+          <StyledInput
+            value={studentNumber}
+            onChange={(e) => setStudentNumber(e.target.value)}
+          />
+        </AuthInputGroup>
+
+        <AuthInputGroup>
+          <h3>비밀번호</h3>
+          <StyledInput
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </AuthInputGroup>
       </div>
 
-      <ButtonWrapper>
+      <AuthButtonWrapper>
         <SquareButton
           text="로그인"
           type="submit"
-          disabled={!isFilled() || isLoading}
+          disabled={!isFilled || isLoading}
         />
 
-        {/* 추가된 신입생 전용 링크 섹션 */}
-        <FreshmanLinkWrapper>
-          <span>신입생이신가요?</span>
-          <button type="button" onClick={() => navigate("/login/freshman")}>
-            신입생 임시 계정 발급/로그인
-          </button>
-        </FreshmanLinkWrapper>
-      </ButtonWrapper>
-    </LoginFormWrapper>
+        {/*{isFreshmanLoginEnabled && (*/}
+        {/*  <AuthLinkRow>*/}
+        {/*    <span>신입생 임시 계정이 이미 있으신가요?</span>*/}
+        {/*    <button*/}
+        {/*      type="button"*/}
+        {/*      onClick={() => navigate(PATHS.FRESHMAN_LOGIN)}*/}
+        {/*    >*/}
+        {/*      신입생 로그인*/}
+        {/*    </button>*/}
+        {/*  </AuthLinkRow>*/}
+        {/*)}*/}
+
+        {isFreshmanSignupEnabled && (
+          <AuthLinkRow>
+            <span>포털 계정이 아직 발급되지 않으셨나요?</span>
+            <button
+              type="button"
+              onClick={() => navigate(PATHS.FRESHMAN_SIGNUP)}
+            >
+              신입생 회원가입
+            </button>
+          </AuthLinkRow>
+        )}
+      </AuthButtonWrapper>
+    </AuthFormWrapper>
   );
 }
-
-const LoginFormWrapper = styled.form`
-  padding: 0 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  box-sizing: border-box;
-  width: 100%;
-  flex: 1;
-  overflow-y: auto;
-
-  .description {
-    font-size: 14px;
-    color: #666;
-  }
-`;
-
-const ButtonWrapper = styled.div`
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  display: flex;
-  flex-direction: column; /* 버튼과 링크를 세로로 배치 */
-  align-items: center;
-  padding: 16px;
-  padding-bottom: 30px; /* 하단 여유 공간 추가 */
-  box-sizing: border-box;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-`;
-
-const FreshmanLinkWrapper = styled.div`
-  margin-top: 16px;
-  display: flex;
-  gap: 8px;
-  font-size: 14px;
-  color: #999;
-
-  button {
-    background: none;
-    border: none;
-    color: #333;
-    font-weight: 600;
-    text-decoration: underline;
-    cursor: pointer;
-    padding: 0;
-  }
-`;
