@@ -1,20 +1,33 @@
 import styled from "styled-components";
-import { Notification } from "@/types/notifications";
-import announce from "../../assets/notification/announce.svg";
-import roommate from "../../assets/notification/roommate.svg";
-import purchase from "../../assets/notification/purchase.svg";
-import { formatTimeAgo } from "@/utils/dateUtils";
 import { useNavigate } from "react-router-dom";
+import { Notification } from "@/types/notifications";
 import { ReceivedMatchingRequest } from "@/types/roommates";
 import { useCouponStore } from "@/stores/useCouponStore";
+import { formatTimeAgo } from "@/utils/dateUtils";
+import {
+  getNotificationTypeLabel,
+  normalizeNotificationType,
+} from "@/utils/notificationType";
+import announce from "../../assets/notification/announce.svg";
+import chat from "../../assets/notification/chat.svg";
+import purchase from "../../assets/notification/purchase.svg";
+import roommate from "../../assets/notification/roommate.svg";
 
 interface NotiItemProps {
   notidata?: Notification;
   receivedRoommateRequest?: ReceivedMatchingRequest;
   handleRoommateRequest?: (matchingId: number, senderName: string) => void;
-  // 매칭 요청 클릭 핸들러 추가
   onMatchRequestClick?: (matchingId: number, message: string) => void;
 }
+
+const selectNotificationIcon = (notificationType?: string) => {
+  const normalizedType = normalizeNotificationType(notificationType);
+
+  if (normalizedType === "ROOMMATE") return roommate;
+  if (normalizedType === "GROUP_ORDER") return purchase;
+  if (normalizedType === "CHAT") return chat;
+  return announce;
+};
 
 const NotiItem = ({
   notidata,
@@ -27,49 +40,43 @@ const NotiItem = ({
     (state) => state.setIsCouponWinOpen,
   );
 
-  const NotiIconSelector = (notidata: Notification) => {
-    if (notidata.notificationType === "룸메이트") return roommate;
-    if (notidata.notificationType === "공동구매") return purchase;
-    return announce;
-  };
-
-  const handleNotificationClick = (notidata: Notification) => {
-    switch (notidata.apiType) {
+  const handleNotificationClick = (notification: Notification) => {
+    switch (notification.apiType) {
       case "ANNOUNCEMENT":
-        navigate(`/announcements/${notidata.boardId}`);
+        navigate(`/announcements/${notification.boardId}`);
         break;
       case "COMPLAINT":
-        navigate(`/complain/${notidata.boardId}`);
+        navigate(`/complain/${notification.boardId}`);
         break;
       case "GROUP_ORDER":
-        navigate(`/groupPurchase/${notidata.boardId}`);
+        navigate(`/groupPurchase/${notification.boardId}`);
         break;
       case "ROOMMATE":
-        if (notidata.boardId) {
-          navigate(`/roommate/list/${notidata.boardId}`);
+        if (notification.boardId) {
+          navigate(`/roommate/list/${notification.boardId}`);
         } else {
-          alert(notidata.title + "\n" + notidata.body);
+          alert(`${notification.title}\n${notification.body}`);
         }
         break;
       case "COUPON":
         setIsCouponWinOpen(true);
         break;
       case "ROOMMATE_MATCHING":
-        if (notidata.boardId && onMatchRequestClick) {
-          onMatchRequestClick(notidata.boardId, notidata.body);
-        } else if (!notidata.boardId) {
-          console.error("매칭 ID 누락");
+        if (notification.boardId && onMatchRequestClick) {
+          onMatchRequestClick(notification.boardId, notification.body);
+        } else if (!notification.boardId) {
+          console.error("매칭 ID가 없습니다.");
         }
         break;
       case "CHAT":
-        if (notidata.boardId) {
-          navigate(`/chat/roommate/${notidata.boardId}`);
+        if (notification.boardId) {
+          navigate(`/chat/roommate/${notification.boardId}`);
         } else {
-          alert(notidata.title + "\n" + notidata.body);
+          alert(`${notification.title}\n${notification.body}`);
         }
         return;
       default:
-        console.warn("Unhandled apiType:", notidata.apiType);
+        console.warn("Unhandled apiType:", notification.apiType);
         break;
     }
   };
@@ -81,6 +88,7 @@ const NotiItem = ({
         if (notidata) {
           handleNotificationClick(notidata);
         }
+
         if (receivedRoommateRequest && handleRoommateRequest) {
           handleRoommateRequest(
             receivedRoommateRequest.matchingId,
@@ -91,14 +99,17 @@ const NotiItem = ({
     >
       <IconWrapper>
         <img
-          src={!notidata ? roommate : NotiIconSelector(notidata)}
-          alt={"공지아이콘"}
+          src={!notidata ? roommate : selectNotificationIcon(notidata.notificationType)}
+          alt="공지 아이콘"
         />
       </IconWrapper>
+
       {notidata && (
         <ContentWrapper>
           <TopRow>
-            <div className="notificationType">{notidata.notificationType}</div>
+            <div className="notificationType">
+              {getNotificationTypeLabel(notidata.notificationType)}
+            </div>
             <div className="createdDate">
               {formatTimeAgo(notidata.createdDate)}
             </div>
@@ -107,6 +118,7 @@ const NotiItem = ({
           <div className="body">{notidata.body}</div>
         </ContentWrapper>
       )}
+
       {receivedRoommateRequest && (
         <ContentWrapper>
           <TopRow>
@@ -134,7 +146,6 @@ const NotiItemWrapper = styled.div<{ isRead: boolean }>`
   position: relative;
   padding: 16px;
   border-bottom: 1px solid #e6e6e6;
-
   cursor: pointer;
 
   &::after {

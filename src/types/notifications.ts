@@ -1,4 +1,13 @@
-// GET 응답에 사용될 알림 타입
+export type NotificationType =
+  | "ROOMMATE"
+  | "GROUP_ORDER"
+  | "DORMITORY"
+  | "UNI_DORM"
+  | "SUPPORTERS"
+  | "COMPLAINT"
+  | "COUPON"
+  | "CHAT";
+
 export interface Notification {
   id: number;
   apiType: string;
@@ -6,29 +15,29 @@ export interface Notification {
   title: string;
   body: string;
   notificationType: string;
-  createdDate: string; // ISO 8601 형식의 날짜 문자열
+  createdDate: string;
   read: boolean;
 }
 
-/**
- * 알림 데이터 형식
- */
 export interface NotificationPayload {
   title: string;
   body: string;
-  notificationType: "UNIDORM" | "DORMITORY" | "INDIVIDUAL" | string; // 알림 타입
-  boardId: number;
+  notificationType: NotificationType | string;
+  boardId?: number;
 }
 
-/**
- * 알림 환경설정 객체의 타입 정의
- */
+export interface DirectNotificationPayload {
+  studentNumber: string;
+  title: string;
+  content: string;
+  notificationType?: NotificationType | string;
+}
+
 export interface NotificationPreferences {
   roommateNotification: boolean;
   groupOrderNotification: boolean;
   dormitoryNotification: boolean;
   unidormNotification: boolean;
   supportersNotification: boolean;
-
-  complaintNotification: boolean; //민원 알림 수신 여부 (관리자용)
+  complaintNotification: boolean;
 }

@@ -2,6 +2,7 @@ import styled from "styled-components";
 import { Drawer } from "vaul";
 import { PopupNotification } from "@/types/popup-notifications";
 import { formatTimeAgo } from "@/utils/dateUtils";
+import { getNotificationTypeLabel } from "@/utils/notificationType";
 
 interface Props {
   isOpen: boolean;
@@ -27,7 +28,7 @@ export default function HomeNoticeListBottomSheet({
 
           <FixedHeader>
             <Drawer.Title asChild>
-              <h2>홈 화면 공지 목록</h2>
+              <h2>홈 화면 팝업 공지 목록</h2>
             </Drawer.Title>
             <Drawer.Description />
           </FixedHeader>
@@ -38,7 +39,9 @@ export default function HomeNoticeListBottomSheet({
                 {notifications.map((noti) => (
                   <NotiItem key={noti.id} onClick={() => onSelect(noti)}>
                     <div className="top">
-                      <span className="type">{noti.notificationType}</span>
+                      <span className="type">
+                        {getNotificationTypeLabel(noti.notificationType)}
+                      </span>
                       <span className="date">
                         {formatTimeAgo(noti.createdDate)}
                       </span>
@@ -123,6 +126,7 @@ const ScrollContent = styled.div`
   padding: 0 20px 40px 20px;
 
   scrollbar-width: none;
+
   &::-webkit-scrollbar {
     display: none;
   }
@@ -152,6 +156,7 @@ const NotiItem = styled.div`
       color: #007aff;
       font-weight: 600;
     }
+
     .date {
       font-size: 11px;
       color: #999;
