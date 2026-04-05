@@ -1,7 +1,8 @@
 import axios, { AxiosError } from "axios";
-import useUserStore from "../stores/useUserStore";
-import useNetworkStore from "../stores/useNetworkStore";
 import { refresh } from "@/apis/members";
+import { appendDebugLog } from "@/utils/debugLog";
+import useNetworkStore from "../stores/useNetworkStore";
+import useUserStore from "../stores/useUserStore";
 
 const BASE_URL = `https://${import.meta.env.VITE_API_SUBDOMAIN}.inuappcenter.kr/`;
 
@@ -9,7 +10,14 @@ const tokenInstance = axios.create({
   baseURL: BASE_URL,
 });
 
-// 요청 인터셉터
+const getRequestDetails = (config?: {
+  method?: string;
+  url?: string;
+}) => ({
+  method: config?.method?.toUpperCase() ?? "UNKNOWN",
+  url: config?.url ?? "",
+});
+
 tokenInstance.interceptors.request.use(
   (config) => {
     const accessToken = localStorage.getItem("accessToken");
@@ -21,55 +29,113 @@ tokenInstance.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
-// 응답 인터셉터
 tokenInstance.interceptors.response.use(
   (response) => {
     if (response.data?.msg) console.log(response.data.msg);
-    // 정상 응답 시 네트워크 오류 플래그 해제
     useNetworkStore.getState().setNetworkError(false);
+
+    if ((response.config as { _retry?: boolean })._retry) {
+      appendDebugLog({
+        category: "token-refresh",
+        action: "리프레시 후 재요청 성공",
+        details: getRequestDetails(response.config),
+      });
+    }
+
     return response;
   },
   async (error) => {
-    const originalRequest = error.config;
+    const originalRequest = error.config as (typeof error.config & {
+      _retry?: boolean;
+    }) | null;
     const { setNetworkError } = useNetworkStore.getState();
+    const requestDetails = getRequestDetails(originalRequest ?? undefined);
 
-    // 🌐 네트워크 불량 또는 서버 다운 시
     if (error.response && error.response.status === 502) {
       setNetworkError(true);
-      // alert("네트워크 연결이 불안정하거나, 서버 점검 중입니다.");
+      appendDebugLog({
+        category: "network",
+        action: "502 응답 수신",
+        details: {
+          ...requestDetails,
+          status: error.response.status,
+        },
+      });
       return Promise.reject(error);
     }
 
-    // ❌ 네트워크 자체 장애 (response 없음)
     if (!error.response) {
       setNetworkError(true);
-      // alert("인터넷 연결을 확인해주세요.");
+      appendDebugLog({
+        category: "network",
+        action: "응답 없는 네트워크 오류",
+        details: {
+          ...requestDetails,
+          message: error.message,
+        },
+      });
       return Promise.reject(error);
     }
 
-    // 🔁 403 에러 → 토큰 재발급 시도
-    if (error.response.status === 403 && !originalRequest._retry) {
+    if (error.response.status === 403 && originalRequest && !originalRequest._retry) {
       originalRequest._retry = true;
+
+      appendDebugLog({
+        category: "token-refresh",
+        action: "403 응답으로 리프레시 시작",
+        details: {
+          ...requestDetails,
+          status: error.response.status,
+        },
+      });
+
       try {
         console.log("리프레시 발급 시도");
         const { data } = await refresh();
-        const newTokenInfo = data.accessToken;
+        const newAccessToken = data.accessToken;
 
-        const { tokenInfo, setTokenInfo } = useUserStore.getState();
-        setTokenInfo({ ...tokenInfo, accessToken: newTokenInfo });
+        const { setTokenInfo } = useUserStore.getState();
+        setTokenInfo(data);
+
+        appendDebugLog({
+          category: "token-refresh",
+          action: "새 액세스 토큰 저장 완료",
+          details: {
+            ...requestDetails,
+            hasAccessToken: Boolean(data.accessToken),
+            hasRefreshToken: Boolean(data.refreshToken),
+          },
+        });
 
         tokenInstance.defaults.headers.common["Authorization"] =
-          `Bearer ${newTokenInfo}`;
-        originalRequest.headers["Authorization"] = `Bearer ${newTokenInfo}`;
+          `Bearer ${newAccessToken}`;
+        originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
 
-        // 재요청 시도
+        appendDebugLog({
+          category: "token-refresh",
+          action: "원래 요청 재시도",
+          details: requestDetails,
+        });
+
         return tokenInstance(originalRequest);
       } catch (refreshError) {
+        const axiosRefreshError = refreshError as AxiosError & {
+          isRefreshError?: boolean;
+        };
+
+        appendDebugLog({
+          category: "token-refresh",
+          action: "리프레시 실패로 로그아웃 이동",
+          details: {
+            ...requestDetails,
+            status: axiosRefreshError.response?.status ?? null,
+            message: axiosRefreshError.message,
+          },
+        });
+
         window.location.href = "/logout";
-        (
-          refreshError as AxiosError & { isRefreshError?: boolean }
-        ).isRefreshError = true;
-        return Promise.reject(refreshError);
+        axiosRefreshError.isRefreshError = true;
+        return Promise.reject(axiosRefreshError);
       }
     }
 

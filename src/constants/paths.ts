@@ -8,6 +8,7 @@ export const PATHS = {
   HOME: "/home",
   MYPAGE: "/mypage",
   SETTINGS: "/settings",
+  SETTINGS_LOGS: "/settings/logs",
   MYINFO_EDIT: "/myinfoedit",
   FRESHMAN_MIGRATION: "/myinfoedit/freshman-migration",
   AGREEMENT: "/agreement",
