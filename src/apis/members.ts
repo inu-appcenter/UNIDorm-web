@@ -119,7 +119,40 @@ export const putMember = async (
   return response;
 };
 
-export const refresh = async (): Promise<ApiResponse> => {
+type RefreshResponsePayload = Partial<TokenInfo> & {
+  data?: Partial<TokenInfo>;
+};
+
+const normalizeRefreshTokenInfo = (
+  payload: ApiResponse<TokenInfo> | RefreshResponsePayload | undefined,
+  currentRefreshToken: string,
+): TokenInfo => {
+  const flatPayload = payload as RefreshResponsePayload | undefined;
+  const nestedPayload = flatPayload?.data;
+  const accessToken =
+    nestedPayload?.accessToken ?? flatPayload?.accessToken ?? "";
+  const nextRefreshToken =
+    nestedPayload?.refreshToken ??
+    flatPayload?.refreshToken ??
+    currentRefreshToken;
+  const role =
+    nestedPayload?.role ??
+    flatPayload?.role ??
+    localStorage.getItem("role") ??
+    "";
+
+  if (!accessToken) {
+    throw new Error("리프레시 응답에 액세스 토큰이 없습니다.");
+  }
+
+  return {
+    accessToken,
+    refreshToken: nextRefreshToken,
+    role,
+  };
+};
+
+export const refresh = async (): Promise<TokenInfo> => {
   const refreshToken = localStorage.getItem("refreshToken");
 
   if (!refreshToken) {
@@ -144,17 +177,12 @@ export const refresh = async (): Promise<ApiResponse> => {
   console.log("refresh", refreshToken);
 
   try {
-    const response = await axiosInstance.post<ApiResponse<TokenInfo>>(
-      "/users/refreshToken",
-      { refreshToken: `Bearer ${refreshToken}` },
-    );
-    const tokenPayload = response.data as
-      | (Partial<TokenInfo> & { data?: Partial<TokenInfo> })
-      | undefined;
-    const accessToken =
-      tokenPayload?.data?.accessToken ?? tokenPayload?.accessToken ?? "";
-    const nextRefreshToken =
-      tokenPayload?.data?.refreshToken ?? tokenPayload?.refreshToken ?? "";
+    const response = await axiosInstance.post<
+      ApiResponse<TokenInfo> | RefreshResponsePayload
+    >("/users/refreshToken", {
+      refreshToken: `Bearer ${refreshToken}`,
+    });
+    const tokenInfo = normalizeRefreshTokenInfo(response.data, refreshToken);
 
     appendDebugLog({
       category: "token-refresh",
@@ -162,15 +190,16 @@ export const refresh = async (): Promise<ApiResponse> => {
       details: {
         endpoint: "/users/refreshToken",
         status: response.status,
-        hasAccessToken: Boolean(accessToken),
-        hasRefreshToken: Boolean(nextRefreshToken),
+        hasAccessToken: Boolean(tokenInfo.accessToken),
+        hasRefreshToken: Boolean(tokenInfo.refreshToken),
+        hasRole: Boolean(tokenInfo.role),
       },
     });
 
     console.log("리프레시 응답");
     console.log(response);
 
-    return response;
+    return tokenInfo;
   } catch (error) {
     const refreshError = error as AxiosError;
 
