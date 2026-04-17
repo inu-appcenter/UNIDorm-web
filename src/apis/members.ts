@@ -2,16 +2,15 @@ import axiosInstance from "../apis/axiosInstance";
 import tokenInstance from "../apis/tokenInstance";
 import { ApiResponse } from "@/types/common";
 import { MyPost_GroupOrder, TokenInfo, UserInfo } from "@/types/members";
-import { AxiosResponse } from "axios";
+import { appendDebugLog } from "@/utils/debugLog";
+import { AxiosError, AxiosResponse } from "axios";
 
-// 회원 가져오기
 export const getMemberInfo = async (): Promise<AxiosResponse<UserInfo>> => {
   const response = await tokenInstance.get<UserInfo>(`/users`);
   console.log(response);
   return response;
 };
 
-// 회원 프로필이미지 가져오기
 export const getMemberImage = async (): Promise<AxiosResponse> => {
   const response = await tokenInstance.get<AxiosResponse>(`/users/image`);
   return response;
@@ -29,7 +28,6 @@ export const putUserImage = async (imageFile: File): Promise<AxiosResponse> => {
   return response;
 };
 
-// 회원 시간표이미지 가져오기
 export const getUserTimetableImage = async (): Promise<AxiosResponse> => {
   const response = await tokenInstance.get<AxiosResponse>(
     `/users/time-table-image`,
@@ -37,7 +35,6 @@ export const getUserTimetableImage = async (): Promise<AxiosResponse> => {
   return response;
 };
 
-//룸메이트의 시간표 이미지 가져오기
 export const getMyRoommateTimeTableImage = async (): Promise<AxiosResponse> => {
   const response = await tokenInstance.get<AxiosResponse>(
     "/my-roommate/time-table-image",
@@ -63,13 +60,11 @@ export const putUserTimetableImage = async (
   return response;
 };
 
-// 회원 삭제
 export const deleteMembers = async (): Promise<number> => {
   const response = await tokenInstance.delete(`/users`);
   return response.status;
 };
 
-// 신입생 회원가입 및 로그인
 export const signupFreshman = async (
   studentNumber: string,
   password: string,
@@ -84,7 +79,6 @@ export const signupFreshman = async (
   return response;
 };
 
-// 로그인
 export const loginFreshman = async (
   studentNumber: string,
   password: string,
@@ -108,7 +102,6 @@ export const login = async (
   return response;
 };
 
-// 회원정보 수정
 export const putMember = async (
   name: string,
   college: string,
@@ -126,27 +119,104 @@ export const putMember = async (
   return response;
 };
 
-// 토큰 재발급
-export const refresh = async (): Promise<ApiResponse> => {
-  const refreshToken = localStorage.getItem("refreshToken"); // 필요에 따라 위치 변경 가능
-  if (!refreshToken) {
-    throw new Error("리프레시 토큰이 없습니다.");
-  }
-  console.log("refresh", refreshToken);
-  const response = await axiosInstance.post<ApiResponse<TokenInfo>>(
-    "/users/refreshToken",
-    { refreshToken: `Bearer ${refreshToken}` },
-  );
-
-  if (response) {
-    console.log("리프레시응답");
-    console.log(response);
-  }
-
-  return response;
+type RefreshResponsePayload = Partial<TokenInfo> & {
+  data?: Partial<TokenInfo>;
 };
 
-// 사용자가 작성한 게시글 조회
+const normalizeRefreshTokenInfo = (
+  payload: ApiResponse<TokenInfo> | RefreshResponsePayload | undefined,
+  currentRefreshToken: string,
+): TokenInfo => {
+  const flatPayload = payload as RefreshResponsePayload | undefined;
+  const nestedPayload = flatPayload?.data;
+  const accessToken =
+    nestedPayload?.accessToken ?? flatPayload?.accessToken ?? "";
+  const nextRefreshToken =
+    nestedPayload?.refreshToken ??
+    flatPayload?.refreshToken ??
+    currentRefreshToken;
+  const role =
+    nestedPayload?.role ??
+    flatPayload?.role ??
+    localStorage.getItem("role") ??
+    "";
+
+  if (!accessToken) {
+    throw new Error("리프레시 응답에 액세스 토큰이 없습니다.");
+  }
+
+  return {
+    accessToken,
+    refreshToken: nextRefreshToken,
+    role,
+  };
+};
+
+export const refresh = async (): Promise<TokenInfo> => {
+  const refreshToken = localStorage.getItem("refreshToken");
+
+  if (!refreshToken) {
+    appendDebugLog({
+      category: "token-refresh",
+      action: "리프레시 토큰 없음",
+      details: {
+        endpoint: "/users/refreshToken",
+      },
+    });
+    throw new Error("리프레시 토큰이 없습니다.");
+  }
+
+  appendDebugLog({
+    category: "token-refresh",
+    action: "리프레시 토큰 재발급 요청",
+    details: {
+      endpoint: "/users/refreshToken",
+    },
+  });
+
+  console.log("refresh", refreshToken);
+
+  try {
+    const response = await axiosInstance.post<
+      ApiResponse<TokenInfo> | RefreshResponsePayload
+    >("/users/refreshToken", {
+      refreshToken: `Bearer ${refreshToken}`,
+    });
+    const tokenInfo = normalizeRefreshTokenInfo(response.data, refreshToken);
+
+    appendDebugLog({
+      category: "token-refresh",
+      action: "리프레시 토큰 재발급 성공",
+      details: {
+        endpoint: "/users/refreshToken",
+        status: response.status,
+        hasAccessToken: Boolean(tokenInfo.accessToken),
+        hasRefreshToken: Boolean(tokenInfo.refreshToken),
+        hasRole: Boolean(tokenInfo.role),
+      },
+    });
+
+    console.log("리프레시 응답");
+    console.log(response);
+
+    return tokenInfo;
+  } catch (error) {
+    const refreshError = error as AxiosError;
+
+    appendDebugLog({
+      category: "token-refresh",
+      action: "리프레시 토큰 재발급 실패",
+      details: {
+        endpoint: "/users/refreshToken",
+        status: refreshError.response?.status ?? null,
+        message: refreshError.message,
+      },
+    });
+
+    throw error;
+  }
+};
+
 export const getMemberPosts = async (): Promise<
   AxiosResponse<MyPost_GroupOrder[]>
 > => {
@@ -155,7 +225,6 @@ export const getMemberPosts = async (): Promise<
   return response;
 };
 
-// 사용자가 좋아요한 게시글 조회
 export const getMemberLikePosts = async (): Promise<
   AxiosResponse<MyPost_GroupOrder[]>
 > => {
@@ -164,7 +233,6 @@ export const getMemberLikePosts = async (): Promise<
   return response;
 };
 
-//개인정보, 이용약관 동의
 export const putUserAgreement = async (
   isTermsAgreed: boolean,
   isPrivacyAgreed: boolean,
@@ -179,7 +247,6 @@ export const putUserAgreement = async (
   return response;
 };
 
-// 신입생 포털 계정 통합
 export const putInuStudent = async (
   studentNumber: string,
   password: string,

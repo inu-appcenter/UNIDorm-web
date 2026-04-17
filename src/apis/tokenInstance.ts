@@ -1,7 +1,9 @@
 import axios, { AxiosError } from "axios";
-import useUserStore from "../stores/useUserStore";
-import useNetworkStore from "../stores/useNetworkStore";
 import { refresh } from "@/apis/members";
+import { TokenInfo } from "@/types/members";
+import { appendDebugLog } from "@/utils/debugLog";
+import useNetworkStore from "../stores/useNetworkStore";
+import useUserStore from "../stores/useUserStore";
 
 const BASE_URL = `https://${import.meta.env.VITE_API_SUBDOMAIN}.inuappcenter.kr/`;
 
@@ -9,67 +11,225 @@ const tokenInstance = axios.create({
   baseURL: BASE_URL,
 });
 
-// 요청 인터셉터
+const getRequestDetails = (config?: {
+  method?: string;
+  url?: string;
+}) => ({
+  method: config?.method?.toUpperCase() ?? "UNKNOWN",
+  url: config?.url ?? "",
+});
+
+type RetryableRequestConfig = NonNullable<AxiosError["config"]> & {
+  _retry?: boolean;
+  _sentAccessToken?: string;
+};
+
+let refreshPromise: Promise<TokenInfo> | null = null;
+let isLogoutRedirectPending = false;
+
+const getStoredAccessToken = () => localStorage.getItem("accessToken") ?? "";
+
+const setAuthorizationHeader = (
+  config: RetryableRequestConfig,
+  accessToken: string,
+) => {
+  if (!config.headers) {
+    config.headers = {} as RetryableRequestConfig["headers"];
+  }
+
+  if (accessToken) {
+    config.headers["Authorization"] = `Bearer ${accessToken}`;
+    return;
+  }
+
+  delete config.headers["Authorization"];
+};
+
+const mergeTokenInfo = (nextTokenInfo: TokenInfo): TokenInfo => {
+  const currentTokenInfo = useUserStore.getState().tokenInfo;
+
+  return {
+    ...currentTokenInfo,
+    ...nextTokenInfo,
+    accessToken: nextTokenInfo.accessToken,
+    refreshToken: nextTokenInfo.refreshToken || currentTokenInfo.refreshToken,
+    role: nextTokenInfo.role || currentTokenInfo.role,
+  };
+};
+
+const redirectToLogoutOnce = () => {
+  if (isLogoutRedirectPending) {
+    return;
+  }
+
+  isLogoutRedirectPending = true;
+  delete tokenInstance.defaults.headers.common["Authorization"];
+  window.location.href = "/logout";
+};
+
+const refreshAccessToken = async (): Promise<TokenInfo> => {
+  if (!refreshPromise) {
+    refreshPromise = (async () => {
+      const tokenInfo = await refresh();
+      const mergedTokenInfo = mergeTokenInfo(tokenInfo);
+
+      useUserStore.getState().setTokenInfo(mergedTokenInfo);
+      tokenInstance.defaults.headers.common["Authorization"] =
+        `Bearer ${mergedTokenInfo.accessToken}`;
+
+      appendDebugLog({
+        category: "token-refresh",
+        action: "리프레시 완료",
+        details: {
+          hasAccessToken: Boolean(mergedTokenInfo.accessToken),
+          hasRefreshToken: Boolean(mergedTokenInfo.refreshToken),
+          hasRole: Boolean(mergedTokenInfo.role),
+        },
+      });
+
+      return mergedTokenInfo;
+    })().finally(() => {
+      refreshPromise = null;
+    });
+  } else {
+    appendDebugLog({
+      category: "token-refresh",
+      action: "진행 중인 리프레시 재사용",
+    });
+  }
+
+  return refreshPromise;
+};
+
 tokenInstance.interceptors.request.use(
   (config) => {
-    const accessToken = localStorage.getItem("accessToken");
-    if (accessToken) {
-      config.headers["Authorization"] = `Bearer ${accessToken}`;
-    }
-    return config;
+    const retryableConfig = config as RetryableRequestConfig;
+    const accessToken = getStoredAccessToken();
+
+    setAuthorizationHeader(retryableConfig, accessToken);
+    retryableConfig._sentAccessToken = accessToken;
+
+    return retryableConfig;
   },
   (error) => Promise.reject(error),
 );
 
-// 응답 인터셉터
 tokenInstance.interceptors.response.use(
   (response) => {
     if (response.data?.msg) console.log(response.data.msg);
-    // 정상 응답 시 네트워크 오류 플래그 해제
     useNetworkStore.getState().setNetworkError(false);
+
+    if ((response.config as { _retry?: boolean })._retry) {
+      appendDebugLog({
+        category: "token-refresh",
+        action: "리프레시 후 재요청 성공",
+        details: getRequestDetails(response.config),
+      });
+    }
+
     return response;
   },
   async (error) => {
-    const originalRequest = error.config;
+    const originalRequest = error.config as RetryableRequestConfig | null;
     const { setNetworkError } = useNetworkStore.getState();
+    const requestDetails = getRequestDetails(originalRequest ?? undefined);
 
-    // 🌐 네트워크 불량 또는 서버 다운 시
     if (error.response && error.response.status === 502) {
       setNetworkError(true);
-      // alert("네트워크 연결이 불안정하거나, 서버 점검 중입니다.");
+      appendDebugLog({
+        category: "network",
+        action: "502 응답 수신",
+        details: {
+          ...requestDetails,
+          status: error.response.status,
+        },
+      });
       return Promise.reject(error);
     }
 
-    // ❌ 네트워크 자체 장애 (response 없음)
     if (!error.response) {
       setNetworkError(true);
-      // alert("인터넷 연결을 확인해주세요.");
+      appendDebugLog({
+        category: "network",
+        action: "응답 없는 네트워크 오류",
+        details: {
+          ...requestDetails,
+          message: error.message,
+        },
+      });
       return Promise.reject(error);
     }
 
-    // 🔁 403 에러 → 토큰 재발급 시도
-    if (error.response.status === 403 && !originalRequest._retry) {
+    const status = error.response.status;
+    const isAuthError = status === 401 || status === 403;
+
+    if (isAuthError && originalRequest && !originalRequest._retry) {
       originalRequest._retry = true;
+
+      appendDebugLog({
+        category: "token-refresh",
+        action: "인증 오류 응답으로 리프레시 시작",
+        details: {
+          ...requestDetails,
+          status,
+        },
+      });
+
       try {
-        console.log("리프레시 발급 시도");
-        const { data } = await refresh();
-        const newTokenInfo = data.accessToken;
+        const latestAccessToken = getStoredAccessToken();
+        const sentAccessToken = originalRequest._sentAccessToken ?? "";
 
-        const { tokenInfo, setTokenInfo } = useUserStore.getState();
-        setTokenInfo({ ...tokenInfo, accessToken: newTokenInfo });
+        if (latestAccessToken && latestAccessToken !== sentAccessToken) {
+          appendDebugLog({
+            category: "token-refresh",
+            action: "이미 갱신된 최신 토큰으로 재시도",
+            details: requestDetails,
+          });
 
-        tokenInstance.defaults.headers.common["Authorization"] =
-          `Bearer ${newTokenInfo}`;
-        originalRequest.headers["Authorization"] = `Bearer ${newTokenInfo}`;
+          setAuthorizationHeader(originalRequest, latestAccessToken);
+          return tokenInstance(originalRequest);
+        }
 
-        // 재요청 시도
+        const tokenInfo = await refreshAccessToken();
+
+        appendDebugLog({
+          category: "token-refresh",
+          action: "새 토큰 저장 완료",
+          details: {
+            ...requestDetails,
+            hasAccessToken: Boolean(tokenInfo.accessToken),
+            hasRefreshToken: Boolean(tokenInfo.refreshToken),
+            hasRole: Boolean(tokenInfo.role),
+          },
+        });
+
+        setAuthorizationHeader(originalRequest, tokenInfo.accessToken);
+
+        appendDebugLog({
+          category: "token-refresh",
+          action: "원래 요청 재시도",
+          details: requestDetails,
+        });
+
         return tokenInstance(originalRequest);
       } catch (refreshError) {
-        window.location.href = "/logout";
-        (
-          refreshError as AxiosError & { isRefreshError?: boolean }
-        ).isRefreshError = true;
-        return Promise.reject(refreshError);
+        const axiosRefreshError = refreshError as AxiosError & {
+          isRefreshError?: boolean;
+        };
+
+        appendDebugLog({
+          category: "token-refresh",
+          action: "리프레시 실패로 로그아웃 이동",
+          details: {
+            ...requestDetails,
+            status: axiosRefreshError.response?.status ?? null,
+            message: axiosRefreshError.message,
+          },
+        });
+
+        redirectToLogoutOnce();
+        axiosRefreshError.isRefreshError = true;
+        return Promise.reject(axiosRefreshError);
       }
     }
 

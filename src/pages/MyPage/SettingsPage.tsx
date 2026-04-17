@@ -1,19 +1,18 @@
-import styled from "styled-components";
-import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { createSettingsMenuGroups } from "@/stores/menuGroupsFactory";
-import { useUserRole } from "@/hooks/useUserRole";
-import { useSetHeader } from "@/hooks/useSetHeader";
-import { PATHS } from "@/constants/paths";
+import { useNavigate } from "react-router-dom";
+import styled from "styled-components";
 import MenuGroup from "@/components/mypage/MenuGroup";
+import { PATHS } from "@/constants/paths";
+import { useSetHeader } from "@/hooks/useSetHeader";
+import { useUserRole } from "@/hooks/useUserRole";
+import { createSettingsMenuGroups } from "@/stores/menuGroupsFactory";
+
+const APP_VERSION = "1.8.0";
 
 const SettingsPage = () => {
   const navigate = useNavigate();
   const { isLoggedIn, isAdmin } = useUserRole();
-
-  const [showFcm, setShowFcm] = useState(
-    () => sessionStorage.getItem("showFcm") === "true",
-  );
+  const [showHiddenMenu, setShowHiddenMenu] = useState(false);
   const [clickCount, setClickCount] = useState(0);
 
   const menuGroups = createSettingsMenuGroups(navigate, isLoggedIn);
@@ -23,21 +22,24 @@ const SettingsPage = () => {
   });
 
   useEffect(() => {
-    if (clickCount >= 5 && !showFcm) {
-      setShowFcm(true);
-      sessionStorage.setItem("showFcm", "true");
+    if (clickCount >= 5 && !showHiddenMenu) {
+      setShowHiddenMenu(true);
     }
-  }, [clickCount, showFcm]);
+  }, [clickCount, showHiddenMenu]);
 
   const handleAppUpdate = () => {
     if (window.AndroidBridge?.requestAppUpdate) {
       window.AndroidBridge.requestAppUpdate();
-    } else if (window.webkit?.messageHandlers?.requestAppUpdate) {
+      return;
+    }
+
+    if (window.webkit?.messageHandlers?.requestAppUpdate) {
       window.webkit.messageHandlers.requestAppUpdate.postMessage(null);
-    } else {
-      if (confirm("페이지를 새로고침하시겠습니까?")) {
-        window.location.reload();
-      }
+      return;
+    }
+
+    if (window.confirm("페이지를 새로고침하시겠습니까?")) {
+      window.location.reload();
     }
   };
 
@@ -51,23 +53,34 @@ const SettingsPage = () => {
           title="앱 정보"
           menus={[
             {
-              label: "버전 v 1.7.5",
+              label: `버전 v ${APP_VERSION}`,
               onClick: () => setClickCount((prev) => prev + 1),
             },
-            ...(showFcm
-              ? [
-                  {
-                    label: "fcm 토큰 확인",
-                    onClick: () => navigate(PATHS.ADMIN.FCM),
-                  },
-                ]
-              : []),
             {
               label: "업데이트 하기",
               onClick: handleAppUpdate,
             },
           ]}
         />
+
+        {showHiddenMenu && (
+          <>
+            <Divider />
+            <MenuGroup
+              title="히든 메뉴"
+              menus={[
+                {
+                  label: "로그 확인",
+                  onClick: () => navigate(PATHS.SETTINGS_LOGS),
+                },
+                {
+                  label: "FCM 토큰 확인",
+                  onClick: () => navigate(PATHS.ADMIN.FCM),
+                },
+              ]}
+            />
+          </>
+        )}
 
         {isAdmin && (
           <>
@@ -99,6 +112,7 @@ const SettingsWrapper = styled.div`
   flex: 1;
   overflow-y: auto;
   background: #fafafa;
+
   @media (min-width: 1024px) {
     max-width: 1200px;
     margin: 0 auto;

@@ -78,6 +78,7 @@ import FormResultPage from "@/pages/Admin/FormResultPage";
 import FCMPage from "@/pages/Admin/FCMPage";
 import FeatureFlagManagePage from "@/pages/Admin/FeatureFlagManagePage";
 import RoomMateFindSettingPage from "@/pages/RoomMate/RoomMateFindSettingPage";
+import DebugLogPage from "@/pages/MyPage/DebugLogPage";
 import SettingsPage from "@/pages/MyPage/SettingsPage";
 import StatisticsPage from "@/pages/Admin/StatisticsPage";
 
@@ -185,7 +186,10 @@ export const router = createBrowserRouter([
           {
             path: "settings",
             element: <SubPage />,
-            children: [{ index: true, element: <SettingsPage /> }],
+            children: [
+              { index: true, element: <SettingsPage /> },
+              { path: "logs", element: <DebugLogPage /> },
+            ],
           },
 
           // 룸메이트 상세

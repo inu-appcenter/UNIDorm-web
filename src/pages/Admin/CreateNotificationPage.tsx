@@ -92,7 +92,7 @@ const CreateNotificationPage = () => {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>(
-    DELIVERY_MODES.AUDIENCE_NOTIFICATION,
+    DELIVERY_MODES.ALL_USERS_FCM,
   );
   const [studentNumber, setStudentNumber] = useState("");
   const [notificationType, setNotificationType] = useState<NotificationType>(
