@@ -117,6 +117,15 @@ export const mixpanelTrack = {
   postCreated: (boardType: string) => {
     trackEvent("게시글 작성 완료", { board_type: boardType });
   },
+  complainStarted: () => {
+    trackEvent("민원 작성 시작");
+  },
+  complainSubmitted: (category: string, hasImage: boolean) => {
+    trackEvent("민원 작성 완료", {
+      category: category,
+      has_image: hasImage,
+    });
+  },
   commentCreated: (boardType: string) => {
     trackEvent("댓글 작성 완료", { board_type: boardType });
   },
