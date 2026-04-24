@@ -278,7 +278,10 @@ export default function HomePage() {
           <StyledMigrationBanner
             variant={bannerVariant}
             onClick={() => {
-              mixpanelTrack.bannerClicked("신입생 마이그레이션 배너", "홈_상단");
+              mixpanelTrack.bannerClicked(
+                "신입생 마이그레이션 배너",
+                "홈_상단",
+              );
               handleMigrationBannerClick();
             }}
           />
@@ -298,7 +301,7 @@ export default function HomePage() {
                 title={"생활원 민원"}
                 imgsrc={민원아이콘}
                 onClick={() => {
-                  mixpanelTrack.homeServiceClicked("생활원 민원");
+                  mixpanelTrack.featureClicked("생활원 민원", "홈_서비스박스");
                   if (!isLoggedIn) {
                     alert("로그인 후 사용할 수 있습니다.");
                     navigate("/login");
@@ -311,7 +314,7 @@ export default function HomePage() {
                 title={"폼"}
                 imgsrc={폼아이콘}
                 onClick={() => {
-                  mixpanelTrack.homeServiceClicked("폼");
+                  mixpanelTrack.featureClicked("폼", "홈_서비스박스");
                   navigate("/form");
                 }}
               />

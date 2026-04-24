@@ -173,7 +173,7 @@ const ComplainListPage = () => {
 
       <AIChatBanner
         onClick={() => {
-          mixpanelTrack.homeServiceClicked("챗불이_민원페이지", "민원_상단배너");
+          mixpanelTrack.featureClicked("챗불이", "민원_상단배너");
           openChat();
         }}
       >

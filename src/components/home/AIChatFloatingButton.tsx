@@ -7,6 +7,7 @@ import useUserStore from "@/stores/useUserStore";
 import ChatBulButtonImg from "@/assets/ai-chat/챗불이버튼.webp";
 import TooltipMessage from "@/components/common/TooltipMessage";
 import useAIChatStore from "@/stores/useAIChatStore";
+import { mixpanelTrack } from "@/utils/mixpanel";
 
 const AIChatFloatingButton = () => {
   const isOpen = useAIChatStore((state) => state.isOpen);
@@ -43,6 +44,13 @@ const AIChatFloatingButton = () => {
   const handleCloseTooltip = () => {
     setShowTooltip(false);
     localStorage.setItem("showAIChatTooltip", "false");
+  };
+
+  const handleToggleChat = () => {
+    if (!isOpen) {
+      mixpanelTrack.featureClicked("챗불이", location.pathname);
+    }
+    toggleChat();
   };
 
   if (!isVisible) return null;
@@ -131,7 +139,7 @@ const AIChatFloatingButton = () => {
               }
             : { duration: 0 }
         }
-        onClick={toggleChat}
+        onClick={handleToggleChat}
         aria-label="AI 챗봇 열기"
       >
         <AnimatePresence>

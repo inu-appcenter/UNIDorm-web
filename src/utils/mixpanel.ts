@@ -55,7 +55,7 @@ export const trackPageView = (
 
 /**
  * 유니돔 프로젝트 맞춤형 이벤트 프리셋
- * 함수명은 코드 가독성을 위해 영문 camelCase를 사용하고, 
+ * 함수명은 코드 가독성을 위해 영문 camelCase를 사용하고,
  * Mixpanel 이벤트명은 직관적인 한글을 사용합니다.
  */
 export const mixpanelTrack = {
@@ -63,19 +63,13 @@ export const mixpanelTrack = {
   loginCompleted: (method: string) => {
     trackEvent("로그인 완료", { method });
   },
-  onboardingCompleted: () => {
-    trackEvent("온보딩 완료");
-  },
-  freshmanMigrationCompleted: () => {
-    trackEvent("신입생 계정 통합 완료");
-  },
 
-  // --- 2. 네비게이션 및 홈 유입 (Navigation) ---
+  // --- 2. 네비게이션 및 공통 진입 (Navigation) ---
   navTabClicked: (tabName: string) => {
     trackEvent("하단 탭 클릭", { tab_name: tabName });
   },
-  homeServiceClicked: (serviceName: string, location: string = "홈_서비스박스") => {
-    trackEvent("홈 서비스 클릭", { service_name: serviceName, location });
+  featureClicked: (featureName: string, location: string) => {
+    trackEvent("기능 클릭", { feature_name: featureName, location });
   },
   moreClicked: (sectionName: string) => {
     trackEvent("더보기 클릭", { section_name: sectionName });
@@ -83,7 +77,11 @@ export const mixpanelTrack = {
   searchPerformed: (searchTerm: string, location: string) => {
     trackEvent("검색 수행", { search_term: searchTerm, location });
   },
-  categoryFiltered: (category: string, subCategory: string, location: string) => {
+  categoryFiltered: (
+    category: string,
+    subCategory: string,
+    location: string,
+  ) => {
     trackEvent("카테고리 필터 변경", {
       category: category,
       sub_category: subCategory,
@@ -94,7 +92,7 @@ export const mixpanelTrack = {
     trackEvent("일정 월 변경", { year, month });
   },
   itemClicked: (
-    itemType: "공지" | "꿀팁" | "룸메이트" | "공동구매",
+    itemType: "공지" | "꿀팁" | "룸메이트" | "공동구매" | "민원",
     id: number | string,
     title: string,
     location: string,
@@ -147,12 +145,7 @@ export const mixpanelTrack = {
   },
 
   // --- 5. 룸메이트 매칭 (Roommate Matching) ---
-  roommateFilterApplied: (filters: Record<string, any>) => {
-    trackEvent("룸메이트 필터 적용", { ...filters });
-  },
-  roommateMatchSuccess: () => {
-    trackEvent("룸메이트 매칭 성공");
-  },
+  //룸메이트 매칭 관련 함수 들어갈 자리
 
   // --- 6. 프로모션 및 알림 (Promotion & Notification) ---
   bannerClicked: (bannerName: string, location: string) => {
