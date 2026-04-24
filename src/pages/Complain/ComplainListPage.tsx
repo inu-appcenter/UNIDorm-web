@@ -17,6 +17,7 @@ import { useSetHeader } from "@/hooks/useSetHeader";
 import useAIChatStore from "@/stores/useAIChatStore";
 import ChatBulButtonImg from "@/assets/ai-chat/챗불이버튼.webp";
 import { useSetAIChat } from "@/hooks/useSetAIChat";
+import { mixpanelTrack } from "@/utils/mixpanel";
 
 const ComplainListPage = () => {
   useSetAIChat({ isVisible: true, shouldAnimate: false });
@@ -170,7 +171,12 @@ const ComplainListPage = () => {
         }
       />
 
-      <AIChatBanner onClick={openChat}>
+      <AIChatBanner
+        onClick={() => {
+          mixpanelTrack.featureClicked("챗불이", "민원_상단배너");
+          openChat();
+        }}
+      >
         <div className="banner-content">
           <div className="banner-text">
             <span className="banner-title">챗불이에게 먼저 물어보세요!</span>
@@ -205,7 +211,15 @@ const ComplainListPage = () => {
                 <LoadingSpinner />
               ) : recentComplain ? (
                 <Wrapper1
-                  onClick={() => navigate(`/complain/${recentComplain.id}`)}
+                  onClick={() => {
+                    mixpanelTrack.itemClicked(
+                      "민원",
+                      recentComplain.id,
+                      recentComplain.title,
+                      "민원_최근현황",
+                    );
+                    navigate(`/complain/${recentComplain.id}`);
+                  }}
                 >
                   <StepFlow
                     activeIndex={
@@ -275,7 +289,12 @@ const ComplainListPage = () => {
       </MainContent>
 
       {isLoggedIn && (
-        <WriteButton onClick={() => navigate("/complain/write")}>
+        <WriteButton
+          onClick={() => {
+            mixpanelTrack.complainStarted();
+            navigate("/complain/write");
+          }}
+        >
           ✏️ 민원 작성
         </WriteButton>
       )}

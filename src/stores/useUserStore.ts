@@ -1,5 +1,6 @@
 import { TokenInfo, UserInfo } from "@/types/members";
 import { create } from "zustand";
+import { identifyUser } from "@/utils/mixpanel";
 
 interface UserState {
   tokenInfo: TokenInfo;
@@ -59,9 +60,22 @@ const useUserStore = create<UserState>((set) => ({
     localStorage.setItem("refreshToken", tokenInfo.refreshToken);
     localStorage.setItem("role", tokenInfo.role);
   },
-  setUserInfo: (userInfo) => {
-    set(() => ({ userInfo }));
+  setUserInfo: (userInfo: UserInfo) => {
+    set({ userInfo });
     localStorage.setItem("userInfo", JSON.stringify(userInfo));
+
+    if (!userInfo.id || userInfo.id === 0) return;
+    const userId = String(userInfo.id);
+
+    identifyUser(userId, {
+      $name: userInfo.name,
+      dormType: userInfo.dormType,
+      college: userInfo.college,
+      penalty: userInfo.penalty,
+      studentNumber: userInfo.studentNumber,
+      hasTimeTableImage: userInfo.hasTimeTableImage,
+      roommateCheckList: userInfo.roommateCheckList,
+    });
   },
   isLoading: true, // 초기 상태를 true로 설정
 }));

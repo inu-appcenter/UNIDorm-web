@@ -20,6 +20,7 @@ import { useSetHeader } from "@/hooks/useSetHeader";
 import Box from "@/components/common/Box";
 import TitleContentArea from "@/components/common/TitleContentArea";
 import { PATHS } from "@/constants/paths";
+import { mixpanelTrack } from "@/utils/mixpanel";
 
 // ---  옵션 배열 생성 헬퍼 함수 ---
 const generateOptions = (min: number, max: number, suffix: string) => {
@@ -218,6 +219,7 @@ export default function ComplainWritePage() {
         alert("민원이 성공적으로 수정되었습니다!");
       } else {
         res = await createComplaint(dto, files);
+        mixpanelTrack.complainSubmitted(dto.type, files.length > 0);
         alert("민원이 성공적으로 등록되었습니다!");
       }
 

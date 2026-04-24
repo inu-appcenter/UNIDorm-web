@@ -19,6 +19,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { TipImage } from "@/types/tips";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import { PATHS } from "@/constants/paths";
+import { mixpanelTrack } from "@/utils/mixpanel";
 
 const ComplainDetailPage = () => {
   const { isAdmin } = useUserRole();
@@ -59,6 +60,8 @@ const ComplainDetailPage = () => {
         );
         console.log(response);
         setComplaint(response.data);
+        // 민원 상세 조회 추적
+        mixpanelTrack.postViewed("민원", response.data.id, response.data.title);
       } catch (error) {
         console.error("민원 상세 불러오기 실패:", error);
         setComplaint(null);
