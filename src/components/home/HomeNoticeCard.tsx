@@ -6,6 +6,7 @@ import { formatTimeAgo } from "@/utils/dateUtils";
 import { ANNOUNCE_CATEGORY_LIST } from "@/constants/announcement";
 import { TypeBadge } from "@/styles/announcement";
 import { getLabelByValue } from "@/utils/announceUtils";
+import { mixpanelTrack } from "@/utils/mixpanel";
 
 interface HomeCardProps {
   id: number;
@@ -28,6 +29,7 @@ const HomeNoticeCard = ({
   return (
     <HomeCardWrapper
       onClick={() => {
+        mixpanelTrack.itemClicked("공지", id, title, "홈_공지사항목록");
         navigate("/announcements/" + id);
       }}
     >

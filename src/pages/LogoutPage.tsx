@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import useUserStore from "../stores/useUserStore.ts";
 import { TokenInfo } from "@/types/members";
-import { resetMixpanel } from "@/utils/mixpanel";
+import { mixpanelTrack } from "@/utils/mixpanel";
 
 const LogoutPage = () => {
   const navigate = useNavigate();
@@ -39,7 +39,7 @@ const LogoutPage = () => {
       // isAdmin: false, // 삭제됨
     };
     setUserInfo(emptyUserInfo);
-    resetMixpanel();
+    mixpanelTrack.logout();
 
     console.log("로그아웃 성공");
     alert("로그아웃되었습니다.");
