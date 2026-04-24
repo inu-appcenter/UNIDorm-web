@@ -16,6 +16,7 @@ import EmptyMessage from "../../constants/EmptyMessage.tsx";
 import CommonBottomSheet from "src/components/modal/CommonBottomSheet.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import { useUserRole } from "src/hooks/useUserRole";
+import { mixpanelTrack } from "@/utils/mixpanel";
 
 export default function TipDetailPage() {
   const { boardId } = useParams<{ boardId: string }>();
@@ -59,6 +60,12 @@ export default function TipDetailPage() {
         setLiked(tipResponse.data.checkLikeCurrentUser ?? false);
 
         setImages(imagesResponse.data);
+        // 상세 조회 추적 추가
+        mixpanelTrack.postViewed(
+          "꿀팁",
+          tipResponse.data.boardId,
+          tipResponse.data.title,
+        );
       } catch (err) {
         console.error("게시글 또는 이미지 불러오기 실패", err);
       } finally {
@@ -92,6 +99,11 @@ export default function TipDetailPage() {
         ? `/tips/${boardId}/unlike`
         : `/tips/${boardId}/like`;
       await tokenInstance.patch(endpoint);
+
+      if (!liked) {
+        mixpanelTrack.likeClicked("꿀팁", boardId);
+      }
+
       setLiked((prev) => !prev);
       setLikeCount((prev) => prev + (liked ? -1 : 1));
     } catch (err) {
@@ -111,6 +123,7 @@ export default function TipDetailPage() {
         tipId: Number(boardId),
         reply: commentInput,
       });
+      mixpanelTrack.commentCreated("꿀팁");
       setCommentInput("");
       setisneedupdate(!isneedupdate);
     } catch (err) {
@@ -128,10 +141,11 @@ export default function TipDetailPage() {
     if (!replyInput?.trim()) return;
     try {
       await tokenInstance.post("/tip-comments", {
-        parentCommentId,
+        parentCommentId: parentCommentId,
         tipId: Number(boardId),
         reply: replyInput,
       });
+      mixpanelTrack.commentCreated("꿀팁_답글");
       setReplyInputs((prev) => ({ ...prev, [parentCommentId]: "" }));
       setReplyInputOpen((prev) => ({ ...prev, [parentCommentId]: false }));
       setisneedupdate(!isneedupdate);

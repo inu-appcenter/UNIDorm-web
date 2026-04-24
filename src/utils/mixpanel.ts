@@ -80,6 +80,19 @@ export const mixpanelTrack = {
   moreClicked: (sectionName: string) => {
     trackEvent("더보기 클릭", { section_name: sectionName });
   },
+  searchPerformed: (searchTerm: string, location: string) => {
+    trackEvent("검색 수행", { search_term: searchTerm, location });
+  },
+  categoryFiltered: (category: string, subCategory: string, location: string) => {
+    trackEvent("카테고리 필터 변경", {
+      category: category,
+      sub_category: subCategory,
+      location: location,
+    });
+  },
+  calendarMonthChanged: (year: number, month: number) => {
+    trackEvent("일정 월 변경", { year, month });
+  },
   itemClicked: (
     itemType: "공지" | "꿀팁" | "룸메이트" | "공동구매",
     id: number | string,

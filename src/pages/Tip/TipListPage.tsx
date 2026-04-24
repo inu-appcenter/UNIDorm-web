@@ -9,6 +9,7 @@ import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../../constants/EmptyMessage.tsx";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useSetHeader } from "@/hooks/useSetHeader";
+import { mixpanelTrack } from "@/utils/mixpanel";
 
 export default function TipListPage() {
   const navigate = useNavigate();
@@ -75,7 +76,15 @@ export default function TipListPage() {
                     like: tip.tipLikeCount,
                     comment: tip.tipCommentCount,
                   }}
-                  onClick={() => navigate(`/tips/${tip.boardId}`)}
+                  onClick={() => {
+                    mixpanelTrack.itemClicked(
+                      "꿀팁",
+                      tip.boardId,
+                      tip.title,
+                      "꿀팁_리스트",
+                    );
+                    navigate(`/tips/${tip.boardId}`);
+                  }}
                 />
               );
             })}
@@ -88,6 +97,7 @@ export default function TipListPage() {
       {isAdmin && (
         <WriteButton
           onClick={() => {
+            mixpanelTrack.postCreated("꿀팁_시작");
             navigate("/tips/write");
           }}
         >
