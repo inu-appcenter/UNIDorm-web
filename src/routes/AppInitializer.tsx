@@ -1,7 +1,7 @@
 import { Outlet } from "react-router-dom";
 import { ErrorBoundary } from "@/ErrorBoundary";
 import ScrollToTop from "../components/layout/ScrollToTop";
-import { useAppInit } from "@/hooks/useAppInit"; // 이전에 만든 인증/FCM 훅
+import { useAppInit } from "@/hooks/useAppInit";
 import AIChatFloatingButton from "@/components/home/AIChatFloatingButton";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 
