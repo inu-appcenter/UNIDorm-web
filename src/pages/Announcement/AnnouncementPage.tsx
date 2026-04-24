@@ -42,6 +42,7 @@ import HomeNoticeBottomSheet from "@/components/modal/HomeNoticeBottomSheet";
 import { getPopupNotifications } from "@/apis/popup-notification";
 import { PopupNotification } from "@/types/popup-notifications";
 import { guardAppOnly, guardLogin } from "@/utils/guard";
+import { mixpanelTrack } from "@/utils/mixpanel";
 
 export default function AnnouncementPage() {
   const navigate = useNavigate();
@@ -82,11 +83,18 @@ export default function AnnouncementPage() {
   const handleCategoryClick = (
     category: (typeof ANNOUNCE_CATEGORY_LIST)[number]["value"],
   ) => {
+    mixpanelTrack.categoryFiltered(category, "ALL", "공지사항_상단탭");
     setSearchParams({ tab: category }, { replace: true });
   };
 
   const handleSubCategoryClick = (index: number) => {
     const subValue = ANNOUNCE_SUB_CATEGORY_LIST[index]?.value;
+
+    mixpanelTrack.categoryFiltered(
+      selectedCategory,
+      subValue || "ALL",
+      "공지사항_서브필터",
+    );
 
     setSearchParams(
       (prev) => {
@@ -171,6 +179,9 @@ export default function AnnouncementPage() {
     const trimmedTerm = search.trim();
 
     if (rawTerm.trim() === "") return;
+
+    // 검색 수행 추적 추가
+    mixpanelTrack.searchPerformed(trimmedTerm, "공지사항_리스트");
 
     const updatedSearches = [
       trimmedTerm,
@@ -287,7 +298,15 @@ export default function AnnouncementPage() {
             {notices.map((notice) => (
               <NoticeCard
                 key={notice.id}
-                onClick={() => navigate(`/announcements/${notice.id}`)}
+                onClick={() => {
+                  mixpanelTrack.itemClicked(
+                    "공지",
+                    notice.id,
+                    notice.title,
+                    "공지사항_리스트",
+                  );
+                  navigate(`/announcements/${notice.id}`);
+                }}
               >
                 <NoticeTop>
                   <NoticeTitle>{notice.title}</NoticeTitle>

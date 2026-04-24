@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import FaRight from "../../assets/FaRight.svg";
+import { mixpanelTrack } from "@/utils/mixpanel";
 
 interface TitleLineProps {
   title?: string;
@@ -12,12 +13,14 @@ const TitleLine = ({ title, link, externalLink }: TitleLineProps) => {
   const navigate = useNavigate();
 
   const handleClickMore = () => {
+    if (title) mixpanelTrack.moreClicked(title);
     if (link) {
       navigate(link);
     } else if (externalLink) {
       window.open(externalLink, "_blank");
     }
   };
+
   return (
     <TitleLineWrapper>
       <div className="title" onClick={handleClickMore}>
@@ -49,9 +52,9 @@ const TitleLineWrapper = styled.div`
     font-weight: 600;
     font-size: 18px;
     line-height: 28px;
-    /* 상자 높이와 동일 또는 175% */
 
     color: #1c1c1e;
+    cursor: pointer;
   }
 
   .more {

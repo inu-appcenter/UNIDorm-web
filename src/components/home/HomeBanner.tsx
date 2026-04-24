@@ -8,6 +8,7 @@ import 배너3 from "../../assets/banner/포스터3.webp";
 import 인입런배너 from "@/assets/banner/인입런 배너.webp";
 import 학과공지알리미배너 from "@/assets/banner/학과 공지 알리미 배너.webp";
 import { getMobilePlatform } from "@/utils/getMobilePlatform.ts";
+import { mixpanelTrack } from "@/utils/mixpanel";
 
 type BannerItem = {
   id: string;
@@ -38,17 +39,17 @@ export default function HomeBanner() {
       {
         id: "department-notice",
         src: 학과공지알리미배너,
-        alt: "학과공지알리미배너",
+        alt: "학과 공지 알리미",
         click: handleIntipBannerClick,
       },
       {
         id: "intip",
         src: 인입런배너,
-        alt: "인입런배너",
+        alt: "인입런",
         click: handleIntipBannerClick,
       },
-      { id: "poster-3", src: 배너3, alt: "배너 이미지 3" },
-      { id: "poster-1", src: 배너1, alt: "배너 이미지 1" },
+      { id: "poster-3", src: 배너3, alt: "생활원 안내 3" },
+      { id: "poster-1", src: 배너1, alt: "생활원 안내 1" },
     ],
     [platform],
   );
@@ -92,7 +93,7 @@ export default function HomeBanner() {
     };
   }, [emblaApi]);
 
-  const handleSlideClick = (index: number, click?: () => void) => {
+  const handleSlideClick = (index: number, banner: BannerItem) => {
     if (!emblaApi) return;
 
     if (index !== selectedIndex) {
@@ -101,7 +102,9 @@ export default function HomeBanner() {
       return;
     }
 
-    click?.();
+    // Mixpanel 배너 클릭 추적 추가
+    mixpanelTrack.bannerClicked(banner.alt || banner.id, "홈_상단슬라이드");
+    banner.click?.();
   };
 
   return (
@@ -113,7 +116,7 @@ export default function HomeBanner() {
               <BannerButton
                 type="button"
                 $isSelected={index === selectedIndex}
-                onClick={() => handleSlideClick(index, banner.click)}
+                onClick={() => handleSlideClick(index, banner)}
                 aria-label={banner.alt}
               >
                 <img

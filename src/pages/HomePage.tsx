@@ -38,6 +38,7 @@ import { useSetAIChat } from "@/hooks/useSetAIChat";
 import MigrationBanner from "@/components/common/MigrationBanner.tsx";
 import { useFreshmanMigrationBanner } from "@/hooks/useFreshmanMigrationBanner";
 import { motion, AnimatePresence } from "framer-motion";
+import { mixpanelTrack } from "@/utils/mixpanel"; // 추가
 
 export default function HomePage() {
   useSetAIChat({ isVisible: true, shouldAnimate: true });
@@ -98,6 +99,11 @@ export default function HomePage() {
         const response = await getPopupNotifications();
         console.log("팝업 공지 불러오기 성공", response);
         setPopupNotices(response.data);
+
+        // 팝업 노출 추적 추가
+        response.data.forEach((popup: PopupNotification) => {
+          mixpanelTrack.popupViewed(popup.title);
+        });
 
         const initialState = response.data.reduce(
           (acc, noti) => {
@@ -271,7 +277,13 @@ export default function HomePage() {
         >
           <StyledMigrationBanner
             variant={bannerVariant}
-            onClick={handleMigrationBannerClick}
+            onClick={() => {
+              mixpanelTrack.bannerClicked(
+                "신입생 마이그레이션 배너",
+                "홈_상단",
+              );
+              handleMigrationBannerClick();
+            }}
           />
         </motion.div>
       )}
@@ -289,6 +301,7 @@ export default function HomePage() {
                 title={"생활원 민원"}
                 imgsrc={민원아이콘}
                 onClick={() => {
+                  mixpanelTrack.featureClicked("생활원 민원", "홈_서비스박스");
                   if (!isLoggedIn) {
                     alert("로그인 후 사용할 수 있습니다.");
                     navigate("/login");
@@ -301,6 +314,7 @@ export default function HomePage() {
                 title={"폼"}
                 imgsrc={폼아이콘}
                 onClick={() => {
+                  mixpanelTrack.featureClicked("폼", "홈_서비스박스");
                   navigate("/form");
                 }}
               />
@@ -444,6 +458,10 @@ export default function HomePage() {
         whileInView={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
         onClick={() => {
+          mixpanelTrack.externalLinkClicked(
+            "앱센터 홈페이지",
+            "https://home.inuappcenter.kr",
+          );
           window.open("https://home.inuappcenter.kr", "_blank");
         }}
         style={{ cursor: "pointer" }}
@@ -452,18 +470,23 @@ export default function HomePage() {
       <CommonBottomSheet
         id={"이벤트 당첨"}
         isOpen={isAppInstallOpen}
-        setIsOpen={setIsAppInstallOpen}
+        setIsOpen={(open) => {
+          if (open) mixpanelTrack.appInstallImpression();
+          setIsAppInstallOpen(open);
+        }}
         title={"유니돔 앱을 사용해보세요!"}
         headerImageId={0}
         children={ModalContent_AppInstall()}
         closeButtonText={"스토어에서 설치하기"}
         onCloseClick={() => {
           if (platform === "ios_browser") {
+            mixpanelTrack.appInstallClicked("iOS");
             window.open(
               "https://apps.apple.com/kr/app/%EC%9C%A0%EB%8B%88%EB%8F%94/id6751404748",
               "_blank",
             );
           } else if (platform === "android_browser") {
+            mixpanelTrack.appInstallClicked("Android");
             window.open(
               "https://play.google.com/store/apps/details?id=com.hjunieee.inudormitory",
               "_blank",

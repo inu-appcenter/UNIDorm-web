@@ -7,6 +7,7 @@ import FileUploader from "../../components/common/FileUploader.tsx";
 import { useFileHandler } from "@/hooks/useFileHandler";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
+import { mixpanelTrack } from "@/utils/mixpanel";
 
 export default function TipWritePage() {
   const navigate = useNavigate();
@@ -79,6 +80,7 @@ export default function TipWritePage() {
         await tokenInstance.post("/tips", formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
+        mixpanelTrack.postCreated("꿀팁");
         alert("팁이 등록되었습니다!");
       }
       navigate(-1);

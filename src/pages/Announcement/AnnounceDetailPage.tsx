@@ -22,6 +22,7 @@ import {
 import CommonBottomSheet from "src/components/modal/CommonBottomSheet.tsx";
 import { getLabelByValue } from "@/utils/announceUtils";
 import { useSetHeader } from "@/hooks/useSetHeader";
+import { mixpanelTrack } from "@/utils/mixpanel";
 
 export default function AnnounceDetailPage() {
   const { boardId } = useParams<{ boardId: string }>();
@@ -52,6 +53,12 @@ export default function AnnounceDetailPage() {
         console.log("공지사항 이미지 불러오기 성공", filesResponse);
 
         setAnnounce(detailResponse.data);
+        // 상세 조회 추적 추가
+        mixpanelTrack.postViewed(
+          "공지사항",
+          detailResponse.data.id,
+          detailResponse.data.title,
+        );
 
         const allFiles = filesResponse.data;
         const imageExtensions = [

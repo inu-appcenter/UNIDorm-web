@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { RoomMateCardProps } from "@/types/roommates";
 import 매칭완료 from "../../assets/roommate/매칭완료2.svg";
+import { mixpanelTrack } from "@/utils/mixpanel";
 
 const RoomMateCard = ({
   boardId,
@@ -22,7 +23,12 @@ const RoomMateCard = ({
 
   return (
     <CardWrapper
-      onClick={() => !matched && navigate(`/roommate/list/${boardId}`)}
+      onClick={() => {
+        if (!matched) {
+          mixpanelTrack.itemClicked("룸메이트", boardId, title, "룸메이트목록");
+          navigate(`/roommate/list/${boardId}`);
+        }
+      }}
       matched={matched}
     >
       {matched && <DisabledOverlay />}

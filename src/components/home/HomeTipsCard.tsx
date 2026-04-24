@@ -1,5 +1,6 @@
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
+import { mixpanelTrack } from "@/utils/mixpanel";
 
 interface HomeCardProps {
   index: number;
@@ -10,6 +11,7 @@ interface HomeCardProps {
 const HomeTipsCard = ({ index, id, content }: HomeCardProps) => {
   const navigate = useNavigate();
   const handleClickCard = () => {
+    mixpanelTrack.itemClicked("꿀팁", id, content, "홈_오늘의꿀팁");
     navigate(`/tips/${id}`);
   };
 

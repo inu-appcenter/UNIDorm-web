@@ -18,6 +18,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { getCalendarByMonth } from "@/apis/calendar";
 import { CalendarItem } from "@/types/calendar";
+import { mixpanelTrack } from "@/utils/mixpanel";
 
 interface CalendarProps {
   mode?: "month" | "week";
@@ -229,7 +230,14 @@ export default function Calendar({ mode = "month" }: CalendarProps) {
 
   const goToNext = () => {
     if (mode === "month") {
-      setCurrentDate((prev) => addMonths(prev, 1));
+      setCurrentDate((prev) => {
+        const nextDate = addMonths(prev, 1);
+        mixpanelTrack.calendarMonthChanged(
+          nextDate.getFullYear(),
+          nextDate.getMonth() + 1,
+        );
+        return nextDate;
+      });
     } else {
       setCurrentDate((prev) => addDays(prev, 7));
     }
@@ -237,7 +245,14 @@ export default function Calendar({ mode = "month" }: CalendarProps) {
 
   const goToPrev = () => {
     if (mode === "month") {
-      setCurrentDate((prev) => subMonths(prev, 1));
+      setCurrentDate((prev) => {
+        const prevDate = subMonths(prev, 1);
+        mixpanelTrack.calendarMonthChanged(
+          prevDate.getFullYear(),
+          prevDate.getMonth() + 1,
+        );
+        return prevDate;
+      });
     } else {
       setCurrentDate((prev) => subDays(prev, 7));
     }
