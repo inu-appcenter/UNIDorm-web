@@ -70,20 +70,11 @@ export default function HomePage() {
     if (isFreshman && !hasSeenMigrationAlert) {
       sessionStorage.setItem("hasSeenFreshmanMigrationAlert", "true");
       mixpanelTrack.migrationAlertShown("freshman");
-
       alert(
-        "지금 바로 신입생 임시 계정을 학교 포털 계정으로 통합하세요!!!\n곧 통합하지 않은 임시 계정은 삭제될 예정입니다.",
+        "지금 바로 신입생 임시 계정을 학교 포털 계정으로 통합하세요!!!\n곧 통합하지 않은 임시 계정은 삭제될 예정입니다.\n홈 중앙의 [포털 계정 통합] 배너를 클릭하세요.",
       );
-
-      // 보이지 않는 가상 링크/버튼 생성 및 클릭 이벤트 발생
-      const ghostLink = document.createElement("a");
-      ghostLink.href = PATHS.FRESHMAN_MIGRATION;
-
-      // React Router의 navigate를 직접 호출하는 대신 DOM 이벤트를 시뮬레이션
-      // 브라우저가 사용자 액션의 연장선으로 인식하도록 유도
-      document.body.appendChild(ghostLink);
-      ghostLink.click();
-      document.body.removeChild(ghostLink);
+      // navigate(PATHS.FRESHMAN_MIGRATION); //강제이동은 안하기..
+      return;
     }
   }, [isFreshman, navigate]);
 
