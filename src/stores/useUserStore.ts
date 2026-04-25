@@ -7,6 +7,7 @@ interface UserState {
   userInfo: UserInfo;
   setTokenInfo: (tokenInfo: TokenInfo) => void;
   setUserInfo: (userInfo: UserInfo) => void;
+  setLoading: (isLoading: boolean) => void;
   isLoading: boolean;
 }
 
@@ -55,13 +56,13 @@ const useUserStore = create<UserState>((set) => ({
   tokenInfo: getTokenInfoFromStorage(),
   userInfo: getUserInfoFromStorage(),
   setTokenInfo: (tokenInfo) => {
-    set(() => ({ tokenInfo }));
+    set(() => ({ tokenInfo, isLoading: true }));
     localStorage.setItem("accessToken", tokenInfo.accessToken);
     localStorage.setItem("refreshToken", tokenInfo.refreshToken);
     localStorage.setItem("role", tokenInfo.role);
   },
   setUserInfo: (userInfo: UserInfo) => {
-    set({ userInfo });
+    set({ userInfo, isLoading: false });
     localStorage.setItem("userInfo", JSON.stringify(userInfo));
 
     if (!userInfo.id || userInfo.id === 0) return;
@@ -76,6 +77,9 @@ const useUserStore = create<UserState>((set) => ({
       hasTimeTableImage: userInfo.hasTimeTableImage,
       roommateCheckList: userInfo.roommateCheckList,
     });
+  },
+  setLoading: (isLoading: boolean) => {
+    set({ isLoading });
   },
   isLoading: true, // 초기 상태를 true로 설정
 }));

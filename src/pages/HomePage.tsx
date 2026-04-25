@@ -39,6 +39,7 @@ import MigrationBanner from "@/components/common/MigrationBanner.tsx";
 import { useFreshmanMigrationBanner } from "@/hooks/useFreshmanMigrationBanner";
 import { motion, AnimatePresence } from "framer-motion";
 import { mixpanelTrack } from "@/utils/mixpanel"; // 추가
+import { PATHS } from "@/constants/paths";
 
 export default function HomePage() {
   useSetAIChat({ isVisible: true, shouldAnimate: true });
@@ -55,21 +56,22 @@ export default function HomePage() {
 
   const navigate = useNavigate();
   const {
+    isFreshman,
     bannerVariant,
     handleMigrationBannerClick,
     shouldShowMigrationBanner,
   } = useFreshmanMigrationBanner();
-  /*
+
+  useEffect(() => {
     if (isFreshman) {
+      mixpanelTrack.migrationAlertShown("freshman");
+      alert(
+        "지금 바로 신입생 임시 계정을 학교 포털 계정으로 통합하세요!!!\n곧 통합하지 않은 임시 계정은 삭제될 예정입니다.",
+      );
       navigate(PATHS.FRESHMAN_MIGRATION);
       return;
     }
-
-    alert(
-      "신입생 로그인 페이지에서 이전에 만드셨던 임시 계정으로 로그인한 뒤, 홈 화면 배너에서 포털 계정 통합을 진행해 주세요.\n\n신입생 임시 계정 로그인 페이지로 이동합니다.",
-    );
-    navigate(PATHS.FRESHMAN_LOGIN);
-  */
+  }, [isFreshman, navigate]);
 
   const [isTipsLoading, setIsTipsLoading] = useState<boolean>(false);
   const [isAnnounceLoading, setIsAnnounceLoading] = useState<boolean>(false);
@@ -295,10 +297,7 @@ export default function HomePage() {
         animate="animate"
       >
         <motion.div variants={fadeInUp}>
-          <TitleContentArea
-            title={""}
-            location="홈"
-          >
+          <TitleContentArea title={""} location="홈">
             <ServiceWrapper>
               <ServiceBox
                 title={"생활원 민원"}

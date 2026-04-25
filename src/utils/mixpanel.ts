@@ -183,6 +183,11 @@ export const mixpanelTrack = {
   logout: () => {
     trackEvent("로그아웃");
   },
+
+  // --- 8. 계정 통합 (Migration) ---
+  migrationAlertShown: (variant: "freshman" | "portal") => {
+    trackEvent("계정 통합 안내 노출", { variant });
+  },
 };
 
 /**
