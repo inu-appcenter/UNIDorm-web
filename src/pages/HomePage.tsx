@@ -39,7 +39,6 @@ import MigrationBanner from "@/components/common/MigrationBanner.tsx";
 import { useFreshmanMigrationBanner } from "@/hooks/useFreshmanMigrationBanner";
 import { motion, AnimatePresence } from "framer-motion";
 import { mixpanelTrack } from "@/utils/mixpanel"; // 추가
-import { PATHS } from "@/constants/paths";
 
 export default function HomePage() {
   useSetAIChat({ isVisible: true, shouldAnimate: true });
