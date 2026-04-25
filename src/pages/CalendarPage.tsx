@@ -10,7 +10,7 @@ const CalendarPage = () => {
       <TitleContentArea
         title={""}
         description={"인천대학교 생활원 각종 행사 일정입니다."}
-        children={<Calendar />}
+        children={<Calendar location="일정페이지" />}
       />
     </CalendarPageWrapper>
   );

@@ -101,7 +101,7 @@ export default function TipDetailPage() {
       await tokenInstance.patch(endpoint);
 
       if (!liked) {
-        mixpanelTrack.likeClicked("꿀팁", boardId);
+        mixpanelTrack.likeClicked("꿀팁", boardId, "꿀팁상세");
       }
 
       setLiked((prev) => !prev);
@@ -123,7 +123,7 @@ export default function TipDetailPage() {
         tipId: Number(boardId),
         reply: commentInput,
       });
-      mixpanelTrack.commentCreated("꿀팁");
+      mixpanelTrack.commentCreated("꿀팁", "꿀팁상세");
       setCommentInput("");
       setisneedupdate(!isneedupdate);
     } catch (err) {
@@ -145,7 +145,7 @@ export default function TipDetailPage() {
         tipId: Number(boardId),
         reply: replyInput,
       });
-      mixpanelTrack.commentCreated("꿀팁_답글");
+      mixpanelTrack.commentCreated("꿀팁_답글", "꿀팁상세");
       setReplyInputs((prev) => ({ ...prev, [parentCommentId]: "" }));
       setReplyInputOpen((prev) => ({ ...prev, [parentCommentId]: false }));
       setisneedupdate(!isneedupdate);

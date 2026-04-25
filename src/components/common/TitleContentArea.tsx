@@ -5,7 +5,7 @@ interface TitleContentAreaProps {
   title?: string;
   link?: string;
   externalLink?: string;
-
+  location?: string;
   description?: string;
   margin?: string;
   padding?: string;
@@ -17,6 +17,7 @@ const TitleContentArea = ({
   title,
   link,
   externalLink,
+  location,
   description,
   margin,
   padding,
@@ -27,7 +28,12 @@ const TitleContentArea = ({
     <TitleContentAreaWrapper>
       <HeaderSection>
         <TextGroup>
-          <TitleLine title={title} link={link} externalLink={externalLink} />
+          <TitleLine
+            title={title}
+            link={link}
+            externalLink={externalLink}
+            location={location}
+          />
           {description && (
             <DescriptionText $margin={margin} $padding={padding}>
               {description}

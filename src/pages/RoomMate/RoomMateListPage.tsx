@@ -132,6 +132,7 @@ export default function RoomMateListPage() {
       <TitleContentArea
         title={"최신순"}
         description={"룸메이트를 구하고 있는 다양한 UNI들을 찾아보세요!"}
+        location="룸메이트_리스트"
       >
         <>
           <FilterArea>
@@ -164,6 +165,7 @@ export default function RoomMateListPage() {
                   description={post.comment}
                   roommateBoardLike={post.roommateBoardLike}
                   matched={post.matched}
+                  location="룸메이트_리스트"
                 />
               ))
             : !isLoading && <EmptyMessage>게시글이 없습니다.</EmptyMessage>}

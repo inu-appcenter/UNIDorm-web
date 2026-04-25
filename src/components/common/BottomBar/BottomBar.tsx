@@ -20,6 +20,7 @@ import { getAllRoommateChatUnreadCount } from "@/apis/chat";
 import { getMobilePlatform } from "@/utils/getMobilePlatform";
 import TooltipMessage from "@/components/common/TooltipMessage";
 import { useFeatureFlag } from "@/hooks/useFeatureFlags";
+import { mixpanelTrack } from "@/utils/mixpanel";
 
 const ROOMMATE_MATCHING_FEATURE_FLAG_KEY = "ROOMMATE_MATCHING";
 const GROUP_PURCHASE_FEATURE_FLAG_KEY = "GROUP_PURCHASE";
@@ -124,7 +125,10 @@ export default function BottomBar() {
         clickedImg={homeClicked}
         buttonName="홈"
         isActive={pathname === "/home" || pathname === "/"}
-        onClick={() => navigate("/home")}
+        onClick={() => {
+          mixpanelTrack.featureClicked("홈", "BottomBar");
+          navigate("/home");
+        }}
       />
       <Button
         defaultImg={roommate}
@@ -132,6 +136,7 @@ export default function BottomBar() {
         buttonName="룸메이트"
         isActive={pathname === "/roommate" || pathname === "/roommate/my"}
         onClick={async () => {
+          mixpanelTrack.featureClicked("룸메이트", "BottomBar");
           if (!isLoggedIn) {
             navigate("/roommate");
             return;
@@ -152,7 +157,10 @@ export default function BottomBar() {
           clickedImg={buyClicked}
           buttonName="공동구매"
           isActive={pathname === "/groupPurchase"}
-          onClick={() => navigate("/groupPurchase")}
+          onClick={() => {
+            mixpanelTrack.featureClicked("공동구매", "BottomBar");
+            navigate("/groupPurchase");
+          }}
         />
       )}
       <Button
@@ -160,7 +168,10 @@ export default function BottomBar() {
         clickedImg={chatClicked}
         buttonName="채팅"
         isActive={pathname === "/chat"}
-        onClick={() => navigate("/chat")}
+        onClick={() => {
+          mixpanelTrack.featureClicked("채팅", "BottomBar");
+          navigate("/chat");
+        }}
         badgeCount={unreadCount}
       />
       <Button
@@ -168,7 +179,10 @@ export default function BottomBar() {
         clickedImg={mypageClicked}
         buttonName="마이페이지"
         isActive={pathname === "/mypage"}
-        onClick={() => navigate("/mypage")}
+        onClick={() => {
+          mixpanelTrack.featureClicked("마이페이지", "BottomBar");
+          navigate("/mypage");
+        }}
       />
     </StyledBottomBar>
   );
