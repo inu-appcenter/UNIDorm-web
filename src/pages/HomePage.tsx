@@ -63,7 +63,12 @@ export default function HomePage() {
   } = useFreshmanMigrationBanner();
 
   useEffect(() => {
-    if (isFreshman) {
+    const hasSeenMigrationAlert = sessionStorage.getItem(
+      "hasSeenFreshmanMigrationAlert",
+    );
+
+    if (isFreshman && !hasSeenMigrationAlert) {
+      sessionStorage.setItem("hasSeenFreshmanMigrationAlert", "true");
       mixpanelTrack.migrationAlertShown("freshman");
       alert(
         "지금 바로 신입생 임시 계정을 학교 포털 계정으로 통합하세요!!!\n곧 통합하지 않은 임시 계정은 삭제될 예정입니다.",
