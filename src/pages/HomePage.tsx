@@ -63,24 +63,28 @@ export default function HomePage() {
   } = useFreshmanMigrationBanner();
 
   useEffect(() => {
-    // 1초 뒤 수행을 위한 타이머 설정
-    const timer = setTimeout(() => {
-      const hasSeenMigrationAlert = sessionStorage.getItem(
-        "hasSeenFreshmanMigrationAlert",
+    const hasSeenMigrationAlert = sessionStorage.getItem(
+      "hasSeenFreshmanMigrationAlert",
+    );
+
+    if (isFreshman && !hasSeenMigrationAlert) {
+      sessionStorage.setItem("hasSeenFreshmanMigrationAlert", "true");
+      mixpanelTrack.migrationAlertShown("freshman");
+
+      alert(
+        "지금 바로 신입생 임시 계정을 학교 포털 계정으로 통합하세요!!!\n곧 통합하지 않은 임시 계정은 삭제될 예정입니다.",
       );
 
-      if (isFreshman && !hasSeenMigrationAlert) {
-        sessionStorage.setItem("hasSeenFreshmanMigrationAlert", "true");
-        mixpanelTrack.migrationAlertShown("freshman");
-        alert(
-          "지금 바로 신입생 임시 계정을 학교 포털 계정으로 통합하세요!!!\n곧 통합하지 않은 임시 계정은 삭제될 예정입니다.",
-        );
-        navigate(PATHS.FRESHMAN_MIGRATION);
-      }
-    }, 1000);
+      // 보이지 않는 가상 링크/버튼 생성 및 클릭 이벤트 발생
+      const ghostLink = document.createElement("a");
+      ghostLink.href = PATHS.FRESHMAN_MIGRATION;
 
-    // 컴포넌트 언마운트 시 타이머 제거
-    return () => clearTimeout(timer);
+      // React Router의 navigate를 직접 호출하는 대신 DOM 이벤트를 시뮬레이션
+      // 브라우저가 사용자 액션의 연장선으로 인식하도록 유도
+      document.body.appendChild(ghostLink);
+      ghostLink.click();
+      document.body.removeChild(ghostLink);
+    }
   }, [isFreshman, navigate]);
 
   const [isTipsLoading, setIsTipsLoading] = useState<boolean>(false);
