@@ -7,13 +7,14 @@ interface TitleLineProps {
   title?: string;
   link?: string;
   externalLink?: string;
+  location?: string;
 }
 
-const TitleLine = ({ title, link, externalLink }: TitleLineProps) => {
+const TitleLine = ({ title, link, externalLink, location }: TitleLineProps) => {
   const navigate = useNavigate();
 
   const handleClickMore = () => {
-    if (title) mixpanelTrack.moreClicked(title);
+    if (title) mixpanelTrack.moreClicked(title, location || "알수없음");
     if (link) {
       navigate(link);
     } else if (externalLink) {
