@@ -22,17 +22,23 @@ export const useFreshmanMigrationBanner = () => {
   const { flag: isFreshmanMigrationEnabled } = useFeatureFlag(
     FRESHMAN_MIGRATION_FEATURE_FLAG_KEY,
   );
-  const { tokenInfo, userInfo } = useUserStore();
+  const { tokenInfo, userInfo, isLoading } = useUserStore();
 
   const isLoggedIn = Boolean(tokenInfo.accessToken);
   const studentNumber = userInfo.studentNumber.trim();
-  const isFreshman = isLoggedIn && !STUDENT_NUMBER_PATTERN.test(studentNumber);
+
+  // isLoading이 false일 때만 정확한 상태를 판별
+  const isFreshman =
+    !isLoading && isLoggedIn && !STUDENT_NUMBER_PATTERN.test(studentNumber);
   const isPortalAccount =
-    isLoggedIn && STUDENT_NUMBER_PATTERN.test(studentNumber);
+    !isLoading && isLoggedIn && STUDENT_NUMBER_PATTERN.test(studentNumber);
+
   const bannerVariant: MigrationBannerVariant = isFreshman
     ? "freshman"
     : "portal";
+
   const shouldShowMigrationBanner =
+    !isLoading &&
     isFreshmanMigrationEnabled &&
     (isFreshman || (isPortalAccount && isFreshmanLoginEnabled));
 

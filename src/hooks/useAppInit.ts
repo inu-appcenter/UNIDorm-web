@@ -7,7 +7,7 @@ import tokenInstance from "../apis/tokenInstance";
 import { PATHS } from "@/constants/paths";
 
 export const useAppInit = () => {
-  const { tokenInfo, setUserInfo } = useUserStore();
+  const { tokenInfo, setUserInfo, setLoading } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
   const navigate = useNavigate();
   const [fcmToken, setFcmToken] = useState("");
@@ -47,11 +47,13 @@ export const useAppInit = () => {
         }
       } catch (error) {
         // 회원 정보 로드 실패
+        setLoading(false);
       }
     };
 
     if (tokenInfo?.accessToken) initializeUser();
-  }, [tokenInfo.accessToken, setUserInfo, navigate]);
+    else setLoading(false);
+  }, [tokenInfo.accessToken, setUserInfo, setLoading, navigate]);
 
   // 온보딩 방문 이력 체크
   useEffect(() => {
