@@ -55,6 +55,7 @@ export interface RoomMateCardProps {
   roommateBoardLike: number;
   matched: boolean;
   percentage?: number;
+  location?: string;
 }
 
 // --- 알림 필터 관련 ---

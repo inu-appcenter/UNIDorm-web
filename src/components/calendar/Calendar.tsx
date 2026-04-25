@@ -22,6 +22,7 @@ import { mixpanelTrack } from "@/utils/mixpanel";
 
 interface CalendarProps {
   mode?: "month" | "week";
+  location?: string;
 }
 
 // --- 모던한 디자인을 위한 SVG 아이콘 ---
@@ -62,7 +63,7 @@ const ChevronRight = () => (
 );
 // --- ------------------------- ---
 
-export default function Calendar({ mode = "month" }: CalendarProps) {
+export default function Calendar({ mode = "month", location }: CalendarProps) {
   const today = new Date();
   const [currentDate, setCurrentDate] = useState(new Date());
 
@@ -235,6 +236,7 @@ export default function Calendar({ mode = "month" }: CalendarProps) {
         mixpanelTrack.calendarMonthChanged(
           nextDate.getFullYear(),
           nextDate.getMonth() + 1,
+          location || "알수없음",
         );
         return nextDate;
       });
@@ -250,6 +252,7 @@ export default function Calendar({ mode = "month" }: CalendarProps) {
         mixpanelTrack.calendarMonthChanged(
           prevDate.getFullYear(),
           prevDate.getMonth() + 1,
+          location || "알수없음",
         );
         return prevDate;
       });

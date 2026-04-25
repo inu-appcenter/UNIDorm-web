@@ -4,6 +4,7 @@ import styled from "styled-components";
 import Divider from "@/components/common/Divider";
 import Skeleton from "@/components/common/Skeleton";
 import SortDropBox from "@/components/common/SortDropBox";
+import { mixpanelTrack } from "@/utils/mixpanel";
 
 interface VideoData {
   id: string;
@@ -103,13 +104,24 @@ const YoutubeListWidget = () => {
     return `${num.toLocaleString()}회`;
   };
 
-  const handleVideoClick = (videoId: string) => {
-    window.open(`https://www.youtube.com/watch?v=${videoId}`, "_blank");
+  const handleVideoClick = (videoId: string, title: string) => {
+    const url = `https://www.youtube.com/watch?v=${videoId}`;
+    mixpanelTrack.externalLinkClicked(title, url, "홈_유튜브위젯");
+    window.open(url, "_blank");
+  };
+
+  const handleSortChange = (newSort: string) => {
+    setSort(newSort);
+    mixpanelTrack.categoryFiltered(
+      "유튜브",
+      newSort === "date" ? "최신순" : "조회수순",
+      "홈",
+    );
   };
 
   return (
     <>
-      <SortDropBox sort={sort} setSort={setSort} />
+      <SortDropBox sort={sort} setSort={handleSortChange} />
 
       {/* 로딩 혹은 에러 발생 시 스켈레톤 유지 */}
       {isLoading || isError ? (
@@ -141,7 +153,7 @@ const YoutubeListWidget = () => {
         <ListContainer>
           {videos.map((video, i) => (
             <div key={video.id}>
-              <VideoItem onClick={() => handleVideoClick(video.id)}>
+              <VideoItem onClick={() => handleVideoClick(video.id, video.title)}>
                 <Thumbnail src={video.thumbnailUrl} alt={video.title} />
                 <InfoWrapper>
                   <VideoTitle
