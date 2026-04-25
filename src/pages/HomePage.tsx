@@ -63,19 +63,24 @@ export default function HomePage() {
   } = useFreshmanMigrationBanner();
 
   useEffect(() => {
-    const hasSeenMigrationAlert = sessionStorage.getItem(
-      "hasSeenFreshmanMigrationAlert",
-    );
-
-    if (isFreshman && !hasSeenMigrationAlert) {
-      sessionStorage.setItem("hasSeenFreshmanMigrationAlert", "true");
-      mixpanelTrack.migrationAlertShown("freshman");
-      alert(
-        "지금 바로 신입생 임시 계정을 학교 포털 계정으로 통합하세요!!!\n곧 통합하지 않은 임시 계정은 삭제될 예정입니다.",
+    // 1초 뒤 수행을 위한 타이머 설정
+    const timer = setTimeout(() => {
+      const hasSeenMigrationAlert = sessionStorage.getItem(
+        "hasSeenFreshmanMigrationAlert",
       );
-      navigate(PATHS.FRESHMAN_MIGRATION);
-      return;
-    }
+
+      if (isFreshman && !hasSeenMigrationAlert) {
+        sessionStorage.setItem("hasSeenFreshmanMigrationAlert", "true");
+        mixpanelTrack.migrationAlertShown("freshman");
+        alert(
+          "지금 바로 신입생 임시 계정을 학교 포털 계정으로 통합하세요!!!\n곧 통합하지 않은 임시 계정은 삭제될 예정입니다.",
+        );
+        navigate(PATHS.FRESHMAN_MIGRATION);
+      }
+    }, 1000);
+
+    // 컴포넌트 언마운트 시 타이머 제거
+    return () => clearTimeout(timer);
   }, [isFreshman, navigate]);
 
   const [isTipsLoading, setIsTipsLoading] = useState<boolean>(false);
