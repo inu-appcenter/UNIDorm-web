@@ -267,6 +267,7 @@ export default function RoomMatePage() {
         <TitleContentArea
           title={"2026년 1학기 룸메이트 모집"}
           description={"룸메이트를 구하고 있는 다양한 UNI들을 찾아보세요!"}
+          location="룸메이트_홈"
         >
           <>
             <FilterArea>
@@ -295,6 +296,7 @@ export default function RoomMatePage() {
                   description={post.comment}
                   roommateBoardLike={post.roommateBoardLike}
                   matched={post.matched}
+                  location="룸메이트_홈"
                 />
               ))
             ) : (
@@ -314,6 +316,7 @@ export default function RoomMatePage() {
         <TitleContentArea
           title={"맞춤 룸메이트"}
           description={"설정한 알림 필터 조건에 맞는 룸메이트를 보여드려요."}
+          location="룸메이트_맞춤"
           rightAction={
             isLoggedIn && (
               <RoundSquareButton
@@ -362,6 +365,7 @@ export default function RoomMatePage() {
                         description={post.comment}
                         roommateBoardLike={post.roommateBoardLike}
                         matched={post.matched}
+                        location="룸메이트_맞춤"
                       />
                     ))
                   ) : !isFilterSet ? (

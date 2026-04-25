@@ -64,15 +64,12 @@ export const mixpanelTrack = {
     trackEvent("로그인 완료", { method });
   },
 
-  // --- 2. 네비게이션 및 공통 진입 (Navigation) ---
-  navTabClicked: (tabName: string) => {
-    trackEvent("하단 탭 클릭", { tab_name: tabName });
-  },
+  // --- 2. 진입점 (Navigation) ---
   featureClicked: (featureName: string, location: string) => {
     trackEvent("기능 클릭", { feature_name: featureName, location });
   },
-  moreClicked: (sectionName: string) => {
-    trackEvent("더보기 클릭", { section_name: sectionName });
+  moreClicked: (sectionName: string, location: string) => {
+    trackEvent("더보기 클릭", { section_name: sectionName, location });
   },
   searchPerformed: (searchTerm: string, location: string) => {
     trackEvent("검색 수행", { search_term: searchTerm, location });
@@ -88,8 +85,8 @@ export const mixpanelTrack = {
       location: location,
     });
   },
-  calendarMonthChanged: (year: number, month: number) => {
-    trackEvent("일정 월 변경", { year, month });
+  calendarMonthChanged: (year: number, month: number, location: string) => {
+    trackEvent("일정 월 변경", { year, month, location });
   },
   itemClicked: (
     itemType: "공지" | "꿀팁" | "룸메이트" | "공동구매" | "민원",
@@ -125,8 +122,8 @@ export const mixpanelTrack = {
   },
 
   // --- 4. 사용자 액션 (Actions) ---
-  postCreated: (boardType: string) => {
-    trackEvent("게시글 작성 완료", { board_type: boardType });
+  postCreated: (boardType: string, location: string) => {
+    trackEvent("게시글 작성 완료", { board_type: boardType, location });
   },
   complainStarted: () => {
     trackEvent("민원 작성 시작");
@@ -137,11 +134,19 @@ export const mixpanelTrack = {
       has_image: hasImage,
     });
   },
-  commentCreated: (boardType: string) => {
-    trackEvent("댓글 작성 완료", { board_type: boardType });
+  commentCreated: (boardType: string, location: string) => {
+    trackEvent("댓글 작성 완료", { board_type: boardType, location });
   },
-  likeClicked: (itemType: string, itemId: number | string) => {
-    trackEvent("좋아요 클릭", { item_type: itemType, item_id: itemId });
+  likeClicked: (
+    itemType: string,
+    itemId: number | string,
+    location: string,
+  ) => {
+    trackEvent("좋아요 클릭", {
+      item_type: itemType,
+      item_id: itemId,
+      location,
+    });
   },
 
   // --- 5. 룸메이트 매칭 (Roommate Matching) ---
@@ -157,14 +162,18 @@ export const mixpanelTrack = {
   notificationClicked: (notiType: string, title: string) => {
     trackEvent("알림 클릭", { notification_type: notiType, title });
   },
-  appInstallImpression: () => {
-    trackEvent("앱 설치 유도 노출");
+  appInstallImpression: (location: string) => {
+    trackEvent("앱 설치 유도 노출", { location });
   },
-  appInstallClicked: (platform: string) => {
-    trackEvent("앱 설치 클릭", { platform });
+  appInstallClicked: (platform: string, location: string) => {
+    trackEvent("앱 설치 클릭", { platform, location });
   },
-  externalLinkClicked: (linkName: string, url: string) => {
-    trackEvent("외부 링크 이동", { link_name: linkName, url: url });
+  externalLinkClicked: (linkName: string, url: string, location: string) => {
+    trackEvent("외부 링크 이동", {
+      link_name: linkName,
+      url: url,
+      location: location,
+    });
   },
 
   // --- 7. 계정 관리 (Account) ---
@@ -173,6 +182,11 @@ export const mixpanelTrack = {
   },
   logout: () => {
     trackEvent("로그아웃");
+  },
+
+  // --- 8. 계정 통합 (Migration) ---
+  migrationAlertShown: (variant: "freshman" | "portal") => {
+    trackEvent("계정 통합 안내 노출", { variant });
   },
 };
 

@@ -18,6 +18,7 @@ const RoomMateCard = ({
   roommateBoardLike,
   percentage,
   matched,
+  location,
 }: RoomMateCardProps) => {
   const navigate = useNavigate();
 
@@ -25,7 +26,12 @@ const RoomMateCard = ({
     <CardWrapper
       onClick={() => {
         if (!matched) {
-          mixpanelTrack.itemClicked("룸메이트", boardId, title, "룸메이트목록");
+          mixpanelTrack.itemClicked(
+            "룸메이트",
+            boardId,
+            title,
+            location || "룸메이트목록",
+          );
           navigate(`/roommate/list/${boardId}`);
         }
       }}

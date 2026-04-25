@@ -97,8 +97,9 @@ export default function TipListPage() {
       {isAdmin && (
         <WriteButton
           onClick={() => {
-            mixpanelTrack.postCreated("꿀팁_시작");
+            mixpanelTrack.postCreated("꿀팁_시작", "꿀팁리스트");
             navigate("/tips/write");
+
           }}
         >
           ✏️ 글쓰기

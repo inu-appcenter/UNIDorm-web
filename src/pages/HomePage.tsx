@@ -39,6 +39,7 @@ import MigrationBanner from "@/components/common/MigrationBanner.tsx";
 import { useFreshmanMigrationBanner } from "@/hooks/useFreshmanMigrationBanner";
 import { motion, AnimatePresence } from "framer-motion";
 import { mixpanelTrack } from "@/utils/mixpanel"; // 추가
+import { PATHS } from "@/constants/paths";
 
 export default function HomePage() {
   useSetAIChat({ isVisible: true, shouldAnimate: true });
@@ -55,21 +56,27 @@ export default function HomePage() {
 
   const navigate = useNavigate();
   const {
+    isFreshman,
     bannerVariant,
     handleMigrationBannerClick,
     shouldShowMigrationBanner,
   } = useFreshmanMigrationBanner();
-  /*
-    if (isFreshman) {
+
+  useEffect(() => {
+    const hasSeenMigrationAlert = sessionStorage.getItem(
+      "hasSeenFreshmanMigrationAlert",
+    );
+
+    if (isFreshman && !hasSeenMigrationAlert) {
+      sessionStorage.setItem("hasSeenFreshmanMigrationAlert", "true");
+      mixpanelTrack.migrationAlertShown("freshman");
+      alert(
+        "지금 바로 신입생 임시 계정을 학교 포털 계정으로 통합하세요!!!\n곧 통합하지 않은 임시 계정은 삭제될 예정입니다.",
+      );
       navigate(PATHS.FRESHMAN_MIGRATION);
       return;
     }
-
-    alert(
-      "신입생 로그인 페이지에서 이전에 만드셨던 임시 계정으로 로그인한 뒤, 홈 화면 배너에서 포털 계정 통합을 진행해 주세요.\n\n신입생 임시 계정 로그인 페이지로 이동합니다.",
-    );
-    navigate(PATHS.FRESHMAN_LOGIN);
-  */
+  }, [isFreshman, navigate]);
 
   const [isTipsLoading, setIsTipsLoading] = useState<boolean>(false);
   const [isAnnounceLoading, setIsAnnounceLoading] = useState<boolean>(false);
@@ -295,7 +302,7 @@ export default function HomePage() {
         animate="animate"
       >
         <motion.div variants={fadeInUp}>
-          <TitleContentArea title={""}>
+          <TitleContentArea title={""} location="홈">
             <ServiceWrapper>
               <ServiceBox
                 title={"생활원 민원"}
@@ -328,6 +335,7 @@ export default function HomePage() {
               title={"2026년 1학기 룸메이트 모집"}
               description={"룸메이트를 구하고 있는 다양한 UNI들을 찾아보세요!"}
               link={"/roommate"}
+              location="홈"
             >
               <>
                 {isRoommateLoading ? (
@@ -349,6 +357,7 @@ export default function HomePage() {
                         description={post.comment}
                         roommateBoardLike={post.roommateBoardLike}
                         matched={post.matched}
+                        location="홈_룸메이트목록"
                       />
                     ))
                 ) : (
@@ -366,6 +375,7 @@ export default function HomePage() {
               "생활원과 서포터즈에서 알려드리는 공지사항을 확인해보세요."
             }
             link={"/announcements"}
+            location="홈"
           >
             {isAnnounceLoading ? (
               <LoadingSpinner message={"공지사항을 불러오고 있어요!"} />
@@ -403,6 +413,7 @@ export default function HomePage() {
           <TitleContentArea
             title={"생활원 YouTube"}
             externalLink={`https://www.youtube.com/channel/${CHANNEL_ID}`}
+            location="홈"
           >
             <YoutubeWidget />
           </TitleContentArea>
@@ -410,7 +421,11 @@ export default function HomePage() {
 
         <GridContainer>
           <motion.div variants={fadeInUp}>
-            <TitleContentArea title="오늘의 Best 꿀팁" link={"/tips"}>
+            <TitleContentArea
+              title="오늘의 Best 꿀팁"
+              link={"/tips"}
+              location="홈"
+            >
               {isTipsLoading ? (
                 <LoadingSpinner message={"꿀팁을 불러오고 있어요!"} />
               ) : dailyTips.length > 0 ? (
@@ -430,15 +445,20 @@ export default function HomePage() {
           <motion.div variants={fadeInUp}>
             <TitleContentArea
               title={"생활원 일정"}
-              children={<Calendar mode={"week"} />}
+              children={<Calendar mode={"week"} location="홈" />}
               link={"/calendar"}
+              location="홈"
             />
           </motion.div>
         </GridContainer>
 
         {isOpenGroupPurchase && (
           <motion.div variants={fadeInUp}>
-            <TitleContentArea title={"임박한 공동구매"} link={"/groupPurchase"}>
+            <TitleContentArea
+              title={"임박한 공동구매"}
+              link={"/groupPurchase"}
+              location="홈"
+            >
               {isGroupOrdersLoading ? (
                 <LoadingSpinner message={"공동구매를 불러오고 있어요!"} />
               ) : groupOrders.length > 0 ? (
@@ -461,6 +481,7 @@ export default function HomePage() {
           mixpanelTrack.externalLinkClicked(
             "앱센터 홈페이지",
             "https://home.inuappcenter.kr",
+            "홈_하단",
           );
           window.open("https://home.inuappcenter.kr", "_blank");
         }}
@@ -471,7 +492,7 @@ export default function HomePage() {
         id={"이벤트 당첨"}
         isOpen={isAppInstallOpen}
         setIsOpen={(open) => {
-          if (open) mixpanelTrack.appInstallImpression();
+          if (open) mixpanelTrack.appInstallImpression("홈");
           setIsAppInstallOpen(open);
         }}
         title={"유니돔 앱을 사용해보세요!"}
@@ -480,13 +501,13 @@ export default function HomePage() {
         closeButtonText={"스토어에서 설치하기"}
         onCloseClick={() => {
           if (platform === "ios_browser") {
-            mixpanelTrack.appInstallClicked("iOS");
+            mixpanelTrack.appInstallClicked("iOS", "홈");
             window.open(
               "https://apps.apple.com/kr/app/%EC%9C%A0%EB%8B%88%EB%8F%94/id6751404748",
               "_blank",
             );
           } else if (platform === "android_browser") {
-            mixpanelTrack.appInstallClicked("Android");
+            mixpanelTrack.appInstallClicked("Android", "홈");
             window.open(
               "https://play.google.com/store/apps/details?id=com.hjunieee.inudormitory",
               "_blank",

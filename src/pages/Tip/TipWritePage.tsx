@@ -80,7 +80,7 @@ export default function TipWritePage() {
         await tokenInstance.post("/tips", formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
-        mixpanelTrack.postCreated("꿀팁");
+        mixpanelTrack.postCreated("꿀팁", "꿀팁작성페이지");
         alert("팁이 등록되었습니다!");
       }
       navigate(-1);
