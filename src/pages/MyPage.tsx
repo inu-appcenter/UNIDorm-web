@@ -13,6 +13,7 @@ import { useSetHeader } from "@/hooks/useSetHeader";
 import useUserStore from "../stores/useUserStore.ts";
 import { createMyPageMenuGroups } from "@/stores/menuGroupsFactory";
 import { MyRoommateInfoResponse } from "@/types/roommates";
+import { mixpanelTrack } from "@/utils/mixpanel";
 
 const overlayText = "로그인 후 사용 가능해요.";
 
@@ -26,6 +27,11 @@ const MyPage = () => {
 
   const menuGroups = createMyPageMenuGroups(isLoggedIn, navigate);
 
+  //마이페이지 진입 (믹스패널)
+  useEffect(() => {
+    mixpanelTrack.myPageViewed(isLoggedIn);
+  }, [isLoggedIn]);
+
   useEffect(() => {
     const fetchRoommateInfo = async () => {
       if (!isLoggedIn) return;
@@ -33,9 +39,11 @@ const MyPage = () => {
       try {
         const res = await getMyRoommateInfo();
         setRoommateInfo(res.data);
+        mixpanelTrack.myRoommateInfoLoaded(); // 룸메이트 정보 조회
       } catch (err: any) {
         if (err.response?.status === 404) {
           setNotFound(true);
+          mixpanelTrack.myRoommateInfoNotFound(); // 룸메이트 정보 없을 때
         }
       }
     };
@@ -48,8 +56,16 @@ const MyPage = () => {
   useSetHeader({
     title: "마이페이지",
     showAlarm: true,
-    settingOnClick: () => navigate("/settings"),
+    settingOnClick: () => {
+      mixpanelTrack.myPageSettingClicked(); //마이페이지 설정
+      navigate("/settings");
+    },
   });
+
+  const handleLoginClick = () => {
+    mixpanelTrack.myPageLoginClicked();
+    navigate(PATHS.LOGIN); //원래 있던 이동 여기로
+  }; //로그인 버튼 클릭
 
   const fadeInUp = {
     initial: { opacity: 0, y: 15 },
@@ -77,7 +93,7 @@ const MyPage = () => {
           <MyInfoArea />
         ) : (
           <LoginButton
-            onClick={() => navigate(PATHS.LOGIN)}
+            onClick={handleLoginClick}
             as={motion.button}
             whileTap={{ scale: 0.98 }}
           >
@@ -123,7 +139,10 @@ const MyPage = () => {
           variants={fadeInUp}
         >
           <ProtectedContent disabled={isProtected}>
-            <MenuGroup title={menuGroups[1].title} menus={menuGroups[1].menus} />
+            <MenuGroup
+              title={menuGroups[1].title}
+              menus={menuGroups[1].menus}
+            />
           </ProtectedContent>
           {isProtected && (
             <OverlayMessage
@@ -211,7 +230,9 @@ const ProtectedContent = styled.div<{ disabled: boolean }>`
   width: 100%;
   filter: ${(props) => (props.disabled ? "blur(1px)" : "none")};
   opacity: ${(props) => (props.disabled ? 0.64 : 1)};
-  transition: filter 0.2s ease, opacity 0.2s ease;
+  transition:
+    filter 0.2s ease,
+    opacity 0.2s ease;
 `;
 
 const OverlayMessage = styled.div`

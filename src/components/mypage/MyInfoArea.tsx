@@ -6,6 +6,7 @@ import profile from "../../assets/profileimg.png";
 
 import { useNavigate } from "react-router-dom";
 import { PATHS } from "@/constants/paths";
+import { mixpanelTrack } from "@/utils/mixpanel";
 
 const MyInfoArea = () => {
   const navigate = useNavigate();
@@ -20,9 +21,14 @@ const MyInfoArea = () => {
     getUserProfileImg();
   }, [userInfo]);
 
+  const handleMyInfoClick = () => {
+    mixpanelTrack.featureClicked("내 정보 수정 진입", "마이페이지 프로필");
+    navigate(PATHS.MYINFO_EDIT);
+  };
+
   return (
     /* 영역 전체 클릭 이벤트 핸들러 */
-    <MyInfoAreaWrapper onClick={() => navigate(PATHS.MYINFO_EDIT)}>
+    <MyInfoAreaWrapper onClick={handleMyInfoClick}>
       <LeftArea>
         <div className="profile">
           <img

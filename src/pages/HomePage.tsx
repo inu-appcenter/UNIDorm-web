@@ -39,7 +39,6 @@ import MigrationBanner from "@/components/common/MigrationBanner.tsx";
 import { useFreshmanMigrationBanner } from "@/hooks/useFreshmanMigrationBanner";
 import { motion, AnimatePresence } from "framer-motion";
 import { mixpanelTrack } from "@/utils/mixpanel"; // 추가
-import { PATHS } from "@/constants/paths";
 
 export default function HomePage() {
   useSetAIChat({ isVisible: true, shouldAnimate: true });
@@ -71,9 +70,9 @@ export default function HomePage() {
       sessionStorage.setItem("hasSeenFreshmanMigrationAlert", "true");
       mixpanelTrack.migrationAlertShown("freshman");
       alert(
-        "지금 바로 신입생 임시 계정을 학교 포털 계정으로 통합하세요!!!\n곧 통합하지 않은 임시 계정은 삭제될 예정입니다.",
+        "지금 바로 신입생 임시 계정을 학교 포털 계정으로 통합하세요!!!\n곧 통합하지 않은 임시 계정은 삭제될 예정입니다.\n홈 중앙의 [포털 계정 통합] 배너를 클릭하세요.",
       );
-      navigate(PATHS.FRESHMAN_MIGRATION);
+      // navigate(PATHS.FRESHMAN_MIGRATION); //강제이동은 안하기..
       return;
     }
   }, [isFreshman, navigate]);
