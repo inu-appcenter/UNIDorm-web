@@ -4,6 +4,7 @@ import { MyRoommateInfoResponse } from "@/types/roommates";
 import default_profile_img from "../../assets/profileimg.png";
 import { MdKeyboardArrowRight } from "react-icons/md";
 import { PATHS } from "@/constants/paths";
+import { mixpanelTrack } from "@/utils/mixpanel";
 
 interface RoomMateInfoAreaProps {
   roommateInfo: MyRoommateInfoResponse | null;
@@ -27,12 +28,17 @@ const RoomMateInfoArea = ({
           </TextGroup>
           <ButtonGroup>
             <StyledButton
-              onClick={() =>
+              onClick={() => {
+                mixpanelTrack.featureClicked(
+                  "맞춤 룸메이트 찾기",
+                  "마이페이지 룸메이트",
+                );
+
                 navigate({
                   pathname: PATHS.ROOMMATE.ROOT,
                   search: "?tab=맞춤+룸메이트",
-                })
-              }
+                });
+              }}
             >
               맞춤 룸메이트 찾기
             </StyledButton>
@@ -47,7 +53,16 @@ const RoomMateInfoArea = ({
             <SubText>함께 하기로한 룸메이트가 있다면?</SubText>
           </TextGroup>
           <ButtonGroup>
-            <StyledButton onClick={() => navigate("/roommate/add")}>
+            <StyledButton
+              onClick={() => {
+                mixpanelTrack.featureClicked(
+                  "룸메이트 등록",
+                  "마이페이지 룸메이트",
+                );
+
+                navigate("/roommate/add");
+              }}
+            >
               학번으로 룸메이트 등록
             </StyledButton>
           </ButtonGroup>
@@ -64,6 +79,11 @@ const RoomMateInfoArea = ({
     <RoomMateInfoAreaWrapper
       onClick={() => {
         if (location.pathname === "/mypage") {
+          mixpanelTrack.featureClicked(
+            "내 룸메이트 상세",
+            "마이페이지 룸메이트",
+          );
+
           navigate("/roommate/my");
         }
       }}
