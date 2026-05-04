@@ -188,6 +188,35 @@ export const mixpanelTrack = {
   migrationAlertShown: (variant: "freshman" | "portal") => {
     trackEvent("계정 통합 안내 노출", { variant });
   },
+  //마이페이지
+  myPageViewed: (isLoggedIn: boolean) => {
+    trackPageView("마이페이지", {
+      is_logged_in: isLoggedIn,
+    });
+  },
+
+  myPageLoginClicked: () => {
+    trackEvent("마이페이지 로그인 버튼 클릭", {
+      location: "마이페이지",
+    });
+  },
+
+  myPageSettingClicked: () => {
+    trackEvent("마이페이지 설정 버튼 클릭", {
+      location: "마이페이지",
+    });
+  },
+  myRoommateInfoLoaded: () => {
+    trackEvent("내 룸메이트 조회 성공", {
+      location: "마이페이지",
+    });
+  },
+
+  myRoommateInfoNotFound: () => {
+    trackEvent("내 룸메이트 없음", {
+      location: "마이페이지",
+    });
+  },
 };
 
 /**

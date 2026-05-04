@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import TitleLine from "./TitleLine.tsx";
 import Switch from "../../components/common/Switch.tsx";
+import { mixpanelTrack } from "@/utils/mixpanel";
 
 interface MenuItem {
   label: string;
@@ -19,6 +20,11 @@ interface MenuGroupProps {
 
 const MenuGroup = ({ title, menus, hasToggle, onToggle }: MenuGroupProps) => {
   const handleToggle = (menu: MenuItem) => {
+    // mixpanel 추가
+    mixpanelTrack.featureClicked(
+      menu.label,
+      title ? `마이페이지 - ${title}` : "마이페이지",
+    );
     // 토글 상태 변경 실행
     if (hasToggle && onToggle && menu.type && menu.checked !== undefined) {
       onToggle(menu.type, !menu.checked);
