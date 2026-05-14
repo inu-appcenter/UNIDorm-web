@@ -66,7 +66,7 @@ export default function HomePage() {
       "hasSeenFreshmanMigrationAlert",
     );
 
-    if (isFreshman && !hasSeenMigrationAlert) {
+    if (shouldShowMigrationBanner && !hasSeenMigrationAlert) {
       sessionStorage.setItem("hasSeenFreshmanMigrationAlert", "true");
       mixpanelTrack.migrationAlertShown("freshman");
       alert(
