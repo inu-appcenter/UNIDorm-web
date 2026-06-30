@@ -13,7 +13,6 @@ import { PATHS } from "@/constants/paths";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import { useFeatureFlag } from "@/hooks/useFeatureFlags";
 import useUserStore from "@/stores/useUserStore";
-import { mixpanelTrack } from "@/utils/mixpanel";
 import {
   AuthButtonWrapper,
   AuthDescription,
