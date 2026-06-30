@@ -119,6 +119,7 @@ const AIChatFloatingButton = () => {
                   title="AI Chat"
                   width="100%"
                   height="100%"
+                  allow="clipboard-write"
                 />
               </IframeContainer>
             </ModalContainer>
