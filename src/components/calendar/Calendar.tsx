@@ -16,24 +16,23 @@ import {
   subMonths,
 } from "date-fns";
 import { useEffect, useMemo, useState } from "react";
-import { getCalendarByMonth } from "@/apis/calendar";
+import { getCalendarByMonth, getCalendarDetail } from "@/apis/calendar";
 import { CalendarItem } from "@/types/calendar";
 import { mixpanelTrack } from "@/utils/mixpanel";
+import CalendarEventBottomSheet from "@/components/modal/CalendarEventBottomsheet";
 
 interface CalendarProps {
   mode?: "month" | "week";
   location?: string;
 }
 
-// --- 모던한 디자인을 위한 SVG 아이콘 ---
+const CALENDAR_COLORS = ["#FF6A62", "#E5F1FF", "#555555", "#FFC53D", "#5AC8FA"];
+
+const getCalendarColor = (id: number) =>
+  CALENDAR_COLORS[(id - 1) % CALENDAR_COLORS.length];
+
 const ChevronLeft = () => (
-  <svg
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
     <path
       d="M15 6L9 12L15 18"
       stroke="#333333"
@@ -45,13 +44,7 @@ const ChevronLeft = () => (
 );
 
 const ChevronRight = () => (
-  <svg
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
     <path
       d="M9 18L15 12L9 6"
       stroke="#333333"
@@ -61,11 +54,15 @@ const ChevronRight = () => (
     />
   </svg>
 );
-// --- ------------------------- ---
 
 export default function Calendar({ mode = "month", location }: CalendarProps) {
   const today = new Date();
+
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [events, setEvents] = useState<CalendarItem[]>([]);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedEvents, setSelectedEvents] = useState<CalendarItem[]>([]);
+  const [isCalendarSheetOpen, setIsCalendarSheetOpen] = useState(false);
 
   const currentMonth = currentDate.getMonth();
 
@@ -82,6 +79,7 @@ export default function Calendar({ mode = "month", location }: CalendarProps) {
       const startDate = startOfWeek(monthStart, { weekStartsOn: 0 });
       const endDate = endOfWeek(monthEnd, { weekStartsOn: 0 });
       const daysCount = differenceInDays(endDate, startDate) + 1;
+
       dates = Array.from({ length: daysCount }, (_, i) =>
         addDays(startDate, i),
       );
@@ -91,40 +89,40 @@ export default function Calendar({ mode = "month", location }: CalendarProps) {
     const weeks = Array.from({ length: totalWeeks }, (_, i) =>
       dates.slice(i * 7, i * 7 + 7),
     );
+
     return { dates, weeks };
   }, [currentDate, mode]);
 
   const [eventsByWeek, setEventsByWeek] = useState<
     {
+      id: number;
       weekIndex: number;
       start: number;
       end: number;
       title: string;
       row: number;
+      color: string;
     }[]
   >([]);
 
   useEffect(() => {
     const fetchEvents = async () => {
       const months = new Set<string>();
+
       dates.forEach((date) => {
-        const y = date.getFullYear();
-        const m = date.getMonth() + 1;
-        months.add(`${y}-${m}`);
+        const year = date.getFullYear();
+        const month = date.getMonth() + 1;
+        months.add(`${year}-${month}`);
       });
 
-      // ---
-      // Map을 사용해 이벤트 ID 기준 중복 제거
-      // ---
-      const eventMap = new Map<string | number, CalendarItem>(); // (id가 number일 수도 있으므로)
+      const eventMap = new Map<number, CalendarItem>();
 
       await Promise.all(
         Array.from(months).map(async (ym) => {
           const [year, month] = ym.split("-").map(Number);
           const res = await getCalendarByMonth(year, month);
 
-          // 데이터를 가져올 때마다 Map에 저장 (id가 없으면 추가)
-          res.data.forEach((item: CalendarItem) => {
+          res.data.forEach((item) => {
             if (!eventMap.has(item.id)) {
               eventMap.set(item.id, item);
             }
@@ -132,15 +130,17 @@ export default function Calendar({ mode = "month", location }: CalendarProps) {
         }),
       );
 
-      // Map의 값들만 배열로 변환하여 중복 없는 이벤트 리스트 생성
-      const events = Array.from(eventMap.values());
+      const fetchedEvents = Array.from(eventMap.values());
+      setEvents(fetchedEvents);
 
       const parsedEvents: {
+        id: number;
         weekIndex: number;
         start: number;
         end: number;
         title: string;
         row: number;
+        color: string;
       }[] = [];
 
       weeks.forEach((week, weekIndex) => {
@@ -148,50 +148,60 @@ export default function Calendar({ mode = "month", location }: CalendarProps) {
         const weekEndDate = week[6];
 
         const eventsInWeek: {
+          id: number;
           start: number;
           end: number;
           title: string;
-          originalEvent: CalendarItem;
+          color: string;
         }[] = [];
 
-        events.forEach((event) => {
+        fetchedEvents.forEach((event) => {
           const start = parseISO(event.startDate);
           const end = parseISO(event.endDate);
 
-          if (
+          const isEventInWeek =
             (isBefore(start, addDays(weekEndDate, 1)) ||
               isSameDay(start, weekEndDate)) &&
             (isAfter(end, addDays(weekStartDate, -1)) ||
-              isSameDay(end, weekStartDate))
-          ) {
-            const startIdx = dates.findIndex((d) =>
-              isSameDay(
-                d,
-                isBefore(start, weekStartDate) ? weekStartDate : start,
-              ),
-            );
-            const endIdx = dates.findIndex((d) =>
-              isSameDay(d, isAfter(end, weekEndDate) ? weekEndDate : end),
-            );
+              isSameDay(end, weekStartDate));
 
-            eventsInWeek.push({
-              start: startIdx % 7,
-              end: endIdx % 7,
-              title: event.title,
-              originalEvent: event,
-            });
-          }
+          if (!isEventInWeek) return;
+
+          const visibleStart = isBefore(start, weekStartDate)
+            ? weekStartDate
+            : start;
+
+          const visibleEnd = isAfter(end, weekEndDate) ? weekEndDate : end;
+
+          const startIdx = week.findIndex((date) =>
+            isSameDay(date, visibleStart),
+          );
+
+          const endIdx = week.findIndex((date) => isSameDay(date, visibleEnd));
+
+          if (startIdx === -1 || endIdx === -1) return;
+
+          eventsInWeek.push({
+            id: event.id,
+            start: startIdx,
+            end: endIdx,
+            title: event.title,
+            color: getCalendarColor(event.id),
+          });
         });
 
         const placedEvents: {
+          id: number;
           start: number;
           end: number;
           title: string;
           row: number;
+          color: string;
         }[] = [];
 
         eventsInWeek.forEach((currentEvent) => {
           let row = 0;
+
           while (
             placedEvents.some(
               (placed) =>
@@ -202,42 +212,92 @@ export default function Calendar({ mode = "month", location }: CalendarProps) {
           ) {
             row += 1;
           }
-          placedEvents.push({ ...currentEvent, row });
+
+          placedEvents.push({
+            ...currentEvent,
+            row,
+          });
         });
 
-        placedEvents.forEach((e) =>
+        placedEvents.forEach((event) => {
           parsedEvents.push({
+            id: event.id,
             weekIndex,
-            start: e.start,
-            end: e.end,
-            title: e.title,
-            row: e.row,
-          }),
-        );
+            start: event.start,
+            end: event.end,
+            title: event.title,
+            row: event.row,
+            color: event.color,
+          });
+        });
       });
 
       setEventsByWeek(parsedEvents);
     };
 
     fetchEvents();
-  }, [dates]); // [mode] -> [dates] (dates가 변경될 때마다 fetch)
+  }, [dates, weeks]);
 
   const maxRowsByWeek = weeks.map((_, weekIdx) => {
     const rows = eventsByWeek
-      .filter((e) => e.weekIndex === weekIdx)
-      .map((e) => e.row);
+      .filter((event) => event.weekIndex === weekIdx)
+      .map((event) => event.row);
+
     return rows.length > 0 ? Math.max(...rows) + 1 : 1;
   });
+
+  const handleDateClick = async (date: Date) => {
+    const clickedEvents = events.filter((event) => {
+      const start = parseISO(event.startDate);
+      const end = parseISO(event.endDate);
+
+      return (
+        (isAfter(date, start) || isSameDay(date, start)) &&
+        (isBefore(date, end) || isSameDay(date, end))
+      );
+    });
+
+    setSelectedDate(date);
+    setSelectedEvents(clickedEvents);
+    setIsCalendarSheetOpen(true);
+
+    if (clickedEvents.length === 0) return;
+
+    try {
+      const detailResponses = await Promise.all(
+        clickedEvents.map((event) => getCalendarDetail(event.id)),
+      );
+
+      const detailedEvents = detailResponses.map((res, index) => ({
+        ...clickedEvents[index],
+        ...res.data,
+        description: res.data.description ?? clickedEvents[index].description,
+      }));
+
+      setSelectedEvents(detailedEvents);
+    } catch (error) {
+      console.error("Calendar detail fetch error", error);
+      setSelectedEvents(clickedEvents);
+    }
+  };
+
+  const handleClickEvent = (event: CalendarItem) => {
+    if (event.link) {
+      window.open(event.link, "_blank");
+    }
+  };
 
   const goToNext = () => {
     if (mode === "month") {
       setCurrentDate((prev) => {
         const nextDate = addMonths(prev, 1);
+
         mixpanelTrack.calendarMonthChanged(
           nextDate.getFullYear(),
           nextDate.getMonth() + 1,
           location || "알수없음",
         );
+
         return nextDate;
       });
     } else {
@@ -249,11 +309,13 @@ export default function Calendar({ mode = "month", location }: CalendarProps) {
     if (mode === "month") {
       setCurrentDate((prev) => {
         const prevDate = subMonths(prev, 1);
+
         mixpanelTrack.calendarMonthChanged(
           prevDate.getFullYear(),
           prevDate.getMonth() + 1,
           location || "알수없음",
         );
+
         return prevDate;
       });
     } else {
@@ -262,70 +324,91 @@ export default function Calendar({ mode = "month", location }: CalendarProps) {
   };
 
   return (
-    <CalendarContainer>
-      {mode === "month" && (
-        <CalendarHeader>
-          <ArrowButton onClick={goToPrev}>
-            <ChevronLeft />
-          </ArrowButton>
-          <MonthDisplay>{format(currentDate, "yyyy. MM.")}</MonthDisplay>
-          <ArrowButton onClick={goToNext}>
-            <ChevronRight />
-          </ArrowButton>
-        </CalendarHeader>
-      )}
+    <>
+      <CalendarContainer>
+        {mode === "month" && (
+          <CalendarHeader>
+            <ArrowButton type="button" onClick={goToPrev}>
+              <ChevronLeft />
+            </ArrowButton>
 
-      <Weekdays>
-        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d, i) => (
-          <WeekdayCell key={i} $index={i}>
-            {d}
-          </WeekdayCell>
-        ))}
-      </Weekdays>
+            <MonthDisplay>{format(currentDate, "yyyy. MM.")}</MonthDisplay>
 
-      <CalendarBody>
-        {weeks.map((week, weekIdx) => {
-          const maxRows = maxRowsByWeek[weekIdx];
-          return (
-            <WeekRow key={weekIdx} $maxRows={maxRows}>
-              {week.map((date, idx) => {
-                const isToday = isSameDay(date, today);
-                const isLastRow = weekIdx === weeks.length - 1;
-                const isCurrentMonth = date.getMonth() === currentMonth;
-                return (
-                  <DayCell
-                    key={idx}
-                    $isLastRow={isLastRow}
-                    $isCurrentMonth={mode === "month" ? isCurrentMonth : true}
-                  >
-                    {isToday && <TodayCircle />}
-                    <DateNumber
-                      $isToday={isToday}
+            <ArrowButton type="button" onClick={goToNext}>
+              <ChevronRight />
+            </ArrowButton>
+          </CalendarHeader>
+        )}
+
+        <Weekdays>
+          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day, i) => (
+            <WeekdayCell key={day} $index={i}>
+              {day}
+            </WeekdayCell>
+          ))}
+        </Weekdays>
+
+        <CalendarBody>
+          {weeks.map((week, weekIdx) => {
+            const maxRows = maxRowsByWeek[weekIdx];
+
+            return (
+              <WeekRow key={weekIdx} $maxRows={maxRows}>
+                {week.map((date, idx) => {
+                  const isToday = isSameDay(date, today);
+                  const isLastRow = weekIdx === weeks.length - 1;
+                  const isCurrentMonth = date.getMonth() === currentMonth;
+
+                  return (
+                    <DayCell
+                      key={idx}
+                      type="button"
+                      onClick={() => handleDateClick(date)}
+                      $isLastRow={isLastRow}
                       $isCurrentMonth={mode === "month" ? isCurrentMonth : true}
                     >
-                      {format(date, "d")}
-                    </DateNumber>
-                  </DayCell>
-                );
-              })}
+                      {isToday && <TodayCircle />}
 
-              {eventsByWeek
-                .filter((e) => e.weekIndex === weekIdx)
-                .map((event, i) => (
-                  <EventBar
-                    key={i}
-                    $start={event.start}
-                    $end={event.end}
-                    $row={event.row}
-                  >
-                    {event.title}
-                  </EventBar>
-                ))}
-            </WeekRow>
-          );
-        })}
-      </CalendarBody>
-    </CalendarContainer>
+                      <DateNumber
+                        $isToday={isToday}
+                        $isCurrentMonth={
+                          mode === "month" ? isCurrentMonth : true
+                        }
+                      >
+                        {format(date, "d")}
+                      </DateNumber>
+                    </DayCell>
+                  );
+                })}
+
+                {eventsByWeek
+                  .filter((event) => event.weekIndex === weekIdx)
+                  .map((event, i) => (
+                    <EventBar
+                      key={`${event.id}-${event.weekIndex}-${event.row}-${i}`}
+                      $start={event.start}
+                      $end={event.end}
+                      $row={event.row}
+                      $color={event.color}
+                    >
+                      {event.title}
+                    </EventBar>
+                  ))}
+              </WeekRow>
+            );
+          })}
+        </CalendarBody>
+      </CalendarContainer>
+
+      <CalendarEventBottomSheet
+        isOpen={isCalendarSheetOpen}
+        setIsOpen={setIsCalendarSheetOpen}
+        selectedDate={selectedDate}
+        events={selectedEvents}
+        getCalendarColor={getCalendarColor}
+        onClickEvent={handleClickEvent}
+      />
+    </>
   );
 }
 
@@ -376,7 +459,7 @@ const WeekdayCell = styled.div<{ $index: number }>`
   font-size: 14px;
   font-weight: 500;
   color: ${({ $index }) =>
-    $index === 0 ? "#F97171" : $index === 6 ? "#0A84FF" : "#4C4C4C"};
+    $index === 0 ? "#f97171" : $index === 6 ? "#0a84ff" : "#4c4c4c"};
 `;
 
 const CalendarBody = styled.div`
@@ -389,7 +472,7 @@ const WeekRow = styled.div<{ $maxRows: number }>`
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   position: relative;
-  min-height: ${({ $maxRows }) => 80 + ($maxRows - 1) * 16}px;
+  min-height: ${({ $maxRows }) => 80 + ($maxRows - 1) * 24}px;
   border-top: 1px solid #c3c3c3;
 
   &:first-child {
@@ -397,7 +480,10 @@ const WeekRow = styled.div<{ $maxRows: number }>`
   }
 `;
 
-const DayCell = styled.div<{ $isLastRow?: boolean; $isCurrentMonth?: boolean }>`
+const DayCell = styled.button<{
+  $isLastRow?: boolean;
+  $isCurrentMonth?: boolean;
+}>`
   padding: 6px;
   background-color: ${({ $isCurrentMonth }) =>
     $isCurrentMonth ? "#fff" : "#f9f9f9"};
@@ -407,9 +493,12 @@ const DayCell = styled.div<{ $isLastRow?: boolean; $isCurrentMonth?: boolean }>`
   flex-direction: column;
   align-items: center;
 
+  border: none;
   border-right: 1px solid #c3c3c3;
   border-bottom: ${({ $isLastRow }) =>
     $isLastRow ? "none" : "1px solid #c3c3c3"};
+
+  cursor: pointer;
 
   &:nth-child(7n) {
     border-right: none;
@@ -428,28 +517,47 @@ const TodayCircle = styled.div`
   z-index: 1;
 `;
 
-const DateNumber = styled.div<{ $isToday: boolean; $isCurrentMonth?: boolean }>`
+const DateNumber = styled.div<{
+  $isToday: boolean;
+  $isCurrentMonth?: boolean;
+}>`
   color: ${({ $isToday, $isCurrentMonth }) =>
-    $isToday ? "#F4F4F4" : $isCurrentMonth ? "#000" : "#c3c3c3"};
+    $isToday ? "#f4f4f4" : $isCurrentMonth ? "#000" : "#c3c3c3"};
   position: relative;
   z-index: 2;
 `;
 
-const EventBar = styled.div<{ $start: number; $end: number; $row: number }>`
+const EventBar = styled.div<{
+  $start: number;
+  $end: number;
+  $row: number;
+  $color: string;
+}>`
   position: absolute;
-  top: ${({ $row }) => 35 + $row * 24}px;
-  left: ${({ $start }) => `calc(100% / 7 * ${$start})`};
-  width: ${({ $start, $end }) => `calc(100% / 7 * (${$end - $start + 1}))`};
-  height: 20px;
-  background-color: #ffd60a;
-  font-size: 11px;
-  padding: 2px 6px;
+  top: ${({ $row }) => 35 + $row * 22}px;
+  left: ${({ $start }) => `calc((100% / 7) * ${$start})`};
+  width: ${({ $start, $end }) => `calc((100% / 7) * ${$end - $start + 1})`};
+
+  height: 18px;
+  padding: 0 6px;
   box-sizing: border-box;
+
   border-radius: 4px;
+  background-color: ${({ $color }) => $color};
+
+  display: flex;
+  align-items: center;
+
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  display: flex;
-  align-items: center;
-  color: #636366;
+
+  color: ${({ $color }) =>
+    $color === "#E5F1FF" || $color === "#FFC53D" ? "#333" : "#fff"};
+
+  pointer-events: none;
 `;
