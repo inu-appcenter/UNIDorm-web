@@ -59,10 +59,10 @@ export const trackPageView = (
  * Mixpanel 이벤트명은 직관적인 한글을 사용합니다.
  */
 export const mixpanelTrack = {
-  // --- 1. 인증 및 온보딩 (Auth & Onboarding) ---
-  loginCompleted: (method: string) => {
-    trackEvent("로그인 완료", { method });
-  },
+  // // --- 1. 인증 및 온보딩 (Auth & Onboarding) ---
+  // loginCompleted: (method: string) => {
+  //   trackEvent("로그인 완료", { method });
+  // },
 
   // --- 2. 진입점 (Navigation) ---
   featureClicked: (featureName: string, location: string) => {

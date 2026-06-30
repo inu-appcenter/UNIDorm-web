@@ -7,7 +7,6 @@ export const getAllCalendars = async (): Promise<
   AxiosResponse<CalendarItem[]>
 > => {
   const response = await axiosInstance.get<CalendarItem[]>("/calenders");
-  console.log(response);
   return response;
 };
 
@@ -21,7 +20,15 @@ export const getCalendarByMonth = async (
       params: { year, month },
     },
   );
-  console.log(response);
+  return response;
+};
+
+export const getCalendarDetail = async (
+  calenderId: number,
+): Promise<AxiosResponse<CalendarItem>> => {
+  const response = await axiosInstance.get<CalendarItem>(
+    `/calenders/${calenderId}`,
+  );
   return response;
 };
 
