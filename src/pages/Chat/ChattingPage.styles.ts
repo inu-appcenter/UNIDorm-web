@@ -18,7 +18,7 @@ export const FixedHeaderContainer = styled.div`
   background: transparent;
   /* 크기가 줄어들거나 늘어나지 않도록 고정 */
   flex-shrink: 0;
-  z-index: 10;
+  z-index: 1000;
 `;
 
 export const ChattingWrapper = styled.div`
