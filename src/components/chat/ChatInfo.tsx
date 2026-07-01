@@ -8,6 +8,8 @@ import RoundSquareWhiteButton from "../button/RoundSquareWhiteButton.tsx";
 import { useEffect, useState } from "react";
 import 궁금해하는횃불이 from "../../assets/roommate/궁금해하는횃불이.webp";
 import TooltipMessage from "../common/TooltipMessage.tsx";
+import { createPortal } from "react-dom";
+
 
 // 로컬 스토리지 키 정의
 const TOOLTIP_CLOSED_STORAGE_KEY = "roommate_chat_tooltip_closed_list";
@@ -171,7 +173,7 @@ const ChatInfo = ({
           onClick={() => setShowInfoModal(true)}
         />
       </div>
-      {showInfoModal && (
+      {showInfoModal && createPortal(
         <ModalBackGround>
           <Modal>
             <ModalContentWrapper>
@@ -269,7 +271,8 @@ const ChatInfo = ({
               )}
             </ButtonGroupWrapper>
           </Modal>
-        </ModalBackGround>
+        </ModalBackGround>,
+        document.body
       )}
     </ChatInfoWrapper>
   );
