@@ -1,17 +1,17 @@
-import styled from "styled-components";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import React from "react";
 import ChatInfo from "../../components/chat/ChatInfo.tsx";
 import ChatItemOtherPerson from "../../components/chat/ChatItemOtherPerson.tsx";
 import ChatItemMy from "../../components/chat/ChatItemMy.tsx";
-import send from "../../assets/chat/send.svg";
 import { useRoommateChat } from "./useRoommateChat.ts";
 import useUserStore from "../../stores/useUserStore.ts";
 import { getRoommateChatHistory } from "@/apis/chat";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import { deleteRoommateChatRoom } from "@/apis/roommate";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
+import { Plus, ChevronDown, Info, ArrowRight } from "lucide-react";
+import * as S from "./ChattingPage.styles";
 
 type MessageType = {
   id: number;
@@ -20,6 +20,7 @@ type MessageType = {
   time: string; // 화면 표시용 시간 (예: 오후 2:30)
   createdAt: string; // 날짜 비교용 원본 날짜 문자열 (ISO 등)
   userImageUrl?: string | null; // 프로필 이미지 URL NULL 구분
+  nickname?: string;
 };
 
 export default function ChattingPage() {
@@ -43,6 +44,27 @@ export default function ChattingPage() {
   const roomId = Number(id);
   const userId = userInfo.id;
   const token = tokenInfo.accessToken;
+
+  // 오픈채팅방 공지 확장 여부
+  const [isNoticeExpanded, setIsNoticeExpanded] = useState(true);
+  // 플로팅 입력바의 + 버튼 메뉴 열림 여부
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        menuContainerRef.current &&
+        !menuContainerRef.current.contains(event.target as Node)
+      ) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // 내부 스크롤 이동
   const scrollToBottom = () => {
@@ -121,6 +143,8 @@ export default function ChattingPage() {
         connect();
       } else if (chatType === "groupPurchase") {
         setTypeString("공동구매");
+      } else {
+        setTypeString("개인대화");
       }
     };
     init();
@@ -186,14 +210,25 @@ export default function ChattingPage() {
             alert("채팅방에서 나왔어요.");
             navigate("/chat");
           }
-        } catch (error: any) {
-          alert("채팅방 나가기를 실패했어요." + error);
+        } catch (error: unknown) {
+          alert("채팅방 나가기를 실패했어요." + String(error));
         }
       },
     },
   ];
 
-  useSetHeader({ title: "룸메이트 채팅", menuItems });
+  const headerTitle =
+    partnerName ||
+    (chatType === "roommate"
+      ? "룸메이트 채팅"
+      : chatType === "groupPurchase"
+        ? "공동구매 채팅"
+        : "1대1 채팅");
+
+  useSetHeader({
+    title: headerTitle,
+    menuItems: chatType === "roommate" ? menuItems : null,
+  });
 
   // 날짜 포맷 함수 (YYYY년 M월 D일)
   const formatDateLine = (dateString: string) => {
@@ -218,20 +253,54 @@ export default function ChattingPage() {
   };
 
   return (
-    <ChatPageWrapper>
+    <S.ChatPageWrapper>
+      {/* 배경 그라데이션 SVG */}
+      <S.BackgroundImage />
+
       {/* 상단 고정 영역 (Flex Item) */}
-      <FixedHeaderContainer>
-        <ChatInfo
-          selectedTab={typeString}
-          partnerName={partnerName}
-          roomId={roomId}
-          isChatted={messageList.length > 0}
-          partnerProfileImageUrl={partnerProfileImageUrl}
-        />
-      </FixedHeaderContainer>
+      <S.FixedHeaderContainer>
+        {chatType === "roommate" && (
+          <ChatInfo
+            selectedTab={typeString}
+            partnerName={partnerName}
+            roomId={roomId}
+            isChatted={messageList.length > 0}
+            partnerProfileImageUrl={partnerProfileImageUrl}
+          />
+        )}
+        {chatType === "groupPurchase" && (
+          <S.NoticeContainer>
+            <S.NoticeHeader onClick={() => setIsNoticeExpanded((prev) => !prev)}>
+              <S.NoticeTitleArea>
+                <S.InfoIconWrapper>
+                  <Info size={20} color="#0958d9" />
+                </S.InfoIconWrapper>
+                <S.NoticeTitle>방 설명 / 활용 예시</S.NoticeTitle>
+              </S.NoticeTitleArea>
+              <S.ChevronWrapper $expanded={isNoticeExpanded}>
+                <ChevronDown size={20} color="#8b8b8b" />
+              </S.ChevronWrapper>
+            </S.NoticeHeader>
+
+            {isNoticeExpanded && (
+              <S.NoticeBody>
+                <S.NoticeParagraph>
+                  1긱 생활 이슈, 공동구매, 배달 메이트를 자유롭게 대화
+                </S.NoticeParagraph>
+                <S.NoticeParagraph>
+                  예시: 같이 배달 시키기 / 생필품 공동구매 / 분실물 문의
+                </S.NoticeParagraph>
+                <S.NoticeParagraph style={{ color: "#8b8b8b" }}>
+                  확인후 공지를 접고 일반 대화만 볼 수 있음
+                </S.NoticeParagraph>
+              </S.NoticeBody>
+            )}
+          </S.NoticeContainer>
+        )}
+      </S.FixedHeaderContainer>
 
       {/* 내부 스크롤 채팅 영역 (Flex Item, grow) */}
-      <ChattingWrapper ref={scrollRef}>
+      <S.ChattingWrapper ref={scrollRef}>
         {isHistoryLoading ? (
           <LoadingSpinner message="채팅 내역을 가져오고 있습니다..." />
         ) : (
@@ -251,7 +320,7 @@ export default function ChattingPage() {
               return (
                 <React.Fragment key={msg.id}>
                   {showDateLine && (
-                    <DateDivider>{formatDateLine(msg.createdAt)}</DateDivider>
+                    <S.DateDivider>{formatDateLine(msg.createdAt)}</S.DateDivider>
                   )}
                   {msg.sender === "me" ? (
                     <ChatItemMy content={msg.content} time={msg.time} />
@@ -260,6 +329,7 @@ export default function ChattingPage() {
                       content={msg.content}
                       time={msg.time}
                       userImageUrl={msg.userImageUrl}
+                      senderName={chatType === "groupPurchase" ? (msg.nickname || "익명 01") : undefined}
                     />
                   )}
                 </React.Fragment>
@@ -267,12 +337,33 @@ export default function ChattingPage() {
             })}
           </>
         )}
-      </ChattingWrapper>
+      </S.ChattingWrapper>
 
-      {/* 하단 고정 입력창 (Flex Item) */}
-      <FixedInputArea>
-        <Input
-          placeholder={"메시지 입력"}
+      {/* 하단 플로팅 입력 바 */}
+      <S.FloatingInputArea ref={menuContainerRef}>
+        <S.PlusButton onClick={() => setMenuOpen((prev) => !prev)}>
+          <Plus size={24} />
+        </S.PlusButton>
+
+        {menuOpen && (
+          <S.FloatingMenu>
+            <S.FloatingMenuItem onClick={() => setMenuOpen(false)}>
+              사진 첨부
+            </S.FloatingMenuItem>
+            {chatType === "groupPurchase" ? (
+              <S.FloatingMenuItem onClick={() => setMenuOpen(false)}>
+                단체 톡방 만들기
+              </S.FloatingMenuItem>
+            ) : (
+              <S.FloatingMenuItem onClick={() => setMenuOpen(false)}>
+                학번 공유하기
+              </S.FloatingMenuItem>
+            )}
+          </S.FloatingMenu>
+        )}
+
+        <S.FloatingInput
+          placeholder="메시지 보내기"
           ref={inputRef}
           onInput={handleInput}
           rows={1}
@@ -285,101 +376,10 @@ export default function ChattingPage() {
             }
           }}
         />
-        <SendButton onClick={handleSendMessage}>
-          <img src={send} alt={"send"} />
-        </SendButton>
-      </FixedInputArea>
-    </ChatPageWrapper>
+        <S.SendCircleButton onClick={handleSendMessage}>
+          <ArrowRight size={20} color="white" />
+        </S.SendCircleButton>
+      </S.FloatingInputArea>
+    </S.ChatPageWrapper>
   );
 }
-
-const ChatPageWrapper = styled.div`
-  width: 100%;
-  background: #f4f4f4;
-  /* 부모(SubPage)의 padding-top 80px를 뺀 나머지 전체 높이 */
-  height: calc(100vh - 80px);
-  /* Flex Column 레이아웃 */
-  display: flex;
-  flex-direction: column;
-  /* 외부 스크롤 방지 */
-  overflow: hidden;
-`;
-
-const FixedHeaderContainer = styled.div`
-  width: 100%;
-  background: #f4f4f4;
-  /* 크기가 줄어들거나 늘어나지 않도록 고정 */
-  flex-shrink: 0;
-  z-index: 0;
-`;
-
-const ChattingWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  /* 남은 공간을 모두 차지하며 내부 스크롤 활성화 */
-  flex: 1;
-  overflow-y: auto;
-
-  padding-bottom: 10px;
-  box-sizing: border-box;
-  background: #f4f4f4;
-
-  &::-webkit-scrollbar {
-    width: 4px;
-  }
-  &::-webkit-scrollbar-thumb {
-    background-color: #d1d1d1;
-    border-radius: 2px;
-  }
-`;
-
-const DateDivider = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin: 24px 0 16px 0;
-
-  font-size: 12px;
-  font-weight: 500;
-  color: #767676;
-
-  /* 선택 사항: 텍스트 배경을 캡슐 형태로 만들거나 단순 텍스트로 둘 수 있음 */
-  /* 여기서는 깔끔한 텍스트 스타일 적용 */
-`;
-
-const FixedInputArea = styled.div`
-  width: 100%;
-  min-height: 56px;
-  background-color: #fafafa;
-  display: flex;
-  align-items: center;
-  padding: 8px 16px;
-  box-sizing: border-box;
-  gap: 8px;
-  border-top: 1px solid #e0e0e0;
-  /* 크기가 줄어들거나 늘어나지 않도록 고정 */
-  flex-shrink: 0;
-`;
-
-const Input = styled.textarea`
-  width: 100%;
-  padding: 8px;
-  box-sizing: border-box;
-  background: #ffffff;
-  border-radius: 4px;
-  border: none;
-  font-size: 16px;
-  line-height: 24px;
-  color: #1c1c1e;
-  resize: none;
-  outline: none;
-`;
-
-const SendButton = styled.button`
-  background: none;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-`;
