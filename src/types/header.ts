@@ -13,4 +13,6 @@ export interface HeaderConfig {
   settingOnClick?: (() => void) | null; // 설정 아이콘 클릭 핸들러
   showAlarm?: boolean; // 알림 벨 노출 여부
   secondHeader?: ReactNode | null; // 추가 헤더 영역 (탭, 검색바 등)
+  hamburgerOnClick?: (() => void) | null; // 햄버거 메뉴(=) 클릭 핸들러
+  headerRightElement?: ReactNode | null; // 헤더 우측 커스텀 컴포넌트
 }

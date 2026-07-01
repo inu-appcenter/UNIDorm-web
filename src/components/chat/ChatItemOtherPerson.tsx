@@ -5,19 +5,22 @@ type Props = {
   content: string;
   time: string;
   userImageUrl?: string | null;
+  senderName?: string;
 };
 
-const ChatItemOtherPerson = ({ content, time, userImageUrl }: Props) => {
+const ChatItemOtherPerson = ({ content, time, userImageUrl, senderName }: Props) => {
   return (
     <ChatItemOtherPersonWrapper>
       <ProfileImg
         src={userImageUrl && userImageUrl !== "string" ? userImageUrl : profile}
         alt="상대방"
         onError={(e) => {
+          e.currentTarget.onerror = null;
           e.currentTarget.src = profile;
         }}
       />
       <ContentArea>
+        {senderName && <div className="sender-name">{senderName}</div>}
         <div className="message">{content}</div>
       </ContentArea>
       <TimeArea>
@@ -38,7 +41,7 @@ const ChatItemOtherPersonWrapper = styled.div`
   padding: 8px 20px;
   box-sizing: border-box;
 
-  gap: 4px;
+  gap: 8px;
 `;
 const ProfileImg = styled.img`
   //padding-top: 3px;
@@ -52,42 +55,45 @@ const ContentArea = styled.div`
   //flex: 1;
   width: fit-content;
   max-width: 60%;
+  display: flex;
+  flex-direction: column;
 
-  .title {
-    font-style: normal;
-    font-weight: 600;
-    font-size: 14px;
-    line-height: 24px;
-    letter-spacing: 0.38px;
-
-    color: #1c1c1e;
+  .sender-name {
+    font-family: "Pretendard", sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    color: #3d3d3d;
+    margin-bottom: 4px;
+    padding-left: 4px;
   }
 
   .message {
+    font-family: "Pretendard", sans-serif;
     font-style: normal;
     font-weight: 400;
     font-size: 14px;
-    line-height: 14px;
+    line-height: 1.5;
     text-align: start;
 
-    color: #1c1c1e;
-    background: white;
-    padding: 8px;
-    border-radius: 4px;
+    color: #3d3d3d;
+    background: #f7f7f7;
+    padding: 8px 12px;
+    border-radius: 16px;
   }
 `;
 
 const TimeArea = styled.div`
   display: flex;
   align-items: flex-end;
+  font-family: "Pretendard", sans-serif;
   .time {
     font-style: normal;
     font-weight: 400;
-    font-size: 8px;
-    line-height: 10px;
+    font-size: 11px;
+    line-height: 1.5;
 
     letter-spacing: 0.38px;
 
-    color: #8e8e93;
+    color: #8b8b8b;
   }
 `;

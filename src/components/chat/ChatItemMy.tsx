@@ -49,16 +49,17 @@ const ContentArea = styled.div`
   }
 
   .message {
+    font-family: "Pretendard", sans-serif;
     font-style: normal;
     font-weight: 400;
     font-size: 14px;
-    line-height: 14px;
+    line-height: 1.5;
     text-align: start;
 
-    color: #f4f4f4;
-    background: #0a84ff;
-    padding: 8px;
-    border-radius: 4px;
+    color: #ffffff;
+    background: #1677ff;
+    padding: 8px 12px;
+    border-radius: 16px;
   }
 `;
 
@@ -66,18 +67,19 @@ const TimeArea = styled.div`
   display: flex;
   align-items: flex-end;
   flex-direction: column-reverse;
+  font-family: "Pretendard", sans-serif;
   font-style: normal;
   font-weight: 400;
-  font-size: 8px;
-  line-height: 10px;
+  font-size: 11px;
+  line-height: 1.5;
 
   letter-spacing: 0.38px;
   .time {
-    color: #8e8e93;
+    color: #8b8b8b;
   }
   .isRead {
-    color: #ffd60a;
-    font-size: 9px;
+    color: #0958d9;
+    font-size: 11px;
     font-weight: 600;
   }
 `;
