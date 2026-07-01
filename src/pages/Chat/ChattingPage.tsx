@@ -8,7 +8,6 @@ import { useRoommateChat } from "./useRoommateChat.ts";
 import useUserStore from "../../stores/useUserStore.ts";
 import { getRoommateChatHistory } from "@/apis/chat";
 import { useSetHeader } from "@/hooks/useSetHeader";
-import { deleteRoommateChatRoom } from "@/apis/roommate";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { Plus, ChevronDown, Info, ArrowRight } from "lucide-react";
 import * as S from "./ChattingPage.styles";
@@ -275,34 +274,7 @@ export default function ChattingPage() {
     if (inputRef.current) inputRef.current.style.height = "auto";
   };
 
-  const menuItems = [
-    {
-      label: "사전 체크리스트 보기",
-      onClick: async () => {
-        navigate("/roommate/list/opponent", { state: { partnerName, roomId } });
-      },
-    },
-    {
-      label: "채팅방 나가기",
-      onClick: async () => {
-        const confirmed = window.confirm(
-          "정말 채팅방을 나갈까요?\n서로에게 더 이상 채팅방이 보이지 않습니다.",
-        );
-        if (!confirmed) return;
-        try {
-          if (roomId === undefined)
-            throw new Error("채팅방 id가 undefined입니다.");
-          const response = await deleteRoommateChatRoom(roomId);
-          if (response.status === 201) {
-            alert("채팅방에서 나왔어요.");
-            navigate("/chat");
-          }
-        } catch (error: unknown) {
-          alert("채팅방 나가기를 실패했어요." + String(error));
-        }
-      },
-    },
-  ];
+
 
   const headerTitle =
     partnerName ||
@@ -314,7 +286,11 @@ export default function ChattingPage() {
 
   useSetHeader({
     title: headerTitle,
-    menuItems: chatType === "roommate" ? menuItems : null,
+    hamburgerOnClick: () => {
+      navigate(`/chat/${chatType}/${roomId}/members`, {
+        state: { partnerName, partnerProfileImageUrl, roomId }
+      });
+    }
   });
 
   // 날짜 포맷 함수 (YYYY년 M월 D일)

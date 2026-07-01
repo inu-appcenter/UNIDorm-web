@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import back from "@/assets/header/back.svg";
 import logo from "@/assets/unidorm-logo.webp";
-import { Bell, Settings } from "lucide-react";
+import { Bell, Settings, Menu } from "lucide-react";
 import useUserStore from "@/stores/useUserStore";
 import useHeaderStore from "@/stores/useHeaderStore";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -23,7 +23,7 @@ export default function Header({ hasBack = false, backPath }: HeaderProps) {
   const { userInfo, setUserInfo } = useUserStore();
   const platform = getMobilePlatform();
 
-  const { title, menuItems, settingOnClick, showAlarm, secondHeader } =
+  const { title, menuItems, settingOnClick, showAlarm, secondHeader, hamburgerOnClick, headerRightElement } =
     useHeaderStore();
 
   const [showSettingTooltip, setShowSettingTooltip] = useState(() => {
@@ -71,6 +71,7 @@ export default function Header({ hasBack = false, backPath }: HeaderProps) {
           </div>
         </Left>
         <Right>
+          {headerRightElement}
           {/* 앱 설치 버튼: 비관리자 및 모바일 브라우저 */}
           {!isAdmin &&
             (platform === "ios_browser" || platform === "android_browser") && (
@@ -94,6 +95,13 @@ export default function Header({ hasBack = false, backPath }: HeaderProps) {
 
           {/* 메뉴 */}
           {menuItems && <TopRightDropdownMenu items={menuItems} />}
+
+          {/* 햄버거 메뉴 */}
+          {hamburgerOnClick && (
+            <HamburgerWrapper onClick={hamburgerOnClick}>
+              <Menu size={24} color="black" />
+            </HamburgerWrapper>
+          )}
 
           {/* 설정 아이콘 및 툴팁: 공동구매 페이지에서만 툴팁 노출 */}
           {settingOnClick && (
@@ -227,6 +235,15 @@ const RoundButton = styled.button`
 `;
 
 const SettingWrapper = styled.div`
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  height: 100%;
+`;
+
+const HamburgerWrapper = styled.div`
   position: relative;
   display: flex;
   align-items: center;
