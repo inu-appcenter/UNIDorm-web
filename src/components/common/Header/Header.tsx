@@ -123,7 +123,7 @@ const StyledHeader = styled.header<{ $isHome: boolean }>`
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 11;
+  z-index: 10000;
   width: 100%;
   box-sizing: border-box;
   background: ${({ $isHome }) =>
