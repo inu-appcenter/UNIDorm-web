@@ -40,6 +40,7 @@ export default function ChattingPage() {
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const noticeRef = useRef<HTMLDivElement>(null);
 
   const roomId = Number(id);
   const userId = userInfo.id;
@@ -65,6 +66,43 @@ export default function ChattingPage() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  // 오픈채팅 공지 확장 시 외부 터치/드래그 시 닫기 핸들러
+  useEffect(() => {
+    if (!isNoticeExpanded) return;
+
+    const collapseNotice = () => {
+      setIsNoticeExpanded(false);
+    };
+
+    const handleOutsideClick = (event: MouseEvent | TouchEvent) => {
+      if (
+        noticeRef.current &&
+        !noticeRef.current.contains(event.target as Node)
+      ) {
+        collapseNotice();
+      }
+    };
+
+    const chatContainer = scrollRef.current;
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    document.addEventListener("touchstart", handleOutsideClick);
+
+    if (chatContainer) {
+      chatContainer.addEventListener("scroll", collapseNotice, { passive: true });
+      chatContainer.addEventListener("touchmove", collapseNotice, { passive: true });
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("touchstart", handleOutsideClick);
+      if (chatContainer) {
+        chatContainer.removeEventListener("scroll", collapseNotice);
+        chatContainer.removeEventListener("touchmove", collapseNotice);
+      }
+    };
+  }, [isNoticeExpanded]);
 
   // 내부 스크롤 이동
   const scrollToBottom = () => {
@@ -318,7 +356,7 @@ export default function ChattingPage() {
           />
         )}
         {chatType === "open" && (
-          <S.NoticeContainer>
+          <S.NoticeContainer ref={noticeRef}>
             <S.NoticeHeader onClick={() => setIsNoticeExpanded((prev) => !prev)}>
               <S.NoticeTitleArea>
                 <S.InfoIconWrapper>
@@ -347,7 +385,7 @@ export default function ChattingPage() {
       </S.FixedHeaderContainer>
 
       {/* 내부 스크롤 채팅 영역 (Flex Item, grow) */}
-      <S.ChattingWrapper ref={scrollRef}>
+      <S.ChattingWrapper ref={scrollRef} $chatType={chatType}>
         {isHistoryLoading ? (
           <LoadingSpinner message="채팅 내역을 가져오고 있습니다..." />
         ) : (

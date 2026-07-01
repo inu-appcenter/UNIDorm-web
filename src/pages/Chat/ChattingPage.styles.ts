@@ -20,13 +20,15 @@ export const FixedHeaderContainer = styled.div`
   flex-shrink: 0;
 `;
 
-export const ChattingWrapper = styled.div`
+export const ChattingWrapper = styled.div<{ $chatType?: string }>`
   display: flex;
   flex-direction: column;
   /* 남은 공간을 모두 차지하며 내부 스크롤 활성화 */
   flex: 1;
   overflow-y: auto;
 
+  /* 오픈채팅방일 경우 상단에 플로팅 배너 높이만큼 여백 추가 */
+  padding-top: ${({ $chatType }) => ($chatType === "open" ? "72px" : "0")};
   padding-bottom: 100px; /* 플로팅 입력 바 공간 확보 */
   box-sizing: border-box;
   background: transparent;
@@ -69,7 +71,10 @@ export const BackgroundImage = styled.div`
 `;
 
 export const NoticeContainer = styled.div`
-  margin: 12px 20px;
+  position: absolute;
+  top: 12px;
+  left: 20px;
+  right: 20px;
   background-color: #e6f4ff;
   border: 1px solid #dfdfdf;
   border-radius: 16px;
@@ -78,8 +83,8 @@ export const NoticeContainer = styled.div`
   display: flex;
   flex-direction: column;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  z-index: 10;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.08);
+  z-index: 999;
 `;
 
 export const NoticeHeader = styled.div`
