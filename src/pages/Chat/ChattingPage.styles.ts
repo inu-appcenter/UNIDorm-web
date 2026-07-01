@@ -185,6 +185,8 @@ export const FloatingMenuItem = styled.button`
   text-align: left;
   font-family: "Pretendard", sans-serif;
   font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5; /* 150% */
   color: #3d3d3d;
   width: 100%;
   box-sizing: border-box;
@@ -193,8 +195,10 @@ export const FloatingMenuItem = styled.button`
     border-bottom: 1px solid #efefef;
   }
 
-  &:hover {
-    font-weight: 600;
+  &:hover,
+  &:active {
+    color: var(--Main-Main1, #1677FF);
+    font-weight: 400;
   }
 `;
 
