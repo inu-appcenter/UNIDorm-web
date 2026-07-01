@@ -141,10 +141,54 @@ export default function ChattingPage() {
           setIsHistoryLoading(false);
         }
         connect();
-      } else if (chatType === "groupPurchase") {
-        setTypeString("공동구매");
+      } else if (chatType === "open") {
+        setTypeString("오픈채팅");
+        setMessageList([
+          {
+            id: 1,
+            sender: "other",
+            nickname: "방장횃불이",
+            content: "오픈채팅방에 오신 것을 환영합니다! 오늘 배달 같이 시키실 분 계신가요?",
+            time: "오전 11:30",
+            createdAt: "2026-07-01T11:30:00Z",
+            userImageUrl: null
+          },
+          {
+            id: 2,
+            sender: "me",
+            content: "안녕하세요! 혹시 치킨 같이 시킬 수 있을까요?",
+            time: "오전 11:31",
+            createdAt: "2026-07-01T11:31:00Z"
+          },
+          {
+            id: 3,
+            sender: "other",
+            nickname: "동네UNI",
+            content: "오 좋네요. 저도 치킨 같이 시켜요! 무슨 브랜드 좋아하시나요?",
+            time: "오전 11:35",
+            createdAt: "2026-07-01T11:35:00Z",
+            userImageUrl: null
+          }
+        ]);
       } else {
         setTypeString("개인대화");
+        setMessageList([
+          {
+            id: 1,
+            sender: "other",
+            content: "안녕하세요! 아까 오픈채팅방에서 얘기 나누던 사람입니다. 기숙사 신관 3동이 맞으시죠?",
+            time: "오후 1:15",
+            createdAt: "2026-07-01T13:15:00Z",
+            userImageUrl: null
+          },
+          {
+            id: 2,
+            sender: "me",
+            content: "안녕하세요! 네 맞아요. 신관 3동 402호에 살고 있어요.",
+            time: "오후 1:17",
+            createdAt: "2026-07-01T13:17:00Z"
+          }
+        ]);
       }
     };
     init();
@@ -163,10 +207,13 @@ export default function ChattingPage() {
   };
 
   const handleSendMessage = () => {
-    if (!inputValue.trim() || !isConnected) {
-      if (!isConnected) alert("채팅 연결을 확인해주세요.");
+    if (!inputValue.trim()) return;
+
+    if (chatType === "roommate" && !isConnected) {
+      alert("채팅 연결을 확인해주세요.");
       return;
     }
+
     const nowObj = new Date();
     const nowTime = nowObj.toLocaleTimeString("ko-KR", {
       hour: "2-digit",
@@ -183,7 +230,9 @@ export default function ChattingPage() {
     };
 
     setMessageList((prev) => [...prev, newMessage]);
-    sendMessage(inputValue.trim());
+    if (chatType === "roommate") {
+      sendMessage(inputValue.trim());
+    }
     setInputValue("");
     if (inputRef.current) inputRef.current.style.height = "auto";
   };
@@ -221,8 +270,8 @@ export default function ChattingPage() {
     partnerName ||
     (chatType === "roommate"
       ? "룸메이트 채팅"
-      : chatType === "groupPurchase"
-        ? "공동구매 채팅"
+      : chatType === "open"
+        ? "오픈채팅방"
         : "1대1 채팅");
 
   useSetHeader({
@@ -268,7 +317,7 @@ export default function ChattingPage() {
             partnerProfileImageUrl={partnerProfileImageUrl}
           />
         )}
-        {chatType === "groupPurchase" && (
+        {chatType === "open" && (
           <S.NoticeContainer>
             <S.NoticeHeader onClick={() => setIsNoticeExpanded((prev) => !prev)}>
               <S.NoticeTitleArea>
@@ -329,7 +378,7 @@ export default function ChattingPage() {
                       content={msg.content}
                       time={msg.time}
                       userImageUrl={msg.userImageUrl}
-                      senderName={chatType === "groupPurchase" ? (msg.nickname || "익명 01") : undefined}
+                      senderName={chatType === "open" ? (msg.nickname || "익명 01") : undefined}
                     />
                   )}
                 </React.Fragment>
@@ -350,7 +399,7 @@ export default function ChattingPage() {
             <S.FloatingMenuItem onClick={() => setMenuOpen(false)}>
               사진 첨부
             </S.FloatingMenuItem>
-            {chatType === "groupPurchase" ? (
+            {chatType === "open" ? (
               <S.FloatingMenuItem onClick={() => setMenuOpen(false)}>
                 단체 톡방 만들기
               </S.FloatingMenuItem>
