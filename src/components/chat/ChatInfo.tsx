@@ -342,7 +342,7 @@ const ModalBackGround = styled.div`
   justify-content: center;
   background-color: rgba(0, 0, 0, 0.5);
   inset: 0 0 0 0;
-  z-index: 9999;
+  z-index: 20000;
 `;
 
 const Modal = styled.div`
