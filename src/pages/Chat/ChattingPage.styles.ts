@@ -1,4 +1,4 @@
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 
 export const ChatPageWrapper = styled.div`
   width: 100%;
@@ -173,6 +173,17 @@ export const PlusButton = styled.button`
   padding: 0;
 `;
 
+const unfurlBottomToTop = keyframes`
+  from {
+    transform: translateY(8px) scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+`;
+
 export const FloatingMenu = styled.div`
   position: absolute;
   bottom: calc(100% + 12px);
@@ -187,6 +198,10 @@ export const FloatingMenu = styled.div`
   flex-direction: column;
   box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.08);
   z-index: 101;
+
+  /* 아래에서 위 방향으로의 트랜지션 애니메이션 탑재 */
+  transform-origin: bottom left;
+  animation: ${unfurlBottomToTop} 0.15s ease-out;
 `;
 
 export const FloatingMenuItem = styled.button`
