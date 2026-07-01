@@ -166,9 +166,11 @@ export default function ChatMembersPage() {
                     <UserDescText>{selectedUser.desc}</UserDescText>
                   </Drawer.Description>
                 </UserInfoArea>
-                <PrimaryButton onClick={() => setActiveSheet("create")}>
-                  1:1 채팅하기
-                </PrimaryButton>
+                {chatType === "open" && (
+                  <PrimaryButton onClick={() => setActiveSheet("create")}>
+                    1:1 채팅하기
+                  </PrimaryButton>
+                )}
               </SheetBody>
             )}
           </Content>
