@@ -5,7 +5,7 @@ import { User, ChevronRight } from "lucide-react";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import useUserStore from "@/stores/useUserStore";
 import { deleteRoommateChatRoom } from "@/apis/roommate";
-import { createPortal } from "react-dom";
+import { Drawer } from "vaul";
 
 interface ParticipantType {
   id: number;
@@ -145,71 +145,98 @@ export default function ChatMembersPage() {
         </DangerButton>
       </BottomControlBar>
 
-      {/* 바텀시트 포탈 연동 */}
-      {activeSheet === "profile" && selectedUser && createPortal(
-        <Backdrop onClick={() => setActiveSheet(null)}>
-          <SheetContainer onClick={(e) => e.stopPropagation()}>
-            <DragHandle />
-            <UserInfoArea>
-              <UserNameText>{selectedUser.nickname}</UserNameText>
-              <UserDescText>{selectedUser.desc}</UserDescText>
-            </UserInfoArea>
-            <PrimaryButton onClick={() => setActiveSheet("create")}>
-              1:1 채팅하기
-            </PrimaryButton>
-          </SheetContainer>
-        </Backdrop>,
-        document.body
-      )}
+      {/* 1. 프로필 바텀시트 (vaul 사용) */}
+      <Drawer.Root
+        open={activeSheet === "profile"}
+        onOpenChange={(open) => {
+          if (!open) setActiveSheet(null);
+        }}
+      >
+        <Drawer.Portal>
+          <Overlay />
+          <Content>
+            <SwipeHandle />
+            {selectedUser && (
+              <SheetBody>
+                <UserInfoArea>
+                  <Drawer.Title asChild>
+                    <UserNameText>{selectedUser.nickname}</UserNameText>
+                  </Drawer.Title>
+                  <Drawer.Description asChild>
+                    <UserDescText>{selectedUser.desc}</UserDescText>
+                  </Drawer.Description>
+                </UserInfoArea>
+                <PrimaryButton onClick={() => setActiveSheet("create")}>
+                  1:1 채팅하기
+                </PrimaryButton>
+              </SheetBody>
+            )}
+          </Content>
+        </Drawer.Portal>
+      </Drawer.Root>
 
-      {activeSheet === "create" && selectedUser && createPortal(
-        <Backdrop onClick={() => setActiveSheet(null)}>
-          <SheetContainer onClick={(e) => e.stopPropagation()}>
-            <DragHandle />
-            <FormContainer>
-              <FormHeader>
-                <FormTitle>1:1 채팅 만들기</FormTitle>
-                <FormSub>
-                  <span className="label">상대</span>
-                  <span className="value">{selectedUser.nickname}</span>
-                </FormSub>
-              </FormHeader>
+      {/* 2. 1:1 대화 만들기 바텀시트 (vaul 사용) */}
+      <Drawer.Root
+        open={activeSheet === "create"}
+        onOpenChange={(open) => {
+          if (!open) setActiveSheet(null);
+        }}
+      >
+        <Drawer.Portal>
+          <Overlay />
+          <Content>
+            <SwipeHandle />
+            {selectedUser && (
+              <SheetBody>
+                <FormContainer>
+                  <FormHeader>
+                    <Drawer.Title asChild>
+                      <FormTitle>1:1 채팅 만들기</FormTitle>
+                    </Drawer.Title>
+                    <Drawer.Description asChild>
+                      <FormSub>
+                        <span className="label">상대</span>
+                        <span className="value">{selectedUser.nickname}</span>
+                      </FormSub>
+                    </Drawer.Description>
+                  </FormHeader>
 
-              <InputGroup>
-                <InputLabel>방 이름</InputLabel>
-                <TextInput 
-                  type="text" 
-                  placeholder="예: 공동구매 관련 대화" 
-                  value={roomName}
-                  onChange={(e) => setRoomName(e.target.value)}
-                />
-              </InputGroup>
+                  <InputGroup>
+                    <InputLabel>방 이름</InputLabel>
+                    <TextInput 
+                      type="text" 
+                      placeholder="예: 공동구매 관련 대화" 
+                      value={roomName}
+                      onChange={(e) => setRoomName(e.target.value)}
+                    />
+                  </InputGroup>
 
-              <InputGroup>
-                <InputLabel>비밀번호 (선택)</InputLabel>
-                <TextInput 
-                  type="password" 
-                  placeholder="비밀번호 입력" 
-                  value={roomPassword}
-                  onChange={(e) => setRoomPassword(e.target.value)}
-                />
-              </InputGroup>
+                  <InputGroup>
+                    <InputLabel>비밀번호 (선택)</InputLabel>
+                    <TextInput 
+                      type="password" 
+                      placeholder="비밀번호 입력" 
+                      value={roomPassword}
+                      onChange={(e) => setRoomPassword(e.target.value)}
+                    />
+                  </InputGroup>
 
-              <WarningBox>
-                <WarningTitle>주의</WarningTitle>
-                <WarningText>
-                  개인정보 공개 및 외부 연락처 교환은 사용자 책임 하에 이루어집니다.
-                </WarningText>
-              </WarningBox>
+                  <WarningBox>
+                    <WarningTitle>주의</WarningTitle>
+                    <WarningText>
+                      개인정보 공개 및 외부 연락처 교환은 사용자 책임 하에 이루어집니다.
+                    </WarningText>
+                  </WarningBox>
 
-              <PrimaryButton onClick={handleCreateChat}>
-                만들기
-              </PrimaryButton>
-            </FormContainer>
-          </SheetContainer>
-        </Backdrop>,
-        document.body
-      )}
+                  <PrimaryButton onClick={handleCreateChat}>
+                    만들기
+                  </PrimaryButton>
+                </FormContainer>
+              </SheetBody>
+            )}
+          </Content>
+        </Drawer.Portal>
+      </Drawer.Root>
     </PageContainer>
   );
 }
@@ -358,47 +385,51 @@ const DangerButton = styled.button`
   }
 `;
 
-/* 바텀시트 관련 Styles */
-const Backdrop = styled.div`
+/* vaul Drawer 스타일 */
+const Overlay = styled(({ ...props }) => (
+  <Drawer.Overlay {...props} />
+))`
   position: fixed;
   inset: 0;
   background-color: rgba(0, 0, 0, 0.4);
   z-index: 20000;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
 `;
 
-const SheetContainer = styled.div`
-  width: 100%;
-  max-width: 420px;
-  background: white;
-  border-top-left-radius: 16px;
-  border-top-right-radius: 16px;
-  padding: 12px 20px 48px 20px;
-  box-sizing: border-box;
+const Content = styled(({ ...props }) => (
+  <Drawer.Content {...props} />
+))`
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 20001;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
-  animation: slideUp 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-
-  @keyframes slideUp {
-    from {
-      transform: translateY(100%);
-    }
-    to {
-      transform: translateY(0);
-    }
-  }
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  background-color: white;
+  max-width: 420px;
+  margin: 0 auto;
+  outline: none;
 `;
 
-const DragHandle = styled.div`
+const SwipeHandle = styled.div`
+  margin: 12px auto;
   width: 60px;
   height: 4px;
-  background-color: #dfdfdf;
+  flex-shrink: 0;
   border-radius: 4px;
-  margin-bottom: 8px;
+  background-color: #dfdfdf;
+`;
+
+const SheetBody = styled.div`
+  width: 100%;
+  padding: 0 20px 48px 20px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 `;
 
 const UserInfoArea = styled.div`
