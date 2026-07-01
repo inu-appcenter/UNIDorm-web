@@ -46,7 +46,7 @@ export default function ChattingPage() {
   const token = tokenInfo.accessToken;
 
   // 오픈채팅방 공지 확장 여부
-  const [isNoticeExpanded, setIsNoticeExpanded] = useState(true);
+  const [isNoticeExpanded, setIsNoticeExpanded] = useState(false);
   // 플로팅 입력바의 + 버튼 메뉴 열림 여부
   const [menuOpen, setMenuOpen] = useState(false);
   const menuContainerRef = useRef<HTMLDivElement>(null);
@@ -331,19 +331,17 @@ export default function ChattingPage() {
               </S.ChevronWrapper>
             </S.NoticeHeader>
 
-            {isNoticeExpanded && (
-              <S.NoticeBody>
-                <S.NoticeParagraph>
-                  1긱 생활 이슈, 공동구매, 배달 메이트를 자유롭게 대화
-                </S.NoticeParagraph>
-                <S.NoticeParagraph>
-                  예시: 같이 배달 시키기 / 생필품 공동구매 / 분실물 문의
-                </S.NoticeParagraph>
-                <S.NoticeParagraph style={{ color: "#8b8b8b" }}>
-                  확인후 공지를 접고 일반 대화만 볼 수 있음
-                </S.NoticeParagraph>
-              </S.NoticeBody>
-            )}
+            <S.NoticeBody $expanded={isNoticeExpanded}>
+              <S.NoticeParagraph>
+                1긱 생활 이슈, 공동구매, 배달 메이트를 자유롭게 대화
+              </S.NoticeParagraph>
+              <S.NoticeParagraph>
+                예시: 같이 배달 시키기 / 생필품 공동구매 / 분실물 문의
+              </S.NoticeParagraph>
+              <S.NoticeParagraph style={{ color: "#8b8b8b" }}>
+                확인후 공지를 접고 일반 대화만 볼 수 있음
+              </S.NoticeParagraph>
+            </S.NoticeBody>
           </S.NoticeContainer>
         )}
       </S.FixedHeaderContainer>

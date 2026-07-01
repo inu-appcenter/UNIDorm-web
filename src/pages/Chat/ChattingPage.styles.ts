@@ -77,8 +77,7 @@ export const NoticeContainer = styled.div`
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  transition: all 0.2s ease-in-out;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   z-index: 10;
 `;
@@ -114,11 +113,11 @@ export const ChevronWrapper = styled.div<{ $expanded: boolean }>`
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.2s ease-in-out;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   transform: ${({ $expanded }) => ($expanded ? "rotate(180deg)" : "rotate(0deg)")};
 `;
 
-export const NoticeBody = styled.div`
+export const NoticeBody = styled.div<{ $expanded: boolean }>`
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -126,6 +125,15 @@ export const NoticeBody = styled.div`
   font-size: 12px;
   line-height: 1.5;
   color: #555555;
+  
+  /* 슬라이드 애니메이션 효과 */
+  overflow: hidden;
+  max-height: ${({ $expanded }) => ($expanded ? "150px" : "0px")};
+  opacity: ${({ $expanded }) => ($expanded ? "1" : "0")};
+  margin-top: ${({ $expanded }) => ($expanded ? "12px" : "0px")};
+  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.25s ease-in-out,
+              margin-top 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 `;
 
 export const NoticeParagraph = styled.p`
