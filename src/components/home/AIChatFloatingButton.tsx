@@ -113,9 +113,15 @@ const AIChatFloatingButton = () => {
 
               <IframeContainer variants={itemVariants}>
                 <iframe
-                  src={`https://aichat.unidorm.inuappcenter.kr/?token=${
-                    accessToken || ""
-                  }&mode=${import.meta.env.VITE_API_SUBDOMAIN === "unidorm-server" ? "prod" : "dev"}`}
+                  src={`${
+                    import.meta.env.VITE_API_SUBDOMAIN === "unidorm-server"
+                      ? import.meta.env.VITE_INUCHAT_URL // 운영용 URL
+                      : import.meta.env.VITE_INUCHAT_DEV_URL // 개발용 URL
+                  }/?token=${accessToken || ""}&mode=${
+                    import.meta.env.VITE_API_SUBDOMAIN === "unidorm-server"
+                      ? "prod"
+                      : "dev"
+                  }`}
                   title="AI Chat"
                   width="100%"
                   height="100%"
