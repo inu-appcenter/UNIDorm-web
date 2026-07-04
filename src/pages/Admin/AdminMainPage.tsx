@@ -111,9 +111,11 @@ const AdminMainPage: React.FC = () => {
     },
     {
       label: "AI 챗불이 관리",
-      path: `https://unidorm-aichat-admin-console.pages.dev/?token=${
-        tokenInfo.accessToken || ""
-      }&mode=${
+      path: `${
+        import.meta.env.VITE_API_SUBDOMAIN === "unidorm-server"
+          ? import.meta.env.VITE_INUCHAT_CONSOLE_URL // 운영용 URL
+          : import.meta.env.VITE_INUCHAT_DEV_CONSOLE_URL // 개발용 URL
+      }/?token=${tokenInfo.accessToken || ""}&mode=${
         import.meta.env.VITE_API_SUBDOMAIN === "unidorm-server" ? "prod" : "dev"
       }`,
       description: "AI 답변을 학습시키고 관리합니다.",
