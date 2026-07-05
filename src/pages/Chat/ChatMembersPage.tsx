@@ -151,13 +151,14 @@ export default function ChatMembersPage() {
         onOpenChange={(open) => {
           if (!open) setActiveSheet(null);
         }}
+        repositionInputs={false}
       >
         <Drawer.Portal>
           <Overlay />
           <Content>
             <SwipeHandle />
             {selectedUser && (
-              <SheetBody>
+              <SheetBody data-vaul-no-drag>
                 <UserInfoArea>
                   <Drawer.Title asChild>
                     <UserNameText>{selectedUser.nickname}</UserNameText>
@@ -183,13 +184,14 @@ export default function ChatMembersPage() {
         onOpenChange={(open) => {
           if (!open) setActiveSheet(null);
         }}
+        repositionInputs={false}
       >
         <Drawer.Portal>
           <Overlay />
           <Content>
             <SwipeHandle />
             {selectedUser && (
-              <SheetBody>
+              <SheetBody data-vaul-no-drag>
                 <FormContainer>
                   <FormHeader>
                     <Drawer.Title asChild>
@@ -414,6 +416,7 @@ const Content = styled(({ ...props }) => (
   max-width: 420px;
   margin: 0 auto;
   outline: none;
+  max-height: 85dvh; /* 키보드가 올라오거나 화면이 작을 때 최대 높이 제한 */
 `;
 
 const SwipeHandle = styled.div`
@@ -427,11 +430,12 @@ const SwipeHandle = styled.div`
 
 const SheetBody = styled.div`
   width: 100%;
-  padding: 0 20px 48px 20px;
+  padding: 0 20px 24px 20px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  overflow-y: auto; /* 영역 부족 시 내부 스크롤 허용 */
 `;
 
 const UserInfoArea = styled.div`

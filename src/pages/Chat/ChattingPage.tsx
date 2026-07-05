@@ -6,11 +6,25 @@ import ChatItemOtherPerson from "../../components/chat/ChatItemOtherPerson.tsx";
 import ChatItemMy from "../../components/chat/ChatItemMy.tsx";
 import { useRoommateChat } from "./useRoommateChat.ts";
 import useUserStore from "../../stores/useUserStore.ts";
-import { getRoommateChatHistory } from "@/apis/chat";
+import { getRoommateChatHistory, getRoommateChatRooms } from "@/apis/chat";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
-import { Plus, ChevronDown, Info, ArrowRight } from "lucide-react";
+import {
+  Plus,
+  ChevronDown,
+  Info,
+  ArrowRight,
+  CheckCircle2,
+  XCircle,
+} from "lucide-react";
 import * as S from "./ChattingPage.styles";
+import {
+  getStudentIdDisclosureStatus,
+  requestStudentIdDisclosure,
+  cancelStudentIdDisclosure,
+  rejectStudentIdDisclosure,
+  acceptStudentIdDisclosure,
+} from "@/apis/studentIdDisclosure";
 
 type MessageType = {
   id: number;
@@ -22,6 +36,66 @@ type MessageType = {
   nickname?: string;
 };
 
+interface ShareMessageInfo {
+  type: "REQUEST" | "CANCEL" | "DECLINE" | "ACCEPT" | null;
+  requestId: number | null;
+  requesterStudentNumber?: string;
+  acceptorStudentNumber?: string;
+}
+
+// 이 함수를 통해 백엔드에서 보내주는 웹소켓 메시지 형식이 달라지더라도 여기만 수정하면 작동되도록 합니다.
+const parseShareMessage = (content: string): ShareMessageInfo => {
+  if (!content || typeof content !== "string") {
+    return { type: null, requestId: null };
+  }
+
+  if (content.startsWith("[STUDENT_ID_SHARE_REQUEST:")) {
+    const parts = content
+      .replace("[STUDENT_ID_SHARE_REQUEST:", "")
+      .replace("]", "")
+      .split(":");
+    const requestId = Number(parts[0]);
+    const requesterStudentNumber = parts[1] || undefined;
+    return { type: "REQUEST", requestId, requesterStudentNumber };
+  }
+
+  if (content.startsWith("[STUDENT_ID_SHARE_CANCEL:")) {
+    const parts = content
+      .replace("[STUDENT_ID_SHARE_CANCEL:", "")
+      .replace("]", "")
+      .split(":");
+    const requestId = Number(parts[0]);
+    return { type: "CANCEL", requestId };
+  }
+
+  if (content.startsWith("[STUDENT_ID_SHARE_DECLINE:")) {
+    const parts = content
+      .replace("[STUDENT_ID_SHARE_DECLINE:", "")
+      .replace("]", "")
+      .split(":");
+    const requestId = Number(parts[0]);
+    return { type: "DECLINE", requestId };
+  }
+
+  if (content.startsWith("[STUDENT_ID_SHARE_ACCEPT:")) {
+    const parts = content
+      .replace("[STUDENT_ID_SHARE_ACCEPT:", "")
+      .replace("]", "")
+      .split(":");
+    const requestId = Number(parts[0]);
+    const acceptorStudentNumber = parts[1] || undefined;
+    const requesterStudentNumber = parts[2] || undefined;
+    return {
+      type: "ACCEPT",
+      requestId,
+      acceptorStudentNumber,
+      requesterStudentNumber,
+    };
+  }
+
+  return { type: null, requestId: null };
+};
+
 export default function ChattingPage() {
   const isLeavingRef = useRef(false);
   const { chatType, id } = useParams();
@@ -31,6 +105,11 @@ export default function ChattingPage() {
   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
   const { tokenInfo, userInfo } = useUserStore();
   const navigate = useNavigate();
+
+  // 학번 공유 관련 상태 및 Ref
+  const opponentIdRef = useRef<number | null>(null);
+  const [opponentStudentNumber, setOpponentStudentNumber] =
+    useState<string>("");
 
   const location = useLocation();
   const partnerName = location.state?.partnerName ?? undefined;
@@ -89,8 +168,12 @@ export default function ChattingPage() {
     document.addEventListener("touchstart", handleOutsideClick);
 
     if (chatContainer) {
-      chatContainer.addEventListener("scroll", collapseNotice, { passive: true });
-      chatContainer.addEventListener("touchmove", collapseNotice, { passive: true });
+      chatContainer.addEventListener("scroll", collapseNotice, {
+        passive: true,
+      });
+      chatContainer.addEventListener("touchmove", collapseNotice, {
+        passive: true,
+      });
     }
 
     return () => {
@@ -117,26 +200,112 @@ export default function ChattingPage() {
     return () => clearTimeout(timer);
   }, [messageList]);
 
+  // 로컬 메시지 리스트에 커스텀 메시지를 직접 추가하는 헬퍼 함수
+  const appendCustomMessageLocal = (content: string) => {
+    const nowObj = new Date();
+    const nowTime = nowObj.toLocaleTimeString("ko-KR", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+    setMessageList((prev) => {
+      // 이미 동일한 트리거 메시지가 있으면 무시 (중복 추가 방지)
+      if (prev.some((m) => m.content === content)) return prev;
+      return [
+        ...prev,
+        {
+          id: Date.now(),
+          sender: "me",
+          content: content,
+          time: nowTime,
+          createdAt: nowObj.toISOString(),
+        },
+      ];
+    });
+  };
+
+  const handleCancelShare = async (requestId: number) => {
+    try {
+      await cancelStudentIdDisclosure(requestId);
+      appendCustomMessageLocal(`[STUDENT_ID_SHARE_CANCEL:${requestId}]`);
+    } catch (error) {
+      console.error("학번 공유 취소 실패:", error);
+      alert("학번 공유 취소에 실패했습니다.");
+    }
+  };
+
+  const handleDeclineShare = async (requestId: number) => {
+    try {
+      await rejectStudentIdDisclosure(requestId);
+      appendCustomMessageLocal(`[STUDENT_ID_SHARE_DECLINE:${requestId}]`);
+    } catch (error) {
+      console.error("학번 공유 거절 실패:", error);
+      alert("학번 공유 거절에 실패했습니다.");
+    }
+  };
+
+  const handleAcceptShare = async (requestId: number) => {
+    try {
+      const res = await acceptStudentIdDisclosure(requestId);
+      const { requesterStudentNumber } = res.data;
+      setOpponentStudentNumber(requesterStudentNumber);
+      appendCustomMessageLocal(
+        `[STUDENT_ID_SHARE_ACCEPT:${requestId}:${userInfo.studentNumber}:${requesterStudentNumber}]`,
+      );
+    } catch (error) {
+      console.error("학번 공유 수락 실패:", error);
+      alert("학번 공유 수락에 실패했습니다.");
+    }
+  };
+
   const { connect, disconnect, sendMessage, isConnected } = useRoommateChat({
     roomId,
     userId,
     token,
     onMessage: (msg) => {
       const now = new Date();
-      setMessageList((prev) => [
-        ...prev,
-        {
-          id: Date.now(),
-          sender: "other",
-          content: msg.content,
-          time: now.toLocaleTimeString("ko-KR", {
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: true,
-          }),
-          createdAt: now.toISOString(), // 수신 시점 날짜 저장
-        },
-      ]);
+
+      // 학번 공유 관련 특수 메시지 실시간 감지
+      const parsed = parseShareMessage(msg.content);
+      if (parsed.type) {
+        if (parsed.type === "ACCEPT") {
+          // 수락 메시지 수신 시 상대방 학번 정보 조회
+          const oppId = opponentIdRef.current;
+          if (oppId) {
+            getStudentIdDisclosureStatus(roomId, oppId)
+              .then((res) => {
+                if (res.data.targetStudentNumber) {
+                  setOpponentStudentNumber(res.data.targetStudentNumber);
+                }
+              })
+              .catch((err) => console.error("학번 조회 실패:", err));
+          }
+        }
+      }
+
+      setMessageList((prev) => {
+        // 이미 렌더링된 학번 공유 관련 동일 내용 메시지가 있다면 무시
+        if (
+          msg.content.startsWith("[STUDENT_ID_SHARE_") &&
+          prev.some((m) => m.content === msg.content)
+        ) {
+          return prev;
+        }
+        return [
+          ...prev,
+          {
+            id: Date.now(),
+            sender: "other",
+            content: msg.content,
+            time: now.toLocaleTimeString("ko-KR", {
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: true,
+            }),
+            createdAt: now.toISOString(), // 수신 시점 날짜 저장
+          },
+        ];
+      });
     },
     onConnect: () => {
       console.log("✅ WebSocket 연결됨");
@@ -155,6 +324,38 @@ export default function ChattingPage() {
         setTypeString("룸메이트");
         setIsHistoryLoading(true);
         try {
+          // 1. 상대방 ID 조회
+          let oppId: number | null = null;
+          try {
+            const roomsResponse = await getRoommateChatRooms();
+            const currentRoom = roomsResponse.data.find(
+              (r) => r.chatRoomId === roomId,
+            );
+            if (currentRoom) {
+              oppId = currentRoom.partnerId;
+              opponentIdRef.current = oppId;
+            }
+          } catch (e) {
+            console.error("채팅방 목록 조회 실패:", e);
+          }
+
+          // 2. 학번 공유 상태 조회
+          if (oppId) {
+            try {
+              const statusResponse = await getStudentIdDisclosureStatus(
+                roomId,
+                oppId,
+              );
+              const { targetStudentNumber } =
+                statusResponse.data;
+              if (targetStudentNumber) {
+                setOpponentStudentNumber(targetStudentNumber);
+              }
+            } catch (e) {
+              console.error("학번 공유 상태 조회 실패:", e);
+            }
+          }
+
           const response = await getRoommateChatHistory(roomId);
           const chats = response.data;
           // 기존 API 데이터
@@ -185,27 +386,29 @@ export default function ChattingPage() {
             id: 1,
             sender: "other",
             nickname: "방장횃불이",
-            content: "오픈채팅방에 오신 것을 환영합니다! 오늘 배달 같이 시키실 분 계신가요?",
+            content:
+              "오픈채팅방에 오신 것을 환영합니다! 오늘 배달 같이 시키실 분 계신가요?",
             time: "오전 11:30",
             createdAt: "2026-07-01T11:30:00Z",
-            userImageUrl: null
+            userImageUrl: null,
           },
           {
             id: 2,
             sender: "me",
             content: "안녕하세요! 혹시 치킨 같이 시킬 수 있을까요?",
             time: "오전 11:31",
-            createdAt: "2026-07-01T11:31:00Z"
+            createdAt: "2026-07-01T11:31:00Z",
           },
           {
             id: 3,
             sender: "other",
             nickname: "동네UNI",
-            content: "오 좋네요. 저도 치킨 같이 시켜요! 무슨 브랜드 좋아하시나요?",
+            content:
+              "오 좋네요. 저도 치킨 같이 시켜요! 무슨 브랜드 좋아하시나요?",
             time: "오전 11:35",
             createdAt: "2026-07-01T11:35:00Z",
-            userImageUrl: null
-          }
+            userImageUrl: null,
+          },
         ]);
       } else {
         setTypeString("개인대화");
@@ -213,18 +416,54 @@ export default function ChattingPage() {
           {
             id: 1,
             sender: "other",
-            content: "안녕하세요! 아까 오픈채팅방에서 얘기 나누던 사람입니다. 기숙사 신관 3동이 맞으시죠?",
+            content:
+              "안녕하세요! 아까 오픈채팅방에서 얘기 나누던 사람입니다. 기숙사 신관 3동이 맞으시죠?",
             time: "오후 1:15",
             createdAt: "2026-07-01T13:15:00Z",
-            userImageUrl: null
+            userImageUrl: null,
           },
           {
             id: 2,
             sender: "me",
             content: "안녕하세요! 네 맞아요. 신관 3동 402호에 살고 있어요.",
             time: "오후 1:17",
-            createdAt: "2026-07-01T13:17:00Z"
-          }
+            createdAt: "2026-07-01T13:17:00Z",
+          },
+          {
+            id: 3,
+            sender: "other",
+            content: "[STUDENT_ID_SHARE_REQUEST:999:202012345]",
+            time: "오후 1:18",
+            createdAt: "2026-07-01T13:18:00Z",
+          },
+          {
+            id: 4,
+            sender: "me",
+            content: "[STUDENT_ID_SHARE_REQUEST:888:202154321]",
+            time: "오후 1:19",
+            createdAt: "2026-07-01T13:19:00Z",
+          },
+          {
+            id: 5,
+            sender: "other",
+            content: "[STUDENT_ID_SHARE_ACCEPT:777:202209876:202154321]",
+            time: "오후 1:20",
+            createdAt: "2026-07-01T13:20:00Z",
+          },
+          {
+            id: 6,
+            sender: "other",
+            content: "[STUDENT_ID_SHARE_CANCEL:666]",
+            time: "오후 1:21",
+            createdAt: "2026-07-01T13:21:00Z",
+          },
+          {
+            id: 7,
+            sender: "other",
+            content: "[STUDENT_ID_SHARE_DECLINE:555]",
+            time: "오후 1:22",
+            createdAt: "2026-07-01T13:22:00Z",
+          },
         ]);
       }
     };
@@ -245,6 +484,11 @@ export default function ChattingPage() {
 
   const handleSendMessage = () => {
     if (!inputValue.trim()) return;
+
+    if (inputValue.trim().startsWith("[STUDENT_ID_SHARE_")) {
+      alert("올바르지 않은 메시지 형식입니다.");
+      return;
+    }
 
     if (chatType === "roommate" && !isConnected) {
       alert("채팅 연결을 확인해주세요.");
@@ -274,8 +518,6 @@ export default function ChattingPage() {
     if (inputRef.current) inputRef.current.style.height = "auto";
   };
 
-
-
   const headerTitle =
     partnerName ||
     (chatType === "roommate"
@@ -288,9 +530,9 @@ export default function ChattingPage() {
     title: headerTitle,
     hamburgerOnClick: () => {
       navigate(`/chat/${chatType}/${roomId}/members`, {
-        state: { partnerName, partnerProfileImageUrl, roomId }
+        state: { partnerName, partnerProfileImageUrl, roomId },
       });
-    }
+    },
   });
 
   // 날짜 포맷 함수 (YYYY년 M월 D일)
@@ -315,6 +557,31 @@ export default function ChattingPage() {
     );
   };
 
+  const handleRequestShareClick = async () => {
+    setMenuOpen(false);
+    if (!opponentIdRef.current) {
+      alert("상대방 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.");
+      return;
+    }
+    if (!window.confirm("학번 공유를 요청할까요?")) return;
+
+    try {
+      const res = await requestStudentIdDisclosure(
+        roomId,
+        opponentIdRef.current,
+      );
+      const { requestId } = res.data;
+      appendCustomMessageLocal(
+        `[STUDENT_ID_SHARE_REQUEST:${requestId}:${userInfo.studentNumber}]`,
+      );
+    } catch (error) {
+      console.error("학번 공유 요청 실패:", error);
+      alert(
+        "학번 공유 요청에 실패했습니다. 이미 요청을 보냈거나 처리 중일 수 있습니다.",
+      );
+    }
+  };
+
   return (
     <S.ChatPageWrapper>
       {/* 배경 그라데이션 SVG */}
@@ -333,7 +600,9 @@ export default function ChattingPage() {
         )}
         {chatType === "open" && (
           <S.NoticeContainer ref={noticeRef}>
-            <S.NoticeHeader onClick={() => setIsNoticeExpanded((prev) => !prev)}>
+            <S.NoticeHeader
+              onClick={() => setIsNoticeExpanded((prev) => !prev)}
+            >
               <S.NoticeTitleArea>
                 <S.InfoIconWrapper>
                   <Info size={20} color="#0958d9" />
@@ -378,10 +647,199 @@ export default function ChattingPage() {
                 }
               }
 
+              const parsed = parseShareMessage(msg.content);
+
+              if (parsed.type) {
+                const isMe = msg.sender === "me";
+
+                if (parsed.type === "REQUEST") {
+                  const isResolved = messageList.slice(index + 1).some((m) => {
+                    const p = parseShareMessage(m.content);
+                    return (
+                      p.requestId === parsed.requestId &&
+                      (p.type === "CANCEL" ||
+                        p.type === "DECLINE" ||
+                        p.type === "ACCEPT")
+                    );
+                  });
+
+                  if (isMe) {
+                    return (
+                      <React.Fragment key={msg.id}>
+                        {showDateLine && (
+                          <S.DateDivider>
+                            {formatDateLine(msg.createdAt)}
+                          </S.DateDivider>
+                        )}
+                        <S.ShareCardRowMy>
+                          <S.ShareCardWrapper>
+                            <S.ShareCardTextSection>
+                              <S.ShareCardTitle>
+                                학번 공유를 요청했어요!
+                              </S.ShareCardTitle>
+                              <S.ShareCardSubtitle>
+                                <p>수락하면 이 1:1 채팅방에서만</p>
+                                <p>서로의 학번이 공유돼요.</p>
+                              </S.ShareCardSubtitle>
+                            </S.ShareCardTextSection>
+                            {!isResolved && (
+                              <S.ShareCardButtonGroup>
+                                <S.ShareCardButton
+                                  $variant="secondary"
+                                  onClick={() =>
+                                    handleCancelShare(parsed.requestId!)
+                                  }
+                                >
+                                  취소
+                                </S.ShareCardButton>
+                              </S.ShareCardButtonGroup>
+                            )}
+                          </S.ShareCardWrapper>
+                        </S.ShareCardRowMy>
+                      </React.Fragment>
+                    );
+                  } else {
+                    return (
+                      <React.Fragment key={msg.id}>
+                        {showDateLine && (
+                          <S.DateDivider>
+                            {formatDateLine(msg.createdAt)}
+                          </S.DateDivider>
+                        )}
+                        <S.ShareCardRowOther>
+                          <S.ShareCardWrapper>
+                            <S.ShareCardTextSection>
+                              <S.ShareCardTitle>
+                                학번을 공유할까요?
+                              </S.ShareCardTitle>
+                              <S.ShareCardSubtitle>
+                                <p>수락하면 이 1:1 채팅방에서만</p>
+                                <p>서로의 학번이 공개돼요.</p>
+                              </S.ShareCardSubtitle>
+                            </S.ShareCardTextSection>
+                            {!isResolved && (
+                              <S.ShareCardButtonGroup>
+                                <S.ShareCardButton
+                                  $variant="secondary"
+                                  onClick={() =>
+                                    handleDeclineShare(parsed.requestId!)
+                                  }
+                                >
+                                  거절
+                                </S.ShareCardButton>
+                                <S.ShareCardButton
+                                  $variant="primary"
+                                  onClick={() =>
+                                    handleAcceptShare(parsed.requestId!)
+                                  }
+                                >
+                                  수락
+                                </S.ShareCardButton>
+                              </S.ShareCardButtonGroup>
+                            )}
+                          </S.ShareCardWrapper>
+                        </S.ShareCardRowOther>
+                      </React.Fragment>
+                    );
+                  }
+                }
+
+                if (parsed.type === "ACCEPT") {
+                  let myNum = "";
+                  let partnerNum = "";
+                  if (
+                    parsed.acceptorStudentNumber &&
+                    parsed.requesterStudentNumber
+                  ) {
+                    if (isMe) {
+                      myNum = parsed.acceptorStudentNumber;
+                      partnerNum = parsed.requesterStudentNumber;
+                    } else {
+                      myNum = parsed.requesterStudentNumber;
+                      partnerNum = parsed.acceptorStudentNumber;
+                    }
+                  } else {
+                    myNum = userInfo.studentNumber;
+                    partnerNum = opponentStudentNumber;
+                  }
+
+                  const cardContent = (
+                    <S.ShareSuccessCard>
+                      <S.ShareSuccessTitle>
+                        <CheckCircle2 size={18} color="#52c41a" />
+                        학번 공유 완료
+                      </S.ShareSuccessTitle>
+                      <S.ShareSuccessInfo>
+                        <S.ShareSuccessInfoItem>
+                          <span className="label">상대방</span>
+                          <span className="value">
+                            {partnerNum || "알 수 없음"}
+                          </span>
+                        </S.ShareSuccessInfoItem>
+                        <S.ShareSuccessInfoDivider />
+                        <S.ShareSuccessInfoItem>
+                          <span className="label">나</span>
+                          <span className="value">{myNum || "알 수 없음"}</span>
+                        </S.ShareSuccessInfoItem>
+                      </S.ShareSuccessInfo>
+                    </S.ShareSuccessCard>
+                  );
+
+                  return (
+                    <React.Fragment key={msg.id}>
+                      {showDateLine && (
+                        <S.DateDivider>
+                          {formatDateLine(msg.createdAt)}
+                        </S.DateDivider>
+                      )}
+                      {isMe ? (
+                        <S.ShareCardRowMy>{cardContent}</S.ShareCardRowMy>
+                      ) : (
+                        <S.ShareCardRowOther>{cardContent}</S.ShareCardRowOther>
+                      )}
+                    </React.Fragment>
+                  );
+                }
+
+                if (parsed.type === "CANCEL") {
+                  return (
+                    <React.Fragment key={msg.id}>
+                      {showDateLine && (
+                        <S.DateDivider>
+                          {formatDateLine(msg.createdAt)}
+                        </S.DateDivider>
+                      )}
+                      <S.ShareSystemMessage>
+                        <XCircle size={14} color="#8b8b8b" />
+                        학번 공유 요청이 취소되었어요.
+                      </S.ShareSystemMessage>
+                    </React.Fragment>
+                  );
+                }
+
+                if (parsed.type === "DECLINE") {
+                  return (
+                    <React.Fragment key={msg.id}>
+                      {showDateLine && (
+                        <S.DateDivider>
+                          {formatDateLine(msg.createdAt)}
+                        </S.DateDivider>
+                      )}
+                      <S.ShareSystemMessage>
+                        <XCircle size={14} color="#8b8b8b" />
+                        학번 공유 요청이 거절되었어요.
+                      </S.ShareSystemMessage>
+                    </React.Fragment>
+                  );
+                }
+              }
+
               return (
                 <React.Fragment key={msg.id}>
                   {showDateLine && (
-                    <S.DateDivider>{formatDateLine(msg.createdAt)}</S.DateDivider>
+                    <S.DateDivider>
+                      {formatDateLine(msg.createdAt)}
+                    </S.DateDivider>
                   )}
                   {msg.sender === "me" ? (
                     <ChatItemMy content={msg.content} time={msg.time} />
@@ -390,7 +848,11 @@ export default function ChattingPage() {
                       content={msg.content}
                       time={msg.time}
                       userImageUrl={msg.userImageUrl}
-                      senderName={chatType === "open" ? (msg.nickname || "익명 01") : undefined}
+                      senderName={
+                        chatType === "open"
+                          ? msg.nickname || "익명 01"
+                          : undefined
+                      }
                     />
                   )}
                 </React.Fragment>
@@ -416,7 +878,7 @@ export default function ChattingPage() {
                 단체 톡방 만들기
               </S.FloatingMenuItem>
             ) : (
-              <S.FloatingMenuItem onClick={() => setMenuOpen(false)}>
+              <S.FloatingMenuItem onClick={handleRequestShareClick}>
                 학번 공유하기
               </S.FloatingMenuItem>
             )}
