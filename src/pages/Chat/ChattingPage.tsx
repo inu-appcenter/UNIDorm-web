@@ -107,12 +107,9 @@ export default function ChattingPage() {
   const navigate = useNavigate();
 
   // 학번 공유 관련 상태 및 Ref
-  const [opponentId, setOpponentId] = useState<number | null>(null);
   const opponentIdRef = useRef<number | null>(null);
-  const [disclosureStatus, setDisclosureStatus] = useState<string>("NONE"); // NONE, REQUESTED, RECEIVED, ACCEPTED, REJECTED
   const [opponentStudentNumber, setOpponentStudentNumber] =
     useState<string>("");
-  const [currentRequestId, setCurrentRequestId] = useState<number | null>(null);
 
   const location = useLocation();
   const partnerName = location.state?.partnerName ?? undefined;
@@ -230,8 +227,6 @@ export default function ChattingPage() {
   const handleCancelShare = async (requestId: number) => {
     try {
       await cancelStudentIdDisclosure(requestId);
-      setDisclosureStatus("NONE");
-      setCurrentRequestId(null);
       appendCustomMessageLocal(`[STUDENT_ID_SHARE_CANCEL:${requestId}]`);
     } catch (error) {
       console.error("학번 공유 취소 실패:", error);
@@ -242,8 +237,6 @@ export default function ChattingPage() {
   const handleDeclineShare = async (requestId: number) => {
     try {
       await rejectStudentIdDisclosure(requestId);
-      setDisclosureStatus("NONE");
-      setCurrentRequestId(null);
       appendCustomMessageLocal(`[STUDENT_ID_SHARE_DECLINE:${requestId}]`);
     } catch (error) {
       console.error("학번 공유 거절 실패:", error);
@@ -256,7 +249,6 @@ export default function ChattingPage() {
       const res = await acceptStudentIdDisclosure(requestId);
       const { requesterStudentNumber } = res.data;
       setOpponentStudentNumber(requesterStudentNumber);
-      setDisclosureStatus("ACCEPTED");
       appendCustomMessageLocal(
         `[STUDENT_ID_SHARE_ACCEPT:${requestId}:${userInfo.studentNumber}:${requesterStudentNumber}]`,
       );
@@ -276,19 +268,7 @@ export default function ChattingPage() {
       // 학번 공유 관련 특수 메시지 실시간 감지
       const parsed = parseShareMessage(msg.content);
       if (parsed.type) {
-        if (parsed.type === "REQUEST") {
-          setDisclosureStatus("RECEIVED");
-          if (parsed.requestId !== null) setCurrentRequestId(parsed.requestId);
-        } else if (parsed.type === "CANCEL") {
-          setDisclosureStatus("NONE");
-          setCurrentRequestId(null);
-        } else if (parsed.type === "DECLINE") {
-          setDisclosureStatus("NONE");
-          setCurrentRequestId(null);
-        } else if (parsed.type === "ACCEPT") {
-          setDisclosureStatus("ACCEPTED");
-          if (parsed.requestId !== null) setCurrentRequestId(parsed.requestId);
-
+        if (parsed.type === "ACCEPT") {
           // 수락 메시지 수신 시 상대방 학번 정보 조회
           const oppId = opponentIdRef.current;
           if (oppId) {
@@ -353,7 +333,6 @@ export default function ChattingPage() {
             );
             if (currentRoom) {
               oppId = currentRoom.partnerId;
-              setOpponentId(oppId);
               opponentIdRef.current = oppId;
             }
           } catch (e) {
@@ -367,10 +346,8 @@ export default function ChattingPage() {
                 roomId,
                 oppId,
               );
-              const { status, requestId, targetStudentNumber } =
+              const { targetStudentNumber } =
                 statusResponse.data;
-              setDisclosureStatus(status);
-              setCurrentRequestId(requestId);
               if (targetStudentNumber) {
                 setOpponentStudentNumber(targetStudentNumber);
               }
@@ -594,8 +571,6 @@ export default function ChattingPage() {
         opponentIdRef.current,
       );
       const { requestId } = res.data;
-      setDisclosureStatus("REQUESTED");
-      setCurrentRequestId(requestId);
       appendCustomMessageLocal(
         `[STUDENT_ID_SHARE_REQUEST:${requestId}:${userInfo.studentNumber}]`,
       );

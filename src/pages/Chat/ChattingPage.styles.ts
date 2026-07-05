@@ -58,12 +58,13 @@ export const DateDivider = styled.div`
 
 export const BackgroundImage = styled.div`
   position: absolute;
-  width: 512px;
-  height: 549.5px;
+  width: 140%;
+  max-width: 600px;
+  height: 50dvh;
   left: calc(50% + 5px);
-  top: 358px;
+  bottom: -100px;
   transform: translateX(-50%);
-  background-image: url("data:image/svg+xml;base64,PHN2ZyBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIiB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBvdmVyZmxvdz0idmlzaWJsZSIgc3R5bGU9ImRpc3BsYXk6IGJsb2NrOyIgdmlld0JveD0iMCAwIDU1MiA1NzYuMDUyIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8ZyBpZD0iRWxsaXBzZSAyIiBmaWx0ZXI9InVybCgjZmlsdGVyMF9mXzMzNDdfOTYzMykiPgo8cGF0aCBkPSJNNTMyIDMwMC4wNTJDNTMyIDQ0MS40MzcgNDE3LjM4NSA1NTYuMDUyIDI3NiA1NTYuMDUyQzEzNC42MTUgNTU2LjA1MiAyMCA0NDEuNDM3IDIwIDMwMC4wNTJDMjAgMTkzLjg2MSAxNjUuMjYxIDgxLjYxNjUgMjM3LjU3OCAzMi4zMTY0QzI2MS43ODcgMTUuODEyIDI5My4xNzkgMTUuOTAxIDMxNy4yOTEgMzIuNTQ2OEMzODguODc4IDgxLjk2NTYgNTMyIDE5NC4wMjYgNTMyIDMwMC4wNTJaIiBmaWxsPSJ1cmwoI3BhaW50MF9yYWRpYWxfMzM0N185NjMzKSIgZmlsbC1vcGFjaXR5PSIwLjUiLz4KPC9nPgo8ZGVmcz4KPGZpbHRlciBpZD0iZmlsdGVyMF9mXzMzNDdfOTYzMyIgeD0iMCIgeT0iMCIgd2lkdGg9IjU1MiIgaGVpZ2h0PSI1NzYuMDUyIiBmaWx0ZXJVbml0cz0idXNlclNwYWNlT25Vc2UiIGNvbG9yLWludGVycG9sYXRpb24tZmlsdGVycz0ic1JHQiI+CjxmZUZsb29kIGZsb29kLW9wYWNpdHk9IjAiIHJlc3VsdD0iQmFja2dyb3VuZEltYWdlRml4Ii8+CjxmZUJsZW5kIG1vZGU9Im5vcm1hbCIgaW49IlNvdXJjZUdyYXBoaWMiIGluMj0iQmFja2dyb3VuZEltYWdlRml4IiByZXN1bHQ9InNoYXBlIi8+CjxmZUdhdXNzaWFuQmx1ciBzdGREZXZpYXRpb249IjEwIiByZXN1bHQ9ImVmZmVjdDFfZm9yZWdyb3VuZEJsdXJfMzM0N185NjMzIi8+CjwvZmlsdGVyPgo8cmFkaWFsR3JhZGllbnQgaWQ9InBhaW50MF9yYWRpYWxfMzM0N185NjMzIiBjeD0iMCIgY3k9IjAiIHI9IjEiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIiBncmFkaWVudFRyYW5zZm9ybT0idHJhbnNsYXRlKDI3NiA0MTYuNTUyKSByb3RhdGUoLTkwKSBzY2FsZSg0MDAuNSA0MDAuNSkiPgo8c3RvcCBzdG9wLWNvbG9yPSIjMTY3N0ZGIi8+CjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzE2NzdGRiIgc3RvcC1vcGFjaXR5PSIwIi8+CjwvcmFkaWFsR3JhZGllbnQ+CjwvZGVmcz4KPC9zdmc+");
+  background-image: url("data:image/svg+xml;base64,PHN2ZyBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIiB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBvdmVyZmxvdz0idmlzaWJsZSIgc3R5bGU9ImRpc3BsYXk6IGJsb2NrOyIgdmlld0JveD0iMCAwIDU1MiA1NzYuMDUyIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8ZyBpZD0iRWxsaXBzZSAyIiBmaWx0ZXI9InVybCgjZmlsdGVyMF9mXzMzNDdfOTYzMykiPgo8cGF0aCBkPSJNNTMyIDMwMC4wNTJDNTMyIDQ0MS40MzcgNDE3LjM4NSA1NTYuMDUyIDI3NiA1NTYuMDUyQzEzNC42MTUgNTU2LjA1MiAyMCA0NDEuNDM3IDIwIDMwMC4wNTJDMjAgMTkzLjg2MSAxNjUuMjYxIDgxLjYxNjUgMjM3LjU3OCAzMi4zMTY0QzI2MS43ODcgMTUuODEyIDkyLjE3OSAxNS45MDEgMzE3LjI5MSAzMi41NDY4QzM4OC44NzggODEuOTY1NiA1MzIgMTk0LjAyNiA1MzIgMzAwLjA1MloiIGZpbGw9InVybCgjcGFpbnQwX3JhZGlhbF8zMzQ3Xzk2MzMpIiBmaWxsLW9wYWNpdHk9IjAuNSIvPgo8L2c+CjxkZWZzPgo8ZmlsdGVyIGlkPSJmaWx0ZXIwX2ZfMzM0N185NjMzIiB4PSIwIiB5PSIwIiB3aWR0aD0iNTUyIiBoZWlnaHQ9IjU3Ni4wNTIiIGZpbHRlclVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgY29sb3ItaW50ZXJwb2xhdGlvbi1maWx0ZXJzPSJzUkdCIj4KPGZlRmxvb2QgZmxvb2Qtb3BhY2l0eT0iMCIgcmVzdWx0PSJCYWNrZ3JvdW5kSW1hZ2VGaXgiLz4KPGZlQmxlbmQgbW9kZT0ibm9ybWFsIiBpbj0iU291cmNlR3JhcGhpYyIgaW4yPSJCYWNrZ3JvdW5kSW1hZ2VGaXgiIHJlc3VsdD0ic2hhcGUiLz4KPGZlR2F1c3NpYW5CbHVyIHN0ZERldmlhdGlvbj0iMTAiIHJlc3VsdD0iZWZmZWN0MV9mb3JlZ3JvdW5kQmx1cl8zMzQ3Xzk2MzMiLz4KPC9maWx0ZXI+CjxyYWRpYWxHcmFkaWVudCBpZD0icGFpbnQwX3JhZGlhbF8zMzQ3Xzk2MzMiIGN4PSIwIiBjeT0iMCIgcj0iMSIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiIGdyYWRpZW50VHJhbnNmb3JtPSJ0cmFuc2xhdGUoMjc2IDQxNi41NTIpIHJvdGF0ZSgtOTApIHNjYWxlKDQwMC41IDQwMC41KSI+CjxzdG9wIHN0b3AtY29sb3I9IiMxNjc3RkYiLz4KPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjMTY3N0ZCIiBzdG9wLW9wYWNpdHk9IjAiLz4KPC9yYWRpYWxHcmFkaWVudD4KPC9kZWZzPgo8L3N2Zz4=");
   background-size: contain;
   background-repeat: no-repeat;
   pointer-events: none;
@@ -119,7 +120,8 @@ export const ChevronWrapper = styled.div<{ $expanded: boolean }>`
   align-items: center;
   justify-content: center;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  transform: ${({ $expanded }) => ($expanded ? "rotate(180deg)" : "rotate(0deg)")};
+  transform: ${({ $expanded }) =>
+    $expanded ? "rotate(180deg)" : "rotate(0deg)"};
 `;
 
 export const NoticeBody = styled.div<{ $expanded: boolean }>`
@@ -130,15 +132,16 @@ export const NoticeBody = styled.div<{ $expanded: boolean }>`
   font-size: 12px;
   line-height: 1.5;
   color: #555555;
-  
+
   /* 슬라이드 애니메이션 효과 */
   overflow: hidden;
   max-height: ${({ $expanded }) => ($expanded ? "150px" : "0px")};
   opacity: ${({ $expanded }) => ($expanded ? "1" : "0")};
   margin-top: ${({ $expanded }) => ($expanded ? "12px" : "0px")};
-  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-              opacity 0.25s ease-in-out,
-              margin-top 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition:
+    max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.25s ease-in-out,
+    margin-top 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 `;
 
 export const NoticeParagraph = styled.p`
@@ -224,7 +227,7 @@ export const FloatingMenuItem = styled.button`
 
   &:hover,
   &:active {
-    color: var(--Main-Main1, #1677FF);
+    color: var(--Main-Main1, #1677ff);
     font-weight: 400;
   }
 `;
@@ -316,7 +319,9 @@ export const ShareCardButtonGroup = styled.div`
   gap: 12px;
 `;
 
-export const ShareCardButton = styled.button<{ $variant?: "primary" | "secondary" }>`
+export const ShareCardButton = styled.button<{
+  $variant?: "primary" | "secondary";
+}>`
   font-family: "Pretendard", sans-serif;
   font-size: 14px;
   font-weight: 400;
@@ -327,14 +332,18 @@ export const ShareCardButton = styled.button<{ $variant?: "primary" | "secondary
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease-in-out;
-  border: ${({ $variant }) => ($variant === "secondary" ? "1px solid #dfdfdf" : "none")};
-  background-color: ${({ $variant }) => ($variant === "secondary" ? "#ffffff" : "#1677ff")};
-  color: ${({ $variant }) => ($variant === "secondary" ? "#8b8b8b" : "#ffffff")};
+  border: ${({ $variant }) =>
+    $variant === "secondary" ? "1px solid #dfdfdf" : "none"};
+  background-color: ${({ $variant }) =>
+    $variant === "secondary" ? "#ffffff" : "#1677ff"};
+  color: ${({ $variant }) =>
+    $variant === "secondary" ? "#8b8b8b" : "#ffffff"};
   width: fit-content;
   height: fit-content;
 
   &:hover:not(:disabled) {
-    background-color: ${({ $variant }) => ($variant === "secondary" ? "#f7f7f7" : "#0958d9")};
+    background-color: ${({ $variant }) =>
+      $variant === "secondary" ? "#f7f7f7" : "#0958d9"};
   }
 
   &:disabled {
@@ -464,5 +473,3 @@ export const ShareTimeArea = styled.div`
     color: #8b8b8b;
   }
 `;
-
-
