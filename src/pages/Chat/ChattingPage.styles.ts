@@ -265,3 +265,204 @@ export const SendCircleButton = styled.button`
     background-color: #1677ff;
   }
 `;
+
+export const ShareCardWrapper = styled.div`
+  background-color: #ffffff;
+  border: 1px solid #dfdfdf;
+  border-radius: 16px;
+  padding: 16px;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0px 1px 0.85px rgba(0, 0, 0, 0.1);
+
+  @media (min-width: 768px) {
+    max-width: 320px;
+  }
+`;
+
+export const ShareCardTextSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 8px;
+`;
+
+export const ShareCardTitle = styled.p`
+  font-family: "Pretendard", sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: #3d3d3d;
+  margin: 0;
+  line-height: 1.5;
+`;
+
+export const ShareCardSubtitle = styled.div`
+  font-family: "Pretendard", sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  color: #555555;
+
+  p {
+    margin: 0;
+    line-height: 1.5;
+  }
+`;
+
+export const ShareCardButtonGroup = styled.div`
+  display: flex;
+  gap: 12px;
+`;
+
+export const ShareCardButton = styled.button<{ $variant?: "primary" | "secondary" }>`
+  font-family: "Pretendard", sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  padding: 4px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease-in-out;
+  border: ${({ $variant }) => ($variant === "secondary" ? "1px solid #dfdfdf" : "none")};
+  background-color: ${({ $variant }) => ($variant === "secondary" ? "#ffffff" : "#1677ff")};
+  color: ${({ $variant }) => ($variant === "secondary" ? "#8b8b8b" : "#ffffff")};
+  width: fit-content;
+  height: fit-content;
+
+  &:hover:not(:disabled) {
+    background-color: ${({ $variant }) => ($variant === "secondary" ? "#f7f7f7" : "#0958d9")};
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+export const ShareSuccessCard = styled.div`
+  background-color: #ffffff;
+  border: 1px solid #bae0ff;
+  border-radius: 16px;
+  padding: 16px;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0px 4px 12px rgba(22, 119, 255, 0.05);
+
+  @media (min-width: 768px) {
+    max-width: 320px;
+  }
+`;
+
+export const ShareSuccessTitle = styled.div`
+  font-family: "Pretendard", sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: #0958d9;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+`;
+
+export const ShareSuccessInfo = styled.div`
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background-color: #f0f5ff;
+  border: 1px solid #adc6ff;
+  border-radius: 12px;
+  padding: 12px;
+`;
+
+export const ShareSuccessInfoItem = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+
+  .label {
+    font-family: "Pretendard", sans-serif;
+    font-size: 11px;
+    color: #8b8b8b;
+  }
+
+  .value {
+    font-family: "Pretendard", sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: #1677ff;
+  }
+`;
+
+export const ShareSuccessInfoDivider = styled.div`
+  width: 1px;
+  height: 24px;
+  background-color: #adc6ff;
+`;
+
+export const ShareSystemMessage = styled.div`
+  width: fit-content;
+  max-width: 80%;
+  margin: 12px auto;
+  background-color: #f5f5f5;
+  border: 1px solid #dfdfdf;
+  border-radius: 12px;
+  padding: 6px 16px;
+  box-sizing: border-box;
+  font-family: "Pretendard", sans-serif;
+  font-size: 12px;
+  color: #8b8b8b;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: center;
+`;
+
+export const ShareCardRowOther = styled.div`
+  width: 100%;
+  height: fit-content;
+  display: flex;
+  justify-content: center;
+  padding: 16px 20px;
+  box-sizing: border-box;
+`;
+
+export const ShareCardRowMy = styled.div`
+  width: 100%;
+  height: fit-content;
+  display: flex;
+  justify-content: center;
+  padding: 16px 20px;
+  box-sizing: border-box;
+`;
+
+export const ProfileImgPlaceholder = styled.div`
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+`;
+
+export const ShareTimeArea = styled.div`
+  display: flex;
+  align-items: flex-end;
+  font-family: "Pretendard", sans-serif;
+
+  .time {
+    font-style: normal;
+    font-weight: 400;
+    font-size: 11px;
+    line-height: 1.5;
+    letter-spacing: 0.38px;
+    color: #8b8b8b;
+  }
+`;
+
+
