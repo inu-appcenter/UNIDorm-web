@@ -243,6 +243,8 @@ export const FloatingInput = styled.textarea`
   resize: none;
   outline: none;
   padding: 4px 0;
+  box-sizing: border-box; /* box-sizing을 명시하여 패딩이 높이에 포함되도록 설정 */
+  height: 34px; /* 16px * 1.6 (25.6px) + padding 상하 8px = 33.6px. 모바일 포커스 시 위로 쏠리는 버그 방지 */
   max-height: 80px;
 
   &::placeholder {
