@@ -1,5 +1,6 @@
 export interface CalendarItem {
   id: number;
+  description: string;
   startDate: string;
   endDate: string;
   title: string;
