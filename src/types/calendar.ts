@@ -5,7 +5,6 @@ export interface CalendarItem {
   endDate: string;
   title: string;
   link: string;
-  description?: string;
   sourceAnnouncementId?: number;
 }
 
