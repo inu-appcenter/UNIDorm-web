@@ -86,9 +86,9 @@ const Content = styled(Drawer.Content)`
   left: 0;
   right: 0;
   z-index: 9999;
-  background-color: white;
-  border-top-left-radius: 18px;
-  border-top-right-radius: 18px;
+  background-color: #ffffff;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
   max-height: 75vh;
   display: flex;
   flex-direction: column;
@@ -114,7 +114,7 @@ const HandleBar = styled.div`
 `;
 
 const SheetTitle = styled.div`
-  padding: 0 26px 16px;
+  padding: 0 16px 12px;
   font-size: 17px;
   font-weight: 800;
   color: #222;
@@ -123,27 +123,35 @@ const SheetTitle = styled.div`
 const EventList = styled.div`
   flex: 1;
   overflow-y: auto;
-  padding: 0 26px 20px;
+  padding: 0 16px;
 `;
 
 const EventItem = styled.button`
   width: 100%;
   border: none;
-  background: white;
+  background: #ffffff;
   text-align: left;
-  padding: 14px 0 24px;
+  padding: 16px;
   cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-bottom: 1px solid #f3f4f6;
+
+  &:last-child {
+    border-bottom: none;
+  }
 `;
 
 const ColorBar = styled.div<{ $color: string }>`
-  width: 100px;
-  height: 5px;
+  width: 40px;
+  height: 4px;
   border-radius: 999px;
   background-color: ${({ $color }) => $color};
-  margin-bottom: 14px;
 `;
 
 const TopRow = styled.div`
+  width: 100%;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -167,7 +175,6 @@ const DateText = styled.div`
 `;
 
 const Description = styled.div`
-  margin-top: 8px;
   font-size: 15px;
   color: #666;
   line-height: 1.45;
@@ -183,17 +190,21 @@ const EmptyText = styled.p`
 `;
 
 const Footer = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
   border-top: 1px solid #f3f4f6;
-  padding: 14px 26px;
-  padding-bottom: calc(14px + env(safe-area-inset-bottom));
-  text-align: right;
+  padding: 12px 20px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
 
   button {
     background: none;
     border: none;
-    font-size: 15px;
-    font-weight: 600;
-    color: #777;
+    font-size: 14px;
+    font-weight: 400;
+    color: #777777;
+    line-height: 1.5;
     cursor: pointer;
+    padding: 0;
   }
 `;
