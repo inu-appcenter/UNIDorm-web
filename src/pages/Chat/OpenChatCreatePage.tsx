@@ -3,10 +3,15 @@ import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { createOpenChatRoom } from "@/apis/openchat";
 import { OpenChatScope } from "@/types/openchat";
-import BottomBar from "@/components/common/BottomBar/BottomBar";
+import { useSetHeader } from "@/hooks/useSetHeader";
 
 export default function OpenChatCreatePage() {
   const navigate = useNavigate();
+
+  useSetHeader({
+    title: "방 만들기",
+    showAlarm: false,
+  });
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -28,7 +33,7 @@ export default function OpenChatCreatePage() {
         maxParticipants: 100,
       });
 
-      navigate("/chat/open");
+      navigate("/chat/open", { replace: true });
     } catch (error) {
       console.error("오픈채팅방 생성 실패", error);
     } finally {
@@ -38,21 +43,6 @@ export default function OpenChatCreatePage() {
 
   return (
     <PageWrapper>
-      <Header>
-        <Logo>
-          UNI
-          <br />
-          Dorm
-        </Logo>
-      </Header>
-
-      <TitleRow>
-        <BackButton type="button" onClick={() => navigate(-1)}>
-          &lt;
-        </BackButton>
-        <PageTitle>방 만들기</PageTitle>
-      </TitleRow>
-
       <Content>
         <GuideText>
           방 설명을 보고 참여 여부를 결정할 수 있도록 핵심 목적을 적어주세요.
@@ -122,8 +112,6 @@ export default function OpenChatCreatePage() {
           {isSubmitting ? "만드는 중..." : "만들기"}
         </SubmitButton>
       </SubmitArea>
-
-      <BottomBar />
     </PageWrapper>
   );
 }
@@ -131,51 +119,8 @@ export default function OpenChatCreatePage() {
 const PageWrapper = styled.div`
   width: 100%;
   min-height: 100vh;
-  padding-bottom: 100px;
   background: #ffffff;
   box-sizing: border-box;
-`;
-
-const Header = styled.header`
-  height: 96px;
-  padding: 24px 20px 16px;
-  border-bottom: 1px solid #e5e7eb;
-  box-sizing: border-box;
-`;
-
-const Logo = styled.div`
-  font-size: 18px;
-  font-weight: 900;
-  line-height: 17px;
-  color: #2563eb;
-  letter-spacing: -0.5px;
-`;
-
-const TitleRow = styled.div`
-  height: 72px;
-  padding: 0 20px;
-  border-bottom: 1px solid #e5e7eb;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  box-sizing: border-box;
-`;
-
-const BackButton = styled.button`
-  border: none;
-  background: none;
-  padding: 0;
-  color: #1f2430;
-  font-size: 26px;
-  font-weight: 600;
-  cursor: pointer;
-`;
-
-const PageTitle = styled.h1`
-  margin: 0;
-  font-size: 22px;
-  font-weight: 900;
-  color: #1f2430;
 `;
 
 const Content = styled.main`
@@ -221,7 +166,7 @@ const TextInput = styled.input`
   }
 
   &:focus {
-    border-color: #3f6bff;
+    border-color: #2563eb;
   }
 `;
 
@@ -258,10 +203,10 @@ const ScopeButton = styled.button<{ $active: boolean }>`
   min-width: 96px;
   height: 36px;
   padding: 0 18px;
-  border: 1px solid ${({ $active }) => ($active ? "#2563EB" : "#d8dde8")};
+  border: 1px solid ${({ $active }) => ($active ? "#2563eb" : "#d8dde8")};
   border-radius: 999px;
   background: #ffffff;
-  color: ${({ $active }) => ($active ? "#2563EB" : "#9ca3af")};
+  color: ${({ $active }) => ($active ? "#2563eb" : "#9ca3af")};
   font-size: 14px;
   font-weight: 900;
   cursor: pointer;
@@ -303,7 +248,7 @@ const SubmitArea = styled.div`
   position: fixed;
   left: 0;
   right: 0;
-  bottom: 72px;
+  bottom: 0;
   padding: 14px 24px;
   background: #ffffff;
   box-sizing: border-box;

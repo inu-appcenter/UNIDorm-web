@@ -8,9 +8,15 @@ import OpenChatJoinModal from "@/components/modal/OpenChatJoinModal";
 import OpenChatPasswordModal from "@/components/modal/OpenChatPasswordModal";
 import { OpenChatRoom, OpenChatTab as OpenChatTabType } from "@/types/openchat";
 import { useNavigate } from "react-router-dom";
+import { useSetHeader } from "@/hooks/useSetHeader";
 
 export default function OpenChatPage() {
   const navigate = useNavigate();
+
+  useSetHeader({
+    title: "오픈채팅",
+    showAlarm: true,
+  });
 
   const [selectedTab, setSelectedTab] = useState<OpenChatTabType>("MY");
   const [rooms, setRooms] = useState<OpenChatRoom[]>([]);
@@ -23,7 +29,6 @@ export default function OpenChatPage() {
   const fetchOpenChatRooms = async () => {
     try {
       setIsLoading(true);
-
       const response = await getOpenChatRooms(selectedTab);
       setRooms(response.data.content);
     } catch (error) {
@@ -40,8 +45,6 @@ export default function OpenChatPage() {
 
   const handleClickRoom = (room: OpenChatRoom) => {
     if (room.joined) {
-      // TODO: 채팅방 상세 페이지 이동
-      // navigate(`/open-chat/${room.roomId}`);
       return;
     }
 
@@ -59,7 +62,6 @@ export default function OpenChatPage() {
 
     try {
       await joinOpenChatRoom(selectedRoom.roomId);
-
       setIsJoinModalOpen(false);
       setSelectedRoom(null);
       fetchOpenChatRooms();
@@ -73,7 +75,6 @@ export default function OpenChatPage() {
 
     try {
       await joinOpenChatRoom(selectedRoom.roomId, password);
-
       setIsPasswordModalOpen(false);
       setSelectedRoom(null);
       fetchOpenChatRooms();
@@ -90,18 +91,7 @@ export default function OpenChatPage() {
 
   return (
     <PageContainer>
-      <Header>
-        <Logo>
-          UNI
-          <br />
-          Dorm
-        </Logo>
-        <ProfileIcon />
-      </Header>
-
       <Content>
-        <Title>오픈채팅</Title>
-
         <OpenChatTab selectedTab={selectedTab} onChangeTab={setSelectedTab} />
 
         <SearchBox>
@@ -157,40 +147,8 @@ const PageContainer = styled.div`
   color: #222222;
 `;
 
-const Header = styled.header`
-  height: 96px;
-  padding: 24px 20px 16px;
-  border-bottom: 1px solid #e5e7eb;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-`;
-
-const Logo = styled.div`
-  font-size: 18px;
-  font-weight: 900;
-  line-height: 17px;
-  color: #2563eb;
-  letter-spacing: -0.5px;
-`;
-
-const ProfileIcon = styled.div`
-  width: 24px;
-  height: 24px;
-  border: 2px solid #4b5563;
-  border-radius: 50%;
-`;
-
 const Content = styled.main`
   padding: 24px 20px 120px;
-`;
-
-const Title = styled.h1`
-  margin: 0 0 18px;
-  font-size: 26px;
-  font-weight: 900;
-  line-height: 1.25;
-  color: #222222;
 `;
 
 const SearchBox = styled.div`
