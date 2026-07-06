@@ -46,6 +46,9 @@ import RoomMateFilterPage from "@/pages/RoomMate/RoomMateFilterPage";
 import RoomMateChecklistPage from "@/pages/RoomMate/RoomMateChecklistPage";
 import RoomMateAddPage from "@/pages/RoomMate/RoomMateAddPage";
 
+/*OpenCHAT*/
+import OpenChatPage from "@/pages/Chat/openChatPage";
+import OpenChatCreatePage from "../pages/Chat/OpenChatCreatePage";
 import ChattingPage from "@/pages/Chat/ChattingPage";
 
 import GroupPurchasePostPage from "@/pages/GroupPurchase/GroupPurchasePostPage";
@@ -106,6 +109,8 @@ export const router = createBrowserRouter([
           { path: "roommate/my", element: <MyRoomMatePage /> },
           { path: "groupPurchase", element: <GroupPurchaseMainPage /> },
           { path: "chat", element: <ChatListPage /> },
+          { path: "chat/open", element: <OpenChatPage /> },
+          { path: "chat/open/create", element: <OpenChatCreatePage /> },
           { path: "mypage", element: <MyPage /> },
         ],
       },
