@@ -50,6 +50,8 @@ import RoomMateAddPage from "@/pages/RoomMate/RoomMateAddPage";
 import OpenChatPage from "@/pages/Chat/openChatPage";
 import OpenChatCreatePage from "../pages/Chat/OpenChatCreatePage";
 import ChattingPage from "@/pages/Chat/ChattingPage";
+import ChatMembersPage from "@/pages/Chat/ChatMembersPage";
+import ChatNotificationSettingsPage from "@/pages/Chat/ChatNotificationSettingsPage";
 
 import GroupPurchasePostPage from "@/pages/GroupPurchase/GroupPurchasePostPage";
 import GroupPurchaseWritePage from "@/pages/GroupPurchase/GroupPurchaseWritePage";
@@ -215,7 +217,11 @@ export const router = createBrowserRouter([
           {
             path: "chat",
             element: <SubPage />,
-            children: [{ path: ":chatType/:id", element: <ChattingPage /> }],
+            children: [
+              { path: ":chatType/:id", element: <ChattingPage /> },
+              { path: ":chatType/:id/members", element: <ChatMembersPage /> },
+              { path: ":chatType/:id/notifications", element: <ChatNotificationSettingsPage /> },
+            ],
           },
 
           // 공동구매 상세

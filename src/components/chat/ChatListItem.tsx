@@ -73,6 +73,7 @@ const ChatListItem = ({
           }
           alt="프로필이미지"
           onError={(e) => {
+            e.currentTarget.onerror = null;
             e.currentTarget.src = profile;
           }}
         />

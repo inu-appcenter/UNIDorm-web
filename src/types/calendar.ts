@@ -5,11 +5,13 @@ export interface CalendarItem {
   endDate: string;
   title: string;
   link: string;
+  description?: string;
+  sourceAnnouncementId?: number;
 }
 
 export interface CreateCalendarDto {
-  startDate: string; // "YYYY-MM-DD"
-  endDate: string; // "YYYY-MM-DD"
+  startDate: string;
+  endDate: string;
   title: string;
   link: string;
 }
