@@ -181,7 +181,7 @@ const Backdrop = styled(motion.div)`
   width: 100%;
   height: 100%;
   background-color: rgba(0, 0, 0, 0.25);
-  z-index: 1001;
+  z-index: 10001;
 `;
 
 const FloatingButton = styled(motion.button)`
@@ -196,7 +196,7 @@ const FloatingButton = styled(motion.button)`
   background: none;
   border: none;
   cursor: pointer;
-  z-index: 1002;
+  z-index: 10002;
   filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.25));
 
   img {
@@ -215,7 +215,7 @@ const ModalContainer = styled(motion.div)`
   background: white;
   display: flex;
   flex-direction: column;
-  z-index: 1003;
+  z-index: 10003;
   border-radius: 32px;
   overflow: hidden;
 
