@@ -112,7 +112,6 @@ export const router = createBrowserRouter([
           { path: "groupPurchase", element: <GroupPurchaseMainPage /> },
           { path: "chat", element: <ChatListPage /> },
           { path: "chat/open", element: <OpenChatPage /> },
-          { path: "chat/open/create", element: <OpenChatCreatePage /> },
           { path: "mypage", element: <MyPage /> },
         ],
       },
@@ -218,9 +217,13 @@ export const router = createBrowserRouter([
             path: "chat",
             element: <SubPage />,
             children: [
+              { path: "open/create", element: <OpenChatCreatePage /> },
               { path: ":chatType/:id", element: <ChattingPage /> },
               { path: ":chatType/:id/members", element: <ChatMembersPage /> },
-              { path: ":chatType/:id/notifications", element: <ChatNotificationSettingsPage /> },
+              {
+                path: ":chatType/:id/notifications",
+                element: <ChatNotificationSettingsPage />,
+              },
             ],
           },
 
