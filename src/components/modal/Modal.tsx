@@ -43,7 +43,7 @@ const Modal = ({
   const [isClosing, setIsClosing] = useState(false);
 
   useEffect(() => {
-    let timer: NodeJS.Timeout;
+    let timer: ReturnType<typeof setTimeout>;
 
     if (show) {
       setVisible(true);

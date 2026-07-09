@@ -8,6 +8,8 @@ import RoundSquareWhiteButton from "../button/RoundSquareWhiteButton.tsx";
 import { useEffect, useState } from "react";
 import 궁금해하는횃불이 from "../../assets/roommate/궁금해하는횃불이.webp";
 import TooltipMessage from "../common/TooltipMessage.tsx";
+import { createPortal } from "react-dom";
+
 
 // 로컬 스토리지 키 정의
 const TOOLTIP_CLOSED_STORAGE_KEY = "roommate_chat_tooltip_closed_list";
@@ -95,15 +97,16 @@ const ChatInfo = ({
       alert(
         "상대방에게 룸메이트 매칭 요청을 보냈습니다!\n상대방에게 매칭 수락을 요청해보세요.\n서로 요청을 보내는 경우에도 자동으로 매칭 처리됩니다.",
       );
-    } catch (error: any) {
-      if (error.response?.status === 404) {
+    } catch (error: unknown) {
+      const err = error as { response?: { status?: number } };
+      if (err.response?.status === 404) {
         alert("채팅방 또는 사용자를 찾을 수 없습니다.");
         console.error("채팅방 또는 사용자를 찾을 수 없습니다.");
-      } else if (error.response?.status === 409) {
+      } else if (err.response?.status === 409) {
         alert("이미 매칭 요청을 보낸 상태입니다.");
         console.error("이미 매칭 요청을 보낸 상태입니다.");
       } else {
-        alert("알 수 없는 오류 발생:" + error);
+        alert("알 수 없는 오류 발생:" + String(error));
         console.error("알 수 없는 오류 발생:", error);
       }
     }
@@ -112,7 +115,14 @@ const ChatInfo = ({
   return (
     <ChatInfoWrapper>
       <ImgWrapper>
-        <img src={partnerProfileImageUrl || profile} alt={"프로필이미지"} />
+        <img
+          src={partnerProfileImageUrl || profile}
+          alt={"프로필이미지"}
+          onError={(e) => {
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = profile;
+          }}
+        />
       </ImgWrapper>
       <ContentWrapper>
         <div
@@ -163,7 +173,7 @@ const ChatInfo = ({
           onClick={() => setShowInfoModal(true)}
         />
       </div>
-      {showInfoModal && (
+      {showInfoModal && createPortal(
         <ModalBackGround>
           <Modal>
             <ModalContentWrapper>
@@ -261,7 +271,8 @@ const ChatInfo = ({
               )}
             </ButtonGroupWrapper>
           </Modal>
-        </ModalBackGround>
+        </ModalBackGround>,
+        document.body
       )}
     </ChatInfoWrapper>
   );
@@ -334,7 +345,7 @@ const ModalBackGround = styled.div`
   justify-content: center;
   background-color: rgba(0, 0, 0, 0.5);
   inset: 0 0 0 0;
-  z-index: 9999;
+  z-index: 20000;
 `;
 
 const Modal = styled.div`

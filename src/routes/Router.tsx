@@ -46,7 +46,12 @@ import RoomMateFilterPage from "@/pages/RoomMate/RoomMateFilterPage";
 import RoomMateChecklistPage from "@/pages/RoomMate/RoomMateChecklistPage";
 import RoomMateAddPage from "@/pages/RoomMate/RoomMateAddPage";
 
+/*OpenCHAT*/
+import OpenChatPage from "@/pages/Chat/openChatPage";
+import OpenChatCreatePage from "../pages/Chat/OpenChatCreatePage";
 import ChattingPage from "@/pages/Chat/ChattingPage";
+import ChatMembersPage from "@/pages/Chat/ChatMembersPage";
+import ChatNotificationSettingsPage from "@/pages/Chat/ChatNotificationSettingsPage";
 
 import GroupPurchasePostPage from "@/pages/GroupPurchase/GroupPurchasePostPage";
 import GroupPurchaseWritePage from "@/pages/GroupPurchase/GroupPurchaseWritePage";
@@ -106,6 +111,7 @@ export const router = createBrowserRouter([
           { path: "roommate/my", element: <MyRoomMatePage /> },
           { path: "groupPurchase", element: <GroupPurchaseMainPage /> },
           { path: "chat", element: <ChatListPage /> },
+          { path: "chat/open", element: <OpenChatPage /> },
           { path: "mypage", element: <MyPage /> },
         ],
       },
@@ -210,7 +216,15 @@ export const router = createBrowserRouter([
           {
             path: "chat",
             element: <SubPage />,
-            children: [{ path: ":chatType/:id", element: <ChattingPage /> }],
+            children: [
+              { path: "open/create", element: <OpenChatCreatePage /> },
+              { path: ":chatType/:id", element: <ChattingPage /> },
+              { path: ":chatType/:id/members", element: <ChatMembersPage /> },
+              {
+                path: ":chatType/:id/notifications",
+                element: <ChatNotificationSettingsPage />,
+              },
+            ],
           },
 
           // 공동구매 상세

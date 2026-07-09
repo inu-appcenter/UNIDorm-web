@@ -13,7 +13,6 @@ import { PATHS } from "@/constants/paths";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import { useFeatureFlag } from "@/hooks/useFeatureFlags";
 import useUserStore from "@/stores/useUserStore";
-import { mixpanelTrack } from "@/utils/mixpanel";
 import {
   AuthButtonWrapper,
   AuthDescription,
@@ -49,7 +48,7 @@ export default function LoginPage() {
       try {
         const response = await login(studentNumber, password);
         setTokenInfo(response.data);
-        mixpanelTrack.loginCompleted("포털 계정");
+        //mixpanelTrack.loginCompleted("포털 계정");
         navigate(PATHS.HOME);
         return;
       } catch (error) {
@@ -63,7 +62,7 @@ export default function LoginPage() {
 
       const freshmanResponse = await loginFreshman(studentNumber, password);
       setTokenInfo(freshmanResponse.data);
-      mixpanelTrack.loginCompleted("신입생 임시 계정");
+      //mixpanelTrack.loginCompleted("신입생 임시 계정");
       navigate(PATHS.HOME);
     } catch (error) {
       const status = isAxiosError(error) ? error.response?.status : undefined;
