@@ -111,13 +111,7 @@ const AdminMainPage: React.FC = () => {
     },
     {
       label: "AI 챗불이 관리",
-      path: `${
-        import.meta.env.VITE_API_SUBDOMAIN === "unidorm-server"
-          ? import.meta.env.VITE_INUCHAT_CONSOLE_URL // 운영용 URL
-          : import.meta.env.VITE_INUCHAT_DEV_CONSOLE_URL // 개발용 URL
-      }/?token=${tokenInfo.accessToken || ""}&mode=${
-        import.meta.env.VITE_API_SUBDOMAIN === "unidorm-server" ? "prod" : "dev"
-      }`,
+      path: `${import.meta.env.VITE_INUCHAT_CONSOLE_URL}/?service=unidorm`,
       description: "AI 답변을 학습시키고 관리합니다.",
       icon: <Bot size={20} />,
       isExternal: true,
