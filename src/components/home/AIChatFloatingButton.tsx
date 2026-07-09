@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import styled from "styled-components";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import { X } from "lucide-react";
@@ -88,38 +89,41 @@ const AIChatFloatingButton = () => {
 
   return (
     <>
-      <AnimatePresence>
-        {isOpen && (
-          <>
-            <Backdrop
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={closeChat}
-            />
-            <ModalContainer
-              variants={modalVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-            >
-              <FloatingCloseButton onClick={closeChat} variants={itemVariants}>
-                <X size={20} />
-              </FloatingCloseButton>
+      {createPortal(
+        <AnimatePresence>
+          {isOpen && (
+            <>
+              <Backdrop
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={closeChat}
+              />
+              <ModalContainer
+                variants={modalVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+              >
+                <FloatingCloseButton onClick={closeChat} variants={itemVariants}>
+                  <X size={20} />
+                </FloatingCloseButton>
 
-              <IframeContainer variants={itemVariants}>
-                <iframe
-                  src={`${import.meta.env.VITE_INUCHAT_URL}/?service=unidorm`}
-                  title="AI Chat"
-                  width="100%"
-                  height="100%"
-                  allow="clipboard-write"
-                />
-              </IframeContainer>
-            </ModalContainer>
-          </>
-        )}
-      </AnimatePresence>
+                <IframeContainer variants={itemVariants}>
+                  <iframe
+                    src={`${import.meta.env.VITE_INUCHAT_URL}/?service=unidorm`}
+                    title="AI Chat"
+                    width="100%"
+                    height="100%"
+                    allow="clipboard-write"
+                  />
+                </IframeContainer>
+              </ModalContainer>
+            </>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
 
       <FloatingButton
         key={location.pathname} // 페이지 변경 시 애니메이션 초기화
