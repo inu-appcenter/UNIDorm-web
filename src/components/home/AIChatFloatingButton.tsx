@@ -3,7 +3,6 @@ import styled from "styled-components";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import { X } from "lucide-react";
 import { useLocation } from "react-router-dom";
-import useUserStore from "@/stores/useUserStore";
 import ChatBulButtonImg from "@/assets/ai-chat/챗불이버튼.webp";
 import TooltipMessage from "@/components/common/TooltipMessage";
 import useAIChatStore from "@/stores/useAIChatStore";
@@ -22,9 +21,6 @@ const AIChatFloatingButton = () => {
     const stored = localStorage.getItem("showAIChatTooltip");
     return stored !== "false";
   });
-
-  const { tokenInfo } = useUserStore();
-  const accessToken = tokenInfo.accessToken;
 
   useEffect(() => {
     if (isOpen) {
@@ -117,7 +113,7 @@ const AIChatFloatingButton = () => {
                     import.meta.env.VITE_API_SUBDOMAIN === "unidorm-server"
                       ? import.meta.env.VITE_INUCHAT_URL // 운영용 URL
                       : import.meta.env.VITE_INUCHAT_DEV_URL // 개발용 URL
-                  }/?token=${accessToken || ""}`}
+                  }/?service=unidorm`}
                   title="AI Chat"
                   width="100%"
                   height="100%"
