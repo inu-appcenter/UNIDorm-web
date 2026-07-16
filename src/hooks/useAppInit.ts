@@ -65,15 +65,37 @@ export const useAppInit = () => {
 
   // 웹뷰 FCM 토큰 수신 설정
   useEffect(() => {
-    (window as any).onReceiveFcmToken = async function (token: string) {
-      // 토큰이 존재하고 빈 문자열이 아닌 경우에만 처리
+    const handleToken = (token: string) => {
       if (token && token.trim() !== "") {
         localStorage.setItem("fcmToken", token);
         setFcmToken(token);
       }
     };
+
+    // React가 마운트된 이후에도 호출될 수 있으므로 전역 함수 등록 유지
+    (window as any).onReceiveFcmToken = async function (token: string) {
+      handleToken(token);
+    };
+
+    // 커스텀 이벤트 리스너 등록 (index.html에서 조기 수신한 경우 대응)
+    const onTokenReceived = (e: Event) => {
+      const customEvent = e as CustomEvent<string>;
+      if (customEvent.detail) {
+        setFcmToken(customEvent.detail);
+      }
+    };
+
+    window.addEventListener("fcmTokenReceived", onTokenReceived);
+
+    // 마운트 시점에 이미 localStorage에 토큰이 있다면 상태 동기화
+    const storedToken = localStorage.getItem("fcmToken");
+    if (storedToken) {
+      setFcmToken(storedToken);
+    }
+
     return () => {
       (window as any).onReceiveFcmToken = null;
+      window.removeEventListener("fcmTokenReceived", onTokenReceived);
     };
   }, []);
 
