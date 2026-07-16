@@ -120,3 +120,16 @@ export const getUserNotificationPreferences = async (): Promise<
   );
   return response;
 };
+
+/** 특정 알림센터 알림 읽음 처리 */
+export const patchNotificationsRead = async (
+  type: "NOTICE" | "CHAT",
+  targetId: string,
+): Promise<AxiosResponse<void>> => {
+  const response = await tokenInstance.patch<void>("/notifications/read", {
+    type,
+    targetId,
+  });
+  return response;
+};
+

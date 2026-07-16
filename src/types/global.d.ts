@@ -14,11 +14,16 @@ declare global {
                 requestAppUpdate: {
                     postMessage: (message: any) => void;
                 };
-                // 추가로 필요한 핸들러가 있다면 여기에 정의하세요.
+                enterDetailView?: {
+                    postMessage: (message: { type: "CHAT" | "NOTICE"; id: string }) => void;
+                };
             };
         };
 
         // ✅ 기존 useAppInit에서 사용하던 FCM 수신 함수
         onReceiveFcmToken?: ((token: string) => void) | null;
+
+        // ✅ 알림 라우팅용 전역 함수 정의
+        navigateToPath?: (path: string) => void;
     }
 }
