@@ -5,6 +5,7 @@ import { getMemberInfo } from "@/apis/members";
 import tokenInstance from "../apis/tokenInstance";
 // import { getMobilePlatform } from "@/utils/getMobilePlatform";
 import { PATHS } from "@/constants/paths";
+import { getRoommateChatRooms, getGroupOrderChatRooms } from "@/apis/chat";
 
 export const useAppInit = () => {
   const { tokenInfo, setUserInfo, setLoading } = useUserStore();
@@ -75,6 +76,57 @@ export const useAppInit = () => {
       (window as any).onReceiveFcmToken = null;
     };
   }, []);
+
+  // 알림 클릭 시 라우팅 핸들러 설정
+  useEffect(() => {
+    const resolveChatPath = async (id: string): Promise<string> => {
+      try {
+        const numericId = Number(id);
+        const [roommateRes, groupRes] = await Promise.allSettled([
+          getRoommateChatRooms(),
+          getGroupOrderChatRooms()
+        ]);
+        
+        if (roommateRes.status === "fulfilled") {
+          const exists = roommateRes.value.data.some(r => r.chatRoomId === numericId);
+          if (exists) return `/chat/roommate/${id}`;
+        }
+        
+        if (groupRes.status === "fulfilled") {
+          const exists = groupRes.value.data.some(r => r.chatRoomId === numericId);
+          if (exists) return `/chat/groupPurchase/${id}`;
+        }
+      } catch (e) {
+        console.error("Resolve chat path error:", e);
+      }
+      return `/chat/roommate/${id}`;
+    };
+
+    window.navigateToPath = async function (path: string) {
+      if (!path) return;
+      
+      let targetPath = path;
+      
+      // 1. 공지사항 경로 변환 (/notice/5678 -> /announcements/5678)
+      if (path.startsWith("/notice/")) {
+        const id = path.split("/")[2];
+        targetPath = `/announcements/${id}`;
+      }
+      
+      // 2. 채팅 경로 변환 (/chat/1234 -> /chat/roommate/1234 or /chat/groupPurchase/1234)
+      const chatMatch = path.match(/^\/chat\/(\d+)$/);
+      if (chatMatch) {
+        const id = chatMatch[1];
+        targetPath = await resolveChatPath(id);
+      }
+      
+      navigate(targetPath);
+    };
+
+    return () => {
+      window.navigateToPath = undefined;
+    };
+  }, [navigate]);
 
   // FCM 토큰 서버 등록 (로컬 스토리지 기반 무조건 전송)
   useEffect(() => {

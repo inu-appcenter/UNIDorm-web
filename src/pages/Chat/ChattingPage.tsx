@@ -7,6 +7,7 @@ import ChatItemMy from "../../components/chat/ChatItemMy.tsx";
 import { useRoommateChat } from "./useRoommateChat.ts";
 import useUserStore from "../../stores/useUserStore.ts";
 import { getRoommateChatHistory, getRoommateChatRooms } from "@/apis/chat";
+import { patchNotificationsRead } from "@/apis/notification";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import {
@@ -123,6 +124,32 @@ export default function ChattingPage() {
   const roomId = Number(id);
   const userId = userInfo.id;
   const token = tokenInfo.accessToken;
+
+  // 알림 읽음 처리 및 iOS 네이티브 브릿지 호출
+  useEffect(() => {
+    if (!id) return;
+
+    const markReadAndNotifyNative = async () => {
+      try {
+        await patchNotificationsRead("CHAT", id);
+      } catch (err) {
+        console.error("채팅방 알림 읽음 처리 실패:", err);
+      }
+
+      if (window.webkit?.messageHandlers?.enterDetailView) {
+        try {
+          window.webkit.messageHandlers.enterDetailView.postMessage({
+            type: "CHAT",
+            id: id,
+          });
+        } catch (err) {
+          console.error("iOS enterDetailView 브릿지 호출 실패:", err);
+        }
+      }
+    };
+
+    markReadAndNotifyNative();
+  }, [id]);
 
   // 오픈채팅방 공지 확장 여부
   const [isNoticeExpanded, setIsNoticeExpanded] = useState(false);

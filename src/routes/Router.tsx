@@ -26,7 +26,6 @@ import FreshmanSignupPage from "@/pages/FreshmanSignupPage";
 import HomePage from "@/pages/HomePage";
 import RoomMatePage from "@/pages/RoomMate/RoomMatePage";
 import GroupPurchaseMainPage from "@/pages/GroupPurchase/GroupPurchaseMainPage";
-import ChatListPage from "@/pages/Chat/ChatListPage";
 import MyPage from "@/pages/MyPage";
 
 /* 페이지 - 서브 상세 (SubPage 하위) */
@@ -110,8 +109,7 @@ export const router = createBrowserRouter([
           { path: "roommate", element: <RoomMatePage /> },
           { path: "roommate/my", element: <MyRoomMatePage /> },
           { path: "groupPurchase", element: <GroupPurchaseMainPage /> },
-          { path: "chat", element: <ChatListPage /> },
-          { path: "chat/open", element: <OpenChatPage /> },
+          { path: "chat", element: <OpenChatPage /> },
           { path: "mypage", element: <MyPage /> },
         ],
       },

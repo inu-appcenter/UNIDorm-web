@@ -6,6 +6,7 @@ import {
   getAnnouncementDetail,
   getAnnouncementFiles,
 } from "@/apis/announcements";
+import { patchNotificationsRead } from "@/apis/notification";
 import { AnnouncementDetail, AnnouncementFile } from "@/types/announcements";
 import AnnounceAttachment from "../../components/announce/AnnounceAttachment.tsx";
 import GrayDivider from "../../components/common/GrayDivider.tsx";
@@ -35,6 +36,32 @@ export default function AnnounceDetailPage() {
 
   const navigate = useNavigate();
   const { isAdmin } = useUserRole();
+
+  // 알림 읽음 처리 및 iOS 네이티브 브릿지 호출
+  useEffect(() => {
+    if (!boardId) return;
+
+    const markReadAndNotifyNative = async () => {
+      try {
+        await patchNotificationsRead("NOTICE", boardId);
+      } catch (err) {
+        console.error("공지사항 알림 읽음 처리 실패:", err);
+      }
+
+      if (window.webkit?.messageHandlers?.enterDetailView) {
+        try {
+          window.webkit.messageHandlers.enterDetailView.postMessage({
+            type: "NOTICE",
+            id: boardId,
+          });
+        } catch (err) {
+          console.error("iOS enterDetailView 브릿지 호출 실패:", err);
+        }
+      }
+    };
+
+    markReadAndNotifyNative();
+  }, [boardId]);
 
   useEffect(() => {
     if (!boardId) {
