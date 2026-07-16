@@ -4,15 +4,16 @@ import { OpenChatTab as OpenChatTabType } from "@/types/openchat";
 interface Props {
   selectedTab: OpenChatTabType;
   onChangeTab: (tab: OpenChatTabType) => void;
+  unreadCount?: number;
 }
 
 const tabs: { label: string; value: OpenChatTabType }[] = [
-  { label: "내 채팅방", value: "MY" },
-  { label: "내 기숙사", value: "DORMITORY" },
+  { label: "내 채팅", value: "MY" },
+  { label: "기숙사", value: "DORMITORY" },
   { label: "전체 방", value: "ALL" },
 ];
 
-export default function OpenChatTab({ selectedTab, onChangeTab }: Props) {
+export default function OpenChatTab({ selectedTab, onChangeTab, unreadCount = 0 }: Props) {
   return (
     <TabWrapper>
       {tabs.map((tab) => (
@@ -23,6 +24,9 @@ export default function OpenChatTab({ selectedTab, onChangeTab }: Props) {
           onClick={() => onChangeTab(tab.value)}
         >
           {tab.label}
+          {tab.value === "MY" && unreadCount > 0 && (
+            <Badge>{unreadCount > 99 ? "99+" : unreadCount}</Badge>
+          )}
         </TabButton>
       ))}
     </TabWrapper>
@@ -32,17 +36,42 @@ export default function OpenChatTab({ selectedTab, onChangeTab }: Props) {
 const TabWrapper = styled.div`
   width: 100%;
   display: flex;
-  gap: 8px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #c6c6cd;
 `;
 
 const TabButton = styled.button<{ $active: boolean }>`
   flex: 1;
-  height: 34px;
-  border: 1px solid ${({ $active }) => ($active ? "#2563EB" : "#d8dde8")};
-  border-radius: 999px;
-  background-color: #ffffff;
-  color: ${({ $active }) => ($active ? "#2563EB" : "#8a93a3")};
-  font-size: 14px;
-  font-weight: 800;
+  height: 40px;
+  border: none;
+  border-bottom: ${({ $active }) => ($active ? "2px solid #0958d9" : "none")};
+  margin-bottom: -1px; /* Overlaps TabWrapper's border-bottom */
+  background-color: transparent;
+  color: ${({ $active }) => ($active ? "#0958d9" : "#8e8e93")};
+  font-size: 16px;
+  font-weight: 600;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 10px;
+`;
+
+const Badge = styled.span`
+  position: absolute;
+  top: 4px;
+  left: calc(50% + 28px);
+  background-color: #ff5a3d;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 500;
+  min-width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  box-sizing: border-box;
 `;

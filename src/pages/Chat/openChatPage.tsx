@@ -1,28 +1,73 @@
 import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { getOpenChatRooms, joinOpenChatRoom } from "@/apis/openchat";
-import { getRoommateChatRooms, patchRoommateChatRead } from "@/apis/chat";
+import { getRoommateChatRooms, patchRoommateChatRead, getRoommateChatUnreadCount, getAllRoommateChatUnreadCount } from "@/apis/chat";
 import OpenChatRoomCard from "@/components/chat/OpenChatRoomCard";
 import OpenChatTab from "@/components/chat/OpenChatTab";
 import OpenChatEmptyState from "@/components/chat/OpenChatEmptyState";
 import OpenChatJoinModal from "@/components/modal/OpenChatJoinModal";
 import OpenChatPasswordModal from "@/components/modal/OpenChatPasswordModal";
-import ChatListItem from "@/components/chat/ChatListItem";
 import { OpenChatRoom, OpenChatTab as OpenChatTabType } from "@/types/openchat";
 import { RoommateChatRoom } from "@/types/chats";
 import { useNavigate } from "react-router-dom";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import useUserStore from "@/stores/useUserStore";
+import { Search, User } from "lucide-react";
+
+const formatTime = (isoString: string) => {
+  if (!isoString) return "";
+  const date = new Date(isoString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMins / 60);
+
+  if (diffMins < 1) return "방금";
+  if (diffMins < 60) return `${diffMins}분 전`;
+  if (diffHours < 24) return `${diffHours}시간 전`;
+  return date.toLocaleDateString("ko-KR", {
+    month: "2-digit",
+    day: "2-digit",
+  });
+};
+
+function RoommateChatCard({
+  room,
+  onClick,
+}: {
+  room: RoommateChatRoom;
+  onClick: () => void;
+}) {
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    getRoommateChatUnreadCount(room.chatRoomId)
+      .then((res) => setUnreadCount(res.data))
+      .catch((err) => console.error("룸메이트 안 읽은 메시지 수 조회 실패", err));
+  }, [room.chatRoomId]);
+
+  return (
+    <RoommateCard type="button" onClick={onClick}>
+      <CardLeft>
+        <RoommateBadge>
+          <User size={12} color="#1677ff" style={{ marginRight: 4 }} />
+          룸메 매칭
+        </RoommateBadge>
+        <RoomName>{room.partnerName || room.opponentNickname || "익명"}</RoomName>
+        <LastMessage>{room.lastMessage || "대화 내역이 없습니다."}</LastMessage>
+      </CardLeft>
+      <CardRight>
+        <TimeText>{room.lastMessageTime ? formatTime(room.lastMessageTime) : ""}</TimeText>
+        {unreadCount > 0 && <UnreadBadge>{unreadCount > 99 ? "99+" : unreadCount}</UnreadBadge>}
+      </CardRight>
+    </RoommateCard>
+  );
+}
 
 export default function OpenChatPage() {
   const navigate = useNavigate();
   const { tokenInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo?.accessToken);
-
-  useSetHeader({
-    title: "채팅",
-    showAlarm: true,
-  });
 
   const [selectedTab, setSelectedTab] = useState<OpenChatTabType>("MY");
   const [rooms, setRooms] = useState<OpenChatRoom[]>([]);
@@ -32,32 +77,43 @@ export default function OpenChatPage() {
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  
+  const [roommateUnreadTotal, setRoommateUnreadTotal] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const fetchChatRooms = async () => {
     if (!isLoggedIn) {
       setRooms([]);
       setRoommateRooms([]);
+      setRoommateUnreadTotal(0);
       return;
     }
 
     try {
       setIsLoading(true);
       if (selectedTab === "MY") {
-        const [openChatRes, roommateChatRes] = await Promise.all([
+        const [openChatRes, roommateChatRes, unreadRes] = await Promise.all([
           getOpenChatRooms("MY"),
           getRoommateChatRooms(),
+          getAllRoommateChatUnreadCount(),
         ]);
         setRooms(openChatRes.data.content);
         setRoommateRooms(roommateChatRes.data);
+        setRoommateUnreadTotal(unreadRes.data);
       } else {
         setRoommateRooms([]);
-        const response = await getOpenChatRooms(selectedTab);
-        setRooms(response.data.content);
+        const [openChatRes, unreadRes] = await Promise.all([
+          getOpenChatRooms(selectedTab),
+          getAllRoommateChatUnreadCount(),
+        ]);
+        setRooms(openChatRes.data.content);
+        setRoommateUnreadTotal(unreadRes.data);
       }
     } catch (error) {
       console.error("채팅방 목록 조회 실패", error);
       setRooms([]);
       setRoommateRooms([]);
+      setRoommateUnreadTotal(0);
     } finally {
       setIsLoading(false);
     }
@@ -134,9 +190,26 @@ export default function OpenChatPage() {
     setSelectedRoom(null);
   };
 
+  const openChatUnreadTotal = rooms.reduce((acc, r) => acc + (r.unreadCount || 0), 0);
+  const totalUnreadCount = roommateUnreadTotal + openChatUnreadTotal;
+
+  const filteredRoommateRooms = roommateRooms.filter((room) =>
+    (room.partnerName || room.opponentNickname || "")
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase()) ||
+    (room.lastMessage || "")
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase())
+  );
+
+  const filteredRooms = rooms.filter((room) =>
+    room.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    room.description.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   const mergedMyRooms = [
-    ...roommateRooms.map((room) => ({ ...room, itemType: "roommate" as const })),
-    ...rooms.map((room) => ({ ...room, itemType: "open" as const })),
+    ...filteredRoommateRooms.map((room) => ({ ...room, itemType: "roommate" as const })),
+    ...filteredRooms.map((room) => ({ ...room, itemType: "open" as const })),
   ].sort((a, b) => {
     const timeA =
       a.itemType === "roommate"
@@ -152,13 +225,26 @@ export default function OpenChatPage() {
     return new Date(timeB).getTime() - new Date(timeA).getTime();
   });
 
+  useSetHeader({
+    title: "채팅",
+    showAlarm: true,
+    secondHeader: (
+      <OpenChatTab selectedTab={selectedTab} onChangeTab={setSelectedTab} unreadCount={totalUnreadCount} />
+    ),
+  });
+
   return (
     <PageContainer>
       <Content>
-        <OpenChatTab selectedTab={selectedTab} onChangeTab={setSelectedTab} />
 
         <SearchBox>
-          <SearchPlaceholder>방 이름/설명 검색</SearchPlaceholder>
+          <SearchInput
+            type="text"
+            placeholder="방 이름/설명 검색"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <Search size={20} color="#8b8b8b" />
         </SearchBox>
 
         {!isLoggedIn ? (
@@ -184,10 +270,9 @@ export default function OpenChatPage() {
               {mergedMyRooms.map((item) => {
                 if (item.itemType === "roommate") {
                   return (
-                    <ChatListItem
+                    <RoommateChatCard
                       key={`roommate-${item.chatRoomId}`}
-                      chatRoomId={item.chatRoomId}
-                      selectedTab="룸메이트"
+                      room={item}
                       onClick={() =>
                         handleRoommateClick(
                           item.chatRoomId,
@@ -195,10 +280,6 @@ export default function OpenChatPage() {
                           item.partnerProfileImageUrl,
                         )
                       }
-                      title={item.partnerName}
-                      message={item.lastMessage}
-                      time={item.lastMessageTime}
-                      partnerProfileImageUrl={item.partnerProfileImageUrl}
                     />
                   );
                 } else {
@@ -214,14 +295,14 @@ export default function OpenChatPage() {
               })}
             </RoomList>
           )
-        ) : rooms.length === 0 ? (
+        ) : filteredRooms.length === 0 ? (
           <OpenChatEmptyState
             tab={selectedTab}
             onClickMoveDormitory={() => setSelectedTab("DORMITORY")}
           />
         ) : (
           <RoomList>
-            {rooms.map((room) => (
+            {filteredRooms.map((room) => (
               <OpenChatRoomCard
                 key={room.roomId}
                 room={room}
@@ -262,25 +343,36 @@ const PageContainer = styled.div`
 `;
 
 const Content = styled.main`
-  padding: 24px 20px 120px;
+  padding: 64px 20px 120px;
 `;
 
 const SearchBox = styled.div`
   width: 100%;
-  height: 42px;
-  margin: 14px 0 22px;
-  border: 1px solid #d8dde8;
-  border-radius: 999px;
-  padding: 0 16px;
+  height: 40px;
+  margin: 16px 0;
+  border: 1px solid #dfdfdf;
+  border-radius: 8px;
+  padding: 8px 12px;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   background-color: #ffffff;
+  box-sizing: border-box;
 `;
 
-const SearchPlaceholder = styled.span`
+const SearchInput = styled.input`
+  flex: 1;
+  border: none;
+  outline: none;
   font-size: 14px;
-  font-weight: 500;
-  color: #a1a8b5;
+  font-weight: 400;
+  color: #3d3d3d;
+  background-color: transparent;
+  padding: 0;
+
+  &::placeholder {
+    color: #8b8b8b;
+  }
 `;
 
 const RoomList = styled.div`
@@ -370,3 +462,90 @@ const LoginButton = styled.button`
   font-weight: 800;
   cursor: pointer;
 `;
+
+const RoommateCard = styled.button`
+  width: 100%;
+  padding: 16px;
+  border: 1px solid #dfdfdf;
+  border-radius: 16px;
+  background-color: #e6f4ff;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  box-sizing: border-box;
+`;
+
+const CardLeft = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex: 1;
+  min-width: 0;
+`;
+
+const RoommateBadge = styled.div`
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 500;
+  color: #1677ff;
+  margin-bottom: 8px;
+`;
+
+const CardRight = styled.div`
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  margin-left: 12px;
+`;
+
+const RoomName = styled.h3`
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: #3d3d3d;
+  word-break: keep-all;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+`;
+
+const LastMessage = styled.p`
+  margin: 4px 0 0;
+  font-size: 14px;
+  font-weight: 400;
+  color: #8b8b8b;
+  line-height: 1.5;
+  word-break: keep-all;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+`;
+
+const TimeText = styled.span`
+  font-size: 12px;
+  color: #8b8b8b;
+`;
+
+const UnreadBadge = styled.span`
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background-color: #1677ff;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+`;
+
