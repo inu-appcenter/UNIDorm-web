@@ -6,6 +6,7 @@ import tokenInstance from "../apis/tokenInstance";
 // import { getMobilePlatform } from "@/utils/getMobilePlatform";
 import { PATHS } from "@/constants/paths";
 import { getRoommateChatRooms, getGroupOrderChatRooms } from "@/apis/chat";
+import { getOpenChatRooms } from "@/apis/openchat";
 
 export const useAppInit = () => {
   const { tokenInfo, setUserInfo, setLoading } = useUserStore();
@@ -104,9 +105,10 @@ export const useAppInit = () => {
     const resolveChatPath = async (id: string): Promise<string> => {
       try {
         const numericId = Number(id);
-        const [roommateRes, groupRes] = await Promise.allSettled([
+        const [roommateRes, groupRes, openRes] = await Promise.allSettled([
           getRoommateChatRooms(),
-          getGroupOrderChatRooms()
+          getGroupOrderChatRooms(),
+          getOpenChatRooms("MY", 0, 100)
         ]);
         
         if (roommateRes.status === "fulfilled") {
@@ -117,6 +119,11 @@ export const useAppInit = () => {
         if (groupRes.status === "fulfilled") {
           const exists = groupRes.value.data.some(r => r.chatRoomId === numericId);
           if (exists) return `/chat/groupPurchase/${id}`;
+        }
+
+        if (openRes.status === "fulfilled") {
+          const exists = openRes.value.data.content.some(r => r.roomId === numericId);
+          if (exists) return `/chat/open/${id}`;
         }
       } catch (e) {
         console.error("Resolve chat path error:", e);
