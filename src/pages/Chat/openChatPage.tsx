@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import styled from "styled-components";
+import { isAxiosError } from "axios";
 import { getOpenChatRooms, joinOpenChatRoom } from "@/apis/openchat";
 import { getRoommateChatRooms, patchRoommateChatRead, getRoommateChatUnreadCount, getAllRoommateChatUnreadCount } from "@/apis/chat";
 import OpenChatRoomCard from "@/components/chat/OpenChatRoomCard";
@@ -166,6 +167,23 @@ export default function OpenChatPage() {
       fetchChatRooms();
     } catch (error) {
       console.error("오픈채팅방 참여 실패", error);
+      if (isAxiosError(error)) {
+        const status = error.response?.status;
+        if (status === 400) {
+          alert("비밀번호가 올바르지 않습니다.");
+        } else if (status === 401) {
+          alert("로그인이 필요합니다.");
+          navigate("/login");
+        } else if (status === 404) {
+          alert("채팅방을 찾을 수 없습니다.");
+        } else if (status === 409) {
+          alert("참여 인원이 가득 찼습니다. (최대 인원 초과)");
+        } else {
+          alert("채팅방 입장에 실패했습니다. 다시 시도해 주세요.");
+        }
+      } else {
+        alert("알 수 없는 오류가 발생했습니다.");
+      }
     }
   };
 
@@ -181,6 +199,23 @@ export default function OpenChatPage() {
       fetchChatRooms();
     } catch (error) {
       console.error("비밀번호 오픈채팅방 참여 실패", error);
+      if (isAxiosError(error)) {
+        const status = error.response?.status;
+        if (status === 400) {
+          alert("비밀번호가 일치하지 않습니다.");
+        } else if (status === 401) {
+          alert("로그인이 필요합니다.");
+          navigate("/login");
+        } else if (status === 404) {
+          alert("채팅방을 찾을 수 없습니다.");
+        } else if (status === 409) {
+          alert("참여 인원이 가득 찼습니다. (최대 인원 초과)");
+        } else {
+          alert("채팅방 입장에 실패했습니다. 다시 시도해 주세요.");
+        }
+      } else {
+        alert("알 수 없는 오류가 발생했습니다.");
+      }
     }
   };
 

@@ -44,8 +44,8 @@ export const createOpenChatRoom = async (
 export const joinOpenChatRoom = async (
   roomId: number,
   password?: string,
-): Promise<AxiosResponse<void>> => {
-  const response = await tokenInstance.post<void>(
+): Promise<AxiosResponse<CreatedOpenChatRoomResponse>> => {
+  const response = await tokenInstance.post<CreatedOpenChatRoomResponse>(
     `/open-chat-rooms/${roomId}/participants/me`,
     null,
     {
