@@ -167,10 +167,10 @@ export default function BottomBar() {
         defaultImg={chat}
         clickedImg={chatClicked}
         buttonName="채팅"
-        isActive={pathname === "/chat/open"}
+        isActive={pathname === "/chat"}
         onClick={() => {
           mixpanelTrack.featureClicked("채팅", "BottomBar");
-          navigate("/chat/open");
+          navigate("/chat");
         }}
         badgeCount={unreadCount}
       />
