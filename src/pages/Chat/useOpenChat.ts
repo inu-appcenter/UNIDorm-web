@@ -143,7 +143,7 @@ export const useOpenChat = ({
     };
 
     console.log("📤 [SEND] 오픈채팅 메시지 전송:", message);
-    stompSend("/pub/open-chat/socketchat", message);
+    stompSend("/pub/openchat/socketchat", message);
   };
 
   const disconnect = () => {
@@ -158,7 +158,7 @@ export const useOpenChat = ({
   };
 
   useEffect(() => {
-    subscribe(`/sub/open-chat/chat/${roomId}`, onMessage);
+    subscribe(`/sub/openchat/${roomId}`, onMessage);
 
     return () => {
       disconnect();
