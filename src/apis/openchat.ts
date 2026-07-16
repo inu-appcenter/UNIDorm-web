@@ -3,6 +3,7 @@ import {
   CreatedOpenChatRoomResponse,
   OpenChatRoomPageResponse,
   OpenChatTab,
+  OpenChatMessagesResponse,
 } from "@/types/openchat";
 import { AxiosResponse } from "axios";
 import tokenInstance from "./tokenInstance.ts";
@@ -44,8 +45,8 @@ export const createOpenChatRoom = async (
 export const joinOpenChatRoom = async (
   roomId: number,
   password?: string,
-): Promise<AxiosResponse<void>> => {
-  const response = await tokenInstance.post<void>(
+): Promise<AxiosResponse<CreatedOpenChatRoomResponse>> => {
+  const response = await tokenInstance.post<CreatedOpenChatRoomResponse>(
     `/open-chat-rooms/${roomId}/participants/me`,
     null,
     {
@@ -56,5 +57,23 @@ export const joinOpenChatRoom = async (
   );
 
   console.log(response);
+  return response;
+};
+
+/** 오픈채팅방 메시지 목록 조회 */
+export const getOpenChatMessages = async (
+  roomId: number,
+  lastMessageId?: number | null,
+  size = 30,
+): Promise<AxiosResponse<OpenChatMessagesResponse>> => {
+  const response = await tokenInstance.get<OpenChatMessagesResponse>(
+    `/open-chat-rooms/${roomId}/messages`,
+    {
+      params: {
+        lastMessageId,
+        size,
+      },
+    },
+  );
   return response;
 };

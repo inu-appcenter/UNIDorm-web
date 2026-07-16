@@ -5,9 +5,11 @@ import ChatInfo from "../../components/chat/ChatInfo.tsx";
 import ChatItemOtherPerson from "../../components/chat/ChatItemOtherPerson.tsx";
 import ChatItemMy from "../../components/chat/ChatItemMy.tsx";
 import { useRoommateChat } from "./useRoommateChat.ts";
+import { useOpenChat } from "./useOpenChat";
 import useUserStore from "../../stores/useUserStore.ts";
 import { getRoommateChatHistory, getRoommateChatRooms } from "@/apis/chat";
 import { patchNotificationsRead } from "@/apis/notification";
+import { getOpenChatMessages } from "@/apis/openchat";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import {
@@ -35,6 +37,7 @@ type MessageType = {
   createdAt: string; // 날짜 비교용 원본 날짜 문자열 (ISO 등)
   userImageUrl?: string | null; // 프로필 이미지 URL NULL 구분
   nickname?: string;
+  isSystem?: boolean; // 시스템 메시지 플래그 추가
 };
 
 interface ShareMessageInfo {
@@ -285,7 +288,12 @@ export default function ChattingPage() {
     }
   };
 
-  const { connect, disconnect, sendMessage, isConnected } = useRoommateChat({
+  const {
+    connect: connectRoommate,
+    disconnect: disconnectRoommate,
+    sendMessage: sendRoommateMessage,
+    isConnected: isRoommateConnected,
+  } = useRoommateChat({
     roomId,
     userId,
     token,
@@ -339,6 +347,46 @@ export default function ChattingPage() {
     },
     onDisconnect: () => {
       console.log("🛑 WebSocket 연결 해제됨");
+      if (!isLeavingRef.current) {
+        window.location.reload();
+      }
+    },
+  });
+
+  const {
+    connect: connectOpen,
+    disconnect: disconnectOpen,
+    sendMessage: sendOpenMessage,
+    isConnected: isOpenConnected,
+  } = useOpenChat({
+    roomId,
+    userId,
+    token,
+    onMessage: (msg) => {
+      const now = new Date();
+      setMessageList((prev) => [
+        ...prev,
+        {
+          id: msg.messageId || Date.now(),
+          sender: msg.senderId === userId ? "me" : "other",
+          content: msg.content,
+          nickname: msg.senderNickname || undefined,
+          userImageUrl: null,
+          isSystem: msg.type === "SYSTEM",
+          time: now.toLocaleTimeString("ko-KR", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+          }),
+          createdAt: now.toISOString(),
+        },
+      ]);
+    },
+    onConnect: () => {
+      console.log("✅ Open WebSocket 연결됨");
+    },
+    onDisconnect: () => {
+      console.log("🛑 Open WebSocket 연결 해제됨");
       if (!isLeavingRef.current) {
         window.location.reload();
       }
@@ -405,38 +453,34 @@ export default function ChattingPage() {
         } finally {
           setIsHistoryLoading(false);
         }
-        connect();
+        connectRoommate();
       } else if (chatType === "open") {
         setTypeString("오픈채팅");
-        setMessageList([
-          {
-            id: 1,
-            sender: "other",
-            nickname: "방장횃불이",
-            content:
-              "오픈채팅방에 오신 것을 환영합니다! 오늘 배달 같이 시키실 분 계신가요?",
-            time: "오전 11:30",
-            createdAt: "2026-07-01T11:30:00Z",
+        setIsHistoryLoading(true);
+        try {
+          const response = await getOpenChatMessages(roomId);
+          const chats = response.data.messages;
+          const formattedMessages: MessageType[] = chats.map((chat) => ({
+            id: chat.messageId,
+            sender: chat.senderId === userId ? "me" : "other",
+            content: chat.content,
+            nickname: chat.senderNickname || undefined,
             userImageUrl: null,
-          },
-          {
-            id: 2,
-            sender: "me",
-            content: "안녕하세요! 혹시 치킨 같이 시킬 수 있을까요?",
-            time: "오전 11:31",
-            createdAt: "2026-07-01T11:31:00Z",
-          },
-          {
-            id: 3,
-            sender: "other",
-            nickname: "동네UNI",
-            content:
-              "오 좋네요. 저도 치킨 같이 시켜요! 무슨 브랜드 좋아하시나요?",
-            time: "오전 11:35",
-            createdAt: "2026-07-01T11:35:00Z",
-            userImageUrl: null,
-          },
-        ]);
+            isSystem: chat.type === "SYSTEM",
+            time: new Date(chat.createdAt).toLocaleTimeString("ko-KR", {
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: true,
+            }),
+            createdAt: chat.createdAt,
+          }));
+          setMessageList(formattedMessages);
+        } catch (error) {
+          console.error("오픈채팅방 메시지 조회 실패:", error);
+        } finally {
+          setIsHistoryLoading(false);
+        }
+        connectOpen();
       } else {
         setTypeString("개인대화");
         setMessageList([
@@ -497,7 +541,8 @@ export default function ChattingPage() {
     init();
     return () => {
       isLeavingRef.current = true;
-      if (isConnected) disconnect();
+      if (isRoommateConnected) disconnectRoommate();
+      if (isOpenConnected) disconnectOpen();
     };
   }, [chatType]);
 
@@ -517,7 +562,11 @@ export default function ChattingPage() {
       return;
     }
 
-    if (chatType === "roommate" && !isConnected) {
+    if (chatType === "roommate" && !isRoommateConnected) {
+      alert("채팅 연결을 확인해주세요.");
+      return;
+    }
+    if (chatType === "open" && !isOpenConnected) {
       alert("채팅 연결을 확인해주세요.");
       return;
     }
@@ -539,7 +588,9 @@ export default function ChattingPage() {
 
     setMessageList((prev) => [...prev, newMessage]);
     if (chatType === "roommate") {
-      sendMessage(inputValue.trim());
+      sendRoommateMessage(inputValue.trim());
+    } else if (chatType === "open") {
+      sendOpenMessage(inputValue.trim());
     }
     setInputValue("");
     if (inputRef.current) inputRef.current.style.height = "auto";
@@ -672,6 +723,21 @@ export default function ChattingPage() {
                 if (!isSameDate(prevMsg.createdAt, msg.createdAt)) {
                   showDateLine = true;
                 }
+              }
+
+              if (msg.isSystem) {
+                return (
+                  <React.Fragment key={msg.id}>
+                    {showDateLine && (
+                      <S.DateDivider>
+                        {formatDateLine(msg.createdAt)}
+                      </S.DateDivider>
+                    )}
+                    <S.ShareSystemMessage>
+                      {msg.content}
+                    </S.ShareSystemMessage>
+                  </React.Fragment>
+                );
               }
 
               const parsed = parseShareMessage(msg.content);
