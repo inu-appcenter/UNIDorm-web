@@ -64,3 +64,25 @@ export interface CreatedOpenChatRoomResponse {
   createdAt: string;
   official: boolean;
 }
+
+export interface OpenChatMessage {
+  messageId: number;
+  roomId: number;
+  senderId: number | null;
+  senderNickname: string | null;
+  content: string;
+  type: "TEXT" | "IMAGE" | "SYSTEM" | "ROOM_LINK";
+  imageUrls?: string[];
+  unreadCount: number;
+  createdAt: string;
+  linkedRoomId?: number | null;
+  linkedRoomName?: string | null;
+  linkedRoomDescription?: string | null;
+  linkedRoomMaxParticipants?: number | null;
+}
+
+export interface OpenChatMessagesResponse {
+  messages: OpenChatMessage[];
+  hasNext: boolean;
+  nextCursor: number | null;
+}
