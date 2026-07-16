@@ -12,7 +12,7 @@ import { RoommateChatRoom } from "@/types/chats";
 import { useNavigate } from "react-router-dom";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import useUserStore from "@/stores/useUserStore";
-import { Search, User } from "lucide-react";
+import { Search, User, Plus } from "lucide-react";
 
 const formatTime = (isoString: string) => {
   if (!isoString) return "";
@@ -315,7 +315,8 @@ export default function OpenChatPage() {
       </Content>
 
       <CreateButton type="button" onClick={() => navigate("/chat/open/create")}>
-        <Plus>＋</Plus>방 만들기
+        <Plus size={20} color="white" />
+        <ButtonText>방만들기</ButtonText>
       </CreateButton>
 
       <OpenChatJoinModal
@@ -338,7 +339,6 @@ export default function OpenChatPage() {
 const PageContainer = styled.div`
   position: relative;
   min-height: 100vh;
-  background-color: #ffffff;
   color: #222222;
 `;
 
@@ -392,28 +392,32 @@ const CreateButton = styled.button`
   position: fixed;
   right: 24px;
   bottom: 88px;
-  height: 52px;
-  padding: 0 24px;
+  width: 62px;
+  height: 62px;
   border: none;
-  border-radius: 999px;
-  background-color: #2563eb;
+  border-radius: 50%;
+  background-color: #ffc53d;
   color: #ffffff;
-  font-size: 15px;
-  font-weight: 900;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  gap: 2px;
   cursor: pointer;
-  box-shadow: 0 8px 20px rgba(63, 107, 255, 0.28);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  padding: 8px;
+  box-sizing: border-box;
 
   @media (min-width: 769px) {
     right: calc((100vw - 480px) / 2 + 24px);
   }
 `;
 
-const Plus = styled.span`
-  font-size: 20px;
-  line-height: 1;
+const ButtonText = styled.span`
+  font-size: 11px;
+  font-weight: 500;
+  color: #ffffff;
+  white-space: nowrap;
 `;
 
 const LoginPromptWrapper = styled.div`
