@@ -6,11 +6,23 @@ type Props = {
   time: string;
   userImageUrl?: string | null;
   senderName?: string;
+  imageUrls?: string[];
+  onMessageClick?: () => void;
 };
 
-const ChatItemOtherPerson = ({ content, time, userImageUrl, senderName }: Props) => {
+const ChatItemOtherPerson = ({
+  content,
+  time,
+  userImageUrl,
+  senderName,
+  imageUrls,
+  onMessageClick,
+}: Props) => {
   return (
-    <ChatItemOtherPersonWrapper>
+    <ChatItemOtherPersonWrapper
+      onClick={onMessageClick}
+      $clickable={Boolean(onMessageClick)}
+    >
       <ProfileImg
         src={userImageUrl && userImageUrl !== "string" ? userImageUrl : profile}
         alt="상대방"
@@ -21,7 +33,15 @@ const ChatItemOtherPerson = ({ content, time, userImageUrl, senderName }: Props)
       />
       <ContentArea>
         {senderName && <div className="sender-name">{senderName}</div>}
-        <div className="message">{content}</div>
+        {imageUrls?.length ? (
+          <ImageGrid>
+            {imageUrls.map((url) => (
+              <img key={url} src={url} alt="첨부 사진" />
+            ))}
+          </ImageGrid>
+        ) : (
+          <div className="message">{content}</div>
+        )}
       </ContentArea>
       <TimeArea>
         <div className="time">{time}</div>
@@ -32,7 +52,7 @@ const ChatItemOtherPerson = ({ content, time, userImageUrl, senderName }: Props)
 
 export default ChatItemOtherPerson;
 
-const ChatItemOtherPersonWrapper = styled.div`
+const ChatItemOtherPersonWrapper = styled.div<{ $clickable: boolean }>`
   width: 100%;
   height: fit-content;
   display: flex;
@@ -42,6 +62,25 @@ const ChatItemOtherPersonWrapper = styled.div`
   box-sizing: border-box;
 
   gap: 8px;
+  cursor: ${({ $clickable }) => ($clickable ? "pointer" : "default")};
+`;
+
+const ImageGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 140px));
+  gap: 4px;
+  overflow: hidden;
+  border-radius: 16px;
+  img {
+    width: 100%;
+    max-height: 220px;
+    object-fit: cover;
+    display: block;
+  }
+  img:only-child {
+    grid-column: 1 / -1;
+    min-width: 140px;
+  }
 `;
 const ProfileImg = styled.img`
   //padding-top: 3px;

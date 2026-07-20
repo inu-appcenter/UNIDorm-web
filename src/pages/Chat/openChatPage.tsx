@@ -2,7 +2,12 @@ import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { isAxiosError } from "axios";
 import { getOpenChatRooms, joinOpenChatRoom } from "@/apis/openchat";
-import { getRoommateChatRooms, patchRoommateChatRead, getRoommateChatUnreadCount, getAllRoommateChatUnreadCount } from "@/apis/chat";
+import {
+  getRoommateChatRooms,
+  patchRoommateChatRead,
+  getRoommateChatUnreadCount,
+  getAllRoommateChatUnreadCount,
+} from "@/apis/chat";
 import OpenChatRoomCard from "@/components/chat/OpenChatRoomCard";
 import OpenChatTab from "@/components/chat/OpenChatTab";
 import OpenChatEmptyState from "@/components/chat/OpenChatEmptyState";
@@ -44,7 +49,9 @@ function RoommateChatCard({
   useEffect(() => {
     getRoommateChatUnreadCount(room.chatRoomId)
       .then((res) => setUnreadCount(res.data))
-      .catch((err) => console.error("룸메이트 안 읽은 메시지 수 조회 실패", err));
+      .catch((err) =>
+        console.error("룸메이트 안 읽은 메시지 수 조회 실패", err),
+      );
   }, [room.chatRoomId]);
 
   return (
@@ -54,12 +61,18 @@ function RoommateChatCard({
           <User size={12} color="#1677ff" style={{ marginRight: 4 }} />
           룸메 매칭
         </RoommateBadge>
-        <RoomName>{room.partnerName || room.opponentNickname || "익명"}</RoomName>
+        <RoomName>
+          {room.partnerName || room.opponentNickname || "익명"}
+        </RoomName>
         <LastMessage>{room.lastMessage || "대화 내역이 없습니다."}</LastMessage>
       </CardLeft>
       <CardRight>
-        <TimeText>{room.lastMessageTime ? formatTime(room.lastMessageTime) : ""}</TimeText>
-        {unreadCount > 0 && <UnreadBadge>{unreadCount > 99 ? "99+" : unreadCount}</UnreadBadge>}
+        <TimeText>
+          {room.lastMessageTime ? formatTime(room.lastMessageTime) : ""}
+        </TimeText>
+        {unreadCount > 0 && (
+          <UnreadBadge>{unreadCount > 99 ? "99+" : unreadCount}</UnreadBadge>
+        )}
       </CardRight>
     </RoommateCard>
   );
@@ -78,7 +91,7 @@ export default function OpenChatPage() {
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const [roommateUnreadTotal, setRoommateUnreadTotal] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -225,25 +238,33 @@ export default function OpenChatPage() {
     setSelectedRoom(null);
   };
 
-  const openChatUnreadTotal = rooms.reduce((acc, r) => acc + (r.unreadCount || 0), 0);
+  const openChatUnreadTotal = rooms.reduce(
+    (acc, r) => acc + (r.unreadCount || 0),
+    0,
+  );
   const totalUnreadCount = roommateUnreadTotal + openChatUnreadTotal;
 
-  const filteredRoommateRooms = roommateRooms.filter((room) =>
-    (room.partnerName || room.opponentNickname || "")
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase()) ||
-    (room.lastMessage || "")
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase())
+  const filteredRoommateRooms = roommateRooms.filter(
+    (room) =>
+      (room.partnerName || room.opponentNickname || "")
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      (room.lastMessage || "")
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()),
   );
 
-  const filteredRooms = rooms.filter((room) =>
-    room.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    room.description.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredRooms = rooms.filter(
+    (room) =>
+      room.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      room.description.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const mergedMyRooms = [
-    ...filteredRoommateRooms.map((room) => ({ ...room, itemType: "roommate" as const })),
+    ...filteredRoommateRooms.map((room) => ({
+      ...room,
+      itemType: "roommate" as const,
+    })),
     ...filteredRooms.map((room) => ({ ...room, itemType: "open" as const })),
   ].sort((a, b) => {
     const timeA =
@@ -264,14 +285,17 @@ export default function OpenChatPage() {
     title: "채팅",
     showAlarm: true,
     secondHeader: (
-      <OpenChatTab selectedTab={selectedTab} onChangeTab={setSelectedTab} unreadCount={totalUnreadCount} />
+      <OpenChatTab
+        selectedTab={selectedTab}
+        onChangeTab={setSelectedTab}
+        unreadCount={totalUnreadCount}
+      />
     ),
   });
 
   return (
     <PageContainer>
       <Content>
-
         <SearchBox>
           <SearchInput
             type="text"
@@ -425,8 +449,9 @@ const LoadingText = styled.p`
 
 const CreateButton = styled.button`
   position: fixed;
-  right: 24px;
-  bottom: 88px;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: calc(88px + env(safe-area-inset-bottom));
+  z-index: 100;
   width: 62px;
   height: 62px;
   border: none;
@@ -442,10 +467,6 @@ const CreateButton = styled.button`
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
   padding: 8px;
   box-sizing: border-box;
-
-  @media (min-width: 769px) {
-    right: calc((100vw - 480px) / 2 + 24px);
-  }
 `;
 
 const ButtonText = styled.span`
@@ -587,4 +608,3 @@ const UnreadBadge = styled.span`
   justify-content: center;
   box-sizing: border-box;
 `;
-

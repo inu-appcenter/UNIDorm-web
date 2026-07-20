@@ -81,6 +81,42 @@ export interface OpenChatMessage {
   linkedRoomMaxParticipants?: number | null;
 }
 
+export interface OpenChatParticipant {
+  userId: number;
+  nickname: string;
+  joinedAt: string;
+  isHost: boolean;
+  isAdmin: boolean;
+}
+
+export interface OpenChatParticipantListResponse {
+  roomId: number;
+  participants: OpenChatParticipant[];
+  totalCount: number;
+  hostCount: number;
+}
+
+export type OpenChatKickReason =
+  | "SPAM"
+  | "ABUSE"
+  | "IMPERSONATION"
+  | "REPORT_ACCUMULATED"
+  | "OTHER";
+
+export interface CreatePersonalOpenChatRoomRequest {
+  name: string;
+  targetUserId: number;
+  password?: string;
+}
+
+export interface CreatePersonalOpenChatRoomResponse {
+  roomId: number;
+}
+
+export interface LeaveOpenChatRoomResponse {
+  roomDeleted: boolean;
+}
+
 export interface OpenChatMessagesResponse {
   messages: OpenChatMessage[];
   hasNext: boolean;
