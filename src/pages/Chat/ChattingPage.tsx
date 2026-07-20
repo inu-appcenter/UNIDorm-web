@@ -10,6 +10,15 @@ import useUserStore from "../../stores/useUserStore.ts";
 import { getRoommateChatHistory, getRoommateChatRooms } from "@/apis/chat";
 import { patchNotificationsRead } from "@/apis/notification";
 import { getOpenChatMessages } from "@/apis/openchat";
+import {
+  getOpenChatParticipants,
+  kickOpenChatParticipant,
+  sendOpenChatImages,
+} from "@/apis/openchat";
+import { createReport } from "@/apis/report";
+import { OpenChatKickReason, OpenChatMessage } from "@/types/openchat";
+import PhotoAttachmentBottomSheet from "@/components/chat/PhotoAttachmentBottomSheet";
+import ChatMessageActionSheet from "@/components/chat/ChatMessageActionSheet";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import {
@@ -38,6 +47,9 @@ type MessageType = {
   userImageUrl?: string | null; // 프로필 이미지 URL NULL 구분
   nickname?: string;
   isSystem?: boolean; // 시스템 메시지 플래그 추가
+  senderId?: number | null;
+  type?: OpenChatMessage["type"];
+  imageUrls?: string[];
 };
 
 interface ShareMessageInfo {
@@ -158,6 +170,12 @@ export default function ChattingPage() {
   const [isNoticeExpanded, setIsNoticeExpanded] = useState(false);
   // 플로팅 입력바의 + 버튼 메뉴 열림 여부
   const [menuOpen, setMenuOpen] = useState(false);
+  const [photoSheetOpen, setPhotoSheetOpen] = useState(false);
+  const [messageSheetOpen, setMessageSheetOpen] = useState(false);
+  const [selectedMessage, setSelectedMessage] = useState<MessageType | null>(
+    null,
+  );
+  const [isOpenChatHost, setIsOpenChatHost] = useState(false);
   const menuContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -373,6 +391,9 @@ export default function ChattingPage() {
           nickname: msg.senderNickname || undefined,
           userImageUrl: null,
           isSystem: msg.type === "SYSTEM",
+          senderId: msg.senderId,
+          type: msg.type,
+          imageUrls: msg.imageUrls ?? [],
           time: now.toLocaleTimeString("ko-KR", {
             hour: "2-digit",
             minute: "2-digit",
@@ -421,8 +442,7 @@ export default function ChattingPage() {
                 roomId,
                 oppId,
               );
-              const { targetStudentNumber } =
-                statusResponse.data;
+              const { targetStudentNumber } = statusResponse.data;
               if (targetStudentNumber) {
                 setOpponentStudentNumber(targetStudentNumber);
               }
@@ -454,11 +474,20 @@ export default function ChattingPage() {
           setIsHistoryLoading(false);
         }
         connectRoommate();
-      } else if (chatType === "open") {
-        setTypeString("오픈채팅");
+      } else if (chatType === "open" || chatType === "personal") {
+        setTypeString(chatType === "open" ? "오픈채팅" : "1대1 채팅");
         setIsHistoryLoading(true);
         try {
-          const response = await getOpenChatMessages(roomId);
+          const [response, participantsResponse] = await Promise.all([
+            getOpenChatMessages(roomId),
+            getOpenChatParticipants(roomId),
+          ]);
+          setIsOpenChatHost(
+            participantsResponse.data.participants.some(
+              (participant) =>
+                participant.userId === userId && participant.isHost,
+            ),
+          );
           const chats = response.data.messages;
           const formattedMessages: MessageType[] = chats.map((chat) => ({
             id: chat.messageId,
@@ -467,6 +496,9 @@ export default function ChattingPage() {
             nickname: chat.senderNickname || undefined,
             userImageUrl: null,
             isSystem: chat.type === "SYSTEM",
+            senderId: chat.senderId,
+            type: chat.type,
+            imageUrls: chat.imageUrls ?? [],
             time: new Date(chat.createdAt).toLocaleTimeString("ko-KR", {
               hour: "2-digit",
               minute: "2-digit",
@@ -566,7 +598,7 @@ export default function ChattingPage() {
       alert("채팅 연결을 확인해주세요.");
       return;
     }
-    if (chatType === "open" && !isOpenConnected) {
+    if ((chatType === "open" || chatType === "personal") && !isOpenConnected) {
       alert("채팅 연결을 확인해주세요.");
       return;
     }
@@ -589,11 +621,67 @@ export default function ChattingPage() {
     setMessageList((prev) => [...prev, newMessage]);
     if (chatType === "roommate") {
       sendRoommateMessage(inputValue.trim());
-    } else if (chatType === "open") {
+    } else if (chatType === "open" || chatType === "personal") {
       sendOpenMessage(inputValue.trim());
     }
     setInputValue("");
     if (inputRef.current) inputRef.current.style.height = "auto";
+  };
+
+  const toMessageType = (message: OpenChatMessage): MessageType => ({
+    id: message.messageId,
+    sender: message.senderId === userId ? "me" : "other",
+    senderId: message.senderId,
+    content: message.content,
+    nickname: message.senderNickname ?? undefined,
+    isSystem: message.type === "SYSTEM",
+    type: message.type,
+    imageUrls: message.imageUrls ?? [],
+    time: new Date(message.createdAt).toLocaleTimeString("ko-KR", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    }),
+    createdAt: message.createdAt,
+  });
+
+  const handleSendImages = async (files: File[]) => {
+    try {
+      const response = await sendOpenChatImages(roomId, files);
+      setMessageList((current) => [
+        ...current,
+        ...response.data.map(toMessageType),
+      ]);
+    } catch (error) {
+      console.error("사진 전송 실패:", error);
+      alert(
+        "사진 전송에 실패했습니다. 이미지 형식과 네트워크 상태를 확인해주세요.",
+      );
+      throw error;
+    }
+  };
+
+  const openMessageActions = (message: MessageType) => {
+    if (chatType !== "open" || message.sender !== "other" || message.isSystem)
+      return;
+    setSelectedMessage(message);
+    setMessageSheetOpen(true);
+  };
+
+  const handleReportMessage = async (reason: string) => {
+    if (!selectedMessage) return;
+    await createReport({
+      category: reason,
+      title: "오픈채팅 메시지 신고",
+      content: `[roomId:${roomId}][messageId:${selectedMessage.id}] ${selectedMessage.content || "사진 메시지"}`,
+    });
+    alert("신고가 접수되었습니다.");
+  };
+
+  const handleKickSender = async (reason: OpenChatKickReason) => {
+    if (!selectedMessage?.senderId) return;
+    await kickOpenChatParticipant(roomId, selectedMessage.senderId, reason);
+    alert("참여자를 퇴장시켰습니다.");
   };
 
   const headerTitle =
@@ -733,9 +821,7 @@ export default function ChattingPage() {
                         {formatDateLine(msg.createdAt)}
                       </S.DateDivider>
                     )}
-                    <S.ShareSystemMessage>
-                      {msg.content}
-                    </S.ShareSystemMessage>
+                    <S.ShareSystemMessage>{msg.content}</S.ShareSystemMessage>
                   </React.Fragment>
                 );
               }
@@ -935,17 +1021,23 @@ export default function ChattingPage() {
                     </S.DateDivider>
                   )}
                   {msg.sender === "me" ? (
-                    <ChatItemMy content={msg.content} time={msg.time} />
+                    <ChatItemMy
+                      content={msg.content}
+                      time={msg.time}
+                      imageUrls={msg.imageUrls}
+                    />
                   ) : (
                     <ChatItemOtherPerson
                       content={msg.content}
                       time={msg.time}
                       userImageUrl={msg.userImageUrl}
                       senderName={
-                        chatType === "open"
+                        chatType === "open" || chatType === "personal"
                           ? msg.nickname || "익명 01"
                           : undefined
                       }
+                      imageUrls={msg.imageUrls}
+                      onMessageClick={() => openMessageActions(msg)}
                     />
                   )}
                 </React.Fragment>
@@ -963,18 +1055,27 @@ export default function ChattingPage() {
 
         {menuOpen && (
           <S.FloatingMenu>
-            <S.FloatingMenuItem onClick={() => setMenuOpen(false)}>
+            <S.FloatingMenuItem
+              onClick={() => {
+                setMenuOpen(false);
+                if (chatType === "roommate") {
+                  alert("사진 첨부는 현재 오픈채팅에서 사용할 수 있어요.");
+                  return;
+                }
+                setPhotoSheetOpen(true);
+              }}
+            >
               사진 첨부
             </S.FloatingMenuItem>
             {chatType === "open" ? (
               <S.FloatingMenuItem onClick={() => setMenuOpen(false)}>
                 단체 톡방 만들기
               </S.FloatingMenuItem>
-            ) : (
+            ) : chatType === "roommate" ? (
               <S.FloatingMenuItem onClick={handleRequestShareClick}>
                 학번 공유하기
               </S.FloatingMenuItem>
-            )}
+            ) : null}
           </S.FloatingMenu>
         )}
 
@@ -996,6 +1097,22 @@ export default function ChattingPage() {
           <ArrowRight size={20} color="white" />
         </S.SendCircleButton>
       </S.FloatingInputArea>
+
+      <PhotoAttachmentBottomSheet
+        open={photoSheetOpen}
+        onOpenChange={setPhotoSheetOpen}
+        onSend={handleSendImages}
+      />
+
+      <ChatMessageActionSheet
+        open={messageSheetOpen}
+        onOpenChange={setMessageSheetOpen}
+        senderName={selectedMessage?.nickname || "익명"}
+        content={selectedMessage?.content || "사진"}
+        canKick={isOpenChatHost}
+        onReport={handleReportMessage}
+        onKick={handleKickSender}
+      />
     </S.ChatPageWrapper>
   );
 }

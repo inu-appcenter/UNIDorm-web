@@ -3,13 +3,26 @@ import styled from "styled-components";
 type Props = {
   content: string;
   time: string;
+  imageUrls?: string[];
+  onMessageClick?: () => void;
 };
 
-const ChatItemMy = ({ content, time }: Props) => {
+const ChatItemMy = ({ content, time, imageUrls, onMessageClick }: Props) => {
   return (
-    <ChatItemMyWrapper>
+    <ChatItemMyWrapper
+      onClick={onMessageClick}
+      $clickable={Boolean(onMessageClick)}
+    >
       <ContentArea>
-        <div className="message">{content}</div>
+        {imageUrls?.length ? (
+          <ImageGrid>
+            {imageUrls.map((url) => (
+              <img key={url} src={url} alt="첨부 사진" />
+            ))}
+          </ImageGrid>
+        ) : (
+          <div className="message">{content}</div>
+        )}
       </ContentArea>
       <TimeArea>
         <div className="time">{time}</div>
@@ -21,7 +34,7 @@ const ChatItemMy = ({ content, time }: Props) => {
 
 export default ChatItemMy;
 
-const ChatItemMyWrapper = styled.div`
+const ChatItemMyWrapper = styled.div<{ $clickable: boolean }>`
   width: 100%;
   height: fit-content;
   display: flex;
@@ -31,6 +44,25 @@ const ChatItemMyWrapper = styled.div`
   box-sizing: border-box;
 
   gap: 4px;
+  cursor: ${({ $clickable }) => ($clickable ? "pointer" : "default")};
+`;
+
+const ImageGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 140px));
+  gap: 4px;
+  overflow: hidden;
+  border-radius: 16px;
+  img {
+    width: 100%;
+    max-height: 220px;
+    object-fit: cover;
+    display: block;
+  }
+  img:only-child {
+    grid-column: 1 / -1;
+    min-width: 140px;
+  }
 `;
 
 const ContentArea = styled.div`
