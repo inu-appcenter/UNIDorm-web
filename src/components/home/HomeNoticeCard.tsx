@@ -1,12 +1,9 @@
 import styled from "styled-components";
 import { AiOutlineClockCircle } from "react-icons/ai";
 import { useNavigate } from "react-router-dom";
-import TagIconBlueBackground from "../common/TagIconBlueBackground.tsx";
 import { formatTimeAgo } from "@/utils/dateUtils";
-import { ANNOUNCE_CATEGORY_LIST } from "@/constants/announcement";
-import { TypeBadge } from "@/styles/announcement";
-import { getLabelByValue } from "@/utils/announceUtils";
 import { mixpanelTrack } from "@/utils/mixpanel";
+import { ANNOUNCE_CATEGORY_LIST } from "@/constants/announcement";
 
 interface HomeCardProps {
   id: number;
@@ -14,7 +11,7 @@ interface HomeCardProps {
   content: string;
   isEmergency: boolean;
   createdDate: string;
-  type: (typeof ANNOUNCE_CATEGORY_LIST)[number]["value"];
+  type?: (typeof ANNOUNCE_CATEGORY_LIST)[number]["value"];
 }
 
 const HomeNoticeCard = ({
@@ -23,125 +20,104 @@ const HomeNoticeCard = ({
   content,
   isEmergency,
   createdDate,
-  type,
 }: HomeCardProps) => {
   const navigate = useNavigate();
+
   return (
-    <HomeCardWrapper
+    <NoticeItemWrapper
       onClick={() => {
         mixpanelTrack.itemClicked("공지", id, title, "홈_공지사항목록");
         navigate("/announcements/" + id);
       }}
     >
-      <TagLine>
-        <TypeBadge type={type}>{getLabelByValue(type)}</TypeBadge>
-        {isEmergency && (
-          <div className="emergency">
-            <TagIconBlueBackground tagTitle={"긴급"} />
-          </div>
-        )}
-      </TagLine>
-
-      <FirstLine>
-        <div className="title">{title}</div>
-      </FirstLine>
-      <SecondLine>{content}</SecondLine>
-      <LastLine>
-        <AiOutlineClockCircle style={{ marginRight: "4px" }} />
-        {formatTimeAgo(createdDate)}
-      </LastLine>
-    </HomeCardWrapper>
+      <TitleRow>
+        {isEmergency && <EmergencyBadge>긴급</EmergencyBadge>}
+        <TitleText>{title}</TitleText>
+      </TitleRow>
+      <ContentText>{content}</ContentText>
+      <TimeRow>
+        <AiOutlineClockCircle className="clock-icon" />
+        <span>{formatTimeAgo(createdDate)}</span>
+      </TimeRow>
+    </NoticeItemWrapper>
   );
 };
 
 export default HomeNoticeCard;
 
-const HomeCardWrapper = styled.div`
+const NoticeItemWrapper = styled.div`
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding: 8px 16px;
-  gap: 5px;
-
-  width: 45vw;
-  max-width: 170px;
-  height: 150px;
-
-  flex-shrink: 0; /* width가 줄지 않도록 고정 */
-
-  border-radius: 16px;
-  background: #fff;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
-
-  cursor: pointer;
-`;
-
-const TagLine = styled.div`
-  display: flex;
-  flex-direction: row;
   gap: 4px;
-  justify-content: center;
-`;
-
-const FirstLine = styled.div`
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
   width: 100%;
-  height: fit-content;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
 
-  align-items: center;
-
-  .title {
-    font-style: normal;
-    font-weight: 600;
-    font-size: 14px;
-    line-height: 24px;
-    display: -webkit-box;
-    -webkit-line-clamp: 2; /* 최대 두 줄 */
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    letter-spacing: 0.38px;
-
-    color: #1c1c1e;
+  &:hover {
+    background-color: #fcfcfc;
   }
 `;
 
-const SecondLine = styled.div`
-  display: -webkit-box;
-  -webkit-line-clamp: 2; /* 최대 두 줄 */
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-overflow: ellipsis;
-
+const TitleRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
   width: 100%;
-  height: fit-content;
-  font-style: normal;
-  font-weight: 400;
-  font-size: 12px;
-  line-height: 24px;
-  letter-spacing: 0.38px;
-
-  color: #1c1c1e;
 `;
 
-const LastLine = styled.div`
+const EmergencyBadge = styled.div`
   display: flex;
-  flex-direction: row;
   align-items: center;
-  justify-content: start;
-  width: 100%;
-  height: fit-content;
+  justify-content: center;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 16px;
+  background-color: #1677ff;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 500;
+  flex-shrink: 0;
+`;
 
+const TitleText = styled.div`
+  font-style: normal;
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #3d3d3d;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+`;
+
+const ContentText = styled.div`
   font-style: normal;
   font-weight: 400;
-  font-size: 12px;
-  line-height: 24px;
-  /* 상자 높이와 동일 또는 200% */
-  letter-spacing: 0.38px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #555555;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+`;
 
-  color: #1c1c1e;
+const TimeRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  width: 100%;
+  font-size: 12px;
+  color: #8b8b8b;
+
+  .clock-icon {
+    font-size: 14px;
+  }
 `;

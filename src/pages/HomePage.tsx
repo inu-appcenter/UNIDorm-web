@@ -411,32 +411,27 @@ export default function HomePage() {
           >
             {isAnnounceLoading ? (
               <LoadingSpinner message={"공지사항을 불러오고 있어요!"} />
+            ) : notices.length > 0 ? (
+              <NoticeListContainer>
+                {notices
+                  .filter(
+                    (notice) => notice !== null && notice !== undefined,
+                  )
+                  .slice(0, 2)
+                  .map((notice) => (
+                    <HomeNoticeCard
+                      key={notice.id ?? notice.title}
+                      id={notice.id}
+                      title={notice.title}
+                      content={notice.content}
+                      isEmergency={notice.emergency}
+                      createdDate={notice.createdDate}
+                      type={notice.type}
+                    />
+                  ))}
+              </NoticeListContainer>
             ) : (
-              <NotiArea>
-                <NotiWrapper>
-                  {notices.length > 0 ? (
-                    notices
-                      .filter(
-                        (notice) => notice !== null && notice !== undefined,
-                      )
-                      .slice(0, 8)
-                      .map((notice) => (
-                        <HomeNoticeCard
-                          key={notice.id ?? notice.title}
-                          id={notice.id}
-                          title={notice.title}
-                          content={notice.content}
-                          isEmergency={notice.emergency}
-                          createdDate={notice.createdDate}
-                          type={notice.type}
-                        />
-                      ))
-                  ) : (
-                    <EmptyMessage message={"공지사항이 없습니다."} />
-                  )}
-                </NotiWrapper>
-                <GradientRight />
-              </NotiArea>
+              <EmptyMessage message={"공지사항이 없습니다."} />
             )}
           </TitleContentArea>
         </motion.div>
@@ -781,4 +776,11 @@ const FormGradientRight = styled.div`
   @media (min-width: 768px) {
     display: none;
   }
+`;
+
+const NoticeListContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
 `;
