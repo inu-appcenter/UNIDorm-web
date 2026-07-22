@@ -114,7 +114,7 @@ export default function OpenChatPage() {
       setIsLoading(true);
       if (selectedTab === "MY") {
         const [openChatRes, roommateChatRes, unreadRes] = await Promise.all([
-          getOpenChatRooms("MY"),
+          getOpenChatRooms("MY", 0, 20, searchQuery || undefined),
           getRoommateChatRooms(),
           getAllRoommateChatUnreadCount(),
         ]);
@@ -124,7 +124,7 @@ export default function OpenChatPage() {
       } else {
         setRoommateRooms([]);
         const [openChatRes, unreadRes] = await Promise.all([
-          getOpenChatRooms(selectedTab),
+          getOpenChatRooms(selectedTab, 0, 20, searchQuery || undefined),
           getAllRoommateChatUnreadCount(),
         ]);
         setRooms(openChatRes.data.content);
@@ -142,7 +142,7 @@ export default function OpenChatPage() {
 
   useEffect(() => {
     fetchChatRooms();
-  }, [selectedTab, isLoggedIn]);
+  }, [selectedTab, isLoggedIn, searchQuery]);
 
   const handleRoommateClick = async (
     chatRoomId: number,

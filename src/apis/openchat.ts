@@ -14,11 +14,14 @@ import {
 import { AxiosResponse } from "axios";
 import tokenInstance from "./tokenInstance.ts";
 
+export type NotificationMode = "EVERY" | "BUNDLED" | "OFF";
+
 /** 오픈채팅방 목록 조회 */
 export const getOpenChatRooms = async (
   tab: OpenChatTab,
   page = 0,
   size = 20,
+  keyword?: string,
 ): Promise<AxiosResponse<OpenChatRoomPageResponse>> => {
   const response = await tokenInstance.get<OpenChatRoomPageResponse>(
     `/open-chat-rooms`,
@@ -27,6 +30,7 @@ export const getOpenChatRooms = async (
         tab,
         page,
         size,
+        keyword: keyword || undefined,
       },
     },
   );
@@ -133,3 +137,13 @@ export const createPersonalOpenChatRoom = (
   data: CreatePersonalOpenChatRoomRequest,
 ): Promise<AxiosResponse<CreatePersonalOpenChatRoomResponse>> =>
   tokenInstance.post(`/open-chat-rooms/personal`, data);
+
+/** 채팅방 FCM 알림 모드 변경 */
+export const updateOpenChatNotificationMode = (
+  roomId: number,
+  mode: NotificationMode,
+): Promise<AxiosResponse<void>> =>
+  tokenInstance.patch(
+    `/open-chat-rooms/${roomId}/participants/me/notification`,
+    { mode },
+  );
