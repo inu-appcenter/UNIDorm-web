@@ -13,6 +13,7 @@ import OpenChatTab from "@/components/chat/OpenChatTab";
 import OpenChatEmptyState from "@/components/chat/OpenChatEmptyState";
 import OpenChatJoinModal from "@/components/modal/OpenChatJoinModal";
 import OpenChatPasswordModal from "@/components/modal/OpenChatPasswordModal";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { OpenChatRoom, OpenChatTab as OpenChatTabType } from "@/types/openchat";
 import { RoommateChatRoom } from "@/types/chats";
 import { useNavigate } from "react-router-dom";
@@ -317,7 +318,7 @@ export default function OpenChatPage() {
             </LoginButton>
           </LoginPromptWrapper>
         ) : isLoading ? (
-          <LoadingText>채팅방을 불러오는 중입니다.</LoadingText>
+          <LoadingSpinner message="채팅방을 불러오는 중입니다." />
         ) : selectedTab === "MY" ? (
           mergedMyRooms.length === 0 ? (
             <OpenChatEmptyState
@@ -397,12 +398,13 @@ export default function OpenChatPage() {
 
 const PageContainer = styled.div`
   position: relative;
-  min-height: 100vh;
+  width: 100%;
+  flex: 1;
   color: #222222;
 `;
 
 const Content = styled.main`
-  padding: 64px 20px 120px;
+  padding: 40px 20px 100px;
 `;
 
 const SearchBox = styled.div`
@@ -440,12 +442,7 @@ const RoomList = styled.div`
   gap: 12px;
 `;
 
-const LoadingText = styled.p`
-  margin: 48px 0 0;
-  text-align: center;
-  font-size: 14px;
-  color: #9ca3af;
-`;
+
 
 const CreateButton = styled.button`
   position: fixed;
