@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { formatTimeAgo } from "@/utils/dateUtils";
 import { mixpanelTrack } from "@/utils/mixpanel";
 import { ANNOUNCE_CATEGORY_LIST } from "@/constants/announcement";
+import { TypeBadge } from "@/styles/announcement";
+import { getLabelByValue } from "@/utils/announceUtils";
 
 interface HomeCardProps {
   id: number;
@@ -20,6 +22,7 @@ const HomeNoticeCard = ({
   content,
   isEmergency,
   createdDate,
+  type,
 }: HomeCardProps) => {
   const navigate = useNavigate();
 
@@ -35,10 +38,17 @@ const HomeNoticeCard = ({
         <TitleText>{title}</TitleText>
       </TitleRow>
       <ContentText>{content}</ContentText>
-      <TimeRow>
-        <AiOutlineClockCircle className="clock-icon" />
-        <span>{formatTimeAgo(createdDate)}</span>
-      </TimeRow>
+      <BottomRow>
+        {type ? (
+          <TypeBadge type={type}>{getLabelByValue(type)}</TypeBadge>
+        ) : (
+          <div />
+        )}
+        <TimeGroup>
+          <AiOutlineClockCircle className="clock-icon" />
+          <span>{formatTimeAgo(createdDate)}</span>
+        </TimeGroup>
+      </BottomRow>
     </NoticeItemWrapper>
   );
 };
@@ -49,7 +59,7 @@ const NoticeItemWrapper = styled.div`
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   width: 100%;
   padding: 12px 16px;
   border-radius: 12px;
@@ -108,12 +118,18 @@ const ContentText = styled.div`
   width: 100%;
 `;
 
-const TimeRow = styled.div`
+const BottomRow = styled.div`
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 4px;
+  justify-content: space-between;
   width: 100%;
+  margin-top: 2px;
+`;
+
+const TimeGroup = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
   font-size: 12px;
   color: #8b8b8b;
 
