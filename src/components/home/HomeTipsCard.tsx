@@ -17,7 +17,7 @@ const HomeTipsCard = ({ index, id, content }: HomeCardProps) => {
 
   return (
     <HomeCardWrapper onClick={handleClickCard}>
-      <span className="title">Tip {index}</span>
+      <span className="tip-badge">Tip {index}</span>
       <span className="content">{content}</span>
     </HomeCardWrapper>
   );
@@ -27,43 +27,38 @@ export default HomeTipsCard;
 
 const HomeCardWrapper = styled.div`
   box-sizing: border-box;
-
-  background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 32px;
-
-  width: 100%;
-  height: fit-content;
-
-  padding: 8px 16px;
-  box-sizing: border-box;
   display: flex;
   flex-direction: row;
+  align-items: center;
   gap: 8px;
+  width: 100%;
+  padding: 4px 0;
   cursor: pointer;
-  .title {
+  transition: opacity 0.2s ease;
+
+  &:hover {
+    opacity: 0.8;
+  }
+
+  .tip-badge {
     font-style: normal;
-    font-weight: 500;
+    font-weight: 400;
     font-size: 12px;
-    line-height: 24px;
-    letter-spacing: 0.38px;
-
-    color: #0a84ff;
-
+    line-height: 1.5;
+    color: #1677ff;
     min-width: fit-content;
   }
 
   .content {
-    color: #1c1c1e;
     font-style: normal;
-    font-weight: 500;
+    font-weight: 400;
     font-size: 14px;
-    line-height: 24px;
-    letter-spacing: 0.38px;
+    line-height: 1.5;
+    color: #3d3d3d;
 
-    /* 말줄임 처리 */
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    width: 100%;
   }
 `;

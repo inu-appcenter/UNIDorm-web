@@ -333,34 +333,6 @@ export default function HomePage() {
         initial="initial"
         animate="animate"
       >
-        <motion.div variants={fadeInUp}>
-          <TitleContentArea title={""} location="홈">
-            <ServiceWrapper>
-              <ServiceBox
-                title={"생활원 민원"}
-                imgsrc={민원아이콘}
-                onClick={() => {
-                  mixpanelTrack.featureClicked("생활원 민원", "홈_서비스박스");
-                  if (!isLoggedIn) {
-                    alert("로그인 후 사용할 수 있습니다.");
-                    navigate("/login");
-                    return;
-                  }
-                  navigate("/complain");
-                }}
-              />
-              <ServiceBox
-                title={"폼"}
-                imgsrc={폼아이콘}
-                onClick={() => {
-                  mixpanelTrack.featureClicked("폼", "홈_서비스박스");
-                  navigate("/form");
-                }}
-              />
-            </ServiceWrapper>
-          </TitleContentArea>
-        </motion.div>
-
         {isMatchingActive && (
           <motion.div variants={fadeInUp}>
             <TitleContentArea
@@ -403,20 +375,16 @@ export default function HomePage() {
         <motion.div variants={fadeInUp}>
           <TitleContentArea
             title={"공지사항"}
-            description={
-              "생활원과 서포터즈에서 알려드리는 공지사항을 확인해보세요."
-            }
             link={"/announcements"}
             location="홈"
+            gap={"16px"}
           >
             {isAnnounceLoading ? (
               <LoadingSpinner message={"공지사항을 불러오고 있어요!"} />
             ) : notices.length > 0 ? (
               <NoticeListContainer>
                 {notices
-                  .filter(
-                    (notice) => notice !== null && notice !== undefined,
-                  )
+                  .filter((notice) => notice !== null && notice !== undefined)
                   .slice(0, 2)
                   .map((notice) => (
                     <HomeNoticeCard
@@ -438,11 +406,7 @@ export default function HomePage() {
 
         <motion.div variants={fadeInUp}>
           <FormSectionWrapper>
-            <TitleContentArea
-              title={"INU 폼"}
-              link={"/form"}
-              location="홈"
-            >
+            <TitleContentArea title={"INU 폼"} link={"/form"} location="홈">
               {isSurveysLoading ? (
                 <LoadingSpinner message={"폼 목록을 불러오고 있어요!"} />
               ) : (
@@ -491,14 +455,16 @@ export default function HomePage() {
               {isTipsLoading ? (
                 <LoadingSpinner message={"꿀팁을 불러오고 있어요!"} />
               ) : dailyTips.length > 0 ? (
-                dailyTips.map((tip, key) => (
-                  <HomeTipsCard
-                    key={key}
-                    index={key + 1}
-                    id={tip.boardId}
-                    content={tip.title}
-                  />
-                ))
+                <TipsListContainer>
+                  {dailyTips.slice(0, 3).map((tip, key) => (
+                    <HomeTipsCard
+                      key={tip.boardId ?? key}
+                      index={key + 1}
+                      id={tip.boardId}
+                      content={tip.title}
+                    />
+                  ))}
+                </TipsListContainer>
               ) : (
                 <EmptyMessage message={"오늘의 꿀팁이 없습니다."} />
               )}
@@ -783,4 +749,12 @@ const NoticeListContainer = styled.div`
   flex-direction: column;
   gap: 10px;
   width: 100%;
+`;
+
+const TipsListContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  padding: 4px 0;
 `;
