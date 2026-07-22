@@ -61,10 +61,8 @@ const NoticeItemWrapper = styled.div`
   flex-direction: column;
   gap: 6px;
   width: 100%;
-  padding: 12px 16px;
+  //padding: 12px 16px;
   border-radius: 12px;
-  background: #ffffff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   cursor: pointer;
   transition: background-color 0.2s ease;
 
@@ -100,10 +98,14 @@ const TitleText = styled.div`
   font-size: 16px;
   line-height: 1.5;
   color: #3d3d3d;
-  white-space: nowrap;
+  flex: 1;
+
+  /* 2줄 이상 말줄임 설정 */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
-  flex: 1;
 `;
 
 const ContentText = styled.div`

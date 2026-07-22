@@ -49,12 +49,13 @@ const TitleLineWrapper = styled.div`
   height: fit-content;
 
   .title {
+    color: var(--Gray-Gray800, #3d3d3d);
+
+    font-size: 20px;
     font-style: normal;
     font-weight: 600;
-    font-size: 18px;
-    line-height: 28px;
+    line-height: 150%;
 
-    color: #1c1c1e;
     cursor: pointer;
   }
 
