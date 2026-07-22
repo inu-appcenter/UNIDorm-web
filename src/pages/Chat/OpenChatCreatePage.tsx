@@ -31,6 +31,7 @@ export default function OpenChatCreatePage() {
         description: description.trim(),
         scope,
         maxParticipants: 100,
+        isPublic: true,
       });
 
       navigate("/chat/open", { replace: true });

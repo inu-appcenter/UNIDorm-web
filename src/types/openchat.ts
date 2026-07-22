@@ -7,14 +7,15 @@ export interface OpenChatRoom {
   name: string;
   description: string;
   scope: OpenChatScope;
-  roomType: "OPEN" | string;
+  roomType: "OPEN" | "DERIVED" | "PERSONAL";
   hasPassword: boolean;
   currentParticipants: number;
   maxParticipants: number;
   lastMessageAt: string;
   lastMessage: string;
   unreadCount: number;
-  public: boolean;
+  isPublic?: boolean;
+  public?: boolean;
   joined: boolean;
 }
 
@@ -52,6 +53,8 @@ export interface CreateOpenChatRoomRequest {
   description: string;
   scope: "DORMITORY" | "ALL";
   maxParticipants: number;
+  isPublic?: boolean;
+  password?: string;
 }
 
 export interface CreatedOpenChatRoomResponse {
