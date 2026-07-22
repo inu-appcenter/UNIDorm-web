@@ -20,15 +20,11 @@ import { Announcement } from "@/types/announcements";
 import { getAllSurveys } from "@/apis/formApis";
 import { SurveySummary } from "@/types/formTypes";
 import { statusText } from "@/utils/formUtils";
-import useUserStore from "../stores/useUserStore.ts";
 import { getPopupNotifications } from "@/apis/popup-notification";
 import { PopupNotification } from "@/types/popup-notifications";
 import { getMobilePlatform } from "@/utils/getMobilePlatform";
 import ModalContent_AppInstall from "../components/common/ModalContent_AppInstall.tsx";
 import CommonBottomSheet from "src/components/modal/CommonBottomSheet.tsx";
-import ServiceBox from "../components/home/ServiceBox.tsx";
-import 민원아이콘 from "../assets/home/민원아이콘.webp";
-import 폼아이콘 from "../assets/home/폼아이콘.webp";
 import TopPopupNotification from "../components/common/TopPopupNotification.tsx";
 import useNetworkStore from "../stores/useNetworkStore.ts";
 import Calendar from "../components/calendar/Calendar.tsx";
@@ -48,8 +44,7 @@ export default function HomePage() {
   useSetAIChat({ isVisible: true, shouldAnimate: true });
   const { flag: isMatchingActive } = useFeatureFlag("ROOMMATE_MATCHING");
 
-  const { tokenInfo } = useUserStore();
-  const isLoggedIn = Boolean(tokenInfo.accessToken);
+
 
   const [dailyTips, setDailyTips] = useState<Tip[]>([]);
   const [groupOrders, setGroupOrders] = useState<GroupOrder[]>([]);
@@ -603,35 +598,6 @@ const WidgetContainer = styled.div`
   width: 100%;
 `;
 
-const FormSectionWrapper = styled.div`
-  background: #f7f7f7;
-  padding: 16px 20px;
-  box-sizing: border-box;
-  width: 100%;
-`;
-
-const FormArea = styled.div`
-  position: relative;
-  margin: 0 -20px;
-  width: calc(100% + 40px);
-  height: fit-content;
-`;
-
-const FormWrapper = styled.div`
-  display: flex;
-  flex-direction: row;
-  gap: 16px;
-  width: 100%;
-  padding: 12px 20px;
-  box-sizing: border-box;
-  overflow-x: auto;
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-  &::-webkit-scrollbar {
-    display: none;
-  }
-`;
-
 const GridContainer = styled.div`
   display: contents;
 
@@ -640,30 +606,6 @@ const GridContainer = styled.div`
     grid-template-columns: 1fr 1fr;
     gap: 32px;
     order: -1;
-  }
-`;
-
-const NotiArea = styled.div`
-  position: relative;
-  left: -32px;
-  right: -32px;
-  width: calc(100% + 32px);
-  height: fit-content;
-`;
-
-const NotiWrapper = styled.div`
-  display: flex;
-  flex-direction: row;
-  gap: 16px;
-  width: 100%;
-  padding: 16px 48px 16px 32px;
-  padding-top: 8px;
-  box-sizing: border-box;
-  overflow-x: auto;
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-  &::-webkit-scrollbar {
-    display: none;
   }
 `;
 
@@ -690,32 +632,6 @@ const PopupModalContent = styled.div`
     font-size: 12px;
     color: #777;
   }
-`;
-
-const GradientRight = styled.div`
-  position: absolute;
-  right: -16px;
-  top: 0;
-  bottom: 0;
-  width: 48px;
-  background: linear-gradient(
-    270deg,
-    #fafafa 38.54%,
-    rgba(250, 250, 250, 0) 100%
-  );
-  pointer-events: none;
-
-  @media (min-width: 768px) {
-    display: none;
-  }
-`;
-
-const ServiceWrapper = styled.div`
-  width: 100%;
-  height: 78px;
-  display: flex;
-  flex-direction: row;
-  gap: 16px;
 `;
 
 const StyledMigrationBanner = styled(MigrationBanner)`
