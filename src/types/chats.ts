@@ -18,6 +18,10 @@ export interface RoommateChatRoom {
   partnerId: number;
   partnerName: string;
   partnerProfileImageUrl: string;
+  isMyRoommate?: boolean;
+  myRoommate?: boolean;
+  matched?: boolean;
+  isRoommate?: boolean;
 }
 
 export interface RoommateChat {

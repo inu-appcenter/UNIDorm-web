@@ -19,7 +19,7 @@ import { RoommateChatRoom } from "@/types/chats";
 import { useNavigate } from "react-router-dom";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import useUserStore from "@/stores/useUserStore";
-import { Search, User, Plus } from "lucide-react";
+import { Search, Plus, MapPin } from "lucide-react";
 
 const formatTime = (isoString: string) => {
   if (!isoString) return "";
@@ -55,13 +55,19 @@ function RoommateChatCard({
       );
   }, [room.chatRoomId]);
 
+  const isMyRoommate = Boolean(
+    room.isMyRoommate || room.myRoommate || room.matched || room.isRoommate,
+  );
+
   return (
-    <RoommateCard type="button" onClick={onClick}>
+    <RoommateCard type="button" onClick={onClick} $isMyRoommate={isMyRoommate}>
       <CardLeft>
-        <RoommateBadge>
-          <User size={12} color="#1677ff" style={{ marginRight: 4 }} />
-          룸메 매칭
-        </RoommateBadge>
+        {isMyRoommate && (
+          <RoommateBadge>
+            <MapPin size={12} color="#1677ff" style={{ marginRight: 4 }} />
+            내 룸메이트
+          </RoommateBadge>
+        )}
         <RoomName>
           {room.partnerName || room.opponentNickname || "익명"}
         </RoomName>
@@ -520,18 +526,20 @@ const LoginButton = styled.button`
   cursor: pointer;
 `;
 
-const RoommateCard = styled.button`
+const RoommateCard = styled.button<{ $isMyRoommate?: boolean }>`
   width: 100%;
   padding: 16px;
   border: 1px solid #dfdfdf;
   border-radius: 16px;
-  background-color: #e6f4ff;
+  background-color: ${({ $isMyRoommate }) =>
+    $isMyRoommate ? "#e6f4ff" : "#ffffff"};
   text-align: left;
   cursor: pointer;
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
   box-sizing: border-box;
+  transition: background-color 0.2s ease;
 `;
 
 const CardLeft = styled.div`
