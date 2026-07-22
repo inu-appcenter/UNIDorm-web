@@ -7,7 +7,7 @@ export interface OpenChatRoom {
   name: string;
   description: string;
   scope: OpenChatScope;
-  roomType: "OPEN" | string;
+  roomType: "OPEN" | "DERIVED" | "PERSONAL";
   hasPassword: boolean;
   currentParticipants: number;
   maxParticipants: number;
