@@ -44,8 +44,6 @@ export default function HomePage() {
   useSetAIChat({ isVisible: true, shouldAnimate: true });
   const { flag: isMatchingActive } = useFeatureFlag("ROOMMATE_MATCHING");
 
-
-
   const [dailyTips, setDailyTips] = useState<Tip[]>([]);
   const [groupOrders, setGroupOrders] = useState<GroupOrder[]>([]);
   const [notices, setNotices] = useState<Announcement[]>([]);
@@ -333,7 +331,9 @@ export default function HomePage() {
             <WidgetContainer>
               <TitleContentArea
                 title={"2026년 1학기 룸메이트 모집"}
-                description={"룸메이트를 구하고 있는 다양한 UNI들을 찾아보세요!"}
+                description={
+                  "룸메이트를 구하고 있는 다양한 UNI들을 찾아보세요!"
+                }
                 link={"/roommate"}
                 location="홈"
               >
@@ -581,7 +581,7 @@ const ContentWrapper = styled.div`
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 8px;
   background: #fafafa;
   width: 100%;
 
@@ -646,29 +646,15 @@ const StyledMigrationBanner = styled(MigrationBanner)`
 
 const FormSectionWrapper = styled.div`
   background: #f7f7f7;
-  margin: 0 -16px;
-  padding: 16px;
+  padding: 16px 20px;
   box-sizing: border-box;
-  width: calc(100% + 32px);
-
-  @media (min-width: 768px) {
-    margin: 0 -32px;
-    padding: 24px 32px;
-    width: calc(100% + 64px);
-    border-radius: 16px;
-  }
+  width: 100%;
 `;
 
 const FormArea = styled.div`
   position: relative;
-  margin: 0 -16px;
-  width: calc(100% + 32px);
+  width: 100%;
   height: fit-content;
-
-  @media (min-width: 768px) {
-    margin: 0 -32px;
-    width: calc(100% + 64px);
-  }
 `;
 
 const FormWrapper = styled.div`
@@ -676,17 +662,13 @@ const FormWrapper = styled.div`
   flex-direction: row;
   gap: 16px;
   width: 100%;
-  padding: 12px 32px 12px 16px;
+  padding-top: 12px;
   box-sizing: border-box;
   overflow-x: auto;
   -ms-overflow-style: none;
   scrollbar-width: none;
   &::-webkit-scrollbar {
     display: none;
-  }
-
-  @media (min-width: 768px) {
-    padding: 16px 48px 16px 32px;
   }
 `;
 
