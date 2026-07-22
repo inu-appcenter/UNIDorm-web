@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { colors, typography } from "@/styles/tokens";
 import { useNavigate } from "react-router-dom";
 import { AiOutlineClockCircle } from "react-icons/ai";
 import { FiChevronRight } from "react-icons/fi";
@@ -83,7 +84,7 @@ const CardWrapper = styled.div`
   flex-shrink: 0;
 
   border-radius: 16px;
-  background: #ffffff;
+  background: ${colors.bg.bg1};
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.08);
 
   cursor: pointer;
@@ -103,11 +104,8 @@ const CardHeader = styled.div`
 `;
 
 const Title = styled.div`
-  font-style: normal;
-  font-weight: 600;
-  font-size: 16px;
-  line-height: 1.4;
-  color: #0958d9;
+  ${typography.body1Normal}
+  color: ${colors.main.main2};
 
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -122,11 +120,8 @@ const Title = styled.div`
 const TimeAgo = styled.div`
   display: flex;
   align-items: center;
-  font-style: normal;
-  font-weight: 400;
-  font-size: 13px;
-  line-height: 1.4;
-  color: #555555;
+  ${typography.label2}
+  color: ${colors.gray.gray700};
 `;
 
 const ButtonWrapper = styled.div`
@@ -142,12 +137,12 @@ const StatusButton = styled.div<{ $isProgress: boolean }>`
   gap: 4px;
   padding: 6px 12px;
   border-radius: 23px;
-  font-size: 14px;
-  font-weight: 400;
-  line-height: 1.4;
+  ${typography.label1Normal}
   width: ${({ $isProgress }) => ($isProgress ? "100%" : "fit-content")};
-  background-color: ${({ $isProgress }) => ($isProgress ? "#1677ff" : "#c1c1c1")};
-  color: ${({ $isProgress }) => ($isProgress ? "#ffffff" : "#f7f7f7")};
+  background-color: ${({ $isProgress }) =>
+    $isProgress ? colors.main.main1 : colors.cta.disabled};
+  color: ${({ $isProgress }) =>
+    $isProgress ? colors.gray.gray0 : colors.gray.gray50};
 
   .arrow-icon {
     font-size: 16px;

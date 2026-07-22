@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { colors, typography } from "@/styles/tokens";
 import TitleLine from "../home/TitleLine.tsx";
 
 interface TitleContentAreaProps {
@@ -80,8 +81,8 @@ const ActionGroup = styled.div`
 `;
 
 const DescriptionText = styled.p<{ $margin?: string; $padding?: string }>`
-  font-size: 12px;
-  color: #666;
+  ${typography.caption1}
+  color: ${colors.gray.gray600};
   text-align: start;
   width: 100%;
   margin: ${({ $margin }) => $margin || "0"};

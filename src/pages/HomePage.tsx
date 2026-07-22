@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { colors, typography } from "@/styles/tokens";
 import TitleContentArea from "../components/common/TitleContentArea.tsx";
 import HomeNoticeCard from "../components/home/HomeNoticeCard.tsx";
 import HomeFormCard from "../components/home/HomeFormCard.tsx";
@@ -582,7 +583,7 @@ const ContentWrapper = styled.div`
   display: flex;
   flex-direction: column;
   gap: 8px;
-  background: #fafafa;
+  background: ${colors.bg.bg2};
   width: 100%;
 
   @media (min-width: 768px) {
@@ -592,7 +593,7 @@ const ContentWrapper = styled.div`
 `;
 
 const WidgetContainer = styled.div`
-  background: #ffffff;
+  background: ${colors.bg.bg1};
   padding: 16px 20px;
   box-sizing: border-box;
   width: 100%;
@@ -620,16 +621,16 @@ const PopupModalContent = styled.div`
     border-radius: 8px;
   }
   h3 {
-    font-size: 18px;
-    font-weight: 600;
+    ${typography.headline1}
+    color: ${colors.text.text1};
   }
   p {
-    font-size: 14px;
-    color: #333;
+    ${typography.label1Normal}
+    color: ${colors.text.text1};
   }
   span {
-    font-size: 12px;
-    color: #777;
+    ${typography.caption1}
+    color: ${colors.text.text2};
   }
 `;
 
@@ -644,7 +645,7 @@ const StyledMigrationBanner = styled(MigrationBanner)`
 `;
 
 const FormSectionWrapper = styled.div`
-  background: #f7f7f7;
+  background: ${colors.bg.bg2};
   padding: 16px 0 16px 20px;
   box-sizing: border-box;
   width: 100%;
@@ -686,7 +687,7 @@ const FormGradientRight = styled.div`
   width: 48px;
   background: linear-gradient(
     270deg,
-    #f7f7f7 38.54%,
+    ${colors.bg.bg2} 38.54%,
     rgba(247, 247, 247, 0) 100%
   );
   pointer-events: none;

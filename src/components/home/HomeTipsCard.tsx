@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { colors, typography } from "@/styles/tokens";
 import { useNavigate } from "react-router-dom";
 import { mixpanelTrack } from "@/utils/mixpanel";
 
@@ -40,23 +41,15 @@ const HomeCardWrapper = styled.div`
   }
 
   .tip-badge {
-    font-family: "Pretendard", sans-serif;
-    font-style: normal;
-    font-weight: 400;
-    font-size: 12px;
-    line-height: 1.5;
-    color: #1677ff;
+    ${typography.caption1}
+    color: ${colors.main.main1};
     min-width: fit-content;
     white-space: nowrap;
   }
 
   .content {
-    font-family: "Pretendard", sans-serif;
-    font-style: normal;
-    font-weight: 400;
-    font-size: 14px;
-    line-height: 1.5;
-    color: #3d3d3d;
+    ${typography.label1Normal}
+    color: ${colors.gray.gray800};
 
     white-space: nowrap;
     overflow: hidden;

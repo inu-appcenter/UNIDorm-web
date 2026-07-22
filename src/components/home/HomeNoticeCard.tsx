@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { colors, typography } from "@/styles/tokens";
 import { AiOutlineClockCircle } from "react-icons/ai";
 import { useNavigate } from "react-router-dom";
 import { formatTimeAgo } from "@/utils/dateUtils";
@@ -85,19 +86,16 @@ const EmergencyBadge = styled.div`
   height: 22px;
   padding: 0 8px;
   border-radius: 16px;
-  background-color: #1677ff;
-  color: #ffffff;
-  font-size: 12px;
+  background-color: ${colors.main.main1};
+  color: ${colors.gray.gray0};
+  ${typography.caption1}
   font-weight: 500;
   flex-shrink: 0;
 `;
 
 const TitleText = styled.div`
-  font-style: normal;
-  font-weight: 600;
-  font-size: 16px;
-  line-height: 1.5;
-  color: #3d3d3d;
+  ${typography.body1Normal}
+  color: ${colors.gray.gray800};
   flex: 1;
 
   /* 2줄 이상 말줄임 설정 */
@@ -109,11 +107,8 @@ const TitleText = styled.div`
 `;
 
 const ContentText = styled.div`
-  font-style: normal;
-  font-weight: 400;
-  font-size: 14px;
-  line-height: 1.5;
-  color: #555555;
+  ${typography.label1Normal}
+  color: ${colors.gray.gray700};
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -132,8 +127,8 @@ const TimeGroup = styled.div`
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 12px;
-  color: #8b8b8b;
+  ${typography.caption1}
+  color: ${colors.gray.gray500};
 
   .clock-icon {
     font-size: 14px;

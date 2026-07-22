@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { colors, typography } from "@/styles/tokens";
 import { useNavigate } from "react-router-dom";
 import FaRight from "../../assets/FaRight.svg";
 import { mixpanelTrack } from "@/utils/mixpanel";
@@ -49,20 +50,14 @@ const TitleLineWrapper = styled.div`
   height: fit-content;
 
   .title {
-    color: var(--Gray-Gray800, #3d3d3d);
-
-    font-size: 20px;
-    font-style: normal;
-    font-weight: 600;
-    line-height: 150%;
-
+    ${typography.heading2}
+    color: ${colors.gray.gray800};
     cursor: pointer;
   }
 
   .more {
-    font-size: 14px;
-
-    color: #8e8e93;
+    ${typography.label1Normal}
+    color: ${colors.gray.gray500};
     display: flex;
     flex-direction: row;
     align-items: center;
