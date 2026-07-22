@@ -646,9 +646,16 @@ const StyledMigrationBanner = styled(MigrationBanner)`
 
 const FormSectionWrapper = styled.div`
   background: #f7f7f7;
-  padding: 16px 20px;
+  padding: 16px 0 16px 20px;
   box-sizing: border-box;
   width: 100%;
+
+  /* TitleContentArea 헤더 부분(제목 + 더보기) 우측 20px 여백 유지 */
+  > div > div:first-child {
+    padding-right: 20px;
+    box-sizing: border-box;
+    width: 100%;
+  }
 `;
 
 const FormArea = styled.div`
@@ -661,9 +668,8 @@ const FormWrapper = styled.div`
   display: flex;
   flex-direction: row;
   gap: 16px;
-  width: calc(100% + 8px);
-  margin-left: -4px;
-  padding: 12px 4px 16px 4px;
+  width: 100%;
+  padding: 12px 20px 16px 0;
   box-sizing: border-box;
   overflow-x: auto;
   -ms-overflow-style: none;
