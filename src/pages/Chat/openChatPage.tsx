@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import { isAxiosError } from "axios";
 import { getOpenChatRooms, joinOpenChatRoom } from "@/apis/openchat";
@@ -16,7 +16,7 @@ import OpenChatPasswordModal from "@/components/modal/OpenChatPasswordModal";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { OpenChatRoom, OpenChatTab as OpenChatTabType } from "@/types/openchat";
 import { RoommateChatRoom } from "@/types/chats";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import useUserStore from "@/stores/useUserStore";
 import { Search, Plus, MapPin } from "lucide-react";
@@ -85,12 +85,25 @@ function RoommateChatCard({
   );
 }
 
+const VALID_TABS: OpenChatTabType[] = ["MY", "DORMITORY", "ALL"];
+
 export default function OpenChatPage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { tokenInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo?.accessToken);
 
-  const [selectedTab, setSelectedTab] = useState<OpenChatTabType>("MY");
+  const tabParam = searchParams.get("tab") as OpenChatTabType | null;
+  const selectedTab: OpenChatTabType =
+    tabParam && VALID_TABS.includes(tabParam) ? tabParam : "MY";
+
+  const handleTabChange = useCallback(
+    (tab: OpenChatTabType) => {
+      setSearchParams({ tab }, { replace: true });
+    },
+    [setSearchParams],
+  );
+
   const [rooms, setRooms] = useState<OpenChatRoom[]>([]);
   const [roommateRooms, setRoommateRooms] = useState<RoommateChatRoom[]>([]);
   const [selectedRoom, setSelectedRoom] = useState<OpenChatRoom | null>(null);
@@ -294,7 +307,7 @@ export default function OpenChatPage() {
     secondHeader: (
       <OpenChatTab
         selectedTab={selectedTab}
-        onChangeTab={setSelectedTab}
+        onChangeTab={handleTabChange}
         unreadCount={totalUnreadCount}
       />
     ),
@@ -329,7 +342,7 @@ export default function OpenChatPage() {
           mergedMyRooms.length === 0 ? (
             <OpenChatEmptyState
               tab={selectedTab}
-              onClickMoveDormitory={() => setSelectedTab("DORMITORY")}
+              onClickMoveDormitory={() => handleTabChange("DORMITORY")}
             />
           ) : (
             <RoomList>
@@ -364,7 +377,7 @@ export default function OpenChatPage() {
         ) : filteredRooms.length === 0 ? (
           <OpenChatEmptyState
             tab={selectedTab}
-            onClickMoveDormitory={() => setSelectedTab("DORMITORY")}
+            onClickMoveDormitory={() => handleTabChange("DORMITORY")}
           />
         ) : (
           <RoomList>
