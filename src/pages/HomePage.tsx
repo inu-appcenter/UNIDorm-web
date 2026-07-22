@@ -335,73 +335,77 @@ export default function HomePage() {
       >
         {isMatchingActive && (
           <motion.div variants={fadeInUp}>
-            <TitleContentArea
-              title={"2026년 1학기 룸메이트 모집"}
-              description={"룸메이트를 구하고 있는 다양한 UNI들을 찾아보세요!"}
-              link={"/roommate"}
-              location="홈"
-            >
-              <>
-                {isRoommateLoading ? (
-                  <LoadingSpinner message="최신 목록을 불러오는 중..." />
-                ) : roommates && roommates.length > 0 ? (
-                  roommates
-                    .slice(0, 2)
-                    .map((post) => (
-                      <RoomMateCard
-                        key={post.boardId}
-                        title={post.title}
-                        boardId={post.boardId}
-                        dormType={post.dormType}
-                        mbti={post.mbti}
-                        college={post.college}
-                        isSmoker={post.smoking === "피워요"}
-                        isClean={post.arrangement === "깔끔해요"}
-                        stayDays={post.dormPeriod}
-                        description={post.comment}
-                        roommateBoardLike={post.roommateBoardLike}
-                        matched={post.matched}
-                        location="홈_룸메이트목록"
-                      />
-                    ))
-                ) : (
-                  <EmptyMessage>게시글이 없습니다.</EmptyMessage>
-                )}
-              </>
-            </TitleContentArea>
+            <WidgetContainer>
+              <TitleContentArea
+                title={"2026년 1학기 룸메이트 모집"}
+                description={"룸메이트를 구하고 있는 다양한 UNI들을 찾아보세요!"}
+                link={"/roommate"}
+                location="홈"
+              >
+                <>
+                  {isRoommateLoading ? (
+                    <LoadingSpinner message="최신 목록을 불러오는 중..." />
+                  ) : roommates && roommates.length > 0 ? (
+                    roommates
+                      .slice(0, 2)
+                      .map((post) => (
+                        <RoomMateCard
+                          key={post.boardId}
+                          title={post.title}
+                          boardId={post.boardId}
+                          dormType={post.dormType}
+                          mbti={post.mbti}
+                          college={post.college}
+                          isSmoker={post.smoking === "피워요"}
+                          isClean={post.arrangement === "깔끔해요"}
+                          stayDays={post.dormPeriod}
+                          description={post.comment}
+                          roommateBoardLike={post.roommateBoardLike}
+                          matched={post.matched}
+                          location="홈_룸메이트목록"
+                        />
+                      ))
+                  ) : (
+                    <EmptyMessage>게시글이 없습니다.</EmptyMessage>
+                  )}
+                </>
+              </TitleContentArea>
+            </WidgetContainer>
           </motion.div>
         )}
 
         <motion.div variants={fadeInUp}>
-          <TitleContentArea
-            title={"공지사항"}
-            link={"/announcements"}
-            location="홈"
-            gap={"16px"}
-          >
-            {isAnnounceLoading ? (
-              <LoadingSpinner message={"공지사항을 불러오고 있어요!"} />
-            ) : notices.length > 0 ? (
-              <NoticeListContainer>
-                {notices
-                  .filter((notice) => notice !== null && notice !== undefined)
-                  .slice(0, 2)
-                  .map((notice) => (
-                    <HomeNoticeCard
-                      key={notice.id ?? notice.title}
-                      id={notice.id}
-                      title={notice.title}
-                      content={notice.content}
-                      isEmergency={notice.emergency}
-                      createdDate={notice.createdDate}
-                      type={notice.type}
-                    />
-                  ))}
-              </NoticeListContainer>
-            ) : (
-              <EmptyMessage message={"공지사항이 없습니다."} />
-            )}
-          </TitleContentArea>
+          <WidgetContainer>
+            <TitleContentArea
+              title={"공지사항"}
+              link={"/announcements"}
+              location="홈"
+              gap={"16px"}
+            >
+              {isAnnounceLoading ? (
+                <LoadingSpinner message={"공지사항을 불러오고 있어요!"} />
+              ) : notices.length > 0 ? (
+                <NoticeListContainer>
+                  {notices
+                    .filter((notice) => notice !== null && notice !== undefined)
+                    .slice(0, 2)
+                    .map((notice) => (
+                      <HomeNoticeCard
+                        key={notice.id ?? notice.title}
+                        id={notice.id}
+                        title={notice.title}
+                        content={notice.content}
+                        isEmergency={notice.emergency}
+                        createdDate={notice.createdDate}
+                        type={notice.type}
+                      />
+                    ))}
+                </NoticeListContainer>
+              ) : (
+                <EmptyMessage message={"공지사항이 없습니다."} />
+              )}
+            </TitleContentArea>
+          </WidgetContainer>
         </motion.div>
 
         <motion.div variants={fadeInUp}>
@@ -436,65 +440,74 @@ export default function HomePage() {
         </motion.div>
 
         <motion.div variants={fadeInUp}>
-          <TitleContentArea
-            title={"생활원 YouTube"}
-            externalLink={`https://www.youtube.com/channel/${CHANNEL_ID}`}
-            location="홈"
-          >
-            <YoutubeWidget />
-          </TitleContentArea>
+          <WidgetContainer>
+            <TitleContentArea
+              title={"생활원 YouTube"}
+              externalLink={`https://www.youtube.com/channel/${CHANNEL_ID}`}
+              location="홈"
+            >
+              <YoutubeWidget />
+            </TitleContentArea>
+          </WidgetContainer>
         </motion.div>
 
         <GridContainer>
           <motion.div variants={fadeInUp}>
-            <TitleContentArea
-              title="오늘의 Best 꿀팁"
-              link={"/tips"}
-              location="홈"
-            >
-              {isTipsLoading ? (
-                <LoadingSpinner message={"꿀팁을 불러오고 있어요!"} />
-              ) : dailyTips.length > 0 ? (
-                <TipsListContainer>
-                  {dailyTips.slice(0, 3).map((tip, key) => (
-                    <HomeTipsCard
-                      key={tip.boardId ?? key}
-                      index={key + 1}
-                      id={tip.boardId}
-                      content={tip.title}
-                    />
-                  ))}
-                </TipsListContainer>
-              ) : (
-                <EmptyMessage message={"오늘의 꿀팁이 없습니다."} />
-              )}
-            </TitleContentArea>
+            <WidgetContainer>
+              <TitleContentArea
+                title="오늘의 Best 꿀팁"
+                link={"/tips"}
+                location="홈"
+                gap={"16px"}
+              >
+                {isTipsLoading ? (
+                  <LoadingSpinner message={"꿀팁을 불러오고 있어요!"} />
+                ) : dailyTips.length > 0 ? (
+                  <TipsListContainer>
+                    {dailyTips.slice(0, 3).map((tip, key) => (
+                      <HomeTipsCard
+                        key={tip.boardId ?? key}
+                        index={key + 1}
+                        id={tip.boardId}
+                        content={tip.title}
+                      />
+                    ))}
+                  </TipsListContainer>
+                ) : (
+                  <EmptyMessage message={"오늘의 꿀팁이 없습니다."} />
+                )}
+              </TitleContentArea>
+            </WidgetContainer>
           </motion.div>
           <motion.div variants={fadeInUp}>
-            <TitleContentArea
-              title={"생활원 일정"}
-              children={<Calendar mode={"week"} location="홈" />}
-              link={"/calendar"}
-              location="홈"
-            />
+            <WidgetContainer>
+              <TitleContentArea
+                title={"생활원 일정"}
+                children={<Calendar mode={"week"} location="홈" />}
+                link={"/calendar"}
+                location="홈"
+              />
+            </WidgetContainer>
           </motion.div>
         </GridContainer>
 
         {isOpenGroupPurchase && (
           <motion.div variants={fadeInUp}>
-            <TitleContentArea
-              title={"임박한 공동구매"}
-              link={"/groupPurchase"}
-              location="홈"
-            >
-              {isGroupOrdersLoading ? (
-                <LoadingSpinner message={"공동구매를 불러오고 있어요!"} />
-              ) : groupOrders.length > 0 ? (
-                <GroupPurchaseList groupOrders={groupOrders.slice(0, 4)} />
-              ) : (
-                <EmptyMessage message={"임박한 공동구매가 없습니다."} />
-              )}
-            </TitleContentArea>
+            <WidgetContainer>
+              <TitleContentArea
+                title={"임박한 공동구매"}
+                link={"/groupPurchase"}
+                location="홈"
+              >
+                {isGroupOrdersLoading ? (
+                  <LoadingSpinner message={"공동구매를 불러오고 있어요!"} />
+                ) : groupOrders.length > 0 ? (
+                  <GroupPurchaseList groupOrders={groupOrders.slice(0, 4)} />
+                ) : (
+                  <EmptyMessage message={"임박한 공동구매가 없습니다."} />
+                )}
+              </TitleContentArea>
+            </WidgetContainer>
           </motion.div>
         )}
       </ContentWrapper>
@@ -569,18 +582,53 @@ const HomePageWrapper = styled.div`
 `;
 
 const ContentWrapper = styled.div`
-  padding: 16px;
+  padding: 0;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: 16px;
-  border-radius: 16px 16px 0 0;
   background: #fafafa;
   width: 100%;
 
   @media (min-width: 768px) {
     max-width: 1200px;
-    padding: 32px;
+    padding: 0;
+  }
+`;
+
+const WidgetContainer = styled.div`
+  background: #ffffff;
+  padding: 16px 20px;
+  box-sizing: border-box;
+  width: 100%;
+`;
+
+const FormSectionWrapper = styled.div`
+  background: #f7f7f7;
+  padding: 16px 20px;
+  box-sizing: border-box;
+  width: 100%;
+`;
+
+const FormArea = styled.div`
+  position: relative;
+  margin: 0 -20px;
+  width: calc(100% + 40px);
+  height: fit-content;
+`;
+
+const FormWrapper = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  width: 100%;
+  padding: 12px 20px;
+  box-sizing: border-box;
+  overflow-x: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
   }
 `;
 
