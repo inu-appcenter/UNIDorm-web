@@ -754,7 +754,6 @@ const NoticeListContainer = styled.div`
 const TipsListContainer = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
   width: 100%;
-  padding: 4px 0;
 `;

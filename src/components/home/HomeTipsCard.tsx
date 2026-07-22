@@ -32,7 +32,6 @@ const HomeCardWrapper = styled.div`
   align-items: center;
   gap: 8px;
   width: 100%;
-  padding: 4px 0;
   cursor: pointer;
   transition: opacity 0.2s ease;
 
@@ -41,15 +40,18 @@ const HomeCardWrapper = styled.div`
   }
 
   .tip-badge {
+    font-family: "Pretendard", sans-serif;
     font-style: normal;
     font-weight: 400;
     font-size: 12px;
     line-height: 1.5;
     color: #1677ff;
     min-width: fit-content;
+    white-space: nowrap;
   }
 
   .content {
+    font-family: "Pretendard", sans-serif;
     font-style: normal;
     font-weight: 400;
     font-size: 14px;
