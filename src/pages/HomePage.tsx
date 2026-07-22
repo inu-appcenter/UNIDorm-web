@@ -442,36 +442,38 @@ export default function HomePage() {
         </motion.div>
 
         <motion.div variants={fadeInUp}>
-          <TitleContentArea
-            title={"INU 폼"}
-            link={"/form"}
-            location="홈"
-          >
-            {isSurveysLoading ? (
-              <LoadingSpinner message={"폼 목록을 불러오고 있어요!"} />
-            ) : (
-              <NotiArea>
-                <NotiWrapper>
-                  {surveys.length > 0 ? (
-                    surveys
-                      .filter(
-                        (survey) => survey !== null && survey !== undefined,
-                      )
-                      .slice(0, 8)
-                      .map((survey) => (
-                        <HomeFormCard
-                          key={survey.id ?? survey.title}
-                          survey={survey}
-                        />
-                      ))
-                  ) : (
-                    <EmptyMessage message={"조회된 폼이 없습니다."} />
-                  )}
-                </NotiWrapper>
-                <GradientRight />
-              </NotiArea>
-            )}
-          </TitleContentArea>
+          <FormSectionWrapper>
+            <TitleContentArea
+              title={"INU 폼"}
+              link={"/form"}
+              location="홈"
+            >
+              {isSurveysLoading ? (
+                <LoadingSpinner message={"폼 목록을 불러오고 있어요!"} />
+              ) : (
+                <NotiArea>
+                  <NotiWrapper>
+                    {surveys.length > 0 ? (
+                      surveys
+                        .filter(
+                          (survey) => survey !== null && survey !== undefined,
+                        )
+                        .slice(0, 8)
+                        .map((survey) => (
+                          <HomeFormCard
+                            key={survey.id ?? survey.title}
+                            survey={survey}
+                          />
+                        ))
+                    ) : (
+                      <EmptyMessage message={"조회된 폼이 없습니다."} />
+                    )}
+                  </NotiWrapper>
+                  <FormGradientRight />
+                </NotiArea>
+              )}
+            </TitleContentArea>
+          </FormSectionWrapper>
         </motion.div>
 
         <motion.div variants={fadeInUp}>
@@ -714,5 +716,35 @@ const StyledMigrationBanner = styled(MigrationBanner)`
 
   @media (min-width: 768px) {
     margin: 24px auto 0;
+  }
+`;
+
+const FormSectionWrapper = styled.div`
+  background: #f7f7f7;
+  border-radius: 16px;
+  padding: 16px;
+  box-sizing: border-box;
+  width: 100%;
+
+  @media (min-width: 768px) {
+    padding: 24px;
+  }
+`;
+
+const FormGradientRight = styled.div`
+  position: absolute;
+  right: -16px;
+  top: 0;
+  bottom: 0;
+  width: 48px;
+  background: linear-gradient(
+    270deg,
+    #f7f7f7 38.54%,
+    rgba(247, 247, 247, 0) 100%
+  );
+  pointer-events: none;
+
+  @media (min-width: 768px) {
+    display: none;
   }
 `;
