@@ -134,10 +134,11 @@ const StyledHeader = styled.header<{ $isHome: boolean }>`
   z-index: 10000;
   width: 100%;
   box-sizing: border-box;
-  background: ${({ $isHome }) =>
-    $isHome
-      ? "linear-gradient(360deg, rgba(255, 255, 255, 0) 0%, #FFFFFF 80.71%)"
-      : "rgba(244, 244, 244, 0.6)"};
+  background: color-mix(
+    in srgb,
+    var(--page-bg, var(--Bg-Bg2, #f7f7f7)) 80%,
+    transparent
+  );
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 

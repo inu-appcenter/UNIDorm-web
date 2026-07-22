@@ -16,11 +16,9 @@ import { getMobilePlatform } from "@/utils/getMobilePlatform";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import useAIChatStore from "@/stores/useAIChatStore";
 import ChatBulButtonImg from "@/assets/ai-chat/챗불이버튼.webp";
-import { useSetAIChat } from "@/hooks/useSetAIChat";
 import { mixpanelTrack } from "@/utils/mixpanel";
 
 const ComplainListPage = () => {
-  useSetAIChat({ isVisible: true, shouldAnimate: false });
   const navigate = useNavigate();
   const openChat = useAIChatStore((state) => state.openChat);
   const { tokenInfo } = useUserStore();
@@ -451,7 +449,7 @@ const Wrapper2 = styled.div`
 
 const WriteButton = styled.button`
   position: fixed;
-  bottom: 40px;
+  bottom: 96px;
   right: 20px;
   background-color: #007bff;
   color: #f4f4f4;
@@ -460,8 +458,8 @@ const WriteButton = styled.button`
   font-weight: bold;
   border: none;
   cursor: pointer;
-  box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.2);
-  z-index: 100;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 1001;
 `;
 
 const EmptyMessage = styled.div`

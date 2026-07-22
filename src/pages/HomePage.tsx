@@ -1,6 +1,8 @@
 import styled from "styled-components";
+import { colors, typography } from "@/styles/tokens";
 import TitleContentArea from "../components/common/TitleContentArea.tsx";
 import HomeNoticeCard from "../components/home/HomeNoticeCard.tsx";
+import HomeFormCard from "../components/home/HomeFormCard.tsx";
 import HomeTipsCard from "../components/home/HomeTipsCard.tsx";
 import { useEffect, useState } from "react";
 import { fetchDailyRandomTips } from "@/apis/tips";
@@ -16,15 +18,14 @@ import LoadingSpinner from "../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../constants/EmptyMessage.tsx";
 import { getAnnouncementScrollList } from "@/apis/announcements";
 import { Announcement } from "@/types/announcements";
-import useUserStore from "../stores/useUserStore.ts";
+import { getAllSurveys } from "@/apis/formApis";
+import { SurveySummary } from "@/types/formTypes";
+import { statusText } from "@/utils/formUtils";
 import { getPopupNotifications } from "@/apis/popup-notification";
 import { PopupNotification } from "@/types/popup-notifications";
 import { getMobilePlatform } from "@/utils/getMobilePlatform";
 import ModalContent_AppInstall from "../components/common/ModalContent_AppInstall.tsx";
 import CommonBottomSheet from "src/components/modal/CommonBottomSheet.tsx";
-import ServiceBox from "../components/home/ServiceBox.tsx";
-import 민원아이콘 from "../assets/home/민원아이콘.webp";
-import 폼아이콘 from "../assets/home/폼아이콘.webp";
 import TopPopupNotification from "../components/common/TopPopupNotification.tsx";
 import useNetworkStore from "../stores/useNetworkStore.ts";
 import Calendar from "../components/calendar/Calendar.tsx";
@@ -44,12 +45,10 @@ export default function HomePage() {
   useSetAIChat({ isVisible: true, shouldAnimate: true });
   const { flag: isMatchingActive } = useFeatureFlag("ROOMMATE_MATCHING");
 
-  const { tokenInfo } = useUserStore();
-  const isLoggedIn = Boolean(tokenInfo.accessToken);
-
   const [dailyTips, setDailyTips] = useState<Tip[]>([]);
   const [groupOrders, setGroupOrders] = useState<GroupOrder[]>([]);
   const [notices, setNotices] = useState<Announcement[]>([]);
+  const [surveys, setSurveys] = useState<SurveySummary[]>([]);
   const [popupNotices, setPopupNotices] = useState<PopupNotification[]>([]);
   const [isPopupLoading, setIsPopupLoading] = useState<boolean>(false);
 
@@ -79,6 +78,7 @@ export default function HomePage() {
 
   const [isTipsLoading, setIsTipsLoading] = useState<boolean>(false);
   const [isAnnounceLoading, setIsAnnounceLoading] = useState<boolean>(false);
+  const [isSurveysLoading, setIsSurveysLoading] = useState<boolean>(false);
   const [isGroupOrdersLoading, setIsGroupOrdersLoading] =
     useState<boolean>(false);
 
@@ -177,10 +177,37 @@ export default function HomePage() {
       }
     }
 
+    async function fetchSurveys() {
+      setIsSurveysLoading(true);
+      try {
+        const response = await getAllSurveys();
+        console.log("폼 목록 불러오기 성공:", response);
+        const sorted = [...response.data].sort((a, b) => {
+          const isAProgress = statusText(a.status) === "진행 중";
+          const isBProgress = statusText(b.status) === "진행 중";
+
+          // 1. 현재 신청 받는 이벤트(진행 중)가 우선
+          if (isAProgress && !isBProgress) return -1;
+          if (!isAProgress && isBProgress) return 1;
+
+          // 2. 같은 상태 내에서는 최신 생성순
+          const timeA = new Date(a.createdDate).getTime();
+          const timeB = new Date(b.createdDate).getTime();
+          return timeB - timeA;
+        });
+        setSurveys(sorted);
+      } catch (error) {
+        console.error("폼 목록 불러오기 실패:", error);
+      } finally {
+        setIsSurveysLoading(false);
+      }
+    }
+
     fetchPopupNotices();
     getTips();
     fetchGroupOrders();
     fetchAnnouncements();
+    fetchSurveys();
   }, []);
 
   // 룸메이트 데이터 단일 페이지 조회
@@ -300,172 +327,183 @@ export default function HomePage() {
         initial="initial"
         animate="animate"
       >
-        <motion.div variants={fadeInUp}>
-          <TitleContentArea title={""} location="홈">
-            <ServiceWrapper>
-              <ServiceBox
-                title={"생활원 민원"}
-                imgsrc={민원아이콘}
-                onClick={() => {
-                  mixpanelTrack.featureClicked("생활원 민원", "홈_서비스박스");
-                  if (!isLoggedIn) {
-                    alert("로그인 후 사용할 수 있습니다.");
-                    navigate("/login");
-                    return;
-                  }
-                  navigate("/complain");
-                }}
-              />
-              <ServiceBox
-                title={"폼"}
-                imgsrc={폼아이콘}
-                onClick={() => {
-                  mixpanelTrack.featureClicked("폼", "홈_서비스박스");
-                  navigate("/form");
-                }}
-              />
-            </ServiceWrapper>
-          </TitleContentArea>
-        </motion.div>
-
         {isMatchingActive && (
           <motion.div variants={fadeInUp}>
-            <TitleContentArea
-              title={"2026년 1학기 룸메이트 모집"}
-              description={"룸메이트를 구하고 있는 다양한 UNI들을 찾아보세요!"}
-              link={"/roommate"}
-              location="홈"
-            >
-              <>
-                {isRoommateLoading ? (
-                  <LoadingSpinner message="최신 목록을 불러오는 중..." />
-                ) : roommates && roommates.length > 0 ? (
-                  roommates
-                    .slice(0, 2)
-                    .map((post) => (
-                      <RoomMateCard
-                        key={post.boardId}
-                        title={post.title}
-                        boardId={post.boardId}
-                        dormType={post.dormType}
-                        mbti={post.mbti}
-                        college={post.college}
-                        isSmoker={post.smoking === "피워요"}
-                        isClean={post.arrangement === "깔끔해요"}
-                        stayDays={post.dormPeriod}
-                        description={post.comment}
-                        roommateBoardLike={post.roommateBoardLike}
-                        matched={post.matched}
-                        location="홈_룸메이트목록"
-                      />
-                    ))
-                ) : (
-                  <EmptyMessage>게시글이 없습니다.</EmptyMessage>
-                )}
-              </>
-            </TitleContentArea>
+            <WidgetContainer>
+              <TitleContentArea
+                title={"2026년 1학기 룸메이트 모집"}
+                description={
+                  "룸메이트를 구하고 있는 다양한 UNI들을 찾아보세요!"
+                }
+                link={"/roommate"}
+                location="홈"
+              >
+                <>
+                  {isRoommateLoading ? (
+                    <LoadingSpinner message="최신 목록을 불러오는 중..." />
+                  ) : roommates && roommates.length > 0 ? (
+                    roommates
+                      .slice(0, 2)
+                      .map((post) => (
+                        <RoomMateCard
+                          key={post.boardId}
+                          title={post.title}
+                          boardId={post.boardId}
+                          dormType={post.dormType}
+                          mbti={post.mbti}
+                          college={post.college}
+                          isSmoker={post.smoking === "피워요"}
+                          isClean={post.arrangement === "깔끔해요"}
+                          stayDays={post.dormPeriod}
+                          description={post.comment}
+                          roommateBoardLike={post.roommateBoardLike}
+                          matched={post.matched}
+                          location="홈_룸메이트목록"
+                        />
+                      ))
+                  ) : (
+                    <EmptyMessage>게시글이 없습니다.</EmptyMessage>
+                  )}
+                </>
+              </TitleContentArea>
+            </WidgetContainer>
           </motion.div>
         )}
 
         <motion.div variants={fadeInUp}>
-          <TitleContentArea
-            title={"공지사항"}
-            description={
-              "생활원과 서포터즈에서 알려드리는 공지사항을 확인해보세요."
-            }
-            link={"/announcements"}
-            location="홈"
-          >
-            {isAnnounceLoading ? (
-              <LoadingSpinner message={"공지사항을 불러오고 있어요!"} />
-            ) : (
-              <NotiArea>
-                <NotiWrapper>
-                  {notices.length > 0 ? (
-                    notices
-                      .filter(
-                        (notice) => notice !== null && notice !== undefined,
-                      )
-                      .slice(0, 8)
-                      .map((notice) => (
-                        <HomeNoticeCard
-                          key={notice.id ?? notice.title}
-                          id={notice.id}
-                          title={notice.title}
-                          content={notice.content}
-                          isEmergency={notice.emergency}
-                          createdDate={notice.createdDate}
-                          type={notice.type}
-                        />
-                      ))
-                  ) : (
-                    <EmptyMessage message={"공지사항이 없습니다."} />
-                  )}
-                </NotiWrapper>
-                <GradientRight />
-              </NotiArea>
-            )}
-          </TitleContentArea>
+          <WidgetContainer>
+            <TitleContentArea
+              title={"공지사항"}
+              link={"/announcements"}
+              location="홈"
+              gap={"16px"}
+            >
+              {isAnnounceLoading ? (
+                <LoadingSpinner message={"공지사항을 불러오고 있어요!"} />
+              ) : notices.length > 0 ? (
+                <NoticeListContainer>
+                  {notices
+                    .filter((notice) => notice !== null && notice !== undefined)
+                    .slice(0, 2)
+                    .map((notice) => (
+                      <HomeNoticeCard
+                        key={notice.id ?? notice.title}
+                        id={notice.id}
+                        title={notice.title}
+                        content={notice.content}
+                        isEmergency={notice.emergency}
+                        createdDate={notice.createdDate}
+                        type={notice.type}
+                      />
+                    ))}
+                </NoticeListContainer>
+              ) : (
+                <EmptyMessage message={"공지사항이 없습니다."} />
+              )}
+            </TitleContentArea>
+          </WidgetContainer>
         </motion.div>
 
         <motion.div variants={fadeInUp}>
-          <TitleContentArea
-            title={"생활원 YouTube"}
-            externalLink={`https://www.youtube.com/channel/${CHANNEL_ID}`}
-            location="홈"
-          >
-            <YoutubeWidget />
-          </TitleContentArea>
+          <FormSectionWrapper>
+            <TitleContentArea title={"INU 폼"} link={"/form"} location="홈">
+              {isSurveysLoading ? (
+                <LoadingSpinner message={"폼 목록을 불러오고 있어요!"} />
+              ) : (
+                <FormArea>
+                  <FormWrapper>
+                    {surveys.length > 0 ? (
+                      surveys
+                        .filter(
+                          (survey) => survey !== null && survey !== undefined,
+                        )
+                        .slice(0, 8)
+                        .map((survey) => (
+                          <HomeFormCard
+                            key={survey.id ?? survey.title}
+                            survey={survey}
+                          />
+                        ))
+                    ) : (
+                      <EmptyMessage message={"조회된 폼이 없습니다."} />
+                    )}
+                  </FormWrapper>
+                  <FormGradientRight />
+                </FormArea>
+              )}
+            </TitleContentArea>
+          </FormSectionWrapper>
+        </motion.div>
+
+        <motion.div variants={fadeInUp}>
+          <WidgetContainer>
+            <TitleContentArea
+              title={"생활원 YouTube"}
+              externalLink={`https://www.youtube.com/channel/${CHANNEL_ID}`}
+              location="홈"
+            >
+              <YoutubeWidget />
+            </TitleContentArea>
+          </WidgetContainer>
         </motion.div>
 
         <GridContainer>
           <motion.div variants={fadeInUp}>
-            <TitleContentArea
-              title="오늘의 Best 꿀팁"
-              link={"/tips"}
-              location="홈"
-            >
-              {isTipsLoading ? (
-                <LoadingSpinner message={"꿀팁을 불러오고 있어요!"} />
-              ) : dailyTips.length > 0 ? (
-                dailyTips.map((tip, key) => (
-                  <HomeTipsCard
-                    key={key}
-                    index={key + 1}
-                    id={tip.boardId}
-                    content={tip.title}
-                  />
-                ))
-              ) : (
-                <EmptyMessage message={"오늘의 꿀팁이 없습니다."} />
-              )}
-            </TitleContentArea>
+            <WidgetContainer>
+              <TitleContentArea
+                title="오늘의 Best 꿀팁"
+                link={"/tips"}
+                location="홈"
+                gap={"16px"}
+              >
+                {isTipsLoading ? (
+                  <LoadingSpinner message={"꿀팁을 불러오고 있어요!"} />
+                ) : dailyTips.length > 0 ? (
+                  <TipsListContainer>
+                    {dailyTips.slice(0, 3).map((tip, key) => (
+                      <HomeTipsCard
+                        key={tip.boardId ?? key}
+                        index={key + 1}
+                        id={tip.boardId}
+                        content={tip.title}
+                      />
+                    ))}
+                  </TipsListContainer>
+                ) : (
+                  <EmptyMessage message={"오늘의 꿀팁이 없습니다."} />
+                )}
+              </TitleContentArea>
+            </WidgetContainer>
           </motion.div>
           <motion.div variants={fadeInUp}>
-            <TitleContentArea
-              title={"생활원 일정"}
-              children={<Calendar mode={"week"} location="홈" />}
-              link={"/calendar"}
-              location="홈"
-            />
+            <WidgetContainer>
+              <TitleContentArea
+                title={"생활원 일정"}
+                children={<Calendar mode={"week"} location="홈" />}
+                link={"/calendar"}
+                location="홈"
+              />
+            </WidgetContainer>
           </motion.div>
         </GridContainer>
 
         {isOpenGroupPurchase && (
           <motion.div variants={fadeInUp}>
-            <TitleContentArea
-              title={"임박한 공동구매"}
-              link={"/groupPurchase"}
-              location="홈"
-            >
-              {isGroupOrdersLoading ? (
-                <LoadingSpinner message={"공동구매를 불러오고 있어요!"} />
-              ) : groupOrders.length > 0 ? (
-                <GroupPurchaseList groupOrders={groupOrders.slice(0, 4)} />
-              ) : (
-                <EmptyMessage message={"임박한 공동구매가 없습니다."} />
-              )}
-            </TitleContentArea>
+            <WidgetContainer>
+              <TitleContentArea
+                title={"임박한 공동구매"}
+                link={"/groupPurchase"}
+                location="홈"
+              >
+                {isGroupOrdersLoading ? (
+                  <LoadingSpinner message={"공동구매를 불러오고 있어요!"} />
+                ) : groupOrders.length > 0 ? (
+                  <GroupPurchaseList groupOrders={groupOrders.slice(0, 4)} />
+                ) : (
+                  <EmptyMessage message={"임박한 공동구매가 없습니다."} />
+                )}
+              </TitleContentArea>
+            </WidgetContainer>
           </motion.div>
         )}
       </ContentWrapper>
@@ -540,19 +578,25 @@ const HomePageWrapper = styled.div`
 `;
 
 const ContentWrapper = styled.div`
-  padding: 16px;
+  padding: 0;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  border-radius: 16px 16px 0 0;
-  background: #fafafa;
+  gap: 8px;
+  background: ${colors.bg.bg2};
   width: 100%;
 
   @media (min-width: 768px) {
     max-width: 1200px;
-    padding: 32px;
+    padding: 0;
   }
+`;
+
+const WidgetContainer = styled.div`
+  background: ${colors.bg.bg1};
+  padding: 16px 20px;
+  box-sizing: border-box;
+  width: 100%;
 `;
 
 const GridContainer = styled.div`
@@ -562,31 +606,6 @@ const GridContainer = styled.div`
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 32px;
-    order: -1;
-  }
-`;
-
-const NotiArea = styled.div`
-  position: relative;
-  left: -32px;
-  right: -32px;
-  width: calc(100% + 32px);
-  height: fit-content;
-`;
-
-const NotiWrapper = styled.div`
-  display: flex;
-  flex-direction: row;
-  gap: 16px;
-  width: 100%;
-  padding: 16px 48px 16px 32px;
-  padding-top: 8px;
-  box-sizing: border-box;
-  overflow-x: auto;
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-  &::-webkit-scrollbar {
-    display: none;
   }
 `;
 
@@ -602,43 +621,17 @@ const PopupModalContent = styled.div`
     border-radius: 8px;
   }
   h3 {
-    font-size: 18px;
-    font-weight: 600;
+    ${typography.headline1}
+    color: ${colors.text.text1};
   }
   p {
-    font-size: 14px;
-    color: #333;
+    ${typography.label1Normal}
+    color: ${colors.text.text1};
   }
   span {
-    font-size: 12px;
-    color: #777;
+    ${typography.caption1}
+    color: ${colors.text.text2};
   }
-`;
-
-const GradientRight = styled.div`
-  position: absolute;
-  right: -16px;
-  top: 0;
-  bottom: 0;
-  width: 48px;
-  background: linear-gradient(
-    270deg,
-    #fafafa 38.54%,
-    rgba(250, 250, 250, 0) 100%
-  );
-  pointer-events: none;
-
-  @media (min-width: 768px) {
-    display: none;
-  }
-`;
-
-const ServiceWrapper = styled.div`
-  width: 100%;
-  height: 78px;
-  display: flex;
-  flex-direction: row;
-  gap: 16px;
 `;
 
 const StyledMigrationBanner = styled(MigrationBanner)`
@@ -649,4 +642,71 @@ const StyledMigrationBanner = styled(MigrationBanner)`
   @media (min-width: 768px) {
     margin: 24px auto 0;
   }
+`;
+
+const FormSectionWrapper = styled.div`
+  background: ${colors.bg.bg2};
+  padding: 16px 0 16px 20px;
+  box-sizing: border-box;
+  width: 100%;
+
+  /* TitleContentArea 헤더 부분(제목 + 더보기) 우측 20px 여백 유지 */
+  > div > div:first-child {
+    padding-right: 20px;
+    box-sizing: border-box;
+    width: 100%;
+  }
+`;
+
+const FormArea = styled.div`
+  position: relative;
+  width: 100%;
+  height: fit-content;
+`;
+
+const FormWrapper = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  width: 100%;
+  padding: 12px 20px 16px 0;
+  box-sizing: border-box;
+  overflow-x: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+`;
+
+const FormGradientRight = styled.div`
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 48px;
+  background: linear-gradient(
+    270deg,
+    ${colors.bg.bg2} 38.54%,
+    rgba(247, 247, 247, 0) 100%
+  );
+  pointer-events: none;
+
+  @media (min-width: 768px) {
+    display: none;
+  }
+`;
+
+const NoticeListContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+`;
+
+const TipsListContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
 `;

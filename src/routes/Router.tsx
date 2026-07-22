@@ -110,6 +110,7 @@ export const router = createBrowserRouter([
           { path: "roommate/my", element: <MyRoomMatePage /> },
           { path: "groupPurchase", element: <GroupPurchaseMainPage /> },
           { path: "chat", element: <OpenChatPage /> },
+          { path: "complain", element: <ComplainListPage /> },
           { path: "mypage", element: <MyPage /> },
         ],
       },
@@ -259,7 +260,6 @@ export const router = createBrowserRouter([
             path: "complain",
             element: <SubPage />,
             children: [
-              { index: true, element: <ComplainListPage /> },
               { path: ":complainId", element: <ComplainDetailPage /> },
               { path: "write", element: <ComplainWritePage /> },
             ],

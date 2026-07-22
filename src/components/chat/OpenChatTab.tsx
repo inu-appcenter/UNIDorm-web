@@ -36,18 +36,20 @@ export default function OpenChatTab({ selectedTab, onChangeTab, unreadCount = 0 
 const TabWrapper = styled.div`
   width: 100%;
   display: flex;
-  background-color: #ffffff;
-  border-bottom: 1px solid #c6c6cd;
+  background-color: transparent;
+  border-bottom: 1px solid var(--Gray-Gray200, #dfdfdf);
 `;
 
 const TabButton = styled.button<{ $active: boolean }>`
   flex: 1;
   height: 40px;
   border: none;
-  border-bottom: ${({ $active }) => ($active ? "2px solid #0958d9" : "none")};
+  border-bottom: ${({ $active }) =>
+    $active ? "2px solid var(--CTA-Default, #0958d9)" : "none"};
   margin-bottom: -1px; /* Overlaps TabWrapper's border-bottom */
   background-color: transparent;
-  color: ${({ $active }) => ($active ? "#0958d9" : "#8e8e93")};
+  color: ${({ $active }) =>
+    $active ? "var(--CTA-Default, #0958d9)" : "var(--Text-Text2, #6f6f6f)"};
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;

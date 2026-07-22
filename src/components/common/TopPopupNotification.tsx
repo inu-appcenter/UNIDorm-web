@@ -18,7 +18,7 @@ const NotificationWrapper = styled.div<{ isClosing: boolean }>`
   position: fixed;
   top: 20px;
   left: 50%;
-  z-index: 9999;
+  z-index: 20000;
   width: calc(100% - 10px);
   max-width: 450px;
   padding: 12px 40px;

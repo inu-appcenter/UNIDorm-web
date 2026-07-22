@@ -63,7 +63,7 @@ export default function OpenChatCreatePage() {
           <TextArea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder={`예) 배달, 공동구매, 생활 정보처럼\n같이 이야기할 주제를 짧게 적기`}
+            placeholder={`예) 배달, 공동구매, 생활 정보처럼 같이 이야기할\n주제를 짧게 적기`}
             maxLength={100}
           />
         </FormGroup>
@@ -97,8 +97,7 @@ export default function OpenChatCreatePage() {
         <NoticeBox>
           <NoticeTitle>안내</NoticeTitle>
           <NoticeText>
-            개인정보 공개, 금전 거래, 외부 연락처 교환은 사용자 책임 하에
-            이루어집니다.
+            개인정보 공개, 금전 거래, 외부 연락처 교환은 사용자 책임 하에 이루어집니다.
           </NoticeText>
         </NoticeBox>
       </Content>
@@ -109,7 +108,7 @@ export default function OpenChatCreatePage() {
           disabled={!isValid || isSubmitting}
           onClick={handleSubmit}
         >
-          {isSubmitting ? "만드는 중..." : "만들기"}
+          {isSubmitting ? "만드는 중..." : "방 만들기"}
         </SubmitButton>
       </SubmitArea>
     </PageWrapper>
@@ -124,123 +123,149 @@ const PageWrapper = styled.div`
 `;
 
 const Content = styled.main`
-  padding: 28px 24px 140px;
+  padding: 24px 20px 100px 20px;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  @media (min-width: 769px) {
+    max-width: 480px;
+    margin: 0 auto;
+  }
 `;
 
 const GuideText = styled.p`
-  margin: 0 0 28px;
-  font-size: 14px;
-  font-weight: 500;
+  margin: 0;
+  font-family: "Pretendard", sans-serif;
+  font-size: 12px;
+  font-weight: 400;
   line-height: 1.5;
-  color: #7a8495;
+  color: #8b8b8b;
   word-break: keep-all;
 `;
 
 const FormGroup = styled.div`
-  margin-bottom: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
 `;
 
 const Label = styled.label`
   display: block;
-  margin-bottom: 10px;
-  font-size: 15px;
-  font-weight: 900;
-  color: #1f2430;
+  font-family: "Pretendard", sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: #3d3d3d;
 `;
 
 const TextInput = styled.input`
   width: 100%;
-  height: 54px;
-  padding: 0 18px;
-  border: 1px solid #d8dde8;
-  border-radius: 16px;
-  color: #1f2430;
-  font-size: 15px;
-  font-weight: 500;
+  height: 38px;
+  padding: 8px 12px;
+  background: #f7f7f7;
+  border: none;
+  border-radius: 4px;
+  color: #3d3d3d;
+  font-family: "Pretendard", sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
   outline: none;
   box-sizing: border-box;
 
   &::placeholder {
-    color: #b0b7c3;
+    color: #8b8b8b;
   }
 
   &:focus {
-    border-color: #2563eb;
+    background: #f0f0f0;
   }
 `;
 
 const TextArea = styled.textarea`
   width: 100%;
-  height: 116px;
-  padding: 18px;
-  border: 1px solid #d8dde8;
-  border-radius: 16px;
-  color: #1f2430;
-  font-size: 15px;
-  font-weight: 500;
+  height: 114px;
+  padding: 8px 12px;
+  background: #f7f7f7;
+  border: none;
+  border-radius: 4px;
+  color: #3d3d3d;
+  font-family: "Pretendard", sans-serif;
+  font-size: 14px;
+  font-weight: 400;
   line-height: 1.5;
   outline: none;
   resize: none;
   box-sizing: border-box;
 
   &::placeholder {
-    color: #b0b7c3;
+    color: #8b8b8b;
   }
 
   &:focus {
-    border-color: #2563eb;
+    background: #f0f0f0;
   }
 `;
 
 const ScopeButtonRow = styled.div`
   display: flex;
-  gap: 10px;
-  margin-bottom: 12px;
+  gap: 8px;
 `;
 
 const ScopeButton = styled.button<{ $active: boolean }>`
-  min-width: 96px;
   height: 36px;
-  padding: 0 18px;
-  border: 1px solid ${({ $active }) => ($active ? "#2563eb" : "#d8dde8")};
-  border-radius: 999px;
-  background: #ffffff;
-  color: ${({ $active }) => ($active ? "#2563eb" : "#9ca3af")};
+  padding: 6px 14px;
+  border: none;
+  border-radius: 32px;
+  background: ${({ $active }) => ($active ? "#1677ff" : "#f7f7f7")};
+  color: ${({ $active }) => ($active ? "#ffffff" : "#3d3d3d")};
+  font-family: "Pretendard", sans-serif;
   font-size: 14px;
-  font-weight: 900;
+  font-weight: 400;
+  line-height: 1.5;
   cursor: pointer;
+  transition: all 0.2s ease;
 `;
 
 const ScopeDescription = styled.p`
   margin: 0;
-  font-size: 13px;
-  font-weight: 500;
+  font-family: "Pretendard", sans-serif;
+  font-size: 12px;
+  font-weight: 400;
   line-height: 1.5;
-  color: #8a93a3;
+  color: #8b8b8b;
   word-break: keep-all;
 `;
 
 const NoticeBox = styled.div`
-  padding: 18px;
-  border: 1px solid #ffc53d;
-  border-radius: 16px;
-  background: #fffaf0;
+  padding: 16px;
+  border: none;
+  border-radius: 8px;
+  background: #fffbe6;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 `;
 
 const NoticeTitle = styled.p`
-  margin: 0 0 10px;
+  margin: 0;
+  font-family: "Pretendard", sans-serif;
   font-size: 14px;
-  font-weight: 900;
-  color: #b7791f;
+  font-weight: 500;
+  line-height: 1.5;
+  color: #ad6800;
 `;
 
 const NoticeText = styled.p`
   margin: 0;
-  font-size: 14px;
-  font-weight: 500;
+  font-family: "Pretendard", sans-serif;
+  font-size: 12px;
+  font-weight: 400;
   line-height: 1.5;
-  color: #9a6b1f;
+  color: #613400;
   word-break: keep-all;
 `;
 
@@ -249,7 +274,7 @@ const SubmitArea = styled.div`
   left: 0;
   right: 0;
   bottom: 0;
-  padding: 14px 24px;
+  padding: 16px 20px;
   background: #ffffff;
   box-sizing: border-box;
 
@@ -261,17 +286,20 @@ const SubmitArea = styled.div`
 
 const SubmitButton = styled.button`
   width: 100%;
-  height: 54px;
+  height: 48px;
   border: none;
-  border-radius: 14px;
-  background: #2563eb;
+  border-radius: 8px;
+  background: #1677ff;
   color: #ffffff;
+  font-family: "Pretendard", sans-serif;
   font-size: 16px;
-  font-weight: 900;
+  font-weight: 600;
+  line-height: 1.5;
   cursor: pointer;
+  transition: background 0.2s ease;
 
   &:disabled {
-    background: #c7d2fe;
-    cursor: default;
+    background: #91caff;
+    cursor: not-allowed;
   }
 `;

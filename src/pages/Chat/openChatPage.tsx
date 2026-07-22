@@ -13,12 +13,13 @@ import OpenChatTab from "@/components/chat/OpenChatTab";
 import OpenChatEmptyState from "@/components/chat/OpenChatEmptyState";
 import OpenChatJoinModal from "@/components/modal/OpenChatJoinModal";
 import OpenChatPasswordModal from "@/components/modal/OpenChatPasswordModal";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { OpenChatRoom, OpenChatTab as OpenChatTabType } from "@/types/openchat";
 import { RoommateChatRoom } from "@/types/chats";
 import { useNavigate } from "react-router-dom";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import useUserStore from "@/stores/useUserStore";
-import { Search, User, Plus } from "lucide-react";
+import { Search, Plus, MapPin } from "lucide-react";
 
 const formatTime = (isoString: string) => {
   if (!isoString) return "";
@@ -54,13 +55,19 @@ function RoommateChatCard({
       );
   }, [room.chatRoomId]);
 
+  const isMyRoommate = Boolean(
+    room.isMyRoommate || room.myRoommate || room.matched || room.isRoommate,
+  );
+
   return (
-    <RoommateCard type="button" onClick={onClick}>
+    <RoommateCard type="button" onClick={onClick} $isMyRoommate={isMyRoommate}>
       <CardLeft>
-        <RoommateBadge>
-          <User size={12} color="#1677ff" style={{ marginRight: 4 }} />
-          룸메 매칭
-        </RoommateBadge>
+        {isMyRoommate && (
+          <RoommateBadge>
+            <MapPin size={12} color="#1677ff" style={{ marginRight: 4 }} />
+            내 룸메이트
+          </RoommateBadge>
+        )}
         <RoomName>
           {room.partnerName || room.opponentNickname || "익명"}
         </RoomName>
@@ -317,7 +324,7 @@ export default function OpenChatPage() {
             </LoginButton>
           </LoginPromptWrapper>
         ) : isLoading ? (
-          <LoadingText>채팅방을 불러오는 중입니다.</LoadingText>
+          <LoadingSpinner message="채팅방을 불러오는 중입니다." />
         ) : selectedTab === "MY" ? (
           mergedMyRooms.length === 0 ? (
             <OpenChatEmptyState
@@ -397,12 +404,13 @@ export default function OpenChatPage() {
 
 const PageContainer = styled.div`
   position: relative;
-  min-height: 100vh;
+  width: 100%;
+  flex: 1;
   color: #222222;
 `;
 
 const Content = styled.main`
-  padding: 64px 20px 120px;
+  padding: 40px 20px 100px;
 `;
 
 const SearchBox = styled.div`
@@ -440,12 +448,7 @@ const RoomList = styled.div`
   gap: 12px;
 `;
 
-const LoadingText = styled.p`
-  margin: 48px 0 0;
-  text-align: center;
-  font-size: 14px;
-  color: #9ca3af;
-`;
+
 
 const CreateButton = styled.button`
   position: fixed;
@@ -523,18 +526,20 @@ const LoginButton = styled.button`
   cursor: pointer;
 `;
 
-const RoommateCard = styled.button`
+const RoommateCard = styled.button<{ $isMyRoommate?: boolean }>`
   width: 100%;
   padding: 16px;
   border: 1px solid #dfdfdf;
   border-radius: 16px;
-  background-color: #e6f4ff;
+  background-color: ${({ $isMyRoommate }) =>
+    $isMyRoommate ? "#e6f4ff" : "#ffffff"};
   text-align: left;
   cursor: pointer;
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
   box-sizing: border-box;
+  transition: background-color 0.2s ease;
 `;
 
 const CardLeft = styled.div`

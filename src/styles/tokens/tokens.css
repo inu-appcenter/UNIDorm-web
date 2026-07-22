@@ -1,0 +1,199 @@
+/* Auto-generated design tokens from src/styles/tokens/tokens.json */
+:root {
+  --color-main-main1: #1677ff;
+  --color-main-main3: #ffd666;
+  --color-main-main2: #0958d9;
+  --color-main-main4: #ffc53d;
+  --color-bg-bg2: #f7f7f7;
+  --color-bg-bg3: #efefef;
+  --color-bg-bg1: #ffffff;
+  --color-gray-gray1100: #000000;
+  --color-gray-gray1000: #242424;
+  --color-gray-gray900: #333333;
+  --color-gray-gray800: #3d3d3d;
+  --color-gray-gray700: #555555;
+  --color-gray-gray600: #6f6f6f;
+  --color-gray-gray500: #8b8b8b;
+  --color-gray-gray400: #a5a5a5;
+  --color-gray-gray300: #c1c1c1;
+  --color-gray-gray200: #dfdfdf;
+  --color-gray-gray100: #efefef;
+  --color-gray-gray50: #f7f7f7;
+  --color-gray-gray0: #ffffff;
+  --color-blue-blue100: #e6f4ff;
+  --color-blue-blue200: #bae0ff;
+  --color-blue-blue300: #91caff;
+  --color-blue-blue400: #69b1ff;
+  --color-blue-blue500: #4096ff;
+  --color-blue-blue600: #1677ff;
+  --color-blue-blue700: #0958d9;
+  --color-blue-blue800: #003eb3;
+  --color-blue-blue900: #002c8c;
+  --color-blue-blue1000: #001d66;
+  --color-gold-gold100: #fffbe6;
+  --color-gold-gold200: #fff1b8;
+  --color-gold-gold300: #ffe58f;
+  --color-gold-gold400: #ffd666;
+  --color-gold-gold500: #ffc53d;
+  --color-gold-gold600: #faad14;
+  --color-gold-gold700: #d48806;
+  --color-gold-gold800: #ad6800;
+  --color-gold-gold900: #874d00;
+  --color-gold-gold1000: #613400;
+  --color-text-text1: #242424;
+  --color-text-text2: #6f6f6f;
+  --color-text-text3: #a5a5a5;
+  --color-text-text4: #dfdfdf;
+  --color-text-text5: #f7f7f7;
+  --color-cta-default: #0958d9;
+  --color-cta-hover: #002c8c;
+  --color-cta-disabled: #c1c1c1;
+  --color-status-positive: #00bf40;
+  --color-status-cautionary: #ff9200;
+  --color-status-destructive: #ff4242;
+  --font-family-pretendard: 'Pretendard', sans-serif;
+}
+
+.typo-display-1 {
+  font-family: 'Pretendard', sans-serif;
+  font-weight: 700;
+  font-size: 56px;
+  line-height: 1.2;
+  letter-spacing: -0.006em;
+}
+
+.typo-display-2 {
+  font-family: 'Pretendard', sans-serif;
+  font-weight: 700;
+  font-size: 40px;
+  line-height: 1.2;
+  letter-spacing: -0.006em;
+}
+
+.typo-title-1 {
+  font-family: 'Pretendard', sans-serif;
+  font-weight: 700;
+  font-size: 38px;
+  line-height: 1.2;
+  letter-spacing: -0.006em;
+}
+
+.typo-title-2 {
+  font-family: 'Pretendard', sans-serif;
+  font-weight: 700;
+  font-size: 28px;
+  line-height: 1.2;
+  letter-spacing: -0.006em;
+}
+
+.typo-title-3 {
+  font-family: 'Pretendard', sans-serif;
+  font-weight: 600;
+  font-size: 24px;
+  line-height: 1.2;
+  letter-spacing: -0.006em;
+}
+
+.typo-heading-1 {
+  font-family: 'Pretendard', sans-serif;
+  font-weight: 600;
+  font-size: 22px;
+  line-height: 1.5;
+  letter-spacing: 0em;
+}
+
+.typo-heading-2 {
+  font-family: 'Pretendard', sans-serif;
+  font-weight: 600;
+  font-size: 20px;
+  line-height: 1.5;
+  letter-spacing: 0em;
+}
+
+.typo-headline-1 {
+  font-family: 'Pretendard', sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  line-height: 1.5;
+  letter-spacing: 0em;
+}
+
+.typo-headline-2 {
+  font-family: 'Pretendard', sans-serif;
+  font-weight: 700;
+  font-size: 17px;
+  line-height: 1.5;
+  letter-spacing: 0em;
+}
+
+.typo-body-1-normal {
+  font-family: 'Pretendard', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 1.5;
+  letter-spacing: 0em;
+}
+
+.typo-body-1-reading {
+  font-family: 'Pretendard', sans-serif;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.6;
+  letter-spacing: 0em;
+}
+
+.typo-body-2-normal {
+  font-family: 'Pretendard', sans-serif;
+  font-weight: 400;
+  font-size: 15px;
+  line-height: 1.5;
+  letter-spacing: 0em;
+}
+
+.typo-body-2-reading {
+  font-family: 'Pretendard', sans-serif;
+  font-weight: 400;
+  font-size: 15px;
+  line-height: 1.5;
+  letter-spacing: 0em;
+}
+
+.typo-label-1-normal {
+  font-family: 'Pretendard', sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.5;
+  letter-spacing: 0em;
+}
+
+.typo-label-1-reading {
+  font-family: 'Pretendard', sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.5;
+  letter-spacing: 0em;
+}
+
+.typo-label-2 {
+  font-family: 'Pretendard', sans-serif;
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 1.5;
+  letter-spacing: 0em;
+}
+
+.typo-caption-1 {
+  font-family: 'Pretendard', sans-serif;
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 1.5;
+  letter-spacing: 0em;
+}
+
+.typo-caption-2 {
+  font-family: 'Pretendard', sans-serif;
+  font-weight: 400;
+  font-size: 11px;
+  line-height: 1.5;
+  letter-spacing: 0em;
+}

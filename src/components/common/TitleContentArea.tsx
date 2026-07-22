@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { colors, typography } from "@/styles/tokens";
 import TitleLine from "../home/TitleLine.tsx";
 
 interface TitleContentAreaProps {
@@ -9,7 +10,8 @@ interface TitleContentAreaProps {
   description?: string;
   margin?: string;
   padding?: string;
-  rightAction?: React.ReactNode; // 우측 배치용 프롭 추가
+  gap?: string; // gap 프롭 추가
+  rightAction?: React.ReactNode;
   children?: React.ReactNode;
 }
 
@@ -21,11 +23,12 @@ const TitleContentArea = ({
   description,
   margin,
   padding,
+  gap,
   rightAction,
   children,
 }: TitleContentAreaProps) => {
   return (
-    <TitleContentAreaWrapper>
+    <TitleContentAreaWrapper $gap={gap}>
       <HeaderSection>
         <TextGroup>
           <TitleLine
@@ -49,18 +52,18 @@ const TitleContentArea = ({
 
 export default TitleContentArea;
 
-const TitleContentAreaWrapper = styled.div`
+const TitleContentAreaWrapper = styled.div<{ $gap?: string }>`
   display: flex;
   flex-direction: column;
   width: 100%;
   height: fit-content;
-  gap: 8px;
+  gap: ${({ $gap }) => $gap || "8px"};
 `;
 
 const HeaderSection = styled.div`
   display: flex;
-  justify-content: space-between; // 양 끝 정렬
-  align-items: center; // 중앙 정렬
+  justify-content: space-between;
+  align-items: center;
   width: 100%;
 `;
 
@@ -78,8 +81,8 @@ const ActionGroup = styled.div`
 `;
 
 const DescriptionText = styled.p<{ $margin?: string; $padding?: string }>`
-  font-size: 12px;
-  color: #666;
+  ${typography.caption1}
+  color: ${colors.gray.gray600};
   text-align: start;
   width: 100%;
   margin: ${({ $margin }) => $margin || "0"};

@@ -4,7 +4,8 @@ export const CategoryWrapper = styled.div`
   display: flex;
   gap: 16px;
   width: 100%;
-  border-bottom: 1px solid silver;
+  background-color: transparent;
+  border-bottom: 1px solid var(--Gray-Gray200, #dfdfdf);
 
   @media (min-width: 1024px) {
     max-width: 1200px;
@@ -16,14 +17,14 @@ export const CategoryItem = styled.div`
   flex: 1;
   text-align: center;
   font-size: 16px;
-  color: #aaa;
+  color: var(--Text-Text2, #6f6f6f);
   cursor: pointer;
-  padding: 6px 0;
+  padding: 8px 0;
 
   &.active {
-    color: black;
-    font-weight: bold;
-    border-bottom: 2px solid black;
-    padding-bottom: 2px;
+    color: var(--CTA-Default, #0958d9);
+    font-weight: 600;
+    border-bottom: 2px solid var(--CTA-Default, #0958d9);
+    margin-bottom: -1px;
   }
 `;

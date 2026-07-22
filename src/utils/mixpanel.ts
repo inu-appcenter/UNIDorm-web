@@ -89,7 +89,7 @@ export const mixpanelTrack = {
     trackEvent("일정 월 변경", { year, month, location });
   },
   itemClicked: (
-    itemType: "공지" | "꿀팁" | "룸메이트" | "공동구매" | "민원",
+    itemType: "공지" | "꿀팁" | "룸메이트" | "공동구매" | "민원" | "폼",
     id: number | string,
     title: string,
     location: string,

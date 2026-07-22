@@ -213,10 +213,10 @@ export default function ChatListPage() {
 }
 
 const ChatListPageWrapper = styled.div`
-  padding-bottom: 100px;
+  padding: 16px 16px 100px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
   box-sizing: border-box;
   width: 100%;
   flex: 1;
@@ -229,7 +229,6 @@ const ChatListPageWrapper = styled.div`
 `;
 
 const ContentWrapper = styled.div`
-  padding-bottom: 100px;
   display: flex;
   flex-direction: column;
   height: 100%;
