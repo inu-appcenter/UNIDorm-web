@@ -36,6 +36,18 @@ export default function OpenChatRoomCard({ room, tab, onClick }: Props) {
             <RoomName>{room.name}</RoomName>
             <LastMessage>{room.lastMessage || room.description}</LastMessage>
           </TextArea>
+
+          <MetaArea>
+            <MetaItem>
+              {(room.isPublic ?? room.public) ? <Unlock size={14} /> : <Lock size={14} />}
+              <span>{(room.isPublic ?? room.public) ? "공개" : "비공개"}</span>
+            </MetaItem>
+
+            <MetaItem>
+              <User size={14} />
+              <span>{room.currentParticipants}</span>
+            </MetaItem>
+          </MetaArea>
         </LeftArea>
 
         <RightArea>
