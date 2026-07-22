@@ -52,7 +52,7 @@ const AIChatFloatingButton = () => {
 
   const isHomePage = location.pathname === "/home" || location.pathname === "/";
 
-  if (!isVisible || !isHomePage) return null;
+  if (!isOpen && (!isVisible || !isHomePage)) return null;
 
   const modalVariants: Variants = {
     hidden: { scale: 0, opacity: 0 },
@@ -127,42 +127,44 @@ const AIChatFloatingButton = () => {
         document.body
       )}
 
-      <FloatingButton
-        key={location.pathname} // 페이지 변경 시 애니메이션 초기화
-        // 애니메이션이 꺼져있을 때는 명시적으로 y: 0으로 고정
-        animate={shouldAnimate ? { y: [0, -8, 0] } : { y: 0 }}
-        transition={
-          shouldAnimate
-            ? {
-                duration: 3,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }
-            : { duration: 0 }
-        }
-        onClick={handleToggleChat}
-        aria-label="AI 챗봇 열기"
-      >
-        <AnimatePresence>
-          {showTooltip && (
-            <TooltipWrapper
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ delay: 0.5 }}
-            >
-              <TooltipMessage
-                message="베타 오픈!\n기숙사에 대해\n무엇이든 물어보세요!"
-                onClose={handleCloseTooltip}
-                position="top"
-                align="right"
-                width="max-content"
-              />
-            </TooltipWrapper>
-          )}
-        </AnimatePresence>
-        <img src={ChatBulButtonImg} alt="AI 챗봇" />
-      </FloatingButton>
+      {isHomePage && isVisible && (
+        <FloatingButton
+          key={location.pathname} // 페이지 변경 시 애니메이션 초기화
+          // 애니메이션이 꺼져있을 때는 명시적으로 y: 0으로 고정
+          animate={shouldAnimate ? { y: [0, -8, 0] } : { y: 0 }}
+          transition={
+            shouldAnimate
+              ? {
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }
+              : { duration: 0 }
+          }
+          onClick={handleToggleChat}
+          aria-label="AI 챗봇 열기"
+        >
+          <AnimatePresence>
+            {showTooltip && (
+              <TooltipWrapper
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ delay: 0.5 }}
+              >
+                <TooltipMessage
+                  message="베타 오픈!\n기숙사에 대해\n무엇이든 물어보세요!"
+                  onClose={handleCloseTooltip}
+                  position="top"
+                  align="right"
+                  width="max-content"
+                />
+              </TooltipWrapper>
+            )}
+          </AnimatePresence>
+          <img src={ChatBulButtonImg} alt="AI 챗봇" />
+        </FloatingButton>
+      )}
     </>
   );
 };
