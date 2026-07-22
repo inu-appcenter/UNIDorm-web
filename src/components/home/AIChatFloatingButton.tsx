@@ -50,7 +50,9 @@ const AIChatFloatingButton = () => {
     toggleChat();
   };
 
-  if (!isVisible) return null;
+  const isHomePage = location.pathname === "/home" || location.pathname === "/";
+
+  if (!isVisible || !isHomePage) return null;
 
   const modalVariants: Variants = {
     hidden: { scale: 0, opacity: 0 },
