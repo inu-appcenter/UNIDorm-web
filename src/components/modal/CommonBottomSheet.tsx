@@ -96,7 +96,7 @@ const Overlay = styled(({ overlay, ...props }) => (
   position: fixed;
   inset: 0;
   background-color: rgba(0, 0, 0, 0.4);
-  z-index: 40;
+  z-index: 10010;
 `;
 
 const Content = styled(({ overlay, ...props }) => (
@@ -106,7 +106,7 @@ const Content = styled(({ overlay, ...props }) => (
   bottom: 0;
   left: 0;
   right: 0;
-  z-index: 9999;
+  z-index: 10011;
   margin: 6rem auto 0 auto;
   display: flex;
   flex-direction: column;
