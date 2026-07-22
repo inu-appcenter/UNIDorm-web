@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import TitleContentArea from "../components/common/TitleContentArea.tsx";
 import HomeNoticeCard from "../components/home/HomeNoticeCard.tsx";
+import HomeFormCard from "../components/home/HomeFormCard.tsx";
 import HomeTipsCard from "../components/home/HomeTipsCard.tsx";
 import { useEffect, useState } from "react";
 import { fetchDailyRandomTips } from "@/apis/tips";
@@ -16,6 +17,9 @@ import LoadingSpinner from "../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../constants/EmptyMessage.tsx";
 import { getAnnouncementScrollList } from "@/apis/announcements";
 import { Announcement } from "@/types/announcements";
+import { getAllSurveys } from "@/apis/formApis";
+import { SurveySummary } from "@/types/formTypes";
+import { statusText } from "@/utils/formUtils";
 import useUserStore from "../stores/useUserStore.ts";
 import { getPopupNotifications } from "@/apis/popup-notification";
 import { PopupNotification } from "@/types/popup-notifications";
@@ -50,6 +54,7 @@ export default function HomePage() {
   const [dailyTips, setDailyTips] = useState<Tip[]>([]);
   const [groupOrders, setGroupOrders] = useState<GroupOrder[]>([]);
   const [notices, setNotices] = useState<Announcement[]>([]);
+  const [surveys, setSurveys] = useState<SurveySummary[]>([]);
   const [popupNotices, setPopupNotices] = useState<PopupNotification[]>([]);
   const [isPopupLoading, setIsPopupLoading] = useState<boolean>(false);
 
@@ -79,6 +84,7 @@ export default function HomePage() {
 
   const [isTipsLoading, setIsTipsLoading] = useState<boolean>(false);
   const [isAnnounceLoading, setIsAnnounceLoading] = useState<boolean>(false);
+  const [isSurveysLoading, setIsSurveysLoading] = useState<boolean>(false);
   const [isGroupOrdersLoading, setIsGroupOrdersLoading] =
     useState<boolean>(false);
 
@@ -177,10 +183,37 @@ export default function HomePage() {
       }
     }
 
+    async function fetchSurveys() {
+      setIsSurveysLoading(true);
+      try {
+        const response = await getAllSurveys();
+        console.log("폼 목록 불러오기 성공:", response);
+        const sorted = [...response.data].sort((a, b) => {
+          const isAProgress = statusText(a.status) === "진행 중";
+          const isBProgress = statusText(b.status) === "진행 중";
+
+          // 1. 현재 신청 받는 이벤트(진행 중)가 우선
+          if (isAProgress && !isBProgress) return -1;
+          if (!isAProgress && isBProgress) return 1;
+
+          // 2. 같은 상태 내에서는 최신 생성순
+          const timeA = new Date(a.createdDate).getTime();
+          const timeB = new Date(b.createdDate).getTime();
+          return timeB - timeA;
+        });
+        setSurveys(sorted);
+      } catch (error) {
+        console.error("폼 목록 불러오기 실패:", error);
+      } finally {
+        setIsSurveysLoading(false);
+      }
+    }
+
     fetchPopupNotices();
     getTips();
     fetchGroupOrders();
     fetchAnnouncements();
+    fetchSurveys();
   }, []);
 
   // 룸메이트 데이터 단일 페이지 조회
@@ -400,6 +433,39 @@ export default function HomePage() {
                       ))
                   ) : (
                     <EmptyMessage message={"공지사항이 없습니다."} />
+                  )}
+                </NotiWrapper>
+                <GradientRight />
+              </NotiArea>
+            )}
+          </TitleContentArea>
+        </motion.div>
+
+        <motion.div variants={fadeInUp}>
+          <TitleContentArea
+            title={"INU 폼"}
+            link={"/form"}
+            location="홈"
+          >
+            {isSurveysLoading ? (
+              <LoadingSpinner message={"폼 목록을 불러오고 있어요!"} />
+            ) : (
+              <NotiArea>
+                <NotiWrapper>
+                  {surveys.length > 0 ? (
+                    surveys
+                      .filter(
+                        (survey) => survey !== null && survey !== undefined,
+                      )
+                      .slice(0, 8)
+                      .map((survey) => (
+                        <HomeFormCard
+                          key={survey.id ?? survey.title}
+                          survey={survey}
+                        />
+                      ))
+                  ) : (
+                    <EmptyMessage message={"조회된 폼이 없습니다."} />
                   )}
                 </NotiWrapper>
                 <GradientRight />
