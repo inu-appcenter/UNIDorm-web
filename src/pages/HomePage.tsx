@@ -451,8 +451,8 @@ export default function HomePage() {
               {isSurveysLoading ? (
                 <LoadingSpinner message={"폼 목록을 불러오고 있어요!"} />
               ) : (
-                <NotiArea>
-                  <NotiWrapper>
+                <FormArea>
+                  <FormWrapper>
                     {surveys.length > 0 ? (
                       surveys
                         .filter(
@@ -468,9 +468,9 @@ export default function HomePage() {
                     ) : (
                       <EmptyMessage message={"조회된 폼이 없습니다."} />
                     )}
-                  </NotiWrapper>
+                  </FormWrapper>
                   <FormGradientRight />
-                </NotiArea>
+                </FormArea>
               )}
             </TitleContentArea>
           </FormSectionWrapper>
@@ -721,19 +721,53 @@ const StyledMigrationBanner = styled(MigrationBanner)`
 
 const FormSectionWrapper = styled.div`
   background: #f7f7f7;
-  border-radius: 16px;
+  margin: 0 -16px;
   padding: 16px;
   box-sizing: border-box;
-  width: 100%;
+  width: calc(100% + 32px);
 
   @media (min-width: 768px) {
-    padding: 24px;
+    margin: 0 -32px;
+    padding: 24px 32px;
+    width: calc(100% + 64px);
+    border-radius: 16px;
+  }
+`;
+
+const FormArea = styled.div`
+  position: relative;
+  margin: 0 -16px;
+  width: calc(100% + 32px);
+  height: fit-content;
+
+  @media (min-width: 768px) {
+    margin: 0 -32px;
+    width: calc(100% + 64px);
+  }
+`;
+
+const FormWrapper = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  width: 100%;
+  padding: 12px 32px 12px 16px;
+  box-sizing: border-box;
+  overflow-x: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  @media (min-width: 768px) {
+    padding: 16px 48px 16px 32px;
   }
 `;
 
 const FormGradientRight = styled.div`
   position: absolute;
-  right: -16px;
+  right: 0;
   top: 0;
   bottom: 0;
   width: 48px;
