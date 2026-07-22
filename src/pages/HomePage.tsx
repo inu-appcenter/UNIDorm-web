@@ -661,8 +661,9 @@ const FormWrapper = styled.div`
   display: flex;
   flex-direction: row;
   gap: 16px;
-  width: 100%;
-  padding-top: 12px;
+  width: calc(100% + 8px);
+  margin-left: -4px;
+  padding: 12px 4px 16px 4px;
   box-sizing: border-box;
   overflow-x: auto;
   -ms-overflow-style: none;
