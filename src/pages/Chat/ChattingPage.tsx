@@ -181,19 +181,25 @@ export default function ChattingPage() {
     : null;
 
   const handleImageClick = (url: string) => {
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
-      next.set("viewImg", encodeURIComponent(url));
-      return next;
-    });
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.set("viewImg", encodeURIComponent(url));
+        return next;
+      },
+      { replace: true }
+    );
   };
 
   const handleCloseImageModal = () => {
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
-      next.delete("viewImg");
-      return next;
-    }, { replace: true });
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete("viewImg");
+        return next;
+      },
+      { replace: true }
+    );
   };
   const [isOpenChatHost, setIsOpenChatHost] = useState(false);
   const menuContainerRef = useRef<HTMLDivElement>(null);
