@@ -189,9 +189,11 @@ export default function ChattingPage() {
   };
 
   const handleCloseImageModal = () => {
-    if (searchParams.has("viewImg")) {
-      navigate(-1);
-    }
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.delete("viewImg");
+      return next;
+    });
   };
   const [isOpenChatHost, setIsOpenChatHost] = useState(false);
   const menuContainerRef = useRef<HTMLDivElement>(null);
