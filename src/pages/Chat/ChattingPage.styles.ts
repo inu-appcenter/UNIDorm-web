@@ -318,6 +318,7 @@ export const ShareCardSubtitle = styled.div`
 
 export const ShareCardButtonGroup = styled.div`
   display: flex;
+  justify-content: flex-end;
   gap: 12px;
 `;
 
@@ -356,15 +357,14 @@ export const ShareCardButton = styled.button<{
 
 export const ShareSuccessCard = styled.div`
   background-color: #ffffff;
-  border: 1px solid #bae0ff;
+  border: 1px solid #dfdfdf;
   border-radius: 16px;
   padding: 16px;
   width: 100%;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  box-shadow: 0px 4px 12px rgba(22, 119, 255, 0.05);
+  gap: 16px;
 
   @media (min-width: 768px) {
     max-width: 320px;
@@ -372,50 +372,58 @@ export const ShareSuccessCard = styled.div`
 `;
 
 export const ShareSuccessTitle = styled.div`
-  font-family: "Pretendard", sans-serif;
-  font-size: 15px;
-  font-weight: 600;
-  color: #0958d9;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  font-family: "Pretendard", sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: #3d3d3d;
   margin: 0;
+  white-space: nowrap;
 `;
 
 export const ShareSuccessInfo = styled.div`
   display: flex;
-  justify-content: space-around;
-  align-items: center;
-  background-color: #f0f5ff;
-  border: 1px solid #adc6ff;
-  border-radius: 12px;
-  padding: 12px;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 0 0 28px;
+  width: 100%;
+  box-sizing: border-box;
 `;
 
-export const ShareSuccessInfoItem = styled.div`
+export const ShareSuccessInfoRow = styled.div`
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 16px;
+  line-height: 1.5;
 
   .label {
+    width: 37px;
     font-family: "Pretendard", sans-serif;
-    font-size: 11px;
-    color: #8b8b8b;
+    font-size: 14px;
+    font-weight: 400;
+    color: #3d3d3d;
+    flex-shrink: 0;
+  }
+
+  .label-other {
+    font-family: "Pretendard", sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    color: #3d3d3d;
+    flex-shrink: 0;
   }
 
   .value {
     font-family: "Pretendard", sans-serif;
     font-size: 16px;
-    font-weight: 700;
-    color: #1677ff;
+    font-weight: 600;
+    color: #3d3d3d;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
-`;
-
-export const ShareSuccessInfoDivider = styled.div`
-  width: 1px;
-  height: 24px;
-  background-color: #adc6ff;
 `;
 
 export const ShareSystemMessage = styled.div`

@@ -1,4 +1,4 @@
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import React from "react";
 import ChatInfo from "../../components/chat/ChatInfo.tsx";
@@ -19,6 +19,7 @@ import { createReport } from "@/apis/report";
 import { OpenChatKickReason, OpenChatMessage } from "@/types/openchat";
 import PhotoAttachmentBottomSheet from "@/components/chat/PhotoAttachmentBottomSheet";
 import ChatMessageActionSheet from "@/components/chat/ChatMessageActionSheet";
+import ImageViewerModal from "@/components/chat/ImageViewerModal";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import {
@@ -27,7 +28,6 @@ import {
   Info,
   ArrowRight,
   CheckCircle2,
-  XCircle,
 } from "lucide-react";
 import * as S from "./ChattingPage.styles";
 import {
@@ -175,6 +175,7 @@ export default function ChattingPage() {
   const [selectedMessage, setSelectedMessage] = useState<MessageType | null>(
     null,
   );
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
   const [isOpenChatHost, setIsOpenChatHost] = useState(false);
   const menuContainerRef = useRef<HTMLDivElement>(null);
 
@@ -945,21 +946,20 @@ export default function ChattingPage() {
                   const cardContent = (
                     <S.ShareSuccessCard>
                       <S.ShareSuccessTitle>
-                        <CheckCircle2 size={18} color="#52c41a" />
+                        <CheckCircle2 size={20} color="#3D3D3D" />
                         학번 공유 완료
                       </S.ShareSuccessTitle>
                       <S.ShareSuccessInfo>
-                        <S.ShareSuccessInfoItem>
-                          <span className="label">상대방</span>
+                        <S.ShareSuccessInfoRow>
+                          <span className="label">나</span>
+                          <span className="value">{myNum || "알 수 없음"}</span>
+                        </S.ShareSuccessInfoRow>
+                        <S.ShareSuccessInfoRow>
+                          <span className="label-other">상대방</span>
                           <span className="value">
                             {partnerNum || "알 수 없음"}
                           </span>
-                        </S.ShareSuccessInfoItem>
-                        <S.ShareSuccessInfoDivider />
-                        <S.ShareSuccessInfoItem>
-                          <span className="label">나</span>
-                          <span className="value">{myNum || "알 수 없음"}</span>
-                        </S.ShareSuccessInfoItem>
+                        </S.ShareSuccessInfoRow>
                       </S.ShareSuccessInfo>
                     </S.ShareSuccessCard>
                   );
@@ -980,36 +980,8 @@ export default function ChattingPage() {
                   );
                 }
 
-                if (parsed.type === "CANCEL") {
-                  return (
-                    <React.Fragment key={msg.id}>
-                      {showDateLine && (
-                        <S.DateDivider>
-                          {formatDateLine(msg.createdAt)}
-                        </S.DateDivider>
-                      )}
-                      <S.ShareSystemMessage>
-                        <XCircle size={14} color="#8b8b8b" />
-                        학번 공유 요청이 취소되었어요.
-                      </S.ShareSystemMessage>
-                    </React.Fragment>
-                  );
-                }
-
-                if (parsed.type === "DECLINE") {
-                  return (
-                    <React.Fragment key={msg.id}>
-                      {showDateLine && (
-                        <S.DateDivider>
-                          {formatDateLine(msg.createdAt)}
-                        </S.DateDivider>
-                      )}
-                      <S.ShareSystemMessage>
-                        <XCircle size={14} color="#8b8b8b" />
-                        학번 공유 요청이 거절되었어요.
-                      </S.ShareSystemMessage>
-                    </React.Fragment>
-                  );
+                if (parsed.type === "CANCEL" || parsed.type === "DECLINE") {
+                  return null;
                 }
               }
 
@@ -1025,6 +997,7 @@ export default function ChattingPage() {
                       content={msg.content}
                       time={msg.time}
                       imageUrls={msg.imageUrls}
+                      onImageClick={(url) => setSelectedImageUrl(url)}
                     />
                   ) : (
                     <ChatItemOtherPerson
@@ -1038,6 +1011,7 @@ export default function ChattingPage() {
                       }
                       imageUrls={msg.imageUrls}
                       onMessageClick={() => openMessageActions(msg)}
+                      onImageClick={(url) => setSelectedImageUrl(url)}
                     />
                   )}
                 </React.Fragment>
@@ -1112,6 +1086,11 @@ export default function ChattingPage() {
         canKick={isOpenChatHost}
         onReport={handleReportMessage}
         onKick={handleKickSender}
+      />
+
+      <ImageViewerModal
+        imageUrl={selectedImageUrl}
+        onClose={() => setSelectedImageUrl(null)}
       />
     </S.ChatPageWrapper>
   );
