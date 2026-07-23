@@ -1,4 +1,4 @@
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import React from "react";
 import ChatInfo from "../../components/chat/ChatInfo.tsx";
@@ -175,7 +175,23 @@ export default function ChattingPage() {
   const [selectedMessage, setSelectedMessage] = useState<MessageType | null>(
     null,
   );
-  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedImageUrl = searchParams.get("viewImg")
+    ? decodeURIComponent(searchParams.get("viewImg")!)
+    : null;
+
+  const handleImageClick = (url: string) => {
+    setSearchParams((prev) => {
+      prev.set("viewImg", encodeURIComponent(url));
+      return prev;
+    });
+  };
+
+  const handleCloseImageModal = () => {
+    if (searchParams.has("viewImg")) {
+      navigate(-1);
+    }
+  };
   const [isOpenChatHost, setIsOpenChatHost] = useState(false);
   const menuContainerRef = useRef<HTMLDivElement>(null);
 
@@ -997,7 +1013,7 @@ export default function ChattingPage() {
                       content={msg.content}
                       time={msg.time}
                       imageUrls={msg.imageUrls}
-                      onImageClick={(url) => setSelectedImageUrl(url)}
+                      onImageClick={handleImageClick}
                     />
                   ) : (
                     <ChatItemOtherPerson
@@ -1011,7 +1027,7 @@ export default function ChattingPage() {
                       }
                       imageUrls={msg.imageUrls}
                       onMessageClick={() => openMessageActions(msg)}
-                      onImageClick={(url) => setSelectedImageUrl(url)}
+                      onImageClick={handleImageClick}
                     />
                   )}
                 </React.Fragment>
@@ -1090,7 +1106,7 @@ export default function ChattingPage() {
 
       <ImageViewerModal
         imageUrl={selectedImageUrl}
-        onClose={() => setSelectedImageUrl(null)}
+        onClose={handleCloseImageModal}
       />
     </S.ChatPageWrapper>
   );
