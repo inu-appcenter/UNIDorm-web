@@ -8,6 +8,7 @@ export interface OpenChatRoom {
   description: string;
   scope: OpenChatScope;
   roomType: "OPEN" | "DERIVED" | "PERSONAL";
+  chatCategory: "OPEN_CHAT" | "ROOMMATE";
   hasPassword: boolean;
   currentParticipants: number;
   maxParticipants: number;
@@ -74,7 +75,12 @@ export interface OpenChatMessage {
   senderId: number | null;
   senderNickname: string | null;
   content: string;
-  type: "TEXT" | "IMAGE" | "SYSTEM" | "ROOM_LINK";
+  type:
+    | "TEXT"
+    | "IMAGE"
+    | "SYSTEM"
+    | "ROOM_LINK"
+    | "STUDENT_ID_REQUEST";
   imageUrls?: string[];
   unreadCount: number;
   createdAt: string;
@@ -82,6 +88,7 @@ export interface OpenChatMessage {
   linkedRoomName?: string | null;
   linkedRoomDescription?: string | null;
   linkedRoomMaxParticipants?: number | null;
+  disclosureRequestId?: number | null;
 }
 
 export interface OpenChatParticipant {

@@ -14,6 +14,9 @@ import {
 } from "@/apis/openchat";
 import { OpenChatParticipant } from "@/types/openchat";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
+import { requestStudentIdDisclosure } from "@/apis/studentIdDisclosure";
+import { blockUser } from "@/apis/block";
+import { isAxiosError } from "axios";
 
 type Sheet = "profile" | "create" | null;
 
@@ -23,6 +26,7 @@ export default function ChatMembersPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const partnerName = location.state?.partnerName ?? "상대방";
+  const sourceRoomName = location.state?.roomName as string | undefined;
   const { userInfo } = useUserStore();
   const isOpenChatRoom = chatType === "open" || chatType === "personal";
 
@@ -113,11 +117,88 @@ export default function ChatMembersPage() {
         password: roomPassword.trim() || undefined,
       });
       navigate(`/chat/personal/${response.data.roomId}`, {
-        state: { partnerName: selectedUser.nickname },
+        state: {
+          partnerName: selectedUser.nickname,
+          partnerId: selectedUser.userId,
+        },
       });
     } catch (error) {
       console.error("1:1 채팅 생성 실패:", error);
       alert("1:1 채팅방 생성에 실패했습니다. 이미 대화방이 존재할 수 있어요.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleRequestStudentIdDisclosure = async () => {
+    if (!selectedUser || submitting) return;
+    if (
+      !window.confirm(
+        `${selectedUser.nickname}님에게 학번 공개를 요청할까요?`,
+      )
+    ) {
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const response = await requestStudentIdDisclosure(
+        roomId,
+        selectedUser.userId,
+      );
+      navigate(`/chat/open/${roomId}`, {
+        replace: true,
+        state: {
+          partnerId: selectedUser.userId,
+          disclosureRequestId: response.data.requestId,
+          roomName: sourceRoomName,
+        },
+      });
+    } catch (error) {
+      console.error("오픈채팅 학번 공개 요청 실패:", error);
+      alert(
+        "학번 공개 요청에 실패했습니다. 이미 요청을 보냈거나 처리 중일 수 있습니다.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleBlockUser = async () => {
+    if (!selectedUser || submitting) return;
+
+    const targetUser = selectedUser;
+    if (
+      !window.confirm(
+        `${targetUser.nickname}님을 차단할까요?\n차단 후 해당 사용자와 1:1 채팅방 생성 및 메시지 전송이 제한됩니다.`,
+      )
+    ) {
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await blockUser(targetUser.userId);
+      setActiveSheet(null);
+      setSelectedUser(null);
+      alert(`${targetUser.nickname}님을 차단했습니다.`);
+    } catch (error) {
+      console.error("사용자 차단 실패:", error);
+
+      if (isAxiosError(error)) {
+        if (error.response?.status === 401) {
+          alert("로그인이 필요합니다.");
+          navigate("/login");
+        } else if (error.response?.status === 404) {
+          alert("차단할 사용자를 찾을 수 없습니다.");
+        } else if (error.response?.status === 409) {
+          alert("이미 차단한 사용자입니다.");
+        } else {
+          alert("사용자 차단에 실패했습니다. 다시 시도해 주세요.");
+        }
+      } else {
+        alert("사용자 차단 중 오류가 발생했습니다.");
+      }
     } finally {
       setSubmitting(false);
     }
@@ -258,14 +339,34 @@ export default function ChatMembersPage() {
                 <Drawer.Description>1긱 오픈채팅 참여중</Drawer.Description>
                 <SheetButtons>
                   {chatType === "open" && (
-                    <PrimaryButton
-                      onClick={() => {
-                        setRoomName(`${selectedUser.nickname}님과의 대화`);
-                        setActiveSheet("create");
-                      }}
-                    >
-                      1:1 채팅하기
-                    </PrimaryButton>
+                    <>
+                      <DisclosureButton
+                        type="button"
+                        disabled={submitting}
+                        onClick={handleRequestStudentIdDisclosure}
+                      >
+                        학번 공개 요청
+                      </DisclosureButton>
+                      <ProfileActionRow>
+                        <BlockButton
+                          type="button"
+                          disabled={submitting}
+                          onClick={handleBlockUser}
+                        >
+                          {submitting ? "처리 중..." : "차단하기"}
+                        </BlockButton>
+                        <PrimaryButton
+                          type="button"
+                          disabled={submitting}
+                          onClick={() => {
+                            setRoomName(`${selectedUser.nickname}님과의 대화`);
+                            setActiveSheet("create");
+                          }}
+                        >
+                          1:1 채팅하기
+                        </PrimaryButton>
+                      </ProfileActionRow>
+                    </>
                   )}
                   {me?.isHost && !selectedUser.isHost && (
                     <DarkButton onClick={handleTransferHost}>
@@ -506,6 +607,11 @@ const SheetButtons = styled.div`
   flex-direction: column;
   gap: 12px;
 `;
+const ProfileActionRow = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.4fr);
+  gap: 10px;
+`;
 const PrimaryButton = styled.button`
   width: 100%;
   height: 48px;
@@ -520,6 +626,27 @@ const PrimaryButton = styled.button`
   &:disabled {
     opacity: 0.5;
   }
+`;
+const BlockButton = styled.button`
+  width: 100%;
+  height: 48px;
+  border: 0;
+  border-radius: 8px;
+  background: #f7f7f7;
+  color: #ff4242;
+  font:
+    600 16px/1.5 Pretendard,
+    sans-serif;
+  cursor: pointer;
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.5;
+  }
+`;
+const DisclosureButton = styled(PrimaryButton)`
+  background: #eef5ff;
+  color: #1677ff;
 `;
 const DarkButton = styled(PrimaryButton)`
   background: #0958d9;

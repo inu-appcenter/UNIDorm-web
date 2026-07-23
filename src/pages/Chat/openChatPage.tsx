@@ -110,6 +110,7 @@ export default function OpenChatPage() {
 
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [isJoining, setIsJoining] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const [roommateUnreadTotal, setRoommateUnreadTotal] = useState(0);
@@ -131,7 +132,11 @@ export default function OpenChatPage() {
           getRoommateChatRooms(),
           getAllRoommateChatUnreadCount(),
         ]);
-        setRooms(openChatRes.data.content);
+        setRooms(
+          openChatRes.data.content.filter(
+            (room) => room.chatCategory === "OPEN_CHAT",
+          ),
+        );
         setRoommateRooms(roommateChatRes.data);
         setRoommateUnreadTotal(unreadRes.data);
       } else {
@@ -140,7 +145,11 @@ export default function OpenChatPage() {
           getOpenChatRooms(selectedTab, 0, 20, searchQuery || undefined),
           getAllRoommateChatUnreadCount(),
         ]);
-        setRooms(openChatRes.data.content);
+        setRooms(
+          openChatRes.data.content.filter(
+            (room) => room.chatCategory === "OPEN_CHAT",
+          ),
+        );
         setRoommateUnreadTotal(unreadRes.data);
       }
     } catch (error) {
@@ -175,7 +184,13 @@ export default function OpenChatPage() {
 
   const handleClickRoom = (room: OpenChatRoom) => {
     if (room.joined) {
-      navigate(`/chat/open/${room.roomId}`);
+      const chatRoute = room.roomType === "PERSONAL" ? "personal" : "open";
+      navigate(`/chat/${chatRoute}/${room.roomId}`, {
+        state: {
+          partnerName: room.roomType === "PERSONAL" ? room.name : undefined,
+          roomName: room.name,
+        },
+      });
       return;
     }
 
@@ -188,22 +203,35 @@ export default function OpenChatPage() {
     }
   };
 
-  const handleJoinRoom = async () => {
-    if (!selectedRoom) return;
+  const joinSelectedRoom = async (password?: string): Promise<boolean> => {
+    if (!selectedRoom || isJoining) return false;
 
     try {
-      await joinOpenChatRoom(selectedRoom.roomId);
+      setIsJoining(true);
+      const roomToJoin = selectedRoom;
+      const response = await joinOpenChatRoom(roomToJoin.roomId, password);
+      const targetRoomId = response.data?.roomId ?? roomToJoin.roomId;
+      const targetRoomName = response.data?.name ?? roomToJoin.name;
+
       setIsJoinModalOpen(false);
-      const targetRoomId = selectedRoom.roomId;
+      setIsPasswordModalOpen(false);
       setSelectedRoom(null);
-      navigate(`/chat/open/${targetRoomId}`);
-      fetchChatRooms();
+      setIsJoining(false);
+
+      navigate(`/chat/open/${targetRoomId}`, {
+        state: { roomName: targetRoomName },
+      });
+      return true;
     } catch (error) {
       console.error("오픈채팅방 참여 실패", error);
       if (isAxiosError(error)) {
         const status = error.response?.status;
         if (status === 400) {
-          alert("비밀번호가 올바르지 않습니다.");
+          alert(
+            password
+              ? "비밀번호가 일치하지 않습니다."
+              : "채팅방에 참여할 수 없습니다.",
+          );
         } else if (status === 401) {
           alert("로그인이 필요합니다.");
           navigate("/login");
@@ -217,42 +245,19 @@ export default function OpenChatPage() {
       } else {
         alert("알 수 없는 오류가 발생했습니다.");
       }
+      return false;
+    } finally {
+      setIsJoining(false);
     }
   };
 
-  const handleJoinPasswordRoom = async (password: string) => {
-    if (!selectedRoom) return;
+  const handleJoinRoom = () => joinSelectedRoom();
 
-    try {
-      await joinOpenChatRoom(selectedRoom.roomId, password);
-      setIsPasswordModalOpen(false);
-      const targetRoomId = selectedRoom.roomId;
-      setSelectedRoom(null);
-      navigate(`/chat/open/${targetRoomId}`);
-      fetchChatRooms();
-    } catch (error) {
-      console.error("비밀번호 오픈채팅방 참여 실패", error);
-      if (isAxiosError(error)) {
-        const status = error.response?.status;
-        if (status === 400) {
-          alert("비밀번호가 일치하지 않습니다.");
-        } else if (status === 401) {
-          alert("로그인이 필요합니다.");
-          navigate("/login");
-        } else if (status === 404) {
-          alert("채팅방을 찾을 수 없습니다.");
-        } else if (status === 409) {
-          alert("참여 인원이 가득 찼습니다. (최대 인원 초과)");
-        } else {
-          alert("채팅방 입장에 실패했습니다. 다시 시도해 주세요.");
-        }
-      } else {
-        alert("알 수 없는 오류가 발생했습니다.");
-      }
-    }
-  };
+  const handleJoinPasswordRoom = (password: string) =>
+    joinSelectedRoom(password);
 
   const handleCloseModal = () => {
+    if (isJoining) return;
     setIsJoinModalOpen(false);
     setIsPasswordModalOpen(false);
     setSelectedRoom(null);
@@ -403,6 +408,7 @@ export default function OpenChatPage() {
         room={selectedRoom}
         onClose={handleCloseModal}
         onJoin={handleJoinRoom}
+        isJoining={isJoining}
       />
 
       <OpenChatPasswordModal
@@ -410,6 +416,7 @@ export default function OpenChatPage() {
         room={selectedRoom}
         onClose={handleCloseModal}
         onJoin={handleJoinPasswordRoom}
+        isJoining={isJoining}
       />
     </PageContainer>
   );

@@ -20,6 +20,7 @@ import { getCalendarByMonth, getCalendarDetail } from "@/apis/calendar";
 import { CalendarItem } from "@/types/calendar";
 import { mixpanelTrack } from "@/utils/mixpanel";
 import CalendarEventBottomSheet from "@/components/modal/CalendarEventBottomsheet";
+import { useNavigate } from "react-router-dom";
 
 interface CalendarProps {
   mode?: "month" | "week";
@@ -56,6 +57,7 @@ const ChevronRight = () => (
 );
 
 export default function Calendar({ mode = "month", location }: CalendarProps) {
+  const navigate = useNavigate();
   const today = new Date();
 
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -282,6 +284,12 @@ export default function Calendar({ mode = "month", location }: CalendarProps) {
   };
 
   const handleClickEvent = (event: CalendarItem) => {
+    if (typeof event.sourceAnnouncementId === "number") {
+      setIsCalendarSheetOpen(false);
+      navigate(`/announcements/${event.sourceAnnouncementId}`);
+      return;
+    }
+
     if (event.link) {
       window.open(event.link, "_blank");
     }

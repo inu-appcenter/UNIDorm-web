@@ -2,11 +2,11 @@ import styled from "styled-components";
 import TitleContentArea from "../components/common/TitleContentArea.tsx";
 import MyPostLikeCard from "../components/mypage/MyPostLikeCard.tsx";
 import { useEffect, useState } from "react";
-import { MyPost_GroupOrder } from "@/types/members";
+import { MyPost } from "@/types/members";
 import { getMemberLikePosts } from "@/apis/members";
 
 export default function MyLikesPage() {
-  const [posts, setPosts] = useState<MyPost_GroupOrder[]>([]);
+  const [posts, setPosts] = useState<MyPost[]>([]);
 
   useEffect(() => {
     const fetchPosts = async () => {
