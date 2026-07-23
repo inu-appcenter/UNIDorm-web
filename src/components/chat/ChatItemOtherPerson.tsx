@@ -27,10 +27,7 @@ const ChatItemOtherPerson = ({
   });
 
   return (
-    <ChatItemOtherPersonWrapper
-      {...(onMessageClick ? longPressHandlers : {})}
-      $clickable={Boolean(onMessageClick)}
-    >
+    <ChatItemOtherPersonWrapper>
       <ProfileImg
         src={userImageUrl && userImageUrl !== "string" ? userImageUrl : profile}
         alt="상대방"
@@ -42,13 +39,21 @@ const ChatItemOtherPerson = ({
       <ContentArea>
         {senderName && <div className="sender-name">{senderName}</div>}
         {imageUrls?.length ? (
-          <ImageGrid>
+          <ImageGrid
+            {...(onMessageClick ? longPressHandlers : {})}
+            $clickable={Boolean(onMessageClick)}
+          >
             {imageUrls.map((url) => (
               <img key={url} src={url} alt="첨부 사진" />
             ))}
           </ImageGrid>
         ) : (
-          <div className="message">{content}</div>
+          <MessageBubble
+            {...(onMessageClick ? longPressHandlers : {})}
+            $clickable={Boolean(onMessageClick)}
+          >
+            {content}
+          </MessageBubble>
         )}
       </ContentArea>
       <TimeArea>
@@ -60,7 +65,7 @@ const ChatItemOtherPerson = ({
 
 export default ChatItemOtherPerson;
 
-const ChatItemOtherPersonWrapper = styled.div<{ $clickable: boolean }>`
+const ChatItemOtherPersonWrapper = styled.div`
   width: 100%;
   height: fit-content;
   display: flex;
@@ -70,15 +75,17 @@ const ChatItemOtherPersonWrapper = styled.div<{ $clickable: boolean }>`
   box-sizing: border-box;
 
   gap: 8px;
-  cursor: ${({ $clickable }) => ($clickable ? "pointer" : "default")};
 `;
 
-const ImageGrid = styled.div`
+const ImageGrid = styled.div<{ $clickable?: boolean }>`
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 140px));
   gap: 4px;
   overflow: hidden;
   border-radius: 16px;
+  cursor: ${({ $clickable }) => ($clickable ? "pointer" : "default")};
+  transition: transform 0.15s ease, filter 0.15s ease;
+
   img {
     width: 100%;
     max-height: 220px;
@@ -89,17 +96,26 @@ const ImageGrid = styled.div`
     grid-column: 1 / -1;
     min-width: 140px;
   }
+
+  &:active {
+    ${({ $clickable }) =>
+      $clickable &&
+      `
+      transform: scale(0.97);
+      filter: brightness(0.92);
+    `}
+  }
 `;
+
 const ProfileImg = styled.img`
-  //padding-top: 3px;
   width: 30px;
   height: 30px;
   border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
 `;
+
 const ContentArea = styled.div`
-  //flex: 1;
   width: fit-content;
   max-width: 60%;
   display: flex;
@@ -113,19 +129,30 @@ const ContentArea = styled.div`
     margin-bottom: 4px;
     padding-left: 4px;
   }
+`;
 
-  .message {
-    font-family: "Pretendard", sans-serif;
-    font-style: normal;
-    font-weight: 400;
-    font-size: 14px;
-    line-height: 1.5;
-    text-align: start;
+const MessageBubble = styled.div<{ $clickable?: boolean }>`
+  font-family: "Pretendard", sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.5;
+  text-align: start;
 
-    color: #3d3d3d;
-    background: #f7f7f7;
-    padding: 8px 12px;
-    border-radius: 16px;
+  color: #3d3d3d;
+  background: #f7f7f7;
+  padding: 8px 12px;
+  border-radius: 16px;
+  cursor: ${({ $clickable }) => ($clickable ? "pointer" : "default")};
+  transition: transform 0.15s ease, background-color 0.15s ease;
+
+  &:active {
+    ${({ $clickable }) =>
+      $clickable &&
+      `
+      transform: scale(0.97);
+      background-color: #e5e5e5;
+    `}
   }
 `;
 
