@@ -9,7 +9,11 @@ import { useOpenChat } from "./useOpenChat";
 import useUserStore from "../../stores/useUserStore.ts";
 import { getRoommateChatHistory, getRoommateChatRooms } from "@/apis/chat";
 import { patchNotificationsRead } from "@/apis/notification";
-import { getOpenChatMessages, getOpenChatRooms } from "@/apis/openchat";
+import {
+  getOpenChatMessages,
+  getOpenChatRooms,
+  joinOpenChatRoom,
+} from "@/apis/openchat";
 import {
   getOpenChatParticipants,
   kickOpenChatParticipant,
@@ -28,6 +32,7 @@ import {
   Info,
   ArrowRight,
   CheckCircle2,
+  XCircle,
 } from "lucide-react";
 import * as S from "./ChattingPage.styles";
 import {
@@ -38,6 +43,7 @@ import {
   acceptStudentIdDisclosure,
 } from "@/apis/studentIdDisclosure";
 import type { StudentIdDisclosureStatus } from "@/apis/studentIdDisclosure";
+import { isAxiosError } from "axios";
 
 type MessageType = {
   id: number;
@@ -52,6 +58,10 @@ type MessageType = {
   type?: OpenChatMessage["type"];
   imageUrls?: string[];
   disclosureRequestId?: number | null;
+  linkedRoomId?: number | null;
+  linkedRoomName?: string | null;
+  linkedRoomDescription?: string | null;
+  linkedRoomMaxParticipants?: number | null;
 };
 
 interface LegacyRoommateShareMessage {
@@ -110,11 +120,23 @@ const parseLegacyRoommateShareMessage = (
   return { type: null, requestId: null };
 };
 
-const PENDING_DISCLOSURE_STATUSES = new Set([
-  "REQUESTED",
-  "RECEIVED",
-  "PENDING",
-]);
+const ACCEPTED_DISCLOSURE_STATUSES = new Set(["ACCEPTED", "APPROVED"]);
+const REJECTED_DISCLOSURE_STATUSES = new Set(["REJECTED", "DECLINED"]);
+const CANCELED_DISCLOSURE_STATUSES = new Set(["NONE", "CANCELED", "CANCELLED"]);
+
+const normalizeDisclosureStatus = (status?: string | null) =>
+  status?.trim().toUpperCase() ?? "";
+
+const isPendingDisclosureStatus = (status?: string | null) => {
+  const normalizedStatus = normalizeDisclosureStatus(status);
+
+  return (
+    normalizedStatus.length > 0 &&
+    !ACCEPTED_DISCLOSURE_STATUSES.has(normalizedStatus) &&
+    !REJECTED_DISCLOSURE_STATUSES.has(normalizedStatus) &&
+    !CANCELED_DISCLOSURE_STATUSES.has(normalizedStatus)
+  );
+};
 
 export default function ChattingPage() {
   const isLeavingRef = useRef(false);
@@ -130,17 +152,20 @@ export default function ChattingPage() {
   const opponentIdRef = useRef<number | null>(null);
   const [opponentStudentNumber, setOpponentStudentNumber] =
     useState<string>("");
+  const [roommateDisclosureStatus, setRoommateDisclosureStatus] =
+    useState<StudentIdDisclosureStatus | null>(null);
 
   const location = useLocation();
   const partnerName = location.state?.partnerName ?? undefined;
   const routeRoomName = location.state?.roomName as string | undefined;
-  const [openChatRoomName, setOpenChatRoomName] = useState<
-    string | undefined
-  >(routeRoomName);
+  const [openChatRoomName, setOpenChatRoomName] = useState<string | undefined>(
+    routeRoomName,
+  );
   const partnerProfileImageUrl =
     location.state?.partnerProfileImageUrl ?? undefined;
-  const pendingDisclosureRequestId =
-    location.state?.disclosureRequestId ?? undefined;
+  const pendingDisclosureRequestId = Number(
+    location.state?.disclosureRequestId,
+  );
   const openChatOpponentIdRef = useRef<number | null>(
     location.state?.partnerId ?? null,
   );
@@ -151,6 +176,9 @@ export default function ChattingPage() {
   const [processingDisclosureId, setProcessingDisclosureId] = useState<
     number | null
   >(null);
+  const [joiningLinkedRoomId, setJoiningLinkedRoomId] = useState<number | null>(
+    null,
+  );
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -159,6 +187,16 @@ export default function ChattingPage() {
   const roomId = Number(id);
   const userId = userInfo.id;
   const token = tokenInfo.accessToken;
+
+  const clearPendingDisclosureRouteState = () => {
+    if (!pendingDisclosureRequestId) return;
+
+    const nextState = {
+      ...((location.state ?? {}) as Record<string, unknown>),
+    };
+    delete nextState.disclosureRequestId;
+    navigate(location.pathname, { replace: true, state: nextState });
+  };
 
   // 알림 읽음 처리 및 iOS 네이티브 브릿지 호출
   useEffect(() => {
@@ -300,9 +338,7 @@ export default function ChattingPage() {
     try {
       const response = await getStudentIdDisclosureStatus(roomId, opponentId);
       setOpenChatDisclosureStatus(response.data);
-      setOpenChatOpponentStudentNumber(
-        response.data.targetStudentNumber ?? "",
-      );
+      setOpenChatOpponentStudentNumber(response.data.targetStudentNumber ?? "");
     } catch (error) {
       console.error("오픈채팅 학번 공개 상태 조회 실패:", error);
     }
@@ -315,6 +351,11 @@ export default function ChattingPage() {
     try {
       await cancelStudentIdDisclosure(requestId);
       if (chatType === "roommate") {
+        setRoommateDisclosureStatus((current) => ({
+          status: "NONE",
+          requestId,
+          targetStudentNumber: current?.targetStudentNumber ?? null,
+        }));
         appendCustomMessageLocal(`[STUDENT_ID_SHARE_CANCEL:${requestId}]`);
       } else {
         setOpenChatDisclosureStatus((current) => ({
@@ -338,6 +379,11 @@ export default function ChattingPage() {
     try {
       await rejectStudentIdDisclosure(requestId);
       if (chatType === "roommate") {
+        setRoommateDisclosureStatus({
+          status: "REJECTED",
+          requestId,
+          targetStudentNumber: null,
+        });
         appendCustomMessageLocal(`[STUDENT_ID_SHARE_DECLINE:${requestId}]`);
       } else {
         setOpenChatDisclosureStatus({
@@ -363,6 +409,11 @@ export default function ChattingPage() {
       const { requesterStudentNumber } = res.data;
       if (chatType === "roommate") {
         setOpponentStudentNumber(requesterStudentNumber);
+        setRoommateDisclosureStatus({
+          status: "ACCEPTED",
+          requestId,
+          targetStudentNumber: requesterStudentNumber,
+        });
         appendCustomMessageLocal(
           `[STUDENT_ID_SHARE_ACCEPT:${requestId}:${userInfo.studentNumber}:${requesterStudentNumber}]`,
         );
@@ -397,12 +448,42 @@ export default function ChattingPage() {
       // 학번 공유 관련 특수 메시지 실시간 감지
       const parsed = parseLegacyRoommateShareMessage(msg.content);
       if (parsed.type) {
-        if (parsed.type === "ACCEPT") {
+        if (parsed.type === "REQUEST" && parsed.requestId) {
+          setRoommateDisclosureStatus({
+            status: "RECEIVED",
+            requestId: parsed.requestId,
+            targetStudentNumber: null,
+          });
+        } else if (parsed.type === "CANCEL" && parsed.requestId) {
+          setRoommateDisclosureStatus({
+            status: "NONE",
+            requestId: parsed.requestId,
+            targetStudentNumber: null,
+          });
+        } else if (parsed.type === "DECLINE" && parsed.requestId) {
+          setRoommateDisclosureStatus({
+            status: "REJECTED",
+            requestId: parsed.requestId,
+            targetStudentNumber: null,
+          });
+        } else if (parsed.type === "ACCEPT" && parsed.requestId) {
+          const receivedOpponentStudentNumber =
+            parsed.acceptorStudentNumber ?? "";
+          setRoommateDisclosureStatus({
+            status: "ACCEPTED",
+            requestId: parsed.requestId,
+            targetStudentNumber: receivedOpponentStudentNumber || null,
+          });
+          if (receivedOpponentStudentNumber) {
+            setOpponentStudentNumber(receivedOpponentStudentNumber);
+          }
+
           // 수락 메시지 수신 시 상대방 학번 정보 조회
           const oppId = opponentIdRef.current;
           if (oppId) {
             getStudentIdDisclosureStatus(roomId, oppId)
               .then((res) => {
+                setRoommateDisclosureStatus(res.data);
                 if (res.data.targetStudentNumber) {
                   setOpponentStudentNumber(res.data.targetStudentNumber);
                 }
@@ -459,7 +540,15 @@ export default function ChattingPage() {
     onMessage: (msg) => {
       const now = new Date();
 
-      if (msg.type === "STUDENT_ID_REQUEST" && msg.disclosureRequestId) {
+      if (chatType === "open" && msg.type === "STUDENT_ID_REQUEST") {
+        return;
+      }
+
+      if (
+        chatType === "personal" &&
+        msg.type === "STUDENT_ID_REQUEST" &&
+        msg.disclosureRequestId
+      ) {
         if (msg.senderId && msg.senderId !== userId) {
           openChatOpponentIdRef.current = msg.senderId;
         }
@@ -468,7 +557,7 @@ export default function ChattingPage() {
           requestId: msg.disclosureRequestId,
           targetStudentNumber: null,
         });
-      } else if (msg.type === "SYSTEM") {
+      } else if (chatType === "personal" && msg.type === "SYSTEM") {
         void refreshOpenChatDisclosureStatus();
       }
 
@@ -495,6 +584,10 @@ export default function ChattingPage() {
             type: msg.type,
             imageUrls: msg.imageUrls ?? [],
             disclosureRequestId: msg.disclosureRequestId,
+            linkedRoomId: msg.linkedRoomId,
+            linkedRoomName: msg.linkedRoomName,
+            linkedRoomDescription: msg.linkedRoomDescription,
+            linkedRoomMaxParticipants: msg.linkedRoomMaxParticipants,
             time: now.toLocaleTimeString("ko-KR", {
               hour: "2-digit",
               minute: "2-digit",
@@ -524,6 +617,8 @@ export default function ChattingPage() {
         try {
           // 1. 상대방 ID 조회
           let oppId: number | null = null;
+          let fetchedRoommateDisclosureStatus: StudentIdDisclosureStatus | null =
+            null;
           try {
             const roomsResponse = await getRoommateChatRooms();
             const currentRoom = roomsResponse.data.find(
@@ -544,6 +639,8 @@ export default function ChattingPage() {
                 roomId,
                 oppId,
               );
+              fetchedRoommateDisclosureStatus = statusResponse.data;
+              setRoommateDisclosureStatus(statusResponse.data);
               const { targetStudentNumber } = statusResponse.data;
               if (targetStudentNumber) {
                 setOpponentStudentNumber(targetStudentNumber);
@@ -569,7 +666,66 @@ export default function ChattingPage() {
             createdAt: chat.createdDate, // API에서 받은 날짜 저장
           }));
 
+          const currentStatusRequestId =
+            fetchedRoommateDisclosureStatus?.requestId;
+          const normalizedRoommateStatus = normalizeDisclosureStatus(
+            fetchedRoommateDisclosureStatus?.status,
+          );
+          if (
+            currentStatusRequestId &&
+            !CANCELED_DISCLOSURE_STATUSES.has(normalizedRoommateStatus) &&
+            !formattedMessages.some(
+              (message) =>
+                parseLegacyRoommateShareMessage(message.content).requestId ===
+                currentStatusRequestId,
+            )
+          ) {
+            const now = new Date();
+            formattedMessages.push({
+              id: Date.now(),
+              sender: normalizedRoommateStatus === "RECEIVED" ? "other" : "me",
+              senderId:
+                normalizedRoommateStatus === "RECEIVED" ? oppId : userId,
+              content: `[STUDENT_ID_SHARE_REQUEST:${currentStatusRequestId}]`,
+              time: now.toLocaleTimeString("ko-KR", {
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: true,
+              }),
+              createdAt: now.toISOString(),
+            });
+          }
+
+          if (
+            pendingDisclosureRequestId &&
+            !formattedMessages.some(
+              (message) =>
+                parseLegacyRoommateShareMessage(message.content).requestId ===
+                pendingDisclosureRequestId,
+            )
+          ) {
+            const now = new Date();
+            formattedMessages.push({
+              id: Date.now(),
+              sender: "me",
+              senderId: userId,
+              content: `[STUDENT_ID_SHARE_REQUEST:${pendingDisclosureRequestId}]`,
+              time: now.toLocaleTimeString("ko-KR", {
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: true,
+              }),
+              createdAt: now.toISOString(),
+            });
+            setRoommateDisclosureStatus({
+              status: "REQUESTED",
+              requestId: pendingDisclosureRequestId,
+              targetStudentNumber: null,
+            });
+          }
+
           setMessageList(formattedMessages);
+          clearPendingDisclosureRouteState();
         } catch (error) {
           console.error("채팅 내역 불러오기 실패:", error);
         } finally {
@@ -619,8 +775,25 @@ export default function ChattingPage() {
             ),
           );
 
-          const chats = response.data.messages;
-          let disclosureOpponentId = openChatOpponentIdRef.current;
+          // 응답 순서와 관계없이 화면에는 과거 메시지부터 최신 메시지 순으로 표시한다.
+          const chats = [...response.data.messages].sort((a, b) => {
+            const createdAtDifference =
+              Date.parse(a.createdAt) - Date.parse(b.createdAt);
+
+            if (Number.isFinite(createdAtDifference)) {
+              return createdAtDifference || a.messageId - b.messageId;
+            }
+
+            return a.messageId - b.messageId;
+          });
+          const visibleChats =
+            chatType === "open"
+              ? chats.filter((message) => message.type !== "STUDENT_ID_REQUEST")
+              : chats;
+          let disclosureOpponentId =
+            chatType === "personal" ? openChatOpponentIdRef.current : null;
+          let fetchedOpenChatDisclosureStatus: StudentIdDisclosureStatus | null =
+            null;
 
           if (chatType === "personal") {
             const opponent = participants.find(
@@ -631,8 +804,8 @@ export default function ChattingPage() {
             }
           }
 
-          if (!disclosureOpponentId) {
-            const receivedRequest = chats.find(
+          if (chatType === "personal" && !disclosureOpponentId) {
+            const receivedRequest = visibleChats.find(
               (message) =>
                 message.type === "STUDENT_ID_REQUEST" &&
                 message.senderId !== null &&
@@ -641,13 +814,14 @@ export default function ChattingPage() {
             disclosureOpponentId = receivedRequest?.senderId ?? null;
           }
 
-          if (disclosureOpponentId) {
+          if (chatType === "personal" && disclosureOpponentId) {
             openChatOpponentIdRef.current = disclosureOpponentId;
             try {
               const statusResponse = await getStudentIdDisclosureStatus(
                 roomId,
                 disclosureOpponentId,
               );
+              fetchedOpenChatDisclosureStatus = statusResponse.data;
               setOpenChatDisclosureStatus(statusResponse.data);
               setOpenChatOpponentStudentNumber(
                 statusResponse.data.targetStudentNumber ?? "",
@@ -657,7 +831,7 @@ export default function ChattingPage() {
             }
           }
 
-          const formattedMessages: MessageType[] = chats.map((chat) => ({
+          const formattedMessages: MessageType[] = visibleChats.map((chat) => ({
             id: chat.messageId,
             sender: chat.senderId === userId ? "me" : "other",
             content: chat.content,
@@ -668,6 +842,10 @@ export default function ChattingPage() {
             type: chat.type,
             imageUrls: chat.imageUrls ?? [],
             disclosureRequestId: chat.disclosureRequestId,
+            linkedRoomId: chat.linkedRoomId,
+            linkedRoomName: chat.linkedRoomName,
+            linkedRoomDescription: chat.linkedRoomDescription,
+            linkedRoomMaxParticipants: chat.linkedRoomMaxParticipants,
             time: new Date(chat.createdAt).toLocaleTimeString("ko-KR", {
               hour: "2-digit",
               minute: "2-digit",
@@ -676,7 +854,46 @@ export default function ChattingPage() {
             createdAt: chat.createdAt,
           }));
 
+          const currentOpenChatRequestId =
+            fetchedOpenChatDisclosureStatus?.requestId;
+          const normalizedOpenChatStatus = normalizeDisclosureStatus(
+            fetchedOpenChatDisclosureStatus?.status,
+          );
           if (
+            chatType === "personal" &&
+            currentOpenChatRequestId &&
+            !CANCELED_DISCLOSURE_STATUSES.has(normalizedOpenChatStatus) &&
+            !formattedMessages.some(
+              (message) =>
+                message.type === "STUDENT_ID_REQUEST" &&
+                message.disclosureRequestId === currentOpenChatRequestId,
+            )
+          ) {
+            const now = new Date();
+            formattedMessages.push({
+              id: Date.now(),
+              sender: normalizedOpenChatStatus === "RECEIVED" ? "other" : "me",
+              senderId:
+                normalizedOpenChatStatus === "RECEIVED"
+                  ? disclosureOpponentId
+                  : userId,
+              content:
+                normalizedOpenChatStatus === "RECEIVED"
+                  ? "학번 공유 요청이 도착했어요."
+                  : "학번 공유를 요청했어요.",
+              type: "STUDENT_ID_REQUEST",
+              disclosureRequestId: currentOpenChatRequestId,
+              time: now.toLocaleTimeString("ko-KR", {
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: true,
+              }),
+              createdAt: now.toISOString(),
+            });
+          }
+
+          if (
+            chatType === "personal" &&
             pendingDisclosureRequestId &&
             !formattedMessages.some(
               (message) =>
@@ -689,7 +906,7 @@ export default function ChattingPage() {
               id: Date.now(),
               sender: "me",
               senderId: userId,
-              content: "학번 공개를 요청했어요.",
+              content: "학번 공유를 요청했어요.",
               type: "STUDENT_ID_REQUEST",
               disclosureRequestId: pendingDisclosureRequestId,
               time: now.toLocaleTimeString("ko-KR", {
@@ -707,6 +924,7 @@ export default function ChattingPage() {
           }
 
           setMessageList(formattedMessages);
+          clearPendingDisclosureRouteState();
         } catch (error) {
           console.error("오픈채팅방 메시지 조회 실패:", error);
         } finally {
@@ -838,6 +1056,10 @@ export default function ChattingPage() {
     type: message.type,
     imageUrls: message.imageUrls ?? [],
     disclosureRequestId: message.disclosureRequestId,
+    linkedRoomId: message.linkedRoomId,
+    linkedRoomName: message.linkedRoomName,
+    linkedRoomDescription: message.linkedRoomDescription,
+    linkedRoomMaxParticipants: message.linkedRoomMaxParticipants,
     time: new Date(message.createdAt).toLocaleTimeString("ko-KR", {
       hour: "2-digit",
       minute: "2-digit",
@@ -885,11 +1107,24 @@ export default function ChattingPage() {
     alert("참여자를 퇴장시켰습니다.");
   };
 
+  const normalizedCurrentDisclosureStatus = normalizeDisclosureStatus(
+    openChatDisclosureStatus?.status,
+  );
+  const sharedOpponentStudentNumber =
+    chatType === "personal" &&
+    ACCEPTED_DISCLOSURE_STATUSES.has(normalizedCurrentDisclosureStatus)
+      ? openChatOpponentStudentNumber
+      : chatType === "roommate"
+        ? opponentStudentNumber
+        : "";
+  const basePartnerName =
+    partnerName || (chatType === "roommate" ? "룸메이트 채팅" : "1대1 채팅");
   const headerTitle =
     chatType === "open"
       ? openChatRoomName || "오픈채팅방"
-      : partnerName ||
-        (chatType === "roommate" ? "룸메이트 채팅" : "1대1 채팅");
+      : sharedOpponentStudentNumber
+        ? `${basePartnerName} / ${sharedOpponentStudentNumber}`
+        : basePartnerName;
 
   useSetHeader({
     title: headerTitle,
@@ -897,6 +1132,10 @@ export default function ChattingPage() {
       navigate(`/chat/${chatType}/${roomId}/members`, {
         state: {
           partnerName,
+          partnerId:
+            chatType === "roommate"
+              ? opponentIdRef.current
+              : openChatOpponentIdRef.current,
           partnerProfileImageUrl,
           roomId,
           roomName: openChatRoomName,
@@ -929,6 +1168,8 @@ export default function ChattingPage() {
 
   const handleRequestShareClick = async () => {
     setMenuOpen(false);
+    if (chatType !== "roommate" && chatType !== "personal") return;
+
     const targetId =
       chatType === "roommate"
         ? opponentIdRef.current
@@ -945,9 +1186,12 @@ export default function ChattingPage() {
       const { requestId } = res.data;
 
       if (chatType === "roommate") {
-        appendCustomMessageLocal(
-          `[STUDENT_ID_SHARE_REQUEST:${requestId}:${userInfo.studentNumber}]`,
-        );
+        setRoommateDisclosureStatus({
+          status: "REQUESTED",
+          requestId,
+          targetStudentNumber: null,
+        });
+        appendCustomMessageLocal(`[STUDENT_ID_SHARE_REQUEST:${requestId}]`);
       } else {
         const now = new Date();
         setOpenChatDisclosureStatus({
@@ -978,6 +1222,49 @@ export default function ChattingPage() {
       alert(
         "학번 공유 요청에 실패했습니다. 이미 요청을 보냈거나 처리 중일 수 있습니다.",
       );
+    }
+  };
+
+  const handleJoinLinkedRoom = async (message: MessageType) => {
+    const linkedRoomId = message.linkedRoomId;
+    if (!linkedRoomId || joiningLinkedRoomId) return;
+
+    const enterRoom = async (password?: string) => {
+      const response = await joinOpenChatRoom(linkedRoomId, password);
+      const targetRoomId = response.data.roomId ?? linkedRoomId;
+      const targetRoomName =
+        response.data.name ?? message.linkedRoomName ?? "단체 톡방";
+
+      navigate(`/chat/open/${targetRoomId}`, {
+        state: { roomName: targetRoomName },
+      });
+    };
+
+    try {
+      setJoiningLinkedRoomId(linkedRoomId);
+      await enterRoom();
+    } catch (error) {
+      if (isAxiosError(error) && error.response?.status === 400) {
+        const password = window.prompt("입장 비밀번호를 입력해주세요.");
+        if (password === null) return;
+
+        try {
+          await enterRoom(password);
+        } catch (passwordError) {
+          console.error("파생 톡방 입장 실패:", passwordError);
+          alert("비밀번호를 확인한 후 다시 시도해주세요.");
+        }
+        return;
+      }
+
+      console.error("파생 톡방 입장 실패:", error);
+      if (isAxiosError(error) && error.response?.status === 409) {
+        alert("참여 인원이 가득 찬 단체 톡방입니다.");
+      } else {
+        alert("단체 톡방에 입장하지 못했습니다.");
+      }
+    } finally {
+      setJoiningLinkedRoomId(null);
     }
   };
 
@@ -1046,6 +1333,48 @@ export default function ChattingPage() {
                 }
               }
 
+              if (msg.type === "ROOM_LINK" && msg.linkedRoomId) {
+                const isJoining = joiningLinkedRoomId === msg.linkedRoomId;
+
+                return (
+                  <React.Fragment key={msg.id}>
+                    {showDateLine && (
+                      <S.DateDivider>
+                        {formatDateLine(msg.createdAt)}
+                      </S.DateDivider>
+                    )}
+                    <S.RoomLinkRow>
+                      <S.RoomLinkCard
+                        type="button"
+                        disabled={isJoining}
+                        onClick={() => handleJoinLinkedRoom(msg)}
+                      >
+                        <S.RoomLinkTextArea>
+                          <S.RoomLinkLabel>새 단체 톡방</S.RoomLinkLabel>
+                          <S.RoomLinkName>
+                            {msg.linkedRoomName || "단체 톡방"}
+                          </S.RoomLinkName>
+                          {msg.linkedRoomDescription && (
+                            <S.RoomLinkDescription>
+                              {msg.linkedRoomDescription}
+                            </S.RoomLinkDescription>
+                          )}
+                          {msg.linkedRoomMaxParticipants && (
+                            <S.RoomLinkMeta>
+                              최대 {msg.linkedRoomMaxParticipants}명
+                            </S.RoomLinkMeta>
+                          )}
+                        </S.RoomLinkTextArea>
+                        <S.RoomLinkAction>
+                          {isJoining ? "입장 중..." : "참여하기"}
+                          {!isJoining && <ArrowRight size={18} />}
+                        </S.RoomLinkAction>
+                      </S.RoomLinkCard>
+                    </S.RoomLinkRow>
+                  </React.Fragment>
+                );
+              }
+
               if (msg.isSystem) {
                 return (
                   <React.Fragment key={msg.id}>
@@ -1060,6 +1389,7 @@ export default function ChattingPage() {
               }
 
               if (
+                chatType === "personal" &&
                 msg.type === "STUDENT_ID_REQUEST" &&
                 msg.disclosureRequestId
               ) {
@@ -1067,20 +1397,47 @@ export default function ChattingPage() {
                 const isMe = msg.sender === "me";
                 const isCurrentRequest =
                   openChatDisclosureStatus?.requestId === requestId;
-                const isPending =
-                  isCurrentRequest &&
-                  PENDING_DISCLOSURE_STATUSES.has(
-                    openChatDisclosureStatus.status,
+                const normalizedStatus = isCurrentRequest
+                  ? normalizeDisclosureStatus(openChatDisclosureStatus?.status)
+                  : "";
+                const isLatestRequest = !messageList
+                  .slice(index + 1)
+                  .some(
+                    (message) =>
+                      message.type === "STUDENT_ID_REQUEST" &&
+                      message.disclosureRequestId,
                   );
+                const isPending =
+                  isLatestRequest &&
+                  (!openChatDisclosureStatus ||
+                    (isCurrentRequest &&
+                      isPendingDisclosureStatus(normalizedStatus)));
                 const isAccepted =
                   isCurrentRequest &&
-                  openChatDisclosureStatus.status === "ACCEPTED";
+                  ACCEPTED_DISCLOSURE_STATUSES.has(normalizedStatus);
+                const isRejected =
+                  isCurrentRequest &&
+                  REJECTED_DISCLOSURE_STATUSES.has(normalizedStatus);
+                const isCanceled =
+                  isCurrentRequest &&
+                  CANCELED_DISCLOSURE_STATUSES.has(normalizedStatus);
+
+                const requestCardTitle = isMe
+                  ? "학번 공유를 요청했어요"
+                  : "학번을 공유하시겠습니까?";
+
+                const requestCardSubtitle = (
+                  <>
+                    <p>수락하면 이 1:1 채팅방에서만</p>
+                    <p>닉네임과 학번이 함께 표시됩니다.</p>
+                  </>
+                );
 
                 if (isAccepted) {
                   const successCard = (
                     <S.ShareSuccessCard>
                       <S.ShareSuccessTitle>
-                        <CheckCircle2 size={20} color="#3D3D3D" />
+                        <CheckCircle2 size={20} color="#3B7CF6" />
                         학번 공유 완료
                       </S.ShareSuccessTitle>
                       <S.ShareSuccessInfo>
@@ -1107,13 +1464,31 @@ export default function ChattingPage() {
                           {formatDateLine(msg.createdAt)}
                         </S.DateDivider>
                       )}
-                      {isMe ? (
-                        <S.ShareCardRowMy>{successCard}</S.ShareCardRowMy>
-                      ) : (
-                        <S.ShareCardRowOther>{successCard}</S.ShareCardRowOther>
-                      )}
+                      <S.ShareCardRowOther>{successCard}</S.ShareCardRowOther>
                     </React.Fragment>
                   );
+                }
+
+                if (isRejected) {
+                  return (
+                    <React.Fragment key={msg.id}>
+                      {showDateLine && (
+                        <S.DateDivider>
+                          {formatDateLine(msg.createdAt)}
+                        </S.DateDivider>
+                      )}
+                      <S.ShareCardRowOther>
+                        <S.ShareRejectedCard>
+                          <XCircle size={20} aria-hidden="true" />
+                          학번 공개 요청 거절
+                        </S.ShareRejectedCard>
+                      </S.ShareCardRowOther>
+                    </React.Fragment>
+                  );
+                }
+
+                if (isCanceled || !isPending) {
+                  return null;
                 }
 
                 return (
@@ -1128,26 +1503,23 @@ export default function ChattingPage() {
                         <S.ShareCardWrapper>
                           <S.ShareCardTextSection>
                             <S.ShareCardTitle>
-                              학번 공유를 요청했어요!
+                              {requestCardTitle}
                             </S.ShareCardTitle>
                             <S.ShareCardSubtitle>
-                              <p>수락하면 이 채팅방에서만</p>
-                              <p>서로의 학번이 공유돼요.</p>
+                              {requestCardSubtitle}
                             </S.ShareCardSubtitle>
                           </S.ShareCardTextSection>
-                          {isPending && (
-                            <S.ShareCardButtonGroup>
-                              <S.ShareCardButton
-                                $variant="secondary"
-                                disabled={
-                                  processingDisclosureId === requestId
-                                }
-                                onClick={() => handleCancelShare(requestId)}
-                              >
-                                취소
-                              </S.ShareCardButton>
-                            </S.ShareCardButtonGroup>
-                          )}
+                          <S.ShareCardButtonGroup>
+                            <S.ShareCardButton
+                              $variant="secondary"
+                              disabled={processingDisclosureId === requestId}
+                              onClick={() => handleCancelShare(requestId)}
+                            >
+                              {processingDisclosureId === requestId
+                                ? "처리 중"
+                                : "취소"}
+                            </S.ShareCardButton>
+                          </S.ShareCardButtonGroup>
                         </S.ShareCardWrapper>
                       </S.ShareCardRowMy>
                     ) : (
@@ -1155,35 +1527,32 @@ export default function ChattingPage() {
                         <S.ShareCardWrapper>
                           <S.ShareCardTextSection>
                             <S.ShareCardTitle>
-                              학번을 공유할까요?
+                              {requestCardTitle}
                             </S.ShareCardTitle>
                             <S.ShareCardSubtitle>
-                              <p>수락하면 이 채팅방에서만</p>
-                              <p>서로의 학번이 공개돼요.</p>
+                              {requestCardSubtitle}
                             </S.ShareCardSubtitle>
                           </S.ShareCardTextSection>
-                          {isPending && (
-                            <S.ShareCardButtonGroup>
-                              <S.ShareCardButton
-                                $variant="secondary"
-                                disabled={
-                                  processingDisclosureId === requestId
-                                }
-                                onClick={() => handleDeclineShare(requestId)}
-                              >
-                                거절
-                              </S.ShareCardButton>
-                              <S.ShareCardButton
-                                $variant="primary"
-                                disabled={
-                                  processingDisclosureId === requestId
-                                }
-                                onClick={() => handleAcceptShare(requestId)}
-                              >
-                                수락
-                              </S.ShareCardButton>
-                            </S.ShareCardButtonGroup>
-                          )}
+                          <S.ShareCardButtonGroup>
+                            <S.ShareCardButton
+                              $variant="secondary"
+                              disabled={processingDisclosureId === requestId}
+                              onClick={() => handleDeclineShare(requestId)}
+                            >
+                              {processingDisclosureId === requestId
+                                ? "처리 중"
+                                : "거절"}
+                            </S.ShareCardButton>
+                            <S.ShareCardButton
+                              $variant="primary"
+                              disabled={processingDisclosureId === requestId}
+                              onClick={() => handleAcceptShare(requestId)}
+                            >
+                              {processingDisclosureId === requestId
+                                ? "처리 중"
+                                : "수락"}
+                            </S.ShareCardButton>
+                          </S.ShareCardButtonGroup>
                         </S.ShareCardWrapper>
                       </S.ShareCardRowOther>
                     )}
@@ -1209,6 +1578,88 @@ export default function ChattingPage() {
                         p.type === "ACCEPT")
                     );
                   });
+                  const isCurrentRequest =
+                    roommateDisclosureStatus?.requestId === parsed.requestId;
+                  const normalizedRoommateStatus = isCurrentRequest
+                    ? normalizeDisclosureStatus(
+                        roommateDisclosureStatus?.status,
+                      )
+                    : "";
+                  const isAccepted =
+                    isCurrentRequest &&
+                    ACCEPTED_DISCLOSURE_STATUSES.has(normalizedRoommateStatus);
+                  const isRejected =
+                    isCurrentRequest &&
+                    REJECTED_DISCLOSURE_STATUSES.has(normalizedRoommateStatus);
+                  const isCanceled =
+                    isCurrentRequest &&
+                    CANCELED_DISCLOSURE_STATUSES.has(normalizedRoommateStatus);
+                  const isPending = roommateDisclosureStatus
+                    ? isCurrentRequest &&
+                      isPendingDisclosureStatus(normalizedRoommateStatus)
+                    : !isResolved;
+
+                  if (isResolved) {
+                    return null;
+                  }
+
+                  if (isAccepted) {
+                    return (
+                      <React.Fragment key={msg.id}>
+                        {showDateLine && (
+                          <S.DateDivider>
+                            {formatDateLine(msg.createdAt)}
+                          </S.DateDivider>
+                        )}
+                        <S.ShareCardRowOther>
+                          <S.ShareSuccessCard>
+                            <S.ShareSuccessTitle>
+                              <CheckCircle2 size={20} color="#3B7CF6" />
+                              학번 공유 완료
+                            </S.ShareSuccessTitle>
+                            <S.ShareSuccessInfo>
+                              <S.ShareSuccessInfoRow>
+                                <span className="label">나</span>
+                                <span className="value">
+                                  {userInfo.studentNumber || "알 수 없음"}
+                                </span>
+                              </S.ShareSuccessInfoRow>
+                              <S.ShareSuccessInfoRow>
+                                <span className="label-other">상대방</span>
+                                <span className="value">
+                                  {roommateDisclosureStatus?.targetStudentNumber ||
+                                    opponentStudentNumber ||
+                                    "알 수 없음"}
+                                </span>
+                              </S.ShareSuccessInfoRow>
+                            </S.ShareSuccessInfo>
+                          </S.ShareSuccessCard>
+                        </S.ShareCardRowOther>
+                      </React.Fragment>
+                    );
+                  }
+
+                  if (isRejected) {
+                    return (
+                      <React.Fragment key={msg.id}>
+                        {showDateLine && (
+                          <S.DateDivider>
+                            {formatDateLine(msg.createdAt)}
+                          </S.DateDivider>
+                        )}
+                        <S.ShareCardRowOther>
+                          <S.ShareRejectedCard>
+                            <XCircle size={20} aria-hidden="true" />
+                            학번 공개 요청 거절
+                          </S.ShareRejectedCard>
+                        </S.ShareCardRowOther>
+                      </React.Fragment>
+                    );
+                  }
+
+                  if (isCanceled || !isPending) {
+                    return null;
+                  }
 
                   if (isMe) {
                     return (
@@ -1222,25 +1673,28 @@ export default function ChattingPage() {
                           <S.ShareCardWrapper>
                             <S.ShareCardTextSection>
                               <S.ShareCardTitle>
-                                학번 공유를 요청했어요!
+                                학번 공유를 요청했어요
                               </S.ShareCardTitle>
                               <S.ShareCardSubtitle>
                                 <p>수락하면 이 1:1 채팅방에서만</p>
-                                <p>서로의 학번이 공유돼요.</p>
+                                <p>닉네임과 학번이 함께 표시됩니다.</p>
                               </S.ShareCardSubtitle>
                             </S.ShareCardTextSection>
-                            {!isResolved && (
-                              <S.ShareCardButtonGroup>
-                                <S.ShareCardButton
-                                  $variant="secondary"
-                                  onClick={() =>
-                                    handleCancelShare(parsed.requestId!)
-                                  }
-                                >
-                                  취소
-                                </S.ShareCardButton>
-                              </S.ShareCardButtonGroup>
-                            )}
+                            <S.ShareCardButtonGroup>
+                              <S.ShareCardButton
+                                $variant="secondary"
+                                disabled={
+                                  processingDisclosureId === parsed.requestId
+                                }
+                                onClick={() =>
+                                  handleCancelShare(parsed.requestId!)
+                                }
+                              >
+                                {processingDisclosureId === parsed.requestId
+                                  ? "처리 중"
+                                  : "취소"}
+                              </S.ShareCardButton>
+                            </S.ShareCardButtonGroup>
                           </S.ShareCardWrapper>
                         </S.ShareCardRowMy>
                       </React.Fragment>
@@ -1257,33 +1711,41 @@ export default function ChattingPage() {
                           <S.ShareCardWrapper>
                             <S.ShareCardTextSection>
                               <S.ShareCardTitle>
-                                학번을 공유할까요?
+                                학번을 공유하시겠습니까?
                               </S.ShareCardTitle>
                               <S.ShareCardSubtitle>
                                 <p>수락하면 이 1:1 채팅방에서만</p>
-                                <p>서로의 학번이 공개돼요.</p>
+                                <p>닉네임과 학번이 함께 표시됩니다.</p>
                               </S.ShareCardSubtitle>
                             </S.ShareCardTextSection>
-                            {!isResolved && (
-                              <S.ShareCardButtonGroup>
-                                <S.ShareCardButton
-                                  $variant="secondary"
-                                  onClick={() =>
-                                    handleDeclineShare(parsed.requestId!)
-                                  }
-                                >
-                                  거절
-                                </S.ShareCardButton>
-                                <S.ShareCardButton
-                                  $variant="primary"
-                                  onClick={() =>
-                                    handleAcceptShare(parsed.requestId!)
-                                  }
-                                >
-                                  수락
-                                </S.ShareCardButton>
-                              </S.ShareCardButtonGroup>
-                            )}
+                            <S.ShareCardButtonGroup>
+                              <S.ShareCardButton
+                                $variant="secondary"
+                                disabled={
+                                  processingDisclosureId === parsed.requestId
+                                }
+                                onClick={() =>
+                                  handleDeclineShare(parsed.requestId!)
+                                }
+                              >
+                                {processingDisclosureId === parsed.requestId
+                                  ? "처리 중"
+                                  : "거절"}
+                              </S.ShareCardButton>
+                              <S.ShareCardButton
+                                $variant="primary"
+                                disabled={
+                                  processingDisclosureId === parsed.requestId
+                                }
+                                onClick={() =>
+                                  handleAcceptShare(parsed.requestId!)
+                                }
+                              >
+                                {processingDisclosureId === parsed.requestId
+                                  ? "처리 중"
+                                  : "수락"}
+                              </S.ShareCardButton>
+                            </S.ShareCardButtonGroup>
                           </S.ShareCardWrapper>
                         </S.ShareCardRowOther>
                       </React.Fragment>
@@ -1313,7 +1775,7 @@ export default function ChattingPage() {
                   const cardContent = (
                     <S.ShareSuccessCard>
                       <S.ShareSuccessTitle>
-                        <CheckCircle2 size={20} color="#3D3D3D" />
+                        <CheckCircle2 size={20} color="#3B7CF6" />
                         학번 공유 완료
                       </S.ShareSuccessTitle>
                       <S.ShareSuccessInfo>
@@ -1338,16 +1800,30 @@ export default function ChattingPage() {
                           {formatDateLine(msg.createdAt)}
                         </S.DateDivider>
                       )}
-                      {isMe ? (
-                        <S.ShareCardRowMy>{cardContent}</S.ShareCardRowMy>
-                      ) : (
-                        <S.ShareCardRowOther>{cardContent}</S.ShareCardRowOther>
-                      )}
+                      <S.ShareCardRowOther>{cardContent}</S.ShareCardRowOther>
                     </React.Fragment>
                   );
                 }
 
-                if (parsed.type === "CANCEL" || parsed.type === "DECLINE") {
+                if (parsed.type === "DECLINE") {
+                  return (
+                    <React.Fragment key={msg.id}>
+                      {showDateLine && (
+                        <S.DateDivider>
+                          {formatDateLine(msg.createdAt)}
+                        </S.DateDivider>
+                      )}
+                      <S.ShareCardRowOther>
+                        <S.ShareRejectedCard>
+                          <XCircle size={20} aria-hidden="true" />
+                          학번 공개 요청 거절
+                        </S.ShareRejectedCard>
+                      </S.ShareCardRowOther>
+                    </React.Fragment>
+                  );
+                }
+
+                if (parsed.type === "CANCEL") {
                   return null;
                 }
               }
@@ -1409,7 +1885,12 @@ export default function ChattingPage() {
               사진 첨부
             </S.FloatingMenuItem>
             {chatType === "open" ? (
-              <S.FloatingMenuItem onClick={() => setMenuOpen(false)}>
+              <S.FloatingMenuItem
+                onClick={() => {
+                  setMenuOpen(false);
+                  navigate(`/chat/open/create?originRoomId=${roomId}`);
+                }}
+              >
                 단체 톡방 만들기
               </S.FloatingMenuItem>
             ) : chatType === "roommate" || chatType === "personal" ? (

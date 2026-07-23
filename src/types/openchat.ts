@@ -69,18 +69,26 @@ export interface CreatedOpenChatRoomResponse {
   official: boolean;
 }
 
+export interface CreateDerivedOpenChatRoomRequest {
+  originRoomId: number;
+  name: string;
+  description?: string;
+  maxParticipants: number;
+  isPublic: boolean;
+  password?: string;
+}
+
+export interface CreateDerivedOpenChatRoomResponse {
+  roomId: number;
+}
+
 export interface OpenChatMessage {
   messageId: number;
   roomId: number;
   senderId: number | null;
   senderNickname: string | null;
   content: string;
-  type:
-    | "TEXT"
-    | "IMAGE"
-    | "SYSTEM"
-    | "ROOM_LINK"
-    | "STUDENT_ID_REQUEST";
+  type: "TEXT" | "IMAGE" | "SYSTEM" | "ROOM_LINK" | "STUDENT_ID_REQUEST";
   imageUrls?: string[];
   unreadCount: number;
   createdAt: string;

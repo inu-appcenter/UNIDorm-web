@@ -26,7 +26,7 @@ export const mbti3 = ["F", "T"];
 export const mbti4 = ["P", "J"];
 
 export const smoking = ["안피워요", "피워요"];
-export const snoring = ["안골아요", "골아요"];
+export const snoring = ["안 골아요", "골아요"];
 export const toothgrinding = ["안갈아요", "갈아요"];
 export const isLightSleeper = ["밝아요", "어두워요", "몰라요"];
 export const showertime = ["아침", "저녁", "둘다"];

@@ -13,6 +13,7 @@ import BottomBar from "../../components/common/BottomBar/BottomBar.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import { motion, AnimatePresence } from "framer-motion";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
+import { formatChatMessagePreview } from "@/utils/chatMessagePreview";
 
 export default function ChatListPage() {
   const navigate = useNavigate();
@@ -84,7 +85,7 @@ export default function ChatListPage() {
   const fadeInUp = {
     initial: { opacity: 0, y: 15 },
     animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.3 }
+    transition: { duration: 0.3 },
   };
 
   return (
@@ -165,7 +166,7 @@ export default function ChatListPage() {
                       )
                     }
                     title={room.partnerName}
-                    message={room.lastMessage}
+                    message={formatChatMessagePreview(room.lastMessage)}
                     time={room.lastMessageTime}
                     partnerProfileImageUrl={room.partnerProfileImageUrl}
                   />

@@ -9,6 +9,8 @@ import {
   OpenChatKickReason,
   CreatePersonalOpenChatRoomRequest,
   CreatePersonalOpenChatRoomResponse,
+  CreateDerivedOpenChatRoomRequest,
+  CreateDerivedOpenChatRoomResponse,
   LeaveOpenChatRoomResponse,
 } from "@/types/openchat";
 import { AxiosResponse } from "axios";
@@ -137,6 +139,12 @@ export const createPersonalOpenChatRoom = (
   data: CreatePersonalOpenChatRoomRequest,
 ): Promise<AxiosResponse<CreatePersonalOpenChatRoomResponse>> =>
   tokenInstance.post(`/open-chat-rooms/personal`, data);
+
+/** 현재 오픈채팅방에서 파생된 단체 톡방 생성 */
+export const createDerivedOpenChatRoom = (
+  data: CreateDerivedOpenChatRoomRequest,
+): Promise<AxiosResponse<CreateDerivedOpenChatRoomResponse>> =>
+  tokenInstance.post(`/open-chat-rooms/derived`, data);
 
 /** 채팅방 FCM 알림 모드 변경 */
 export const updateOpenChatNotificationMode = (

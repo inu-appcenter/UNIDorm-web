@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import { isAxiosError } from "axios";
-import { getOpenChatRooms, joinOpenChatRoom } from "@/apis/openchat";
+import {
+  getOpenChatMessages,
+  getOpenChatRooms,
+  joinOpenChatRoom,
+} from "@/apis/openchat";
 import {
   getRoommateChatRooms,
   patchRoommateChatRead,
@@ -20,6 +24,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import useUserStore from "@/stores/useUserStore";
 import { Search, Plus, MapPin } from "lucide-react";
+import { formatChatMessagePreview } from "@/utils/chatMessagePreview";
 
 const formatTime = (isoString: string) => {
   if (!isoString) return "";
@@ -64,14 +69,16 @@ function RoommateChatCard({
       <CardLeft>
         {isMyRoommate && (
           <RoommateBadge>
-            <MapPin size={12} color="#1677ff" style={{ marginRight: 4 }} />
-            내 룸메이트
+            <MapPin size={12} color="#1677ff" style={{ marginRight: 4 }} />내
+            룸메이트
           </RoommateBadge>
         )}
         <RoomName>
           {room.partnerName || room.opponentNickname || "익명"}
         </RoomName>
-        <LastMessage>{room.lastMessage || "대화 내역이 없습니다."}</LastMessage>
+        <LastMessage>
+          {formatChatMessagePreview(room.lastMessage, "대화 내역이 없습니다.")}
+        </LastMessage>
       </CardLeft>
       <CardRight>
         <TimeText>
@@ -116,6 +123,32 @@ export default function OpenChatPage() {
   const [roommateUnreadTotal, setRoommateUnreadTotal] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
 
+  const fillMissingPersonalLastMessages = async (chatRooms: OpenChatRoom[]) =>
+    Promise.all(
+      chatRooms.map(async (room) => {
+        const needsMessageFallback = !String(room.lastMessage ?? "").trim();
+        if (room.roomType !== "PERSONAL" || !needsMessageFallback) return room;
+
+        try {
+          const messagesResponse = await getOpenChatMessages(
+            room.roomId,
+            null,
+            1,
+          );
+          const latestMessage = messagesResponse.data.messages[0];
+
+          return {
+            ...room,
+            lastMessage: latestMessage?.content || "",
+            lastMessageAt: latestMessage?.createdAt || room.lastMessageAt,
+          };
+        } catch (error) {
+          console.error("개인 채팅 최신 메시지 조회 실패:", error);
+          return room;
+        }
+      }),
+    );
+
   const fetchChatRooms = async () => {
     if (!isLoggedIn) {
       setRooms([]);
@@ -132,11 +165,10 @@ export default function OpenChatPage() {
           getRoommateChatRooms(),
           getAllRoommateChatUnreadCount(),
         ]);
-        setRooms(
-          openChatRes.data.content.filter(
-            (room) => room.chatCategory === "OPEN_CHAT",
-          ),
+        const openChatRooms = openChatRes.data.content.filter(
+          (room) => room.chatCategory === "OPEN_CHAT",
         );
+        setRooms(await fillMissingPersonalLastMessages(openChatRooms));
         setRoommateRooms(roommateChatRes.data);
         setRoommateUnreadTotal(unreadRes.data);
       } else {
@@ -268,21 +300,23 @@ export default function OpenChatPage() {
     0,
   );
   const totalUnreadCount = roommateUnreadTotal + openChatUnreadTotal;
+  const normalizedSearchQuery = searchQuery.trim().toLocaleLowerCase("ko-KR");
+  const includesSearchQuery = (value: unknown) =>
+    String(value ?? "")
+      .toLocaleLowerCase("ko-KR")
+      .includes(normalizedSearchQuery);
 
   const filteredRoommateRooms = roommateRooms.filter(
     (room) =>
-      (room.partnerName || room.opponentNickname || "")
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-      (room.lastMessage || "")
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase()),
+      includesSearchQuery(room.partnerName || room.opponentNickname) ||
+      includesSearchQuery(formatChatMessagePreview(room.lastMessage)),
   );
 
   const filteredRooms = rooms.filter(
     (room) =>
-      room.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      room.description.toLowerCase().includes(searchQuery.toLowerCase()),
+      includesSearchQuery(room.name) ||
+      includesSearchQuery(room.description) ||
+      includesSearchQuery(formatChatMessagePreview(room.lastMessage)),
   );
 
   const mergedMyRooms = [
@@ -467,8 +501,6 @@ const RoomList = styled.div`
   flex-direction: column;
   gap: 12px;
 `;
-
-
 
 const CreateButton = styled.button`
   position: fixed;

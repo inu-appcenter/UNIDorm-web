@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import { OpenChatRoom, OpenChatTab } from "@/types/openchat";
 import { Lock, Unlock, User } from "lucide-react";
+import { formatChatMessagePreview } from "@/utils/chatMessagePreview";
 
 interface Props {
   room: OpenChatRoom;
@@ -45,12 +46,18 @@ export default function OpenChatRoomCard({ room, tab, onClick }: Props) {
         <LeftArea>
           <TextArea>
             <RoomName>{room.name}</RoomName>
-            <LastMessage>{room.lastMessage || room.description}</LastMessage>
+            <LastMessage>
+              {formatChatMessagePreview(room.lastMessage, room.description)}
+            </LastMessage>
           </TextArea>
 
           <MetaArea>
             <MetaItem>
-              {(room.isPublic ?? room.public) ? <Unlock size={14} /> : <Lock size={14} />}
+              {(room.isPublic ?? room.public) ? (
+                <Unlock size={14} />
+              ) : (
+                <Lock size={14} />
+              )}
               <span>{(room.isPublic ?? room.public) ? "공개" : "비공개"}</span>
             </MetaItem>
 
@@ -68,9 +75,13 @@ export default function OpenChatRoomCard({ room, tab, onClick }: Props) {
         </LeftArea>
 
         <RightArea>
-          <TimeText>{room.lastMessageAt ? formatActivityTime(room.lastMessageAt) : ""}</TimeText>
+          <TimeText>
+            {room.lastMessageAt ? formatActivityTime(room.lastMessageAt) : ""}
+          </TimeText>
           {room.unreadCount > 0 && (
-            <UnreadBadge>{room.unreadCount > 99 ? "99+" : room.unreadCount}</UnreadBadge>
+            <UnreadBadge>
+              {room.unreadCount > 99 ? "99+" : room.unreadCount}
+            </UnreadBadge>
           )}
         </RightArea>
       </Card>
@@ -87,7 +98,11 @@ export default function OpenChatRoomCard({ room, tab, onClick }: Props) {
 
         <MetaArea>
           <MetaItem>
-            {(room.isPublic ?? room.public) ? <Unlock size={14} /> : <Lock size={14} />}
+            {(room.isPublic ?? room.public) ? (
+              <Unlock size={14} />
+            ) : (
+              <Lock size={14} />
+            )}
             <span>{(room.isPublic ?? room.public) ? "공개" : "비공개"}</span>
           </MetaItem>
 

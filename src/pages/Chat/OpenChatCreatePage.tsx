@@ -1,30 +1,57 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import styled from "styled-components";
-import { createOpenChatRoom } from "@/apis/openchat";
+import { createDerivedOpenChatRoom, createOpenChatRoom } from "@/apis/openchat";
 import { OpenChatScope } from "@/types/openchat";
 import { useSetHeader } from "@/hooks/useSetHeader";
 
 export default function OpenChatCreatePage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const originRoomId = Number(searchParams.get("originRoomId"));
+  const isDerivedRoom = Number.isInteger(originRoomId) && originRoomId > 0;
 
   useSetHeader({
-    title: "방 만들기",
+    title: isDerivedRoom ? "단체 톡방 만들기" : "방 만들기",
     showAlarm: false,
   });
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [scope, setScope] = useState<OpenChatScope>("DORMITORY");
+  const [maxParticipants, setMaxParticipants] = useState(100);
+  const [isPublic, setIsPublic] = useState(true);
+  const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const isValid = name.trim() && description.trim();
+  const isValid =
+    Boolean(name.trim()) &&
+    (isDerivedRoom || Boolean(description.trim())) &&
+    maxParticipants >= 2 &&
+    maxParticipants <= 100;
 
   const handleSubmit = async () => {
     if (!isValid || isSubmitting) return;
 
     try {
       setIsSubmitting(true);
+
+      if (isDerivedRoom) {
+        const response = await createDerivedOpenChatRoom({
+          originRoomId,
+          name: name.trim(),
+          description: description.trim() || undefined,
+          maxParticipants,
+          isPublic,
+          password: password.trim() || undefined,
+        });
+
+        navigate(`/chat/open/${response.data.roomId}`, {
+          replace: true,
+          state: { roomName: name.trim() },
+        });
+        return;
+      }
 
       const response = await createOpenChatRoom({
         name: name.trim(),
@@ -72,36 +99,94 @@ export default function OpenChatCreatePage() {
           />
         </FormGroup>
 
-        <FormGroup>
-          <Label>공개 범위</Label>
+        {isDerivedRoom ? (
+          <>
+            <FormGroup>
+              <Label htmlFor="max-participants">최대 참여 인원</Label>
+              <NumberInput
+                id="max-participants"
+                type="number"
+                min={2}
+                max={100}
+                value={maxParticipants}
+                onChange={(event) => {
+                  const nextValue = Number(event.target.value);
+                  setMaxParticipants(Number.isNaN(nextValue) ? 2 : nextValue);
+                }}
+              />
+              <ScopeDescription>
+                2명부터 100명까지 설정할 수 있어요.
+              </ScopeDescription>
+            </FormGroup>
 
-          <ScopeButtonRow>
-            <ScopeButton
-              type="button"
-              $active={scope === "DORMITORY"}
-              onClick={() => setScope("DORMITORY")}
-            >
-              내 기숙사
-            </ScopeButton>
+            <FormGroup>
+              <Label>검색 목록 공개 여부</Label>
+              <ScopeButtonRow>
+                <ScopeButton
+                  type="button"
+                  $active={isPublic}
+                  onClick={() => setIsPublic(true)}
+                >
+                  공개
+                </ScopeButton>
+                <ScopeButton
+                  type="button"
+                  $active={!isPublic}
+                  onClick={() => setIsPublic(false)}
+                >
+                  비노출
+                </ScopeButton>
+              </ScopeButtonRow>
+              <ScopeDescription>
+                비노출로 설정해도 원본 채팅방에는 입장 링크가 공유돼요.
+              </ScopeDescription>
+            </FormGroup>
 
-            <ScopeButton
-              type="button"
-              $active={scope === "ALL"}
-              onClick={() => setScope("ALL")}
-            >
-              전체
-            </ScopeButton>
-          </ScopeButtonRow>
+            <FormGroup>
+              <Label htmlFor="room-password">입장 비밀번호</Label>
+              <TextInput
+                id="room-password"
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="비밀번호 없이 만들려면 비워두세요"
+                maxLength={50}
+              />
+            </FormGroup>
+          </>
+        ) : (
+          <FormGroup>
+            <Label>공개 범위</Label>
 
-          <ScopeDescription>
-            선택한 범위에 따라 내 기숙사 방 또는 전체 방 목록에 노출됩니다.
-          </ScopeDescription>
-        </FormGroup>
+            <ScopeButtonRow>
+              <ScopeButton
+                type="button"
+                $active={scope === "DORMITORY"}
+                onClick={() => setScope("DORMITORY")}
+              >
+                내 기숙사
+              </ScopeButton>
+
+              <ScopeButton
+                type="button"
+                $active={scope === "ALL"}
+                onClick={() => setScope("ALL")}
+              >
+                전체
+              </ScopeButton>
+            </ScopeButtonRow>
+
+            <ScopeDescription>
+              선택한 범위에 따라 내 기숙사 방 또는 전체 방 목록에 노출됩니다.
+            </ScopeDescription>
+          </FormGroup>
+        )}
 
         <NoticeBox>
           <NoticeTitle>안내</NoticeTitle>
           <NoticeText>
-            개인정보 공개, 금전 거래, 외부 연락처 교환은 사용자 책임 하에 이루어집니다.
+            개인정보 공개, 금전 거래, 외부 연락처 교환은 사용자 책임 하에
+            이루어집니다.
           </NoticeText>
         </NoticeBox>
       </Content>
@@ -112,7 +197,11 @@ export default function OpenChatCreatePage() {
           disabled={!isValid || isSubmitting}
           onClick={handleSubmit}
         >
-          {isSubmitting ? "만드는 중..." : "방 만들기"}
+          {isSubmitting
+            ? "만드는 중..."
+            : isDerivedRoom
+              ? "단체 톡방 만들기"
+              : "방 만들기"}
         </SubmitButton>
       </SubmitArea>
     </PageWrapper>
@@ -186,6 +275,15 @@ const TextInput = styled.input`
 
   &:focus {
     background: #f0f0f0;
+  }
+`;
+
+const NumberInput = styled(TextInput)`
+  appearance: textfield;
+
+  &::-webkit-inner-spin-button,
+  &::-webkit-outer-spin-button {
+    margin: 0;
   }
 `;
 
