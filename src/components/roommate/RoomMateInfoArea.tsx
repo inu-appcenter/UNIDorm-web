@@ -5,6 +5,7 @@ import default_profile_img from "../../assets/profileimg.png";
 import { MdKeyboardArrowRight } from "react-icons/md";
 import { PATHS } from "@/constants/paths";
 import { mixpanelTrack } from "@/utils/mixpanel";
+import { CATEGORY_LIST } from "@/constants/roommate";
 
 interface RoomMateInfoAreaProps {
   roommateInfo: MyRoommateInfoResponse | null;
@@ -36,7 +37,7 @@ const RoomMateInfoArea = ({
 
                 navigate({
                   pathname: PATHS.ROOMMATE.ROOT,
-                  search: "?tab=맞춤+룸메이트",
+                  search: `?tab=${encodeURIComponent(CATEGORY_LIST[0])}`,
                 });
               }}
             >

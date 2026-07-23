@@ -79,3 +79,5 @@ export interface MyPost_TipBoard extends MyPostBase {
   tipCommentCount: number;
   tipLikeCount: number;
 }
+
+export type MyPost = MyPost_GroupOrder | MyPost_RoommateBoard | MyPost_TipBoard;
