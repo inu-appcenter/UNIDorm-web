@@ -388,7 +388,7 @@ export const ShareSuccessInfo = styled.div`
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 0 20px;
+  padding: 0 0 0 28px;
   width: 100%;
   box-sizing: border-box;
 `;
