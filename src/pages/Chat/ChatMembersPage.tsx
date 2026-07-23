@@ -6,6 +6,7 @@ import { Drawer } from "vaul";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import useUserStore from "@/stores/useUserStore";
 import { deleteRoommateChatRoom } from "@/apis/roommate";
+import { getRoommateChatRooms } from "@/apis/chat";
 import {
   createPersonalOpenChatRoom,
   getOpenChatParticipants,
@@ -14,8 +15,8 @@ import {
 } from "@/apis/openchat";
 import { OpenChatParticipant } from "@/types/openchat";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
-import { requestStudentIdDisclosure } from "@/apis/studentIdDisclosure";
 import { blockUser } from "@/apis/block";
+import { requestStudentIdDisclosure } from "@/apis/studentIdDisclosure";
 import { isAxiosError } from "axios";
 
 type Sheet = "profile" | "create" | null;
@@ -26,12 +27,28 @@ export default function ChatMembersPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const partnerName = location.state?.partnerName ?? "상대방";
-  const sourceRoomName = location.state?.roomName as string | undefined;
+  const partnerProfileImageUrl =
+    location.state?.partnerProfileImageUrl ?? undefined;
+  const routePartnerId = Number(location.state?.partnerId) || null;
   const { userInfo } = useUserStore();
   const isOpenChatRoom = chatType === "open" || chatType === "personal";
 
   const [participants, setParticipants] = useState<OpenChatParticipant[]>([]);
-  const [loading, setLoading] = useState(isOpenChatRoom);
+  const [directChatPartner, setDirectChatPartner] =
+    useState<OpenChatParticipant | null>(
+      routePartnerId
+        ? {
+            userId: routePartnerId,
+            nickname: partnerName,
+            joinedAt: "",
+            isHost: false,
+            isAdmin: false,
+          }
+        : null,
+    );
+  const [loading, setLoading] = useState(
+    isOpenChatRoom || chatType === "roommate",
+  );
   const [activeSheet, setActiveSheet] = useState<Sheet>(null);
   const [selectedUser, setSelectedUser] = useState<OpenChatParticipant | null>(
     null,
@@ -43,18 +60,40 @@ export default function ChatMembersPage() {
   const [submitting, setSubmitting] = useState(false);
 
   const fetchParticipants = useCallback(async () => {
-    if (!isOpenChatRoom) return;
+    if (!isOpenChatRoom && chatType !== "roommate") return;
     setLoading(true);
     try {
-      const response = await getOpenChatParticipants(roomId);
-      setParticipants(response.data.participants);
+      if (chatType === "roommate") {
+        const response = await getRoommateChatRooms();
+        const currentRoom = response.data.find(
+          (room) => room.chatRoomId === roomId,
+        );
+
+        if (currentRoom) {
+          setDirectChatPartner({
+            userId: currentRoom.partnerId,
+            nickname:
+              currentRoom.partnerName ||
+              currentRoom.opponentNickname ||
+              partnerName,
+            joinedAt: "",
+            isHost: false,
+            isAdmin: false,
+          });
+        }
+      } else {
+        const response = await getOpenChatParticipants(roomId);
+        setParticipants(response.data.participants);
+      }
     } catch (error) {
       console.error("참여자 목록 조회 실패:", error);
-      alert("참여자 목록을 불러오지 못했습니다.");
+      if (chatType !== "roommate" || !routePartnerId) {
+        alert("참여자 목록을 불러오지 못했습니다.");
+      }
     } finally {
       setLoading(false);
     }
-  }, [isOpenChatRoom, roomId]);
+  }, [chatType, isOpenChatRoom, partnerName, routePartnerId, roomId]);
 
   useEffect(() => {
     fetchParticipants();
@@ -130,40 +169,6 @@ export default function ChatMembersPage() {
     }
   };
 
-  const handleRequestStudentIdDisclosure = async () => {
-    if (!selectedUser || submitting) return;
-    if (
-      !window.confirm(
-        `${selectedUser.nickname}님에게 학번 공개를 요청할까요?`,
-      )
-    ) {
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      const response = await requestStudentIdDisclosure(
-        roomId,
-        selectedUser.userId,
-      );
-      navigate(`/chat/open/${roomId}`, {
-        replace: true,
-        state: {
-          partnerId: selectedUser.userId,
-          disclosureRequestId: response.data.requestId,
-          roomName: sourceRoomName,
-        },
-      });
-    } catch (error) {
-      console.error("오픈채팅 학번 공개 요청 실패:", error);
-      alert(
-        "학번 공개 요청에 실패했습니다. 이미 요청을 보냈거나 처리 중일 수 있습니다.",
-      );
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   const handleBlockUser = async () => {
     if (!selectedUser || submitting) return;
 
@@ -204,6 +209,47 @@ export default function ChatMembersPage() {
     }
   };
 
+  const handleRequestStudentIdDisclosure = async () => {
+    if (
+      !selectedUser ||
+      submitting ||
+      (chatType !== "personal" && chatType !== "roommate")
+    ) {
+      return;
+    }
+
+    if (
+      !window.confirm(`${selectedUser.nickname}님에게 학번 공유를 요청할까요?`)
+    ) {
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const response = await requestStudentIdDisclosure(
+        roomId,
+        selectedUser.userId,
+      );
+
+      navigate(`/chat/${chatType}/${roomId}`, {
+        replace: true,
+        state: {
+          partnerName: selectedUser.nickname,
+          partnerId: selectedUser.userId,
+          partnerProfileImageUrl,
+          disclosureRequestId: response.data.requestId,
+        },
+      });
+    } catch (error) {
+      console.error("학번 공유 요청 실패:", error);
+      alert(
+        "학번 공유 요청에 실패했습니다. 이미 요청을 보냈거나 처리 중일 수 있습니다.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleTransferHost = async () => {
     if (!selectedUser || submitting) return;
     if (!window.confirm(`${selectedUser.nickname}님에게 방장을 위임할까요?`))
@@ -239,7 +285,7 @@ export default function ChatMembersPage() {
       return;
     }
 
-    if (me?.isHost && others.length > 0) {
+    if (chatType === "open" && me?.isHost && others.length > 0) {
       setLeavePromptOpen(true);
       return;
     }
@@ -304,8 +350,19 @@ export default function ChatMembersPage() {
               <ParticipantCard $selectable={false}>
                 <ParticipantName>나</ParticipantName>
               </ParticipantCard>
-              <ParticipantCard $selectable={false}>
-                <ParticipantName>{partnerName}</ParticipantName>
+              <ParticipantCard
+                as="button"
+                type="button"
+                $selectable={Boolean(directChatPartner)}
+                disabled={!directChatPartner || submitting}
+                onClick={() =>
+                  directChatPartner && handleUserClick(directChatPartner)
+                }
+              >
+                <ParticipantName>
+                  {directChatPartner?.nickname || partnerName}
+                </ParticipantName>
+                {directChatPartner && <ChevronRight size={18} color="#555" />}
               </ParticipantCard>
             </ParticipantList>
           </Section>
@@ -336,43 +393,60 @@ export default function ChatMembersPage() {
             {selectedUser && (
               <SheetBody>
                 <Drawer.Title>{selectedUser.nickname}</Drawer.Title>
-                <Drawer.Description>1긱 오픈채팅 참여중</Drawer.Description>
+                <Drawer.Description>
+                  {chatType === "open"
+                    ? "1긱 오픈채팅 참여중"
+                    : chatType === "roommate"
+                      ? "룸메이트 채팅 참여중"
+                      : "1:1 채팅 참여중"}
+                </Drawer.Description>
                 <SheetButtons>
-                  {chatType === "open" && (
-                    <>
-                      <DisclosureButton
+                  {chatType === "open" ? (
+                    <ProfileActionRow>
+                      <BlockButton
+                        type="button"
+                        disabled={submitting}
+                        onClick={handleBlockUser}
+                      >
+                        {submitting ? "처리 중..." : "차단하기"}
+                      </BlockButton>
+                      <PrimaryButton
+                        type="button"
+                        disabled={submitting}
+                        onClick={() => {
+                          setRoomName("");
+                          setRoomPassword("");
+                          setActiveSheet("create");
+                        }}
+                      >
+                        1:1 채팅하기
+                      </PrimaryButton>
+                    </ProfileActionRow>
+                  ) : (
+                    <ProfileActionRow>
+                      <BlockButton
+                        type="button"
+                        disabled={submitting}
+                        onClick={handleBlockUser}
+                      >
+                        {submitting ? "처리 중..." : "차단하기"}
+                      </BlockButton>
+                      <PrimaryButton
                         type="button"
                         disabled={submitting}
                         onClick={handleRequestStudentIdDisclosure}
                       >
-                        학번 공개 요청
-                      </DisclosureButton>
-                      <ProfileActionRow>
-                        <BlockButton
-                          type="button"
-                          disabled={submitting}
-                          onClick={handleBlockUser}
-                        >
-                          {submitting ? "처리 중..." : "차단하기"}
-                        </BlockButton>
-                        <PrimaryButton
-                          type="button"
-                          disabled={submitting}
-                          onClick={() => {
-                            setRoomName(`${selectedUser.nickname}님과의 대화`);
-                            setActiveSheet("create");
-                          }}
-                        >
-                          1:1 채팅하기
-                        </PrimaryButton>
-                      </ProfileActionRow>
-                    </>
+                        {submitting ? "처리 중..." : "학번 공유하기"}
+                      </PrimaryButton>
+                    </ProfileActionRow>
                   )}
-                  {me?.isHost && !selectedUser.isHost && (
-                    <DarkButton onClick={handleTransferHost}>
-                      방장 위임하기
-                    </DarkButton>
-                  )}
+                  {chatType === "open" &&
+                    me?.isHost &&
+                    !selectedUser.isHost && (
+                      <DarkButton onClick={handleTransferHost}>
+                        방장 위임하기
+                      </DarkButton>
+                    )}
                 </SheetButtons>
               </SheetBody>
             )}
@@ -398,6 +472,7 @@ export default function ChatMembersPage() {
                 <label>방 이름</label>
                 <input
                   value={roomName}
+                  placeholder="방 이름을 입력해주세요"
                   maxLength={30}
                   onChange={(event) => setRoomName(event.target.value)}
                 />
@@ -643,10 +718,6 @@ const BlockButton = styled.button`
     cursor: default;
     opacity: 0.5;
   }
-`;
-const DisclosureButton = styled(PrimaryButton)`
-  background: #eef5ff;
-  color: #1677ff;
 `;
 const DarkButton = styled(PrimaryButton)`
   background: #0958d9;
