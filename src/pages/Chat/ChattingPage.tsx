@@ -175,26 +175,7 @@ export default function ChattingPage() {
   const [selectedMessage, setSelectedMessage] = useState<MessageType | null>(
     null,
   );
-  const [searchParams, setSearchParams] = useSearchParams();
-  const selectedImageUrl = searchParams.get("viewImg")
-    ? decodeURIComponent(searchParams.get("viewImg")!)
-    : null;
-
-  const handleImageClick = (url: string) => {
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
-      next.set("viewImg", encodeURIComponent(url));
-      return next;
-    });
-  };
-
-  const handleCloseImageModal = () => {
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
-      next.delete("viewImg");
-      return next;
-    });
-  };
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
   const [isOpenChatHost, setIsOpenChatHost] = useState(false);
   const menuContainerRef = useRef<HTMLDivElement>(null);
 
@@ -1016,7 +997,7 @@ export default function ChattingPage() {
                       content={msg.content}
                       time={msg.time}
                       imageUrls={msg.imageUrls}
-                      onImageClick={handleImageClick}
+                      onImageClick={(url) => setSelectedImageUrl(url)}
                     />
                   ) : (
                     <ChatItemOtherPerson
@@ -1030,7 +1011,7 @@ export default function ChattingPage() {
                       }
                       imageUrls={msg.imageUrls}
                       onMessageClick={() => openMessageActions(msg)}
-                      onImageClick={handleImageClick}
+                      onImageClick={(url) => setSelectedImageUrl(url)}
                     />
                   )}
                 </React.Fragment>
@@ -1109,7 +1090,7 @@ export default function ChattingPage() {
 
       <ImageViewerModal
         imageUrl={selectedImageUrl}
-        onClose={handleCloseImageModal}
+        onClose={() => setSelectedImageUrl(null)}
       />
     </S.ChatPageWrapper>
   );

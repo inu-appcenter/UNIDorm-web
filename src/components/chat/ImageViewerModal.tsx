@@ -10,7 +10,7 @@ export default function ImageViewerModal({ imageUrl, onClose }: Props) {
   if (!imageUrl) return null;
 
   return (
-    <Overlay onClick={onClose}>
+    <Overlay>
       <CloseButton onClick={onClose} aria-label="닫기">
         <X size={24} color="#ffffff" />
       </CloseButton>
