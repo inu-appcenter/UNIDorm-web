@@ -11,10 +11,11 @@ export default function ImageViewerModal({ imageUrl, onClose }: Props) {
   useEffect(() => {
     if (!imageUrl) return;
 
-    // 히스토리에 현재 모달 상태 push (뒤로가기 키 대응)
-    window.history.pushState({ imageViewerOpen: true }, "");
+    // 히스토리 가짜 엔트리 추가
+    window.history.pushState({ modalOpen: true }, "");
 
     const handlePopState = () => {
+      // 브라우저/네이티브 뒤로가기 실행 시 모달 닫기
       onClose();
     };
 
@@ -22,18 +23,23 @@ export default function ImageViewerModal({ imageUrl, onClose }: Props) {
 
     return () => {
       window.removeEventListener("popstate", handlePopState);
-      // 모달이 수동 닫힘(X 버튼이나 배경 클릭)으로 해제될 때 추가했던 히스토리 back 처리
-      if (window.history.state?.imageViewerOpen) {
-        window.history.back();
-      }
     };
   }, [imageUrl, onClose]);
+
+  const handleClose = () => {
+    // 버튼/배경 직접 클릭으로 닫힐 때는 생성했던 history state 제거를 위해 back 실행
+    if (window.history.state?.modalOpen) {
+      window.history.back();
+    } else {
+      onClose();
+    }
+  };
 
   if (!imageUrl) return null;
 
   return (
-    <Overlay onClick={onClose}>
-      <CloseButton onClick={onClose} aria-label="닫기">
+    <Overlay onClick={handleClose}>
+      <CloseButton onClick={handleClose} aria-label="닫기">
         <X size={24} color="#ffffff" />
       </CloseButton>
       <ImageContainer onClick={(e) => e.stopPropagation()}>
