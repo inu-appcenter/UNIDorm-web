@@ -1,5 +1,6 @@
 import styled from "styled-components";
 import profile from "../../assets/profileimg.png";
+import { useLongPress } from "@/hooks/useLongPress";
 
 type Props = {
   content: string;
@@ -18,9 +19,16 @@ const ChatItemOtherPerson = ({
   imageUrls,
   onMessageClick,
 }: Props) => {
+  const longPressHandlers = useLongPress({
+    onLongPress: () => {
+      if (onMessageClick) onMessageClick();
+    },
+    delay: 500,
+  });
+
   return (
     <ChatItemOtherPersonWrapper
-      onClick={onMessageClick}
+      {...(onMessageClick ? longPressHandlers : {})}
       $clickable={Boolean(onMessageClick)}
     >
       <ProfileImg
