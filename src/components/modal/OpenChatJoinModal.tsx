@@ -5,8 +5,7 @@ interface Props {
   isOpen: boolean;
   room: OpenChatRoom | null;
   onClose: () => void;
-  onJoin: () => Promise<boolean>;
-  isJoining?: boolean;
+  onJoin: () => void;
 }
 
 export default function OpenChatJoinModal({
@@ -14,7 +13,6 @@ export default function OpenChatJoinModal({
   room,
   onClose,
   onJoin,
-  isJoining = false,
 }: Props) {
   if (!isOpen || !room) return null;
 
@@ -32,12 +30,12 @@ export default function OpenChatJoinModal({
         </InfoGroup>
 
         <ButtonRow>
-          <CancelButton type="button" onClick={onClose} disabled={isJoining}>
+          <CancelButton type="button" onClick={onClose}>
             취소
           </CancelButton>
 
-          <JoinButton type="button" onClick={onJoin} disabled={isJoining}>
-            {isJoining ? "참여 중..." : "참여하기"}
+          <JoinButton type="button" onClick={onJoin}>
+            참여하기
           </JoinButton>
         </ButtonRow>
       </ModalBox>
@@ -106,11 +104,6 @@ const BaseButton = styled.button`
   font-size: 15px;
   font-weight: 900;
   cursor: pointer;
-
-  &:disabled {
-    cursor: default;
-    opacity: 0.6;
-  }
 `;
 
 const CancelButton = styled(BaseButton)`

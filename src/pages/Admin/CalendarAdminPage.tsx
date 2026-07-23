@@ -101,7 +101,7 @@ const CalendarAdminPage: React.FC = () => {
     let linked = 0;
 
     calendarList.forEach((item) => {
-      if (item.link?.trim()) {
+      if (item.link.trim()) {
         linked += 1;
       }
 
@@ -134,7 +134,7 @@ const CalendarAdminPage: React.FC = () => {
     setSelectedItem(item);
     setFormData({
       title: item.title,
-      link: item.link ?? "",
+      link: item.link,
       startDate: item.startDate,
       endDate: item.endDate,
     });
@@ -284,7 +284,7 @@ const CalendarAdminPage: React.FC = () => {
                             </EventBadgeGroup>
                           </EventHeader>
 
-                          {item.link?.trim() && (
+                          {item.link.trim() && (
                             <EventLink>
                               <Link2 size={16} />
                               {getDomainLabel(item.link)}

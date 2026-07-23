@@ -1,4 +1,6 @@
 import styled from "styled-components";
+import RoundSquareButton from "../button/RoundSquareButton.tsx";
+import { FaHeart, FaRegHeart } from "react-icons/fa";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { createRoommateChatRoom } from "@/apis/chat";
@@ -9,9 +11,6 @@ import {
   unlikeRoommateBoard,
 } from "@/apis/roommate";
 import { useQueryClient } from "@tanstack/react-query";
-import { isAxiosError } from "axios";
-import { colors, typography } from "@/styles/tokens";
-import HeartToggleButton from "@/components/common/HeartToggleButton";
 
 const RoomMateBottomBar = ({
   partnerName,
@@ -27,7 +26,6 @@ const RoomMateBottomBar = ({
   const isLoggedIn = Boolean(tokenInfo.accessToken);
 
   const [liked, setLiked] = useState<boolean>(false);
-  const [isLikeSubmitting, setIsLikeSubmitting] = useState(false);
   const navigate = useNavigate();
 
   // 좋아요 상태 초기값 세팅이 필요하면 API로 받아오는 로직 추가 가능
@@ -37,18 +35,16 @@ const RoomMateBottomBar = ({
         const response = await getRoommateLiked(Number(boardId));
         console.log(response);
         setLiked(response.data);
-      } catch (error) {
+      } catch (error: any) {
         console.log("좋아요 정보를 가져오는 중 오류가 발생했습니다.", error);
       }
     };
     if (isLoggedIn && boardId) {
       fetchisLiked();
     }
-  }, [boardId, isLoggedIn]);
+  }, [boardId]);
 
   const handleLikeClick = async () => {
-    if (isLikeSubmitting) return;
-
     if (!isLoggedIn) {
       alert("로그인 후 이용해주세요.");
       navigate("/login");
@@ -57,8 +53,6 @@ const RoomMateBottomBar = ({
     if (!boardId) return;
 
     try {
-      setIsLikeSubmitting(true);
-
       if (!liked) {
         // 좋아요 추가
         const res = await likeRoommateBoard(Number(boardId));
@@ -77,11 +71,8 @@ const RoomMateBottomBar = ({
       await queryClient.invalidateQueries({
         queryKey: ["roommates", "scroll"],
       });
-      await queryClient.invalidateQueries({
-        queryKey: ["memberLikePosts"],
-      });
-    } catch (error) {
-      if (isAxiosError(error) && error.response) {
+    } catch (error: any) {
+      if (error.response) {
         const code = error.response.status;
         if (code === 401) {
           alert("이미 좋아요를 누른 상태입니다.");
@@ -94,8 +85,6 @@ const RoomMateBottomBar = ({
         alert("서버와 통신할 수 없습니다.");
       }
       console.error(error);
-    } finally {
-      setIsLikeSubmitting(false);
     }
   };
 
@@ -128,16 +117,13 @@ const RoomMateBottomBar = ({
 
   return (
     <RoomMateBottomBarWrapper>
-      <MessageButton type="button" onClick={handleChatClick}>
-        메시지 보내기
-      </MessageButton>
+      <HeartIconWrapper onClick={handleLikeClick}>
+        {liked ? <FaHeart color="red" size={24} /> : <FaRegHeart size={24} />}
+      </HeartIconWrapper>
 
-      <HeartToggleButton
-        onClick={handleLikeClick}
-        aria-label={liked ? "좋아요 취소" : "좋아요"}
-        liked={liked}
-        disabled={isLikeSubmitting}
-      />
+      <ChatButtonWrapper onClick={handleChatClick}>
+        <RoundSquareButton btnName={"채팅하기"} />
+      </ChatButtonWrapper>
     </RoomMateBottomBarWrapper>
   );
 };
@@ -147,32 +133,29 @@ export default RoomMateBottomBar;
 const RoomMateBottomBarWrapper = styled.div`
   width: 100%;
   height: 64px;
-  padding: 8px 13px;
+  padding: 8px 16px;
   box-sizing: border-box;
+  border-top: rgba(0, 0, 0, 0.1) 0.5px solid;
+
   position: fixed;
   bottom: 0;
   left: 0;
+
   display: flex;
+  flex-direction: row;
   align-items: center;
-  justify-content: center;
-  gap: 12px;
-  background: rgba(247, 247, 247, 0.9);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  z-index: 100;
+  gap: 16px;
+
+  background: rgba(244, 244, 244, 0.6); /* 반투명 */
+  backdrop-filter: blur(10px); /* 블러 효과 */
+  -webkit-backdrop-filter: blur(10px); /* Safari 지원 */
 `;
 
-const MessageButton = styled.button`
-  ${typography.label1Normal}
-  height: 40px;
-  min-width: 0;
-  padding: 8px 16px;
-  border: 0;
-  border-radius: 32px;
-  background: ${colors.gray.gray0};
-  box-shadow: 0 2px 5px ${colors.gray.gray200};
-  color: ${colors.gray.gray400};
-  text-align: left;
-  flex: 1 1 auto;
+const HeartIconWrapper = styled.div`
+  flex-shrink: 0;
   cursor: pointer;
+`;
+
+const ChatButtonWrapper = styled.div`
+  flex-grow: 1;
 `;

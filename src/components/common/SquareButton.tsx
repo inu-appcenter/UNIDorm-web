@@ -1,19 +1,14 @@
 import styled, { css } from "styled-components";
 import React from "react";
-import { colors, typography } from "@/styles/tokens";
 
 type ButtonProps = React.ComponentProps<"button">;
-type SquareButtonVariant =
-  | "primary"
-  | "primaryDark"
-  | "secondary"
-  | "destructive";
 
 interface SquareButtonProps extends Omit<ButtonProps, "disabled" | "onClick"> {
   text: string;
   disabled?: boolean;
   onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void;
-  variant?: SquareButtonVariant;
+  // 버튼 스타일을 결정하는 variant (기본값: primary)
+  variant?: "primary" | "secondary";
 }
 
 const SquareButton = ({
@@ -40,59 +35,34 @@ const SquareButton = ({
 export default SquareButton;
 
 const SquareButtonWrapper = styled.button<
-  ButtonProps & { disabled?: boolean; $variant: SquareButtonVariant }
+  ButtonProps & { disabled?: boolean; $variant: "primary" | "secondary" }
 >`
   width: 100%;
-  height: 48px;
-  min-width: 0;
-  padding: 12px 16px;
-  border: 0;
+  min-height: 56px;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
   border-radius: 8px;
-  box-sizing: border-box;
-  ${typography.body1Normal}
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  white-space: nowrap;
   cursor: ${({ disabled }) => (disabled ? "not-allowed" : "pointer")};
-  transition:
-    background-color 0.2s ease,
-    color 0.2s ease;
+  transition: all 0.2s ease;
 
+  /* Variant에 따른 스타일 분기 */
   ${({ $variant, disabled }) =>
-    disabled || $variant === "secondary"
+    $variant === "primary"
       ? css`
-          background-color: ${colors.gray.gray50};
-          color: ${colors.text.text3};
-
-          &:hover:not(:disabled) {
-            background-color: ${colors.gray.gray100};
+          /* 메인: 파란색 (#0A84FF) */
+          background-color: ${disabled ? "#8E8E93" : "#0A84FF"};
+          color: white;
+          &:hover {
+            background-color: ${disabled ? "#8E8E93" : "#006fe0"};
           }
         `
-      : $variant === "destructive"
-        ? css`
-            background-color: ${colors.gray.gray50};
-            color: ${colors.status.destructive};
-
-            &:hover:not(:disabled) {
-              background-color: ${colors.gray.gray100};
-            }
-          `
-        : $variant === "primaryDark"
-          ? css`
-              background-color: ${colors.main.main2};
-              color: ${colors.gray.gray0};
-
-              &:hover:not(:disabled) {
-                background-color: ${colors.blue.blue800};
-              }
-            `
-          : css`
-              background-color: ${colors.main.main1};
-              color: ${colors.gray.gray0};
-
-              &:hover:not(:disabled) {
-                background-color: ${colors.main.main2};
-              }
-            `}
+      : css`
+          /* 보조: 연회색 */
+          background-color: ${disabled ? "#f0f0f0" : "#f5f5f5"};
+          color: #666666;
+          &:hover {
+            background-color: ${disabled ? "#f0f0f0" : "#e0e0e0"};
+          }
+        `}
 `;

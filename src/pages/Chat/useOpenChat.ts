@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import useUserStore from "../../stores/useUserStore.ts";
-import type { OpenChatMessage } from "@/types/openchat";
 
 interface OpenChatMessagePayload {
   roomId: number;
@@ -11,7 +10,7 @@ interface UseOpenChatProps {
   roomId: number;
   userId: number;
   token?: string;
-  onMessage: (msg: OpenChatMessage) => void;
+  onMessage: (msg: any) => void;
   onConnect?: () => void;
   onDisconnect?: () => void;
 }
@@ -29,12 +28,10 @@ export const useOpenChat = ({
   const wsRef = useRef<WebSocket | null>(null);
   const [connected, setConnected] = useState(false);
   const subscriptions = useRef<string[]>([]);
-  const callbacks = useRef<
-    Record<string, (msg: OpenChatMessage) => void>
-  >({});
+  const callbacks = useRef<Record<string, (msg: any) => void>>({});
   const pendingSubscriptions = useRef<string[]>([]);
 
-  const stompSend = (destination: string, body: unknown) => {
+  const stompSend = (destination: string, body: any) => {
     if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
       console.warn("❌ WebSocket is not connected.");
       return;
@@ -127,10 +124,7 @@ export const useOpenChat = ({
     subscriptions.current.push(destination);
   };
 
-  const subscribe = (
-    destination: string,
-    callback: (msg: OpenChatMessage) => void,
-  ) => {
+  const subscribe = (destination: string, callback: (msg: any) => void) => {
     if (subscriptions.current.includes(destination)) return;
 
     callbacks.current[destination] = callback;

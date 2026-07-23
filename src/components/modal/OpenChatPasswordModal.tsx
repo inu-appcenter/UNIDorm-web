@@ -6,8 +6,7 @@ interface Props {
   isOpen: boolean;
   room: OpenChatRoom | null;
   onClose: () => void;
-  onJoin: (password: string) => Promise<boolean>;
-  isJoining?: boolean;
+  onJoin: (password: string) => void;
 }
 
 export default function OpenChatPasswordModal({
@@ -15,7 +14,6 @@ export default function OpenChatPasswordModal({
   room,
   onClose,
   onJoin,
-  isJoining = false,
 }: Props) {
   const [password, setPassword] = useState("");
 
@@ -26,11 +24,9 @@ export default function OpenChatPasswordModal({
     onClose();
   };
 
-  const handleJoin = async () => {
-    if (!password.trim() || isJoining) return;
-
-    const joined = await onJoin(password.trim());
-    if (joined) setPassword("");
+  const handleJoin = () => {
+    onJoin(password);
+    setPassword("");
   };
 
   return (
@@ -48,25 +44,16 @@ export default function OpenChatPasswordModal({
             onChange={(e) => setPassword(e.target.value)}
             placeholder="비밀번호 입력"
             type="password"
-            disabled={isJoining}
           />
         </InfoGroup>
 
         <ButtonRow>
-          <CancelButton
-            type="button"
-            onClick={handleClose}
-            disabled={isJoining}
-          >
+          <CancelButton type="button" onClick={handleClose}>
             닫기
           </CancelButton>
 
-          <JoinButton
-            type="button"
-            onClick={handleJoin}
-            disabled={!password.trim() || isJoining}
-          >
-            {isJoining ? "입장 중..." : "입장하기"}
+          <JoinButton type="button" onClick={handleJoin}>
+            입장하기
           </JoinButton>
         </ButtonRow>
       </ModalBox>
@@ -144,11 +131,6 @@ const BaseButton = styled.button`
   font-size: 15px;
   font-weight: 900;
   cursor: pointer;
-
-  &:disabled {
-    cursor: default;
-    opacity: 0.6;
-  }
 `;
 
 const CancelButton = styled(BaseButton)`

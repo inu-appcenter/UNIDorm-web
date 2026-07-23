@@ -26,7 +26,7 @@ export default function OpenChatCreatePage() {
     try {
       setIsSubmitting(true);
 
-      const response = await createOpenChatRoom({
+      await createOpenChatRoom({
         name: name.trim(),
         description: description.trim(),
         scope,
@@ -34,10 +34,7 @@ export default function OpenChatCreatePage() {
         isPublic: true,
       });
 
-      navigate(`/chat/open/${response.data.roomId}`, {
-        replace: true,
-        state: { roomName: response.data.name },
-      });
+      navigate("/chat/open", { replace: true });
     } catch (error) {
       console.error("오픈채팅방 생성 실패", error);
     } finally {
