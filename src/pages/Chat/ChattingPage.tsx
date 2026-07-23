@@ -27,7 +27,6 @@ import {
   Info,
   ArrowRight,
   CheckCircle2,
-  XCircle,
 } from "lucide-react";
 import * as S from "./ChattingPage.styles";
 import {
