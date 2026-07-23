@@ -318,6 +318,7 @@ export const ShareCardSubtitle = styled.div`
 
 export const ShareCardButtonGroup = styled.div`
   display: flex;
+  justify-content: flex-end;
   gap: 12px;
 `;
 
