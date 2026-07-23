@@ -19,6 +19,7 @@ import { createReport } from "@/apis/report";
 import { OpenChatKickReason, OpenChatMessage } from "@/types/openchat";
 import PhotoAttachmentBottomSheet from "@/components/chat/PhotoAttachmentBottomSheet";
 import ChatMessageActionSheet from "@/components/chat/ChatMessageActionSheet";
+import ImageViewerModal from "@/components/chat/ImageViewerModal";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import {
@@ -174,6 +175,7 @@ export default function ChattingPage() {
   const [selectedMessage, setSelectedMessage] = useState<MessageType | null>(
     null,
   );
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
   const [isOpenChatHost, setIsOpenChatHost] = useState(false);
   const menuContainerRef = useRef<HTMLDivElement>(null);
 
@@ -995,6 +997,7 @@ export default function ChattingPage() {
                       content={msg.content}
                       time={msg.time}
                       imageUrls={msg.imageUrls}
+                      onImageClick={(url) => setSelectedImageUrl(url)}
                     />
                   ) : (
                     <ChatItemOtherPerson
@@ -1008,6 +1011,7 @@ export default function ChattingPage() {
                       }
                       imageUrls={msg.imageUrls}
                       onMessageClick={() => openMessageActions(msg)}
+                      onImageClick={(url) => setSelectedImageUrl(url)}
                     />
                   )}
                 </React.Fragment>
@@ -1082,6 +1086,11 @@ export default function ChattingPage() {
         canKick={isOpenChatHost}
         onReport={handleReportMessage}
         onKick={handleKickSender}
+      />
+
+      <ImageViewerModal
+        imageUrl={selectedImageUrl}
+        onClose={() => setSelectedImageUrl(null)}
       />
     </S.ChatPageWrapper>
   );

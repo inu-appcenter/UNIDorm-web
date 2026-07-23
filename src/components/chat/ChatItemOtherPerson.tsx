@@ -9,6 +9,7 @@ type Props = {
   senderName?: string;
   imageUrls?: string[];
   onMessageClick?: () => void;
+  onImageClick?: (url: string) => void;
 };
 
 const ChatItemOtherPerson = ({
@@ -18,6 +19,7 @@ const ChatItemOtherPerson = ({
   senderName,
   imageUrls,
   onMessageClick,
+  onImageClick,
 }: Props) => {
   const longPressHandlers = useLongPress({
     onLongPress: () => {
@@ -44,7 +46,17 @@ const ChatItemOtherPerson = ({
             $clickable={Boolean(onMessageClick)}
           >
             {imageUrls.map((url) => (
-              <img key={url} src={url} alt="첨부 사진" />
+              <img
+                key={url}
+                src={url}
+                alt="첨부 사진"
+                onClick={(e) => {
+                  if (onImageClick) {
+                    e.stopPropagation();
+                    onImageClick(url);
+                  }
+                }}
+              />
             ))}
           </ImageGrid>
         ) : (

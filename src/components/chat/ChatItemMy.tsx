@@ -5,9 +5,10 @@ type Props = {
   time: string;
   imageUrls?: string[];
   onMessageClick?: () => void;
+  onImageClick?: (url: string) => void;
 };
 
-const ChatItemMy = ({ content, time, imageUrls, onMessageClick }: Props) => {
+const ChatItemMy = ({ content, time, imageUrls, onMessageClick, onImageClick }: Props) => {
   return (
     <ChatItemMyWrapper
       onClick={onMessageClick}
@@ -17,7 +18,17 @@ const ChatItemMy = ({ content, time, imageUrls, onMessageClick }: Props) => {
         {imageUrls?.length ? (
           <ImageGrid>
             {imageUrls.map((url) => (
-              <img key={url} src={url} alt="첨부 사진" />
+              <img
+                key={url}
+                src={url}
+                alt="첨부 사진"
+                onClick={(e) => {
+                  if (onImageClick) {
+                    e.stopPropagation();
+                    onImageClick(url);
+                  }
+                }}
+              />
             ))}
           </ImageGrid>
         ) : (
@@ -58,6 +69,7 @@ const ImageGrid = styled.div`
     max-height: 220px;
     object-fit: cover;
     display: block;
+    cursor: pointer;
   }
   img:only-child {
     grid-column: 1 / -1;
