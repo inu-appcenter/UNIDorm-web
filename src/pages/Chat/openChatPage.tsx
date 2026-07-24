@@ -123,80 +123,108 @@ export default function OpenChatPage() {
   const [roommateUnreadTotal, setRoommateUnreadTotal] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const fillMissingPersonalLastMessages = async (chatRooms: OpenChatRoom[]) =>
-    Promise.all(
-      chatRooms.map(async (room) => {
-        const needsMessageFallback = !String(room.lastMessage ?? "").trim();
-        if (room.roomType !== "PERSONAL" || !needsMessageFallback) return room;
+  const fillMissingPersonalLastMessages = useCallback(
+    async (chatRooms: OpenChatRoom[]) =>
+      Promise.all(
+        chatRooms.map(async (room) => {
+          const needsMessageFallback = !String(room.lastMessage ?? "").trim();
+          if (room.roomType !== "PERSONAL" || !needsMessageFallback)
+            return room;
 
-        try {
-          const messagesResponse = await getOpenChatMessages(
-            room.roomId,
-            null,
-            1,
-          );
-          const latestMessage = messagesResponse.data.messages[0];
+          try {
+            const messagesResponse = await getOpenChatMessages(
+              room.roomId,
+              null,
+              1,
+            );
+            const latestMessage = messagesResponse.data.messages[0];
 
-          return {
-            ...room,
-            lastMessage: latestMessage?.content || "",
-            lastMessageAt: latestMessage?.createdAt || room.lastMessageAt,
-          };
-        } catch (error) {
-          console.error("개인 채팅 최신 메시지 조회 실패:", error);
-          return room;
-        }
-      }),
-    );
+            return {
+              ...room,
+              lastMessage: latestMessage?.content || "",
+              lastMessageAt: latestMessage?.createdAt || room.lastMessageAt,
+            };
+          } catch (error) {
+            console.error("개인 채팅 최신 메시지 조회 실패:", error);
+            return room;
+          }
+        }),
+      ),
+    [],
+  );
 
-  const fetchChatRooms = async () => {
-    if (!isLoggedIn) {
-      setRooms([]);
-      setRoommateRooms([]);
-      setRoommateUnreadTotal(0);
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      if (selectedTab === "MY") {
-        const [openChatRes, roommateChatRes, unreadRes] = await Promise.all([
-          getOpenChatRooms("MY", 0, 20, searchQuery || undefined),
-          getRoommateChatRooms(),
-          getAllRoommateChatUnreadCount(),
-        ]);
-        const openChatRooms = openChatRes.data.content.filter(
-          (room) => room.chatCategory === "OPEN_CHAT",
-        );
-        setRooms(await fillMissingPersonalLastMessages(openChatRooms));
-        setRoommateRooms(roommateChatRes.data);
-        setRoommateUnreadTotal(unreadRes.data);
-      } else {
+  const fetchChatRooms = useCallback(
+    async ({ silent = false }: { silent?: boolean } = {}) => {
+      if (!isLoggedIn) {
+        setRooms([]);
         setRoommateRooms([]);
-        const [openChatRes, unreadRes] = await Promise.all([
-          getOpenChatRooms(selectedTab, 0, 20, searchQuery || undefined),
-          getAllRoommateChatUnreadCount(),
-        ]);
-        setRooms(
-          openChatRes.data.content.filter(
-            (room) => room.chatCategory === "OPEN_CHAT",
-          ),
-        );
-        setRoommateUnreadTotal(unreadRes.data);
+        setRoommateUnreadTotal(0);
+        return;
       }
-    } catch (error) {
-      console.error("채팅방 목록 조회 실패", error);
-      setRooms([]);
-      setRoommateRooms([]);
-      setRoommateUnreadTotal(0);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+
+      try {
+        if (!silent) setIsLoading(true);
+        if (selectedTab === "MY") {
+          const [openChatRes, roommateChatRes, unreadRes] = await Promise.all([
+            getOpenChatRooms("MY", 0, 20, searchQuery || undefined),
+            getRoommateChatRooms(),
+            getAllRoommateChatUnreadCount(),
+          ]);
+          const openChatRooms = openChatRes.data.content.filter(
+            (room) => room.chatCategory === "OPEN_CHAT",
+          );
+          setRooms(await fillMissingPersonalLastMessages(openChatRooms));
+          setRoommateRooms(roommateChatRes.data);
+          setRoommateUnreadTotal(unreadRes.data);
+        } else {
+          setRoommateRooms([]);
+          const [openChatRes, unreadRes] = await Promise.all([
+            getOpenChatRooms(selectedTab, 0, 20, searchQuery || undefined),
+            getAllRoommateChatUnreadCount(),
+          ]);
+          setRooms(
+            openChatRes.data.content.filter(
+              (room) => room.chatCategory === "OPEN_CHAT",
+            ),
+          );
+          setRoommateUnreadTotal(unreadRes.data);
+        }
+      } catch (error) {
+        console.error("채팅방 목록 조회 실패", error);
+        setRooms([]);
+        setRoommateRooms([]);
+        setRoommateUnreadTotal(0);
+      } finally {
+        if (!silent) setIsLoading(false);
+      }
+    },
+    [fillMissingPersonalLastMessages, isLoggedIn, searchQuery, selectedTab],
+  );
 
   useEffect(() => {
-    fetchChatRooms();
-  }, [selectedTab, isLoggedIn, searchQuery]);
+    void fetchChatRooms();
+  }, [fetchChatRooms]);
+
+  useEffect(() => {
+    if (!isLoggedIn || selectedTab !== "MY") return;
+
+    const refreshSilently = () => {
+      void fetchChatRooms({ silent: true });
+    };
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") refreshSilently();
+    };
+
+    window.addEventListener("focus", refreshSilently);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    const refreshTimer = window.setInterval(refreshSilently, 10_000);
+
+    return () => {
+      window.removeEventListener("focus", refreshSilently);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.clearInterval(refreshTimer);
+    };
+  }, [fetchChatRooms, isLoggedIn, selectedTab]);
 
   const handleRoommateClick = async (
     chatRoomId: number,

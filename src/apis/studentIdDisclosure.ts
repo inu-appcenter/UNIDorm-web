@@ -2,7 +2,13 @@ import { AxiosResponse } from "axios";
 import tokenInstance from "./tokenInstance.ts";
 
 export interface StudentIdDisclosureStatus {
-  status: "NONE" | "REQUESTED" | "RECEIVED" | "ACCEPTED" | "REJECTED" | string;
+  status:
+    | "NONE"
+    | "PENDING_SENT"
+    | "PENDING_RECEIVED"
+    | "DISCLOSED"
+    | "REJECTED"
+    | string;
   requestId: number;
   targetStudentNumber: string | null;
 }

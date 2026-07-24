@@ -22,6 +22,7 @@ export interface RoommateChatRoom {
   myRoommate?: boolean;
   matched?: boolean;
   isRoommate?: boolean;
+  opponentLeft?: boolean;
 }
 
 export interface RoommateChat {
@@ -32,4 +33,5 @@ export interface RoommateChat {
   content: string;
   read: boolean;
   userImageUrl: string | null;
+  system?: boolean;
 }
