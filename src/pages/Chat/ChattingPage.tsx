@@ -683,6 +683,30 @@ export default function ChattingPage() {
 
           const response = await getRoommateChatHistory(roomId);
           const chats = response.data;
+          if (!oppId) {
+            const opponentMessage = chats.find(
+              (chat) => !chat.system && chat.userId !== userId,
+            );
+            if (opponentMessage) {
+              oppId = opponentMessage.userId;
+              opponentIdRef.current = opponentMessage.userId;
+
+              try {
+                const statusResponse = await getStudentIdDisclosureStatus(
+                  roomId,
+                  opponentMessage.userId,
+                );
+                fetchedRoommateDisclosureStatus = statusResponse.data;
+                setRoommateDisclosureStatus(statusResponse.data);
+                setOpponentStudentNumber(
+                  statusResponse.data.targetStudentNumber ?? "",
+                );
+              } catch (error) {
+                console.error("룸메이트 학번 공유 상태 조회 실패:", error);
+              }
+            }
+          }
+
           // 기존 API 데이터
           const formattedMessages: MessageType[] = chats.map((chat) => ({
             id: chat.roommateChatId,
