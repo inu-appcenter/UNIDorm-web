@@ -6,6 +6,7 @@ declare global {
         AndroidBridge?: {
             onRouteChange: (path: string) => void;
             requestAppUpdate: () => void;
+            onAppReady?: () => void;
         };
 
         // ✅ iOS WebKit 브릿지 정의

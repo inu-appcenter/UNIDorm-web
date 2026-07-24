@@ -152,13 +152,9 @@ export const useAppInit = () => {
       navigate(targetPath);
     };
 
-    // Cold Start 알림 유입 대응: URL query parameter 중 redirect 경로가 존재하면 자동 라우팅
-    const searchParams = new URLSearchParams(window.location.search);
-    const initialRedirect = searchParams.get("redirect");
-    if (initialRedirect) {
-      const cleanUrl = window.location.pathname;
-      window.history.replaceState({}, "", cleanUrl);
-      window.navigateToPath(initialRedirect);
+    // React 마운트 및 navigateToPath 준비 완료 신호를 네이티브로 전송 (Cold Start 딥링크 대응)
+    if (window.AndroidBridge?.onAppReady) {
+      window.AndroidBridge.onAppReady();
     }
 
     return () => {
