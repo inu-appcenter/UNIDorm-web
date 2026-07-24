@@ -272,7 +272,7 @@ export default function ChatMembersPage() {
       if (!window.confirm("정말 채팅방을 나갈까요?")) return;
       try {
         await deleteRoommateChatRoom(roomId);
-        navigate("/chat");
+        navigate("/chat", { replace: true });
       } catch (error) {
         console.error("채팅방 나가기 실패:", error);
         alert("채팅방 나가기에 실패했습니다.");

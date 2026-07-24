@@ -120,12 +120,20 @@ const parseLegacyRoommateShareMessage = (
   return { type: null, requestId: null };
 };
 
-const ACCEPTED_DISCLOSURE_STATUSES = new Set(["ACCEPTED", "APPROVED"]);
+const ACCEPTED_DISCLOSURE_STATUSES = new Set([
+  "DISCLOSED",
+  "ACCEPTED",
+  "APPROVED",
+]);
 const REJECTED_DISCLOSURE_STATUSES = new Set(["REJECTED", "DECLINED"]);
 const CANCELED_DISCLOSURE_STATUSES = new Set(["NONE", "CANCELED", "CANCELLED"]);
+const RECEIVED_DISCLOSURE_STATUSES = new Set(["PENDING_RECEIVED", "RECEIVED"]);
 
 const normalizeDisclosureStatus = (status?: string | null) =>
   status?.trim().toUpperCase() ?? "";
+
+const isReceivedDisclosureStatus = (status?: string | null) =>
+  RECEIVED_DISCLOSURE_STATUSES.has(normalizeDisclosureStatus(status));
 
 const isPendingDisclosureStatus = (status?: string | null) => {
   const normalizedStatus = normalizeDisclosureStatus(status);
@@ -344,6 +352,19 @@ export default function ChattingPage() {
     }
   };
 
+  const refreshRoommateDisclosureStatus = async () => {
+    const opponentId = opponentIdRef.current;
+    if (!opponentId) return;
+
+    try {
+      const response = await getStudentIdDisclosureStatus(roomId, opponentId);
+      setRoommateDisclosureStatus(response.data);
+      setOpponentStudentNumber(response.data.targetStudentNumber ?? "");
+    } catch (error) {
+      console.error("룸메이트 학번 공개 상태 조회 실패:", error);
+    }
+  };
+
   const handleCancelShare = async (requestId: number) => {
     if (processingDisclosureId !== null) return;
     setProcessingDisclosureId(requestId);
@@ -357,12 +378,14 @@ export default function ChattingPage() {
           targetStudentNumber: current?.targetStudentNumber ?? null,
         }));
         appendCustomMessageLocal(`[STUDENT_ID_SHARE_CANCEL:${requestId}]`);
+        await refreshRoommateDisclosureStatus();
       } else {
         setOpenChatDisclosureStatus((current) => ({
           status: "NONE",
           requestId,
           targetStudentNumber: current?.targetStudentNumber ?? null,
         }));
+        await refreshOpenChatDisclosureStatus();
       }
     } catch (error) {
       console.error("학번 공유 취소 실패:", error);
@@ -385,12 +408,14 @@ export default function ChattingPage() {
           targetStudentNumber: null,
         });
         appendCustomMessageLocal(`[STUDENT_ID_SHARE_DECLINE:${requestId}]`);
+        await refreshRoommateDisclosureStatus();
       } else {
         setOpenChatDisclosureStatus({
           status: "REJECTED",
           requestId,
           targetStudentNumber: null,
         });
+        await refreshOpenChatDisclosureStatus();
       }
     } catch (error) {
       console.error("학번 공유 거절 실패:", error);
@@ -410,20 +435,22 @@ export default function ChattingPage() {
       if (chatType === "roommate") {
         setOpponentStudentNumber(requesterStudentNumber);
         setRoommateDisclosureStatus({
-          status: "ACCEPTED",
+          status: "DISCLOSED",
           requestId,
           targetStudentNumber: requesterStudentNumber,
         });
         appendCustomMessageLocal(
           `[STUDENT_ID_SHARE_ACCEPT:${requestId}:${userInfo.studentNumber}:${requesterStudentNumber}]`,
         );
+        await refreshRoommateDisclosureStatus();
       } else {
         setOpenChatOpponentStudentNumber(requesterStudentNumber);
         setOpenChatDisclosureStatus({
-          status: "ACCEPTED",
+          status: "DISCLOSED",
           requestId,
           targetStudentNumber: requesterStudentNumber,
         });
+        await refreshOpenChatDisclosureStatus();
       }
     } catch (error) {
       console.error("학번 공유 수락 실패:", error);
@@ -447,10 +474,13 @@ export default function ChattingPage() {
 
       // 학번 공유 관련 특수 메시지 실시간 감지
       const parsed = parseLegacyRoommateShareMessage(msg.content);
+      if (msg.system) {
+        void refreshRoommateDisclosureStatus();
+      }
       if (parsed.type) {
         if (parsed.type === "REQUEST" && parsed.requestId) {
           setRoommateDisclosureStatus({
-            status: "RECEIVED",
+            status: "PENDING_RECEIVED",
             requestId: parsed.requestId,
             targetStudentNumber: null,
           });
@@ -470,7 +500,7 @@ export default function ChattingPage() {
           const receivedOpponentStudentNumber =
             parsed.acceptorStudentNumber ?? "";
           setRoommateDisclosureStatus({
-            status: "ACCEPTED",
+            status: "DISCLOSED",
             requestId: parsed.requestId,
             targetStudentNumber: receivedOpponentStudentNumber || null,
           });
@@ -507,6 +537,7 @@ export default function ChattingPage() {
             id: Date.now(),
             sender: "other",
             content: msg.content,
+            isSystem: Boolean(msg.system),
             time: now.toLocaleTimeString("ko-KR", {
               hour: "2-digit",
               minute: "2-digit",
@@ -553,7 +584,7 @@ export default function ChattingPage() {
           openChatOpponentIdRef.current = msg.senderId;
         }
         setOpenChatDisclosureStatus({
-          status: "RECEIVED",
+          status: "PENDING_RECEIVED",
           requestId: msg.disclosureRequestId,
           targetStudentNumber: null,
         });
@@ -658,6 +689,7 @@ export default function ChattingPage() {
             sender: chat.userId === userId ? "me" : "other",
             content: chat.content,
             userImageUrl: chat.userImageUrl, // 프로필 이미지 URL 추가
+            isSystem: Boolean(chat.system),
             time: new Date(chat.createdDate).toLocaleTimeString("ko-KR", {
               hour: "2-digit",
               minute: "2-digit",
@@ -683,9 +715,12 @@ export default function ChattingPage() {
             const now = new Date();
             formattedMessages.push({
               id: Date.now(),
-              sender: normalizedRoommateStatus === "RECEIVED" ? "other" : "me",
-              senderId:
-                normalizedRoommateStatus === "RECEIVED" ? oppId : userId,
+              sender: isReceivedDisclosureStatus(normalizedRoommateStatus)
+                ? "other"
+                : "me",
+              senderId: isReceivedDisclosureStatus(normalizedRoommateStatus)
+                ? oppId
+                : userId,
               content: `[STUDENT_ID_SHARE_REQUEST:${currentStatusRequestId}]`,
               time: now.toLocaleTimeString("ko-KR", {
                 hour: "2-digit",
@@ -718,7 +753,7 @@ export default function ChattingPage() {
               createdAt: now.toISOString(),
             });
             setRoommateDisclosureStatus({
-              status: "REQUESTED",
+              status: "PENDING_SENT",
               requestId: pendingDisclosureRequestId,
               targetStudentNumber: null,
             });
@@ -872,15 +907,15 @@ export default function ChattingPage() {
             const now = new Date();
             formattedMessages.push({
               id: Date.now(),
-              sender: normalizedOpenChatStatus === "RECEIVED" ? "other" : "me",
-              senderId:
-                normalizedOpenChatStatus === "RECEIVED"
-                  ? disclosureOpponentId
-                  : userId,
-              content:
-                normalizedOpenChatStatus === "RECEIVED"
-                  ? "학번 공유 요청이 도착했어요."
-                  : "학번 공유를 요청했어요.",
+              sender: isReceivedDisclosureStatus(normalizedOpenChatStatus)
+                ? "other"
+                : "me",
+              senderId: isReceivedDisclosureStatus(normalizedOpenChatStatus)
+                ? disclosureOpponentId
+                : userId,
+              content: isReceivedDisclosureStatus(normalizedOpenChatStatus)
+                ? "학번 공유 요청이 도착했어요."
+                : "학번 공유를 요청했어요.",
               type: "STUDENT_ID_REQUEST",
               disclosureRequestId: currentOpenChatRequestId,
               time: now.toLocaleTimeString("ko-KR", {
@@ -917,7 +952,7 @@ export default function ChattingPage() {
               createdAt: now.toISOString(),
             });
             setOpenChatDisclosureStatus({
-              status: "REQUESTED",
+              status: "PENDING_SENT",
               requestId: pendingDisclosureRequestId,
               targetStudentNumber: null,
             });
@@ -1108,15 +1143,18 @@ export default function ChattingPage() {
   };
 
   const normalizedCurrentDisclosureStatus = normalizeDisclosureStatus(
-    openChatDisclosureStatus?.status,
+    chatType === "roommate"
+      ? roommateDisclosureStatus?.status
+      : openChatDisclosureStatus?.status,
   );
-  const sharedOpponentStudentNumber =
-    chatType === "personal" &&
-    ACCEPTED_DISCLOSURE_STATUSES.has(normalizedCurrentDisclosureStatus)
-      ? openChatOpponentStudentNumber
-      : chatType === "roommate"
-        ? opponentStudentNumber
-        : "";
+  const isStudentNumberDisclosed =
+    (chatType === "personal" || chatType === "roommate") &&
+    ACCEPTED_DISCLOSURE_STATUSES.has(normalizedCurrentDisclosureStatus);
+  const sharedOpponentStudentNumber = isStudentNumberDisclosed
+    ? chatType === "roommate"
+      ? opponentStudentNumber
+      : openChatOpponentStudentNumber
+    : "";
   const basePartnerName =
     partnerName || (chatType === "roommate" ? "룸메이트 채팅" : "1대1 채팅");
   const headerTitle =
@@ -1187,7 +1225,7 @@ export default function ChattingPage() {
 
       if (chatType === "roommate") {
         setRoommateDisclosureStatus({
-          status: "REQUESTED",
+          status: "PENDING_SENT",
           requestId,
           targetStudentNumber: null,
         });
@@ -1195,7 +1233,7 @@ export default function ChattingPage() {
       } else {
         const now = new Date();
         setOpenChatDisclosureStatus({
-          status: "REQUESTED",
+          status: "PENDING_SENT",
           requestId,
           targetStudentNumber: null,
         });
