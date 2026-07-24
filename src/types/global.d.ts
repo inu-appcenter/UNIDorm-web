@@ -18,6 +18,9 @@ declare global {
                 enterDetailView?: {
                     postMessage: (message: { type: "CHAT" | "NOTICE"; id: string }) => void;
                 };
+                onAppReady?: {
+                    postMessage: (message: any) => void;
+                };
             };
         };
 

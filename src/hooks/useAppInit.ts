@@ -152,11 +152,14 @@ export const useAppInit = () => {
       navigate(targetPath);
     };
 
-    // React 마운트 및 navigateToPath 준비 완료 신호를 비동기로 네이티브에 안전하게 전송
+    // React 마운트 및 navigateToPath 준비 완료 신호를 비동기로 네이티브(Android & iOS)에 안전하게 전송
     setTimeout(() => {
       try {
         if (window.AndroidBridge?.onAppReady) {
           window.AndroidBridge.onAppReady();
+        }
+        if (window.webkit?.messageHandlers?.onAppReady) {
+          window.webkit.messageHandlers.onAppReady.postMessage("");
         }
       } catch (e) {
         console.error("onAppReady bridge error:", e);
