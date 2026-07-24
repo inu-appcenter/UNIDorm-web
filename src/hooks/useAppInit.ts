@@ -152,10 +152,16 @@ export const useAppInit = () => {
       navigate(targetPath);
     };
 
-    // React 마운트 및 navigateToPath 준비 완료 신호를 네이티브로 전송 (Cold Start 딥링크 대응)
-    if (window.AndroidBridge?.onAppReady) {
-      window.AndroidBridge.onAppReady();
-    }
+    // React 마운트 및 navigateToPath 준비 완료 신호를 비동기로 네이티브에 안전하게 전송
+    setTimeout(() => {
+      try {
+        if (window.AndroidBridge?.onAppReady) {
+          window.AndroidBridge.onAppReady();
+        }
+      } catch (e) {
+        console.error("onAppReady bridge error:", e);
+      }
+    }, 50);
 
     return () => {
       window.navigateToPath = undefined;
