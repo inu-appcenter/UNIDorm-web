@@ -23,6 +23,7 @@ export interface RoommateChatRoom {
   matched?: boolean;
   isRoommate?: boolean;
   opponentLeft?: boolean;
+  unreadCount?: number;
 }
 
 export interface RoommateChat {

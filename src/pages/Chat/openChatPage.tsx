@@ -50,15 +50,16 @@ function RoommateChatCard({
   room: RoommateChatRoom;
   onClick: () => void;
 }) {
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(room.unreadCount ?? 0);
 
   useEffect(() => {
+    setUnreadCount(room.unreadCount ?? 0);
     getRoommateChatUnreadCount(room.chatRoomId)
       .then((res) => setUnreadCount(res.data))
       .catch((err) =>
         console.error("룸메이트 안 읽은 메시지 수 조회 실패", err),
       );
-  }, [room.chatRoomId]);
+  }, [room.chatRoomId, room.unreadCount]);
 
   const isMyRoommate = Boolean(
     room.isMyRoommate || room.myRoommate || room.matched || room.isRoommate,
@@ -94,6 +95,19 @@ function RoommateChatCard({
 
 const VALID_TABS: OpenChatTabType[] = ["MY", "DORMITORY", "ALL"];
 
+type MyChatRoomFilter = "ALL" | "PERSONAL" | "DERIVED" | "OPEN" | "ROOMMATE";
+
+const MY_CHAT_ROOM_FILTERS: {
+  value: MyChatRoomFilter;
+  label: string;
+}[] = [
+  { value: "ALL", label: "전체" },
+  { value: "PERSONAL", label: "1:1" },
+  { value: "DERIVED", label: "파생톡방" },
+  { value: "OPEN", label: "오픈채팅" },
+  { value: "ROOMMATE", label: "룸메채팅" },
+];
+
 export default function OpenChatPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -122,6 +136,8 @@ export default function OpenChatPage() {
 
   const [roommateUnreadTotal, setRoommateUnreadTotal] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
+  const [myChatRoomFilter, setMyChatRoomFilter] =
+    useState<MyChatRoomFilter>("ALL");
 
   const fillMissingPersonalLastMessages = useCallback(
     async (chatRooms: OpenChatRoom[]) =>
@@ -173,8 +189,32 @@ export default function OpenChatPage() {
           const openChatRooms = openChatRes.data.content.filter(
             (room) => room.chatCategory === "OPEN_CHAT",
           );
+          const dedicatedRoommateRooms = roommateChatRes.data;
+          const dedicatedRoommateRoomIds = new Set(
+            dedicatedRoommateRooms.map((room) => room.chatRoomId),
+          );
+          const restoredRoommateRooms: RoommateChatRoom[] =
+            openChatRes.data.content
+              .filter(
+                (room) =>
+                  room.chatCategory === "ROOMMATE" &&
+                  !dedicatedRoommateRoomIds.has(room.roomId),
+              )
+              .map((room) => ({
+                chatRoomId: room.roomId,
+                opponentNickname: room.name,
+                lastMessage: room.lastMessage,
+                lastMessageTime: room.lastMessageAt,
+                partnerId: 0,
+                partnerName: room.name,
+                partnerProfileImageUrl: "",
+                unreadCount: room.unreadCount,
+              }));
           setRooms(await fillMissingPersonalLastMessages(openChatRooms));
-          setRoommateRooms(roommateChatRes.data);
+          setRoommateRooms([
+            ...dedicatedRoommateRooms,
+            ...restoredRoommateRooms,
+          ]);
           setRoommateUnreadTotal(unreadRes.data);
         } else {
           setRoommateRooms([]);
@@ -347,12 +387,23 @@ export default function OpenChatPage() {
       includesSearchQuery(formatChatMessagePreview(room.lastMessage)),
   );
 
+  const categoryFilteredRoommateRooms =
+    myChatRoomFilter === "ALL" || myChatRoomFilter === "ROOMMATE"
+      ? filteredRoommateRooms
+      : [];
+  const categoryFilteredRooms = filteredRooms.filter(
+    (room) => myChatRoomFilter === "ALL" || room.roomType === myChatRoomFilter,
+  );
+
   const mergedMyRooms = [
-    ...filteredRoommateRooms.map((room) => ({
+    ...categoryFilteredRoommateRooms.map((room) => ({
       ...room,
       itemType: "roommate" as const,
     })),
-    ...filteredRooms.map((room) => ({ ...room, itemType: "open" as const })),
+    ...categoryFilteredRooms.map((room) => ({
+      ...room,
+      itemType: "open" as const,
+    })),
   ].sort((a, b) => {
     const timeA =
       a.itemType === "roommate"
@@ -390,8 +441,24 @@ export default function OpenChatPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-          <Search size={20} color="#8b8b8b" />
+          <Search size={20} color="#1677ff" />
         </SearchBox>
+
+        {selectedTab === "MY" && (
+          <MyChatFilterList aria-label="채팅방 유형">
+            {MY_CHAT_ROOM_FILTERS.map((filter) => (
+              <MyChatFilterButton
+                key={filter.value}
+                type="button"
+                aria-pressed={myChatRoomFilter === filter.value}
+                $active={myChatRoomFilter === filter.value}
+                onClick={() => setMyChatRoomFilter(filter.value)}
+              >
+                {filter.label}
+              </MyChatFilterButton>
+            ))}
+          </MyChatFilterList>
+        )}
 
         {!isLoggedIn ? (
           <LoginPromptWrapper>
@@ -407,10 +474,18 @@ export default function OpenChatPage() {
           <LoadingSpinner message="채팅방을 불러오는 중입니다." />
         ) : selectedTab === "MY" ? (
           mergedMyRooms.length === 0 ? (
-            <OpenChatEmptyState
-              tab={selectedTab}
-              onClickMoveDormitory={() => handleTabChange("DORMITORY")}
-            />
+            searchQuery.trim() || myChatRoomFilter !== "ALL" ? (
+              <FilteredEmptyMessage>
+                {searchQuery.trim()
+                  ? "검색 결과가 없습니다."
+                  : "해당 유형의 채팅방이 없습니다."}
+              </FilteredEmptyMessage>
+            ) : (
+              <OpenChatEmptyState
+                tab={selectedTab}
+                onClickMoveDormitory={() => handleTabChange("DORMITORY")}
+              />
+            )
           ) : (
             <RoomList>
               {mergedMyRooms.map((item) => {
@@ -501,7 +576,7 @@ const SearchBox = styled.div`
   margin: 16px 0;
   border: 1px solid #dfdfdf;
   border-radius: 8px;
-  padding: 8px 12px;
+  padding: 8px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -522,6 +597,42 @@ const SearchInput = styled.input`
   &::placeholder {
     color: #8b8b8b;
   }
+`;
+
+const MyChatFilterList = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+`;
+
+const MyChatFilterButton = styled.button<{ $active: boolean }>`
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  border-radius: 24px;
+  background: transparent;
+  color: ${({ $active }) => ($active ? "#1677ff" : "#8b8b8b")};
+  font-family: "Pretendard", sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+  cursor: pointer;
+`;
+
+const FilteredEmptyMessage = styled.p`
+  margin: 64px 0 0;
+  color: #8b8b8b;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+  text-align: center;
 `;
 
 const RoomList = styled.div`
