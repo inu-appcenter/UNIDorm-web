@@ -9,6 +9,8 @@ import { getMobilePlatform } from "@/utils/getMobilePlatform";
 import TooltipMessage from "@/components/common/TooltipMessage";
 import { useFeatureFlag } from "@/hooks/useFeatureFlags";
 import { mixpanelTrack } from "@/utils/mixpanel";
+import complaintIcon from "@/assets/bottombar/Complaint.svg";
+import complaintClickedIcon from "@/assets/bottombar/complaint-clicked.svg";
 
 const ROOMMATE_MATCHING_FEATURE_FLAG_KEY = "ROOMMATE_MATCHING";
 
@@ -76,28 +78,13 @@ const ChatIcon = ({ isActive }: { isActive: boolean }) => (
 );
 
 const ComplainIcon = ({ isActive }: { isActive: boolean }) => (
-  <svg
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      d="M7 17.5H17M12 17.5V21M8.5 2H15.5C19.5 2 21 3.5 21 7.5V12C21 15.5 19.5 17 16 17H8C4.5 17 3 15.5 3 12V7.5C3 3.5 4.5 2 8.5 2Z"
-      stroke={isActive ? "#1677FF" : "#6F6F6F"}
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M14.9965 9.5H15.0055M11.9955 9.5H12.0045M7.99451 9.5H8.00351"
-      stroke={isActive ? "#1677FF" : "#6F6F6F"}
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
+  <img
+    src={isActive ? complaintClickedIcon : complaintIcon}
+    width={24}
+    height={24}
+    alt=""
+    aria-hidden="true"
+  />
 );
 
 const MyPageIcon = ({ isActive }: { isActive: boolean }) => (
@@ -248,7 +235,7 @@ export default function BottomBar() {
             try {
               await getMyRoommateInfo();
               navigate("/roommate/my");
-            } catch (err) {
+            } catch {
               navigate("/roommate");
             }
           }}
