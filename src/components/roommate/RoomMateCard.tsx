@@ -105,18 +105,24 @@ const TopRightBadge = styled.div.withConfig({
   top: 12px;
   right: 12px;
   font-size: 12px;
-  color: white;
   padding: 4px 8px;
-  border-radius: 8px;
-  font-weight: 600;
+  border-radius: 12px;
   z-index: 0;
+
+  color: var(--Gray-Gray0, #fff);
+  text-align: center;
+
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 150%; /* 18px */
 
   background: ${({ dormType }) => {
     switch (dormType) {
       case "1기숙사":
         return "#8e8e93"; // 회색 계열
       case "2기숙사":
-        return "#0a84ff"; // 파랑
+        return "var(--Main-Main1, #1677ff)"; // 파랑
       case "3기숙사":
         return "#ff6b6b"; // 빨강
       default:
@@ -218,21 +224,27 @@ const Tag = styled.div.withConfig({
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
-  color: #1c1c1e;
+
   padding: 4px 8px;
-  border-radius: 6px;
-  font-weight: 500;
+  border-radius: 12px;
+
+  color: var(--Gray-Gray800, #3d3d3d);
+  text-align: center;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 150%; /* 18px */
+
   background: ${({ category }) => {
     switch (category) {
       case "mbti":
-        return "#E4F6ED";
+        return "#E1F7EE";
       case "college":
-        return "#FCEEF3";
+        return "#FFEDF3";
       case "smoker":
-        return "#E8F0FE";
+        return "#E6F0FE";
       case "clean":
-        return "#F3F4F6";
+        return "var(--Gray-Gray100, #EFEFEF)";
       default:
         return "#f1f1f1";
     }
@@ -255,16 +267,20 @@ const Description = styled.div`
 const BottomLine = styled.div`
   display: flex;
   align-items: center;
+  gap: 4px;
   font-size: 12px;
   color: #1c1c1e;
 
   img {
-    width: 16px;
-    height: 16px;
-    margin-right: 4px;
+    width: 18px;
+    height: 18px;
+    display: block;
   }
 
   span {
-    margin-right: 8px;
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
   }
 `;
+

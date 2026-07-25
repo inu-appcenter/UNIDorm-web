@@ -28,7 +28,6 @@ import searchIcon from "@/assets/roommate/search-normal.svg";
 import caretDownIcon from "@/assets/roommate/caret-down.svg";
 import settingsSlidersIcon from "@/assets/roommate/settings-sliders.svg";
 
-
 const SEMESTER_OPTIONS = ["2026-1학기", "2025-2학기", "2025-1학기"];
 
 function FilterTags({
@@ -277,8 +276,6 @@ export default function RoomMatePage() {
     return likedRoommates;
   }, [likedRoommates, likedTabFilter]);
 
-
-
   return (
     <RoomMatePageWrapper $isLocked={isLocked}>
       {!isFeatureFlagLoading && !isMatchingActive && (
@@ -493,9 +490,7 @@ export default function RoomMatePage() {
       {selectedCategory === CATEGORY_LIST[1] && (
         <TitleContentArea
           title={`총 ${likedRoommates.length}개 저장됨`}
-          description={
-            isLoggedIn ? `모집중 ${recruitingCount}개` : undefined
-          }
+          description={isLoggedIn ? `모집중 ${recruitingCount}개` : undefined}
           location="룸메이트_좋아요"
         >
           <>
@@ -516,7 +511,6 @@ export default function RoomMatePage() {
               </LikedFilterChipsRow>
             )}
 
-
             <LikedPostsSection>
               {!isLoggedIn ? (
                 <ChecklistBanner onClick={() => navigate(PATHS.LOGIN)}>
@@ -526,7 +520,9 @@ export default function RoomMatePage() {
               ) : isLikedLoading ? (
                 <LoadingSpinner message="좋아요한 게시글을 불러오는 중..." />
               ) : isLikedError ? (
-                <EmptyMessage>좋아요한 게시글을 불러오지 못했습니다.</EmptyMessage>
+                <EmptyMessage>
+                  좋아요한 게시글을 불러오지 못했습니다.
+                </EmptyMessage>
               ) : filteredLikedRoommates.length > 0 ? (
                 filteredLikedRoommates.map((post) => (
                   <RoomMateCard
@@ -552,7 +548,6 @@ export default function RoomMatePage() {
           </>
         </TitleContentArea>
       )}
-
 
       {isLoggedIn && (
         <WriteButton onClick={() => navigate(PATHS.ROOMMATE.CHECKLIST)}>
@@ -667,13 +662,19 @@ const SemesterSelect = styled.select`
   border-radius: 8px;
   box-sizing: border-box;
   appearance: none;
-  background-color: ${colors.bg.bg3};
+  background: transparent;
   background-image: url("${caretDownIcon}");
   background-repeat: no-repeat;
   background-position: right 12px center;
   background-size: 9px 5px;
-  color: ${colors.gray.gray600};
-  cursor: pointer;
+  color: var(--Text-Text2, #6f6f6f);
+
+  /* Label 1_Normal */
+  font-family: Pretendard;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 150%; /* 21px */
   outline: 0;
 
   &:focus-visible {
@@ -709,7 +710,6 @@ const LikedFilterChipsRow = styled.div`
   align-items: center;
   margin: 4px 0 12px;
 `;
-
 
 const MatchingFilterChip = styled.span`
   ${typography.caption1}
