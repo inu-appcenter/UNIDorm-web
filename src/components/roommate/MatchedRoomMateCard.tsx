@@ -25,17 +25,19 @@ export default function MatchedRoomMateCard({
     navigate(`/roommate/list/${post.boardId}`);
   };
 
+  const isRead = Boolean(post.read);
+
   return (
     <Card
       type="button"
       onClick={handleClick}
       disabled={post.matched}
+      $isRead={isRead}
       aria-label={`${post.title} 룸메이트 게시글 보기`}
     >
       <HeaderArea>
         <Title>{post.title}</Title>
       </HeaderArea>
-
 
       <TagList>
         {post.college && <Tag>{post.college}</Tag>}
@@ -45,15 +47,20 @@ export default function MatchedRoomMateCard({
   );
 }
 
-const Card = styled.button`
+const Card = styled.button<{ $isRead?: boolean }>`
   flex: 0 0 116px;
   width: 116px;
   min-height: 130px;
   padding: 12px 10px;
-  border: 1px solid ${colors.blue.blue200};
   border-radius: 8px;
+  border: ${({ $isRead }) =>
+    $isRead
+      ? `1px solid ${colors.gray.gray200}`
+      : `1px solid ${colors.blue.blue200}`};
   background: ${colors.bg.bg1};
-  box-shadow: 0px 0px 4px 0px rgba(105, 177, 255, 0.2);
+  opacity: ${({ $isRead }) => ($isRead ? 0.4 : 1)};
+  box-shadow: ${({ $isRead }) =>
+    $isRead ? "none" : "0px 0px 4px 0px rgba(105, 177, 255, 0.2)"};
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -74,6 +81,7 @@ const Card = styled.button`
     cursor: not-allowed;
   }
 `;
+
 
 const HeaderArea = styled.div`
   display: flex;

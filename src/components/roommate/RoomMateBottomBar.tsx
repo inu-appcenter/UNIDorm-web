@@ -146,19 +146,19 @@ export default RoomMateBottomBar;
 
 const RoomMateBottomBarWrapper = styled.div`
   width: 100%;
-  height: 64px;
-  padding: 8px 13px;
+  max-width: 480px;
+  height: calc(64px + env(safe-area-inset-bottom, 0px));
+  padding: 8px 16px calc(24px + env(safe-area-inset-bottom, 0px));
   box-sizing: border-box;
   position: fixed;
   bottom: 0;
-  left: 0;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12px;
-  background: rgba(247, 247, 247, 0.9);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+
   z-index: 100;
 `;
 
@@ -172,7 +172,15 @@ const MessageButton = styled.button`
   background: ${colors.gray.gray0};
   box-shadow: 0 2px 5px ${colors.gray.gray200};
   color: ${colors.gray.gray400};
-  text-align: left;
+  display: flex;
+  align-items: center;
+  //justify-content: center;
   flex: 1 1 auto;
   cursor: pointer;
+
+  color: var(--Text-Text3, #a5a5a5);
+
+  &:hover {
+    opacity: 0.9;
+  }
 `;

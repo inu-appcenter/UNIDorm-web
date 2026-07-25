@@ -1,15 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { SquareUserRound } from "lucide-react";
 import styled from "styled-components";
+
+
 import {
   deleteRoommatePost,
-  getMyChecklist,
   getOpponentChecklist,
   getRoomMateDetail,
 } from "@/apis/roommate";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import RoomMateBottomBar from "@/components/roommate/RoomMateBottomBar";
+import UserInfo from "@/components/common/UserInfo";
 import { PATHS } from "@/constants/paths";
 import { CATEGORY_LIST } from "@/constants/roommate";
 import { useSetHeader } from "@/hooks/useSetHeader";
@@ -20,7 +21,7 @@ import type { RoommatePost } from "@/types/roommates";
 interface DetailRow {
   label: string;
   value: string;
-  matched: boolean;
+  matched?: boolean;
 }
 
 interface DetailSection {
@@ -31,47 +32,21 @@ interface DetailSection {
 
 const getDisplayValue = (value?: string | null) => value || "정보 없음";
 
-const formatCreatedDate = (date?: string) => {
-  if (!date) return "";
 
-  const parsedDate = new Date(date);
-  if (Number.isNaN(parsedDate.getTime())) return date;
 
-  const month = String(parsedDate.getMonth() + 1).padStart(2, "0");
-  const day = String(parsedDate.getDate()).padStart(2, "0");
-  const hour = String(parsedDate.getHours()).padStart(2, "0");
-  const minute = String(parsedDate.getMinutes()).padStart(2, "0");
-
-  return `${month}/${day} ${hour}:${minute}`;
-};
-
-const isSameValue = (
-  myValue: string | undefined,
-  boardValue: string | undefined,
-) => Boolean(myValue && boardValue && myValue === boardValue);
-
-const isSameDays = (
-  myDays: string[] | undefined,
-  boardDays: string[] | undefined,
-) => {
-  if (!myDays?.length || !boardDays?.length) return false;
-  if (myDays.length !== boardDays.length) return false;
-
-  const boardDaySet = new Set(boardDays);
-  return myDays.every((day) => boardDaySet.has(day));
-};
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function RoomMateBoardDetailPage() {
   const { boardId } = useParams<{ boardId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
+  const queryClient = useQueryClient();
   const roomId = location.state?.roomId as number | undefined;
   const partnerName = location.state?.partnerName as string | undefined;
   const { userInfo, tokenInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
 
   const [boardData, setBoardData] = useState<RoommatePost | null>(null);
-  const [myData, setMyData] = useState<RoommatePost | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
 
@@ -91,6 +66,8 @@ export default function RoomMateBoardDetailPage() {
 
         if (isActive && response) {
           setBoardData(response.data);
+          queryClient.invalidateQueries({ queryKey: ["matchingRoommates"] });
+          queryClient.invalidateQueries({ queryKey: ["roommates"] });
         }
       } catch (error) {
         console.error("게시글 데이터를 불러오지 못했습니다:", error);
@@ -102,32 +79,12 @@ export default function RoomMateBoardDetailPage() {
 
     fetchBoardData();
 
+
     return () => {
       isActive = false;
     };
   }, [boardId, roomId]);
 
-  useEffect(() => {
-    if (!isLoggedIn || !userInfo.roommateCheckList) {
-      setMyData(null);
-      return;
-    }
-
-    let isActive = true;
-
-    getMyChecklist()
-      .then((response) => {
-        if (isActive) setMyData(response.data);
-      })
-      .catch((error) => {
-        console.error("내 체크리스트를 불러오지 못했습니다:", error);
-        if (isActive) setMyData(null);
-      });
-
-    return () => {
-      isActive = false;
-    };
-  }, [isLoggedIn, userInfo.roommateCheckList]);
 
   const handleDelete = async () => {
     if (
@@ -164,37 +121,26 @@ export default function RoomMateBoardDetailPage() {
   const sections = useMemo<DetailSection[]>(() => {
     if (!boardData) return [];
 
-    const showerMatched = Boolean(
-      myData &&
-        isSameValue(myData.showerHour, boardData.showerHour) &&
-        isSameValue(myData.showerTime, boardData.showerTime),
-    );
-
     return [
       {
         title: "기본 정보",
         color: colors.main.main1,
         rows: [
           {
+            label: "기숙사",
+            value: getDisplayValue(boardData.dormType),
+          },
+          {
             label: "상주 기간",
             value: boardData.dormPeriod?.join(", ") || "정보 없음",
-            matched: Boolean(
-              myData && isSameDays(myData.dormPeriod, boardData.dormPeriod),
-            ),
           },
           {
             label: "단과대",
             value: getDisplayValue(boardData.college),
-            matched: Boolean(
-              myData && isSameValue(myData.college, boardData.college),
-            ),
           },
           {
             label: "MBTI",
             value: getDisplayValue(boardData.mbti),
-            matched: Boolean(
-              myData && isSameValue(myData.mbti, boardData.mbti),
-            ),
           },
         ],
       },
@@ -205,9 +151,6 @@ export default function RoomMateBoardDetailPage() {
           {
             label: "취침",
             value: getDisplayValue(boardData.bedTime),
-            matched: Boolean(
-              myData && isSameValue(myData.bedTime, boardData.bedTime),
-            ),
           },
           {
             label: "샤워",
@@ -215,14 +158,10 @@ export default function RoomMateBoardDetailPage() {
               [boardData.showerHour, boardData.showerTime]
                 .filter(Boolean)
                 .join(" · ") || "정보 없음",
-            matched: showerMatched,
           },
           {
             label: "잠귀",
             value: getDisplayValue(boardData.sleeper),
-            matched: Boolean(
-              myData && isSameValue(myData.sleeper, boardData.sleeper),
-            ),
           },
         ],
       },
@@ -233,46 +172,23 @@ export default function RoomMateBoardDetailPage() {
           {
             label: "흡연",
             value: getDisplayValue(boardData.smoking),
-            matched: Boolean(
-              myData && isSameValue(myData.smoking, boardData.smoking),
-            ),
           },
           {
             label: "코골이",
             value: getDisplayValue(boardData.snoring),
-            matched: Boolean(
-              myData && isSameValue(myData.snoring, boardData.snoring),
-            ),
           },
           {
             label: "이갈이",
             value: getDisplayValue(boardData.toothGrind),
-            matched: Boolean(
-              myData && isSameValue(myData.toothGrind, boardData.toothGrind),
-            ),
           },
           {
             label: "정리정돈",
             value: getDisplayValue(boardData.arrangement),
-            matched: Boolean(
-              myData &&
-                isSameValue(myData.arrangement, boardData.arrangement),
-            ),
           },
         ],
       },
     ];
-  }, [boardData, myData]);
-
-  const matchedCount = useMemo(
-    () =>
-      sections.reduce(
-        (count, section) =>
-          count + section.rows.filter((row) => row.matched).length,
-        0,
-      ),
-    [sections],
-  );
+  }, [boardData]);
 
   if (isLoading) {
     return <LoadingSpinner message="게시글을 불러오는 중..." />;
@@ -287,24 +203,23 @@ export default function RoomMateBoardDetailPage() {
     !isMyPost &&
     (!isLoggedIn || userInfo.dormType === boardData.dormType);
 
+  const displayUserName =
+    boardData.userName || (roomId && partnerName ? partnerName : "익명");
+
   return (
     <RoomMateDetailPageWrapper>
       <DetailContent>
-        <ProfileRow>
-          <UserArea>
-            <SquareUserRound size={36} strokeWidth={1.35} aria-hidden />
-            <UserDescription>
-              <UserName>{roomId && partnerName ? partnerName : "익명"}</UserName>
-              <CreatedDate dateTime={boardData.createDate}>
-                {formatCreatedDate(boardData.createDate)}
-              </CreatedDate>
-            </UserDescription>
-          </UserArea>
+        <UserInfo
+          username={displayUserName}
+          createDate={boardData.createDate}
+          authorImagePath={boardData.userProfileImageUrl}
+        />
 
-          {myData && <MatchBadge>{matchedCount}개 항목 일치</MatchBadge>}
-        </ProfileRow>
+        {boardData.title && <PostTitle>{boardData.title}</PostTitle>}
 
-        <PostDescription>{boardData.comment || boardData.title}</PostDescription>
+        {boardData.comment && (
+          <PostDescription>{boardData.comment}</PostDescription>
+        )}
 
         <SectionList>
           {sections.map((section) => (
@@ -316,7 +231,7 @@ export default function RoomMateBoardDetailPage() {
 
               <InfoRows>
                 {section.rows.map((row) => (
-                  <InfoRow key={row.label} $matched={row.matched}>
+                  <InfoRow key={row.label}>
                     <span>{row.label}</span>
                     <strong>{row.value}</strong>
                   </InfoRow>
@@ -337,6 +252,7 @@ export default function RoomMateBoardDetailPage() {
   );
 }
 
+
 const RoomMateDetailPageWrapper = styled.div`
   min-height: calc(100vh - 70px);
   padding-bottom: 104px;
@@ -348,57 +264,21 @@ const RoomMateDetailPageWrapper = styled.div`
 const DetailContent = styled.div`
   padding: 16px 20px;
   box-sizing: border-box;
-  background: ${colors.bg.bg1};
 `;
 
-const ProfileRow = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  width: 100%;
-`;
 
-const UserArea = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-  color: ${colors.gray.gray800};
-`;
-
-const UserDescription = styled.div`
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-`;
-
-const UserName = styled.strong`
+const PostTitle = styled.h1`
   ${typography.body1Normal}
+  font-size: 16px;
+  font-weight: 600;
   color: ${colors.gray.gray800};
+  margin: 16px 0 6px;
 `;
 
-const CreatedDate = styled.time`
-  ${typography.caption1}
-  color: ${colors.gray.gray500};
-`;
-
-const MatchBadge = styled.span`
-  ${typography.label1Normal}
-  min-height: 42px;
-  padding: 8px 12px;
-  border-radius: 20px;
-  box-sizing: border-box;
-  background: ${colors.gray.gray50};
-  color: ${colors.gray.gray700};
-  display: flex;
-  align-items: center;
-  flex: 0 0 auto;
-`;
 
 const PostDescription = styled.p`
   ${typography.label1Normal}
-  margin: 20px 0;
+  margin: 0 0 20px;
   color: ${colors.gray.gray800};
   white-space: pre-line;
 `;
@@ -438,22 +318,21 @@ const InfoRows = styled.div`
   gap: 2px;
 `;
 
-const InfoRow = styled.div<{ $matched: boolean }>`
+const InfoRow = styled.div`
   ${typography.label1Normal}
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  color: ${({ $matched }) =>
-    $matched ? colors.main.main2 : colors.gray.gray500};
+  color: ${colors.gray.gray500};
 
   strong {
-    color: ${({ $matched }) =>
-      $matched ? colors.main.main1 : colors.gray.gray800};
+    color: ${colors.gray.gray800};
     font: inherit;
     text-align: right;
   }
 `;
+
 
 const ErrorMessage = styled.div`
   ${typography.label1Normal}
