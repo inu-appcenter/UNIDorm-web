@@ -20,16 +20,22 @@ import { useMemo, useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { RoommatePost } from "@/types/roommates";
 import type { MyPost_RoommateBoard } from "@/types/members";
-import FilterButton from "../../components/button/FilterButton.tsx";
 import { useFeatureFlag } from "@/hooks/useFeatureFlags";
 import MatchedRoomMateCard from "@/components/roommate/MatchedRoomMateCard";
 import { colors, typography } from "@/styles/tokens";
 import searchIcon from "@/assets/roommate/search-normal.svg";
 import caretDownIcon from "@/assets/roommate/caret-down.svg";
+import settingsSlidersIcon from "@/assets/roommate/settings-sliders.svg";
 
 const SEMESTER_OPTIONS = ["2026-1학기", "2025-2학기", "2025-1학기"];
 
-function FilterTags({ filters }: { filters: Record<string, unknown> }) {
+function FilterTags({
+  filters,
+  onClick,
+}: {
+  filters: Record<string, unknown>;
+  onClick: () => void;
+}) {
   const filteredTags = Object.values(filters).filter((value) => {
     if (value == null) return false;
     if (Array.isArray(value)) return value.length > 0;
@@ -40,7 +46,7 @@ function FilterTags({ filters }: { filters: Record<string, unknown> }) {
   if (filteredTags.length === 0) return null;
 
   return (
-    <TagsWrapper>
+    <TagsWrapper onClick={onClick} role="button" tabIndex={0}>
       <div className="filtertitle">적용된 필터</div>
       {filteredTags.map((value, idx) => {
         const displayValue = Array.isArray(value)
@@ -66,9 +72,7 @@ export default function RoomMatePage() {
 
   const selectedCategory = searchParams.get("tab") || CATEGORY_LIST[0];
   const [searchKeyword, setSearchKeyword] = useState("");
-  const [selectedSemester, setSelectedSemester] = useState(
-    SEMESTER_OPTIONS[0],
-  );
+  const [selectedSemester, setSelectedSemester] = useState(SEMESTER_OPTIONS[0]);
 
   const filters = useMemo(
     () => location.state?.filters || {},
@@ -268,32 +272,64 @@ export default function RoomMatePage() {
 
       {selectedCategory === CATEGORY_LIST[0] && (
         <>
-          <SearchBox role="search">
-            <SearchInput
-              type="search"
-              value={searchKeyword}
-              onChange={(event) => setSearchKeyword(event.target.value)}
-              placeholder="검색어를 입력하세요"
-              aria-label="룸메이트 게시글 검색"
-            />
-            <SearchIcon src={searchIcon} alt="" aria-hidden />
-          </SearchBox>
-
           <TitleContentArea
-            title={"내 조건에 맞는 룸메"}
-            location="룸메이트_맞춤"
-            rightAction={
-              isLoggedIn && (
-                <FilterEditButton
-                  type="button"
-                  onClick={() => navigate(PATHS.ROOMMATE.FIND_SETTING)}
-                >
-                  필터 수정
-                </FilterEditButton>
-              )
-            }
+            title={"맞춤 룸메이트"}
+            location="룸메이트_홈"
+            description={"조건에 맞는 글이 올라오면 알림을 받을 수 있어요."}
           >
             <>
+              <MatchingFilterRow
+                onClick={() =>
+                  navigate(
+                    isLoggedIn ? PATHS.ROOMMATE.FIND_SETTING : PATHS.LOGIN,
+                  )
+                }
+                role="button"
+                tabIndex={0}
+              >
+                <MatchingFilterChipsGroup>
+                  {isLoggedIn &&
+                  isFilterSet &&
+                  matchingFilterLabels.length > 0 ? (
+                    <>
+                      {matchingFilterLabels.slice(0, 2).map((label, index) => (
+                        <MatchingFilterChip key={`${label}-${index}`}>
+                          {label}
+                        </MatchingFilterChip>
+                      ))}
+                      {matchingFilterLabels.length > 2 && (
+                        <MatchingFilterChip>
+                          +{matchingFilterLabels.length - 2}
+                        </MatchingFilterChip>
+                      )}
+                    </>
+                  ) : (
+                    <MatchingFilterChip className="empty">
+                      + 맞춤 조건 설정하기
+                    </MatchingFilterChip>
+                  )}
+                </MatchingFilterChipsGroup>
+
+                <FilterEditIconButton
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(
+                      isLoggedIn ? PATHS.ROOMMATE.FIND_SETTING : PATHS.LOGIN,
+                    );
+                  }}
+                  aria-label="맞춤 필터 설정"
+                >
+                  <img
+                    src={settingsSlidersIcon}
+                    alt=""
+                    aria-hidden
+                    width={20}
+                    height={20}
+                  />
+                </FilterEditIconButton>
+              </MatchingFilterRow>
+
               {!isLoggedIn ? (
                 <ChecklistBanner onClick={() => navigate(PATHS.LOGIN)}>
                   로그인하시면,
@@ -312,21 +348,6 @@ export default function RoomMatePage() {
                 </ChecklistBanner>
               ) : null}
 
-              {isLoggedIn && hasChecklist && isFilterSet && (
-                <MatchingFilterSummary>
-                  {matchingFilterLabels.slice(0, 2).map((label, index) => (
-                    <MatchingFilterChip key={`${label}-${index}`}>
-                      {label}
-                    </MatchingFilterChip>
-                  ))}
-                  {matchingFilterLabels.length > 2 && (
-                    <MatchingFilterChip>
-                      +{matchingFilterLabels.length - 2}
-                    </MatchingFilterChip>
-                  )}
-                </MatchingFilterSummary>
-              )}
-
               {isMatchingLoading ? (
                 <LoadingSpinner message="추천 목록을 불러오는 중..." />
               ) : (
@@ -334,11 +355,16 @@ export default function RoomMatePage() {
                 hasChecklist && (
                   <>
                     {matchingRoommates && matchingRoommates.length > 0 ? (
-                      <MatchingCardRail>
-                        {matchingRoommates.map((post) => (
-                          <MatchedRoomMateCard key={post.boardId} post={post} />
-                        ))}
-                      </MatchingCardRail>
+                      <MatchingCardRailWrapper>
+                        <MatchingCardRail>
+                          {matchingRoommates.map((post) => (
+                            <MatchedRoomMateCard
+                              key={post.boardId}
+                              post={post}
+                            />
+                          ))}
+                        </MatchingCardRail>
+                      </MatchingCardRailWrapper>
                     ) : !isFilterSet ? (
                       <EmptyStateContainer>
                         <EmptyTitle>
@@ -386,14 +412,32 @@ export default function RoomMatePage() {
             }
           >
             <>
-              <FilterArea>
-                <FilterButton
+              <SearchBox role="search">
+                <SearchIcon src={searchIcon} alt="" aria-hidden />
+                <SearchInput
+                  type="search"
+                  value={searchKeyword}
+                  onChange={(event) => setSearchKeyword(event.target.value)}
+                  placeholder="검색어를 입력하세요"
+                  aria-label="룸메이트 게시글 검색"
+                />
+                <SettingsIconButton
+                  type="button"
                   onClick={() =>
                     navigate("/roommate/filter", { state: { filters } })
                   }
-                />
-                <FilterTags filters={filters} />
-              </FilterArea>
+                  aria-label="필터 설정"
+                >
+                  <SettingsIcon src={settingsSlidersIcon} alt="" aria-hidden />
+                </SettingsIconButton>
+              </SearchBox>
+
+              <FilterTags
+                filters={filters}
+                onClick={() =>
+                  navigate("/roommate/filter", { state: { filters } })
+                }
+              />
 
               {isLatestLoading ? (
                 <LoadingSpinner message="최신 목록을 불러오는 중..." />
@@ -479,7 +523,7 @@ export default function RoomMatePage() {
 
 // 스크롤 및 터치 차단 속성 추가
 const RoomMatePageWrapper = styled.div<{ $isLocked?: boolean }>`
-  padding: 40px 16px 140px;
+  padding: 52px 16px 140px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -489,6 +533,26 @@ const RoomMatePageWrapper = styled.div<{ $isLocked?: boolean }>`
   background: #fafafa;
   width: 100%;
   flex: 1;
+`;
+
+const MatchingFilterRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  cursor: pointer;
+`;
+
+const MatchingFilterChipsGroup = styled.div`
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  overflow-x: auto;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 `;
 
 const SearchBox = styled.div`
@@ -504,8 +568,15 @@ const SearchBox = styled.div`
   gap: 8px;
 
   &:focus-within {
-    border-color: ${colors.main.main1};
+    border-color: ${colors.blue.blue200};
   }
+`;
+
+const SearchIcon = styled.img`
+  width: 16px;
+  height: 16px;
+  display: block;
+  flex: 0 0 16px;
 `;
 
 const SearchInput = styled.input`
@@ -527,18 +598,29 @@ const SearchInput = styled.input`
   }
 `;
 
-const SearchIcon = styled.img`
+const SettingsIconButton = styled.button`
+  background: none;
+  border: none;
+  padding: 2px;
+  margin: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 20px;
+`;
+
+const SettingsIcon = styled.img`
   width: 20px;
   height: 20px;
   display: block;
-  flex: 0 0 20px;
 `;
 
 const SemesterSelect = styled.select`
   ${typography.label1Normal}
-  width: 126px;
-  height: 40px;
-  padding: 8px 40px 8px 16px;
+  width: 110px;
+  height: 36px;
+  padding: 6px 28px 6px 12px;
   border: 0;
   border-radius: 8px;
   box-sizing: border-box;
@@ -546,14 +628,29 @@ const SemesterSelect = styled.select`
   background-color: ${colors.bg.bg3};
   background-image: url("${caretDownIcon}");
   background-repeat: no-repeat;
-  background-position: right 16px center;
-  background-size: 9.333px 4.391px;
-  color: ${colors.gray.gray500};
+  background-position: right 12px center;
+  background-size: 9px 5px;
+  color: ${colors.gray.gray600};
   cursor: pointer;
   outline: 0;
 
   &:focus-visible {
     box-shadow: 0 0 0 2px ${colors.blue.blue200};
+  }
+`;
+
+const FilterEditIconButton = styled.button`
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  img {
+    width: 20px;
+    height: 20px;
   }
 `;
 
@@ -574,44 +671,47 @@ const LikedPostsSection = styled.section`
   width: 100%;
 `;
 
-const FilterEditButton = styled.button`
-  ${typography.label2}
-  min-width: max-content;
-  padding: 8px 12px;
-  border: 0;
-  border-radius: 8px;
-  background: ${colors.gray.gray50};
-  color: ${colors.gray.gray600};
-  font-weight: 600;
-  cursor: pointer;
-`;
-
-const MatchingFilterSummary = styled.div`
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding: 2px 0 4px;
-  scrollbar-width: none;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
-`;
-
 const MatchingFilterChip = styled.span`
   ${typography.caption1}
   flex: 0 0 auto;
-  padding: 5px 10px;
+  padding: 4px 12px;
   border: 1px solid ${colors.gray.gray200};
-  border-radius: 999px;
+  border-radius: 23px;
   background: ${colors.bg.bg1};
-  color: ${colors.gray.gray600};
+  color: ${colors.gray.gray500};
+
+  &.empty {
+    color: ${colors.gray.gray400};
+    border-style: dashed;
+  }
+`;
+
+const MatchingCardRailWrapper = styled.div`
+  position: relative;
+  width: calc(100% + 32px);
+  margin-left: -16px;
+  margin-right: -16px;
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 48px;
+    background: linear-gradient(
+      to right,
+      rgba(250, 250, 250, 0) 0%,
+      #fafafa 100%
+    );
+    pointer-events: none;
+    z-index: 2;
+  }
 `;
 
 const MatchingCardRail = styled.div`
   display: flex;
-  gap: 10px;
-  margin: 0 -16px;
+  gap: 6px;
   padding: 4px 16px 8px;
   overflow-x: auto;
   scroll-padding-inline: 16px;
@@ -663,30 +763,32 @@ const FooterTextGroup = styled.div`
   }
 `;
 
-const FilterArea = styled.div`
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 16px;
-`;
-
 const TagsWrapper = styled.div`
   display: flex;
+  align-items: center;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 8px;
+  //margin-top: 8px;
+  cursor: pointer;
+
   .filtertitle {
     font-size: 14px;
     font-weight: 600;
+    color: ${colors.gray.gray800};
+  }
+
+  &:hover {
+    opacity: 0.8;
   }
 `;
 
 const Tag = styled.div`
-  background-color: #e0e0e0;
+  background-color: ${colors.bg.bg1};
+  border: 1px solid ${colors.gray.gray200};
   padding: 4px 10px;
   border-radius: 16px;
   font-size: 13px;
-  color: #333;
+  color: ${colors.gray.gray600};
 `;
 
 const EmptyMessage = styled.div`
