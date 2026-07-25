@@ -4,6 +4,8 @@ import styled from "styled-components";
 import { createDerivedOpenChatRoom, createOpenChatRoom } from "@/apis/openchat";
 import { OpenChatScope } from "@/types/openchat";
 import { useSetHeader } from "@/hooks/useSetHeader";
+import ChipButton from "@/components/button/ChipButton";
+
 
 export default function OpenChatCreatePage() {
   const navigate = useNavigate();
@@ -122,25 +124,24 @@ export default function OpenChatCreatePage() {
             <FormGroup>
               <Label>검색 목록 공개 여부</Label>
               <ScopeButtonRow>
-                <ScopeButton
-                  type="button"
-                  $active={isPublic}
+                <ChipButton
+                  active={isPublic}
                   onClick={() => setIsPublic(true)}
                 >
                   공개
-                </ScopeButton>
-                <ScopeButton
-                  type="button"
-                  $active={!isPublic}
+                </ChipButton>
+                <ChipButton
+                  active={!isPublic}
                   onClick={() => setIsPublic(false)}
                 >
                   비노출
-                </ScopeButton>
+                </ChipButton>
               </ScopeButtonRow>
               <ScopeDescription>
                 비노출로 설정해도 원본 채팅방에는 입장 링크가 공유돼요.
               </ScopeDescription>
             </FormGroup>
+
 
             <FormGroup>
               <Label htmlFor="room-password">입장 비밀번호</Label>

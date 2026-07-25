@@ -23,9 +23,11 @@ import type { MyPost_RoommateBoard } from "@/types/members";
 import { useFeatureFlag } from "@/hooks/useFeatureFlags";
 import MatchedRoomMateCard from "@/components/roommate/MatchedRoomMateCard";
 import { colors, typography } from "@/styles/tokens";
+import ChipButton from "@/components/button/ChipButton";
 import searchIcon from "@/assets/roommate/search-normal.svg";
 import caretDownIcon from "@/assets/roommate/caret-down.svg";
 import settingsSlidersIcon from "@/assets/roommate/settings-sliders.svg";
+
 
 const SEMESTER_OPTIONS = ["2026-1학기", "2025-2학기", "2025-1학기"];
 
@@ -259,6 +261,24 @@ export default function RoomMatePage() {
     staleTime: 1000 * 60 * 5,
   });
 
+  const [likedTabFilter, setLikedTabFilter] = useState<"ALL" | "RECRUITING">(
+    "ALL",
+  );
+
+  const recruitingCount = useMemo(
+    () => likedRoommates.filter((post) => !post.matched).length,
+    [likedRoommates],
+  );
+
+  const filteredLikedRoommates = useMemo(() => {
+    if (likedTabFilter === "RECRUITING") {
+      return likedRoommates.filter((post) => !post.matched);
+    }
+    return likedRoommates;
+  }, [likedRoommates, likedTabFilter]);
+
+
+
   return (
     <RoomMatePageWrapper $isLocked={isLocked}>
       {!isFeatureFlagLoading && !isMatchingActive && (
@@ -471,39 +491,68 @@ export default function RoomMatePage() {
       )}
 
       {selectedCategory === CATEGORY_LIST[1] && (
-        <LikedPostsSection>
-          {!isLoggedIn ? (
-            <ChecklistBanner onClick={() => navigate(PATHS.LOGIN)}>
-              로그인하시면 좋아요한 룸메이트 게시글을 모아볼 수 있어요.
-              <strong>인천대학교 포털로 로그인 →</strong>
-            </ChecklistBanner>
-          ) : isLikedLoading ? (
-            <LoadingSpinner message="좋아요한 게시글을 불러오는 중..." />
-          ) : isLikedError ? (
-            <EmptyMessage>좋아요한 게시글을 불러오지 못했습니다.</EmptyMessage>
-          ) : likedRoommates.length > 0 ? (
-            likedRoommates.map((post) => (
-              <RoomMateCard
-                key={post.boardId}
-                title={post.title}
-                boardId={post.boardId}
-                dormType={post.dormType}
-                mbti={post.mbti}
-                college={post.college}
-                isSmoker={post.smoking === "피워요"}
-                isClean={post.arrangement === "깔끔해요"}
-                stayDays={post.dormPeriod}
-                description={post.comment}
-                roommateBoardLike={post.roommateBoardLike}
-                matched={post.matched}
-                location="룸메이트_좋아요"
-              />
-            ))
-          ) : (
-            <EmptyMessage>좋아요한 게시글이 없습니다.</EmptyMessage>
-          )}
-        </LikedPostsSection>
+        <TitleContentArea
+          title={`총 ${likedRoommates.length}개 저장됨`}
+          description={
+            isLoggedIn ? `모집중 ${recruitingCount}개` : undefined
+          }
+          location="룸메이트_좋아요"
+        >
+          <>
+            {isLoggedIn && likedRoommates.length > 0 && (
+              <LikedFilterChipsRow>
+                <ChipButton
+                  active={likedTabFilter === "ALL"}
+                  onClick={() => setLikedTabFilter("ALL")}
+                >
+                  전체
+                </ChipButton>
+                <ChipButton
+                  active={likedTabFilter === "RECRUITING"}
+                  onClick={() => setLikedTabFilter("RECRUITING")}
+                >
+                  모집중
+                </ChipButton>
+              </LikedFilterChipsRow>
+            )}
+
+
+            <LikedPostsSection>
+              {!isLoggedIn ? (
+                <ChecklistBanner onClick={() => navigate(PATHS.LOGIN)}>
+                  로그인하시면 좋아요한 룸메이트 게시글을 모아볼 수 있어요.
+                  <strong>인천대학교 포털로 로그인 →</strong>
+                </ChecklistBanner>
+              ) : isLikedLoading ? (
+                <LoadingSpinner message="좋아요한 게시글을 불러오는 중..." />
+              ) : isLikedError ? (
+                <EmptyMessage>좋아요한 게시글을 불러오지 못했습니다.</EmptyMessage>
+              ) : filteredLikedRoommates.length > 0 ? (
+                filteredLikedRoommates.map((post) => (
+                  <RoomMateCard
+                    key={post.boardId}
+                    title={post.title}
+                    boardId={post.boardId}
+                    dormType={post.dormType}
+                    mbti={post.mbti}
+                    college={post.college}
+                    isSmoker={post.smoking === "피워요"}
+                    isClean={post.arrangement === "깔끔해요"}
+                    stayDays={post.dormPeriod}
+                    description={post.comment}
+                    roommateBoardLike={post.roommateBoardLike}
+                    matched={post.matched}
+                    location="룸메이트_좋아요"
+                  />
+                ))
+              ) : (
+                <EmptyMessage>좋아요한 게시글이 없습니다.</EmptyMessage>
+              )}
+            </LikedPostsSection>
+          </>
+        </TitleContentArea>
       )}
+
 
       {isLoggedIn && (
         <WriteButton onClick={() => navigate(PATHS.ROOMMATE.CHECKLIST)}>
@@ -653,6 +702,14 @@ const LikedPostsSection = styled.section`
   gap: 12px;
   width: 100%;
 `;
+
+const LikedFilterChipsRow = styled.div`
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 4px 0 12px;
+`;
+
 
 const MatchingFilterChip = styled.span`
   ${typography.caption1}
