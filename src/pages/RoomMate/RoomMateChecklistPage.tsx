@@ -71,14 +71,7 @@ export default function RoomMateChecklistPage() {
 
   // 사용자 정보 및 기존 데이터 로드
   useEffect(() => {
-    setFormData((prev) => ({
-      ...prev,
-      dormType: dormitory.indexOf(userInfo.dormType),
-      college: colleges.indexOf(userInfo.college),
-    }));
-
     const fetchMyChecklistData = async () => {
-      if (!userInfo.roommateCheckList) return;
       try {
         const { data } = await getMyChecklist();
         if (data) {
@@ -92,33 +85,74 @@ export default function RoomMateChecklistPage() {
                 ]
               : [null, null, null, null];
 
-          setFormData((prev) => ({
-            ...prev,
-            title: data.title,
+          const findIndexOrNull = (arr: readonly string[], val?: string) => {
+            if (!val) return null;
+            const idx = arr.indexOf(val);
+            return idx !== -1 ? idx : null;
+          };
+
+          const dormIndex = dormitory.findIndex(
+            (d) =>
+              d.replace(/제|\s/g, "") ===
+              (data.dormType || "").replace(/제|\s/g, ""),
+          );
+
+          const collegeIndex = colleges.indexOf(data.college);
+
+          setFormData({
+            title: data.title || "",
             comment: data.comment || "",
-            dormType: dormitory.indexOf(data.dormType),
-            college: colleges.indexOf(data.college),
-            dormPeriod: data.dormPeriod
-              .map((d: string) => days.indexOf(d.replace("요일", "")))
-              .filter((i: number) => i !== -1),
-            smoking: smoking.indexOf(data.smoking),
-            snoring: snoring.indexOf(data.snoring),
-            toothGrind: toothgrinding.indexOf(data.toothGrind),
-            arrangement: organizationLevel.indexOf(data.arrangement),
-            religion: religion.indexOf(data.religion),
-            sleeper: isLightSleeper.indexOf(data.sleeper),
-            showerHour: showertime.indexOf(data.showerHour),
-            showerTime: showerDuration.indexOf(data.showerTime),
-            bedTime: bedtime.indexOf(data.bedTime),
-            mbti: mbtiIndices,
-          }));
+            dormType:
+              dormIndex !== -1
+                ? dormIndex
+                : dormitory.indexOf(userInfo.dormType) !== -1
+                  ? dormitory.indexOf(userInfo.dormType)
+                  : null,
+            college:
+              collegeIndex !== -1
+                ? collegeIndex
+                : colleges.indexOf(userInfo.college) !== -1
+                  ? colleges.indexOf(userInfo.college)
+                  : null,
+            dormPeriod: Array.isArray(data.dormPeriod)
+              ? data.dormPeriod
+                  .map((d: string) => days.indexOf(d.replace("요일", "").trim()))
+                  .filter((i: number) => i !== -1)
+              : [],
+            smoking: findIndexOrNull(smoking, data.smoking),
+            snoring: findIndexOrNull(snoring, data.snoring),
+            toothGrind: findIndexOrNull(toothgrinding, data.toothGrind),
+            arrangement: findIndexOrNull(organizationLevel, data.arrangement),
+            religion: findIndexOrNull(religion, data.religion),
+            sleeper: findIndexOrNull(isLightSleeper, data.sleeper),
+            showerHour: findIndexOrNull(showertime, data.showerHour),
+            showerTime: findIndexOrNull(showerDuration, data.showerTime),
+            bedTime: findIndexOrNull(bedtime, data.bedTime),
+            mbti: mbtiIndices.map((i) => (i !== undefined && i !== -1 ? i : null)),
+          });
+          return;
         }
       } catch (error) {
-        console.error("데이터 로드 실패", error);
+        console.log("기존 체크리스트 데이터 로드 시도", error);
       }
+
+      // 기존 체크리스트 데이터가 없거나 로드 실패 시 유저 기본정보 설정
+      setFormData((prev) => ({
+        ...prev,
+        dormType:
+          dormitory.indexOf(userInfo.dormType) !== -1
+            ? dormitory.indexOf(userInfo.dormType)
+            : null,
+        college:
+          colleges.indexOf(userInfo.college) !== -1
+            ? colleges.indexOf(userInfo.college)
+            : null,
+      }));
     };
+
     fetchMyChecklistData();
   }, [userInfo]);
+
 
   // 유효성 검사
   const validateStep = (step: number) => {

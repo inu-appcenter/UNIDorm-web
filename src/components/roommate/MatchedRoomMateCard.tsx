@@ -25,39 +25,50 @@ export default function MatchedRoomMateCard({
     navigate(`/roommate/list/${post.boardId}`);
   };
 
+  const isRead = Boolean(post.read);
+
   return (
     <Card
       type="button"
       onClick={handleClick}
       disabled={post.matched}
+      $isRead={isRead}
       aria-label={`${post.title} 룸메이트 게시글 보기`}
     >
-      <MetaRow>
-        <DormType>{post.dormType}</DormType>
-        {post.matched && <MatchedBadge>매칭 완료</MatchedBadge>}
-      </MetaRow>
-
-      <Title>{post.title}</Title>
+      <HeaderArea>
+        <Title>{post.title}</Title>
+      </HeaderArea>
 
       <TagList>
-        <Tag>{post.college}</Tag>
-        <Tag>{post.mbti}</Tag>
+        {post.college && <Tag>{post.college}</Tag>}
+        {post.mbti && <Tag>{post.mbti}</Tag>}
       </TagList>
     </Card>
   );
 }
 
-const Card = styled.button`
-  flex: 0 0 148px;
-  min-height: 158px;
-  padding: 14px 12px;
-  border: 1px solid ${colors.blue.blue300};
-  border-radius: 10px;
+const Card = styled.button<{ $isRead?: boolean }>`
+  flex: 0 0 116px;
+  width: 116px;
+  min-height: 130px;
+  padding: 12px 10px;
+  border-radius: 8px;
+  border: ${({ $isRead }) =>
+    $isRead
+      ? `1px solid ${colors.gray.gray200}`
+      : `1px solid ${colors.blue.blue200}`};
   background: ${colors.bg.bg1};
-  color: ${colors.gray.gray800};
+  opacity: ${({ $isRead }) => ($isRead ? 0.4 : 1)};
+  box-shadow: ${({ $isRead }) =>
+    $isRead ? "none" : "0px 0px 4px 0px rgba(105, 177, 255, 0.2)"};
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
   text-align: left;
   scroll-snap-align: start;
   cursor: pointer;
+  box-sizing: border-box;
+  overflow: hidden;
 
   &:active {
     background: ${colors.blue.blue100};
@@ -65,61 +76,54 @@ const Card = styled.button`
 
   &:disabled {
     border-color: ${colors.gray.gray200};
-    opacity: 0.55;
+    box-shadow: none;
+    opacity: 0.4;
     cursor: not-allowed;
   }
 `;
 
-const MetaRow = styled.div`
+
+const HeaderArea = styled.div`
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
+  flex-direction: column;
+  width: 100%;
 `;
 
-const DormType = styled.span`
-  ${typography.caption1}
-  color: ${colors.gray.gray500};
-`;
+const Title = styled.p`
 
-const MatchedBadge = styled.span`
-  ${typography.caption2}
-  padding: 2px 5px;
-  border-radius: 999px;
-  background: ${colors.gray.gray100};
-  color: ${colors.gray.gray600};
-  white-space: nowrap;
-`;
-
-const Title = styled.strong`
-  ${typography.body1Normal}
+  ${typography.label1Normal}
+  color: ${colors.gray.gray800};
+  margin: 0;
+  line-height: 1.5;
   display: -webkit-box;
-  min-height: 48px;
-  margin-top: 4px;
-  overflow: hidden;
-  color: ${colors.gray.gray900};
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+  overflow: hidden;
+  word-break: break-word;
 `;
 
 const TagList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  margin-top: 9px;
+  gap: 4px;
+  width: 100%;
+  margin-top: 8px;
 `;
 
 const Tag = styled.span`
   ${typography.caption1}
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
-  padding: 3px 8px;
+  padding: 4px 8px;
   box-sizing: border-box;
   overflow: hidden;
-  border-radius: 999px;
+  border-radius: 24px;
   background: ${colors.blue.blue100};
-  color: ${colors.blue.blue700};
+  color: ${colors.main.main2};
   text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;
 `;
+

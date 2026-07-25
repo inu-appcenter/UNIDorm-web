@@ -29,7 +29,9 @@ export interface RoommatePost extends RoommatePostRequest {
   userName: string;
   userProfileImageUrl: string;
   createDate: string;
+  read?: boolean;
 }
+
 
 export interface RoommatePostResponse extends RoommatePost {}
 

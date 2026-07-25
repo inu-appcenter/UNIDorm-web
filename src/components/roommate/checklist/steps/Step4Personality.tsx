@@ -60,9 +60,11 @@ export default function Step4Personality({
       >
         <StyledTextInput
           value={data.title}
-          onChange={(e) => onChange("title", e.target.value)}
-          placeholder={"제목을 입력하세요"}
+          onChange={(e) => onChange("title", e.target.value.slice(0, 30))}
+          maxLength={30}
+          placeholder={"제목을 입력하세요 (최대 30자)"}
         />
+
         {!data.title && (
           <SortFilterWrapper>
             {randomTitles.map((option) => (

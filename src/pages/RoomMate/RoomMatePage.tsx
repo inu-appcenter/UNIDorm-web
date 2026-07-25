@@ -20,16 +20,23 @@ import { useMemo, useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { RoommatePost } from "@/types/roommates";
 import type { MyPost_RoommateBoard } from "@/types/members";
-import FilterButton from "../../components/button/FilterButton.tsx";
 import { useFeatureFlag } from "@/hooks/useFeatureFlags";
 import MatchedRoomMateCard from "@/components/roommate/MatchedRoomMateCard";
 import { colors, typography } from "@/styles/tokens";
+import ChipButton from "@/components/button/ChipButton";
 import searchIcon from "@/assets/roommate/search-normal.svg";
 import caretDownIcon from "@/assets/roommate/caret-down.svg";
+import settingsSlidersIcon from "@/assets/roommate/settings-sliders.svg";
 
 const SEMESTER_OPTIONS = ["2026-1학기", "2025-2학기", "2025-1학기"];
 
-function FilterTags({ filters }: { filters: Record<string, unknown> }) {
+function FilterTags({
+  filters,
+  onClick,
+}: {
+  filters: Record<string, unknown>;
+  onClick: () => void;
+}) {
   const filteredTags = Object.values(filters).filter((value) => {
     if (value == null) return false;
     if (Array.isArray(value)) return value.length > 0;
@@ -40,7 +47,7 @@ function FilterTags({ filters }: { filters: Record<string, unknown> }) {
   if (filteredTags.length === 0) return null;
 
   return (
-    <TagsWrapper>
+    <TagsWrapper onClick={onClick} role="button" tabIndex={0}>
       <div className="filtertitle">적용된 필터</div>
       {filteredTags.map((value, idx) => {
         const displayValue = Array.isArray(value)
@@ -66,9 +73,7 @@ export default function RoomMatePage() {
 
   const selectedCategory = searchParams.get("tab") || CATEGORY_LIST[0];
   const [searchKeyword, setSearchKeyword] = useState("");
-  const [selectedSemester, setSelectedSemester] = useState(
-    SEMESTER_OPTIONS[0],
-  );
+  const [selectedSemester, setSelectedSemester] = useState(SEMESTER_OPTIONS[0]);
 
   const filters = useMemo(
     () => location.state?.filters || {},
@@ -255,6 +260,22 @@ export default function RoomMatePage() {
     staleTime: 1000 * 60 * 5,
   });
 
+  const [likedTabFilter, setLikedTabFilter] = useState<"ALL" | "RECRUITING">(
+    "ALL",
+  );
+
+  const recruitingCount = useMemo(
+    () => likedRoommates.filter((post) => !post.matched).length,
+    [likedRoommates],
+  );
+
+  const filteredLikedRoommates = useMemo(() => {
+    if (likedTabFilter === "RECRUITING") {
+      return likedRoommates.filter((post) => !post.matched);
+    }
+    return likedRoommates;
+  }, [likedRoommates, likedTabFilter]);
+
   return (
     <RoomMatePageWrapper $isLocked={isLocked}>
       {!isFeatureFlagLoading && !isMatchingActive && (
@@ -268,32 +289,50 @@ export default function RoomMatePage() {
 
       {selectedCategory === CATEGORY_LIST[0] && (
         <>
-          <SearchBox role="search">
-            <SearchInput
-              type="search"
-              value={searchKeyword}
-              onChange={(event) => setSearchKeyword(event.target.value)}
-              placeholder="검색어를 입력하세요"
-              aria-label="룸메이트 게시글 검색"
-            />
-            <SearchIcon src={searchIcon} alt="" aria-hidden />
-          </SearchBox>
-
           <TitleContentArea
-            title={"내 조건에 맞는 룸메"}
-            location="룸메이트_맞춤"
-            rightAction={
-              isLoggedIn && (
-                <FilterEditButton
-                  type="button"
-                  onClick={() => navigate(PATHS.ROOMMATE.FIND_SETTING)}
-                >
-                  필터 수정
-                </FilterEditButton>
-              )
-            }
+            title={"맞춤 룸메이트"}
+            description={"조건에 맞는 글이 올라오면 알림을 받을 수 있어요."}
+            location="룸메이트_홈"
           >
             <>
+              {isLoggedIn && isFilterSet && matchingFilterLabels.length > 0 && (
+                <MatchingFilterRow
+                  onClick={() => navigate(PATHS.ROOMMATE.FIND_SETTING)}
+                  role="button"
+                  tabIndex={0}
+                >
+                  <MatchingFilterChipsGroup>
+                    {matchingFilterLabels.slice(0, 2).map((label, index) => (
+                      <MatchingFilterChip key={`${label}-${index}`}>
+                        {label}
+                      </MatchingFilterChip>
+                    ))}
+                    {matchingFilterLabels.length > 2 && (
+                      <MatchingFilterChip>
+                        +{matchingFilterLabels.length - 2}
+                      </MatchingFilterChip>
+                    )}
+                  </MatchingFilterChipsGroup>
+
+                  <FilterEditIconButton
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(PATHS.ROOMMATE.FIND_SETTING);
+                    }}
+                    aria-label="맞춤 필터 설정"
+                  >
+                    <img
+                      src={settingsSlidersIcon}
+                      alt=""
+                      aria-hidden
+                      width={20}
+                      height={20}
+                    />
+                  </FilterEditIconButton>
+                </MatchingFilterRow>
+              )}
+
               {!isLoggedIn ? (
                 <ChecklistBanner onClick={() => navigate(PATHS.LOGIN)}>
                   로그인하시면,
@@ -312,21 +351,6 @@ export default function RoomMatePage() {
                 </ChecklistBanner>
               ) : null}
 
-              {isLoggedIn && hasChecklist && isFilterSet && (
-                <MatchingFilterSummary>
-                  {matchingFilterLabels.slice(0, 2).map((label, index) => (
-                    <MatchingFilterChip key={`${label}-${index}`}>
-                      {label}
-                    </MatchingFilterChip>
-                  ))}
-                  {matchingFilterLabels.length > 2 && (
-                    <MatchingFilterChip>
-                      +{matchingFilterLabels.length - 2}
-                    </MatchingFilterChip>
-                  )}
-                </MatchingFilterSummary>
-              )}
-
               {isMatchingLoading ? (
                 <LoadingSpinner message="추천 목록을 불러오는 중..." />
               ) : (
@@ -334,29 +358,41 @@ export default function RoomMatePage() {
                 hasChecklist && (
                   <>
                     {matchingRoommates && matchingRoommates.length > 0 ? (
-                      <MatchingCardRail>
-                        {matchingRoommates.map((post) => (
-                          <MatchedRoomMateCard key={post.boardId} post={post} />
-                        ))}
-                      </MatchingCardRail>
+                      <MatchingCardRailWrapper>
+                        <MatchingCardRail>
+                          {matchingRoommates.map((post) => (
+                            <MatchedRoomMateCard
+                              key={post.boardId}
+                              post={post}
+                            />
+                          ))}
+                        </MatchingCardRail>
+                      </MatchingCardRailWrapper>
                     ) : !isFilterSet ? (
-                      <EmptyStateContainer>
-                        <EmptyTitle>
-                          맞춤 룸메이트를 설정하면 <br />새 글이 올라올 때 푸시
-                          알림으로 알려드려요.
-                        </EmptyTitle>
+                      <EmptyStateCard>
+                        <EmptyStateText>
+                          조건에 맞는 글이 올라오면
+                          <br />
+                          푸시 알림을 받아볼 수 있어요.
+                        </EmptyStateText>
                         <PrimarySettingButton
-                          onClick={() => navigate(PATHS.ROOMMATE.FIND_SETTING)}
+                          type="button"
+                          onClick={() =>
+                            navigate(
+                              isLoggedIn
+                                ? PATHS.ROOMMATE.FIND_SETTING
+                                : PATHS.LOGIN,
+                            )
+                          }
                         >
-                          맞춤 룸메이트 설정하기
+                          맞춤 룸메이트 설정
                         </PrimarySettingButton>
-                        <FooterTextGroup>
-                          <p>이미 같이 하기로 한 룸메이트가 있다면?</p>
-                          <span onClick={() => navigate(PATHS.ROOMMATE.ADD)}>
-                            룸메이트 등록하러 가기
-                          </span>
-                        </FooterTextGroup>
-                      </EmptyStateContainer>
+                        <EmptyStateSubText>
+                          필터를 아직 설정하지 않았다면
+                          <br />
+                          먼저 원하는 조건을 선택해주세요
+                        </EmptyStateSubText>
+                      </EmptyStateCard>
                     ) : (
                       <EmptyMessage>
                         필터 조건에 맞는 게시글이 없습니다.
@@ -369,7 +405,7 @@ export default function RoomMatePage() {
           </TitleContentArea>
 
           <TitleContentArea
-            title={"룸메 목록"}
+            title={"전체 목록"}
             location="룸메이트_홈"
             rightAction={
               <SemesterSelect
@@ -386,14 +422,32 @@ export default function RoomMatePage() {
             }
           >
             <>
-              <FilterArea>
-                <FilterButton
+              <SearchBox role="search">
+                <SearchIcon src={searchIcon} alt="" aria-hidden />
+                <SearchInput
+                  type="search"
+                  value={searchKeyword}
+                  onChange={(event) => setSearchKeyword(event.target.value)}
+                  placeholder="검색어를 입력하세요"
+                  aria-label="룸메이트 게시글 검색"
+                />
+                <SettingsIconButton
+                  type="button"
                   onClick={() =>
                     navigate("/roommate/filter", { state: { filters } })
                   }
-                />
-                <FilterTags filters={filters} />
-              </FilterArea>
+                  aria-label="필터 설정"
+                >
+                  <SettingsIcon src={settingsSlidersIcon} alt="" aria-hidden />
+                </SettingsIconButton>
+              </SearchBox>
+
+              <FilterTags
+                filters={filters}
+                onClick={() =>
+                  navigate("/roommate/filter", { state: { filters } })
+                }
+              />
 
               {isLatestLoading ? (
                 <LoadingSpinner message="최신 목록을 불러오는 중..." />
@@ -434,38 +488,65 @@ export default function RoomMatePage() {
       )}
 
       {selectedCategory === CATEGORY_LIST[1] && (
-        <LikedPostsSection>
-          {!isLoggedIn ? (
-            <ChecklistBanner onClick={() => navigate(PATHS.LOGIN)}>
-              로그인하시면 좋아요한 룸메이트 게시글을 모아볼 수 있어요.
-              <strong>인천대학교 포털로 로그인 →</strong>
-            </ChecklistBanner>
-          ) : isLikedLoading ? (
-            <LoadingSpinner message="좋아요한 게시글을 불러오는 중..." />
-          ) : isLikedError ? (
-            <EmptyMessage>좋아요한 게시글을 불러오지 못했습니다.</EmptyMessage>
-          ) : likedRoommates.length > 0 ? (
-            likedRoommates.map((post) => (
-              <RoomMateCard
-                key={post.boardId}
-                title={post.title}
-                boardId={post.boardId}
-                dormType={post.dormType}
-                mbti={post.mbti}
-                college={post.college}
-                isSmoker={post.smoking === "피워요"}
-                isClean={post.arrangement === "깔끔해요"}
-                stayDays={post.dormPeriod}
-                description={post.comment}
-                roommateBoardLike={post.roommateBoardLike}
-                matched={post.matched}
-                location="룸메이트_좋아요"
-              />
-            ))
-          ) : (
-            <EmptyMessage>좋아요한 게시글이 없습니다.</EmptyMessage>
-          )}
-        </LikedPostsSection>
+        <TitleContentArea
+          title={`총 ${likedRoommates.length}개 저장됨`}
+          description={isLoggedIn ? `모집중 ${recruitingCount}개` : undefined}
+          location="룸메이트_좋아요"
+        >
+          <>
+            {isLoggedIn && likedRoommates.length > 0 && (
+              <LikedFilterChipsRow>
+                <ChipButton
+                  active={likedTabFilter === "ALL"}
+                  onClick={() => setLikedTabFilter("ALL")}
+                >
+                  전체
+                </ChipButton>
+                <ChipButton
+                  active={likedTabFilter === "RECRUITING"}
+                  onClick={() => setLikedTabFilter("RECRUITING")}
+                >
+                  모집중
+                </ChipButton>
+              </LikedFilterChipsRow>
+            )}
+
+            <LikedPostsSection>
+              {!isLoggedIn ? (
+                <ChecklistBanner onClick={() => navigate(PATHS.LOGIN)}>
+                  로그인하시면 좋아요한 룸메이트 게시글을 모아볼 수 있어요.
+                  <strong>인천대학교 포털로 로그인 →</strong>
+                </ChecklistBanner>
+              ) : isLikedLoading ? (
+                <LoadingSpinner message="좋아요한 게시글을 불러오는 중..." />
+              ) : isLikedError ? (
+                <EmptyMessage>
+                  좋아요한 게시글을 불러오지 못했습니다.
+                </EmptyMessage>
+              ) : filteredLikedRoommates.length > 0 ? (
+                filteredLikedRoommates.map((post) => (
+                  <RoomMateCard
+                    key={post.boardId}
+                    title={post.title}
+                    boardId={post.boardId}
+                    dormType={post.dormType}
+                    mbti={post.mbti}
+                    college={post.college}
+                    isSmoker={post.smoking === "피워요"}
+                    isClean={post.arrangement === "깔끔해요"}
+                    stayDays={post.dormPeriod}
+                    description={post.comment}
+                    roommateBoardLike={post.roommateBoardLike}
+                    matched={post.matched}
+                    location="룸메이트_좋아요"
+                  />
+                ))
+              ) : (
+                <EmptyMessage>좋아요한 게시글이 없습니다.</EmptyMessage>
+              )}
+            </LikedPostsSection>
+          </>
+        </TitleContentArea>
       )}
 
       {isLoggedIn && (
@@ -479,7 +560,7 @@ export default function RoomMatePage() {
 
 // 스크롤 및 터치 차단 속성 추가
 const RoomMatePageWrapper = styled.div<{ $isLocked?: boolean }>`
-  padding: 40px 16px 140px;
+  padding: 52px 16px 140px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -489,6 +570,26 @@ const RoomMatePageWrapper = styled.div<{ $isLocked?: boolean }>`
   background: #fafafa;
   width: 100%;
   flex: 1;
+`;
+
+const MatchingFilterRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  cursor: pointer;
+`;
+
+const MatchingFilterChipsGroup = styled.div`
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  overflow-x: auto;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 `;
 
 const SearchBox = styled.div`
@@ -504,8 +605,15 @@ const SearchBox = styled.div`
   gap: 8px;
 
   &:focus-within {
-    border-color: ${colors.main.main1};
+    border-color: ${colors.blue.blue200};
   }
+`;
+
+const SearchIcon = styled.img`
+  width: 16px;
+  height: 16px;
+  display: block;
+  flex: 0 0 16px;
 `;
 
 const SearchInput = styled.input`
@@ -527,29 +635,46 @@ const SearchInput = styled.input`
   }
 `;
 
-const SearchIcon = styled.img`
+const SettingsIconButton = styled.button`
+  background: none;
+  border: none;
+  padding: 2px;
+  margin: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 20px;
+`;
+
+const SettingsIcon = styled.img`
   width: 20px;
   height: 20px;
   display: block;
-  flex: 0 0 20px;
 `;
 
 const SemesterSelect = styled.select`
   ${typography.label1Normal}
-  width: 126px;
-  height: 40px;
-  padding: 8px 40px 8px 16px;
+  width: 110px;
+  height: 36px;
+  padding: 6px 28px 6px 12px;
   border: 0;
   border-radius: 8px;
   box-sizing: border-box;
   appearance: none;
-  background-color: ${colors.bg.bg3};
+  background: transparent;
   background-image: url("${caretDownIcon}");
   background-repeat: no-repeat;
-  background-position: right 16px center;
-  background-size: 9.333px 4.391px;
-  color: ${colors.gray.gray500};
-  cursor: pointer;
+  background-position: right 12px center;
+  background-size: 9px 5px;
+  color: var(--Text-Text2, #6f6f6f);
+
+  /* Label 1_Normal */
+  font-family: Pretendard;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 150%; /* 21px */
   outline: 0;
 
   &:focus-visible {
@@ -557,14 +682,19 @@ const SemesterSelect = styled.select`
   }
 `;
 
-const EmptyStateContainer = styled.div`
+const FilterEditIconButton = styled.button`
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 60px 24px;
-  text-align: center;
-  margin-top: 8px;
+
+  img {
+    width: 20px;
+    height: 20px;
+  }
 `;
 
 const LikedPostsSection = styled.section`
@@ -574,44 +704,54 @@ const LikedPostsSection = styled.section`
   width: 100%;
 `;
 
-const FilterEditButton = styled.button`
-  ${typography.label2}
-  min-width: max-content;
-  padding: 8px 12px;
-  border: 0;
-  border-radius: 8px;
-  background: ${colors.gray.gray50};
-  color: ${colors.gray.gray600};
-  font-weight: 600;
-  cursor: pointer;
-`;
-
-const MatchingFilterSummary = styled.div`
+const LikedFilterChipsRow = styled.div`
   display: flex;
   gap: 8px;
-  overflow-x: auto;
-  padding: 2px 0 4px;
-  scrollbar-width: none;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
+  align-items: center;
+  margin: 4px 0 12px;
 `;
 
 const MatchingFilterChip = styled.span`
   ${typography.caption1}
   flex: 0 0 auto;
-  padding: 5px 10px;
+  padding: 4px 12px;
   border: 1px solid ${colors.gray.gray200};
-  border-radius: 999px;
+  border-radius: 23px;
   background: ${colors.bg.bg1};
-  color: ${colors.gray.gray600};
+  color: ${colors.gray.gray500};
+
+  &.empty {
+    color: ${colors.gray.gray400};
+    border-style: dashed;
+  }
+`;
+
+const MatchingCardRailWrapper = styled.div`
+  position: relative;
+  width: calc(100% + 32px);
+  margin-left: -16px;
+  margin-right: -16px;
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 48px;
+    background: linear-gradient(
+      to right,
+      rgba(250, 250, 250, 0) 0%,
+      #fafafa 100%
+    );
+    pointer-events: none;
+    z-index: 2;
+  }
 `;
 
 const MatchingCardRail = styled.div`
   display: flex;
-  gap: 10px;
-  margin: 0 -16px;
+  gap: 6px;
   padding: 4px 16px 8px;
   overflow-x: auto;
   scroll-padding-inline: 16px;
@@ -623,70 +763,82 @@ const MatchingCardRail = styled.div`
   }
 `;
 
-const EmptyTitle = styled.h3`
-  color: black;
+const EmptyStateCard = styled.div`
+  background: ${colors.bg.bg1};
+  filter: drop-shadow(0px 4px 4px ${colors.gray.gray200});
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  padding: 16px 32px;
+  border-radius: 8px;
+  width: 100%;
+  box-sizing: border-box;
   text-align: center;
-  font-size: 16px;
-  font-style: normal;
-  font-weight: 400;
-  line-height: normal;
+`;
+
+const EmptyStateText = styled.p`
+  ${typography.label1Normal}
+  color: ${colors.gray.gray800};
+  text-align: center;
+  line-height: 1.5;
+  margin: 0;
 `;
 
 const PrimarySettingButton = styled.button`
-  background-color: #007bff;
+  background-color: ${colors.main.main1};
   border: none;
-  padding: 16px;
-  border-radius: 34px;
+  padding: 8px 68px;
+  border-radius: 68px;
   cursor: pointer;
-  margin-bottom: 32px;
-  width: 100%;
-  max-width: 240px;
-  color: var(--7, #f4f4f4);
-  font-size: 16px;
-  font-style: normal;
-  font-weight: 700;
-  line-height: normal;
-`;
-
-const FooterTextGroup = styled.div`
-  p {
-    font-size: 13px;
-    color: #888;
-    margin-bottom: 4px;
-  }
-  span {
-    font-size: 13px;
-    color: #007bff;
-    font-weight: 600;
-    text-decoration: underline;
-    cursor: pointer;
-  }
-`;
-
-const FilterArea = styled.div`
-  width: 100%;
+  color: ${colors.bg.bg1};
+  ${typography.body1Normal}
+  line-height: 1.5;
+  white-space: nowrap;
+  box-sizing: border-box;
   display: flex;
-  flex-direction: column;
-  margin-bottom: 16px;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    opacity: 0.9;
+  }
+`;
+
+const EmptyStateSubText = styled.p`
+  ${typography.caption1}
+  color: ${colors.gray.gray500};
+  text-align: center;
+  line-height: 1.5;
+  margin: 0;
 `;
 
 const TagsWrapper = styled.div`
   display: flex;
+  align-items: center;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 8px;
+  //margin-top: 8px;
+  cursor: pointer;
+
   .filtertitle {
     font-size: 14px;
     font-weight: 600;
+    color: ${colors.gray.gray800};
+  }
+
+  &:hover {
+    opacity: 0.8;
   }
 `;
 
 const Tag = styled.div`
-  background-color: #e0e0e0;
+  background-color: ${colors.bg.bg1};
+  border: 1px solid ${colors.gray.gray200};
   padding: 4px 10px;
   border-radius: 16px;
   font-size: 13px;
-  color: #333;
+  color: ${colors.gray.gray600};
 `;
 
 const EmptyMessage = styled.div`

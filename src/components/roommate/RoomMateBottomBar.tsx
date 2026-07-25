@@ -16,15 +16,22 @@ import HeartToggleButton from "@/components/common/HeartToggleButton";
 const RoomMateBottomBar = ({
   partnerName,
   userProfileImageUrl,
+  postDormType,
 }: {
   partnerName: string;
   userProfileImageUrl: string;
+  postDormType?: string;
 }) => {
   const { boardId } = useParams<{ boardId: string }>();
   const queryClient = useQueryClient();
 
   const { tokenInfo, userInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
+  const isSameDorm =
+    !isLoggedIn ||
+    !userInfo.dormType ||
+    !postDormType ||
+    userInfo.dormType === postDormType;
 
   const [liked, setLiked] = useState<boolean>(false);
   const [isLikeSubmitting, setIsLikeSubmitting] = useState(false);
@@ -54,6 +61,12 @@ const RoomMateBottomBar = ({
       navigate("/login");
       return;
     }
+
+    if (!isSameDorm) {
+      alert("나와 같은 기숙사생이 아니에요.\n기숙사 정보를 확인해주세요.");
+      return;
+    }
+
     if (!boardId) return;
 
     try {
@@ -105,6 +118,12 @@ const RoomMateBottomBar = ({
       navigate("/login");
       return;
     }
+
+    if (!isSameDorm) {
+      alert("나와 같은 기숙사생이 아니에요.\n기숙사 정보를 확인해주세요.");
+      return;
+    }
+
     if (!userInfo.roommateCheckList) {
       alert("먼저 체크리스트를 작성해주세요!");
       navigate("/roommate/checklist");
@@ -129,7 +148,9 @@ const RoomMateBottomBar = ({
   return (
     <RoomMateBottomBarWrapper>
       <MessageButton type="button" onClick={handleChatClick}>
-        메시지 보내기
+        {isSameDorm
+          ? "메시지 보내기"
+          : "나와 같은 기숙사생에게만 보낼 수 있어요."}
       </MessageButton>
 
       <HeartToggleButton
@@ -146,19 +167,19 @@ export default RoomMateBottomBar;
 
 const RoomMateBottomBarWrapper = styled.div`
   width: 100%;
-  height: 64px;
-  padding: 8px 13px;
+  max-width: 480px;
+  height: calc(64px + env(safe-area-inset-bottom, 0px));
+  padding: 8px 16px calc(24px + env(safe-area-inset-bottom, 0px));
   box-sizing: border-box;
   position: fixed;
   bottom: 0;
-  left: 0;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12px;
-  background: rgba(247, 247, 247, 0.9);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+
   z-index: 100;
 `;
 
@@ -172,7 +193,15 @@ const MessageButton = styled.button`
   background: ${colors.gray.gray0};
   box-shadow: 0 2px 5px ${colors.gray.gray200};
   color: ${colors.gray.gray400};
-  text-align: left;
+  display: flex;
+  align-items: center;
+  //justify-content: center;
   flex: 1 1 auto;
   cursor: pointer;
+
+  color: var(--Text-Text3, #a5a5a5);
+
+  &:hover {
+    opacity: 0.9;
+  }
 `;
