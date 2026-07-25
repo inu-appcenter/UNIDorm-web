@@ -274,61 +274,47 @@ export default function RoomMatePage() {
         <>
           <TitleContentArea
             title={"맞춤 룸메이트"}
-            location="룸메이트_홈"
             description={"조건에 맞는 글이 올라오면 알림을 받을 수 있어요."}
+            location="룸메이트_홈"
           >
             <>
-              <MatchingFilterRow
-                onClick={() =>
-                  navigate(
-                    isLoggedIn ? PATHS.ROOMMATE.FIND_SETTING : PATHS.LOGIN,
-                  )
-                }
-                role="button"
-                tabIndex={0}
-              >
-                <MatchingFilterChipsGroup>
-                  {isLoggedIn &&
-                  isFilterSet &&
-                  matchingFilterLabels.length > 0 ? (
-                    <>
-                      {matchingFilterLabels.slice(0, 2).map((label, index) => (
-                        <MatchingFilterChip key={`${label}-${index}`}>
-                          {label}
-                        </MatchingFilterChip>
-                      ))}
-                      {matchingFilterLabels.length > 2 && (
-                        <MatchingFilterChip>
-                          +{matchingFilterLabels.length - 2}
-                        </MatchingFilterChip>
-                      )}
-                    </>
-                  ) : (
-                    <MatchingFilterChip className="empty">
-                      + 맞춤 조건 설정하기
-                    </MatchingFilterChip>
-                  )}
-                </MatchingFilterChipsGroup>
-
-                <FilterEditIconButton
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate(
-                      isLoggedIn ? PATHS.ROOMMATE.FIND_SETTING : PATHS.LOGIN,
-                    );
-                  }}
-                  aria-label="맞춤 필터 설정"
+              {isLoggedIn && isFilterSet && matchingFilterLabels.length > 0 && (
+                <MatchingFilterRow
+                  onClick={() => navigate(PATHS.ROOMMATE.FIND_SETTING)}
+                  role="button"
+                  tabIndex={0}
                 >
-                  <img
-                    src={settingsSlidersIcon}
-                    alt=""
-                    aria-hidden
-                    width={20}
-                    height={20}
-                  />
-                </FilterEditIconButton>
-              </MatchingFilterRow>
+                  <MatchingFilterChipsGroup>
+                    {matchingFilterLabels.slice(0, 2).map((label, index) => (
+                      <MatchingFilterChip key={`${label}-${index}`}>
+                        {label}
+                      </MatchingFilterChip>
+                    ))}
+                    {matchingFilterLabels.length > 2 && (
+                      <MatchingFilterChip>
+                        +{matchingFilterLabels.length - 2}
+                      </MatchingFilterChip>
+                    )}
+                  </MatchingFilterChipsGroup>
+
+                  <FilterEditIconButton
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(PATHS.ROOMMATE.FIND_SETTING);
+                    }}
+                    aria-label="맞춤 필터 설정"
+                  >
+                    <img
+                      src={settingsSlidersIcon}
+                      alt=""
+                      aria-hidden
+                      width={20}
+                      height={20}
+                    />
+                  </FilterEditIconButton>
+                </MatchingFilterRow>
+              )}
 
               {!isLoggedIn ? (
                 <ChecklistBanner onClick={() => navigate(PATHS.LOGIN)}>
@@ -366,23 +352,30 @@ export default function RoomMatePage() {
                         </MatchingCardRail>
                       </MatchingCardRailWrapper>
                     ) : !isFilterSet ? (
-                      <EmptyStateContainer>
-                        <EmptyTitle>
-                          맞춤 룸메이트를 설정하면 <br />새 글이 올라올 때 푸시
-                          알림으로 알려드려요.
-                        </EmptyTitle>
+                      <EmptyStateCard>
+                        <EmptyStateText>
+                          조건에 맞는 글이 올라오면
+                          <br />
+                          푸시 알림을 받아볼 수 있어요.
+                        </EmptyStateText>
                         <PrimarySettingButton
-                          onClick={() => navigate(PATHS.ROOMMATE.FIND_SETTING)}
+                          type="button"
+                          onClick={() =>
+                            navigate(
+                              isLoggedIn
+                                ? PATHS.ROOMMATE.FIND_SETTING
+                                : PATHS.LOGIN,
+                            )
+                          }
                         >
-                          맞춤 룸메이트 설정하기
+                          맞춤 룸메이트 설정
                         </PrimarySettingButton>
-                        <FooterTextGroup>
-                          <p>이미 같이 하기로 한 룸메이트가 있다면?</p>
-                          <span onClick={() => navigate(PATHS.ROOMMATE.ADD)}>
-                            룸메이트 등록하러 가기
-                          </span>
-                        </FooterTextGroup>
-                      </EmptyStateContainer>
+                        <EmptyStateSubText>
+                          필터를 아직 설정하지 않았다면
+                          <br />
+                          먼저 원하는 조건을 선택해주세요
+                        </EmptyStateSubText>
+                      </EmptyStateCard>
                     ) : (
                       <EmptyMessage>
                         필터 조건에 맞는 게시글이 없습니다.
@@ -395,7 +388,7 @@ export default function RoomMatePage() {
           </TitleContentArea>
 
           <TitleContentArea
-            title={"룸메 목록"}
+            title={"전체 목록"}
             location="룸메이트_홈"
             rightAction={
               <SemesterSelect
@@ -654,16 +647,6 @@ const FilterEditIconButton = styled.button`
   }
 `;
 
-const EmptyStateContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 60px 24px;
-  text-align: center;
-  margin-top: 8px;
-`;
-
 const LikedPostsSection = styled.section`
   display: flex;
   flex-direction: column;
@@ -723,44 +706,54 @@ const MatchingCardRail = styled.div`
   }
 `;
 
-const EmptyTitle = styled.h3`
-  color: black;
+const EmptyStateCard = styled.div`
+  background: ${colors.bg.bg1};
+  filter: drop-shadow(0px 4px 4px ${colors.gray.gray200});
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  padding: 16px 32px;
+  border-radius: 8px;
+  width: 100%;
+  box-sizing: border-box;
   text-align: center;
-  font-size: 16px;
-  font-style: normal;
-  font-weight: 400;
-  line-height: normal;
+`;
+
+const EmptyStateText = styled.p`
+  ${typography.label1Normal}
+  color: ${colors.gray.gray800};
+  text-align: center;
+  line-height: 1.5;
+  margin: 0;
 `;
 
 const PrimarySettingButton = styled.button`
-  background-color: #007bff;
+  background-color: ${colors.main.main1};
   border: none;
-  padding: 16px;
-  border-radius: 34px;
+  padding: 8px 68px;
+  border-radius: 68px;
   cursor: pointer;
-  margin-bottom: 32px;
-  width: 100%;
-  max-width: 240px;
-  color: var(--7, #f4f4f4);
-  font-size: 16px;
-  font-style: normal;
-  font-weight: 700;
-  line-height: normal;
+  color: ${colors.bg.bg1};
+  ${typography.body1Normal}
+  line-height: 1.5;
+  white-space: nowrap;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    opacity: 0.9;
+  }
 `;
 
-const FooterTextGroup = styled.div`
-  p {
-    font-size: 13px;
-    color: #888;
-    margin-bottom: 4px;
-  }
-  span {
-    font-size: 13px;
-    color: #007bff;
-    font-weight: 600;
-    text-decoration: underline;
-    cursor: pointer;
-  }
+const EmptyStateSubText = styled.p`
+  ${typography.caption1}
+  color: ${colors.gray.gray500};
+  text-align: center;
+  line-height: 1.5;
+  margin: 0;
 `;
 
 const TagsWrapper = styled.div`
