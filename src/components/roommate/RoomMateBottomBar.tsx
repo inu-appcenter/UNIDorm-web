@@ -16,15 +16,22 @@ import HeartToggleButton from "@/components/common/HeartToggleButton";
 const RoomMateBottomBar = ({
   partnerName,
   userProfileImageUrl,
+  postDormType,
 }: {
   partnerName: string;
   userProfileImageUrl: string;
+  postDormType?: string;
 }) => {
   const { boardId } = useParams<{ boardId: string }>();
   const queryClient = useQueryClient();
 
   const { tokenInfo, userInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
+  const isSameDorm =
+    !isLoggedIn ||
+    !userInfo.dormType ||
+    !postDormType ||
+    userInfo.dormType === postDormType;
 
   const [liked, setLiked] = useState<boolean>(false);
   const [isLikeSubmitting, setIsLikeSubmitting] = useState(false);
@@ -54,6 +61,12 @@ const RoomMateBottomBar = ({
       navigate("/login");
       return;
     }
+
+    if (!isSameDorm) {
+      alert("나와 같은 기숙사생이 아니에요.\n기숙사 정보를 확인해주세요.");
+      return;
+    }
+
     if (!boardId) return;
 
     try {
@@ -105,6 +118,12 @@ const RoomMateBottomBar = ({
       navigate("/login");
       return;
     }
+
+    if (!isSameDorm) {
+      alert("나와 같은 기숙사생이 아니에요.\n기숙사 정보를 확인해주세요.");
+      return;
+    }
+
     if (!userInfo.roommateCheckList) {
       alert("먼저 체크리스트를 작성해주세요!");
       navigate("/roommate/checklist");
@@ -129,7 +148,9 @@ const RoomMateBottomBar = ({
   return (
     <RoomMateBottomBarWrapper>
       <MessageButton type="button" onClick={handleChatClick}>
-        메시지 보내기
+        {isSameDorm
+          ? "메시지 보내기"
+          : "나와 같은 기숙사생에게만 보낼 수 있어요."}
       </MessageButton>
 
       <HeartToggleButton

@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import styled from "styled-components";
+
+
 
 
 import {
@@ -30,21 +33,32 @@ interface DetailSection {
   rows: DetailRow[];
 }
 
-const getDisplayValue = (value?: string | null) => value || "정보 없음";
+const getDisplayValue = (value?: string | null) => {
+  if (!value) return "정보 없음";
+  if (value === "안골아요") return "안 골아요";
+  if (value === "안갈아요") return "안 갈아요";
+  if (value === "안피워요") return "안 피워요";
+  return value;
+};
 
 
 
-import { useQueryClient } from "@tanstack/react-query";
 
 export default function RoomMateBoardDetailPage() {
   const { boardId } = useParams<{ boardId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
+
+
   const queryClient = useQueryClient();
   const roomId = location.state?.roomId as number | undefined;
+
   const partnerName = location.state?.partnerName as string | undefined;
-  const { userInfo, tokenInfo } = useUserStore();
-  const isLoggedIn = Boolean(tokenInfo.accessToken);
+  const { userInfo } = useUserStore();
+
+
+
+
 
   const [boardData, setBoardData] = useState<RoommatePost | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -198,10 +212,7 @@ export default function RoomMateBoardDetailPage() {
     return <ErrorMessage>게시글을 불러오지 못했습니다.</ErrorMessage>;
   }
 
-  const shouldShowBottomBar =
-    !roomId &&
-    !isMyPost &&
-    (!isLoggedIn || userInfo.dormType === boardData.dormType);
+  const shouldShowBottomBar = !roomId && !isMyPost;
 
   const displayUserName =
     boardData.userName || (roomId && partnerName ? partnerName : "익명");
@@ -246,10 +257,12 @@ export default function RoomMateBoardDetailPage() {
         <RoomMateBottomBar
           partnerName={boardData.userName}
           userProfileImageUrl={boardData.userProfileImageUrl}
+          postDormType={boardData.dormType}
         />
       )}
     </RoomMateDetailPageWrapper>
   );
+
 }
 
 

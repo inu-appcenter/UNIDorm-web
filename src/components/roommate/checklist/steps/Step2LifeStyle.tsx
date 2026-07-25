@@ -4,9 +4,9 @@ import ToggleGroup from "../ToggleGroup";
 import {
   organizationLevel,
   religion,
-  smoking,
-  snoring,
-  toothgrinding,
+  smokingDisplay,
+  snoringDisplay,
+  toothgrindingDisplay,
 } from "@/constants/constants";
 import { StepProps } from "@/types/roommates";
 
@@ -15,25 +15,26 @@ export default function Step2LifeStyle({ data, onChange }: StepProps) {
     <>
       <TitleContentArea title={"흡연 여부"}>
         <ToggleGroup
-          Groups={smoking}
+          Groups={smokingDisplay}
           selectedIndex={data.smoking}
           onSelect={(val) => onChange("smoking", val)}
         />
       </TitleContentArea>
       <TitleContentArea title={"코골이 여부"}>
         <ToggleGroup
-          Groups={snoring}
+          Groups={snoringDisplay}
           selectedIndex={data.snoring}
           onSelect={(val) => onChange("snoring", val)}
         />
       </TitleContentArea>
       <TitleContentArea title={"이갈이 여부"}>
         <ToggleGroup
-          Groups={toothgrinding}
+          Groups={toothgrindingDisplay}
           selectedIndex={data.toothGrind}
           onSelect={(val) => onChange("toothGrind", val)}
         />
       </TitleContentArea>
+
       <TitleContentArea title={"정리 정돈"}>
         <ToggleGroup
           Groups={organizationLevel}
