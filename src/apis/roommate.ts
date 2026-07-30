@@ -2,6 +2,7 @@
 import { AxiosResponse } from "axios";
 import tokenInstance from "./tokenInstance.ts";
 import {
+  FilteredRoommatePost,
   MyRoommateInfoResponse,
   ReceivedMatchingRequest,
   RoommateMatchingByChatRoomRequest,
@@ -16,12 +17,12 @@ import {
   SimilarRoommatePost,
 } from "@/types/roommates";
 
-export const getRoomMateList = async (): Promise<
-  AxiosResponse<RoommatePost[]>
-> => {
-
-
-  const response = await tokenInstance.get<RoommatePost[]>(`/roommates/list`);
+export const getRoomMateList = async (
+  semester?: number,
+): Promise<AxiosResponse<RoommatePost[]>> => {
+  const response = await tokenInstance.get<RoommatePost[]>(`/roommates/list`, {
+    params: { semester },
+  });
   console.log(response);
   return response;
 };
@@ -29,11 +30,12 @@ export const getRoomMateList = async (): Promise<
 export const getRoomMateScrollList = async (
   lastId?: number,
   size: number = 10,
+  semester?: number,
 ): Promise<RoommatePost[]> => {
   const response = await tokenInstance.get<RoommatePost[]>(
     `/roommates/list/scroll`,
     {
-      params: { lastId, size },
+      params: { lastId, size, semester },
     },
   );
 
@@ -250,14 +252,15 @@ export const getNotificationFilter = async (): Promise<
 
 // 필터 조건에 맞는 게시글 목록 조회
 export const getMatchingPostList = async (): Promise<
-  AxiosResponse<RoommatePost[]>
+  AxiosResponse<FilteredRoommatePost[]>
 > => {
-  const response = await tokenInstance.get<RoommatePost[]>(
+  const response = await tokenInstance.get<FilteredRoommatePost[]>(
     `/roommates/notification-filter/matching-posts`,
   );
   console.log(response);
   return response;
 };
+
 
 // 룸메이트 알림 필터 설정 및 수정
 export const updateNotificationFilter = async (

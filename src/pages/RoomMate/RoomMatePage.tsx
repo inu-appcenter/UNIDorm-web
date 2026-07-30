@@ -141,6 +141,15 @@ export default function RoomMatePage() {
     });
   }, [notificationFilterData]);
 
+  const semesterCodeMap: Record<string, number> = {
+    "1학기": 1,
+    "2학기": 2,
+    "여름방학": 3,
+    "겨울방학": 4,
+  };
+  const currentSemesterCode =
+    semesterCodeMap[selectedSemester.slice(-3)] || undefined;
+
   const {
     data: scrollData,
     fetchNextPage,
@@ -148,8 +157,9 @@ export default function RoomMatePage() {
     isFetchingNextPage,
     isLoading: isLatestLoading,
   } = useInfiniteQuery({
-    queryKey: ["roommates", "scroll"],
-    queryFn: ({ pageParam }) => getRoomMateScrollList(pageParam, 10),
+    queryKey: ["roommates", "scroll", currentSemesterCode],
+    queryFn: ({ pageParam }) =>
+      getRoomMateScrollList(pageParam, 10, currentSemesterCode),
     initialPageParam: undefined as number | undefined,
     getNextPageParam: (lastPage) => {
       if (lastPage.length < 10) return undefined;
@@ -157,6 +167,7 @@ export default function RoomMatePage() {
     },
     staleTime: 1000 * 60 * 5,
   });
+
 
   useEffect(() => {
     if (
@@ -360,14 +371,27 @@ export default function RoomMatePage() {
                     {matchingRoommates && matchingRoommates.length > 0 ? (
                       <MatchingCardRailWrapper>
                         <MatchingCardRail>
-                          {matchingRoommates.map((post) => (
-                            <MatchedRoomMateCard
-                              key={post.boardId}
-                              post={post}
-                            />
-                          ))}
+                          {matchingRoommates.map((item) => {
+                            const post =
+                              "post" in item
+                                ? item.post
+                                : (item as unknown as RoommatePost);
+                            const matchedFilterFields =
+                              "matchedFilterFields" in item
+                                ? item.matchedFilterFields
+                                : undefined;
+
+                            return (
+                              <MatchedRoomMateCard
+                                key={post.boardId}
+                                post={post}
+                                matchedFilterFields={matchedFilterFields}
+                              />
+                            );
+                          })}
                         </MatchingCardRail>
                       </MatchingCardRailWrapper>
+
                     ) : !isFilterSet ? (
                       <EmptyStateCard>
                         <EmptyStateText>

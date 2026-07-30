@@ -6,10 +6,28 @@ import { mixpanelTrack } from "@/utils/mixpanel";
 
 interface MatchedRoomMateCardProps {
   post: RoommatePost;
+  matchedFilterFields?: string[];
 }
+
+const FILTER_FIELD_NAMES: Record<string, string> = {
+  dormType: "기숙사",
+  college: "단과대",
+  dormPeriod: "상주기간",
+  mbti: "MBTI",
+  smoking: "흡연",
+  snoring: "코골이",
+  toothGrind: "이갈이",
+  sleeper: "잠귀",
+  showerHour: "샤워시간",
+  showerTime: "샤워소요",
+  bedTime: "취침시간",
+  arrangement: "정리정돈",
+  religion: "종교",
+};
 
 export default function MatchedRoomMateCard({
   post,
+  matchedFilterFields,
 }: MatchedRoomMateCardProps) {
   const navigate = useNavigate();
 
@@ -40,9 +58,19 @@ export default function MatchedRoomMateCard({
       </HeaderArea>
 
       <TagList>
-        {post.college && <Tag>{post.college}</Tag>}
-        {post.mbti && <Tag>{post.mbti}</Tag>}
+        {matchedFilterFields && matchedFilterFields.length > 0 ? (
+          matchedFilterFields.map((field) => (
+            <Tag key={field}>{FILTER_FIELD_NAMES[field] || field}</Tag>
+          ))
+        ) : (
+          <>
+            {post.college && <Tag>{post.college}</Tag>}
+            {post.mbti && <Tag>{post.mbti}</Tag>}
+          </>
+        )}
       </TagList>
+
+
     </Card>
   );
 }

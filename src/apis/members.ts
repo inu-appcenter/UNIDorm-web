@@ -111,18 +111,17 @@ export const putMember = async (
   name: string,
   college: string,
   dormType: string,
-  penalty: number,
 ): Promise<AxiosResponse<TokenInfo>> => {
-  console.log(name, college, dormType, penalty);
+  console.log(name, college, dormType);
   const response = await tokenInstance.put<TokenInfo>(`/users`, {
     name,
     college,
     dormType,
-    penalty,
   });
 
   return response;
 };
+
 
 type RefreshResponsePayload = Partial<TokenInfo> & {
   data?: Partial<TokenInfo>;

@@ -43,7 +43,7 @@ const getUserInfoFromStorage = (): UserInfo => {
     studentNumber: "",
     dormType: "",
     college: "",
-    penalty: 0,
+    reportedCount: 0,
     hasTimeTableImage: false,
     hasUnreadNotifications: false, // 새로 추가된 필드
     termsAgreed: false, // 새로 추가된 필드
@@ -72,7 +72,7 @@ const useUserStore = create<UserState>((set) => ({
       $name: userInfo.name,
       dormType: userInfo.dormType,
       college: userInfo.college,
-      penalty: userInfo.penalty,
+      reportedCount: userInfo.reportedCount,
       studentNumber: userInfo.studentNumber,
       hasTimeTableImage: userInfo.hasTimeTableImage,
       roommateCheckList: userInfo.roommateCheckList,

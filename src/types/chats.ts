@@ -24,7 +24,10 @@ export interface RoommateChatRoom {
   isRoommate?: boolean;
   opponentLeft?: boolean;
   unreadCount?: number;
+  myBoardTitle?: string | null;
+  opponentBoardTitle?: string | null;
 }
+
 
 export interface RoommateChat {
   createdDate: string;

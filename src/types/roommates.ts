@@ -30,7 +30,16 @@ export interface RoommatePost extends RoommatePostRequest {
   userProfileImageUrl: string;
   createDate: string;
   read?: boolean;
+  isRead?: boolean;
+  isMyPost?: boolean;
+  semester?: number;
 }
+
+export interface FilteredRoommatePost {
+  post: RoommatePost;
+  matchedFilterFields: string[];
+}
+
 
 
 export interface RoommatePostResponse extends RoommatePost {}
@@ -58,7 +67,9 @@ export interface RoomMateCardProps {
   matched: boolean;
   percentage?: number;
   location?: string;
+  isMyPost?: boolean;
 }
+
 
 // --- 알림 필터 관련 ---
 export interface RoommateNotificationFilter
