@@ -24,7 +24,7 @@ import type { RoommatePost } from "@/types/roommates";
 interface DetailRow {
   label: string;
   value: string;
-  matched?: boolean;
+  fieldKey?: string | string[];
 }
 
 interface DetailSection {
@@ -54,6 +54,9 @@ export default function RoomMateBoardDetailPage() {
   const roomId = location.state?.roomId as number | undefined;
 
   const partnerName = location.state?.partnerName as string | undefined;
+  const matchedFilterFields = location.state?.matchedFilterFields as
+    | string[]
+    | undefined;
   const { userInfo } = useUserStore();
 
 
@@ -132,6 +135,15 @@ export default function RoomMateBoardDetailPage() {
       : null,
   });
 
+  const isMatchedRow = (row: DetailRow) => {
+    if (!matchedFilterFields || matchedFilterFields.length === 0 || !row.fieldKey)
+      return false;
+    if (Array.isArray(row.fieldKey)) {
+      return row.fieldKey.some((k) => matchedFilterFields.includes(k));
+    }
+    return matchedFilterFields.includes(row.fieldKey);
+  };
+
   const sections = useMemo<DetailSection[]>(() => {
     if (!boardData) return [];
 
@@ -143,18 +155,22 @@ export default function RoomMateBoardDetailPage() {
           {
             label: "기숙사",
             value: getDisplayValue(boardData.dormType),
+            fieldKey: "dormType",
           },
           {
             label: "상주 기간",
             value: boardData.dormPeriod?.join(", ") || "정보 없음",
+            fieldKey: "dormPeriod",
           },
           {
             label: "단과대",
             value: getDisplayValue(boardData.college),
+            fieldKey: "college",
           },
           {
             label: "MBTI",
             value: getDisplayValue(boardData.mbti),
+            fieldKey: "mbti",
           },
         ],
       },
@@ -165,6 +181,7 @@ export default function RoomMateBoardDetailPage() {
           {
             label: "취침",
             value: getDisplayValue(boardData.bedTime),
+            fieldKey: "bedTime",
           },
           {
             label: "샤워",
@@ -172,10 +189,12 @@ export default function RoomMateBoardDetailPage() {
               [boardData.showerHour, boardData.showerTime]
                 .filter(Boolean)
                 .join(" · ") || "정보 없음",
+            fieldKey: ["showerHour", "showerTime"],
           },
           {
             label: "잠귀",
             value: getDisplayValue(boardData.sleeper),
+            fieldKey: "sleeper",
           },
         ],
       },
@@ -186,18 +205,22 @@ export default function RoomMateBoardDetailPage() {
           {
             label: "흡연",
             value: getDisplayValue(boardData.smoking),
+            fieldKey: "smoking",
           },
           {
             label: "코골이",
             value: getDisplayValue(boardData.snoring),
+            fieldKey: "snoring",
           },
           {
             label: "이갈이",
             value: getDisplayValue(boardData.toothGrind),
+            fieldKey: "toothGrind",
           },
           {
             label: "정리정돈",
             value: getDisplayValue(boardData.arrangement),
+            fieldKey: "arrangement",
           },
         ],
       },
@@ -242,7 +265,7 @@ export default function RoomMateBoardDetailPage() {
 
               <InfoRows>
                 {section.rows.map((row) => (
-                  <InfoRow key={row.label}>
+                  <InfoRow key={row.label} $isMatched={isMatchedRow(row)}>
                     <span>{row.label}</span>
                     <strong>{row.value}</strong>
                   </InfoRow>
@@ -331,17 +354,21 @@ const InfoRows = styled.div`
   gap: 2px;
 `;
 
-const InfoRow = styled.div`
+const InfoRow = styled.div<{ $isMatched?: boolean }>`
   ${typography.label1Normal}
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  color: ${colors.gray.gray500};
+  color: ${({ $isMatched }) =>
+    $isMatched ? colors.blue.blue300 : colors.gray.gray500};
+  font-weight: ${({ $isMatched }) => ($isMatched ? "600" : "400")};
 
   strong {
-    color: ${colors.gray.gray800};
+    color: ${({ $isMatched }) =>
+      $isMatched ? colors.blue.blue300 : colors.gray.gray800};
     font: inherit;
+    font-weight: ${({ $isMatched }) => ($isMatched ? "700" : "600")};
     text-align: right;
   }
 `;

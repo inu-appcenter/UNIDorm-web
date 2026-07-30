@@ -33,7 +33,9 @@ export interface RoommatePost extends RoommatePostRequest {
   isRead?: boolean;
   isMyPost?: boolean;
   semester?: number;
+  year?: number;
 }
+
 
 export interface FilteredRoommatePost {
   post: RoommatePost;
