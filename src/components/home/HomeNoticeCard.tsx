@@ -34,22 +34,18 @@ const HomeNoticeCard = ({
         navigate("/announcements/" + id);
       }}
     >
-      <TitleRow>
-        {isEmergency && <EmergencyBadge>긴급</EmergencyBadge>}
-        <TitleText>{title}</TitleText>
-      </TitleRow>
-      <ContentText>{content}</ContentText>
-      <BottomRow>
-        {type ? (
-          <TypeBadge type={type}>{getLabelByValue(type)}</TypeBadge>
-        ) : (
-          <div />
-        )}
+      <MetaRow>
+        <BadgeGroup>
+          {type && <TypeBadge type={type}>{getLabelByValue(type)}</TypeBadge>}
+          {isEmergency && <EmergencyBadge>긴급</EmergencyBadge>}
+        </BadgeGroup>
         <TimeGroup>
           <AiOutlineClockCircle className="clock-icon" />
           <span>{formatTimeAgo(createdDate)}</span>
         </TimeGroup>
-      </BottomRow>
+      </MetaRow>
+      <TitleText>{title}</TitleText>
+      <ContentText>{content}</ContentText>
     </NoticeItemWrapper>
   );
 };
@@ -72,11 +68,18 @@ const NoticeItemWrapper = styled.div`
   }
 `;
 
-const TitleRow = styled.div`
+const MetaRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+`;
+
+const BadgeGroup = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  width: 100%;
+  min-height: 22px;
 `;
 
 const EmergencyBadge = styled.div`
@@ -113,14 +116,6 @@ const ContentText = styled.div`
   overflow: hidden;
   text-overflow: ellipsis;
   width: 100%;
-`;
-
-const BottomRow = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  margin-top: 2px;
 `;
 
 const TimeGroup = styled.div`

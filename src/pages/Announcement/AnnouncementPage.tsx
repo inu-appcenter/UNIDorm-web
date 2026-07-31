@@ -490,7 +490,7 @@ export default function AnnouncementPage() {
 }
 
 const NoticePageWrapper = styled.div`
-  padding: 40px 16px 100px;
+  padding: 16px 16px 100px;
   display: flex;
   flex-direction: column;
   gap: 16px;

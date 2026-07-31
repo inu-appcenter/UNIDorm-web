@@ -17,6 +17,7 @@ import { useSetHeader } from "@/hooks/useSetHeader";
 import useUserStore from "@/stores/useUserStore";
 import { colors, typography } from "@/styles/tokens";
 import type { RoommatePost } from "@/types/roommates";
+import { getMemberInfo } from "@/apis/members";
 
 interface DetailRow {
   label: string;
@@ -50,7 +51,7 @@ export default function RoomMateBoardDetailPage() {
   const routeMatchedFilterFields = location.state?.matchedFilterFields as
     | string[]
     | undefined;
-  const { userInfo } = useUserStore();
+  const { userInfo, setUserInfo } = useUserStore();
 
   const [boardData, setBoardData] = useState<RoommatePost | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -101,6 +102,15 @@ export default function RoomMateBoardDetailPage() {
 
     try {
       await deleteRoommatePost(Number(boardId));
+
+      try {
+        const memberResponse = await getMemberInfo();
+        setUserInfo(memberResponse.data);
+      } catch (memberError) {
+        console.error("체크리스트 삭제 후 사용자 정보 갱신 실패:", memberError);
+      }
+
+      queryClient.invalidateQueries({ queryKey: ["roommates"] });
       alert("게시글이 삭제되었습니다.");
       navigate(
         `${PATHS.ROOMMATE.ROOT}?tab=${encodeURIComponent(CATEGORY_LIST[0])}`,
@@ -112,12 +122,23 @@ export default function RoomMateBoardDetailPage() {
     }
   };
 
+  const handleEdit = () => {
+    navigate(PATHS.ROOMMATE.CHECKLIST, {
+      state: { mode: "edit", boardId: boardData?.boardId },
+    });
+  };
+
   const isMyPost = Boolean(boardData && userInfo.id === boardData.userId);
 
   useSetHeader({
     title: "",
     showAlarm: true,
-    menuItems: isMyPost ? [{ label: "삭제하기", onClick: handleDelete }] : null,
+    menuItems: isMyPost
+      ? [
+          { label: "수정하기", onClick: handleEdit },
+          { label: "삭제하기", onClick: handleDelete },
+        ]
+      : null,
   });
 
   const isMatchedRow = (row: DetailRow) => {

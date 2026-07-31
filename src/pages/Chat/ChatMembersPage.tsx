@@ -10,6 +10,7 @@ import { getRoommateChatRooms } from "@/apis/chat";
 import {
   createPersonalOpenChatRoom,
   getOpenChatParticipants,
+  getOpenChatRooms,
   kickOpenChatParticipant,
   leaveOpenChatRoom,
   transferOpenChatHost,
@@ -163,20 +164,90 @@ export default function ChatMembersPage() {
       return;
     }
     setSubmitting(true);
-    try {
-      const response = await createPersonalOpenChatRoom({
-        name: roomName.trim(),
-        targetUserId: selectedUser.userId,
-      });
-      navigate(`/chat/personal/${response.data.roomId}`, {
+
+    const navigateToPersonalChat = (personalRoomId: number) => {
+      navigate(`/chat/personal/${personalRoomId}`, {
         state: {
           partnerName: selectedUser.nickname,
           partnerId: selectedUser.userId,
         },
       });
+    };
+
+    const findExistingPersonalRoomId = async () => {
+      let page = 0;
+      let totalPages = 1;
+
+      while (page < totalPages) {
+        const roomsResponse = await getOpenChatRooms("MY", page, 50);
+        totalPages = roomsResponse.data.totalPages;
+        const personalRooms = roomsResponse.data.content.filter(
+          (room) => room.roomType === "PERSONAL" && room.joined,
+        );
+
+        const participantResults = await Promise.all(
+          personalRooms.map(async (room) => {
+            try {
+              const participantsResponse = await getOpenChatParticipants(
+                room.roomId,
+              );
+              const hasTargetUser =
+                participantsResponse.data.participants.some(
+                  (participant) =>
+                    participant.userId === selectedUser.userId,
+                );
+
+              return hasTargetUser ? room.roomId : null;
+            } catch {
+              return null;
+            }
+          }),
+        );
+        const existingRoomId = participantResults.find(
+          (candidate): candidate is number => candidate !== null,
+        );
+
+        if (existingRoomId) return existingRoomId;
+        page += 1;
+      }
+
+      return null;
+    };
+
+    try {
+      const response = await createPersonalOpenChatRoom({
+        name: roomName.trim(),
+        targetUserId: selectedUser.userId,
+      });
+      navigateToPersonalChat(response.data.roomId);
     } catch (error) {
       console.error("1:1 채팅 생성 실패:", error);
-      alert("1:1 채팅방 생성에 실패했습니다. 이미 대화방이 존재할 수 있어요.");
+
+      if (isAxiosError(error) && error.response?.status === 409) {
+        const responseData = error.response.data as
+          | { roomId?: number; data?: { roomId?: number } }
+          | undefined;
+        const conflictRoomId = Number(
+          responseData?.roomId ?? responseData?.data?.roomId,
+        );
+
+        if (Number.isInteger(conflictRoomId) && conflictRoomId > 0) {
+          navigateToPersonalChat(conflictRoomId);
+          return;
+        }
+
+        try {
+          const existingRoomId = await findExistingPersonalRoomId();
+          if (existingRoomId) {
+            navigateToPersonalChat(existingRoomId);
+            return;
+          }
+        } catch (findError) {
+          console.error("기존 1:1 채팅방 조회 실패:", findError);
+        }
+      }
+
+      alert("1:1 채팅방 생성에 실패했습니다. 잠시 후 다시 시도해주세요.");
     } finally {
       setSubmitting(false);
     }
