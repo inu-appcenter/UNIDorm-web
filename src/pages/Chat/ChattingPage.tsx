@@ -86,6 +86,76 @@ interface RoommateBoardLink {
   boardId?: number;
 }
 
+interface StudentIdRequestPayload {
+  requestId: number;
+  requesterId?: number;
+  requesterNickname?: string;
+}
+
+const parseStudentIdRequestPayload = (
+  content?: string | null,
+): StudentIdRequestPayload | null => {
+  if (!content?.trim().startsWith("{")) return null;
+
+  try {
+    const payload = JSON.parse(content) as Record<string, unknown>;
+    const requestId = Number(
+      payload.requestId ?? payload.disclosureRequestId,
+    );
+    const requesterId = Number(payload.requesterId);
+    const requesterNickname =
+      typeof payload.requesterNickname === "string"
+        ? payload.requesterNickname.trim()
+        : "";
+
+    if (
+      !Number.isFinite(requestId) ||
+      requestId <= 0 ||
+      (!Number.isFinite(requesterId) && !requesterNickname)
+    ) {
+      return null;
+    }
+
+    return {
+      requestId,
+      requesterId: Number.isFinite(requesterId) ? requesterId : undefined,
+      requesterNickname: requesterNickname || undefined,
+    };
+  } catch {
+    return null;
+  }
+};
+
+const isStudentIdDisclosureAcceptedSystemMessage = (message: MessageType) =>
+  Boolean(
+    message.isSystem &&
+      /학번\s*(공유|공개).*?(수락|승인)/.test(
+        message.content.replace(/\s+/g, " ").trim(),
+      ),
+  );
+
+const dedupeStudentIdDisclosureMessages = (messages: MessageType[]) => {
+  const seenRequestIds = new Set<number>();
+  let hasAcceptedSystemMessage = false;
+
+  return messages.filter((message) => {
+    if (
+      message.type === "STUDENT_ID_REQUEST" &&
+      message.disclosureRequestId
+    ) {
+      if (seenRequestIds.has(message.disclosureRequestId)) return false;
+      seenRequestIds.add(message.disclosureRequestId);
+    }
+
+    if (isStudentIdDisclosureAcceptedSystemMessage(message)) {
+      if (hasAcceptedSystemMessage) return false;
+      hasAcceptedSystemMessage = true;
+    }
+
+    return true;
+  });
+};
+
 const parseLegacyRoommateShareMessage = (
   content: string,
 ): LegacyRoommateShareMessage => {
@@ -626,64 +696,76 @@ export default function ChattingPage() {
     token,
     onMessage: (msg) => {
       const now = new Date();
+      const studentIdRequestPayload = parseStudentIdRequestPayload(msg.content);
+      const normalizedType = studentIdRequestPayload
+        ? "STUDENT_ID_REQUEST"
+        : msg.type;
+      const normalizedRequestId =
+        msg.disclosureRequestId ?? studentIdRequestPayload?.requestId ?? null;
+      const normalizedSenderId =
+        msg.senderId ?? studentIdRequestPayload?.requesterId ?? null;
+      const normalizedNickname =
+        msg.senderNickname || studentIdRequestPayload?.requesterNickname;
 
-      if (chatType === "open" && msg.type === "STUDENT_ID_REQUEST") {
+      if (chatType === "open" && normalizedType === "STUDENT_ID_REQUEST") {
         return;
       }
 
       if (
         chatType === "personal" &&
-        msg.type === "STUDENT_ID_REQUEST" &&
-        msg.disclosureRequestId
+        normalizedType === "STUDENT_ID_REQUEST" &&
+        normalizedRequestId
       ) {
-        if (msg.senderId && msg.senderId !== userId) {
-          openChatOpponentIdRef.current = msg.senderId;
+        if (normalizedSenderId && normalizedSenderId !== userId) {
+          openChatOpponentIdRef.current = normalizedSenderId;
         }
         setOpenChatDisclosureStatus({
           status: "PENDING_RECEIVED",
-          requestId: msg.disclosureRequestId,
+          requestId: normalizedRequestId,
           targetStudentNumber: null,
         });
-      } else if (chatType === "personal" && msg.type === "SYSTEM") {
+      } else if (chatType === "personal" && normalizedType === "SYSTEM") {
         void refreshOpenChatDisclosureStatus();
       }
 
       setMessageList((prev) => {
+        const nextMessage: MessageType = {
+          id: msg.messageId || Date.now(),
+          sender: normalizedSenderId === userId ? "me" : "other",
+          content: studentIdRequestPayload
+            ? "학번 공유 요청"
+            : msg.content,
+          nickname: normalizedNickname || undefined,
+          userImageUrl: null,
+          isSystem: normalizedType === "SYSTEM",
+          senderId: normalizedSenderId,
+          type: normalizedType,
+          imageUrls: msg.imageUrls ?? [],
+          disclosureRequestId: normalizedRequestId,
+          linkedRoomId: msg.linkedRoomId,
+          linkedRoomName: msg.linkedRoomName,
+          linkedRoomDescription: msg.linkedRoomDescription,
+          linkedRoomMaxParticipants: msg.linkedRoomMaxParticipants,
+          unreadCount: msg.unreadCount,
+          time: now.toLocaleTimeString("ko-KR", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+          }),
+          createdAt: msg.createdAt || now.toISOString(),
+        };
         const isDuplicate = prev.some(
           (message) =>
-            message.id === msg.messageId ||
-            (msg.type === "STUDENT_ID_REQUEST" &&
+            message.id === nextMessage.id ||
+            (normalizedType === "STUDENT_ID_REQUEST" &&
               message.type === "STUDENT_ID_REQUEST" &&
-              message.disclosureRequestId === msg.disclosureRequestId),
+              message.disclosureRequestId === normalizedRequestId) ||
+            (isStudentIdDisclosureAcceptedSystemMessage(nextMessage) &&
+              isStudentIdDisclosureAcceptedSystemMessage(message)),
         );
         if (isDuplicate) return prev;
 
-        return [
-          ...prev,
-          {
-            id: msg.messageId || Date.now(),
-            sender: msg.senderId === userId ? "me" : "other",
-            content: msg.content,
-            nickname: msg.senderNickname || undefined,
-            userImageUrl: null,
-            isSystem: msg.type === "SYSTEM",
-            senderId: msg.senderId,
-            type: msg.type,
-            imageUrls: msg.imageUrls ?? [],
-            disclosureRequestId: msg.disclosureRequestId,
-            linkedRoomId: msg.linkedRoomId,
-            linkedRoomName: msg.linkedRoomName,
-            linkedRoomDescription: msg.linkedRoomDescription,
-            linkedRoomMaxParticipants: msg.linkedRoomMaxParticipants,
-            unreadCount: msg.unreadCount,
-            time: now.toLocaleTimeString("ko-KR", {
-              hour: "2-digit",
-              minute: "2-digit",
-              hour12: true,
-            }),
-            createdAt: msg.createdAt || now.toISOString(),
-          },
-        ];
+        return [...prev, nextMessage];
       });
     },
     onRead: ({ messageId, unreadCount }) => {
@@ -986,29 +1068,51 @@ export default function ChattingPage() {
             }
           }
 
-          const formattedMessages: MessageType[] = visibleChats.map((chat) => ({
-            id: chat.messageId,
-            sender: chat.senderId === userId ? "me" : "other",
-            content: chat.content,
-            nickname: chat.senderNickname || undefined,
-            userImageUrl: null,
-            isSystem: chat.type === "SYSTEM",
-            senderId: chat.senderId,
-            type: chat.type,
-            imageUrls: chat.imageUrls ?? [],
-            disclosureRequestId: chat.disclosureRequestId,
-            linkedRoomId: chat.linkedRoomId,
-            linkedRoomName: chat.linkedRoomName,
-            linkedRoomDescription: chat.linkedRoomDescription,
-            linkedRoomMaxParticipants: chat.linkedRoomMaxParticipants,
-            unreadCount: chat.unreadCount,
-            time: new Date(chat.createdAt).toLocaleTimeString("ko-KR", {
-              hour: "2-digit",
-              minute: "2-digit",
-              hour12: true,
-            }),
-            createdAt: chat.createdAt,
-          }));
+          const formattedMessages: MessageType[] =
+            dedupeStudentIdDisclosureMessages(
+              visibleChats.map((chat) => {
+                const studentIdRequestPayload = parseStudentIdRequestPayload(
+                  chat.content,
+                );
+                const normalizedType = studentIdRequestPayload
+                  ? "STUDENT_ID_REQUEST"
+                  : chat.type;
+                const normalizedSenderId =
+                  chat.senderId ?? studentIdRequestPayload?.requesterId ?? null;
+
+                return {
+                  id: chat.messageId,
+                  sender: normalizedSenderId === userId ? "me" : "other",
+                  content: studentIdRequestPayload
+                    ? "학번 공유 요청"
+                    : chat.content,
+                  nickname:
+                    chat.senderNickname ||
+                    studentIdRequestPayload?.requesterNickname ||
+                    undefined,
+                  userImageUrl: null,
+                  isSystem: normalizedType === "SYSTEM",
+                  senderId: normalizedSenderId,
+                  type: normalizedType,
+                  imageUrls: chat.imageUrls ?? [],
+                  disclosureRequestId:
+                    chat.disclosureRequestId ??
+                    studentIdRequestPayload?.requestId ??
+                    null,
+                  linkedRoomId: chat.linkedRoomId,
+                  linkedRoomName: chat.linkedRoomName,
+                  linkedRoomDescription: chat.linkedRoomDescription,
+                  linkedRoomMaxParticipants: chat.linkedRoomMaxParticipants,
+                  unreadCount: chat.unreadCount,
+                  time: new Date(chat.createdAt).toLocaleTimeString("ko-KR", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: true,
+                  }),
+                  createdAt: chat.createdAt,
+                };
+              }),
+            );
 
           const currentOpenChatRequestId =
             fetchedOpenChatDisclosureStatus?.requestId;
@@ -1420,8 +1524,8 @@ export default function ChattingPage() {
     const linkedRoomId = message.linkedRoomId;
     if (!linkedRoomId || joiningLinkedRoomId) return;
 
-    const enterRoom = async (password?: string) => {
-      const response = await joinOpenChatRoom(linkedRoomId, password);
+    const enterRoom = async () => {
+      const response = await joinOpenChatRoom(linkedRoomId);
       const targetRoomId = response.data.roomId ?? linkedRoomId;
       const targetRoomName =
         response.data.name ?? message.linkedRoomName ?? "단체 톡방";
@@ -1438,19 +1542,6 @@ export default function ChattingPage() {
       setJoiningLinkedRoomId(linkedRoomId);
       await enterRoom();
     } catch (error) {
-      if (isAxiosError(error) && error.response?.status === 400) {
-        const password = window.prompt("입장 비밀번호를 입력해주세요.");
-        if (password === null) return;
-
-        try {
-          await enterRoom(password);
-        } catch (passwordError) {
-          console.error("파생 톡방 입장 실패:", passwordError);
-          alert("비밀번호를 확인한 후 다시 시도해주세요.");
-        }
-        return;
-      }
-
       console.error("파생 톡방 입장 실패:", error);
       if (isAxiosError(error) && error.response?.status === 409) {
         alert("참여 인원이 가득 찬 단체 톡방입니다.");
@@ -2087,7 +2178,11 @@ export default function ChattingPage() {
                       showTime={showMessageTime}
                       imageUrls={msg.imageUrls}
                       unreadCount={
-                        chatType === "open" ? msg.unreadCount : undefined
+                        chatType === "open" || chatType === "personal"
+                          ? msg.unreadCount
+                          : chatType === "roommate" && msg.isRead === false
+                            ? 1
+                            : undefined
                       }
                       onImageClick={(url) => setSelectedImageUrl(url)}
                     />
@@ -2105,7 +2200,9 @@ export default function ChattingPage() {
                       }
                       imageUrls={msg.imageUrls}
                       unreadCount={
-                        chatType === "open" ? msg.unreadCount : undefined
+                        chatType === "open" || chatType === "personal"
+                          ? msg.unreadCount
+                          : undefined
                       }
                       onMessageClick={() => openMessageActions(msg)}
                       onImageClick={(url) => setSelectedImageUrl(url)}

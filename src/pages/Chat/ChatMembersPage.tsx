@@ -56,7 +56,6 @@ export default function ChatMembersPage() {
     null,
   );
   const [roomName, setRoomName] = useState("");
-  const [roomPassword, setRoomPassword] = useState("");
   const [leavePromptOpen, setLeavePromptOpen] = useState(false);
   const [selectingNewHost, setSelectingNewHost] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -168,7 +167,6 @@ export default function ChatMembersPage() {
       const response = await createPersonalOpenChatRoom({
         name: roomName.trim(),
         targetUserId: selectedUser.userId,
-        password: roomPassword.trim() || undefined,
       });
       navigate(`/chat/personal/${response.data.roomId}`, {
         state: {
@@ -468,7 +466,6 @@ export default function ChatMembersPage() {
                           disabled={submitting}
                           onClick={() => {
                             setRoomName("");
-                            setRoomPassword("");
                             setActiveSheet("create");
                           }}
                         >
@@ -562,15 +559,6 @@ export default function ChatMembersPage() {
                   placeholder="방 이름을 입력해주세요"
                   maxLength={30}
                   onChange={(event) => setRoomName(event.target.value)}
-                />
-              </FormField>
-              <FormField>
-                <label>비밀번호 (선택)</label>
-                <input
-                  type="password"
-                  value={roomPassword}
-                  maxLength={50}
-                  onChange={(event) => setRoomPassword(event.target.value)}
                 />
               </FormField>
               <PrimaryButton

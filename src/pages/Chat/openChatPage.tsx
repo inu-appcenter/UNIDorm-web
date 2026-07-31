@@ -16,7 +16,6 @@ import OpenChatRoomCard from "@/components/chat/OpenChatRoomCard";
 import OpenChatTab from "@/components/chat/OpenChatTab";
 import OpenChatEmptyState from "@/components/chat/OpenChatEmptyState";
 import OpenChatJoinModal from "@/components/modal/OpenChatJoinModal";
-import OpenChatPasswordModal from "@/components/modal/OpenChatPasswordModal";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { OpenChatRoom, OpenChatTab as OpenChatTabType } from "@/types/openchat";
 import { RoommateChatRoom } from "@/types/chats";
@@ -132,7 +131,6 @@ export default function OpenChatPage() {
   const [selectedRoom, setSelectedRoom] = useState<OpenChatRoom | null>(null);
 
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
-  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -222,7 +220,13 @@ export default function OpenChatPage() {
         } else {
           setRoommateRooms([]);
           const [openChatRes, unreadRes] = await Promise.all([
-            getOpenChatRooms(selectedTab, 0, 20, searchQuery || undefined),
+            getOpenChatRooms(
+              selectedTab,
+              0,
+              20,
+              searchQuery || undefined,
+              "createdAt,desc",
+            ),
             getAllRoommateChatUnreadCount(),
           ]);
           setRooms(
@@ -308,21 +312,16 @@ export default function OpenChatPage() {
     }
 
     setSelectedRoom(room);
-
-    if (room.hasPassword) {
-      setIsPasswordModalOpen(true);
-    } else {
-      setIsJoinModalOpen(true);
-    }
+    setIsJoinModalOpen(true);
   };
 
-  const joinSelectedRoom = async (password?: string): Promise<boolean> => {
+  const joinSelectedRoom = async (): Promise<boolean> => {
     if (!selectedRoom || isJoining) return false;
 
     try {
       setIsJoining(true);
       const roomToJoin = selectedRoom;
-      const response = await joinOpenChatRoom(roomToJoin.roomId, password);
+      const response = await joinOpenChatRoom(roomToJoin.roomId);
       const targetRoomId = response.data?.roomId ?? roomToJoin.roomId;
       const targetRoomName = response.data?.name ?? roomToJoin.name;
       const joinedRoom: OpenChatRoom = {
@@ -334,7 +333,6 @@ export default function OpenChatPage() {
       };
 
       setIsJoinModalOpen(false);
-      setIsPasswordModalOpen(false);
       setSelectedRoom(null);
       setIsJoining(false);
 
@@ -351,11 +349,7 @@ export default function OpenChatPage() {
       if (isAxiosError(error)) {
         const status = error.response?.status;
         if (status === 400) {
-          alert(
-            password
-              ? "비밀번호가 일치하지 않습니다."
-              : "채팅방에 참여할 수 없습니다.",
-          );
+          alert("채팅방에 참여할 수 없습니다.");
         } else if (status === 401) {
           alert("로그인이 필요합니다.");
           navigate("/login");
@@ -377,13 +371,9 @@ export default function OpenChatPage() {
 
   const handleJoinRoom = () => joinSelectedRoom();
 
-  const handleJoinPasswordRoom = (password: string) =>
-    joinSelectedRoom(password);
-
   const handleCloseModal = () => {
     if (isJoining) return;
     setIsJoinModalOpen(false);
-    setIsPasswordModalOpen(false);
     setSelectedRoom(null);
   };
 
@@ -409,6 +399,9 @@ export default function OpenChatPage() {
       includesSearchQuery(room.name) ||
       includesSearchQuery(room.description) ||
       includesSearchQuery(formatChatMessagePreview(room.lastMessage)),
+  );
+  const latestPublicRooms = [...filteredRooms].sort(
+    (firstRoom, secondRoom) => secondRoom.roomId - firstRoom.roomId,
   );
 
   const categoryFilteredRoommateRooms =
@@ -563,14 +556,14 @@ export default function OpenChatPage() {
               })}
             </RoomList>
           )
-        ) : filteredRooms.length === 0 ? (
+        ) : latestPublicRooms.length === 0 ? (
           <OpenChatEmptyState
             tab={selectedTab}
             onClickMoveDormitory={() => handleTabChange("DORMITORY")}
           />
         ) : (
           <RoomList>
-            {filteredRooms.map((room) => (
+            {latestPublicRooms.map((room) => (
               <OpenChatRoomCard
                 key={room.roomId}
                 room={room}
@@ -600,13 +593,6 @@ export default function OpenChatPage() {
         isJoining={isJoining}
       />
 
-      <OpenChatPasswordModal
-        isOpen={isPasswordModalOpen}
-        room={selectedRoom}
-        onClose={handleCloseModal}
-        onJoin={handleJoinPasswordRoom}
-        isJoining={isJoining}
-      />
     </PageContainer>
   );
 }
