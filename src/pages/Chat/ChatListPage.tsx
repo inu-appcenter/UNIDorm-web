@@ -169,6 +169,8 @@ export default function ChatListPage() {
                     message={formatChatMessagePreview(room.lastMessage)}
                     time={room.lastMessageTime}
                     partnerProfileImageUrl={room.partnerProfileImageUrl}
+                    isRoommate={room.isRoommate}
+                    boardTitle={room.opponentBoardTitle || room.myBoardTitle}
                   />
                 </motion.div>
               ))

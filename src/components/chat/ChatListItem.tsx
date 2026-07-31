@@ -15,6 +15,8 @@ interface ChatItemProps {
   maxPeople?: number;
   deadline?: string;
   partnerProfileImageUrl?: string;
+  isRoommate?: boolean;
+  boardTitle?: string | null;
 }
 
 const ChatListItem = ({
@@ -28,7 +30,10 @@ const ChatListItem = ({
   maxPeople,
   deadline,
   partnerProfileImageUrl,
+  isRoommate,
+  boardTitle,
 }: ChatItemProps) => {
+
   const [unreadCount, setUnreadCount] = useState<number>(0);
 
   // 안 읽은 메시지 카운트 조회 (룸메이트 탭일 경우에만)
@@ -82,7 +87,10 @@ const ChatListItem = ({
       {/* unreadCount가 0보다 크면 안 읽음 스타일($isUnread=true) 적용 */}
       <ContentWrapper $isUnread={unreadCount > 0}>
         <div className="titleLine">
-          <div className="title">{title ?? "익명 1"}</div>
+          <div className="title">
+            {title ?? "익명 1"}
+            {isRoommate && <RoommateBadge>룸메이트</RoommateBadge>}
+          </div>
           {selectedTab === "공구" && (
             <GroupPurchaseInfo
               currentPeople={currentPeople}
@@ -91,9 +99,11 @@ const ChatListItem = ({
             />
           )}
         </div>
+        {boardTitle && <BoardTitleText>{boardTitle}</BoardTitleText>}
         <div className="message">
           {message ?? "늦은 시간에 죄송합니다 ㅠㅠ"}
         </div>
+
       </ContentWrapper>
 
       <RightWrapper>
@@ -210,3 +220,25 @@ const Badge = styled.div`
   box-sizing: border-box;
   line-height: 1;
 `;
+
+const RoommateBadge = styled.span`
+  font-size: 10px;
+  font-weight: 600;
+  color: #3b82f6;
+  background: #eff6ff;
+  border-radius: 12px;
+  padding: 2px 6px;
+  margin-left: 6px;
+  display: inline-block;
+  vertical-align: middle;
+`;
+
+const BoardTitleText = styled.div`
+  font-size: 11px;
+  color: #8e8e93;
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+

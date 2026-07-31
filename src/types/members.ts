@@ -12,7 +12,7 @@ export interface UserInfo {
   studentNumber: string;
   dormType: string;
   college: string;
-  penalty: number;
+  reportedCount: number;
   hasTimeTableImage: boolean;
   /** 읽지 않은 알림이 있는지 여부 */
   hasUnreadNotifications: boolean;

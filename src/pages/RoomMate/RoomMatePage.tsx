@@ -28,7 +28,16 @@ import searchIcon from "@/assets/roommate/search-normal.svg";
 import caretDownIcon from "@/assets/roommate/caret-down.svg";
 import settingsSlidersIcon from "@/assets/roommate/settings-sliders.svg";
 
-const SEMESTER_OPTIONS = ["2026-1학기", "2025-2학기", "2025-1학기"];
+const CURRENT_YEAR = new Date().getFullYear();
+
+const SEMESTER_OPTIONS = [
+  { label: "전체 학기", value: undefined },
+  { label: `${CURRENT_YEAR}년 1학기`, value: 1 },
+  { label: `${CURRENT_YEAR}년 여름계절학기`, value: 3 },
+  { label: `${CURRENT_YEAR}년 2학기`, value: 2 },
+  { label: `${CURRENT_YEAR}년 겨울계절학기`, value: 4 },
+];
+
 
 function FilterTags({
   filters,
@@ -73,7 +82,10 @@ export default function RoomMatePage() {
 
   const selectedCategory = searchParams.get("tab") || CATEGORY_LIST[0];
   const [searchKeyword, setSearchKeyword] = useState("");
-  const [selectedSemester, setSelectedSemester] = useState(SEMESTER_OPTIONS[0]);
+  const [selectedSemesterCode, setSelectedSemesterCode] = useState<
+    number | undefined
+  >(undefined);
+
 
   const filters = useMemo(
     () => location.state?.filters || {},
@@ -148,8 +160,9 @@ export default function RoomMatePage() {
     isFetchingNextPage,
     isLoading: isLatestLoading,
   } = useInfiniteQuery({
-    queryKey: ["roommates", "scroll"],
-    queryFn: ({ pageParam }) => getRoomMateScrollList(pageParam, 10),
+    queryKey: ["roommates", "scroll", selectedSemesterCode],
+    queryFn: ({ pageParam }) =>
+      getRoomMateScrollList(pageParam, 10, selectedSemesterCode),
     initialPageParam: undefined as number | undefined,
     getNextPageParam: (lastPage) => {
       if (lastPage.length < 10) return undefined;
@@ -157,6 +170,8 @@ export default function RoomMatePage() {
     },
     staleTime: 1000 * 60 * 5,
   });
+
+
 
   useEffect(() => {
     if (
@@ -360,14 +375,27 @@ export default function RoomMatePage() {
                     {matchingRoommates && matchingRoommates.length > 0 ? (
                       <MatchingCardRailWrapper>
                         <MatchingCardRail>
-                          {matchingRoommates.map((post) => (
-                            <MatchedRoomMateCard
-                              key={post.boardId}
-                              post={post}
-                            />
-                          ))}
+                          {matchingRoommates.map((item) => {
+                            const post =
+                              "post" in item
+                                ? item.post
+                                : (item as unknown as RoommatePost);
+                            const matchedFilterFields =
+                              "matchedFilterFields" in item
+                                ? item.matchedFilterFields
+                                : undefined;
+
+                            return (
+                              <MatchedRoomMateCard
+                                key={post.boardId}
+                                post={post}
+                                matchedFilterFields={matchedFilterFields}
+                              />
+                            );
+                          })}
                         </MatchingCardRail>
                       </MatchingCardRailWrapper>
+
                     ) : !isFilterSet ? (
                       <EmptyStateCard>
                         <EmptyStateText>
@@ -409,16 +437,22 @@ export default function RoomMatePage() {
             location="룸메이트_홈"
             rightAction={
               <SemesterSelect
-                value={selectedSemester}
-                onChange={(event) => setSelectedSemester(event.target.value)}
+                value={selectedSemesterCode ?? "ALL"}
+                onChange={(event) => {
+                  const val = event.target.value;
+                  setSelectedSemesterCode(
+                    val === "ALL" ? undefined : Number(val),
+                  );
+                }}
                 aria-label="학기 선택"
               >
-                {SEMESTER_OPTIONS.map((semester) => (
-                  <option key={semester} value={semester}>
-                    {semester}
+                {SEMESTER_OPTIONS.map((opt) => (
+                  <option key={opt.label} value={opt.value ?? "ALL"}>
+                    {opt.label}
                   </option>
                 ))}
               </SemesterSelect>
+
             }
           >
             <>
@@ -655,7 +689,8 @@ const SettingsIcon = styled.img`
 
 const SemesterSelect = styled.select`
   ${typography.label1Normal}
-  width: 110px;
+  min-width: 155px;
+  width: auto;
   height: 36px;
   padding: 6px 28px 6px 12px;
   border: 0;
