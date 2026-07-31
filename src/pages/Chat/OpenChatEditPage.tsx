@@ -31,8 +31,6 @@ export default function OpenChatEditPage() {
   const [scope, setScope] = useState<OpenChatScope>("DORMITORY");
   const [maxParticipants, setMaxParticipants] = useState(2);
   const [isPublic, setIsPublic] = useState(true);
-  const [password, setPassword] = useState("");
-  const [removePassword, setRemovePassword] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -114,16 +112,6 @@ export default function OpenChatEditPage() {
     maxParticipants >= minimumParticipants &&
     maxParticipants <= 100;
 
-  const handlePublicChange = (nextIsPublic: boolean) => {
-    setIsPublic(nextIsPublic);
-    if (!nextIsPublic) {
-      setPassword("");
-      setRemovePassword(true);
-    } else {
-      setRemovePassword(false);
-    }
-  };
-
   const handleSubmit = async () => {
     if (!room || !isValid || isSubmitting) return;
 
@@ -134,12 +122,6 @@ export default function OpenChatEditPage() {
       maxParticipants,
       isPublic,
     };
-
-    if (!isPublic || removePassword) {
-      request.password = "";
-    } else if (password.trim()) {
-      request.password = password.trim();
-    }
 
     setIsSubmitting(true);
     try {
@@ -153,10 +135,6 @@ export default function OpenChatEditPage() {
         maxParticipants: request.maxParticipants ?? room.maxParticipants,
         isPublic: request.isPublic ?? room.isPublic,
         public: request.isPublic ?? room.public,
-        hasPassword:
-          !isPublic || removePassword
-            ? false
-            : Boolean(password.trim()) || room.hasPassword,
       };
 
       navigate(`/chat/open/${roomId}`, {
@@ -264,14 +242,14 @@ export default function OpenChatEditPage() {
             <ChoiceButton
               type="button"
               $active={isPublic}
-              onClick={() => handlePublicChange(true)}
+              onClick={() => setIsPublic(true)}
             >
               공개
             </ChoiceButton>
             <ChoiceButton
               type="button"
               $active={!isPublic}
-              onClick={() => handlePublicChange(false)}
+              onClick={() => setIsPublic(false)}
             >
               비공개
             </ChoiceButton>
@@ -282,37 +260,6 @@ export default function OpenChatEditPage() {
           </Helper>
         </FormGroup>
 
-        {isPublic && (
-          <FormGroup>
-            <Label htmlFor="edit-room-password">입장 비밀번호</Label>
-            <TextInput
-              id="edit-room-password"
-              type="password"
-              value={password}
-              maxLength={50}
-              disabled={removePassword}
-              placeholder={
-                room.hasPassword
-                  ? "변경하려면 새 비밀번호를 입력하세요"
-                  : "비밀번호 없이 사용하려면 비워두세요"
-              }
-              onChange={(event) => setPassword(event.target.value)}
-            />
-            {room.hasPassword && (
-              <CheckLabel>
-                <input
-                  type="checkbox"
-                  checked={removePassword}
-                  onChange={(event) => {
-                    setRemovePassword(event.target.checked);
-                    if (event.target.checked) setPassword("");
-                  }}
-                />
-                기존 비밀번호 제거
-              </CheckLabel>
-            )}
-          </FormGroup>
-        )}
       </Content>
 
       <SubmitArea>
@@ -442,15 +389,6 @@ const ChoiceButton = styled.button<{ $active: boolean }>`
   background: ${({ $active }) => ($active ? "#1677ff" : "#f7f7f7")};
   color: ${({ $active }) => ($active ? "#fff" : "#3d3d3d")};
   font: 400 14px/1.5 Pretendard, sans-serif;
-  cursor: pointer;
-`;
-
-const CheckLabel = styled.label`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #555;
-  font: 400 13px/1.5 Pretendard, sans-serif;
   cursor: pointer;
 `;
 

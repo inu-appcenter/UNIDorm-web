@@ -25,6 +25,7 @@ export const getOpenChatRooms = async (
   page = 0,
   size = 20,
   keyword?: string,
+  sort?: string,
 ): Promise<AxiosResponse<OpenChatRoomPageResponse>> => {
   const response = await tokenInstance.get<OpenChatRoomPageResponse>(
     `/open-chat-rooms`,
@@ -34,6 +35,7 @@ export const getOpenChatRooms = async (
         page,
         size,
         keyword: keyword || undefined,
+        sort,
       },
     },
   );

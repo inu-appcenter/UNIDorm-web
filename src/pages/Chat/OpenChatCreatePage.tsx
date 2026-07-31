@@ -23,7 +23,6 @@ export default function OpenChatCreatePage() {
   const [scope, setScope] = useState<OpenChatScope>("DORMITORY");
   const [maxParticipants, setMaxParticipants] = useState(100);
   const [isPublic, setIsPublic] = useState(true);
-  const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isValid =
@@ -45,7 +44,6 @@ export default function OpenChatCreatePage() {
           description: description.trim() || undefined,
           maxParticipants,
           isPublic,
-          password: isPublic ? password.trim() || undefined : undefined,
         });
 
         navigate(`/chat/open/${response.data.roomId}`, {
@@ -138,10 +136,7 @@ export default function OpenChatCreatePage() {
                 </ChipButton>
                 <ChipButton
                   active={!isPublic}
-                  onClick={() => {
-                    setIsPublic(false);
-                    setPassword("");
-                  }}
+                  onClick={() => setIsPublic(false)}
                 >
                   비노출
                 </ChipButton>
@@ -151,19 +146,6 @@ export default function OpenChatCreatePage() {
               </ScopeDescription>
             </FormGroup>
 
-            {isPublic && (
-              <FormGroup>
-                <Label htmlFor="room-password">입장 비밀번호</Label>
-                <TextInput
-                  id="room-password"
-                  type="password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  placeholder="비밀번호 없이 만들려면 비워두세요"
-                  maxLength={50}
-                />
-              </FormGroup>
-            )}
           </>
         ) : (
           <FormGroup>
