@@ -6,9 +6,12 @@ import ChatMessageContent from "./ChatMessageContent";
 type Props = {
   content: string;
   time: string;
+  showTime?: boolean;
+  showSenderInfo?: boolean;
   userImageUrl?: string | null;
   senderName?: string;
   imageUrls?: string[];
+  unreadCount?: number;
   onMessageClick?: () => void;
   onImageClick?: (url: string) => void;
 };
@@ -16,12 +19,24 @@ type Props = {
 const ChatItemOtherPerson = ({
   content,
   time,
+  showTime = true,
+  showSenderInfo = true,
   userImageUrl,
   senderName,
   imageUrls,
+  unreadCount,
   onMessageClick,
   onImageClick,
 }: Props) => {
+  const unreadLabel =
+    typeof unreadCount === "number"
+      ? unreadCount > 0
+        ? unreadCount > 99
+          ? "99+"
+          : String(unreadCount)
+        : null
+      : null;
+
   const longPressHandlers = useLongPress({
     onLongPress: () => {
       if (onMessageClick) onMessageClick();
@@ -32,6 +47,7 @@ const ChatItemOtherPerson = ({
   return (
     <ChatItemOtherPersonWrapper>
       <ProfileImg
+        $hidden={!showSenderInfo}
         src={userImageUrl && userImageUrl !== "string" ? userImageUrl : profile}
         alt="상대방"
         onError={(e) => {
@@ -40,7 +56,9 @@ const ChatItemOtherPerson = ({
         }}
       />
       <ContentArea>
-        {senderName && <div className="sender-name">{senderName}</div>}
+        {showSenderInfo && senderName && (
+          <div className="sender-name">{senderName}</div>
+        )}
         {imageUrls?.length ? (
           <ImageGrid
             {...(onMessageClick ? longPressHandlers : {})}
@@ -69,9 +87,12 @@ const ChatItemOtherPerson = ({
           </MessageBubble>
         )}
       </ContentArea>
-      <TimeArea>
-        <div className="time">{time}</div>
-      </TimeArea>
+      {(showTime || unreadLabel) && (
+        <TimeArea>
+          {showTime && <div className="time">{time}</div>}
+          {unreadLabel && <div className="isRead">{unreadLabel}</div>}
+        </TimeArea>
+      )}
     </ChatItemOtherPersonWrapper>
   );
 };
@@ -120,12 +141,13 @@ const ImageGrid = styled.div<{ $clickable?: boolean }>`
   }
 `;
 
-const ProfileImg = styled.img`
+const ProfileImg = styled.img<{ $hidden: boolean }>`
   width: 30px;
   height: 30px;
   border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
+  visibility: ${({ $hidden }) => ($hidden ? "hidden" : "visible")};
 `;
 
 const ContentArea = styled.div`
@@ -172,6 +194,7 @@ const MessageBubble = styled.div<{ $clickable?: boolean }>`
 const TimeArea = styled.div`
   display: flex;
   align-items: flex-end;
+  flex-direction: column-reverse;
   font-family: "Pretendard", sans-serif;
   .time {
     font-style: normal;
@@ -182,5 +205,10 @@ const TimeArea = styled.div`
     letter-spacing: 0.38px;
 
     color: #8b8b8b;
+  }
+  .isRead {
+    color: #0958d9;
+    font-size: 11px;
+    font-weight: 600;
   }
 `;

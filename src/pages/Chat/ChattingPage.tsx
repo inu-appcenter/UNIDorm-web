@@ -1312,6 +1312,51 @@ export default function ChattingPage() {
     );
   };
 
+  const isSameMinute = (date1: string, date2: string) => {
+    const firstTime = new Date(date1).getTime();
+    const secondTime = new Date(date2).getTime();
+
+    if (Number.isNaN(firstTime) || Number.isNaN(secondTime)) return false;
+
+    return Math.floor(firstTime / 60_000) === Math.floor(secondTime / 60_000);
+  };
+
+  const isRegularBubbleMessage = (message: MessageType) => {
+    if (
+      message.isSystem ||
+      message.type === "ROOM_LINK" ||
+      message.type === "STUDENT_ID_REQUEST"
+    ) {
+      return false;
+    }
+
+    return !(
+      chatType === "roommate" &&
+      parseLegacyRoommateShareMessage(message.content).type
+    );
+  };
+
+  const isSameMessageSender = (
+    firstMessage: MessageType,
+    secondMessage: MessageType,
+  ) => {
+    if (firstMessage.sender !== secondMessage.sender) return false;
+    if (firstMessage.sender === "me") return true;
+
+    if (
+      typeof firstMessage.senderId === "number" &&
+      typeof secondMessage.senderId === "number"
+    ) {
+      return firstMessage.senderId === secondMessage.senderId;
+    }
+
+    if (firstMessage.nickname && secondMessage.nickname) {
+      return firstMessage.nickname === secondMessage.nickname;
+    }
+
+    return chatType === "roommate" || chatType === "personal";
+  };
+
   const handleRequestShareClick = async () => {
     setMenuOpen(false);
     if (chatType !== "roommate" && chatType !== "personal") return;
@@ -2015,6 +2060,19 @@ export default function ChattingPage() {
                 }
               }
 
+              const nextMessage = messageList[index + 1];
+              const previousMessage = messageList[index - 1];
+              const showMessageTime =
+                !nextMessage ||
+                !isRegularBubbleMessage(nextMessage) ||
+                !isSameMessageSender(msg, nextMessage) ||
+                !isSameMinute(msg.createdAt, nextMessage.createdAt);
+              const showSenderInfo =
+                !previousMessage ||
+                !isRegularBubbleMessage(previousMessage) ||
+                !isSameMessageSender(previousMessage, msg) ||
+                !isSameMinute(previousMessage.createdAt, msg.createdAt);
+
               return (
                 <React.Fragment key={msg.id}>
                   {showDateLine && (
@@ -2026,15 +2084,19 @@ export default function ChattingPage() {
                     <ChatItemMy
                       content={msg.content}
                       time={msg.time}
+                      showTime={showMessageTime}
                       imageUrls={msg.imageUrls}
-                      unreadCount={msg.unreadCount}
-                      isRead={msg.isRead}
+                      unreadCount={
+                        chatType === "open" ? msg.unreadCount : undefined
+                      }
                       onImageClick={(url) => setSelectedImageUrl(url)}
                     />
                   ) : (
                     <ChatItemOtherPerson
                       content={msg.content}
                       time={msg.time}
+                      showTime={showMessageTime}
+                      showSenderInfo={showSenderInfo}
                       userImageUrl={msg.userImageUrl}
                       senderName={
                         chatType === "open" || chatType === "personal"
@@ -2042,6 +2104,9 @@ export default function ChattingPage() {
                           : undefined
                       }
                       imageUrls={msg.imageUrls}
+                      unreadCount={
+                        chatType === "open" ? msg.unreadCount : undefined
+                      }
                       onMessageClick={() => openMessageActions(msg)}
                       onImageClick={(url) => setSelectedImageUrl(url)}
                     />
