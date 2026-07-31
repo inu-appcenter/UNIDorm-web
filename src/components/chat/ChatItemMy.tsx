@@ -1,14 +1,34 @@
 import styled from "styled-components";
+import ChatMessageContent from "./ChatMessageContent";
 
 type Props = {
   content: string;
   time: string;
   imageUrls?: string[];
+  unreadCount?: number;
+  isRead?: boolean;
   onMessageClick?: () => void;
   onImageClick?: (url: string) => void;
 };
 
-const ChatItemMy = ({ content, time, imageUrls, onMessageClick, onImageClick }: Props) => {
+const ChatItemMy = ({
+  content,
+  time,
+  imageUrls,
+  unreadCount,
+  isRead,
+  onMessageClick,
+  onImageClick,
+}: Props) => {
+  const unreadLabel =
+    typeof unreadCount === "number" && unreadCount > 0
+      ? unreadCount > 99
+        ? "99+"
+        : String(unreadCount)
+      : isRead === false
+        ? "1"
+        : null;
+
   return (
     <ChatItemMyWrapper
       onClick={onMessageClick}
@@ -32,12 +52,14 @@ const ChatItemMy = ({ content, time, imageUrls, onMessageClick, onImageClick }: 
             ))}
           </ImageGrid>
         ) : (
-          <div className="message">{content}</div>
+          <div className="message">
+            <ChatMessageContent content={content} />
+          </div>
         )}
       </ContentArea>
       <TimeArea>
         <div className="time">{time}</div>
-        {/*<div className="isRead">1</div>*/}
+        {unreadLabel && <div className="isRead">{unreadLabel}</div>}
       </TimeArea>
     </ChatItemMyWrapper>
   );

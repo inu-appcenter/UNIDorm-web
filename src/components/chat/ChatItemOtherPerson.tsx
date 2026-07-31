@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import profile from "../../assets/profileimg.png";
 import { useLongPress } from "@/hooks/useLongPress";
+import ChatMessageContent from "./ChatMessageContent";
 
 type Props = {
   content: string;
@@ -64,7 +65,7 @@ const ChatItemOtherPerson = ({
             {...(onMessageClick ? longPressHandlers : {})}
             $clickable={Boolean(onMessageClick)}
           >
-            {content}
+            <ChatMessageContent content={content} />
           </MessageBubble>
         )}
       </ContentArea>

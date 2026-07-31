@@ -45,12 +45,15 @@ export default function OpenChatCreatePage() {
           description: description.trim() || undefined,
           maxParticipants,
           isPublic,
-          password: password.trim() || undefined,
+          password: isPublic ? password.trim() || undefined : undefined,
         });
 
         navigate(`/chat/open/${response.data.roomId}`, {
           replace: true,
-          state: { roomName: name.trim() },
+          state: {
+            roomName: name.trim(),
+            roomDescription: description.trim(),
+          },
         });
         return;
       }
@@ -65,7 +68,10 @@ export default function OpenChatCreatePage() {
 
       navigate(`/chat/open/${response.data.roomId}`, {
         replace: true,
-        state: { roomName: response.data.name },
+        state: {
+          roomName: response.data.name,
+          roomDescription: response.data.description,
+        },
       });
     } catch (error) {
       console.error("오픈채팅방 생성 실패", error);
@@ -132,7 +138,10 @@ export default function OpenChatCreatePage() {
                 </ChipButton>
                 <ChipButton
                   active={!isPublic}
-                  onClick={() => setIsPublic(false)}
+                  onClick={() => {
+                    setIsPublic(false);
+                    setPassword("");
+                  }}
                 >
                   비노출
                 </ChipButton>
@@ -142,18 +151,19 @@ export default function OpenChatCreatePage() {
               </ScopeDescription>
             </FormGroup>
 
-
-            <FormGroup>
-              <Label htmlFor="room-password">입장 비밀번호</Label>
-              <TextInput
-                id="room-password"
-                type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                placeholder="비밀번호 없이 만들려면 비워두세요"
-                maxLength={50}
-              />
-            </FormGroup>
+            {isPublic && (
+              <FormGroup>
+                <Label htmlFor="room-password">입장 비밀번호</Label>
+                <TextInput
+                  id="room-password"
+                  type="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder="비밀번호 없이 만들려면 비워두세요"
+                  maxLength={50}
+                />
+              </FormGroup>
+            )}
           </>
         ) : (
           <FormGroup>

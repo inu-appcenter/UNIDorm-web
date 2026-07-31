@@ -19,8 +19,15 @@ import {
   kickOpenChatParticipant,
   sendOpenChatImages,
 } from "@/apis/openchat";
-import { createReport } from "@/apis/report";
-import { OpenChatKickReason, OpenChatMessage } from "@/types/openchat";
+import {
+  OpenChatReportReason,
+  reportOpenChatMessage,
+} from "@/apis/report";
+import {
+  OpenChatKickReason,
+  OpenChatMessage,
+  OpenChatRoom,
+} from "@/types/openchat";
 import PhotoAttachmentBottomSheet from "@/components/chat/PhotoAttachmentBottomSheet";
 import ChatMessageActionSheet from "@/components/chat/ChatMessageActionSheet";
 import ImageViewerModal from "@/components/chat/ImageViewerModal";
@@ -62,6 +69,8 @@ type MessageType = {
   linkedRoomName?: string | null;
   linkedRoomDescription?: string | null;
   linkedRoomMaxParticipants?: number | null;
+  unreadCount?: number;
+  isRead?: boolean;
 };
 
 interface LegacyRoommateShareMessage {
@@ -165,7 +174,11 @@ export default function ChattingPage() {
 
   const location = useLocation();
   const partnerName = location.state?.partnerName ?? undefined;
+  const routeRoom = location.state?.room as OpenChatRoom | undefined;
   const routeRoomName = location.state?.roomName as string | undefined;
+  const routeRoomDescription = location.state?.roomDescription as
+    | string
+    | undefined;
   const [openChatRoomName, setOpenChatRoomName] = useState<string | undefined>(
     routeRoomName,
   );
@@ -548,6 +561,16 @@ export default function ChattingPage() {
         ];
       });
     },
+    onRead: (readMessageIds) => {
+      const readIds = new Set(readMessageIds.map(String));
+      setMessageList((current) =>
+        current.map((message) =>
+          readIds.has(String(message.id))
+            ? { ...message, isRead: true }
+            : message,
+        ),
+      );
+    },
     onConnect: () => {
       console.log("✅ WebSocket 연결됨");
     },
@@ -720,6 +743,7 @@ export default function ChattingPage() {
               hour12: true,
             }),
             createdAt: chat.createdDate, // API에서 받은 날짜 저장
+            isRead: chat.read,
           }));
 
           const currentStatusRequestId =
@@ -905,6 +929,7 @@ export default function ChattingPage() {
             linkedRoomName: chat.linkedRoomName,
             linkedRoomDescription: chat.linkedRoomDescription,
             linkedRoomMaxParticipants: chat.linkedRoomMaxParticipants,
+            unreadCount: chat.unreadCount,
             time: new Date(chat.createdAt).toLocaleTimeString("ko-KR", {
               hour: "2-digit",
               minute: "2-digit",
@@ -1119,6 +1144,7 @@ export default function ChattingPage() {
     linkedRoomName: message.linkedRoomName,
     linkedRoomDescription: message.linkedRoomDescription,
     linkedRoomMaxParticipants: message.linkedRoomMaxParticipants,
+    unreadCount: message.unreadCount,
     time: new Date(message.createdAt).toLocaleTimeString("ko-KR", {
       hour: "2-digit",
       minute: "2-digit",
@@ -1150,13 +1176,9 @@ export default function ChattingPage() {
     setMessageSheetOpen(true);
   };
 
-  const handleReportMessage = async (reason: string) => {
+  const handleReportMessage = async (reason: OpenChatReportReason) => {
     if (!selectedMessage) return;
-    await createReport({
-      category: reason,
-      title: "오픈채팅 메시지 신고",
-      content: `[roomId:${roomId}][messageId:${selectedMessage.id}] ${selectedMessage.content || "사진 메시지"}`,
-    });
+    await reportOpenChatMessage(selectedMessage.id, reason);
     alert("신고가 접수되었습니다.");
   };
 
@@ -1201,6 +1223,8 @@ export default function ChattingPage() {
           partnerProfileImageUrl,
           roomId,
           roomName: openChatRoomName,
+          roomDescription: routeRoomDescription,
+          room: routeRoom,
         },
       });
     },
@@ -1298,7 +1322,10 @@ export default function ChattingPage() {
         response.data.name ?? message.linkedRoomName ?? "단체 톡방";
 
       navigate(`/chat/open/${targetRoomId}`, {
-        state: { roomName: targetRoomName },
+        state: {
+          roomName: targetRoomName,
+          roomDescription: message.linkedRoomDescription,
+        },
       });
     };
 
@@ -1364,14 +1391,19 @@ export default function ChattingPage() {
 
             <S.NoticeBody $expanded={isNoticeExpanded}>
               <S.NoticeParagraph>
-                1긱 생활 이슈, 공동구매, 배달 메이트를 자유롭게 대화
+                {routeRoomDescription?.trim() ||
+                  "생활 정보 공유, 공동구매, 배달 메이트 등 자유롭게 이야기해보세요."}
               </S.NoticeParagraph>
-              <S.NoticeParagraph>
-                예시: 같이 배달 시키기 / 생필품 공동구매 / 분실물 문의
-              </S.NoticeParagraph>
-              <S.NoticeParagraph style={{ color: "#8b8b8b" }}>
-                확인후 공지를 접고 일반 대화만 볼 수 있음
-              </S.NoticeParagraph>
+              {!routeRoomDescription?.trim() && (
+                <>
+                  <S.NoticeParagraph>
+                    예시: 같이 배달 시키기 / 생필품 공동구매 / 분실물 문의
+                  </S.NoticeParagraph>
+                  <S.NoticeParagraph style={{ color: "#8b8b8b" }}>
+                    채팅방의 목적에 맞는 대화를 나눠주세요.
+                  </S.NoticeParagraph>
+                </>
+              )}
             </S.NoticeBody>
           </S.NoticeContainer>
         )}
@@ -1902,6 +1934,8 @@ export default function ChattingPage() {
                       content={msg.content}
                       time={msg.time}
                       imageUrls={msg.imageUrls}
+                      unreadCount={msg.unreadCount}
+                      isRead={msg.isRead}
                       onImageClick={(url) => setSelectedImageUrl(url)}
                     />
                   ) : (

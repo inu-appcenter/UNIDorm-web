@@ -19,6 +19,7 @@ import {
   Beaker,
   ChevronRight,
   ShieldCheck,
+  Siren,
 } from "lucide-react";
 
 interface AdminPageItem {
@@ -89,6 +90,13 @@ const AdminMainPage: React.FC = () => {
       category: "콘텐츠 관리",
     },
     {
+      label: "채팅 신고 관리",
+      path: "/admin/open-chat-reports",
+      description: "오픈채팅 메시지 신고를 확인하고 처리합니다.",
+      icon: <Siren size={20} />,
+      category: "운영 및 시스템",
+    },
+    {
       label: "푸시 알림 전송",
       path: "/admin/notification/create",
       description: "전체 또는 특정 유저에게 알림을 보냅니다.",
@@ -130,7 +138,9 @@ const AdminMainPage: React.FC = () => {
           "AI 챗불이 관리",
         ].includes(page.label),
       )
-    : allAdminPages;
+    : allAdminPages.filter(
+        (page) => page.label !== "채팅 신고 관리" || isMainAdmin,
+      );
 
   let categories = Array.from(
     new Set(filteredPages.map((p) => p.category)),
