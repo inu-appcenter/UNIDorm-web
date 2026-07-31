@@ -2029,6 +2029,9 @@ export default function ChattingPage() {
                       imageUrls={msg.imageUrls}
                       unreadCount={msg.unreadCount}
                       isRead={msg.isRead}
+                      readLabel={
+                        chatType === "roommate" ? "읽음" : undefined
+                      }
                       onImageClick={(url) => setSelectedImageUrl(url)}
                     />
                   ) : (

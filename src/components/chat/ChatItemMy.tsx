@@ -7,6 +7,7 @@ type Props = {
   imageUrls?: string[];
   unreadCount?: number;
   isRead?: boolean;
+  readLabel?: string;
   onMessageClick?: () => void;
   onImageClick?: (url: string) => void;
 };
@@ -17,6 +18,7 @@ const ChatItemMy = ({
   imageUrls,
   unreadCount,
   isRead,
+  readLabel = "모두 읽음",
   onMessageClick,
   onImageClick,
 }: Props) => {
@@ -26,10 +28,10 @@ const ChatItemMy = ({
         ? unreadCount > 99
           ? "99+"
           : String(unreadCount)
-        : "모두 읽음"
+        : readLabel
       : typeof isRead === "boolean"
         ? isRead
-          ? "모두 읽음"
+          ? readLabel
           : "1"
         : null;
 

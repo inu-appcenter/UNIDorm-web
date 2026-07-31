@@ -77,8 +77,9 @@ const CardWrapper = styled.div.withConfig({
   gap: 12px;
   padding: 16px;
   background: #fff;
-  border: 1px solid #dcdcdc;
-  border-radius: 12px;
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.1);
   width: 100%;
   cursor: ${({ matched }) => (matched ? "not-allowed" : "pointer")};
   box-sizing: border-box;
