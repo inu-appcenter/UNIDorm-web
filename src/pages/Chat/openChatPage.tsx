@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { isAxiosError } from "axios";
 import {
@@ -62,7 +62,11 @@ function RoommateChatCard({
   }, [room.chatRoomId, room.unreadCount]);
 
   const isMyRoommate = Boolean(
-    room.isMyRoommate || room.myRoommate || room.matched || room.isRoommate,
+    room.roommate ||
+      room.isMyRoommate ||
+      room.myRoommate ||
+      room.matched ||
+      room.isRoommate,
   );
 
   return (
@@ -134,6 +138,7 @@ export default function OpenChatPage() {
 
   const [roommateUnreadTotal, setRoommateUnreadTotal] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [myChatRoomFilter, setMyChatRoomFilter] =
     useState<MyChatRoomFilter>("ALL");
 
@@ -264,19 +269,27 @@ export default function OpenChatPage() {
     };
   }, [fetchChatRooms, isLoggedIn, selectedTab]);
 
-  const handleRoommateClick = async (
-    chatRoomId: number,
-    partnerName?: string,
-    partnerProfileImageUrl?: string,
-  ) => {
+  const handleRoommateClick = async (room: RoommateChatRoom) => {
     try {
-      await patchRoommateChatRead(chatRoomId);
+      await patchRoommateChatRead(room.chatRoomId);
     } catch (err) {
       console.error("채팅 읽음 처리 실패", err);
     }
 
-    navigate(`/chat/roommate/${chatRoomId}`, {
-      state: { partnerName, partnerProfileImageUrl },
+    const opponentBoardTitle = room.opponentBoardTitle?.trim();
+    const myBoardTitle = room.myBoardTitle?.trim();
+
+    navigate(`/chat/roommate/${room.chatRoomId}`, {
+      state: {
+        partnerName: room.partnerName,
+        partnerProfileImageUrl: room.partnerProfileImageUrl,
+        roommateBoardTitle: opponentBoardTitle || myBoardTitle,
+        roommateBoardOwner: opponentBoardTitle
+          ? "opponent"
+          : myBoardTitle
+            ? "me"
+            : undefined,
+      },
     });
   };
 
@@ -417,12 +430,11 @@ export default function OpenChatPage() {
       itemType: "open" as const,
     })),
   ].sort((a, b) => {
-    const isPinnedRoommate = (
-      room: (typeof a) | (typeof b),
-    ): boolean =>
+    const isPinnedRoommate = (room: typeof a | typeof b): boolean =>
       room.itemType === "roommate" &&
       Boolean(
         (room as RoommateChatRoom).isMyRoommate ||
+          (room as RoommateChatRoom).roommate ||
           (room as RoommateChatRoom).myRoommate ||
           (room as RoommateChatRoom).matched ||
           (room as RoommateChatRoom).isRoommate,
@@ -450,7 +462,16 @@ export default function OpenChatPage() {
 
   useSetHeader({
     title: "채팅",
-    showAlarm: true,
+    showAlarm: isLoggedIn,
+    headerRightElement: !isLoggedIn ? (
+      <HeaderSearchButton
+        type="button"
+        aria-label="채팅방 검색"
+        onClick={() => searchInputRef.current?.focus()}
+      >
+        <Search size={28} />
+      </HeaderSearchButton>
+    ) : null,
     secondHeader: (
       <OpenChatTab
         selectedTab={selectedTab}
@@ -465,6 +486,7 @@ export default function OpenChatPage() {
       <Content>
         <SearchBox>
           <SearchInput
+            ref={searchInputRef}
             type="text"
             placeholder="방 이름/설명 검색"
             value={searchQuery}
@@ -473,7 +495,7 @@ export default function OpenChatPage() {
           <Search size={20} color="#1677ff" />
         </SearchBox>
 
-        {selectedTab === "MY" && (
+        {isLoggedIn && selectedTab === "MY" && (
           <MyChatFilterList aria-label="채팅방 유형">
             {MY_CHAT_ROOM_FILTERS.map((filter) => (
               <MyChatFilterButton
@@ -491,12 +513,14 @@ export default function OpenChatPage() {
 
         {!isLoggedIn ? (
           <LoginPromptWrapper>
-            <LoginTitle>로그인이 필요합니다</LoginTitle>
+            <LoginTitle>로그인이 필요합니다.</LoginTitle>
             <LoginDescription>
-              채팅방 목록을 확인하려면 로그인이 필요합니다.
+              내 기숙사 방이나 전체 방에서
+              <br />
+              설명을 보고 참여해보세요
             </LoginDescription>
             <LoginButton type="button" onClick={() => navigate("/login")}>
-              로그인하러 가기
+              참여하기
             </LoginButton>
           </LoginPromptWrapper>
         ) : isLoading ? (
@@ -523,13 +547,7 @@ export default function OpenChatPage() {
                     <RoommateChatCard
                       key={`roommate-${item.chatRoomId}`}
                       room={item}
-                      onClick={() =>
-                        handleRoommateClick(
-                          item.chatRoomId,
-                          item.partnerName,
-                          item.partnerProfileImageUrl,
-                        )
-                      }
+                      onClick={() => handleRoommateClick(item)}
                     />
                   );
                 } else {
@@ -564,10 +582,15 @@ export default function OpenChatPage() {
         )}
       </Content>
 
-      <CreateButton type="button" onClick={() => navigate("/chat/open/create")}>
-        <Plus size={20} color="white" />
-        <ButtonText>방만들기</ButtonText>
-      </CreateButton>
+      {isLoggedIn && (
+        <CreateButton
+          type="button"
+          onClick={() => navigate("/chat/open/create")}
+        >
+          <Plus size={20} color="white" />
+          <ButtonText>방만들기</ButtonText>
+        </CreateButton>
+      )}
 
       <OpenChatJoinModal
         isOpen={isJoinModalOpen}
@@ -626,6 +649,19 @@ const SearchInput = styled.input`
   &::placeholder {
     color: #8b8b8b;
   }
+`;
+
+const HeaderSearchButton = styled.button`
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #242424;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
 `;
 
 const MyChatFilterList = styled.div`
@@ -701,48 +737,49 @@ const ButtonText = styled.span`
 
 const LoginPromptWrapper = styled.div`
   width: 100%;
-  max-width: 288px;
-  min-height: 200px;
-  margin: 48px auto 0;
-  padding: 32px 20px;
-  border: 1px solid #e4e7ec;
+  min-height: 304px;
+  margin: 28px auto 0;
+  padding: 44px 20px 38px;
+  border: none;
   border-radius: 20px;
-  background: #f9fafb;
+  background: #ffffff;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 `;
 
 const LoginTitle = styled.h3`
   margin: 0;
-  font-size: 20px;
-  font-weight: 800;
-  line-height: 1.35;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.5;
   text-align: center;
   color: #1f2430;
   word-break: keep-all;
 `;
 
 const LoginDescription = styled.p`
-  margin: 20px 0 28px;
-  font-size: 15px;
-  font-weight: 500;
-  line-height: 1.6;
-  color: #8a93a3;
+  margin: 20px 0 40px;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #8b8b8b;
   text-align: center;
   word-break: keep-all;
 `;
 
 const LoginButton = styled.button`
-  width: 200px;
-  height: 46px;
+  width: min(230px, 100%);
+  height: 60px;
   border: none;
   border-radius: 999px;
-  background: #2563eb;
+  background: #1677ff;
   color: #ffffff;
-  font-size: 15px;
-  font-weight: 800;
+  font-size: 18px;
+  font-weight: 400;
   cursor: pointer;
 `;
 

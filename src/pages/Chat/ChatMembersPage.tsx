@@ -16,7 +16,7 @@ import {
 } from "@/apis/openchat";
 import { OpenChatParticipant, OpenChatRoom } from "@/types/openchat";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
-import { blockUser } from "@/apis/block";
+import { blockUser, getBlockedUsers } from "@/apis/block";
 import { requestStudentIdDisclosure } from "@/apis/studentIdDisclosure";
 import { isAxiosError } from "axios";
 
@@ -60,6 +60,7 @@ export default function ChatMembersPage() {
   const [leavePromptOpen, setLeavePromptOpen] = useState(false);
   const [selectingNewHost, setSelectingNewHost] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [blockedUserIds, setBlockedUserIds] = useState<Set<number>>(new Set());
 
   const fetchParticipants = useCallback(async () => {
     if (!isOpenChatRoom && chatType !== "roommate") return;
@@ -100,6 +101,18 @@ export default function ChatMembersPage() {
   useEffect(() => {
     fetchParticipants();
   }, [fetchParticipants]);
+
+  useEffect(() => {
+    getBlockedUsers()
+      .then((response) => {
+        setBlockedUserIds(
+          new Set(response.data.map((user) => user.blockedUserId)),
+        );
+      })
+      .catch((error) => {
+        console.error("차단 목록 조회 실패:", error);
+      });
+  }, []);
 
   const me = useMemo(
     () =>
@@ -175,6 +188,7 @@ export default function ChatMembersPage() {
     if (!selectedUser || submitting) return;
 
     const targetUser = selectedUser;
+    if (blockedUserIds.has(targetUser.userId)) return;
     if (
       !window.confirm(
         `${targetUser.nickname}님을 차단할까요?\n차단 후 해당 사용자와 1:1 채팅방 생성 및 메시지 전송이 제한됩니다.`,
@@ -186,6 +200,11 @@ export default function ChatMembersPage() {
     setSubmitting(true);
     try {
       await blockUser(targetUser.userId);
+      setBlockedUserIds((current) => {
+        const next = new Set(current);
+        next.add(targetUser.userId);
+        return next;
+      });
       setActiveSheet(null);
       setSelectedUser(null);
       alert(`${targetUser.nickname}님을 차단했습니다.`);
@@ -273,9 +292,7 @@ export default function ChatMembersPage() {
     if (!selectedUser || submitting || !me?.isHost || selectedUser.isHost)
       return;
     if (
-      !window.confirm(
-        `${selectedUser.nickname}님을 이 채팅방에서 강퇴할까요?`,
-      )
+      !window.confirm(`${selectedUser.nickname}님을 이 채팅방에서 강퇴할까요?`)
     ) {
       return;
     }
@@ -442,34 +459,71 @@ export default function ChatMembersPage() {
                 </Drawer.Description>
                 <SheetButtons>
                   {chatType === "open" ? (
-                    <ProfileActionRow>
-                      <BlockButton
-                        type="button"
-                        disabled={submitting}
-                        onClick={handleBlockUser}
+                    <>
+                      <OpenChatPrimaryActions
+                        $single={!me?.isHost || selectedUser.isHost}
                       >
-                        {submitting ? "처리 중..." : "차단하기"}
-                      </BlockButton>
-                      <PrimaryButton
-                        type="button"
-                        disabled={submitting}
-                        onClick={() => {
-                          setRoomName("");
-                          setRoomPassword("");
-                          setActiveSheet("create");
-                        }}
-                      >
-                        1:1 채팅하기
-                      </PrimaryButton>
-                    </ProfileActionRow>
+                        <PrimaryButton
+                          type="button"
+                          disabled={submitting}
+                          onClick={() => {
+                            setRoomName("");
+                            setRoomPassword("");
+                            setActiveSheet("create");
+                          }}
+                        >
+                          1:1 채팅하기
+                        </PrimaryButton>
+                        {me?.isHost && !selectedUser.isHost && (
+                          <DarkButton
+                            type="button"
+                            disabled={submitting}
+                            onClick={handleTransferHost}
+                          >
+                            방장 위임하기
+                          </DarkButton>
+                        )}
+                      </OpenChatPrimaryActions>
+                      <DangerActionList>
+                        {me?.isHost && !selectedUser.isHost && (
+                          <DangerActionButton
+                            type="button"
+                            disabled={submitting}
+                            onClick={handleKickUser}
+                          >
+                            강퇴시키기
+                          </DangerActionButton>
+                        )}
+                        <DangerActionButton
+                          type="button"
+                          disabled={
+                            submitting ||
+                            blockedUserIds.has(selectedUser.userId)
+                          }
+                          onClick={handleBlockUser}
+                        >
+                          {blockedUserIds.has(selectedUser.userId)
+                            ? "차단됨"
+                            : submitting
+                              ? "처리 중..."
+                              : "차단하기"}
+                        </DangerActionButton>
+                      </DangerActionList>
+                    </>
                   ) : (
                     <ProfileActionRow>
                       <BlockButton
                         type="button"
-                        disabled={submitting}
+                        disabled={
+                          submitting || blockedUserIds.has(selectedUser.userId)
+                        }
                         onClick={handleBlockUser}
                       >
-                        {submitting ? "처리 중..." : "차단하기"}
+                        {blockedUserIds.has(selectedUser.userId)
+                          ? "차단됨"
+                          : submitting
+                            ? "처리 중..."
+                            : "차단하기"}
                       </BlockButton>
                       <PrimaryButton
                         type="button"
@@ -480,26 +534,6 @@ export default function ChatMembersPage() {
                       </PrimaryButton>
                     </ProfileActionRow>
                   )}
-                  {chatType === "open" &&
-                    me?.isHost &&
-                    !selectedUser.isHost && (
-                      <ProfileActionRow>
-                        <DarkButton
-                          type="button"
-                          disabled={submitting}
-                          onClick={handleTransferHost}
-                        >
-                          방장 위임하기
-                        </DarkButton>
-                        <KickButton
-                          type="button"
-                          disabled={submitting}
-                          onClick={handleKickUser}
-                        >
-                          강퇴시키기
-                        </KickButton>
-                      </ProfileActionRow>
-                    )}
                 </SheetButtons>
               </SheetBody>
             )}
@@ -737,12 +771,18 @@ const SheetBody = styled.div`
 const SheetButtons = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 `;
 const ProfileActionRow = styled.div`
   display: grid;
   grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.4fr);
   gap: 10px;
+`;
+const OpenChatPrimaryActions = styled.div<{ $single: boolean }>`
+  display: grid;
+  grid-template-columns: ${({ $single }) =>
+    $single ? "minmax(0, 1fr)" : "repeat(2, minmax(0, 1fr))"};
+  gap: 8px;
 `;
 const PrimaryButton = styled.button`
   width: 100%;
@@ -779,9 +819,37 @@ const BlockButton = styled.button`
 const DarkButton = styled(PrimaryButton)`
   background: #0958d9;
 `;
-const KickButton = styled(BlockButton)`
-  border: 1px solid #ffccc7;
-  background: #fff2f0;
+const DangerActionList = styled.div`
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid #efefef;
+`;
+const DangerActionButton = styled.button`
+  display: flex;
+  width: 100%;
+  align-items: center;
+  padding: 8px;
+  border: 0;
+  background: transparent;
+  color: #eb0000;
+  font:
+    400 16px/1.6 Pretendard,
+    sans-serif;
+  text-align: left;
+  cursor: pointer;
+
+  &:first-child {
+    padding-top: 16px;
+  }
+
+  &:last-child {
+    padding-bottom: 16px;
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.5;
+  }
 `;
 const FormField = styled.div`
   display: flex;

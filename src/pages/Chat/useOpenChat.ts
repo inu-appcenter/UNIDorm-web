@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import useUserStore from "../../stores/useUserStore.ts";
-import type { OpenChatMessage } from "@/types/openchat";
+import type { OpenChatMessage, OpenChatReadEvent } from "@/types/openchat";
 
 interface OpenChatMessagePayload {
   roomId: number;
@@ -12,6 +11,7 @@ interface UseOpenChatProps {
   userId: number;
   token?: string;
   onMessage: (msg: OpenChatMessage) => void;
+  onRead?: (event: OpenChatReadEvent) => void;
   onConnect?: () => void;
   onDisconnect?: () => void;
 }
@@ -21,17 +21,14 @@ export const useOpenChat = ({
   userId,
   token,
   onMessage,
+  onRead,
   onConnect,
   onDisconnect,
 }: UseOpenChatProps) => {
-  const { userInfo } = useUserStore();
-
   const wsRef = useRef<WebSocket | null>(null);
   const [connected, setConnected] = useState(false);
   const subscriptions = useRef<string[]>([]);
-  const callbacks = useRef<
-    Record<string, (msg: OpenChatMessage) => void>
-  >({});
+  const callbacks = useRef<Record<string, (payload: unknown) => void>>({});
   const pendingSubscriptions = useRef<string[]>([]);
 
   const stompSend = (destination: string, body: unknown) => {
@@ -91,9 +88,6 @@ export const useOpenChat = ({
         try {
           const parsed = JSON.parse(body);
           console.log("📩 [RECEIVED MESSAGE]:", parsed);
-          if (parsed.senderId === userInfo.id) {
-            return;
-          }
           const callback = callbacks.current[destination];
 
           if (callback) {
@@ -129,7 +123,7 @@ export const useOpenChat = ({
 
   const subscribe = (
     destination: string,
-    callback: (msg: OpenChatMessage) => void,
+    callback: (payload: unknown) => void,
   ) => {
     if (subscriptions.current.includes(destination)) return;
 
@@ -164,7 +158,14 @@ export const useOpenChat = ({
   };
 
   useEffect(() => {
-    subscribe(`/sub/openchat/${roomId}`, onMessage);
+    subscribe(`/sub/openchat/${roomId}`, (payload) =>
+      onMessage(payload as OpenChatMessage),
+    );
+    if (onRead) {
+      subscribe(`/sub/openchat/${roomId}/read`, (payload) =>
+        onRead(payload as OpenChatReadEvent),
+      );
+    }
 
     return () => {
       disconnect();

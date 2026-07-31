@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import useUserStore from "../../stores/useUserStore.ts";
+import type { RoommateChat } from "@/types/chats";
 
 interface ChatMessage {
   roommateChattingRoomId: number;
@@ -10,8 +10,8 @@ interface UseRoommateChatProps {
   roomId: number;
   userId: number;
   token?: string;
-  onMessage: (msg: any) => void;
-  onRead?: (readMessageIds: string[]) => void;
+  onMessage: (msg: RoommateChat) => void;
+  onRead?: (readMessageIds: Array<string | number>) => void;
   onConnect?: () => void;
   onDisconnect?: () => void;
 }
@@ -25,8 +25,6 @@ export const useRoommateChat = ({
   onConnect,
   onDisconnect,
 }: UseRoommateChatProps) => {
-  const { userInfo } = useUserStore();
-
   const wsRef = useRef<WebSocket | null>(null);
   const [connected, setConnected] = useState(false);
   const subscriptions = useRef<string[]>([]);
@@ -91,9 +89,6 @@ export const useRoommateChat = ({
         try {
           const parsed = JSON.parse(body);
           console.log("📩 [RECEIVED MESSAGE]:", parsed); // 로그 추가
-          if (parsed.userId === userInfo.id) {
-            return;
-          }
           const callback = callbacks.current[destination];
 
           if (callback) {

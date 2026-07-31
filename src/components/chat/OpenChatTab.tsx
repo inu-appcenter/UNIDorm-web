@@ -17,7 +17,7 @@ export default function OpenChatTab({
 
   const tabs: { label: string; value: OpenChatTabType }[] = [
     { label: "내 채팅", value: "MY" },
-    { label: dormType ? dormType : "내 기숙사", value: "DORMITORY" },
+    { label: dormType ? dormType : "기숙사", value: "DORMITORY" },
     { label: "전체 방", value: "ALL" },
   ];
 

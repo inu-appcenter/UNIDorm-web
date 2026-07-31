@@ -7,7 +7,12 @@ import ChatItemMy from "../../components/chat/ChatItemMy.tsx";
 import { useRoommateChat } from "./useRoommateChat.ts";
 import { useOpenChat } from "./useOpenChat";
 import useUserStore from "../../stores/useUserStore.ts";
-import { getRoommateChatHistory, getRoommateChatRooms } from "@/apis/chat";
+import {
+  getRoommateChatHistory,
+  getRoommateChatRooms,
+  patchRoommateChatRead,
+} from "@/apis/chat";
+import { getMyChecklist } from "@/apis/roommate";
 import { patchNotificationsRead } from "@/apis/notification";
 import {
   getOpenChatMessages,
@@ -19,15 +24,8 @@ import {
   kickOpenChatParticipant,
   sendOpenChatImages,
 } from "@/apis/openchat";
-import {
-  OpenChatReportReason,
-  reportOpenChatMessage,
-} from "@/apis/report";
-import {
-  OpenChatKickReason,
-  OpenChatMessage,
-  OpenChatRoom,
-} from "@/types/openchat";
+import { OpenChatReportReason, reportOpenChatMessage } from "@/apis/report";
+import { OpenChatMessage, OpenChatRoom } from "@/types/openchat";
 import PhotoAttachmentBottomSheet from "@/components/chat/PhotoAttachmentBottomSheet";
 import ChatMessageActionSheet from "@/components/chat/ChatMessageActionSheet";
 import ImageViewerModal from "@/components/chat/ImageViewerModal";
@@ -78,6 +76,14 @@ interface LegacyRoommateShareMessage {
   requestId: number | null;
   requesterStudentNumber?: string;
   acceptorStudentNumber?: string;
+}
+
+type RoommateBoardOwner = "opponent" | "me";
+
+interface RoommateBoardLink {
+  title: string;
+  owner: RoommateBoardOwner;
+  boardId?: number;
 }
 
 const parseLegacyRoommateShareMessage = (
@@ -179,6 +185,24 @@ export default function ChattingPage() {
   const routeRoomDescription = location.state?.roomDescription as
     | string
     | undefined;
+  const routeRoommateBoardTitle = location.state?.roommateBoardTitle as
+    | string
+    | undefined;
+  const routeRoommateBoardOwner = location.state?.roommateBoardOwner as
+    | RoommateBoardOwner
+    | undefined;
+  const routeRoommateBoardId =
+    Number(location.state?.roommateBoardId) || undefined;
+  const [roommateBoardLink, setRoommateBoardLink] =
+    useState<RoommateBoardLink | null>(
+      routeRoommateBoardTitle && routeRoommateBoardOwner
+        ? {
+            title: routeRoommateBoardTitle,
+            owner: routeRoommateBoardOwner,
+            boardId: routeRoommateBoardId,
+          }
+        : null,
+    );
   const [openChatRoomName, setOpenChatRoomName] = useState<string | undefined>(
     routeRoomName,
   );
@@ -537,6 +561,12 @@ export default function ChattingPage() {
       }
 
       setMessageList((prev) => {
+        const messageId = msg.roommateChatId || Date.now();
+
+        if (prev.some((message) => message.id === messageId)) {
+          return prev;
+        }
+
         // 이미 렌더링된 학번 공유 관련 동일 내용 메시지가 있다면 무시
         if (
           msg.content.startsWith("[STUDENT_ID_SHARE_") &&
@@ -547,16 +577,19 @@ export default function ChattingPage() {
         return [
           ...prev,
           {
-            id: Date.now(),
-            sender: "other",
+            id: messageId,
+            sender: msg.userId === userId ? "me" : "other",
+            senderId: msg.userId,
             content: msg.content,
             isSystem: Boolean(msg.system),
-            time: now.toLocaleTimeString("ko-KR", {
+            userImageUrl: msg.userImageUrl,
+            isRead: msg.read,
+            time: new Date(msg.createdDate || now).toLocaleTimeString("ko-KR", {
               hour: "2-digit",
               minute: "2-digit",
               hour12: true,
             }),
-            createdAt: now.toISOString(), // 수신 시점 날짜 저장
+            createdAt: msg.createdDate || now.toISOString(),
           },
         ];
       });
@@ -642,6 +675,7 @@ export default function ChattingPage() {
             linkedRoomName: msg.linkedRoomName,
             linkedRoomDescription: msg.linkedRoomDescription,
             linkedRoomMaxParticipants: msg.linkedRoomMaxParticipants,
+            unreadCount: msg.unreadCount,
             time: now.toLocaleTimeString("ko-KR", {
               hour: "2-digit",
               minute: "2-digit",
@@ -651,6 +685,13 @@ export default function ChattingPage() {
           },
         ];
       });
+    },
+    onRead: ({ messageId, unreadCount }) => {
+      setMessageList((current) =>
+        current.map((message) =>
+          message.id === messageId ? { ...message, unreadCount } : message,
+        ),
+      );
     },
     onConnect: () => {
       console.log("✅ Open WebSocket 연결됨");
@@ -681,6 +722,31 @@ export default function ChattingPage() {
             if (currentRoom) {
               oppId = currentRoom.partnerId;
               opponentIdRef.current = oppId;
+
+              const opponentBoardTitle = currentRoom.opponentBoardTitle?.trim();
+              const myBoardTitle = currentRoom.myBoardTitle?.trim();
+              const nextBoardLink = opponentBoardTitle
+                ? {
+                    title: opponentBoardTitle,
+                    owner: "opponent" as const,
+                  }
+                : myBoardTitle
+                  ? {
+                      title: myBoardTitle,
+                      owner: "me" as const,
+                    }
+                  : null;
+
+              if (nextBoardLink) {
+                setRoommateBoardLink((current) => ({
+                  ...nextBoardLink,
+                  boardId:
+                    current?.title === nextBoardLink.title &&
+                    current.owner === nextBoardLink.owner
+                      ? current.boardId
+                      : undefined,
+                }));
+              }
             }
           } catch (e) {
             console.error("채팅방 목록 조회 실패:", e);
@@ -702,6 +768,12 @@ export default function ChattingPage() {
             } catch (e) {
               console.error("학번 공유 상태 조회 실패:", e);
             }
+          }
+
+          try {
+            await patchRoommateChatRead(roomId);
+          } catch (error) {
+            console.error("룸메이트 채팅 읽음 처리 실패:", error);
           }
 
           const response = await getRoommateChatHistory(roomId);
@@ -1105,22 +1177,6 @@ export default function ChattingPage() {
       return;
     }
 
-    const nowObj = new Date();
-    const nowTime = nowObj.toLocaleTimeString("ko-KR", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
-
-    const newMessage: MessageType = {
-      id: Date.now(),
-      sender: "me",
-      content: inputValue.trim(),
-      time: nowTime,
-      createdAt: nowObj.toISOString(), // 전송 시점 날짜 저장
-    };
-
-    setMessageList((prev) => [...prev, newMessage]);
     if (chatType === "roommate") {
       sendRoommateMessage(inputValue.trim());
     } else if (chatType === "open" || chatType === "personal") {
@@ -1156,10 +1212,13 @@ export default function ChattingPage() {
   const handleSendImages = async (files: File[]) => {
     try {
       const response = await sendOpenChatImages(roomId, files);
-      setMessageList((current) => [
-        ...current,
-        ...response.data.map(toMessageType),
-      ]);
+      setMessageList((current) => {
+        const currentIds = new Set(current.map((message) => message.id));
+        const newMessages = response.data
+          .map(toMessageType)
+          .filter((message) => !currentIds.has(message.id));
+        return [...current, ...newMessages];
+      });
     } catch (error) {
       console.error("사진 전송 실패:", error);
       alert(
@@ -1182,9 +1241,9 @@ export default function ChattingPage() {
     alert("신고가 접수되었습니다.");
   };
 
-  const handleKickSender = async (reason: OpenChatKickReason) => {
+  const handleKickSender = async () => {
     if (!selectedMessage?.senderId) return;
-    await kickOpenChatParticipant(roomId, selectedMessage.senderId, reason);
+    await kickOpenChatParticipant(roomId, selectedMessage.senderId, "OTHER");
     alert("참여자를 퇴장시켰습니다.");
   };
 
@@ -1212,6 +1271,7 @@ export default function ChattingPage() {
 
   useSetHeader({
     title: headerTitle,
+    titleBadge: chatType === "open" && isOpenChatHost ? "방장" : null,
     hamburgerOnClick: () => {
       navigate(`/chat/${chatType}/${roomId}/members`, {
         state: {
@@ -1357,6 +1417,37 @@ export default function ChattingPage() {
     }
   };
 
+  const handleRoommateBoardClick = async () => {
+    if (!roommateBoardLink) return;
+
+    if (roommateBoardLink.boardId) {
+      navigate(`/roommate/list/${roommateBoardLink.boardId}`);
+      return;
+    }
+
+    if (roommateBoardLink.owner === "opponent") {
+      navigate("/roommate/list/opponent", {
+        state: {
+          roomId,
+          partnerName,
+        },
+      });
+      return;
+    }
+
+    try {
+      const response = await getMyChecklist();
+      if (!response.data.boardId) {
+        alert("연결된 룸메이트 모집글을 찾지 못했습니다.");
+        return;
+      }
+      navigate(`/roommate/list/${response.data.boardId}`);
+    } catch (error) {
+      console.error("내 룸메이트 모집글 조회 실패:", error);
+      alert("연결된 룸메이트 모집글을 불러오지 못했습니다.");
+    }
+  };
+
   return (
     <S.ChatPageWrapper>
       {/* 배경 그라데이션 SVG */}
@@ -1371,6 +1462,8 @@ export default function ChattingPage() {
             roomId={roomId}
             isChatted={messageList.length > 0}
             partnerProfileImageUrl={partnerProfileImageUrl}
+            boardTitle={roommateBoardLink?.title}
+            onBoardTitleClick={handleRoommateBoardClick}
           />
         )}
         {chatType === "open" && (

@@ -85,7 +85,7 @@ export default function RoomMatePage() {
   const [selectedSemesterCode, setSelectedSemesterCode] = useState<
     number | undefined
   >(undefined);
-
+  const [debouncedSearchKeyword, setDebouncedSearchKeyword] = useState("");
 
   const filters = useMemo(
     () => location.state?.filters || {},
@@ -117,6 +117,14 @@ export default function RoomMatePage() {
 
   // 배경 잠금 상태 정의
   const isLocked = !isFeatureFlagLoading && isMatchingActive === false;
+
+  useEffect(() => {
+    const timer = window.setTimeout(
+      () => setDebouncedSearchKeyword(searchKeyword.trim()),
+      300,
+    );
+    return () => window.clearTimeout(timer);
+  }, [searchKeyword]);
 
   const { data: notificationFilterData } = useQuery({
     queryKey: ["roommateNotificationFilter"],
@@ -160,9 +168,18 @@ export default function RoomMatePage() {
     isFetchingNextPage,
     isLoading: isLatestLoading,
   } = useInfiniteQuery({
-    queryKey: ["roommates", "scroll", selectedSemesterCode],
+    queryKey: [
+      "roommates",
+      "scroll",
+      debouncedSearchKeyword,
+      selectedSemesterCode,
+    ],
     queryFn: ({ pageParam }) =>
-      getRoomMateScrollList(pageParam, 10, selectedSemesterCode),
+      getRoomMateScrollList(pageParam, 10, {
+        keyword: debouncedSearchKeyword || undefined,
+        year: selectedSemesterCode ? CURRENT_YEAR : undefined,
+        semester: selectedSemesterCode,
+      }),
     initialPageParam: undefined as number | undefined,
     getNextPageParam: (lastPage) => {
       if (lastPage.length < 10) return undefined;
@@ -227,27 +244,7 @@ export default function RoomMatePage() {
     });
   }, [scrollData, filters]);
 
-  const searchedRoommates = useMemo(() => {
-    const normalizedKeyword = searchKeyword.trim().toLowerCase();
-    if (!normalizedKeyword) return filteredRoommates;
-
-    return filteredRoommates.filter((post) =>
-      [
-        post.title,
-        post.comment,
-        post.dormType,
-        post.college,
-        post.mbti,
-        post.smoking,
-        post.arrangement,
-        post.dormPeriod?.join(" "),
-      ]
-        .filter(Boolean)
-        .some((value) =>
-          String(value).toLowerCase().includes(normalizedKeyword),
-        ),
-    );
-  }, [filteredRoommates, searchKeyword]);
+  const searchedRoommates = filteredRoommates;
 
   const { data: matchingRoommates, isLoading: isMatchingLoading } = useQuery({
     queryKey: ["roommates", "matching"],

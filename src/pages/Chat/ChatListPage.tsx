@@ -55,25 +55,31 @@ export default function ChatListPage() {
     }
   }, [selectedTab, isLoggedIn]);
 
-  const handleChatClick = async (
-    chatRoomId: number,
-    partnerName?: string,
-    partnerProfileImageUrl?: string,
-  ) => {
+  const handleChatClick = async (room: RoommateChatRoom) => {
     if (selectedTab === "룸메이트") {
       try {
         // 채팅방 진입 시 읽음 처리 API 호출
-        await patchRoommateChatRead(chatRoomId);
+        await patchRoommateChatRead(room.chatRoomId);
       } catch (err) {
         console.error("채팅 읽음 처리 실패", err);
         // 에러가 나더라도 채팅방 입장은 가능하게 할지 여부에 따라 처리
       }
 
-      navigate(`/chat/roommate/${chatRoomId}`, {
-        state: { partnerName, partnerProfileImageUrl },
+      const opponentBoardTitle = room.opponentBoardTitle?.trim();
+      const myBoardTitle = room.myBoardTitle?.trim();
+
+      navigate(`/chat/roommate/${room.chatRoomId}`, {
+        state: {
+          partnerName: room.partnerName,
+          partnerProfileImageUrl: room.partnerProfileImageUrl,
+          roommateBoardTitle: opponentBoardTitle || myBoardTitle,
+          roommateBoardOwner: opponentBoardTitle
+            ? "opponent"
+            : myBoardTitle
+              ? "me"
+              : undefined,
+        },
       });
-    } else if (selectedTab === "공동구매") {
-      navigate(`/chat/groupPurchase/${chatRoomId}`);
     }
   };
 
@@ -112,7 +118,9 @@ export default function ChatListPage() {
                     <ChatListItem
                       chatRoomId={room.chatRoomId}
                       selectedTab={selectedTab}
-                      onClick={() => handleChatClick(room.chatRoomId)}
+                      onClick={() =>
+                        navigate(`/chat/groupPurchase/${room.chatRoomId}`)
+                      }
                       title={room.chatRoomTitle}
                       message={room.recentChatContent}
                       time={room.recentChatTime}
@@ -158,13 +166,7 @@ export default function ChatListPage() {
                   <ChatListItem
                     chatRoomId={room.chatRoomId}
                     selectedTab={selectedTab}
-                    onClick={() =>
-                      handleChatClick(
-                        room.chatRoomId,
-                        room.partnerName,
-                        room.partnerProfileImageUrl,
-                      )
-                    }
+                    onClick={() => handleChatClick(room)}
                     title={room.partnerName}
                     message={formatChatMessagePreview(room.lastMessage)}
                     time={room.lastMessageTime}

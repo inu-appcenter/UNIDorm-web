@@ -34,17 +34,30 @@ export interface RoommatePost extends RoommatePostRequest {
   isMyPost?: boolean;
   semester?: number;
   year?: number;
+  matchedFilterCount?: number | null;
+  matchedFilterFields?: RoommateMatchedFilterField[] | null;
 }
 
+export type RoommateMatchedFilterField =
+  | "dormType"
+  | "dormPeriodDays"
+  | "colleges"
+  | "smoking"
+  | "snoring"
+  | "toothGrind"
+  | "sleeper"
+  | "showerHour"
+  | "showerTime"
+  | "bedTime"
+  | "arrangement"
+  | "religions";
 
 export interface FilteredRoommatePost {
   post: RoommatePost;
-  matchedFilterFields: string[];
+  matchedFilterFields: RoommateMatchedFilterField[];
 }
 
-
-
-export interface RoommatePostResponse extends RoommatePost {}
+export type RoommatePostResponse = RoommatePost;
 
 export interface SimilarRoommatePost
   extends Omit<
@@ -159,5 +172,8 @@ export const INITIAL_FORM_STATE: CheckListForm = {
 
 export interface StepProps {
   data: CheckListForm;
-  onChange: (key: keyof CheckListForm, value: any) => void;
+  onChange: (
+    key: keyof CheckListForm,
+    value: CheckListForm[keyof CheckListForm],
+  ) => void;
 }

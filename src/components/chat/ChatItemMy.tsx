@@ -21,12 +21,16 @@ const ChatItemMy = ({
   onImageClick,
 }: Props) => {
   const unreadLabel =
-    typeof unreadCount === "number" && unreadCount > 0
-      ? unreadCount > 99
-        ? "99+"
-        : String(unreadCount)
-      : isRead === false
-        ? "1"
+    typeof unreadCount === "number"
+      ? unreadCount > 0
+        ? unreadCount > 99
+          ? "99+"
+          : String(unreadCount)
+        : "모두 읽음"
+      : typeof isRead === "boolean"
+        ? isRead
+          ? "모두 읽음"
+          : "1"
         : null;
 
   return (

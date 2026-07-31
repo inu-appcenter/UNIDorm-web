@@ -3,9 +3,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import styled from "styled-components";
 
-
-
-
 import {
   deleteRoommatePost,
   getOpponentChecklist,
@@ -41,27 +38,19 @@ const getDisplayValue = (value?: string | null) => {
   return value;
 };
 
-
-
-
 export default function RoomMateBoardDetailPage() {
   const { boardId } = useParams<{ boardId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
 
-
   const queryClient = useQueryClient();
   const roomId = location.state?.roomId as number | undefined;
 
   const partnerName = location.state?.partnerName as string | undefined;
-  const matchedFilterFields = location.state?.matchedFilterFields as
+  const routeMatchedFilterFields = location.state?.matchedFilterFields as
     | string[]
     | undefined;
   const { userInfo } = useUserStore();
-
-
-
-
 
   const [boardData, setBoardData] = useState<RoommatePost | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -96,12 +85,10 @@ export default function RoomMateBoardDetailPage() {
 
     fetchBoardData();
 
-
     return () => {
       isActive = false;
     };
   }, [boardId, roomId]);
-
 
   const handleDelete = async () => {
     if (
@@ -130,13 +117,18 @@ export default function RoomMateBoardDetailPage() {
   useSetHeader({
     title: "",
     showAlarm: true,
-    menuItems: isMyPost
-      ? [{ label: "삭제하기", onClick: handleDelete }]
-      : null,
+    menuItems: isMyPost ? [{ label: "삭제하기", onClick: handleDelete }] : null,
   });
 
   const isMatchedRow = (row: DetailRow) => {
-    if (!matchedFilterFields || matchedFilterFields.length === 0 || !row.fieldKey)
+    const matchedFilterFields =
+      boardData?.matchedFilterFields ?? routeMatchedFilterFields;
+
+    if (
+      !matchedFilterFields ||
+      matchedFilterFields.length === 0 ||
+      !row.fieldKey
+    )
       return false;
     if (Array.isArray(row.fieldKey)) {
       return row.fieldKey.some((k) => matchedFilterFields.includes(k));
@@ -160,12 +152,12 @@ export default function RoomMateBoardDetailPage() {
           {
             label: "상주 기간",
             value: boardData.dormPeriod?.join(", ") || "정보 없음",
-            fieldKey: "dormPeriod",
+            fieldKey: "dormPeriodDays",
           },
           {
             label: "단과대",
             value: getDisplayValue(boardData.college),
-            fieldKey: "college",
+            fieldKey: "colleges",
           },
           {
             label: "MBTI",
@@ -222,6 +214,11 @@ export default function RoomMateBoardDetailPage() {
             value: getDisplayValue(boardData.arrangement),
             fieldKey: "arrangement",
           },
+          {
+            label: "종교",
+            value: getDisplayValue(boardData.religion),
+            fieldKey: "religions",
+          },
         ],
       },
     ];
@@ -243,11 +240,18 @@ export default function RoomMateBoardDetailPage() {
   return (
     <RoomMateDetailPageWrapper>
       <DetailContent>
-        <UserInfo
-          username={displayUserName}
-          createDate={boardData.createDate}
-          authorImagePath={boardData.userProfileImageUrl}
-        />
+        <UserSummaryRow>
+          <UserInfo
+            username={displayUserName}
+            createDate={boardData.createDate}
+            authorImagePath={boardData.userProfileImageUrl}
+          />
+          {typeof boardData.matchedFilterCount === "number" && (
+            <MatchedFilterBadge>
+              {boardData.matchedFilterCount}개 항목 일치
+            </MatchedFilterBadge>
+          )}
+        </UserSummaryRow>
 
         {boardData.title && <PostTitle>{boardData.title}</PostTitle>}
 
@@ -281,13 +285,12 @@ export default function RoomMateBoardDetailPage() {
           partnerName={boardData.userName}
           userProfileImageUrl={boardData.userProfileImageUrl}
           postDormType={boardData.dormType}
+          postTitle={boardData.title}
         />
       )}
     </RoomMateDetailPageWrapper>
   );
-
 }
-
 
 const RoomMateDetailPageWrapper = styled.div`
   min-height: calc(100vh - 70px);
@@ -302,6 +305,21 @@ const DetailContent = styled.div`
   box-sizing: border-box;
 `;
 
+const UserSummaryRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+`;
+
+const MatchedFilterBadge = styled.span`
+  ${typography.label1Normal}
+  flex: 0 0 auto;
+  padding: 8px 12px;
+  border-radius: 999px;
+  color: ${colors.main.main1};
+  background: ${colors.bg.bg1};
+`;
 
 const PostTitle = styled.h1`
   ${typography.body1Normal}
@@ -310,7 +328,6 @@ const PostTitle = styled.h1`
   color: ${colors.gray.gray800};
   margin: 16px 0 6px;
 `;
-
 
 const PostDescription = styled.p`
   ${typography.label1Normal}
@@ -361,18 +378,17 @@ const InfoRow = styled.div<{ $isMatched?: boolean }>`
   justify-content: space-between;
   gap: 16px;
   color: ${({ $isMatched }) =>
-    $isMatched ? colors.blue.blue300 : colors.gray.gray500};
+    $isMatched ? colors.main.main1 : colors.gray.gray500};
   font-weight: ${({ $isMatched }) => ($isMatched ? "600" : "400")};
 
   strong {
     color: ${({ $isMatched }) =>
-      $isMatched ? colors.blue.blue300 : colors.gray.gray800};
+      $isMatched ? colors.main.main1 : colors.gray.gray800};
     font: inherit;
     font-weight: ${({ $isMatched }) => ($isMatched ? "700" : "600")};
     text-align: right;
   }
 `;
-
 
 const ErrorMessage = styled.div`
   ${typography.label1Normal}

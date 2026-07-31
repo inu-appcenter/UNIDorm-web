@@ -88,6 +88,11 @@ export interface OpenChatMessage {
   disclosureRequestId?: number | null;
 }
 
+export interface OpenChatReadEvent {
+  messageId: number;
+  unreadCount: number;
+}
+
 export interface OpenChatParticipant {
   userId: number;
   nickname: string;

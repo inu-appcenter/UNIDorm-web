@@ -22,6 +22,7 @@ export interface RoommateChatRoom {
   myRoommate?: boolean;
   matched?: boolean;
   isRoommate?: boolean;
+  roommate?: boolean;
   opponentLeft?: boolean;
   unreadCount?: number;
   myBoardTitle?: string | null;
