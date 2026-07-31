@@ -4,10 +4,9 @@ import ChatMessageContent from "./ChatMessageContent";
 type Props = {
   content: string;
   time: string;
+  showTime?: boolean;
   imageUrls?: string[];
   unreadCount?: number;
-  isRead?: boolean;
-  readLabel?: string;
   onMessageClick?: () => void;
   onImageClick?: (url: string) => void;
 };
@@ -15,10 +14,9 @@ type Props = {
 const ChatItemMy = ({
   content,
   time,
+  showTime = true,
   imageUrls,
   unreadCount,
-  isRead,
-  readLabel = "모두 읽음",
   onMessageClick,
   onImageClick,
 }: Props) => {
@@ -28,12 +26,8 @@ const ChatItemMy = ({
         ? unreadCount > 99
           ? "99+"
           : String(unreadCount)
-        : readLabel
-      : typeof isRead === "boolean"
-        ? isRead
-          ? readLabel
-          : "1"
-        : null;
+        : null
+      : null;
 
   return (
     <ChatItemMyWrapper
@@ -63,10 +57,12 @@ const ChatItemMy = ({
           </div>
         )}
       </ContentArea>
-      <TimeArea>
-        <div className="time">{time}</div>
-        {unreadLabel && <div className="isRead">{unreadLabel}</div>}
-      </TimeArea>
+      {(showTime || unreadLabel) && (
+        <TimeArea>
+          {showTime && <div className="time">{time}</div>}
+          {unreadLabel && <div className="isRead">{unreadLabel}</div>}
+        </TimeArea>
+      )}
     </ChatItemMyWrapper>
   );
 };
