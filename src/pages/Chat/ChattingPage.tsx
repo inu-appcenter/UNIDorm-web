@@ -632,6 +632,7 @@ export default function ChattingPage() {
 
       setMessageList((prev) => {
         const messageId = msg.roommateChatId || Date.now();
+        const isMyMessage = msg.userId === userId;
 
         if (prev.some((message) => message.id === messageId)) {
           return prev;
@@ -648,12 +649,14 @@ export default function ChattingPage() {
           ...prev,
           {
             id: messageId,
-            sender: msg.userId === userId ? "me" : "other",
+            sender: isMyMessage ? "me" : "other",
             senderId: msg.userId,
             content: msg.content,
             isSystem: Boolean(msg.system),
             userImageUrl: msg.userImageUrl,
-            isRead: msg.read,
+            // 실시간 발신 메시지는 상대방의 읽음 이벤트를 받기 전까지 미확인이다.
+            // 서버의 최초 WebSocket 메시지는 read가 누락되거나 발신자 기준 true일 수 있다.
+            isRead: isMyMessage ? false : msg.read,
             time: new Date(msg.createdDate || now).toLocaleTimeString("ko-KR", {
               hour: "2-digit",
               minute: "2-digit",
@@ -770,9 +773,25 @@ export default function ChattingPage() {
     },
     onRead: ({ messageId, unreadCount }) => {
       setMessageList((current) =>
-        current.map((message) =>
-          message.id === messageId ? { ...message, unreadCount } : message,
-        ),
+        current.map((message) => {
+          if (
+            message.id > messageId ||
+            typeof message.unreadCount !== "number"
+          ) {
+            return message;
+          }
+
+          // 최신 메시지를 읽었다면 그보다 앞선 메시지도 읽은 상태다.
+          // 기존 값보다 커지지 않도록 줄어드는 방향으로만 소급 반영한다.
+          const nextUnreadCount = Math.min(
+            message.unreadCount,
+            unreadCount,
+          );
+
+          return nextUnreadCount === message.unreadCount
+            ? message
+            : { ...message, unreadCount: nextUnreadCount };
+        }),
       );
     },
     onConnect: () => {
