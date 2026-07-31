@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import { Drawer } from "vaul";
 import styled from "styled-components";
-import { OpenChatKickReason } from "@/types/openchat";
 import { OpenChatReportReason } from "@/apis/report";
 
-type Action = "menu" | "report" | "kick";
+type Action = "menu" | "report";
 
 interface Props {
   open: boolean;
@@ -13,21 +12,14 @@ interface Props {
   content: string;
   canKick: boolean;
   onReport: (reason: OpenChatReportReason) => Promise<void>;
-  onKick: (reason: OpenChatKickReason) => Promise<void>;
+  onKick: () => Promise<void>;
 }
 
 const reportReasons: Array<[OpenChatReportReason, string]> = [
   ["SPAM_AD", "도배 · 광고"],
   ["ABUSE", "욕설 · 비방"],
   ["FRAUD", "사기 · 사칭"],
-  ["DISRUPTION", "지속적인 분란 조성"],
   ["ETC", "기타"],
-];
-const kickReasons: Array<[OpenChatKickReason, string]> = [
-  ["SPAM", "도배 · 광고"],
-  ["ABUSE", "욕설 · 비방"],
-  ["REPORT_ACCUMULATED", "지속적인 분란 조성"],
-  ["OTHER", "기타"],
 ];
 
 export default function ChatMessageActionSheet(props: Props) {
@@ -46,17 +38,23 @@ export default function ChatMessageActionSheet(props: Props) {
     if (!selected || submitting) return;
     setSubmitting(true);
     try {
-      if (action === "report")
-        await props.onReport(selected as OpenChatReportReason);
-      if (action === "kick") await props.onKick(selected as OpenChatKickReason);
+      await props.onReport(selected as OpenChatReportReason);
       props.onOpenChange(false);
     } finally {
       setSubmitting(false);
     }
   };
 
-  const isKick = action === "kick";
-  const reasons = isKick ? kickReasons : reportReasons;
+  const kick = async () => {
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      await props.onKick();
+      props.onOpenChange(false);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <Drawer.Root
@@ -77,32 +75,26 @@ export default function ChatMessageActionSheet(props: Props) {
               </MessageInfo>
               <Primary onClick={() => setAction("report")}>신고하기</Primary>
               {props.canKick && (
-                <Danger onClick={() => setAction("kick")}>퇴장시키기</Danger>
+                <Danger disabled={submitting} onClick={kick}>
+                  퇴장시키기
+                </Danger>
               )}
               <Cancel onClick={() => props.onOpenChange(false)}>취소</Cancel>
             </Body>
           ) : (
             <Body>
-              <Drawer.Title>
-                {isKick ? "퇴장 사유 선택" : "신고 사유 선택"}
-              </Drawer.Title>
+              <Drawer.Title>신고 사유 선택</Drawer.Title>
               <ReasonList>
-                {reasons.map(([value, label]) => (
+                {reportReasons.map(([value, label]) => (
                   <ReasonRow key={value} onClick={() => setSelected(value)}>
                     {label}
-                    <Radio $checked={selected === value} $danger={isKick} />
+                    <Radio $checked={selected === value} />
                   </ReasonRow>
                 ))}
               </ReasonList>
-              {isKick ? (
-                <Danger disabled={!selected || submitting} onClick={submit}>
-                  퇴장시키기
-                </Danger>
-              ) : (
-                <Primary disabled={!selected || submitting} onClick={submit}>
-                  신고하기
-                </Primary>
-              )}
+              <Primary disabled={!selected || submitting} onClick={submit}>
+                신고하기
+              </Primary>
               <Cancel onClick={() => props.onOpenChange(false)}>취소</Cancel>
             </Body>
           )}
@@ -184,11 +176,12 @@ const Primary = styled(SheetButton)`
   background: #1677ff;
 `;
 const Danger = styled(SheetButton)`
-  background: #f00000;
+  background: #f7f7f7;
+  color: #ff453a;
 `;
 const Cancel = styled(SheetButton)`
   background: #f7f7f7;
-  color: #555;
+  color: #b8b8b8;
 `;
 const ReasonList = styled.div`
   display: flex;
@@ -207,16 +200,12 @@ const ReasonRow = styled.button`
     sans-serif;
   cursor: pointer;
 `;
-const Radio = styled.span<{ $checked: boolean; $danger: boolean }>`
+const Radio = styled.span<{ $checked: boolean }>`
   width: 20px;
   height: 20px;
   box-sizing: border-box;
   border-radius: 50%;
-  border: 1px solid
-    ${({ $checked, $danger }) =>
-      $checked ? ($danger ? "#f00000" : "#1677ff") : "#dfdfdf"};
-  box-shadow: ${({ $checked, $danger }) =>
-    $checked
-      ? `inset 0 0 0 4px white, inset 0 0 0 10px ${$danger ? "#f00000" : "#1677ff"}`
-      : "none"};
+  border: 1px solid ${({ $checked }) => ($checked ? "#1677ff" : "#dfdfdf")};
+  box-shadow: ${({ $checked }) =>
+    $checked ? "inset 0 0 0 4px white, inset 0 0 0 10px #1677ff" : "none"};
 `;

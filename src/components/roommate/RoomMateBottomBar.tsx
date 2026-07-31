@@ -17,10 +17,12 @@ const RoomMateBottomBar = ({
   partnerName,
   userProfileImageUrl,
   postDormType,
+  postTitle,
 }: {
   partnerName: string;
   userProfileImageUrl: string;
   postDormType?: string;
+  postTitle?: string;
 }) => {
   const { boardId } = useParams<{ boardId: string }>();
   const queryClient = useQueryClient();
@@ -137,7 +139,13 @@ const RoomMateBottomBar = ({
       const chatRoomId = res.data;
       console.log(userProfileImageUrl);
       navigate(`/chat/roommate/${chatRoomId}`, {
-        state: { partnerName, partnerProfileImageUrl: userProfileImageUrl },
+        state: {
+          partnerName,
+          partnerProfileImageUrl: userProfileImageUrl,
+          roommateBoardTitle: postTitle,
+          roommateBoardOwner: "opponent",
+          roommateBoardId: Number(boardId),
+        },
       });
     } catch (error) {
       console.error("채팅방 생성 실패", error);

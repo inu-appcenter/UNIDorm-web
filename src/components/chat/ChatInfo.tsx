@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 import 궁금해하는횃불이 from "../../assets/roommate/궁금해하는횃불이.webp";
 import TooltipMessage from "../common/TooltipMessage.tsx";
 import { createPortal } from "react-dom";
-
+import { ChevronRight } from "lucide-react";
 
 // 로컬 스토리지 키 정의
 const TOOLTIP_CLOSED_STORAGE_KEY = "roommate_chat_tooltip_closed_list";
@@ -20,6 +20,8 @@ interface ChatInfoProps {
   roomId?: number;
   isChatted?: boolean;
   partnerProfileImageUrl?: string;
+  boardTitle?: string;
+  onBoardTitleClick?: () => void;
 }
 
 const ChatInfo = ({
@@ -28,6 +30,8 @@ const ChatInfo = ({
   roomId,
   isChatted,
   partnerProfileImageUrl,
+  boardTitle,
+  onBoardTitleClick,
 }: ChatInfoProps) => {
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [isRequestMode, setIsRequestMode] = useState(false);
@@ -132,6 +136,12 @@ const ChatInfo = ({
           }}
         >
           <div className="title">{partnerName}</div>
+          {boardTitle && (
+            <BoardTitleButton type="button" onClick={onBoardTitleClick}>
+              <span>{boardTitle}</span>
+              <ChevronRight size={14} aria-hidden="true" />
+            </BoardTitleButton>
+          )}
           {selectedTab === "공동구매" && <GroupPurchaseInfo />}
         </div>
       </ContentWrapper>
@@ -173,107 +183,109 @@ const ChatInfo = ({
           onClick={() => setShowInfoModal(true)}
         />
       </div>
-      {showInfoModal && createPortal(
-        <ModalBackGround>
-          <Modal>
-            <ModalContentWrapper>
-              <ModalHeader>
-                <img src={궁금해하는횃불이} className="wonder-character" />
-                <h2>꼭 확인해주세요!</h2>
-                <span>
-                  반드시 아래 내용을 숙지하시고 신청하기 버튼을 눌러주세요.
-                </span>
-              </ModalHeader>
-              <ModalScrollArea>
-                <h3>룸메이트 신청이 뭔가요?</h3>
-                <p>
-                  UNI Dorm에서의 룸메이트 매칭은{" "}
-                  <strong>실제 기숙사 룸메이트 지정과 무관</strong>
-                  하며, 룸메이트를 구하는데 도움을 드리는 서비스입니다.
-                </p>
+      {showInfoModal &&
+        createPortal(
+          <ModalBackGround>
+            <Modal>
+              <ModalContentWrapper>
+                <ModalHeader>
+                  <img src={궁금해하는횃불이} className="wonder-character" />
+                  <h2>꼭 확인해주세요!</h2>
+                  <span>
+                    반드시 아래 내용을 숙지하시고 신청하기 버튼을 눌러주세요.
+                  </span>
+                </ModalHeader>
+                <ModalScrollArea>
+                  <h3>룸메이트 신청이 뭔가요?</h3>
+                  <p>
+                    UNI Dorm에서의 룸메이트 매칭은{" "}
+                    <strong>실제 기숙사 룸메이트 지정과 무관</strong>
+                    하며, 룸메이트를 구하는데 도움을 드리는 서비스입니다.
+                  </p>
 
-                <p>
-                  상대방이 수락하여 매칭이 되면, 룸메이트 탭은 "내 룸메이트"
-                  화면으로 전환되며, 룸메이트와 시간표 공유, 퀵 메시지 등 다양한
-                  편의 기능을 제공합니다.
-                  <br />
-                  또한,{" "}
-                  <strong>
-                    더이상 다른 UNI에게 룸메이트를 구하는 메시지를 받지
-                    않습니다.
+                  <p>
+                    상대방이 수락하여 매칭이 되면, 룸메이트 탭은 "내 룸메이트"
+                    화면으로 전환되며, 룸메이트와 시간표 공유, 퀵 메시지 등
+                    다양한 편의 기능을 제공합니다.
                     <br />
-                    <span style={{ color: "red" }}>
-                      채팅으로 서로의 학번을 알아두고, 아래 방법에 따라 실제
-                      룸메이트를 신청하세요!
-                    </span>
-                  </strong>
-                </p>
-                <h3>실제 기숙사 룸메이트 신청은 어떻게 하나요?</h3>
-                <p>
-                  <strong style={{ color: "red" }}>
-                    반드시 룸메이트 사전 지정 기간에 인천대학교 포털에서
-                    신청해주세요!!!!
-                    <br />❍ 신청기간 : 2026. 02. 14(토) 00:00 ~ 02. 18(수) 23:59
-                  </strong>
-                  <br />
-                  ❍ 신청방법
-                  <br />- 포털(
-                  <a
-                    href="https://portal.inu.ac.kr"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    https://portal.inu.ac.kr
-                  </a>
-                  ) → 통합정보 → 부속행정(생활원) → 합격조회
-                  <br />
-                  ❍ 주의사항
-                  <br />
-                  - 입사기간 및 호실형태가 동일한 학생끼리 서로 신청해야
-                  룸메이트 매칭 가능
-                  <br />
-                  ▷ 별도선발 신청자의 룸메이트 신청을 원하는 경우, 별도선발 부서
-                  신청 기간 내 신청바랍니다.
-                  <br />
-                  - 룸메이트 신청은 2명이 서로 신청한 경우에만 신청이 인정됨
-                  <br />
-                  <br />
-                  기타 자세한 사항은{" "}
-                  <a
-                    href="https://dorm.inu.ac.kr/dorm/6521/subview.do?enc=Zm5jdDF8QEB8JTJGYmJzJTJGZG9ybSUyRjIwMDMlMkY0MTc4MDglMkZhcnRjbFZpZXcuZG8lM0ZwYWdlJTNEMSUyNnNyY2hDb2x1bW4lM0QlMjZzcmNoV3JkJTNEJTI2YmJzQ2xTZXElM0QlMjZiYnNPcGVuV3JkU2VxJTNEJTI2cmdzQmduZGVTdHIlM0QlMjZyZ3NFbmRkZVN0ciUzRCUyNmlzVmlld01pbmUlM0RmYWxzZSUyNnBhc3N3b3JkJTNEJTI2"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    여기
-                  </a>
-                  를 클릭하여 확인
-                </p>
-              </ModalScrollArea>
-            </ModalContentWrapper>
-            {isRequestMode && (
-              <div style={{ padding: "10px 0", textAlign: "center" }}>
-                {partnerName}님에게 룸메이트 요청을 보낼까요?
-              </div>
-            )}
-            <ButtonGroupWrapper>
-              <RoundSquareWhiteButton
-                btnName={"닫기"}
-                onClick={() => {
-                  setShowInfoModal(false);
-                  setIsRequestMode(false);
-                }}
-              />
+                    또한,{" "}
+                    <strong>
+                      더이상 다른 UNI에게 룸메이트를 구하는 메시지를 받지
+                      않습니다.
+                      <br />
+                      <span style={{ color: "red" }}>
+                        채팅으로 서로의 학번을 알아두고, 아래 방법에 따라 실제
+                        룸메이트를 신청하세요!
+                      </span>
+                    </strong>
+                  </p>
+                  <h3>실제 기숙사 룸메이트 신청은 어떻게 하나요?</h3>
+                  <p>
+                    <strong style={{ color: "red" }}>
+                      반드시 룸메이트 사전 지정 기간에 인천대학교 포털에서
+                      신청해주세요!!!!
+                      <br />❍ 신청기간 : 2026. 02. 14(토) 00:00 ~ 02. 18(수)
+                      23:59
+                    </strong>
+                    <br />
+                    ❍ 신청방법
+                    <br />- 포털(
+                    <a
+                      href="https://portal.inu.ac.kr"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      https://portal.inu.ac.kr
+                    </a>
+                    ) → 통합정보 → 부속행정(생활원) → 합격조회
+                    <br />
+                    ❍ 주의사항
+                    <br />
+                    - 입사기간 및 호실형태가 동일한 학생끼리 서로 신청해야
+                    룸메이트 매칭 가능
+                    <br />
+                    ▷ 별도선발 신청자의 룸메이트 신청을 원하는 경우, 별도선발
+                    부서 신청 기간 내 신청바랍니다.
+                    <br />
+                    - 룸메이트 신청은 2명이 서로 신청한 경우에만 신청이 인정됨
+                    <br />
+                    <br />
+                    기타 자세한 사항은{" "}
+                    <a
+                      href="https://dorm.inu.ac.kr/dorm/6521/subview.do?enc=Zm5jdDF8QEB8JTJGYmJzJTJGZG9ybSUyRjIwMDMlMkY0MTc4MDglMkZhcnRjbFZpZXcuZG8lM0ZwYWdlJTNEMSUyNnNyY2hDb2x1bW4lM0QlMjZzcmNoV3JkJTNEJTI2YmJzQ2xTZXElM0QlMjZiYnNPcGVuV3JkU2VxJTNEJTI2cmdzQmduZGVTdHIlM0QlMjZyZ3NFbmRkZVN0ciUzRCUyNmlzVmlld01pbmUlM0RmYWxzZSUyNnBhc3N3b3JkJTNEJTI2"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      여기
+                    </a>
+                    를 클릭하여 확인
+                  </p>
+                </ModalScrollArea>
+              </ModalContentWrapper>
               {isRequestMode && (
-                <RoundSquareButton
-                  btnName={"보내기"}
-                  onClick={handleMatchingRequest}
-                />
+                <div style={{ padding: "10px 0", textAlign: "center" }}>
+                  {partnerName}님에게 룸메이트 요청을 보낼까요?
+                </div>
               )}
-            </ButtonGroupWrapper>
-          </Modal>
-        </ModalBackGround>,
-        document.body
-      )}
+              <ButtonGroupWrapper>
+                <RoundSquareWhiteButton
+                  btnName={"닫기"}
+                  onClick={() => {
+                    setShowInfoModal(false);
+                    setIsRequestMode(false);
+                  }}
+                />
+                {isRequestMode && (
+                  <RoundSquareButton
+                    btnName={"보내기"}
+                    onClick={handleMatchingRequest}
+                  />
+                )}
+              </ButtonGroupWrapper>
+            </Modal>
+          </ModalBackGround>,
+          document.body,
+        )}
     </ChatInfoWrapper>
   );
 };
@@ -312,6 +324,7 @@ const ImgWrapper = styled.div`
 `;
 const ContentWrapper = styled.div`
   flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
 
@@ -323,6 +336,32 @@ const ContentWrapper = styled.div`
     letter-spacing: 0.38px;
 
     color: #1c1c1e;
+  }
+`;
+
+const BoardTitleButton = styled.button`
+  display: flex;
+  max-width: 100%;
+  align-items: center;
+  gap: 2px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #1677ff;
+  font:
+    500 12px/1.5 Pretendard,
+    sans-serif;
+  text-align: left;
+  cursor: pointer;
+
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  svg {
+    flex: 0 0 auto;
   }
 `;
 

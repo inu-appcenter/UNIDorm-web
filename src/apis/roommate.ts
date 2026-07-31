@@ -30,12 +30,16 @@ export const getRoomMateList = async (
 export const getRoomMateScrollList = async (
   lastId?: number,
   size: number = 10,
-  semester?: number,
+  filters?: {
+    keyword?: string;
+    year?: number;
+    semester?: number;
+  },
 ): Promise<RoommatePost[]> => {
   const response = await tokenInstance.get<RoommatePost[]>(
     `/roommates/list/scroll`,
     {
-      params: { lastId, size, semester },
+      params: { lastId, size, ...filters },
     },
   );
 
