@@ -12,6 +12,7 @@ import {
   CreateDerivedOpenChatRoomRequest,
   CreateDerivedOpenChatRoomResponse,
   LeaveOpenChatRoomResponse,
+  UpdateOpenChatRoomRequest,
 } from "@/types/openchat";
 import { AxiosResponse } from "axios";
 import tokenInstance from "./tokenInstance.ts";
@@ -52,6 +53,13 @@ export const createOpenChatRoom = async (
   console.log(response);
   return response;
 };
+
+/** 방장 전용 오픈채팅방 정보 수정 */
+export const updateOpenChatRoom = (
+  roomId: number,
+  data: UpdateOpenChatRoomRequest,
+): Promise<AxiosResponse<void>> =>
+  tokenInstance.patch(`/open-chat-rooms/${roomId}`, data);
 
 /** 오픈채팅방 입장 */
 export const joinOpenChatRoom = async (

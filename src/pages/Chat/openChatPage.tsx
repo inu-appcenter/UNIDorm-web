@@ -95,16 +95,14 @@ function RoommateChatCard({
 
 const VALID_TABS: OpenChatTabType[] = ["MY", "DORMITORY", "ALL"];
 
-type MyChatRoomFilter = "ALL" | "PERSONAL" | "DERIVED" | "OPEN" | "ROOMMATE";
+type MyChatRoomFilter = "ALL" | "OPEN_CHAT" | "ROOMMATE";
 
 const MY_CHAT_ROOM_FILTERS: {
   value: MyChatRoomFilter;
   label: string;
 }[] = [
   { value: "ALL", label: "전체" },
-  { value: "PERSONAL", label: "1:1" },
-  { value: "DERIVED", label: "파생톡방" },
-  { value: "OPEN", label: "오픈채팅" },
+  { value: "OPEN_CHAT", label: "오픈채팅" },
   { value: "ROOMMATE", label: "룸메채팅" },
 ];
 
@@ -289,6 +287,8 @@ export default function OpenChatPage() {
         state: {
           partnerName: room.roomType === "PERSONAL" ? room.name : undefined,
           roomName: room.name,
+          roomDescription: room.description,
+          room,
         },
       });
       return;
@@ -312,6 +312,13 @@ export default function OpenChatPage() {
       const response = await joinOpenChatRoom(roomToJoin.roomId, password);
       const targetRoomId = response.data?.roomId ?? roomToJoin.roomId;
       const targetRoomName = response.data?.name ?? roomToJoin.name;
+      const joinedRoom: OpenChatRoom = {
+        ...roomToJoin,
+        ...response.data,
+        roomId: targetRoomId,
+        name: targetRoomName,
+        joined: true,
+      };
 
       setIsJoinModalOpen(false);
       setIsPasswordModalOpen(false);
@@ -319,7 +326,11 @@ export default function OpenChatPage() {
       setIsJoining(false);
 
       navigate(`/chat/open/${targetRoomId}`, {
-        state: { roomName: targetRoomName },
+        state: {
+          roomName: targetRoomName,
+          roomDescription: joinedRoom.description,
+          room: joinedRoom,
+        },
       });
       return true;
     } catch (error) {
@@ -391,9 +402,10 @@ export default function OpenChatPage() {
     myChatRoomFilter === "ALL" || myChatRoomFilter === "ROOMMATE"
       ? filteredRoommateRooms
       : [];
-  const categoryFilteredRooms = filteredRooms.filter(
-    (room) => myChatRoomFilter === "ALL" || room.roomType === myChatRoomFilter,
-  );
+  const categoryFilteredRooms =
+    myChatRoomFilter === "ALL" || myChatRoomFilter === "OPEN_CHAT"
+      ? filteredRooms
+      : [];
 
   const mergedMyRooms = [
     ...categoryFilteredRoommateRooms.map((room) => ({
@@ -405,6 +417,20 @@ export default function OpenChatPage() {
       itemType: "open" as const,
     })),
   ].sort((a, b) => {
+    const isPinnedRoommate = (
+      room: (typeof a) | (typeof b),
+    ): boolean =>
+      room.itemType === "roommate" &&
+      Boolean(
+        (room as RoommateChatRoom).isMyRoommate ||
+          (room as RoommateChatRoom).myRoommate ||
+          (room as RoommateChatRoom).matched ||
+          (room as RoommateChatRoom).isRoommate,
+      );
+    const pinnedDifference =
+      Number(isPinnedRoommate(b)) - Number(isPinnedRoommate(a));
+    if (pinnedDifference !== 0) return pinnedDifference;
+
     const timeA =
       a.itemType === "roommate"
         ? (a as RoommateChatRoom).lastMessageTime
@@ -414,9 +440,12 @@ export default function OpenChatPage() {
         ? (b as RoommateChatRoom).lastMessageTime
         : (b as OpenChatRoom).lastMessageAt;
 
-    if (!timeA) return 1;
-    if (!timeB) return -1;
-    return new Date(timeB).getTime() - new Date(timeA).getTime();
+    const timestampA = timeA ? Date.parse(timeA) : 0;
+    const timestampB = timeB ? Date.parse(timeB) : 0;
+    const safeTimestampA = Number.isFinite(timestampA) ? timestampA : 0;
+    const safeTimestampB = Number.isFinite(timestampB) ? timestampB : 0;
+
+    return safeTimestampB - safeTimestampA;
   });
 
   useSetHeader({
@@ -687,7 +716,7 @@ const LoginPromptWrapper = styled.div`
 
 const LoginTitle = styled.h3`
   margin: 0;
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 800;
   line-height: 1.35;
   text-align: center;

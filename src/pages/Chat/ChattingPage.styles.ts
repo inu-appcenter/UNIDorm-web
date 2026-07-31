@@ -67,6 +67,17 @@ export const BackgroundImage = styled.div`
   background-image: url("data:image/svg+xml;base64,PHN2ZyBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIiB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBvdmVyZmxvdz0idmlzaWJsZSIgc3R5bGU9ImRpc3BsYXk6IGJsb2NrOyIgdmlld0JveD0iMCAwIDU1MiA1NzYuMDUyIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8ZyBpZD0iRWxsaXBzZSAyIiBmaWx0ZXI9InVybCgjZmlsdGVyMF9mXzMzNDdfOTYzMykiPgo8cGF0aCBkPSJNNTMyIDMwMC4wNTJDNTMyIDQ0MS40MzcgNDE3LjM4NSA1NTYuMDUyIDI3NiA1NTYuMDUyQzEzNC42MTUgNTU2LjA1MiAyMCA0NDEuNDM3IDIwIDMwMC4wNTJDMjAgMTkzLjg2MSAxNjUuMjYxIDgxLjYxNjUgMjM3LjU3OCAzMi4zMTY0QzI2MS43ODcgMTUuODEyIDkyLjE3OSAxNS45MDEgMzE3LjI5MSAzMi41NDY4QzM4OC44NzggODEuOTY1NiA1MzIgMTk0LjAyNiA1MzIgMzAwLjA1MloiIGZpbGw9InVybCgjcGFpbnQwX3JhZGlhbF8zMzQ3Xzk2MzMpIiBmaWxsLW9wYWNpdHk9IjAuNSIvPgo8L2c+CjxkZWZzPgo8ZmlsdGVyIGlkPSJmaWx0ZXIwX2ZfMzM0N185NjMzIiB4PSIwIiB5PSIwIiB3aWR0aD0iNTUyIiBoZWlnaHQ9IjU3Ni4wNTIiIGZpbHRlclVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgY29sb3ItaW50ZXJwb2xhdGlvbi1maWx0ZXJzPSJzUkdCIj4KPGZlRmxvb2QgZmxvb2Qtb3BhY2l0eT0iMCIgcmVzdWx0PSJCYWNrZ3JvdW5kSW1hZ2VGaXgiLz4KPGZlQmxlbmQgbW9kZT0ibm9ybWFsIiBpbj0iU291cmNlR3JhcGhpYyIgaW4yPSJCYWNrZ3JvdW5kSW1hZ2VGaXgiIHJlc3VsdD0ic2hhcGUiLz4KPGZlR2F1c3NpYW5CbHVyIHN0ZERldmlhdGlvbj0iMTAiIHJlc3VsdD0iZWZmZWN0MV9mb3JlZ3JvdW5kQmx1cl8zMzQ3Xzk2MzMiLz4KPC9maWx0ZXI+CjxyYWRpYWxHcmFkaWVudCBpZD0icGFpbnQwX3JhZGlhbF8zMzQ3Xzk2MzMiIGN4PSIwIiBjeT0iMCIgcj0iMSIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiIGdyYWRpZW50VHJhbnNmb3JtPSJ0cmFuc2xhdGUoMjc2IDQxNi41NTIpIHJvdGF0ZSgtOTApIHNjYWxlKDQwMC41IDQwMC41KSI+CjxzdG9wIHN0b3AtY29sb3I9IiMxNjc3RkYiLz4KPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjMTY3N0ZCIiBzdG9wLW9wYWNpdHk9IjAiLz4KPC9yYWRpYWxHcmFkaWVudD4KPC9kZWZzPgo8L3N2Zz4=");
   background-size: contain;
   background-repeat: no-repeat;
+  width: min(160vw, 760px);
+  max-width: none;
+  height: min(62dvh, 640px);
+  bottom: clamp(-140px, -12dvh, -72px);
+  background-image: radial-gradient(
+    ellipse at 50% 88%,
+    rgba(22, 119, 255, 0.38) 0%,
+    rgba(22, 119, 255, 0.17) 42%,
+    rgba(22, 119, 255, 0) 72%
+  );
+  background-size: 100% 100%;
   pointer-events: none;
   z-index: 0;
 `;

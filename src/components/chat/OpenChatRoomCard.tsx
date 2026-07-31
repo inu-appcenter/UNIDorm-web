@@ -33,10 +33,8 @@ export default function OpenChatRoomCard({ room, tab, onClick }: Props) {
     switch (type) {
       case "PERSONAL":
         return "1:1";
-      case "DERIVED":
-        return "파생톡방";
       default:
-        return "오픈채팅";
+        return "단톡";
     }
   };
 

@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import { Drawer } from "vaul";
 import styled from "styled-components";
 import { OpenChatKickReason } from "@/types/openchat";
+import { OpenChatReportReason } from "@/apis/report";
 
 type Action = "menu" | "report" | "kick";
-type ReportReason = "ADVERTISEMENT" | "ABUSE" | "FRAUD" | "OTHER";
 
 interface Props {
   open: boolean;
@@ -12,15 +12,16 @@ interface Props {
   senderName: string;
   content: string;
   canKick: boolean;
-  onReport: (reason: ReportReason) => Promise<void>;
+  onReport: (reason: OpenChatReportReason) => Promise<void>;
   onKick: (reason: OpenChatKickReason) => Promise<void>;
 }
 
-const reportReasons: Array<[ReportReason, string]> = [
-  ["ADVERTISEMENT", "도배 · 광고"],
+const reportReasons: Array<[OpenChatReportReason, string]> = [
+  ["SPAM_AD", "도배 · 광고"],
   ["ABUSE", "욕설 · 비방"],
   ["FRAUD", "사기 · 사칭"],
-  ["OTHER", "기타"],
+  ["DISRUPTION", "지속적인 분란 조성"],
+  ["ETC", "기타"],
 ];
 const kickReasons: Array<[OpenChatKickReason, string]> = [
   ["SPAM", "도배 · 광고"],
@@ -45,7 +46,8 @@ export default function ChatMessageActionSheet(props: Props) {
     if (!selected || submitting) return;
     setSubmitting(true);
     try {
-      if (action === "report") await props.onReport(selected as ReportReason);
+      if (action === "report")
+        await props.onReport(selected as OpenChatReportReason);
       if (action === "kick") await props.onKick(selected as OpenChatKickReason);
       props.onOpenChange(false);
     } finally {

@@ -21,32 +21,12 @@ export interface OpenChatRoom {
 }
 
 export interface OpenChatRoomPageResponse {
-  totalPages: number;
-  totalElements: number;
-  size: number;
   content: OpenChatRoom[];
-  number: number;
-  sort: {
-    empty: boolean;
-    unsorted: boolean;
-    sorted: boolean;
-  };
-  first: boolean;
-  last: boolean;
-  numberOfElements: number;
-  pageable: {
-    offset: number;
-    sort: {
-      empty: boolean;
-      unsorted: boolean;
-      sorted: boolean;
-    };
-    pageSize: number;
-    paged: boolean;
-    pageNumber: number;
-    unpaged: boolean;
-  };
-  empty: boolean;
+  totalElements: number;
+  totalPages: number;
+  pageNumber: number;
+  pageSize: number;
+  totalUnreadCount: number;
 }
 
 export interface CreateOpenChatRoomRequest {
@@ -56,6 +36,15 @@ export interface CreateOpenChatRoomRequest {
   maxParticipants: number;
   isPublic?: boolean;
   password?: string;
+}
+
+export interface UpdateOpenChatRoomRequest {
+  name?: string;
+  description?: string;
+  scope?: OpenChatScope;
+  maxParticipants?: number;
+  password?: string;
+  isPublic?: boolean;
 }
 
 export interface CreatedOpenChatRoomResponse {

@@ -10,10 +10,11 @@ import { getRoommateChatRooms } from "@/apis/chat";
 import {
   createPersonalOpenChatRoom,
   getOpenChatParticipants,
+  kickOpenChatParticipant,
   leaveOpenChatRoom,
   transferOpenChatHost,
 } from "@/apis/openchat";
-import { OpenChatParticipant } from "@/types/openchat";
+import { OpenChatParticipant, OpenChatRoom } from "@/types/openchat";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { blockUser } from "@/apis/block";
 import { requestStudentIdDisclosure } from "@/apis/studentIdDisclosure";
@@ -27,6 +28,7 @@ export default function ChatMembersPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const partnerName = location.state?.partnerName ?? "상대방";
+  const routeRoom = location.state?.room as OpenChatRoom | undefined;
   const partnerProfileImageUrl =
     location.state?.partnerProfileImageUrl ?? undefined;
   const routePartnerId = Number(location.state?.partnerId) || null;
@@ -267,6 +269,32 @@ export default function ChatMembersPage() {
     }
   };
 
+  const handleKickUser = async () => {
+    if (!selectedUser || submitting || !me?.isHost || selectedUser.isHost)
+      return;
+    if (
+      !window.confirm(
+        `${selectedUser.nickname}님을 이 채팅방에서 강퇴할까요?`,
+      )
+    ) {
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await kickOpenChatParticipant(roomId, selectedUser.userId, "OTHER");
+      setActiveSheet(null);
+      setSelectedUser(null);
+      await fetchParticipants();
+      alert("참여자를 강퇴했습니다.");
+    } catch (error) {
+      console.error("참여자 강퇴 실패:", error);
+      alert("참여자 강퇴에 실패했습니다.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleLeaveRoom = async () => {
     if (chatType === "roommate") {
       if (!window.confirm("정말 채팅방을 나갈까요?")) return;
@@ -370,6 +398,18 @@ export default function ChatMembersPage() {
       </Scroll>
 
       <BottomActions>
+        {chatType === "open" && me?.isHost && (
+          <EditRoomAction
+            type="button"
+            onClick={() =>
+              navigate(`/chat/open/${roomId}/edit`, {
+                state: { room: routeRoom },
+              })
+            }
+          >
+            채팅방 수정
+          </EditRoomAction>
+        )}
         <TextAction
           onClick={() =>
             navigate(`/chat/${chatType}/${roomId}/notifications`, {
@@ -443,9 +483,22 @@ export default function ChatMembersPage() {
                   {chatType === "open" &&
                     me?.isHost &&
                     !selectedUser.isHost && (
-                      <DarkButton onClick={handleTransferHost}>
-                        방장 위임하기
-                      </DarkButton>
+                      <ProfileActionRow>
+                        <DarkButton
+                          type="button"
+                          disabled={submitting}
+                          onClick={handleTransferHost}
+                        >
+                          방장 위임하기
+                        </DarkButton>
+                        <KickButton
+                          type="button"
+                          disabled={submitting}
+                          onClick={handleKickUser}
+                        >
+                          강퇴시키기
+                        </KickButton>
+                      </ProfileActionRow>
                     )}
                 </SheetButtons>
               </SheetBody>
@@ -632,6 +685,10 @@ const TextAction = styled.button`
 const LeaveAction = styled(TextAction)`
   color: #f5222d;
 `;
+const EditRoomAction = styled(TextAction)`
+  color: #1677ff;
+  font-weight: 600;
+`;
 const Overlay = styled(Drawer.Overlay)`
   position: fixed;
   inset: 0;
@@ -721,6 +778,10 @@ const BlockButton = styled.button`
 `;
 const DarkButton = styled(PrimaryButton)`
   background: #0958d9;
+`;
+const KickButton = styled(BlockButton)`
+  border: 1px solid #ffccc7;
+  background: #fff2f0;
 `;
 const FormField = styled.div`
   display: flex;
