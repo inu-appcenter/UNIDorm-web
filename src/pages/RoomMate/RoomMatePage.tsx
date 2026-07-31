@@ -5,6 +5,7 @@ import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import useUserStore from "../../stores/useUserStore.ts";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import {
+  getMyRoommatePost,
   getRoomMateScrollList,
   getMatchingPostList,
   getNotificationFilter,
@@ -37,7 +38,6 @@ const SEMESTER_OPTIONS = [
   { label: `${CURRENT_YEAR}년 2학기`, value: 2 },
   { label: `${CURRENT_YEAR}년 겨울계절학기`, value: 4 },
 ];
-
 
 function FilterTags({
   filters,
@@ -86,6 +86,7 @@ export default function RoomMatePage() {
     number | undefined
   >(undefined);
   const [debouncedSearchKeyword, setDebouncedSearchKeyword] = useState("");
+  const [isOpeningMyPost, setIsOpeningMyPost] = useState(false);
 
   const filters = useMemo(
     () => location.state?.filters || {},
@@ -188,8 +189,6 @@ export default function RoomMatePage() {
     staleTime: 1000 * 60 * 5,
   });
 
-
-
   useEffect(() => {
     if (
       inView &&
@@ -287,6 +286,32 @@ export default function RoomMatePage() {
     }
     return likedRoommates;
   }, [likedRoommates, likedTabFilter]);
+
+  const handleChecklistButtonClick = async () => {
+    if (!hasChecklist) {
+      navigate(PATHS.ROOMMATE.CHECKLIST);
+      return;
+    }
+
+    if (isOpeningMyPost) return;
+    setIsOpeningMyPost(true);
+
+    try {
+      const loadedMyPost = scrollData?.pages
+        .flat()
+        .find((post) => post.isMyPost || post.userId === userInfo.id);
+      const myPost = loadedMyPost ?? (await getMyRoommatePost()).data;
+
+      navigate(PATHS.ROOMMATE.DETAIL(myPost.boardId), {
+        state: { isMyPost: true },
+      });
+    } catch (error) {
+      console.error("내 체크리스트 게시글 조회 실패:", error);
+      alert("내 체크리스트 게시글을 불러오지 못했습니다.");
+    } finally {
+      setIsOpeningMyPost(false);
+    }
+  };
 
   return (
     <RoomMatePageWrapper $isLocked={isLocked}>
@@ -392,7 +417,6 @@ export default function RoomMatePage() {
                           })}
                         </MatchingCardRail>
                       </MatchingCardRailWrapper>
-
                     ) : !isFilterSet ? (
                       <EmptyStateCard>
                         <EmptyStateText>
@@ -449,7 +473,6 @@ export default function RoomMatePage() {
                   </option>
                 ))}
               </SemesterSelect>
-
             }
           >
             <>
@@ -581,8 +604,13 @@ export default function RoomMatePage() {
       )}
 
       {isLoggedIn && (
-        <WriteButton onClick={() => navigate(PATHS.ROOMMATE.CHECKLIST)}>
-          ✏️ 내 체크리스트 {!hasChecklist ? "작성" : "수정"}
+        <WriteButton
+          type="button"
+          disabled={isOpeningMyPost}
+          onClick={handleChecklistButtonClick}
+        >
+          ✏️ 내 체크리스트{" "}
+          {isOpeningMyPost ? "불러오는 중" : hasChecklist ? "보기" : "작성"}
         </WriteButton>
       )}
     </RoomMatePageWrapper>
@@ -914,4 +942,9 @@ const WriteButton = styled.button`
   cursor: pointer;
   box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.2);
   z-index: 2;
+
+  &:disabled {
+    cursor: wait;
+    opacity: 0.7;
+  }
 `;

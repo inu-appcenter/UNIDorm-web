@@ -167,6 +167,14 @@ export const getMyChecklist = async (): Promise<
   return response;
 };
 
+/**
+ * 내 룸메이트 게시글 조회.
+ * 백엔드의 신규 전용 API가 확정되면 이 함수의 요청 경로만 교체한다.
+ */
+export const getMyRoommatePost = async (): Promise<
+  AxiosResponse<RoommatePost>
+> => getMyChecklist();
+
 export const deleteRoommateChatRoom = async (
   chatRoomId: number,
 ): Promise<AxiosResponse<void>> => {
@@ -264,7 +272,6 @@ export const getMatchingPostList = async (): Promise<
   console.log(response);
   return response;
 };
-
 
 // 룸메이트 알림 필터 설정 및 수정
 export const updateNotificationFilter = async (

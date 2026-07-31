@@ -14,7 +14,7 @@ import {
 } from "@/apis/roommate";
 import { getMemberInfo } from "@/apis/members";
 import useUserStore from "../../stores/useUserStore";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   bedtime,
   colleges,
@@ -39,6 +39,7 @@ import { useQueryClient } from "@tanstack/react-query";
 export default function RoomMateChecklistPage() {
   const { setUserInfo, userInfo } = useUserStore();
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
@@ -46,6 +47,8 @@ export default function RoomMateChecklistPage() {
 
   const [formData, setFormData] = useState<CheckListForm>(INITIAL_FORM_STATE);
   const [randomTitles, setRandomTitles] = useState<string[]>([]);
+  const isEditMode =
+    location.state?.mode === "edit" || userInfo.roommateCheckList;
 
   // State 변경 핸들러
   const handleFormChange = (key: keyof CheckListForm, value: any) => {
@@ -72,68 +75,74 @@ export default function RoomMateChecklistPage() {
   // 사용자 정보 및 기존 데이터 로드
   useEffect(() => {
     const fetchMyChecklistData = async () => {
-      try {
-        const { data } = await getMyChecklist();
-        if (data) {
-          const mbtiIndices =
-            data.mbti && data.mbti.length === 4
-              ? [
-                  mbti1.indexOf(data.mbti[0]),
-                  mbti2.indexOf(data.mbti[1]),
-                  mbti3.indexOf(data.mbti[2]),
-                  mbti4.indexOf(data.mbti[3]),
-                ]
-              : [null, null, null, null];
+      if (isEditMode) {
+        try {
+          const { data } = await getMyChecklist();
+          if (data) {
+            const mbtiIndices =
+              data.mbti && data.mbti.length === 4
+                ? [
+                    mbti1.indexOf(data.mbti[0]),
+                    mbti2.indexOf(data.mbti[1]),
+                    mbti3.indexOf(data.mbti[2]),
+                    mbti4.indexOf(data.mbti[3]),
+                  ]
+                : [null, null, null, null];
 
-          const findIndexOrNull = (arr: readonly string[], val?: string) => {
-            if (!val) return null;
-            const idx = arr.indexOf(val);
-            return idx !== -1 ? idx : null;
-          };
+            const findIndexOrNull = (arr: readonly string[], val?: string) => {
+              if (!val) return null;
+              const idx = arr.indexOf(val);
+              return idx !== -1 ? idx : null;
+            };
 
-          const dormIndex = dormitory.findIndex(
-            (d) =>
-              d.replace(/제|\s/g, "") ===
-              (data.dormType || "").replace(/제|\s/g, ""),
-          );
+            const dormIndex = dormitory.findIndex(
+              (d) =>
+                d.replace(/제|\s/g, "") ===
+                (data.dormType || "").replace(/제|\s/g, ""),
+            );
 
-          const collegeIndex = colleges.indexOf(data.college);
+            const collegeIndex = colleges.indexOf(data.college);
 
-          setFormData({
-            title: data.title || "",
-            comment: data.comment || "",
-            dormType:
-              dormIndex !== -1
-                ? dormIndex
-                : dormitory.indexOf(userInfo.dormType) !== -1
-                  ? dormitory.indexOf(userInfo.dormType)
-                  : null,
-            college:
-              collegeIndex !== -1
-                ? collegeIndex
-                : colleges.indexOf(userInfo.college) !== -1
-                  ? colleges.indexOf(userInfo.college)
-                  : null,
-            dormPeriod: Array.isArray(data.dormPeriod)
-              ? data.dormPeriod
-                  .map((d: string) => days.indexOf(d.replace("요일", "").trim()))
-                  .filter((i: number) => i !== -1)
-              : [],
-            smoking: findIndexOrNull(smoking, data.smoking),
-            snoring: findIndexOrNull(snoring, data.snoring),
-            toothGrind: findIndexOrNull(toothgrinding, data.toothGrind),
-            arrangement: findIndexOrNull(organizationLevel, data.arrangement),
-            religion: findIndexOrNull(religion, data.religion),
-            sleeper: findIndexOrNull(isLightSleeper, data.sleeper),
-            showerHour: findIndexOrNull(showertime, data.showerHour),
-            showerTime: findIndexOrNull(showerDuration, data.showerTime),
-            bedTime: findIndexOrNull(bedtime, data.bedTime),
-            mbti: mbtiIndices.map((i) => (i !== undefined && i !== -1 ? i : null)),
-          });
-          return;
+            setFormData({
+              title: data.title || "",
+              comment: data.comment || "",
+              dormType:
+                dormIndex !== -1
+                  ? dormIndex
+                  : dormitory.indexOf(userInfo.dormType) !== -1
+                    ? dormitory.indexOf(userInfo.dormType)
+                    : null,
+              college:
+                collegeIndex !== -1
+                  ? collegeIndex
+                  : colleges.indexOf(userInfo.college) !== -1
+                    ? colleges.indexOf(userInfo.college)
+                    : null,
+              dormPeriod: Array.isArray(data.dormPeriod)
+                ? data.dormPeriod
+                    .map((d: string) =>
+                      days.indexOf(d.replace("요일", "").trim()),
+                    )
+                    .filter((i: number) => i !== -1)
+                : [],
+              smoking: findIndexOrNull(smoking, data.smoking),
+              snoring: findIndexOrNull(snoring, data.snoring),
+              toothGrind: findIndexOrNull(toothgrinding, data.toothGrind),
+              arrangement: findIndexOrNull(organizationLevel, data.arrangement),
+              religion: findIndexOrNull(religion, data.religion),
+              sleeper: findIndexOrNull(isLightSleeper, data.sleeper),
+              showerHour: findIndexOrNull(showertime, data.showerHour),
+              showerTime: findIndexOrNull(showerDuration, data.showerTime),
+              bedTime: findIndexOrNull(bedtime, data.bedTime),
+              mbti: mbtiIndices.map((i) =>
+                i !== undefined && i !== -1 ? i : null,
+              ),
+            });
+            return;
+          }
+        } catch (error) {
+          console.log("기존 체크리스트 데이터 로드 시도", error);
         }
-      } catch (error) {
-        console.log("기존 체크리스트 데이터 로드 시도", error);
       }
 
       // 기존 체크리스트 데이터가 없거나 로드 실패 시 유저 기본정보 설정
@@ -151,8 +160,7 @@ export default function RoomMateChecklistPage() {
     };
 
     fetchMyChecklistData();
-  }, [userInfo]);
-
+  }, [isEditMode, userInfo.college, userInfo.dormType]);
 
   // 유효성 검사
   const validateStep = (step: number) => {
@@ -245,7 +253,7 @@ export default function RoomMateChecklistPage() {
       setIsLoading(true);
 
       // [수정] 삼항 연산자 -> if/else 문으로 변경
-      if (userInfo.roommateCheckList) {
+      if (isEditMode) {
         await putRoommatePost(body);
       } else {
         await createRoommatePost(body);
@@ -258,7 +266,7 @@ export default function RoomMateChecklistPage() {
         queryKey: ["roommates", "scroll"],
       });
 
-      alert(`체크리스트 ${userInfo.roommateCheckList ? "수정" : "등록"} 완료!`);
+      alert(`체크리스트 ${isEditMode ? "수정" : "등록"} 완료!`);
       navigate("/roommate");
     } catch (err) {
       alert("저장 실패");

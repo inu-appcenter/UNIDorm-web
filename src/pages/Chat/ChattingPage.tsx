@@ -706,7 +706,7 @@ export default function ChattingPage() {
       const normalizedRequestId =
         msg.disclosureRequestId ?? studentIdRequestPayload?.requestId ?? null;
       const normalizedSenderId =
-        msg.senderId ?? studentIdRequestPayload?.requesterId ?? null;
+        studentIdRequestPayload?.requesterId ?? msg.senderId ?? null;
       const normalizedNickname =
         msg.senderNickname || studentIdRequestPayload?.requesterNickname;
 
@@ -723,7 +723,10 @@ export default function ChattingPage() {
           openChatOpponentIdRef.current = normalizedSenderId;
         }
         setOpenChatDisclosureStatus({
-          status: "PENDING_RECEIVED",
+          status:
+            normalizedSenderId === userId
+              ? "PENDING_SENT"
+              : "PENDING_RECEIVED",
           requestId: normalizedRequestId,
           targetStudentNumber: null,
         });
@@ -1097,7 +1100,7 @@ export default function ChattingPage() {
                   ? "STUDENT_ID_REQUEST"
                   : chat.type;
                 const normalizedSenderId =
-                  chat.senderId ?? studentIdRequestPayload?.requesterId ?? null;
+                  studentIdRequestPayload?.requesterId ?? chat.senderId ?? null;
 
                 return {
                   id: chat.messageId,
