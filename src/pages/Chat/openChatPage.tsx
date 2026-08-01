@@ -85,7 +85,10 @@ function RoommateChatCard({
               {room.partnerName || room.opponentNickname || "익명"}
             </RoomName>
             <LastMessage>
-              {formatChatMessagePreview(room.lastMessage, "대화 내역이 없습니다.")}
+              {formatChatMessagePreview(
+                room.lastMessage,
+                "대화 내역이 없습니다.",
+              )}
             </LastMessage>
           </TextCol>
         </MainRow>
@@ -612,7 +615,6 @@ export default function OpenChatPage() {
         onJoin={handleJoinRoom}
         isJoining={isJoining}
       />
-
     </PageContainer>
   );
 }
@@ -674,7 +676,7 @@ const MyChatFilterList = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 0 0 16px;
+  //margin: 0 0 16px;
   overflow-x: auto;
   scrollbar-width: none;
 
