@@ -626,7 +626,7 @@ const RoomMatePageWrapper = styled.div<{ $isLocked?: boolean }>`
   box-sizing: border-box;
   overflow-y: ${({ $isLocked }) => ($isLocked ? "hidden" : "auto")};
   touch-action: ${({ $isLocked }) => ($isLocked ? "none" : "auto")};
-  background: #fafafa;
+  //background: #fafafa;
   width: 100%;
   flex: 1;
 `;
@@ -722,12 +722,12 @@ const SemesterSelect = styled.select`
   border-radius: 8px;
   box-sizing: border-box;
   appearance: none;
-  background-color: var(--Bg-Bg3, #EFEFEF);
+  background-color: var(--Bg-Bg3, #efefef);
   background-image: url("${caretDownIcon}");
   background-repeat: no-repeat;
   background-position: right 12px center;
   background-size: 9px 5px;
-  color: var(--Gray-Gray500, #8B8B8B);
+  color: var(--Gray-Gray500, #8b8b8b);
 
   /* Label 1_Normal */
   font-family: Pretendard;

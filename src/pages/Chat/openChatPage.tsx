@@ -712,7 +712,7 @@ const HeaderSearchButton = styled.button`
 const MyChatFilterList = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 16px;
   //margin: 0 0 16px;
   overflow-x: auto;
   scrollbar-width: none;

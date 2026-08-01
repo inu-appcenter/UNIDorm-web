@@ -4,7 +4,8 @@ import styled from "styled-components";
 export const PageWrapper = styled.div`
   width: 100%;
   min-height: 100vh;
-  background: #fafafa;
+  background: var(--Bg-Bg2, #f7f7f7);
+
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
