@@ -206,7 +206,7 @@ const RightArea = styled.div`
 const UnreadBadge = styled.span`
   min-width: 20px;
   height: 20px;
-  padding: 0 8px;
+  padding: 0 10px;
   border-radius: 23px;
   background-color: #1677ff;
   color: #ffffff;

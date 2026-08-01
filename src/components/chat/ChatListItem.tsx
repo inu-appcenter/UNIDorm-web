@@ -202,7 +202,7 @@ const Badge = styled.div`
 
   min-width: 20px;
   height: 20px;
-  padding: 0 8px;
+  padding: 0 10px;
   border-radius: 23px;
   width: fit-content;
 
