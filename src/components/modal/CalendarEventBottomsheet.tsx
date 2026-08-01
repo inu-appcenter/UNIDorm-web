@@ -47,7 +47,6 @@ export default function CalendarEventBottomSheet({
                     key={event.id}
                     type="button"
                     onClick={() => onClickEvent(event)}
-                    $hasChevron={isAnnouncement}
                   >
                     <ColorBar $color={getCalendarColor(event.id)} />
 
@@ -144,13 +143,12 @@ const EventList = styled.div`
   overflow-y: auto;
 `;
 
-const EventItem = styled.button<{ $hasChevron?: boolean }>`
+const EventItem = styled.button`
   width: 100%;
   border: none;
   background: #ffffff;
   text-align: left;
   padding: 16px;
-  padding-right: ${({ $hasChevron }) => ($hasChevron ? "40px" : "16px")};
   cursor: pointer;
   display: flex;
   flex-direction: column;
