@@ -2,7 +2,7 @@ import styled from "styled-components";
 import { Drawer } from "vaul";
 import { format, parseISO } from "date-fns";
 import { CalendarItem } from "@/types/calendar";
-import { Sparkles } from "lucide-react";
+import { Sparkles, ChevronRight } from "lucide-react";
 
 interface Props {
   isOpen: boolean;
@@ -45,26 +45,36 @@ export default function CalendarEventBottomSheet({
                   type="button"
                   onClick={() => onClickEvent(event)}
                 >
-                  <ColorBar $color={getCalendarColor(event.id)} />
+                  <EventItemInner>
+                    <EventItemContent>
+                      <ColorBar $color={getCalendarColor(event.id)} />
 
-                  <TopRow>
-                    <Title>{event.title}</Title>
-                    <DateText>
-                      {format(parseISO(event.startDate), "MM.dd")} -{" "}
-                      {format(parseISO(event.endDate), "MM.dd")}
-                    </DateText>
-                  </TopRow>
+                      <TopRow>
+                        <Title>{event.title}</Title>
+                        <DateText>
+                          {format(parseISO(event.startDate), "MM.dd")} -{" "}
+                          {format(parseISO(event.endDate), "MM.dd")}
+                        </DateText>
+                      </TopRow>
 
-                  {event.description && (
-                    <Description>{event.description}</Description>
-                  )}
+                      {event.description && (
+                        <Description>{event.description}</Description>
+                      )}
 
-                  {typeof event.sourceAnnouncementId === "number" && (
-                    <AiBadge>
-                      <Sparkles size={14} />
-                      <span>횃불이 AI로 생성된 콘텐츠입니다.</span>
-                    </AiBadge>
-                  )}
+                      {typeof event.sourceAnnouncementId === "number" && (
+                        <AiBadge>
+                          <Sparkles size={14} />
+                          <span>횃불이 AI로 생성된 콘텐츠입니다.</span>
+                        </AiBadge>
+                      )}
+                    </EventItemContent>
+
+                    {typeof event.sourceAnnouncementId === "number" && (
+                      <ChevronIcon>
+                        <ChevronRight size={20} />
+                      </ChevronIcon>
+                    )}
+                  </EventItemInner>
                 </EventItem>
               ))
             )}
@@ -149,6 +159,29 @@ const EventItem = styled.button`
   &:last-child {
     border-bottom: none;
   }
+`;
+
+const EventItemInner = styled.div`
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 12px;
+`;
+
+const EventItemContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+`;
+
+const ChevronIcon = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #9ca3af;
 `;
 
 const ColorBar = styled.div<{ $color: string }>`
