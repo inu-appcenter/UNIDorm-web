@@ -90,18 +90,18 @@ function RoommateChatCard({
                 "대화 내역이 없습니다.",
               )}
             </LastMessage>
-            <MetaArea>
-              <MetaItem>
-                <User size={14} />
-                <span>2</span>
-              </MetaItem>
-              <Divider />
-              <MetaItem>
-                <span>룸메채팅</span>
-              </MetaItem>
-            </MetaArea>
           </TextCol>
         </MainRow>
+        <MetaArea>
+          <MetaItem>
+            <User size={14} />
+            <span>2</span>
+          </MetaItem>
+          <Divider />
+          <MetaItem>
+            <span>룸메채팅</span>
+          </MetaItem>
+        </MetaArea>
       </CardLeft>
       <CardRight>
         {unreadCount > 0 && (

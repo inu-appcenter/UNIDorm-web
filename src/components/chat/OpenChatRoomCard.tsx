@@ -42,28 +42,30 @@ export default function OpenChatRoomCard({ room, tab, onClick }: Props) {
   if (isMyChatRoom) {
     return (
       <Card type="button" onClick={onClick}>
-        <MainRow>
-          <ChatAvatar count={room.currentParticipants} />
-          <TextArea>
-            <RoomName>{room.name}</RoomName>
-            <LastMessage>
-              {formatChatMessagePreview(room.lastMessage, room.description)}
-            </LastMessage>
+        <LeftArea>
+          <MainRow>
+            <ChatAvatar count={room.currentParticipants} />
+            <TextArea>
+              <RoomName>{room.name}</RoomName>
+              <LastMessage>
+                {formatChatMessagePreview(room.lastMessage, room.description)}
+              </LastMessage>
+            </TextArea>
+          </MainRow>
 
-            <MetaArea>
-              <MetaItem>
-                <User size={14} />
-                <span>{room.currentParticipants}</span>
-              </MetaItem>
+          <MetaArea>
+            <MetaItem>
+              <User size={14} />
+              <span>{room.currentParticipants}</span>
+            </MetaItem>
 
-              <Divider />
+            <Divider />
 
-              <MetaItem>
-                <span>{roomTypeLabel(room.roomType)}</span>
-              </MetaItem>
-            </MetaArea>
-          </TextArea>
-        </MainRow>
+            <MetaItem>
+              <span>{roomTypeLabel(room.roomType)}</span>
+            </MetaItem>
+          </MetaArea>
+        </LeftArea>
 
         <RightArea>
           {room.unreadCount > 0 && (
