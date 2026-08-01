@@ -209,6 +209,7 @@ const Description = styled.div`
   line-height: 1.45;
   white-space: pre-wrap;
   word-break: keep-all;
+  padding-right: 28px;
 `;
 
 const EmptyText = styled.p`
