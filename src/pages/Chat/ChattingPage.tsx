@@ -135,7 +135,6 @@ const isStudentIdDisclosureAcceptedSystemMessage = (message: MessageType) =>
 
 const dedupeStudentIdDisclosureMessages = (messages: MessageType[]) => {
   const seenRequestIds = new Set<number>();
-  let hasAcceptedSystemMessage = false;
 
   return messages.filter((message) => {
     if (
@@ -144,11 +143,6 @@ const dedupeStudentIdDisclosureMessages = (messages: MessageType[]) => {
     ) {
       if (seenRequestIds.has(message.disclosureRequestId)) return false;
       seenRequestIds.add(message.disclosureRequestId);
-    }
-
-    if (isStudentIdDisclosureAcceptedSystemMessage(message)) {
-      if (hasAcceptedSystemMessage) return false;
-      hasAcceptedSystemMessage = true;
     }
 
     return true;
@@ -764,9 +758,7 @@ export default function ChattingPage() {
             message.id === nextMessage.id ||
             (normalizedType === "STUDENT_ID_REQUEST" &&
               message.type === "STUDENT_ID_REQUEST" &&
-              message.disclosureRequestId === normalizedRequestId) ||
-            (isStudentIdDisclosureAcceptedSystemMessage(nextMessage) &&
-              isStudentIdDisclosureAcceptedSystemMessage(message)),
+              message.disclosureRequestId === normalizedRequestId),
         );
         if (isDuplicate) return prev;
 
@@ -1786,15 +1778,47 @@ export default function ChattingPage() {
                       <S.ShareCardRowOther>
                         <S.ShareRejectedCard>
                           <XCircle size={20} aria-hidden="true" />
-                          학번 공개 요청 거절
+                          학번 공개 요청 거절됨
                         </S.ShareRejectedCard>
                       </S.ShareCardRowOther>
                     </React.Fragment>
                   );
                 }
 
-                if (isCanceled || !isPending) {
-                  return null;
+                if (isCanceled) {
+                  return (
+                    <React.Fragment key={msg.id}>
+                      {showDateLine && (
+                        <S.DateDivider>
+                          {formatDateLine(msg.createdAt)}
+                        </S.DateDivider>
+                      )}
+                      <S.ShareCardRowOther>
+                        <S.ShareRejectedCard>
+                          <XCircle size={20} aria-hidden="true" />
+                          학번 공개 요청 취소됨
+                        </S.ShareRejectedCard>
+                      </S.ShareCardRowOther>
+                    </React.Fragment>
+                  );
+                }
+
+                if (!isPending) {
+                  return (
+                    <React.Fragment key={msg.id}>
+                      {showDateLine && (
+                        <S.DateDivider>
+                          {formatDateLine(msg.createdAt)}
+                        </S.DateDivider>
+                      )}
+                      <S.ShareCardRowOther>
+                        <S.ShareRejectedCard>
+                          <XCircle size={20} aria-hidden="true" />
+                          이전 학번 공개 요청
+                        </S.ShareRejectedCard>
+                      </S.ShareCardRowOther>
+                    </React.Fragment>
+                  );
                 }
 
                 return (
