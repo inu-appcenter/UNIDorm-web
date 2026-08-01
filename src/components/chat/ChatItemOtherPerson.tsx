@@ -195,7 +195,7 @@ const MessageBubble = styled.div<{ $clickable?: boolean }>`
 
 const TimeArea = styled.div`
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   flex-direction: column-reverse;
   font-family: "Pretendard", sans-serif;
   .time {
