@@ -141,7 +141,6 @@ const SheetTitle = styled.div`
 const EventList = styled.div`
   flex: 1;
   overflow-y: auto;
-  padding: 0 16px;
 `;
 
 const EventItem = styled.button`
