@@ -12,7 +12,6 @@ import {
   getRoommateChatRooms,
   patchRoommateChatRead,
 } from "@/apis/chat";
-import { getMyChecklist } from "@/apis/roommate";
 import { patchNotificationsRead } from "@/apis/notification";
 import {
   getOpenChatMessages,
@@ -1363,19 +1362,6 @@ export default function ChattingPage() {
     alert("참여자를 퇴장시켰습니다.");
   };
 
-  const normalizedCurrentDisclosureStatus = normalizeDisclosureStatus(
-    chatType === "roommate"
-      ? roommateDisclosureStatus?.status
-      : openChatDisclosureStatus?.status,
-  );
-  const isStudentNumberDisclosed =
-    (chatType === "personal" || chatType === "roommate") &&
-    ACCEPTED_DISCLOSURE_STATUSES.has(normalizedCurrentDisclosureStatus);
-  const sharedOpponentStudentNumber = isStudentNumberDisclosed
-    ? chatType === "roommate"
-      ? opponentStudentNumber
-      : openChatOpponentStudentNumber
-    : "";
   const basePartnerName =
     chatType === "roommate" ? "룸메이트 채팅" : "1대1 채팅";
   const headerTitle =

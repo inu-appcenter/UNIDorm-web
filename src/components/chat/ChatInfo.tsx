@@ -18,7 +18,6 @@ interface ChatInfoProps {
   partnerName?: string;
   roomId?: number;
   isChatted?: boolean;
-  partnerProfileImageUrl?: string;
   boardTitle?: string;
   onBoardTitleClick?: () => void;
 }
@@ -28,7 +27,6 @@ const ChatInfo = ({
   partnerName,
   roomId,
   isChatted,
-  partnerProfileImageUrl,
   boardTitle,
   onBoardTitleClick,
 }: ChatInfoProps) => {
