@@ -46,6 +46,7 @@ import {
   rejectStudentIdDisclosure,
   acceptStudentIdDisclosure,
 } from "@/apis/studentIdDisclosure";
+import { getMyRoommateInfo } from "@/apis/roommate";
 import type { StudentIdDisclosureStatus } from "@/apis/studentIdDisclosure";
 import { isAxiosError } from "axios";
 
@@ -276,6 +277,31 @@ export default function ChattingPage() {
   const [processingDisclosureId, setProcessingDisclosureId] = useState<
     number | null
   >(null);
+  const [isMyRoommateState, setIsMyRoommateState] = useState<boolean>(() => {
+    const routeIsMyRoommate = location.state?.isMyRoommate;
+    const room = location.state?.room;
+    return Boolean(
+      routeIsMyRoommate ||
+        room?.isMyRoommate ||
+        room?.roommate ||
+        room?.myRoommate ||
+        room?.matched ||
+        room?.isRoommate,
+    );
+  });
+
+  useEffect(() => {
+    if (chatType === "roommate") {
+      getMyRoommateInfo()
+        .then((res) => {
+          if (res.data) {
+            setIsMyRoommateState(true);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [chatType]);
+
   const [joiningLinkedRoomId, setJoiningLinkedRoomId] = useState<number | null>(
     null,
   );
@@ -1567,6 +1593,7 @@ export default function ChattingPage() {
             isChatted={messageList.length > 0}
             boardTitle={roommateBoardLink?.title}
             onBoardTitleClick={handleRoommateBoardClick}
+            isMyRoommate={isMyRoommateState}
           />
         )}
         {chatType === "open" && (

@@ -318,6 +318,14 @@ export default function OpenChatPage() {
       console.error("채팅 읽음 처리 실패", err);
     }
 
+    const isMyRoommate = Boolean(
+      room.roommate ||
+        room.isMyRoommate ||
+        room.myRoommate ||
+        room.matched ||
+        room.isRoommate,
+    );
+
     const opponentBoardTitle = room.opponentBoardTitle?.trim();
 
     navigate(`/chat/roommate/${room.chatRoomId}`, {
@@ -326,6 +334,7 @@ export default function OpenChatPage() {
         partnerProfileImageUrl: room.partnerProfileImageUrl,
         roommateBoardTitle: opponentBoardTitle || "삭제된 게시물입니다",
         roommateBoardOwner: "opponent",
+        isMyRoommate,
       },
     });
   };

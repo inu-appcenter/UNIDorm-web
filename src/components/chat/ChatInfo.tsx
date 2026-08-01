@@ -10,6 +10,8 @@ import TooltipMessage from "../common/TooltipMessage.tsx";
 import { createPortal } from "react-dom";
 import { ChevronRight } from "lucide-react";
 
+import { useNavigate } from "react-router-dom";
+
 // 로컬 스토리지 키 정의
 const TOOLTIP_CLOSED_STORAGE_KEY = "roommate_chat_tooltip_closed_list";
 
@@ -20,6 +22,7 @@ interface ChatInfoProps {
   isChatted?: boolean;
   boardTitle?: string;
   onBoardTitleClick?: () => void;
+  isMyRoommate?: boolean;
 }
 
 const ChatInfo = ({
@@ -29,7 +32,9 @@ const ChatInfo = ({
   isChatted,
   boardTitle,
   onBoardTitleClick,
+  isMyRoommate = false,
 }: ChatInfoProps) => {
+  const navigate = useNavigate();
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [isRequestMode, setIsRequestMode] = useState(false);
   // 초기값은 false로 두고, useEffect에서 확인 후 true로 변경
@@ -137,20 +142,27 @@ const ChatInfo = ({
       <FunctionWrapper>
         {selectedTab === "룸메이트" && (
           <RelativeWrapper>
-            <RoundSquareButton
-              btnName={"룸메 신청"}
-              onClick={() => {
-                if (!isChatted) {
-                  alert(
-                    "대화를 나누지 않고 룸메이트를 신청할 수 없어요.\n상대방과 룸메이트를 하기로 약속한 뒤 눌러주세요.",
-                  );
-                  return;
-                }
-                setIsRequestMode(true);
-                setShowInfoModal(true);
-              }}
-            />
-            {showTooltip && (
+            {isMyRoommate ? (
+              <RoundSquareButton
+                btnName={"내 룸메이트"}
+                onClick={() => navigate("/roommate/my")}
+              />
+            ) : (
+              <RoundSquareButton
+                btnName={"룸메 신청"}
+                onClick={() => {
+                  if (!isChatted) {
+                    alert(
+                      "대화를 나누지 않고 룸메이트를 신청할 수 없어요.\n상대방과 룸메이트를 하기로 약속한 뒤 눌러주세요.",
+                    );
+                    return;
+                  }
+                  setIsRequestMode(true);
+                  setShowInfoModal(true);
+                }}
+              />
+            )}
+            {!isMyRoommate && showTooltip && (
               <TooltipMessage
                 message={
                   "서로 룸메이트를 하기로 마음먹었다면,\n룸메이트를 신청하세요!"
