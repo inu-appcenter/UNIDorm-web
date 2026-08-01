@@ -35,7 +35,7 @@ export default function OpenChatRoomCard({ room, tab, onClick }: Props) {
       case "PERSONAL":
         return "1:1";
       default:
-        return "단톡";
+        return "오픈채팅";
     }
   };
 
