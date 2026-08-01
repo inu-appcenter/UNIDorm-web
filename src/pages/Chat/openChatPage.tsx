@@ -876,14 +876,16 @@ const TimeText = styled.span`
 const UnreadBadge = styled.span`
   min-width: 20px;
   height: 20px;
-  padding: 0 6px;
-  border-radius: 999px;
+  padding: 0 8px;
+  border-radius: 23px;
   background-color: #1677ff;
   color: #ffffff;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 400;
+  line-height: 1.5;
   display: flex;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
+  width: fit-content;
 `;
