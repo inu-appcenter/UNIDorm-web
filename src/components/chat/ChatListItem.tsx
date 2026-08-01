@@ -1,11 +1,12 @@
 import styled from "styled-components";
 import { useEffect, useState } from "react";
-import profile from "../../assets/profileimg.png";
 import GroupPurchaseInfo from "./GroupPurchaseInfo.tsx";
 import { getRoommateChatUnreadCount } from "@/apis/chat";
+import ChatAvatar from "./ChatAvatar";
+import { MapPin } from "lucide-react";
 
 interface ChatItemProps {
-  chatRoomId: number; // API 호출을 위해 ID 추가
+  chatRoomId: number;
   selectedTab: string;
   onClick: () => void;
   title?: string;
@@ -33,7 +34,6 @@ const ChatListItem = ({
   isRoommate,
   boardTitle,
 }: ChatItemProps) => {
-
   const [unreadCount, setUnreadCount] = useState<number>(0);
 
   // 안 읽은 메시지 카운트 조회 (룸메이트 탭일 경우에만)
@@ -71,47 +71,42 @@ const ChatListItem = ({
 
   return (
     <ChatItemWrapper onClick={onClick}>
-      <ImgWrapper>
-        <img
-          src={
-            partnerProfileImageUrl?.trim() ? partnerProfileImageUrl : profile
-          }
-          alt="프로필이미지"
-          onError={(e) => {
-            e.currentTarget.onerror = null;
-            e.currentTarget.src = profile;
-          }}
-        />
-      </ImgWrapper>
-
-      {/* unreadCount가 0보다 크면 안 읽음 스타일($isUnread=true) 적용 */}
-      <ContentWrapper $isUnread={unreadCount > 0}>
-        <div className="titleLine">
-          <div className="title">
-            {title ?? "익명 1"}
-            {isRoommate && <RoommateBadge>룸메이트</RoommateBadge>}
-          </div>
-          {selectedTab === "공구" && (
-            <GroupPurchaseInfo
-              currentPeople={currentPeople}
-              maxPeople={maxPeople}
-              deadline={deadline}
-            />
-          )}
-        </div>
-        {boardTitle && <BoardTitleText>{boardTitle}</BoardTitleText>}
-        <div className="message">
-          {message ?? "늦은 시간에 죄송합니다 ㅠㅠ"}
-        </div>
-
-      </ContentWrapper>
+      <LeftSection>
+        {isRoommate && (
+          <RoommateBadge>
+            <MapPin size={12} color="#1677ff" style={{ marginRight: 4 }} />
+            내 룸메
+          </RoommateBadge>
+        )}
+        <MainRow>
+          <ChatAvatar
+            count={currentPeople || 1}
+            imageUrl={partnerProfileImageUrl}
+          />
+          <ContentWrapper $isUnread={unreadCount > 0}>
+            <div className="titleLine">
+              <div className="title">{title ?? "익명 1"}</div>
+              {selectedTab === "공구" && (
+                <GroupPurchaseInfo
+                  currentPeople={currentPeople}
+                  maxPeople={maxPeople}
+                  deadline={deadline}
+                />
+              )}
+            </div>
+            {boardTitle && <BoardTitleText>{boardTitle}</BoardTitleText>}
+            <div className="message">
+              {message ?? "대화 내역이 없습니다."}
+            </div>
+          </ContentWrapper>
+        </MainRow>
+      </LeftSection>
 
       <RightWrapper>
-        <div className="time">{time ? formatTime(time) : ""}</div>
-        {/* 안 읽은 메시지가 있을 때만 뱃지 표시 */}
         {unreadCount > 0 && (
           <Badge>{unreadCount > 99 ? "99+" : unreadCount}</Badge>
         )}
+        <div className="time">{time ? formatTime(time) : ""}</div>
       </RightWrapper>
     </ChatItemWrapper>
   );
@@ -121,65 +116,61 @@ export default ChatListItem;
 
 const ChatItemWrapper = styled.div`
   width: 100%;
-  height: fit-content;
+  padding: 16px 0;
   display: flex;
-  flex-direction: row;
-
-  padding: 8px 20px;
+  justify-content: space-between;
+  align-items: flex-end;
   box-sizing: border-box;
-
-  gap: 16px;
   cursor: pointer;
 `;
 
-const ImgWrapper = styled.div`
-  width: fit-content;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  img {
-    width: 46px;
-    height: 46px;
-    border-radius: 50%;
-    object-fit: cover;
-  }
-`;
-
-// 안 읽음 여부에 따른 스타일 분기
-const ContentWrapper = styled.div<{ $isUnread: boolean }>`
-  flex: 1;
+const LeftSection = styled.div`
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+`;
+
+const MainRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+`;
+
+const ContentWrapper = styled.div<{ $isUnread: boolean }>`
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 
   .titleLine {
     display: flex;
-    flex-direction: row;
-    margin-bottom: 2px;
+    align-items: center;
   }
 
   .title {
-    font-style: normal;
-    font-weight: 500;
+    font-family: "Pretendard", sans-serif;
+    font-weight: 600;
     font-size: 16px;
-    line-height: 24px;
-    letter-spacing: 0.38px;
-    color: #1c1c1e;
-    margin-right: 4px;
+    line-height: 1.5;
+    color: #3d3d3d;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .message {
-    font-family: Pretendard;
-    font-size: 12px;
-    font-style: normal;
-    font-weight: 600;
-    line-height: 24px; /* 200% */
-    letter-spacing: 0.38px;
-
-    /* 안 읽었을 때와 읽었을 때 색상 분기 */
-    color: ${(props) => (props.$isUnread ? "#1C1C1E" : "#636366")};
+    font-family: "Pretendard", sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.5;
+    color: ${(props) => (props.$isUnread ? "#3d3d3d" : "#8b8b8b")};
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 `;
 
@@ -188,57 +179,54 @@ const RightWrapper = styled.div`
   flex-direction: column;
   align-items: flex-end;
   justify-content: center;
-  gap: 4px; /* 시간과 뱃지 사이 간격 */
+  gap: 8px;
+  flex-shrink: 0;
+  margin-left: 12px;
 
   .time {
-    font-style: normal;
-    font-weight: 600;
-    font-size: 10px;
-    line-height: normal; /* 높이 맞춤을 위해 normal 혹은 숫자 조정 */
-    letter-spacing: 0.38px;
-    color: #636366;
+    font-family: "Pretendard", sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #8b8b8b;
   }
 `;
 
-/** 뱃지 스타일 (BottomBar와 동일) */
 const Badge = styled.div`
-  background-color: #f97171;
+  background-color: #1677ff;
   color: #ffffff;
-  font-size: 10px;
-  font-weight: 600;
+  font-family: "Pretendard", sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.5;
 
-  /* 완전 원형 및 캡슐형 로직 */
-  min-width: 16px;
-  height: 16px;
-  padding: 0 4px;
-  border-radius: 100px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 10px;
+  border-radius: 23px;
+  width: fit-content;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
   box-sizing: border-box;
-  line-height: 1;
 `;
 
-const RoommateBadge = styled.span`
-  font-size: 10px;
-  font-weight: 600;
-  color: #3b82f6;
-  background: #eff6ff;
-  border-radius: 12px;
-  padding: 2px 6px;
-  margin-left: 6px;
-  display: inline-block;
-  vertical-align: middle;
+const RoommateBadge = styled.div`
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 400;
+  color: #1677ff;
+  line-height: 1.5;
 `;
 
 const BoardTitleText = styled.div`
-  font-size: 11px;
+  font-family: "Pretendard", sans-serif;
+  font-size: 12px;
   color: #8e8e93;
-  margin-top: 2px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 `;
-

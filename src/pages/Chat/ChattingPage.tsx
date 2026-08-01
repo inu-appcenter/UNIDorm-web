@@ -12,7 +12,6 @@ import {
   getRoommateChatRooms,
   patchRoommateChatRead,
 } from "@/apis/chat";
-import { getMyChecklist } from "@/apis/roommate";
 import { patchNotificationsRead } from "@/apis/notification";
 import {
   getOpenChatMessages,
@@ -47,6 +46,7 @@ import {
   rejectStudentIdDisclosure,
   acceptStudentIdDisclosure,
 } from "@/apis/studentIdDisclosure";
+import { getMyRoommateInfo } from "@/apis/roommate";
 import type { StudentIdDisclosureStatus } from "@/apis/studentIdDisclosure";
 import { isAxiosError } from "axios";
 
@@ -126,17 +126,8 @@ const parseStudentIdRequestPayload = (
   }
 };
 
-const isStudentIdDisclosureAcceptedSystemMessage = (message: MessageType) =>
-  Boolean(
-    message.isSystem &&
-      /학번\s*(공유|공개).*?(수락|승인)/.test(
-        message.content.replace(/\s+/g, " ").trim(),
-      ),
-  );
-
 const dedupeStudentIdDisclosureMessages = (messages: MessageType[]) => {
   const seenRequestIds = new Set<number>();
-  let hasAcceptedSystemMessage = false;
 
   return messages.filter((message) => {
     if (
@@ -145,11 +136,6 @@ const dedupeStudentIdDisclosureMessages = (messages: MessageType[]) => {
     ) {
       if (seenRequestIds.has(message.disclosureRequestId)) return false;
       seenRequestIds.add(message.disclosureRequestId);
-    }
-
-    if (isStudentIdDisclosureAcceptedSystemMessage(message)) {
-      if (hasAcceptedSystemMessage) return false;
-      hasAcceptedSystemMessage = true;
     }
 
     return true;
@@ -291,6 +277,31 @@ export default function ChattingPage() {
   const [processingDisclosureId, setProcessingDisclosureId] = useState<
     number | null
   >(null);
+  const [isMyRoommateState, setIsMyRoommateState] = useState<boolean>(() => {
+    const routeIsMyRoommate = location.state?.isMyRoommate;
+    const room = location.state?.room;
+    return Boolean(
+      routeIsMyRoommate ||
+        room?.isMyRoommate ||
+        room?.roommate ||
+        room?.myRoommate ||
+        room?.matched ||
+        room?.isRoommate,
+    );
+  });
+
+  useEffect(() => {
+    if (chatType === "roommate") {
+      getMyRoommateInfo()
+        .then((res) => {
+          if (res.data) {
+            setIsMyRoommateState(true);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [chatType]);
+
   const [joiningLinkedRoomId, setJoiningLinkedRoomId] = useState<number | null>(
     null,
   );
@@ -765,9 +776,7 @@ export default function ChattingPage() {
             message.id === nextMessage.id ||
             (normalizedType === "STUDENT_ID_REQUEST" &&
               message.type === "STUDENT_ID_REQUEST" &&
-              message.disclosureRequestId === normalizedRequestId) ||
-            (isStudentIdDisclosureAcceptedSystemMessage(nextMessage) &&
-              isStudentIdDisclosureAcceptedSystemMessage(message)),
+              message.disclosureRequestId === normalizedRequestId),
         );
         if (isDuplicate) return prev;
 
@@ -828,29 +837,19 @@ export default function ChattingPage() {
               opponentIdRef.current = oppId;
 
               const opponentBoardTitle = currentRoom.opponentBoardTitle?.trim();
-              const myBoardTitle = currentRoom.myBoardTitle?.trim();
-              const nextBoardLink = opponentBoardTitle
-                ? {
-                    title: opponentBoardTitle,
-                    owner: "opponent" as const,
-                  }
-                : myBoardTitle
-                  ? {
-                      title: myBoardTitle,
-                      owner: "me" as const,
-                    }
-                  : null;
+              const nextBoardLink = {
+                title: opponentBoardTitle || "삭제된 게시물입니다",
+                owner: "opponent" as const,
+              };
 
-              if (nextBoardLink) {
-                setRoommateBoardLink((current) => ({
-                  ...nextBoardLink,
-                  boardId:
-                    current?.title === nextBoardLink.title &&
-                    current.owner === nextBoardLink.owner
-                      ? current.boardId
-                      : undefined,
-                }));
-              }
+              setRoommateBoardLink((current) => ({
+                ...nextBoardLink,
+                boardId:
+                  current?.title === nextBoardLink.title &&
+                  current.owner === nextBoardLink.owner
+                    ? current.boardId
+                    : undefined,
+              }));
             }
           } catch (e) {
             console.error("채팅방 목록 조회 실패:", e);
@@ -1373,27 +1372,10 @@ export default function ChattingPage() {
     alert("참여자를 퇴장시켰습니다.");
   };
 
-  const normalizedCurrentDisclosureStatus = normalizeDisclosureStatus(
-    chatType === "roommate"
-      ? roommateDisclosureStatus?.status
-      : openChatDisclosureStatus?.status,
-  );
-  const isStudentNumberDisclosed =
-    (chatType === "personal" || chatType === "roommate") &&
-    ACCEPTED_DISCLOSURE_STATUSES.has(normalizedCurrentDisclosureStatus);
-  const sharedOpponentStudentNumber = isStudentNumberDisclosed
-    ? chatType === "roommate"
-      ? opponentStudentNumber
-      : openChatOpponentStudentNumber
-    : "";
   const basePartnerName =
-    partnerName || (chatType === "roommate" ? "룸메이트 채팅" : "1대1 채팅");
+    chatType === "roommate" ? "룸메이트 채팅" : "1대1 채팅";
   const headerTitle =
-    chatType === "open"
-      ? openChatRoomName || "오픈채팅방"
-      : sharedOpponentStudentNumber
-        ? `${basePartnerName} / ${sharedOpponentStudentNumber}`
-        : basePartnerName;
+    chatType === "open" ? openChatRoomName || "오픈채팅방" : basePartnerName;
 
   useSetHeader({
     title: headerTitle,
@@ -1578,32 +1560,22 @@ export default function ChattingPage() {
   const handleRoommateBoardClick = async () => {
     if (!roommateBoardLink) return;
 
+    if (roommateBoardLink.title === "삭제된 게시물입니다") {
+      alert("삭제된 게시물입니다.");
+      return;
+    }
+
     if (roommateBoardLink.boardId) {
       navigate(`/roommate/list/${roommateBoardLink.boardId}`);
       return;
     }
 
-    if (roommateBoardLink.owner === "opponent") {
-      navigate("/roommate/list/opponent", {
-        state: {
-          roomId,
-          partnerName,
-        },
-      });
-      return;
-    }
-
-    try {
-      const response = await getMyChecklist();
-      if (!response.data.boardId) {
-        alert("연결된 룸메이트 모집글을 찾지 못했습니다.");
-        return;
-      }
-      navigate(`/roommate/list/${response.data.boardId}`);
-    } catch (error) {
-      console.error("내 룸메이트 모집글 조회 실패:", error);
-      alert("연결된 룸메이트 모집글을 불러오지 못했습니다.");
-    }
+    navigate("/roommate/list/opponent", {
+      state: {
+        roomId,
+        partnerName,
+      },
+    });
   };
 
   return (
@@ -1619,9 +1591,9 @@ export default function ChattingPage() {
             partnerName={partnerName}
             roomId={roomId}
             isChatted={messageList.length > 0}
-            partnerProfileImageUrl={partnerProfileImageUrl}
             boardTitle={roommateBoardLink?.title}
             onBoardTitleClick={handleRoommateBoardClick}
+            isMyRoommate={isMyRoommateState}
           />
         )}
         {chatType === "open" && (
@@ -1825,15 +1797,47 @@ export default function ChattingPage() {
                       <S.ShareCardRowOther>
                         <S.ShareRejectedCard>
                           <XCircle size={20} aria-hidden="true" />
-                          학번 공개 요청 거절
+                          학번 공개 요청 거절됨
                         </S.ShareRejectedCard>
                       </S.ShareCardRowOther>
                     </React.Fragment>
                   );
                 }
 
-                if (isCanceled || !isPending) {
-                  return null;
+                if (isCanceled) {
+                  return (
+                    <React.Fragment key={msg.id}>
+                      {showDateLine && (
+                        <S.DateDivider>
+                          {formatDateLine(msg.createdAt)}
+                        </S.DateDivider>
+                      )}
+                      <S.ShareCardRowOther>
+                        <S.ShareRejectedCard>
+                          <XCircle size={20} aria-hidden="true" />
+                          학번 공개 요청 취소됨
+                        </S.ShareRejectedCard>
+                      </S.ShareCardRowOther>
+                    </React.Fragment>
+                  );
+                }
+
+                if (!isPending) {
+                  return (
+                    <React.Fragment key={msg.id}>
+                      {showDateLine && (
+                        <S.DateDivider>
+                          {formatDateLine(msg.createdAt)}
+                        </S.DateDivider>
+                      )}
+                      <S.ShareCardRowOther>
+                        <S.ShareRejectedCard>
+                          <XCircle size={20} aria-hidden="true" />
+                          이전 학번 공개 요청
+                        </S.ShareRejectedCard>
+                      </S.ShareCardRowOther>
+                    </React.Fragment>
+                  );
                 }
 
                 return (
@@ -2218,7 +2222,7 @@ export default function ChattingPage() {
                       senderName={
                         chatType === "open" || chatType === "personal"
                           ? msg.nickname || "익명 01"
-                          : undefined
+                          : msg.nickname || partnerName || "상대방"
                       }
                       imageUrls={msg.imageUrls}
                       unreadCount={

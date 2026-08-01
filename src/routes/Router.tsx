@@ -52,6 +52,7 @@ import OpenChatEditPage from "../pages/Chat/OpenChatEditPage";
 import ChattingPage from "@/pages/Chat/ChattingPage";
 import ChatMembersPage from "@/pages/Chat/ChatMembersPage";
 import ChatNotificationSettingsPage from "@/pages/Chat/ChatNotificationSettingsPage";
+import BlockListPage from "@/pages/Chat/BlockListPage";
 
 import GroupPurchasePostPage from "@/pages/GroupPurchase/GroupPurchasePostPage";
 import GroupPurchaseWritePage from "@/pages/GroupPurchase/GroupPurchaseWritePage";
@@ -220,6 +221,7 @@ export const router = createBrowserRouter([
             children: [
               { path: "open/create", element: <OpenChatCreatePage /> },
               { path: "open/:id/edit", element: <OpenChatEditPage /> },
+              { path: "blocked", element: <BlockListPage /> },
               { path: ":chatType/:id", element: <ChattingPage /> },
               { path: ":chatType/:id/members", element: <ChatMembersPage /> },
               {

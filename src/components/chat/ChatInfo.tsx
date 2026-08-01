@@ -1,5 +1,4 @@
 import styled from "styled-components";
-import profile from "../../assets/profileimg.png";
 import GroupPurchaseInfo from "./GroupPurchaseInfo.tsx";
 import RoundSquareButton from "../button/RoundSquareButton.tsx";
 import { requestRoommateMatchingByChatRoom } from "@/apis/roommate";
@@ -11,6 +10,8 @@ import TooltipMessage from "../common/TooltipMessage.tsx";
 import { createPortal } from "react-dom";
 import { ChevronRight } from "lucide-react";
 
+import { useNavigate } from "react-router-dom";
+
 // 로컬 스토리지 키 정의
 const TOOLTIP_CLOSED_STORAGE_KEY = "roommate_chat_tooltip_closed_list";
 
@@ -19,9 +20,9 @@ interface ChatInfoProps {
   partnerName?: string;
   roomId?: number;
   isChatted?: boolean;
-  partnerProfileImageUrl?: string;
   boardTitle?: string;
   onBoardTitleClick?: () => void;
+  isMyRoommate?: boolean;
 }
 
 const ChatInfo = ({
@@ -29,10 +30,11 @@ const ChatInfo = ({
   partnerName,
   roomId,
   isChatted,
-  partnerProfileImageUrl,
   boardTitle,
   onBoardTitleClick,
+  isMyRoommate = false,
 }: ChatInfoProps) => {
+  const navigate = useNavigate();
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [isRequestMode, setIsRequestMode] = useState(false);
   // 초기값은 false로 두고, useEffect에서 확인 후 true로 변경
@@ -118,21 +120,13 @@ const ChatInfo = ({
 
   return (
     <ChatInfoWrapper>
-      <ImgWrapper>
-        <img
-          src={partnerProfileImageUrl || profile}
-          alt={"프로필이미지"}
-          onError={(e) => {
-            e.currentTarget.onerror = null;
-            e.currentTarget.src = profile;
-          }}
-        />
-      </ImgWrapper>
       <ContentWrapper>
         <div
           style={{
             display: "flex",
             flexDirection: "column",
+            width: "100%",
+            minWidth: 0,
           }}
         >
           <div className="title">{partnerName}</div>
@@ -148,20 +142,27 @@ const ChatInfo = ({
       <FunctionWrapper>
         {selectedTab === "룸메이트" && (
           <RelativeWrapper>
-            <RoundSquareButton
-              btnName={"룸메 신청"}
-              onClick={() => {
-                if (!isChatted) {
-                  alert(
-                    "대화를 나누지 않고 룸메이트를 신청할 수 없어요.\n상대방과 룸메이트를 하기로 약속한 뒤 눌러주세요.",
-                  );
-                  return;
-                }
-                setIsRequestMode(true);
-                setShowInfoModal(true);
-              }}
-            />
-            {showTooltip && (
+            {isMyRoommate ? (
+              <RoundSquareButton
+                btnName={"내 룸메이트"}
+                onClick={() => navigate("/roommate/my")}
+              />
+            ) : (
+              <RoundSquareButton
+                btnName={"룸메 신청"}
+                onClick={() => {
+                  if (!isChatted) {
+                    alert(
+                      "대화를 나누지 않고 룸메이트를 신청할 수 없어요.\n상대방과 룸메이트를 하기로 약속한 뒤 눌러주세요.",
+                    );
+                    return;
+                  }
+                  setIsRequestMode(true);
+                  setShowInfoModal(true);
+                }}
+              />
+            )}
+            {!isMyRoommate && showTooltip && (
               <TooltipMessage
                 message={
                   "서로 룸메이트를 하기로 마음먹었다면,\n룸메이트를 신청하세요!"
@@ -175,7 +176,7 @@ const ChatInfo = ({
           </RelativeWrapper>
         )}
       </FunctionWrapper>
-      <div style={{ display: "flex", alignItems: "center" }}>
+      <div style={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
         <MdHelpOutline
           color={"gray"}
           size={24}
@@ -308,20 +309,6 @@ const ChatInfoWrapper = styled.div`
   z-index: 100;
 `;
 
-const ImgWrapper = styled.div`
-  width: fit-content;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  img {
-    width: 46px;
-    height: 46px;
-    border-radius: 50%;
-    object-fit: cover;
-  }
-`;
 const ContentWrapper = styled.div`
   flex: 1;
   min-width: 0;
@@ -341,6 +328,7 @@ const ContentWrapper = styled.div`
 
 const BoardTitleButton = styled.button`
   display: flex;
+  width: 100%;
   max-width: 100%;
   align-items: center;
   gap: 2px;
@@ -355,6 +343,7 @@ const BoardTitleButton = styled.button`
   cursor: pointer;
 
   span {
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -369,6 +358,7 @@ const FunctionWrapper = styled.div`
   display: flex;
   align-items: center;
   gap: 16px;
+  flex-shrink: 0;
 `;
 
 const RelativeWrapper = styled.div`

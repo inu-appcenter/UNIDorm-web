@@ -13,6 +13,7 @@ import {
   getAllRoommateChatUnreadCount,
 } from "@/apis/chat";
 import OpenChatRoomCard from "@/components/chat/OpenChatRoomCard";
+import ChatAvatar from "@/components/chat/ChatAvatar";
 import OpenChatTab from "@/components/chat/OpenChatTab";
 import OpenChatEmptyState from "@/components/chat/OpenChatEmptyState";
 import OpenChatJoinModal from "@/components/modal/OpenChatJoinModal";
@@ -22,7 +23,7 @@ import { RoommateChatRoom } from "@/types/chats";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import useUserStore from "@/stores/useUserStore";
-import { Search, Plus, MapPin } from "lucide-react";
+import { Search, Plus, MapPin, User } from "lucide-react";
 import { formatChatMessagePreview } from "@/utils/chatMessagePreview";
 
 const formatTime = (isoString: string) => {
@@ -69,7 +70,7 @@ function RoommateChatCard({
   );
 
   return (
-    <RoommateCard type="button" onClick={onClick} $isMyRoommate={isMyRoommate}>
+    <RoommateCard type="button" onClick={onClick}>
       <CardLeft>
         {isMyRoommate && (
           <RoommateBadge>
@@ -77,20 +78,38 @@ function RoommateChatCard({
             룸메이트
           </RoommateBadge>
         )}
-        <RoomName>
-          {room.partnerName || room.opponentNickname || "익명"}
-        </RoomName>
-        <LastMessage>
-          {formatChatMessagePreview(room.lastMessage, "대화 내역이 없습니다.")}
-        </LastMessage>
+        <MainRow>
+          <ChatAvatar imageUrl={room.partnerProfileImageUrl} />
+          <TextCol>
+            <RoomName>
+              {room.partnerName || room.opponentNickname || "익명"}
+            </RoomName>
+            <LastMessage>
+              {formatChatMessagePreview(
+                room.lastMessage,
+                "대화 내역이 없습니다.",
+              )}
+            </LastMessage>
+          </TextCol>
+        </MainRow>
+        <MetaArea>
+          <MetaItem>
+            <User size={14} />
+            <span>2</span>
+          </MetaItem>
+          <Divider />
+          <MetaItem>
+            <span>룸메채팅</span>
+          </MetaItem>
+        </MetaArea>
       </CardLeft>
       <CardRight>
-        <TimeText>
-          {room.lastMessageTime ? formatTime(room.lastMessageTime) : ""}
-        </TimeText>
         {unreadCount > 0 && (
           <UnreadBadge>{unreadCount > 99 ? "99+" : unreadCount}</UnreadBadge>
         )}
+        <TimeText>
+          {room.lastMessageTime ? formatTime(room.lastMessageTime) : ""}
+        </TimeText>
       </CardRight>
     </RoommateCard>
   );
@@ -119,12 +138,11 @@ export default function OpenChatPage() {
   const selectedTab: OpenChatTabType =
     tabParam && VALID_TABS.includes(tabParam) ? tabParam : "MY";
 
-  const handleTabChange = useCallback(
-    (tab: OpenChatTabType) => {
-      setSearchParams({ tab }, { replace: true });
-    },
-    [setSearchParams],
-  );
+  const filterParam = searchParams.get("filter") as MyChatRoomFilter | null;
+  const myChatRoomFilter: MyChatRoomFilter =
+    filterParam && ["ALL", "OPEN_CHAT", "ROOMMATE"].includes(filterParam)
+      ? filterParam
+      : "ALL";
 
   const [rooms, setRooms] = useState<OpenChatRoom[]>([]);
   const [roommateRooms, setRoommateRooms] = useState<RoommateChatRoom[]>([]);
@@ -135,10 +153,31 @@ export default function OpenChatPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   const [roommateUnreadTotal, setRoommateUnreadTotal] = useState(0);
+  const [myOpenChatUnreadTotal, setMyOpenChatUnreadTotal] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const [myChatRoomFilter, setMyChatRoomFilter] =
-    useState<MyChatRoomFilter>("ALL");
+
+  const handleTabChange = useCallback(
+    (tab: OpenChatTabType) => {
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.set("tab", tab);
+      setSearchParams(nextParams, { replace: true });
+    },
+    [searchParams, setSearchParams],
+  );
+
+  const handleFilterChange = useCallback(
+    (filter: MyChatRoomFilter) => {
+      const nextParams = new URLSearchParams(searchParams);
+      if (filter === "ALL") {
+        nextParams.delete("filter");
+      } else {
+        nextParams.set("filter", filter);
+      }
+      setSearchParams(nextParams, { replace: true });
+    },
+    [searchParams, setSearchParams],
+  );
 
   const fillMissingPersonalLastMessages = useCallback(
     async (chatRooms: OpenChatRoom[]) =>
@@ -190,6 +229,12 @@ export default function OpenChatPage() {
           const openChatRooms = openChatRes.data.content.filter(
             (room) => room.chatCategory === "OPEN_CHAT",
           );
+          const openUnreadCount = openChatRooms.reduce(
+            (acc, r) => acc + (r.unreadCount || 0),
+            0,
+          );
+          setMyOpenChatUnreadTotal(openUnreadCount);
+
           const dedicatedRoommateRooms = roommateChatRes.data;
           const dedicatedRoommateRoomIds = new Set(
             dedicatedRoommateRooms.map((room) => room.chatRoomId),
@@ -218,8 +263,7 @@ export default function OpenChatPage() {
           ]);
           setRoommateUnreadTotal(unreadRes.data);
         } else {
-          setRoommateRooms([]);
-          const [openChatRes, unreadRes] = await Promise.all([
+          const [openChatRes, myOpenChatRes, unreadRes] = await Promise.all([
             getOpenChatRooms(
               selectedTab,
               0,
@@ -227,8 +271,18 @@ export default function OpenChatPage() {
               searchQuery || undefined,
               "createdAt,desc",
             ),
+            getOpenChatRooms("MY", 0, 50),
             getAllRoommateChatUnreadCount(),
           ]);
+          const myOpenChatRooms = myOpenChatRes.data.content.filter(
+            (room) => room.chatCategory === "OPEN_CHAT",
+          );
+          const openUnreadCount = myOpenChatRooms.reduce(
+            (acc, r) => acc + (r.unreadCount || 0),
+            0,
+          );
+          setMyOpenChatUnreadTotal(openUnreadCount);
+
           setRooms(
             openChatRes.data.content.filter(
               (room) => room.chatCategory === "OPEN_CHAT",
@@ -280,19 +334,23 @@ export default function OpenChatPage() {
       console.error("채팅 읽음 처리 실패", err);
     }
 
+    const isMyRoommate = Boolean(
+      room.roommate ||
+        room.isMyRoommate ||
+        room.myRoommate ||
+        room.matched ||
+        room.isRoommate,
+    );
+
     const opponentBoardTitle = room.opponentBoardTitle?.trim();
-    const myBoardTitle = room.myBoardTitle?.trim();
 
     navigate(`/chat/roommate/${room.chatRoomId}`, {
       state: {
         partnerName: room.partnerName,
         partnerProfileImageUrl: room.partnerProfileImageUrl,
-        roommateBoardTitle: opponentBoardTitle || myBoardTitle,
-        roommateBoardOwner: opponentBoardTitle
-          ? "opponent"
-          : myBoardTitle
-            ? "me"
-            : undefined,
+        roommateBoardTitle: opponentBoardTitle || "삭제된 게시물입니다",
+        roommateBoardOwner: "opponent",
+        isMyRoommate,
       },
     });
   };
@@ -377,11 +435,7 @@ export default function OpenChatPage() {
     setSelectedRoom(null);
   };
 
-  const openChatUnreadTotal = rooms.reduce(
-    (acc, r) => acc + (r.unreadCount || 0),
-    0,
-  );
-  const totalUnreadCount = roommateUnreadTotal + openChatUnreadTotal;
+  const totalUnreadCount = roommateUnreadTotal + myOpenChatUnreadTotal;
   const normalizedSearchQuery = searchQuery.trim().toLocaleLowerCase("ko-KR");
   const includesSearchQuery = (value: unknown) =>
     String(value ?? "")
@@ -455,7 +509,13 @@ export default function OpenChatPage() {
 
   useSetHeader({
     title: "채팅",
-    showAlarm: isLoggedIn,
+    showAlarm: false,
+    menuItems: [
+      {
+        label: "차단 목록",
+        onClick: () => navigate("/chat/blocked"),
+      },
+    ],
     headerRightElement: !isLoggedIn ? (
       <HeaderSearchButton
         type="button"
@@ -496,7 +556,7 @@ export default function OpenChatPage() {
                 type="button"
                 aria-pressed={myChatRoomFilter === filter.value}
                 $active={myChatRoomFilter === filter.value}
-                onClick={() => setMyChatRoomFilter(filter.value)}
+                onClick={() => handleFilterChange(filter.value)}
               >
                 {filter.label}
               </MyChatFilterButton>
@@ -592,7 +652,6 @@ export default function OpenChatPage() {
         onJoin={handleJoinRoom}
         isJoining={isJoining}
       />
-
     </PageContainer>
   );
 }
@@ -653,8 +712,8 @@ const HeaderSearchButton = styled.button`
 const MyChatFilterList = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin: 0 0 16px;
+  gap: 16px;
+  //margin: 0 0 16px;
   overflow-x: auto;
   scrollbar-width: none;
 
@@ -689,7 +748,6 @@ const FilteredEmptyMessage = styled.p`
 const RoomList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 12px;
 `;
 
 const CreateButton = styled.button`
@@ -769,18 +827,16 @@ const LoginButton = styled.button`
   cursor: pointer;
 `;
 
-const RoommateCard = styled.button<{ $isMyRoommate?: boolean }>`
+const RoommateCard = styled.button`
   width: 100%;
-  padding: 16px;
-  border: 1px solid #dfdfdf;
-  border-radius: 16px;
-  background-color: ${({ $isMyRoommate }) =>
-    $isMyRoommate ? "#e6f4ff" : "#ffffff"};
+  padding: 16px 0;
+  border: none;
+  background-color: transparent;
   text-align: left;
   cursor: pointer;
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
+  align-items: flex-start;
   box-sizing: border-box;
   transition: background-color 0.2s ease;
 `;
@@ -791,6 +847,41 @@ const CardLeft = styled.div`
   align-items: flex-start;
   flex: 1;
   min-width: 0;
+`;
+
+const MainRow = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+`;
+
+const TextCol = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+`;
+
+const MetaArea = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+`;
+
+const MetaItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 12px;
+  color: #8b8b8b;
+`;
+
+const Divider = styled.span`
+  width: 1px;
+  height: 14px;
+  background-color: #dfdfdf;
 `;
 
 const RoommateBadge = styled.div`
@@ -845,14 +936,16 @@ const TimeText = styled.span`
 const UnreadBadge = styled.span`
   min-width: 20px;
   height: 20px;
-  padding: 0 6px;
-  border-radius: 999px;
+  padding: 0 10px;
+  border-radius: 23px;
   background-color: #1677ff;
   color: #ffffff;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 400;
+  line-height: 1.5;
   display: flex;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
+  width: fit-content;
 `;

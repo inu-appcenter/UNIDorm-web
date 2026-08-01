@@ -92,8 +92,11 @@ export default function RoomMateBoardDetailPage() {
   }, [boardId, roomId]);
 
   const handleDelete = async () => {
+    const targetBoardId = boardData?.boardId || Number(boardId);
+
     if (
-      !boardId ||
+      !targetBoardId ||
+      Number.isNaN(targetBoardId) ||
       boardId === "opponent" ||
       !window.confirm("정말로 이 게시글을 삭제하시겠습니까?")
     ) {
@@ -101,7 +104,7 @@ export default function RoomMateBoardDetailPage() {
     }
 
     try {
-      await deleteRoommatePost(Number(boardId));
+      await deleteRoommatePost(targetBoardId);
 
       try {
         const memberResponse = await getMemberInfo();
@@ -132,7 +135,6 @@ export default function RoomMateBoardDetailPage() {
 
   useSetHeader({
     title: "",
-    showAlarm: true,
     menuItems: isMyPost
       ? [
           { label: "수정하기", onClick: handleEdit },
@@ -324,22 +326,32 @@ const RoomMateDetailPageWrapper = styled.div`
 const DetailContent = styled.div`
   padding: 16px 20px;
   box-sizing: border-box;
+  display: flex;
+  gap: 20px;
+  flex-direction: column;
 `;
 
 const UserSummaryRow = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
 `;
 
 const MatchedFilterBadge = styled.span`
   ${typography.label1Normal}
   flex: 0 0 auto;
   padding: 8px 12px;
-  border-radius: 999px;
-  color: ${colors.main.main1};
-  background: ${colors.bg.bg1};
+
+  border-radius: 20px;
+  background: var(--Gray-Gray50, #f7f7f7);
+
+  color: var(--Gray-Gray700, #555);
+  text-align: center;
+
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 150%;
 `;
 
 const PostTitle = styled.h1`
@@ -347,12 +359,12 @@ const PostTitle = styled.h1`
   font-size: 16px;
   font-weight: 600;
   color: ${colors.gray.gray800};
-  margin: 16px 0 6px;
+  margin: 0;
 `;
 
 const PostDescription = styled.p`
   ${typography.label1Normal}
-  margin: 0 0 20px;
+  margin: 0;
   color: ${colors.gray.gray800};
   white-space: pre-line;
 `;

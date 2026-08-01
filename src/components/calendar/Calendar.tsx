@@ -21,13 +21,22 @@ import { CalendarItem } from "@/types/calendar";
 import { mixpanelTrack } from "@/utils/mixpanel";
 import CalendarEventBottomSheet from "@/components/modal/CalendarEventBottomsheet";
 import { useNavigate } from "react-router-dom";
+import { Sparkles } from "lucide-react";
 
 interface CalendarProps {
   mode?: "month" | "week";
   location?: string;
 }
 
-const CALENDAR_COLORS = ["#FF6A62", "#E5F1FF", "#555555", "#FFC53D", "#5AC8FA"];
+const CALENDAR_COLORS = [
+  "#FFF1B8", // Gold200
+  "#D9EEFF",
+  "#FFD3D3",
+  "#DFDFDF", // Gray200
+  "#DCF0E0",
+  "#FFE0BE",
+  "#E5D4FF",
+];
 
 const getCalendarColor = (id: number) =>
   CALENDAR_COLORS[(id - 1) % CALENDAR_COLORS.length];
@@ -104,6 +113,7 @@ export default function Calendar({ mode = "month", location }: CalendarProps) {
       title: string;
       row: number;
       color: string;
+      isAiGenerated: boolean;
     }[]
   >([]);
 
@@ -143,6 +153,7 @@ export default function Calendar({ mode = "month", location }: CalendarProps) {
         title: string;
         row: number;
         color: string;
+        isAiGenerated: boolean;
       }[] = [];
 
       weeks.forEach((week, weekIndex) => {
@@ -155,6 +166,7 @@ export default function Calendar({ mode = "month", location }: CalendarProps) {
           end: number;
           title: string;
           color: string;
+          isAiGenerated: boolean;
         }[] = [];
 
         fetchedEvents.forEach((event) => {
@@ -189,6 +201,7 @@ export default function Calendar({ mode = "month", location }: CalendarProps) {
             end: endIdx,
             title: event.title,
             color: getCalendarColor(event.id),
+            isAiGenerated: typeof event.sourceAnnouncementId === "number",
           });
         });
 
@@ -199,6 +212,7 @@ export default function Calendar({ mode = "month", location }: CalendarProps) {
           title: string;
           row: number;
           color: string;
+          isAiGenerated: boolean;
         }[] = [];
 
         eventsInWeek.forEach((currentEvent) => {
@@ -230,6 +244,7 @@ export default function Calendar({ mode = "month", location }: CalendarProps) {
             title: event.title,
             row: event.row,
             color: event.color,
+            isAiGenerated: event.isAiGenerated,
           });
         });
       });
@@ -399,6 +414,11 @@ export default function Calendar({ mode = "month", location }: CalendarProps) {
                       $row={event.row}
                       $color={event.color}
                     >
+                      {event.isAiGenerated && (
+                        <AiIcon>
+                          <Sparkles size={10} />
+                        </AiIcon>
+                      )}
                       {event.title}
                     </EventBar>
                   ))}
@@ -564,8 +584,16 @@ const EventBar = styled.div<{
   overflow: hidden;
   text-overflow: ellipsis;
 
-  color: ${({ $color }) =>
-    $color === "#E5F1FF" || $color === "#FFC53D" ? "#333" : "#fff"};
+  color: #333;
 
   pointer-events: none;
+`;
+
+const AiIcon = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-right: 2px;
+  opacity: 0.85;
 `;

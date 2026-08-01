@@ -1,7 +1,8 @@
 import styled from "styled-components";
 import { OpenChatRoom, OpenChatTab } from "@/types/openchat";
-import { Lock, Unlock, User } from "lucide-react";
+import { User } from "lucide-react";
 import { formatChatMessagePreview } from "@/utils/chatMessagePreview";
+import ChatAvatar from "./ChatAvatar";
 
 interface Props {
   room: OpenChatRoom;
@@ -11,15 +12,6 @@ interface Props {
 
 export default function OpenChatRoomCard({ room, tab, onClick }: Props) {
   const isMyChatRoom = tab === "MY";
-  const isRoomPublic = room.isPublic ?? room.public;
-  const visibilityLabel =
-    room.roomType === "DERIVED"
-      ? isRoomPublic
-        ? "노출"
-        : "비노출"
-      : isRoomPublic
-        ? "공개"
-        : "비공개";
 
   const formatActivityTime = (isoString: string) => {
     if (!isoString) return "대화 없음";
@@ -43,7 +35,7 @@ export default function OpenChatRoomCard({ room, tab, onClick }: Props) {
       case "PERSONAL":
         return "1:1";
       default:
-        return "단톡";
+        return "오픈채팅";
     }
   };
 
@@ -51,19 +43,17 @@ export default function OpenChatRoomCard({ room, tab, onClick }: Props) {
     return (
       <Card type="button" onClick={onClick}>
         <LeftArea>
-          <TextArea>
-            <RoomName>{room.name}</RoomName>
-            <LastMessage>
-              {formatChatMessagePreview(room.lastMessage, room.description)}
-            </LastMessage>
-          </TextArea>
+          <MainRow>
+            <ChatAvatar count={room.currentParticipants} />
+            <TextArea>
+              <RoomName>{room.name}</RoomName>
+              <LastMessage>
+                {formatChatMessagePreview(room.lastMessage, room.description)}
+              </LastMessage>
+            </TextArea>
+          </MainRow>
 
           <MetaArea>
-            <MetaItem>
-              {isRoomPublic ? <Unlock size={14} /> : <Lock size={14} />}
-              <span>{visibilityLabel}</span>
-            </MetaItem>
-
             <MetaItem>
               <User size={14} />
               <span>{room.currentParticipants}</span>
@@ -78,14 +68,14 @@ export default function OpenChatRoomCard({ room, tab, onClick }: Props) {
         </LeftArea>
 
         <RightArea>
-          <TimeText>
-            {room.lastMessageAt ? formatActivityTime(room.lastMessageAt) : ""}
-          </TimeText>
           {room.unreadCount > 0 && (
             <UnreadBadge>
               {room.unreadCount > 99 ? "99+" : room.unreadCount}
             </UnreadBadge>
           )}
+          <TimeText>
+            {room.lastMessageAt ? formatActivityTime(room.lastMessageAt) : ""}
+          </TimeText>
         </RightArea>
       </Card>
     );
@@ -100,11 +90,6 @@ export default function OpenChatRoomCard({ room, tab, onClick }: Props) {
         </TextArea>
 
         <MetaArea>
-          <MetaItem>
-            {isRoomPublic ? <Unlock size={14} /> : <Lock size={14} />}
-            <span>{visibilityLabel}</span>
-          </MetaItem>
-
           <MetaItem>
             <User size={14} />
             <span>{room.currentParticipants}</span>
@@ -129,22 +114,28 @@ export default function OpenChatRoomCard({ room, tab, onClick }: Props) {
 
 const Card = styled.button`
   width: 100%;
-  padding: 16px;
-  border: 1px solid #dfdfdf;
-  border-radius: 16px;
-  background-color: #ffffff;
+  padding: 16px 0;
+  border: none;
+  background-color: transparent;
   text-align: left;
   cursor: pointer;
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
+  align-items: flex-start;
   box-sizing: border-box;
+`;
+
+const MainRow = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
 `;
 
 const LeftArea = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 16px;
   flex: 1;
   min-width: 0;
 `;
@@ -185,6 +176,7 @@ const MetaArea = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
+  margin-top: 4px;
 `;
 
 const MetaItem = styled.div`
@@ -222,16 +214,18 @@ const RightArea = styled.div`
 const UnreadBadge = styled.span`
   min-width: 20px;
   height: 20px;
-  padding: 0 6px;
-  border-radius: 999px;
+  padding: 0 10px;
+  border-radius: 23px;
   background-color: #1677ff;
   color: #ffffff;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 400;
+  line-height: 1.5;
   display: flex;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
+  width: fit-content;
 `;
 
 const JoinButtonText = styled.span`
@@ -246,6 +240,7 @@ const JoinButtonText = styled.span`
   justify-content: center;
   flex-shrink: 0;
   margin-left: 12px;
+  align-self: center;
 `;
 
 const JoinedButtonText = styled(JoinButtonText)`

@@ -2,6 +2,7 @@ import styled from "styled-components";
 import { Drawer } from "vaul";
 import { format, parseISO } from "date-fns";
 import { CalendarItem } from "@/types/calendar";
+import { Sparkles, ChevronRight } from "lucide-react";
 
 interface Props {
   isOpen: boolean;
@@ -38,27 +39,44 @@ export default function CalendarEventBottomSheet({
             {events.length === 0 ? (
               <EmptyText>해당 날짜에 일정이 없습니다.</EmptyText>
             ) : (
-              events.map((event) => (
-                <EventItem
-                  key={event.id}
-                  type="button"
-                  onClick={() => onClickEvent(event)}
-                >
-                  <ColorBar $color={getCalendarColor(event.id)} />
+              events.map((event) => {
+                const isAnnouncement =
+                  typeof event.sourceAnnouncementId === "number";
+                return (
+                  <EventItem
+                    key={event.id}
+                    type="button"
+                    onClick={() => onClickEvent(event)}
+                  >
+                    <ColorBar $color={getCalendarColor(event.id)} />
 
-                  <TopRow>
-                    <Title>{event.title}</Title>
-                    <DateText>
-                      {format(parseISO(event.startDate), "MM.dd")} -{" "}
-                      {format(parseISO(event.endDate), "MM.dd")}
-                    </DateText>
-                  </TopRow>
+                    <TopRow>
+                      <Title>{event.title}</Title>
+                      <DateText>
+                        {format(parseISO(event.startDate), "MM.dd")} -{" "}
+                        {format(parseISO(event.endDate), "MM.dd")}
+                      </DateText>
+                    </TopRow>
 
-                  {event.description && (
-                    <Description>{event.description}</Description>
-                  )}
-                </EventItem>
-              ))
+                    {event.description && (
+                      <Description>{event.description}</Description>
+                    )}
+
+                    {isAnnouncement && (
+                      <AiBadge>
+                        <Sparkles size={14} />
+                        <span>횃불이 AI로 생성된 콘텐츠입니다.</span>
+                      </AiBadge>
+                    )}
+
+                    {isAnnouncement && (
+                      <ChevronIcon>
+                        <ChevronRight size={20} />
+                      </ChevronIcon>
+                    )}
+                  </EventItem>
+                );
+              })
             )}
           </EventList>
 
@@ -123,7 +141,6 @@ const SheetTitle = styled.div`
 const EventList = styled.div`
   flex: 1;
   overflow-y: auto;
-  padding: 0 16px;
 `;
 
 const EventItem = styled.button`
@@ -137,10 +154,22 @@ const EventItem = styled.button`
   flex-direction: column;
   gap: 8px;
   border-bottom: 1px solid #f3f4f6;
+  position: relative;
 
   &:last-child {
     border-bottom: none;
   }
+`;
+
+const ChevronIcon = styled.div`
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
 `;
 
 const ColorBar = styled.div<{ $color: string }>`
@@ -180,6 +209,7 @@ const Description = styled.div`
   line-height: 1.45;
   white-space: pre-wrap;
   word-break: keep-all;
+  padding-right: 28px;
 `;
 
 const EmptyText = styled.p`
@@ -206,5 +236,21 @@ const Footer = styled.div`
     line-height: 1.5;
     cursor: pointer;
     padding: 0;
+  }
+`;
+
+const AiBadge = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--Gray-Gray700, #555);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 150%;
+
+  svg {
+    flex-shrink: 0;
+    color: var(--Gray-Gray700, #555);
   }
 `;

@@ -48,7 +48,9 @@ export default function RoomMateChecklistPage() {
   const [formData, setFormData] = useState<CheckListForm>(INITIAL_FORM_STATE);
   const [randomTitles, setRandomTitles] = useState<string[]>([]);
   const isEditMode =
-    location.state?.mode === "edit" || userInfo.roommateCheckList;
+    location.state?.mode === "edit" || Boolean(userInfo.roommateCheckList);
+  const editingBoardId =
+    location.state?.boardId || userInfo.roommateCheckList?.boardId;
 
   // State 변경 핸들러
   const handleFormChange = (key: keyof CheckListForm, value: any) => {
@@ -252,9 +254,12 @@ export default function RoomMateChecklistPage() {
     try {
       setIsLoading(true);
 
-      // [수정] 삼항 연산자 -> if/else 문으로 변경
       if (isEditMode) {
-        await putRoommatePost(body);
+        if (!editingBoardId) {
+          alert("수정할 게시글 식별자가 없습니다.");
+          return;
+        }
+        await putRoommatePost(editingBoardId, body);
       } else {
         await createRoommatePost(body);
       }
@@ -264,6 +269,9 @@ export default function RoomMateChecklistPage() {
 
       await queryClient.invalidateQueries({
         queryKey: ["roommates", "scroll"],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ["roommates"],
       });
 
       alert(`체크리스트 ${isEditMode ? "수정" : "등록"} 완료!`);
@@ -346,7 +354,7 @@ export default function RoomMateChecklistPage() {
             variant="primary"
             text={
               currentStep === TOTAL_STEPS
-                ? userInfo.roommateCheckList
+                ? isEditMode
                   ? "수정 완료"
                   : "작성 완료"
                 : "다음 단계"
