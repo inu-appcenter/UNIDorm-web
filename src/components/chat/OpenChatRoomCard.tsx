@@ -39,7 +39,14 @@ export default function OpenChatRoomCard({ room, tab, onClick }: Props) {
     });
   };
 
-
+  const roomTypeLabel = (type: string) => {
+    switch (type) {
+      case "PERSONAL":
+        return "1:1";
+      default:
+        return "단톡";
+    }
+  };
 
   if (isMyChatRoom) {
     return (
@@ -51,6 +58,24 @@ export default function OpenChatRoomCard({ room, tab, onClick }: Props) {
             <LastMessage>
               {formatChatMessagePreview(room.lastMessage, room.description)}
             </LastMessage>
+
+            <MetaArea>
+              <MetaItem>
+                {isRoomPublic ? <Unlock size={14} /> : <Lock size={14} />}
+                <span>{visibilityLabel}</span>
+              </MetaItem>
+
+              <MetaItem>
+                <User size={14} />
+                <span>{room.currentParticipants}</span>
+              </MetaItem>
+
+              <Divider />
+
+              <MetaItem>
+                <span>{roomTypeLabel(room.roomType)}</span>
+              </MetaItem>
+            </MetaArea>
           </TextArea>
         </MainRow>
 
