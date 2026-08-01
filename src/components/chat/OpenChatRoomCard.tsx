@@ -11,6 +11,15 @@ interface Props {
 
 export default function OpenChatRoomCard({ room, tab, onClick }: Props) {
   const isMyChatRoom = tab === "MY";
+  const isRoomPublic = room.isPublic ?? room.public;
+  const visibilityLabel =
+    room.roomType === "DERIVED"
+      ? isRoomPublic
+        ? "노출"
+        : "비노출"
+      : isRoomPublic
+        ? "공개"
+        : "비공개";
 
   const formatActivityTime = (isoString: string) => {
     if (!isoString) return "대화 없음";
@@ -51,12 +60,8 @@ export default function OpenChatRoomCard({ room, tab, onClick }: Props) {
 
           <MetaArea>
             <MetaItem>
-              {(room.isPublic ?? room.public) ? (
-                <Unlock size={14} />
-              ) : (
-                <Lock size={14} />
-              )}
-              <span>{(room.isPublic ?? room.public) ? "공개" : "비공개"}</span>
+              {isRoomPublic ? <Unlock size={14} /> : <Lock size={14} />}
+              <span>{visibilityLabel}</span>
             </MetaItem>
 
             <MetaItem>
@@ -96,12 +101,8 @@ export default function OpenChatRoomCard({ room, tab, onClick }: Props) {
 
         <MetaArea>
           <MetaItem>
-            {(room.isPublic ?? room.public) ? (
-              <Unlock size={14} />
-            ) : (
-              <Lock size={14} />
-            )}
-            <span>{(room.isPublic ?? room.public) ? "공개" : "비공개"}</span>
+            {isRoomPublic ? <Unlock size={14} /> : <Lock size={14} />}
+            <span>{visibilityLabel}</span>
           </MetaItem>
 
           <MetaItem>

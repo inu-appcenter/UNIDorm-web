@@ -6,7 +6,6 @@ import { OpenChatScope } from "@/types/openchat";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import ChipButton from "@/components/button/ChipButton";
 
-
 export default function OpenChatCreatePage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -126,13 +125,10 @@ export default function OpenChatCreatePage() {
             </FormGroup>
 
             <FormGroup>
-              <Label>검색 목록 공개 여부</Label>
+              <Label>검색 목록 노출 여부</Label>
               <ScopeButtonRow>
-                <ChipButton
-                  active={isPublic}
-                  onClick={() => setIsPublic(true)}
-                >
-                  공개
+                <ChipButton active={isPublic} onClick={() => setIsPublic(true)}>
+                  노출
                 </ChipButton>
                 <ChipButton
                   active={!isPublic}
@@ -145,7 +141,6 @@ export default function OpenChatCreatePage() {
                 비노출로 설정해도 원본 채팅방에는 입장 링크가 공유돼요.
               </ScopeDescription>
             </FormGroup>
-
           </>
         ) : (
           <FormGroup>
