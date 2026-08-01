@@ -13,6 +13,7 @@ import {
   getAllRoommateChatUnreadCount,
 } from "@/apis/chat";
 import OpenChatRoomCard from "@/components/chat/OpenChatRoomCard";
+import ChatAvatar from "@/components/chat/ChatAvatar";
 import OpenChatTab from "@/components/chat/OpenChatTab";
 import OpenChatEmptyState from "@/components/chat/OpenChatEmptyState";
 import OpenChatJoinModal from "@/components/modal/OpenChatJoinModal";
@@ -77,20 +78,25 @@ function RoommateChatCard({
             룸메이트
           </RoommateBadge>
         )}
-        <RoomName>
-          {room.partnerName || room.opponentNickname || "익명"}
-        </RoomName>
-        <LastMessage>
-          {formatChatMessagePreview(room.lastMessage, "대화 내역이 없습니다.")}
-        </LastMessage>
+        <MainRow>
+          <ChatAvatar imageUrl={room.partnerProfileImageUrl} />
+          <TextCol>
+            <RoomName>
+              {room.partnerName || room.opponentNickname || "익명"}
+            </RoomName>
+            <LastMessage>
+              {formatChatMessagePreview(room.lastMessage, "대화 내역이 없습니다.")}
+            </LastMessage>
+          </TextCol>
+        </MainRow>
       </CardLeft>
       <CardRight>
-        <TimeText>
-          {room.lastMessageTime ? formatTime(room.lastMessageTime) : ""}
-        </TimeText>
         {unreadCount > 0 && (
           <UnreadBadge>{unreadCount > 99 ? "99+" : unreadCount}</UnreadBadge>
         )}
+        <TimeText>
+          {room.lastMessageTime ? formatTime(room.lastMessageTime) : ""}
+        </TimeText>
       </CardRight>
     </RoommateCard>
   );
@@ -803,6 +809,20 @@ const CardLeft = styled.div`
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  flex: 1;
+  min-width: 0;
+`;
+
+const MainRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+`;
+
+const TextCol = styled.div`
+  display: flex;
+  flex-direction: column;
   flex: 1;
   min-width: 0;
 `;

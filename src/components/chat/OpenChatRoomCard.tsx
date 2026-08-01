@@ -2,6 +2,7 @@ import styled from "styled-components";
 import { OpenChatRoom, OpenChatTab } from "@/types/openchat";
 import { Lock, Unlock, User } from "lucide-react";
 import { formatChatMessagePreview } from "@/utils/chatMessagePreview";
+import ChatAvatar from "./ChatAvatar";
 
 interface Props {
   room: OpenChatRoom;
@@ -38,54 +39,30 @@ export default function OpenChatRoomCard({ room, tab, onClick }: Props) {
     });
   };
 
-  const roomTypeLabel = (type: string) => {
-    switch (type) {
-      case "PERSONAL":
-        return "1:1";
-      default:
-        return "단톡";
-    }
-  };
+
 
   if (isMyChatRoom) {
     return (
       <Card type="button" onClick={onClick}>
-        <LeftArea>
+        <MainRow>
+          <ChatAvatar count={room.currentParticipants} />
           <TextArea>
             <RoomName>{room.name}</RoomName>
             <LastMessage>
               {formatChatMessagePreview(room.lastMessage, room.description)}
             </LastMessage>
           </TextArea>
-
-          <MetaArea>
-            <MetaItem>
-              {isRoomPublic ? <Unlock size={14} /> : <Lock size={14} />}
-              <span>{visibilityLabel}</span>
-            </MetaItem>
-
-            <MetaItem>
-              <User size={14} />
-              <span>{room.currentParticipants}</span>
-            </MetaItem>
-
-            <Divider />
-
-            <MetaItem>
-              <span>{roomTypeLabel(room.roomType)}</span>
-            </MetaItem>
-          </MetaArea>
-        </LeftArea>
+        </MainRow>
 
         <RightArea>
-          <TimeText>
-            {room.lastMessageAt ? formatActivityTime(room.lastMessageAt) : ""}
-          </TimeText>
           {room.unreadCount > 0 && (
             <UnreadBadge>
               {room.unreadCount > 99 ? "99+" : room.unreadCount}
             </UnreadBadge>
           )}
+          <TimeText>
+            {room.lastMessageAt ? formatActivityTime(room.lastMessageAt) : ""}
+          </TimeText>
         </RightArea>
       </Card>
     );
@@ -139,6 +116,14 @@ const Card = styled.button`
   justify-content: space-between;
   align-items: flex-end;
   box-sizing: border-box;
+`;
+
+const MainRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
 `;
 
 const LeftArea = styled.div`
