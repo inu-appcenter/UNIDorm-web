@@ -92,8 +92,11 @@ export default function RoomMateBoardDetailPage() {
   }, [boardId, roomId]);
 
   const handleDelete = async () => {
+    const targetBoardId = boardData?.boardId || Number(boardId);
+
     if (
-      !boardId ||
+      !targetBoardId ||
+      Number.isNaN(targetBoardId) ||
       boardId === "opponent" ||
       !window.confirm("정말로 이 게시글을 삭제하시겠습니까?")
     ) {
@@ -101,7 +104,7 @@ export default function RoomMateBoardDetailPage() {
     }
 
     try {
-      await deleteRoommatePost(Number(boardId));
+      await deleteRoommatePost(targetBoardId);
 
       try {
         const memberResponse = await getMemberInfo();
@@ -132,7 +135,6 @@ export default function RoomMateBoardDetailPage() {
 
   useSetHeader({
     title: "",
-    showAlarm: true,
     menuItems: isMyPost
       ? [
           { label: "수정하기", onClick: handleEdit },
@@ -349,7 +351,7 @@ const MatchedFilterBadge = styled.span`
   font-size: 14px;
   font-style: normal;
   font-weight: 400;
-  line-height: 150%; /* 21px */
+  line-height: 150%;
 `;
 
 const PostTitle = styled.h1`
