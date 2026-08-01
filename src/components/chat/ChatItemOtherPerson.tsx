@@ -178,6 +178,8 @@ const MessageBubble = styled.div<{ $clickable?: boolean }>`
   background: #f7f7f7;
   padding: 8px 12px;
   border-radius: 16px;
+  white-space: pre-wrap;
+  word-break: break-word;
   cursor: ${({ $clickable }) => ($clickable ? "pointer" : "default")};
   transition: transform 0.15s ease, background-color 0.15s ease;
 

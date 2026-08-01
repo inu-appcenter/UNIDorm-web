@@ -128,6 +128,8 @@ const ContentArea = styled.div`
     background: #1677ff;
     padding: 8px 12px;
     border-radius: 16px;
+    white-space: pre-wrap;
+    word-break: break-word;
   }
 `;
 
