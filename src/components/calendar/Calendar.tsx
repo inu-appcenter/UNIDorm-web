@@ -28,7 +28,15 @@ interface CalendarProps {
   location?: string;
 }
 
-const CALENDAR_COLORS = ["#FF6A62", "#E5F1FF", "#555555", "#FFC53D", "#5AC8FA"];
+const CALENDAR_COLORS = [
+  "#FFF1B8", // Gold200
+  "#D9EEFF",
+  "#FFD3D3",
+  "#DFDFDF", // Gray200
+  "#DCF0E0",
+  "#FFE0BE",
+  "#E5D4FF",
+];
 
 const getCalendarColor = (id: number) =>
   CALENDAR_COLORS[(id - 1) % CALENDAR_COLORS.length];
@@ -576,8 +584,7 @@ const EventBar = styled.div<{
   overflow: hidden;
   text-overflow: ellipsis;
 
-  color: ${({ $color }) =>
-    $color === "#E5F1FF" || $color === "#FFC53D" ? "#333" : "#fff"};
+  color: #333;
 
   pointer-events: none;
 `;
