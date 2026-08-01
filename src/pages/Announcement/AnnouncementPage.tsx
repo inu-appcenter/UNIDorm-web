@@ -85,15 +85,38 @@ export default function AnnouncementPage() {
     return index >= 0 ? index : 0;
   }, [selectedSubValue]);
 
+  const [searchDraft, setSearchDraft] = useState("");
+  const [submittedSearch, setSubmittedSearch] = useState("");
+  const [searchRequestId, setSearchRequestId] = useState(0);
+  const [aiAnswer, setAIAnswer] = useState("");
+  const [isAILoading, setIsAILoading] = useState(false);
+  const [aiError, setAIError] = useState<string | null>(null);
+  const [recentSearches, setRecentSearches] = useState<string[]>(
+    JSON.parse(localStorage.getItem("recentSearches_announcement") || "[]"),
+  );
+
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+
+  // 검색어 및 AI 상태 초기화 함수
+  const resetSearchState = useCallback(() => {
+    setSearchDraft("");
+    setSubmittedSearch("");
+    setAIAnswer("");
+    setAIError(null);
+    setIsAILoading(false);
+  }, []);
+
   const handleCategoryClick = useCallback(
     (category: (typeof ANNOUNCE_CATEGORY_LIST)[number]["value"]) => {
+      resetSearchState();
       mixpanelTrack.categoryFiltered(category, "ALL", "공지사항_상단탭");
       setSearchParams({ tab: category }, { replace: true });
     },
-    [setSearchParams],
+    [resetSearchState, setSearchParams],
   );
 
   const handleSubCategoryClick = (index: number) => {
+    resetSearchState();
     const subValue = ANNOUNCE_SUB_CATEGORY_LIST[index]?.value;
 
     mixpanelTrack.categoryFiltered(
@@ -116,22 +139,18 @@ export default function AnnouncementPage() {
     );
   };
 
-  const [searchDraft, setSearchDraft] = useState("");
-  const [submittedSearch, setSubmittedSearch] = useState("");
-  const [searchRequestId, setSearchRequestId] = useState(0);
-  const [aiAnswer, setAIAnswer] = useState("");
-  const [isAILoading, setIsAILoading] = useState(false);
-  const [aiError, setAIError] = useState<string | null>(null);
-  const [recentSearches, setRecentSearches] = useState<string[]>(
-    JSON.parse(localStorage.getItem("recentSearches_announcement") || "[]"),
-  );
-
-  const [isSearchFocused, setIsSearchFocused] = useState(false);
-
   const subCategoryValue = useMemo(() => {
     if (selectedCategory !== "DORMITORY") return "ALL";
     return selectedSubValue || ANNOUNCE_SUB_CATEGORY_LIST[0].value;
   }, [selectedCategory, selectedSubValue]);
+
+  // AI 개요 노출 조건 판단
+  const isAIOverviewVisible = useMemo(() => {
+    return (
+      (selectedCategory === "ALL" || selectedCategory === "DORMITORY") &&
+      Boolean(submittedSearch)
+    );
+  }, [selectedCategory, submittedSearch]);
 
   // 탭/서브탭 변경 시 스크롤 최상단 이동 (Window + Element 모두 대응)
   useEffect(() => {
@@ -187,7 +206,7 @@ export default function AnnouncementPage() {
   }, [data]);
 
   useEffect(() => {
-    if (!submittedSearch) return;
+    if (!isAIOverviewVisible) return;
 
     const controller = new AbortController();
     let accumulatedAnswer = "";
@@ -229,7 +248,7 @@ export default function AnnouncementPage() {
       });
 
     return () => controller.abort();
-  }, [submittedSearch, searchRequestId]);
+  }, [submittedSearch, searchRequestId, isAIOverviewVisible]);
 
   const handleSearchSubmit = () => {
     const trimmedTerm = searchDraft.trim();
@@ -347,7 +366,7 @@ export default function AnnouncementPage() {
         )}
       </SearchArea>
 
-      {submittedSearch && (
+      {isAIOverviewVisible && (
         <>
           <AIOverviewCard
             query={submittedSearch}
@@ -355,9 +374,7 @@ export default function AnnouncementPage() {
             isLoading={isAILoading}
             error={aiError}
             notices={notices}
-            onOpenNotice={(noticeId) =>
-              navigate(`/announcements/${noticeId}`)
-            }
+            onOpenNotice={(noticeId) => navigate(`/announcements/${noticeId}`)}
             onOpenChat={() => {
               mixpanelTrack.featureClicked("챗불이 AI", "공지사항_AI개요");
               openAIChat();
@@ -490,7 +507,7 @@ export default function AnnouncementPage() {
 }
 
 const NoticePageWrapper = styled.div`
-  padding: 16px 16px 100px;
+  padding: 56px 16px 100px;
   display: flex;
   flex-direction: column;
   gap: 16px;

@@ -3,6 +3,7 @@ import { Sparkles } from "lucide-react";
 import styled from "styled-components";
 import type { AnnouncementPost } from "@/types/announcements";
 import { colors, typography } from "@/styles/tokens";
+import 챗불이로고 from "@/assets/ai-chat/챗불이로고.svg";
 
 interface AIOverviewCardProps {
   query: string;
@@ -20,9 +21,7 @@ interface ParsedAnswer {
 }
 
 function parseAnswer(answer: string): ParsedAnswer {
-  const sourceMarker = answer.match(
-    /(?:^|\r?\n)\s*(?:sources?|출처)\s*:\s*/i,
-  );
+  const sourceMarker = answer.match(/(?:^|\r?\n)\s*(?:sources?|출처)\s*:\s*/i);
 
   if (sourceMarker?.index === undefined) {
     return {
@@ -34,10 +33,7 @@ function parseAnswer(answer: string): ParsedAnswer {
   const sourceStart = sourceMarker.index + sourceMarker[0].length;
 
   return {
-    content: answer
-      .slice(0, sourceMarker.index)
-      .trimEnd()
-      .replace(/\*\*/g, ""),
+    content: answer.slice(0, sourceMarker.index).trimEnd().replace(/\*\*/g, ""),
     sources: answer
       .slice(sourceStart)
       .split(/\r?\n/)
@@ -106,10 +102,7 @@ export default function AIOverviewCard({
             >
               출처 자세히 보기 {isSourcesOpen ? "접기" : "···"}
             </SourceToggle>
-            <SourcePanel
-              id="ai-answer-sources"
-              $isOpen={isSourcesOpen}
-            >
+            <SourcePanel id="ai-answer-sources" $isOpen={isSourcesOpen}>
               <SourceList>
                 {parsedAnswer.sources.map((source, index) => {
                   const url = source.match(/https?:\/\/\S+/)?.[0];
@@ -159,8 +152,8 @@ export default function AIOverviewCard({
         )}
 
         <ChatButton type="button" onClick={onOpenChat}>
-          <Sparkles size={16} aria-hidden />
-          챗불이 AI 사용해보기
+          <img src={챗불이로고} />
+          챗불이에게 물어보기
         </ChatButton>
       </Card>
     </Section>
@@ -326,7 +319,7 @@ const ChatButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 4px;
   width: 100%;
   min-height: 40px;
   margin-top: 2px;

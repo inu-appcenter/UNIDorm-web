@@ -21,7 +21,7 @@ import { CalendarItem } from "@/types/calendar";
 import { mixpanelTrack } from "@/utils/mixpanel";
 import CalendarEventBottomSheet from "@/components/modal/CalendarEventBottomsheet";
 import { useNavigate } from "react-router-dom";
-import { Sparkles } from "lucide-react";
+import 챗불이로고 from "@/assets/ai-chat/챗불이로고.svg";
 
 interface CalendarProps {
   mode?: "month" | "week";
@@ -416,7 +416,7 @@ export default function Calendar({ mode = "month", location }: CalendarProps) {
                     >
                       {event.isAiGenerated && (
                         <AiIcon>
-                          <Sparkles size={10} />
+                          <img src={챗불이로고} />
                         </AiIcon>
                       )}
                       {event.title}
@@ -567,10 +567,10 @@ const EventBar = styled.div<{
   width: ${({ $start, $end }) => `calc((100% / 7) * ${$end - $start + 1})`};
 
   height: 18px;
-  padding: 0 6px;
+  padding: 0;
   box-sizing: border-box;
 
-  border-radius: 4px;
+  //border-radius: 4px;
   background-color: ${({ $color }) => $color};
 
   display: flex;
@@ -590,10 +590,7 @@ const EventBar = styled.div<{
 `;
 
 const AiIcon = styled.span`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  margin-right: 2px;
-  opacity: 0.85;
+  img {
+    height: 20px;
+  }
 `;
