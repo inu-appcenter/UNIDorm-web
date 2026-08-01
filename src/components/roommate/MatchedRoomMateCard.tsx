@@ -3,42 +3,12 @@ import styled from "styled-components";
 import type { RoommatePost } from "@/types/roommates";
 import { colors, typography } from "@/styles/tokens";
 import { mixpanelTrack } from "@/utils/mixpanel";
+import 매칭완료 from "@/assets/roommate/매칭완료2.svg";
 
 interface MatchedRoomMateCardProps {
   post: RoommatePost;
   matchedFilterFields?: string[];
 }
-
-const getFieldValue = (fieldKey: string, post: RoommatePost): string => {
-  switch (fieldKey) {
-    case "dormType":
-      return post.dormType;
-    case "college":
-      return post.college;
-    case "mbti":
-      return post.mbti;
-    case "smoking":
-      return post.smoking;
-    case "snoring":
-      return post.snoring;
-    case "toothGrind":
-      return post.toothGrind;
-    case "sleeper":
-      return post.sleeper;
-    case "showerHour":
-      return post.showerHour;
-    case "showerTime":
-      return post.showerTime;
-    case "bedTime":
-      return post.bedTime;
-    case "arrangement":
-      return post.arrangement;
-    case "religion":
-      return post.religion;
-    default:
-      return fieldKey;
-  }
-};
 
 export default function MatchedRoomMateCard({
   post,
@@ -60,20 +30,13 @@ export default function MatchedRoomMateCard({
     });
   };
 
-
   const isRead = Boolean(post.read);
 
-  const displayTags =
-    matchedFilterFields.length > 0
-      ? matchedFilterFields.map((field) => ({
-          key: field,
-          label: getFieldValue(field, post) || field,
-          isMatched: true,
-        }))
-      : [
-          { key: "college", label: post.college, isMatched: false },
-          { key: "mbti", label: post.mbti, isMatched: false },
-        ].filter((t) => Boolean(t.label));
+  // 단과대학 및 MBTI 두 필드만 고정 추출
+  const fixedTags = [
+    { key: "college", label: post.college },
+    { key: "mbti", label: post.mbti },
+  ].filter((t) => Boolean(t.label));
 
   return (
     <Card
@@ -81,24 +44,28 @@ export default function MatchedRoomMateCard({
       onClick={handleClick}
       disabled={post.matched}
       $isRead={isRead}
+      $matched={post.matched}
       aria-label={`${post.title} 룸메이트 게시글 보기`}
     >
+      {post.matched && <RightBottomBadge src={매칭완료} alt="매칭 완료" />}
+
       <HeaderArea>
         <Title>{post.title}</Title>
       </HeaderArea>
 
       <TagList>
-        {displayTags.map((tag, idx) => (
-          <Tag key={`${tag.key}-${idx}`} $isMatched={tag.isMatched}>
-            {tag.label}
-          </Tag>
+        {fixedTags.map((tag, idx) => (
+          <Tag key={`${tag.key}-${idx}`}>{tag.label}</Tag>
         ))}
       </TagList>
     </Card>
   );
 }
 
-const Card = styled.button<{ $isRead?: boolean }>`
+const Card = styled.button.withConfig({
+  shouldForwardProp: (prop) => prop !== "$isRead" && prop !== "$matched",
+})<{ $isRead?: boolean; $matched?: boolean }>`
+  position: relative;
   flex: 0 0 116px;
   width: 116px;
   min-height: 130px;
@@ -109,7 +76,7 @@ const Card = styled.button<{ $isRead?: boolean }>`
       ? `1px solid ${colors.gray.gray200}`
       : `1px solid ${colors.blue.blue200}`};
   background: ${colors.bg.bg1};
-  opacity: ${({ $isRead }) => ($isRead ? 0.4 : 1)};
+  opacity: ${({ $isRead }) => ($isRead ? 0.7 : 1)};
   box-shadow: ${({ $isRead }) =>
     $isRead ? "none" : "0px 0px 4px 0px rgba(105, 177, 255, 0.2)"};
   display: flex;
@@ -117,7 +84,7 @@ const Card = styled.button<{ $isRead?: boolean }>`
   justify-content: space-between;
   text-align: left;
   scroll-snap-align: start;
-  cursor: pointer;
+  cursor: ${({ $matched }) => ($matched ? "not-allowed" : "pointer")};
   box-sizing: border-box;
   overflow: hidden;
 
@@ -128,9 +95,20 @@ const Card = styled.button<{ $isRead?: boolean }>`
   &:disabled {
     border-color: ${colors.gray.gray200};
     box-shadow: none;
-    opacity: 0.4;
     cursor: not-allowed;
+    pointer-events: none;
   }
+`;
+
+const RightBottomBadge = styled.img`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60px;
+  height: 60px;
+  z-index: 2;
+  pointer-events: none;
 `;
 
 const HeaderArea = styled.div`
@@ -159,7 +137,7 @@ const TagList = styled.div`
   margin-top: 8px;
 `;
 
-const Tag = styled.span<{ $isMatched?: boolean }>`
+const Tag = styled.span`
   ${typography.caption1}
   display: flex;
   align-items: center;
@@ -169,14 +147,10 @@ const Tag = styled.span<{ $isMatched?: boolean }>`
   box-sizing: border-box;
   overflow: hidden;
   border-radius: 24px;
-  background: ${({ $isMatched }) =>
-    $isMatched ? colors.blue.blue100 : colors.gray.gray100};
-  color: ${({ $isMatched }) =>
-    $isMatched ? colors.blue.blue300 : colors.gray.gray600};
-  font-weight: ${({ $isMatched }) => ($isMatched ? "600" : "400")};
+  background: ${colors.blue.blue100};
+  color: ${colors.blue.blue300};
+  font-weight: 600;
   text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;
 `;
-
-

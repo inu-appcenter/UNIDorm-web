@@ -231,7 +231,7 @@ export default function BottomBar() {
         />
         <Button
           icon={(active) => <RoommateIcon isActive={active} />}
-          buttonName="룸메"
+          buttonName="룸메이트"
           isActive={
             pathname === "/roommate" || pathname.startsWith("/roommate")
           }

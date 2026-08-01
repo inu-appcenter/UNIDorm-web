@@ -6,7 +6,6 @@ import {
   getAnnouncementDetail,
   getAnnouncementFiles,
 } from "@/apis/announcements";
-import { patchNotificationsRead } from "@/apis/notification";
 import { AnnouncementDetail, AnnouncementFile } from "@/types/announcements";
 import AnnounceAttachment from "../../components/announce/AnnounceAttachment.tsx";
 import GrayDivider from "../../components/common/GrayDivider.tsx";
@@ -42,12 +41,6 @@ export default function AnnounceDetailPage() {
     if (!boardId) return;
 
     const markReadAndNotifyNative = async () => {
-      try {
-        await patchNotificationsRead("NOTICE", boardId);
-      } catch (err) {
-        console.error("공지사항 알림 읽음 처리 실패:", err);
-      }
-
       if (window.webkit?.messageHandlers?.enterDetailView) {
         try {
           window.webkit.messageHandlers.enterDetailView.postMessage({

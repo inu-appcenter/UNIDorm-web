@@ -47,10 +47,8 @@ export default function RoomMateChecklistPage() {
 
   const [formData, setFormData] = useState<CheckListForm>(INITIAL_FORM_STATE);
   const [randomTitles, setRandomTitles] = useState<string[]>([]);
-  const isEditMode =
-    location.state?.mode === "edit" || Boolean(userInfo.roommateCheckList);
-  const editingBoardId =
-    location.state?.boardId || userInfo.roommateCheckList?.boardId;
+  const isEditMode = location.state?.mode === "edit";
+  const editingBoardId = location.state?.boardId;
 
   // State 변경 핸들러
   const handleFormChange = (key: keyof CheckListForm, value: any) => {

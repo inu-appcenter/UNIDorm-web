@@ -2,7 +2,8 @@ import styled from "styled-components";
 import { Drawer } from "vaul";
 import { format, parseISO } from "date-fns";
 import { CalendarItem } from "@/types/calendar";
-import { Sparkles, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
+import 챗불이로고 from "@/assets/ai-chat/챗불이로고.svg";
 
 interface Props {
   isOpen: boolean;
@@ -64,7 +65,7 @@ export default function CalendarEventBottomSheet({
 
                     {isAnnouncement && (
                       <AiBadge>
-                        <Sparkles size={14} />
+                        <img src={챗불이로고} />
                         <span>횃불이 AI로 생성된 콘텐츠입니다.</span>
                       </AiBadge>
                     )}
@@ -249,8 +250,7 @@ const AiBadge = styled.div`
   font-weight: 400;
   line-height: 150%;
 
-  svg {
-    flex-shrink: 0;
-    color: var(--Gray-Gray700, #555);
+  img {
+    height: 24px;
   }
 `;
