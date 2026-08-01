@@ -2,6 +2,7 @@ import styled from "styled-components";
 import { Drawer } from "vaul";
 import { format, parseISO } from "date-fns";
 import { CalendarItem } from "@/types/calendar";
+import { Sparkles } from "lucide-react";
 
 interface Props {
   isOpen: boolean;
@@ -56,6 +57,13 @@ export default function CalendarEventBottomSheet({
 
                   {event.description && (
                     <Description>{event.description}</Description>
+                  )}
+
+                  {typeof event.sourceAnnouncementId === "number" && (
+                    <AiBadge>
+                      <Sparkles size={14} />
+                      <span>횃불이 AI로 생성된 콘텐츠입니다.</span>
+                    </AiBadge>
                   )}
                 </EventItem>
               ))
@@ -206,5 +214,20 @@ const Footer = styled.div`
     line-height: 1.5;
     cursor: pointer;
     padding: 0;
+  }
+`;
+
+const AiBadge = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #9ca3af;
+  line-height: 1.4;
+
+  svg {
+    flex-shrink: 0;
+    color: #9ca3af;
   }
 `;
