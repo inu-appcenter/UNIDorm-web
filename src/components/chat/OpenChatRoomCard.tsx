@@ -106,10 +106,9 @@ export default function OpenChatRoomCard({ room, tab, onClick }: Props) {
 
 const Card = styled.button`
   width: 100%;
-  padding: 16px;
-  border: 1px solid #dfdfdf;
-  border-radius: 16px;
-  background-color: #ffffff;
+  padding: 16px 0;
+  border: none;
+  background-color: transparent;
   text-align: left;
   cursor: pointer;
   display: flex;

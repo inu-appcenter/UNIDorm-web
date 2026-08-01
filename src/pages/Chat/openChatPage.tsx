@@ -70,7 +70,7 @@ function RoommateChatCard({
   );
 
   return (
-    <RoommateCard type="button" onClick={onClick} $isMyRoommate={isMyRoommate}>
+    <RoommateCard type="button" onClick={onClick}>
       <CardLeft>
         {isMyRoommate && (
           <RoommateBadge>
@@ -789,13 +789,11 @@ const LoginButton = styled.button`
   cursor: pointer;
 `;
 
-const RoommateCard = styled.button<{ $isMyRoommate?: boolean }>`
+const RoommateCard = styled.button`
   width: 100%;
-  padding: 16px;
-  border: 1px solid #dfdfdf;
-  border-radius: 16px;
-  background-color: ${({ $isMyRoommate }) =>
-    $isMyRoommate ? "#e6f4ff" : "#ffffff"};
+  padding: 16px 0;
+  border: none;
+  background-color: transparent;
   text-align: left;
   cursor: pointer;
   display: flex;
