@@ -828,29 +828,19 @@ export default function ChattingPage() {
               opponentIdRef.current = oppId;
 
               const opponentBoardTitle = currentRoom.opponentBoardTitle?.trim();
-              const myBoardTitle = currentRoom.myBoardTitle?.trim();
-              const nextBoardLink = opponentBoardTitle
-                ? {
-                    title: opponentBoardTitle,
-                    owner: "opponent" as const,
-                  }
-                : myBoardTitle
-                  ? {
-                      title: myBoardTitle,
-                      owner: "me" as const,
-                    }
-                  : null;
+              const nextBoardLink = {
+                title: opponentBoardTitle || "삭제된 게시물입니다",
+                owner: "opponent" as const,
+              };
 
-              if (nextBoardLink) {
-                setRoommateBoardLink((current) => ({
-                  ...nextBoardLink,
-                  boardId:
-                    current?.title === nextBoardLink.title &&
-                    current.owner === nextBoardLink.owner
-                      ? current.boardId
-                      : undefined,
-                }));
-              }
+              setRoommateBoardLink((current) => ({
+                ...nextBoardLink,
+                boardId:
+                  current?.title === nextBoardLink.title &&
+                  current.owner === nextBoardLink.owner
+                    ? current.boardId
+                    : undefined,
+              }));
             }
           } catch (e) {
             console.error("채팅방 목록 조회 실패:", e);
@@ -1574,32 +1564,22 @@ export default function ChattingPage() {
   const handleRoommateBoardClick = async () => {
     if (!roommateBoardLink) return;
 
+    if (roommateBoardLink.title === "삭제된 게시물입니다") {
+      alert("삭제된 게시물입니다.");
+      return;
+    }
+
     if (roommateBoardLink.boardId) {
       navigate(`/roommate/list/${roommateBoardLink.boardId}`);
       return;
     }
 
-    if (roommateBoardLink.owner === "opponent") {
-      navigate("/roommate/list/opponent", {
-        state: {
-          roomId,
-          partnerName,
-        },
-      });
-      return;
-    }
-
-    try {
-      const response = await getMyChecklist();
-      if (!response.data.boardId) {
-        alert("연결된 룸메이트 모집글을 찾지 못했습니다.");
-        return;
-      }
-      navigate(`/roommate/list/${response.data.boardId}`);
-    } catch (error) {
-      console.error("내 룸메이트 모집글 조회 실패:", error);
-      alert("연결된 룸메이트 모집글을 불러오지 못했습니다.");
-    }
+    navigate("/roommate/list/opponent", {
+      state: {
+        roomId,
+        partnerName,
+      },
+    });
   };
 
   return (

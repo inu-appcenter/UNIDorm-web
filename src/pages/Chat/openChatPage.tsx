@@ -300,18 +300,13 @@ export default function OpenChatPage() {
     }
 
     const opponentBoardTitle = room.opponentBoardTitle?.trim();
-    const myBoardTitle = room.myBoardTitle?.trim();
 
     navigate(`/chat/roommate/${room.chatRoomId}`, {
       state: {
         partnerName: room.partnerName,
         partnerProfileImageUrl: room.partnerProfileImageUrl,
-        roommateBoardTitle: opponentBoardTitle || myBoardTitle,
-        roommateBoardOwner: opponentBoardTitle
-          ? "opponent"
-          : myBoardTitle
-            ? "me"
-            : undefined,
+        roommateBoardTitle: opponentBoardTitle || "삭제된 게시물입니다",
+        roommateBoardOwner: "opponent",
       },
     });
   };
