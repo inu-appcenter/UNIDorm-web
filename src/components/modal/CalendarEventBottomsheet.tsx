@@ -39,43 +39,45 @@ export default function CalendarEventBottomSheet({
             {events.length === 0 ? (
               <EmptyText>해당 날짜에 일정이 없습니다.</EmptyText>
             ) : (
-              events.map((event) => (
-                <EventItem
-                  key={event.id}
-                  type="button"
-                  onClick={() => onClickEvent(event)}
-                >
-                  <EventItemInner>
-                    <EventItemContent>
-                      <ColorBar $color={getCalendarColor(event.id)} />
+              events.map((event) => {
+                const isAnnouncement =
+                  typeof event.sourceAnnouncementId === "number";
+                return (
+                  <EventItem
+                    key={event.id}
+                    type="button"
+                    onClick={() => onClickEvent(event)}
+                    $hasChevron={isAnnouncement}
+                  >
+                    <ColorBar $color={getCalendarColor(event.id)} />
 
-                      <TopRow>
-                        <Title>{event.title}</Title>
-                        <DateText>
-                          {format(parseISO(event.startDate), "MM.dd")} -{" "}
-                          {format(parseISO(event.endDate), "MM.dd")}
-                        </DateText>
-                      </TopRow>
+                    <TopRow>
+                      <Title>{event.title}</Title>
+                      <DateText>
+                        {format(parseISO(event.startDate), "MM.dd")} -{" "}
+                        {format(parseISO(event.endDate), "MM.dd")}
+                      </DateText>
+                    </TopRow>
 
-                      {event.description && (
-                        <Description>{event.description}</Description>
-                      )}
+                    {event.description && (
+                      <Description>{event.description}</Description>
+                    )}
 
-                      {typeof event.sourceAnnouncementId === "number" && (
-                        <AiBadge>
-                          <Sparkles size={14} />
-                          <span>횃불이 AI로 생성된 콘텐츠입니다.</span>
-                        </AiBadge>
-                      )}
-                    </EventItemContent>
+                    {isAnnouncement && (
+                      <AiBadge>
+                        <Sparkles size={14} />
+                        <span>횃불이 AI로 생성된 콘텐츠입니다.</span>
+                      </AiBadge>
+                    )}
 
-                    {typeof event.sourceAnnouncementId === "number" && (
+                    {isAnnouncement && (
                       <ChevronIcon>
                         <ChevronRight size={20} />
                       </ChevronIcon>
                     )}
-                  </EventItemInner>
-                </EventItem>
+                  </EventItem>
+                );
+              })
               ))
             )}
           </EventList>
@@ -143,43 +145,33 @@ const EventList = styled.div`
   overflow-y: auto;
 `;
 
-const EventItem = styled.button`
+const EventItem = styled.button<{ $hasChevron?: boolean }>`
   width: 100%;
   border: none;
   background: #ffffff;
   text-align: left;
   padding: 16px;
+  padding-right: ${({ $hasChevron }) => ($hasChevron ? "40px" : "16px")};
   cursor: pointer;
   display: flex;
   flex-direction: column;
   gap: 8px;
   border-bottom: 1px solid #f3f4f6;
+  position: relative;
 
   &:last-child {
     border-bottom: none;
   }
 `;
 
-const EventItemInner = styled.div`
-  display: flex;
-  align-items: center;
-  width: 100%;
-  gap: 12px;
-`;
-
-const EventItemContent = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  flex: 1;
-  min-width: 0;
-`;
-
 const ChevronIcon = styled.div`
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
   color: #9ca3af;
 `;
 
