@@ -68,11 +68,13 @@ export const createRoommatePost = async (
 };
 
 export const putRoommatePost = async (
+  boardId: number,
   data: RoommatePostRequest,
 ): Promise<AxiosResponse<RoommatePostResponse>> => {
-  console.log(data);
+  // 게시글 수정 요청
+  console.log(boardId, data);
   const response = await tokenInstance.put<RoommatePostResponse>(
-    "/roommates",
+    `/roommates/${boardId}`,
     data,
   );
   return response;
@@ -288,5 +290,6 @@ export const updateNotificationFilter = async (
 export const deleteRoommatePost = async (
   boardId: number,
 ): Promise<AxiosResponse<void>> => {
+  // 게시글 삭제 요청
   return await tokenInstance.delete(`/roommates/${boardId}`);
 };
