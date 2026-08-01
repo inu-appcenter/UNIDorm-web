@@ -240,6 +240,7 @@ const JoinButtonText = styled.span`
   justify-content: center;
   flex-shrink: 0;
   margin-left: 12px;
+  align-self: center;
 `;
 
 const JoinedButtonText = styled(JoinButtonText)`
