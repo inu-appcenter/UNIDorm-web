@@ -66,13 +66,18 @@ export default function ChatListPage() {
       }
 
       const opponentBoardTitle = room.opponentBoardTitle?.trim();
+      const myBoardTitle = room.myBoardTitle?.trim();
 
       navigate(`/chat/roommate/${room.chatRoomId}`, {
         state: {
           partnerName: room.partnerName,
           partnerProfileImageUrl: room.partnerProfileImageUrl,
-          roommateBoardTitle: opponentBoardTitle || "삭제된 게시물입니다",
-          roommateBoardOwner: "opponent",
+          roommateBoardTitle: opponentBoardTitle || myBoardTitle,
+          roommateBoardOwner: opponentBoardTitle
+            ? "opponent"
+            : myBoardTitle
+              ? "me"
+              : undefined,
         },
       });
     }
@@ -167,9 +172,7 @@ export default function ChatListPage() {
                     time={room.lastMessageTime}
                     partnerProfileImageUrl={room.partnerProfileImageUrl}
                     isRoommate={room.isRoommate}
-                    boardTitle={
-                      room.opponentBoardTitle?.trim() || "삭제된 게시물입니다"
-                    }
+                    boardTitle={room.opponentBoardTitle || room.myBoardTitle}
                   />
                 </motion.div>
               ))
