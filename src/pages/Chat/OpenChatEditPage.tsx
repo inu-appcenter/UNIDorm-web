@@ -2,10 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import styled from "styled-components";
 import { isAxiosError } from "axios";
-import {
-  getOpenChatRooms,
-  updateOpenChatRoom,
-} from "@/apis/openchat";
+import { getOpenChatRooms, updateOpenChatRoom } from "@/apis/openchat";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import {
@@ -45,7 +42,10 @@ export default function OpenChatEditPage() {
     setDescription(nextRoom.description ?? "");
     setScope(nextRoom.scope ?? "DORMITORY");
     setMaxParticipants(
-      Math.max(nextRoom.currentParticipants ?? 2, nextRoom.maxParticipants ?? 2),
+      Math.max(
+        nextRoom.currentParticipants ?? 2,
+        nextRoom.maxParticipants ?? 2,
+      ),
     );
     setIsPublic(nextRoom.isPublic ?? nextRoom.public ?? true);
   }, []);
@@ -106,6 +106,7 @@ export default function OpenChatEditPage() {
   }, [applyRoom, navigate, roomId, routeState?.room]);
 
   const minimumParticipants = Math.max(room?.currentParticipants ?? 2, 2);
+  const isDerivedRoom = room?.roomType === "DERIVED";
   const isValid =
     Boolean(name.trim()) &&
     description.trim().length <= 100 &&
@@ -237,29 +238,28 @@ export default function OpenChatEditPage() {
         </FormGroup>
 
         <FormGroup>
-          <Label>공개 여부</Label>
+          <Label>{isDerivedRoom ? "노출 여부" : "공개 여부"}</Label>
           <ChoiceRow>
             <ChoiceButton
               type="button"
               $active={isPublic}
               onClick={() => setIsPublic(true)}
             >
-              공개
+              {isDerivedRoom ? "노출" : "공개"}
             </ChoiceButton>
             <ChoiceButton
               type="button"
               $active={!isPublic}
               onClick={() => setIsPublic(false)}
             >
-              비공개
+              {isDerivedRoom ? "비노출" : "비공개"}
             </ChoiceButton>
           </ChoiceRow>
           <Helper>
-            비공개로 설정해도 기존 채팅방의 공유 링크를 통해 입장할 수
-            있습니다.
+            {isDerivedRoom ? "비노출" : "비공개"}로 설정해도 기존 채팅방의 공유
+            링크를 통해 입장할 수 있습니다.
           </Helper>
         </FormGroup>
-
       </Content>
 
       <SubmitArea>
@@ -306,13 +306,17 @@ const NoticeBox = styled.section`
 const NoticeTitle = styled.strong`
   margin: 0;
   color: #ad6800;
-  font: 400 14px/1.5 Pretendard, sans-serif;
+  font:
+    400 14px/1.5 Pretendard,
+    sans-serif;
 `;
 
 const NoticeText = styled.p`
   margin: 0;
   color: #613400;
-  font: 400 12px/1.5 Pretendard, sans-serif;
+  font:
+    400 12px/1.5 Pretendard,
+    sans-serif;
   word-break: keep-all;
 `;
 
@@ -324,7 +328,9 @@ const FormGroup = styled.div`
 
 const Label = styled.label`
   color: #3d3d3d;
-  font: 400 14px/1.5 Pretendard, sans-serif;
+  font:
+    400 14px/1.5 Pretendard,
+    sans-serif;
 `;
 
 const TextInput = styled.input`
@@ -337,7 +343,9 @@ const TextInput = styled.input`
   outline: none;
   background: #f7f7f7;
   color: #3d3d3d;
-  font: 400 14px/1.5 Pretendard, sans-serif;
+  font:
+    400 14px/1.5 Pretendard,
+    sans-serif;
 
   &:focus {
     border-color: #91caff;
@@ -361,7 +369,9 @@ const TextArea = styled.textarea`
   resize: vertical;
   background: #f7f7f7;
   color: #3d3d3d;
-  font: 400 14px/1.5 Pretendard, sans-serif;
+  font:
+    400 14px/1.5 Pretendard,
+    sans-serif;
 
   &:focus {
     border-color: #91caff;
@@ -372,7 +382,9 @@ const TextArea = styled.textarea`
 const Helper = styled.p<{ $align?: "left" | "right" }>`
   margin: 0;
   color: #8b8b8b;
-  font: 400 12px/1.5 Pretendard, sans-serif;
+  font:
+    400 12px/1.5 Pretendard,
+    sans-serif;
   text-align: ${({ $align = "left" }) => $align};
 `;
 
@@ -388,7 +400,9 @@ const ChoiceButton = styled.button<{ $active: boolean }>`
   border-radius: 32px;
   background: ${({ $active }) => ($active ? "#1677ff" : "#f7f7f7")};
   color: ${({ $active }) => ($active ? "#fff" : "#3d3d3d")};
-  font: 400 14px/1.5 Pretendard, sans-serif;
+  font:
+    400 14px/1.5 Pretendard,
+    sans-serif;
   cursor: pointer;
 `;
 
@@ -415,7 +429,9 @@ const SubmitButton = styled.button`
   border-radius: 8px;
   background: #1677ff;
   color: #fff;
-  font: 600 16px/1.5 Pretendard, sans-serif;
+  font:
+    600 16px/1.5 Pretendard,
+    sans-serif;
   cursor: pointer;
 
   &:disabled {
