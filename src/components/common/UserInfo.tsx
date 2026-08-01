@@ -54,7 +54,7 @@ const Wrapper = styled.div`
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 16px;
+  //margin-bottom: 16px;
 `;
 
 const ProfileImageWrapper = styled.div`
