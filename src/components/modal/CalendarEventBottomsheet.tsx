@@ -2,7 +2,7 @@ import styled from "styled-components";
 import { Drawer } from "vaul";
 import { format, parseISO } from "date-fns";
 import { CalendarItem } from "@/types/calendar";
-import { Sparkles, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import 챗불이로고 from "@/assets/ai-chat/챗불이로고.svg";
 
 interface Props {
