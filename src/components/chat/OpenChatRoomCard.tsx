@@ -136,7 +136,6 @@ const MainRow = styled.div`
 const LeftArea = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 16px;
   flex: 1;
   min-width: 0;
 `;
@@ -177,6 +176,7 @@ const MetaArea = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
+  margin-top: 4px;
 `;
 
 const MetaItem = styled.div`
