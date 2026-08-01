@@ -125,14 +125,6 @@ const parseStudentIdRequestPayload = (
   }
 };
 
-const isStudentIdDisclosureAcceptedSystemMessage = (message: MessageType) =>
-  Boolean(
-    message.isSystem &&
-      /학번\s*(공유|공개).*?(수락|승인)/.test(
-        message.content.replace(/\s+/g, " ").trim(),
-      ),
-  );
-
 const dedupeStudentIdDisclosureMessages = (messages: MessageType[]) => {
   const seenRequestIds = new Set<number>();
 
