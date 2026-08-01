@@ -18,3 +18,11 @@ export const blockUser = (
   targetUserId: number,
 ): Promise<AxiosResponse<void>> =>
   tokenInstance.post<void>(`/block/${targetUserId}`);
+
+/**
+ * 특정 사용자의 차단을 해제합니다.
+ */
+export const unblockUser = (
+  blockedUserId: number,
+): Promise<AxiosResponse<void>> =>
+  tokenInstance.delete<void>(`/block/${blockedUserId}`);

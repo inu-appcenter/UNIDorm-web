@@ -488,7 +488,13 @@ export default function OpenChatPage() {
 
   useSetHeader({
     title: "채팅",
-    showAlarm: isLoggedIn,
+    showAlarm: false,
+    menuItems: [
+      {
+        label: "차단 목록",
+        onClick: () => navigate("/chat/blocked"),
+      },
+    ],
     headerRightElement: !isLoggedIn ? (
       <HeaderSearchButton
         type="button"
