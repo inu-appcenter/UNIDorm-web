@@ -131,8 +131,9 @@ const MY_CHAT_ROOM_FILTERS: {
 export default function OpenChatPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { tokenInfo } = useUserStore();
+  const { tokenInfo, userInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo?.accessToken);
+  const currentDormType = userInfo.dormType;
 
   const tabParam = searchParams.get("tab") as OpenChatTabType | null;
   const selectedTab: OpenChatTabType =
@@ -299,12 +300,17 @@ export default function OpenChatPage() {
         if (!silent) setIsLoading(false);
       }
     },
-    [fillMissingPersonalLastMessages, isLoggedIn, searchQuery, selectedTab],
+    [
+      fillMissingPersonalLastMessages,
+      isLoggedIn,
+      searchQuery,
+      selectedTab,
+    ],
   );
 
   useEffect(() => {
     void fetchChatRooms();
-  }, [fetchChatRooms]);
+  }, [currentDormType, fetchChatRooms]);
 
   useEffect(() => {
     if (!isLoggedIn || selectedTab !== "MY") return;
