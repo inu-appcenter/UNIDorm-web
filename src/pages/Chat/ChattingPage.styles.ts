@@ -185,6 +185,11 @@ export const PlusButton = styled.button`
   color: #1677ff;
   flex-shrink: 0;
   padding: 0;
+
+  &:disabled {
+    color: #bfbfbf;
+    cursor: not-allowed;
+  }
 `;
 
 const unfurlBottomToTop = keyframes`
@@ -261,6 +266,11 @@ export const FloatingInput = styled.textarea`
   &::placeholder {
     color: #8b8b8b;
   }
+
+  &:disabled {
+    color: #8b8b8b;
+    cursor: not-allowed;
+  }
 `;
 
 export const SendCircleButton = styled.button`
@@ -279,6 +289,12 @@ export const SendCircleButton = styled.button`
 
   &:hover {
     background-color: #1677ff;
+  }
+
+  &:disabled {
+    background-color: #bfbfbf;
+    box-shadow: none;
+    cursor: not-allowed;
   }
 `;
 

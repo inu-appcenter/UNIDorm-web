@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import styled from "styled-components";
-import { ChevronRight, User } from "lucide-react";
+import { Ban, ChevronRight, User } from "lucide-react";
 import { Drawer } from "vaul";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import useUserStore from "@/stores/useUserStore";
@@ -137,6 +137,7 @@ export default function ChatMembersPage() {
 
   const handleUserClick = async (participant: OpenChatParticipant) => {
     if (participant.userId === userInfo.id) return;
+    if (blockedUserIds.has(participant.userId)) return;
     if (selectingNewHost) {
       const confirmed = window.confirm(
         `${participant.nickname}님에게 방장을 위임하고 채팅방을 나갈까요?`,
@@ -438,22 +439,30 @@ export default function ChatMembersPage() {
             <Section>
               <SectionTitle>다른 참여자</SectionTitle>
               <ParticipantList>
-                {others.map((participant) => (
-                  <ParticipantCard
-                    as="button"
-                    type="button"
-                    key={participant.userId}
-                    $selectable
-                    disabled={submitting}
-                    onClick={() => handleUserClick(participant)}
-                  >
-                    <NameArea>
-                      <ParticipantName>{participant.nickname}</ParticipantName>
-                      {participant.isHost && <HostBadge>방장</HostBadge>}
-                    </NameArea>
-                    <ChevronRight size={18} color="#555" />
-                  </ParticipantCard>
-                ))}
+                {others.map((participant) => {
+                  const isBlocked = blockedUserIds.has(participant.userId);
+
+                  return (
+                    <ParticipantCard
+                      as="button"
+                      type="button"
+                      key={participant.userId}
+                      $selectable={!isBlocked}
+                      disabled={submitting || isBlocked}
+                      onClick={() => handleUserClick(participant)}
+                    >
+                      <NameArea>
+                        <ParticipantName>{participant.nickname}</ParticipantName>
+                        {participant.isHost && <HostBadge>방장</HostBadge>}
+                      </NameArea>
+                      {isBlocked ? (
+                        <Ban size={20} color="#bfbfbf" aria-label="차단된 사용자" />
+                      ) : (
+                        <ChevronRight size={18} color="#555" />
+                      )}
+                    </ParticipantCard>
+                  );
+                })}
               </ParticipantList>
             </Section>
           </>
@@ -467,8 +476,15 @@ export default function ChatMembersPage() {
               <ParticipantCard
                 as="button"
                 type="button"
-                $selectable={Boolean(directChatPartner)}
-                disabled={!directChatPartner || submitting}
+                $selectable={Boolean(
+                  directChatPartner &&
+                    !blockedUserIds.has(directChatPartner.userId),
+                )}
+                disabled={
+                  !directChatPartner ||
+                  submitting ||
+                  blockedUserIds.has(directChatPartner.userId)
+                }
                 onClick={() =>
                   directChatPartner && handleUserClick(directChatPartner)
                 }
@@ -476,7 +492,16 @@ export default function ChatMembersPage() {
                 <ParticipantName>
                   {directChatPartner?.nickname || partnerName}
                 </ParticipantName>
-                {directChatPartner && <ChevronRight size={18} color="#555" />}
+                {directChatPartner &&
+                  (blockedUserIds.has(directChatPartner.userId) ? (
+                    <Ban
+                      size={20}
+                      color="#bfbfbf"
+                      aria-label="차단된 사용자"
+                    />
+                  ) : (
+                    <ChevronRight size={18} color="#555" />
+                  ))}
               </ParticipantCard>
             </ParticipantList>
           </Section>

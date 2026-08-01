@@ -49,6 +49,7 @@ import {
 import { getMyRoommateInfo } from "@/apis/roommate";
 import type { StudentIdDisclosureStatus } from "@/apis/studentIdDisclosure";
 import { isAxiosError } from "axios";
+import { getBlockedUsers } from "@/apis/block";
 
 type MessageType = {
   id: number;
@@ -224,6 +225,7 @@ export default function ChattingPage() {
   const [messageList, setMessageList] = useState<MessageType[]>([]);
   const [inputValue, setInputValue] = useState<string>("");
   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
+  const [isBlockedPartner, setIsBlockedPartner] = useState(false);
   const { tokenInfo, userInfo } = useUserStore();
   const navigate = useNavigate();
 
@@ -313,6 +315,37 @@ export default function ChattingPage() {
   const roomId = Number(id);
   const userId = userInfo.id;
   const token = tokenInfo.accessToken;
+
+  const refreshBlockedPartnerStatus = async (
+    targetUserId?: number | null,
+  ) => {
+    if (
+      !targetUserId ||
+      (chatType !== "roommate" && chatType !== "personal")
+    ) {
+      setIsBlockedPartner(false);
+      return;
+    }
+
+    try {
+      const response = await getBlockedUsers();
+      setIsBlockedPartner(
+        response.data.some(
+          (blockedUser) => blockedUser.blockedUserId === targetUserId,
+        ),
+      );
+    } catch (error) {
+      console.error("차단 상태 조회 실패:", error);
+      setIsBlockedPartner(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isBlockedPartner) {
+      setMenuOpen(false);
+      setInputValue("");
+    }
+  }, [isBlockedPartner]);
 
   const clearPendingDisclosureRouteState = () => {
     if (!pendingDisclosureRequestId) return;
@@ -835,6 +868,7 @@ export default function ChattingPage() {
             if (currentRoom) {
               oppId = currentRoom.partnerId;
               opponentIdRef.current = oppId;
+              void refreshBlockedPartnerStatus(oppId);
 
               const opponentBoardTitle = currentRoom.opponentBoardTitle?.trim();
               const nextBoardLink = {
@@ -888,6 +922,7 @@ export default function ChattingPage() {
             if (opponentMessage) {
               oppId = opponentMessage.userId;
               opponentIdRef.current = opponentMessage.userId;
+              void refreshBlockedPartnerStatus(opponentMessage.userId);
 
               try {
                 const statusResponse = await getStudentIdDisclosureStatus(
@@ -1074,6 +1109,7 @@ export default function ChattingPage() {
 
           if (chatType === "personal" && disclosureOpponentId) {
             openChatOpponentIdRef.current = disclosureOpponentId;
+            void refreshBlockedPartnerStatus(disclosureOpponentId);
             try {
               const statusResponse = await getStudentIdDisclosureStatus(
                 roomId,
@@ -1286,6 +1322,10 @@ export default function ChattingPage() {
   };
 
   const handleSendMessage = () => {
+    if (isBlockedPartner) {
+      alert("차단한 사람과는 대화할 수 없습니다.");
+      return;
+    }
     if (!inputValue.trim()) return;
 
     if (inputValue.trim().startsWith("[STUDENT_ID_SHARE_")) {
@@ -1594,6 +1634,7 @@ export default function ChattingPage() {
             boardTitle={roommateBoardLink?.title}
             onBoardTitleClick={handleRoommateBoardClick}
             isMyRoommate={isMyRoommateState}
+            isBlocked={isBlockedPartner}
           />
         )}
         {chatType === "open" && (
@@ -2243,7 +2284,16 @@ export default function ChattingPage() {
 
       {/* 하단 플로팅 입력 바 */}
       <S.FloatingInputArea ref={menuContainerRef}>
-        <S.PlusButton onClick={() => setMenuOpen((prev) => !prev)}>
+        <S.PlusButton
+          type="button"
+          disabled={isBlockedPartner}
+          aria-label={
+            isBlockedPartner
+              ? "차단한 사용자와는 추가 기능을 사용할 수 없습니다"
+              : "채팅 추가 기능"
+          }
+          onClick={() => setMenuOpen((prev) => !prev)}
+        >
           <Plus size={24} />
         </S.PlusButton>
 
@@ -2279,7 +2329,12 @@ export default function ChattingPage() {
         )}
 
         <S.FloatingInput
-          placeholder="메시지 보내기"
+          placeholder={
+            isBlockedPartner
+              ? "차단한 사람과는 대화할 수 없습니다."
+              : "메시지 보내기"
+          }
+          disabled={isBlockedPartner}
           ref={inputRef}
           onInput={handleInput}
           rows={1}
@@ -2292,7 +2347,11 @@ export default function ChattingPage() {
             }
           }}
         />
-        <S.SendCircleButton onClick={handleSendMessage}>
+        <S.SendCircleButton
+          type="button"
+          disabled={isBlockedPartner}
+          onClick={handleSendMessage}
+        >
           <ArrowRight size={20} color="white" />
         </S.SendCircleButton>
       </S.FloatingInputArea>

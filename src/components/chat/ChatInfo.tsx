@@ -23,6 +23,7 @@ interface ChatInfoProps {
   boardTitle?: string;
   onBoardTitleClick?: () => void;
   isMyRoommate?: boolean;
+  isBlocked?: boolean;
 }
 
 const ChatInfo = ({
@@ -33,6 +34,7 @@ const ChatInfo = ({
   boardTitle,
   onBoardTitleClick,
   isMyRoommate = false,
+  isBlocked = false,
 }: ChatInfoProps) => {
   const navigate = useNavigate();
   const [showInfoModal, setShowInfoModal] = useState(false);
@@ -150,7 +152,12 @@ const ChatInfo = ({
             ) : (
               <RoundSquareButton
                 btnName={"룸메 신청"}
+                disabled={isBlocked}
                 onClick={() => {
+                  if (isBlocked) {
+                    alert("차단한 사람에게는 룸메이트를 신청할 수 없습니다.");
+                    return;
+                  }
                   if (!isChatted) {
                     alert(
                       "대화를 나누지 않고 룸메이트를 신청할 수 없어요.\n상대방과 룸메이트를 하기로 약속한 뒤 눌러주세요.",
@@ -162,7 +169,7 @@ const ChatInfo = ({
                 }}
               />
             )}
-            {!isMyRoommate && showTooltip && (
+            {!isMyRoommate && !isBlocked && showTooltip && (
               <TooltipMessage
                 message={
                   "서로 룸메이트를 하기로 마음먹었다면,\n룸메이트를 신청하세요!"

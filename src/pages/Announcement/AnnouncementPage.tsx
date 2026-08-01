@@ -76,6 +76,7 @@ export default function AnnouncementPage() {
     "ALL") as (typeof ANNOUNCE_CATEGORY_LIST)[number]["value"];
 
   const selectedSubValue = searchParams.get("sub");
+  const searchQueryParam = searchParams.get("q")?.trim() ?? "";
 
   const selectedSubCategoryIndex = useMemo(() => {
     if (!selectedSubValue) return 0;
@@ -85,8 +86,8 @@ export default function AnnouncementPage() {
     return index >= 0 ? index : 0;
   }, [selectedSubValue]);
 
-  const [searchDraft, setSearchDraft] = useState("");
-  const [submittedSearch, setSubmittedSearch] = useState("");
+  const [searchDraft, setSearchDraft] = useState(searchQueryParam);
+  const [submittedSearch, setSubmittedSearch] = useState(searchQueryParam);
   const [searchRequestId, setSearchRequestId] = useState(0);
   const [aiAnswer, setAIAnswer] = useState("");
   const [isAILoading, setIsAILoading] = useState(false);
@@ -96,6 +97,18 @@ export default function AnnouncementPage() {
   );
 
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+
+  useEffect(() => {
+    setSearchDraft(searchQueryParam);
+    setSubmittedSearch(searchQueryParam);
+
+    if (!searchQueryParam) {
+      setAIAnswer("");
+      setAIError(null);
+      setIsAILoading(false);
+      setIsSearchFocused(false);
+    }
+  }, [searchQueryParam]);
 
   // 검색어 및 AI 상태 초기화 함수
   const resetSearchState = useCallback(() => {
@@ -133,6 +146,7 @@ export default function AnnouncementPage() {
         } else {
           newParams.delete("sub");
         }
+        newParams.delete("q");
         return newParams;
       },
       { replace: true },
@@ -144,13 +158,23 @@ export default function AnnouncementPage() {
     return selectedSubValue || ANNOUNCE_SUB_CATEGORY_LIST[0].value;
   }, [selectedCategory, selectedSubValue]);
 
+  // AI 검색은 전체/생활원 탭에서만 제공한다.
+  // 서포터즈/유니돔 탭은 공지 목록 검색만 수행한다.
+  const isAIEnabledCategory =
+    selectedCategory === "ALL" || selectedCategory === "DORMITORY";
+
   // AI 개요 노출 조건 판단
   const isAIOverviewVisible = useMemo(() => {
-    return (
-      (selectedCategory === "ALL" || selectedCategory === "DORMITORY") &&
-      Boolean(submittedSearch)
-    );
-  }, [selectedCategory, submittedSearch]);
+    return isAIEnabledCategory && Boolean(submittedSearch);
+  }, [isAIEnabledCategory, submittedSearch]);
+
+  useEffect(() => {
+    if (isAIEnabledCategory) return;
+
+    setAIAnswer("");
+    setAIError(null);
+    setIsAILoading(false);
+  }, [isAIEnabledCategory]);
 
   // 탭/서브탭 변경 시 스크롤 최상단 이동 (Window + Element 모두 대응)
   useEffect(() => {
@@ -273,6 +297,11 @@ export default function AnnouncementPage() {
     setSubmittedSearch(trimmedTerm);
     setSearchRequestId((currentId) => currentId + 1);
     setIsSearchFocused(false);
+
+    const nextParams = new URLSearchParams(searchParams);
+    const alreadySearching = Boolean(nextParams.get("q"));
+    nextParams.set("q", trimmedTerm);
+    setSearchParams(nextParams, { replace: alreadySearching });
   };
 
   const handleDeleteRecent = (e: React.MouseEvent, term: string) => {
@@ -328,8 +357,7 @@ export default function AnnouncementPage() {
       )}
 
       <SearchArea>
-        <SearchBar>
-          <FaSearch size={16} color="#999" />
+        <AnnouncementSearchBar>
           <input
             type="text"
             placeholder="검색어를 입력하세요"
@@ -340,7 +368,14 @@ export default function AnnouncementPage() {
             }}
             onFocus={() => setIsSearchFocused(true)}
           />
-        </SearchBar>
+          <SearchSubmitButton
+            type="button"
+            aria-label="공지사항 검색"
+            onClick={handleSearchSubmit}
+          >
+            <FaSearch size={20} aria-hidden="true" />
+          </SearchSubmitButton>
+        </AnnouncementSearchBar>
 
         {isSearchFocused && recentSearches.length > 0 && (
           <RecentSearchWrapper>
@@ -515,6 +550,34 @@ const NoticePageWrapper = styled.div`
   overflow-y: auto;
   background: #fafafa;
   flex: 1;
+`;
+
+const AnnouncementSearchBar = styled(SearchBar)`
+  height: 40px;
+  padding: 8px 12px;
+  border: 1px solid ${colors.gray.gray200};
+  border-radius: 8px;
+  background: ${colors.gray.gray0};
+  gap: 8px;
+
+  input {
+    min-width: 0;
+    line-height: 1.5;
+  }
+`;
+
+const SearchSubmitButton = styled.button`
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: ${colors.main.main1};
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
 `;
 
 const ResultHeader = styled.div`
