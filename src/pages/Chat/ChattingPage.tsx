@@ -1581,7 +1581,6 @@ export default function ChattingPage() {
             partnerName={partnerName}
             roomId={roomId}
             isChatted={messageList.length > 0}
-            partnerProfileImageUrl={partnerProfileImageUrl}
             boardTitle={roommateBoardLink?.title}
             onBoardTitleClick={handleRoommateBoardClick}
           />
