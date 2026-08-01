@@ -23,7 +23,7 @@ import { RoommateChatRoom } from "@/types/chats";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import useUserStore from "@/stores/useUserStore";
-import { Search, Plus, MapPin } from "lucide-react";
+import { Search, Plus, MapPin, User } from "lucide-react";
 import { formatChatMessagePreview } from "@/utils/chatMessagePreview";
 
 const formatTime = (isoString: string) => {
@@ -90,6 +90,16 @@ function RoommateChatCard({
                 "대화 내역이 없습니다.",
               )}
             </LastMessage>
+            <MetaArea>
+              <MetaItem>
+                <User size={14} />
+                <span>2</span>
+              </MetaItem>
+              <Divider />
+              <MetaItem>
+                <span>룸메채팅</span>
+              </MetaItem>
+            </MetaArea>
           </TextCol>
         </MainRow>
       </CardLeft>
@@ -799,7 +809,7 @@ const RoommateCard = styled.button`
   cursor: pointer;
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
+  align-items: flex-start;
   box-sizing: border-box;
   transition: background-color 0.2s ease;
 `;
@@ -814,7 +824,7 @@ const CardLeft = styled.div`
 
 const MainRow = styled.div`
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
   width: 100%;
 `;
@@ -824,6 +834,27 @@ const TextCol = styled.div`
   flex-direction: column;
   flex: 1;
   min-width: 0;
+`;
+
+const MetaArea = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+`;
+
+const MetaItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 12px;
+  color: #8b8b8b;
+`;
+
+const Divider = styled.span`
+  width: 1px;
+  height: 14px;
+  background-color: #dfdfdf;
 `;
 
 const RoommateBadge = styled.div`

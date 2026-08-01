@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import { OpenChatRoom, OpenChatTab } from "@/types/openchat";
-import { Lock, Unlock, User } from "lucide-react";
+import { User } from "lucide-react";
 import { formatChatMessagePreview } from "@/utils/chatMessagePreview";
 import ChatAvatar from "./ChatAvatar";
 
@@ -12,15 +12,6 @@ interface Props {
 
 export default function OpenChatRoomCard({ room, tab, onClick }: Props) {
   const isMyChatRoom = tab === "MY";
-  const isRoomPublic = room.isPublic ?? room.public;
-  const visibilityLabel =
-    room.roomType === "DERIVED"
-      ? isRoomPublic
-        ? "노출"
-        : "비노출"
-      : isRoomPublic
-        ? "공개"
-        : "비공개";
 
   const formatActivityTime = (isoString: string) => {
     if (!isoString) return "대화 없음";
@@ -61,11 +52,6 @@ export default function OpenChatRoomCard({ room, tab, onClick }: Props) {
 
             <MetaArea>
               <MetaItem>
-                {isRoomPublic ? <Unlock size={14} /> : <Lock size={14} />}
-                <span>{visibilityLabel}</span>
-              </MetaItem>
-
-              <MetaItem>
                 <User size={14} />
                 <span>{room.currentParticipants}</span>
               </MetaItem>
@@ -103,11 +89,6 @@ export default function OpenChatRoomCard({ room, tab, onClick }: Props) {
 
         <MetaArea>
           <MetaItem>
-            {isRoomPublic ? <Unlock size={14} /> : <Lock size={14} />}
-            <span>{visibilityLabel}</span>
-          </MetaItem>
-
-          <MetaItem>
             <User size={14} />
             <span>{room.currentParticipants}</span>
           </MetaItem>
@@ -138,13 +119,13 @@ const Card = styled.button`
   cursor: pointer;
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
+  align-items: flex-start;
   box-sizing: border-box;
 `;
 
 const MainRow = styled.div`
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
   flex: 1;
   min-width: 0;
