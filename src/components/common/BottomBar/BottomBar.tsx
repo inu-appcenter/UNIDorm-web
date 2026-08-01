@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import useUserStore from "../../../stores/useUserStore.ts";
 import { getMyRoommateInfo } from "@/apis/roommate";
 import { getAllRoommateChatUnreadCount } from "@/apis/chat";
+import { getOpenChatRooms } from "@/apis/openchat";
 import { getMobilePlatform } from "@/utils/getMobilePlatform";
 import TooltipMessage from "@/components/common/TooltipMessage";
 import { useFeatureFlag } from "@/hooks/useFeatureFlags";
@@ -189,8 +190,18 @@ export default function BottomBar() {
       }
 
       try {
-        const chatRes = await getAllRoommateChatUnreadCount();
-        setUnreadCount(chatRes.data);
+        const [roommateUnreadRes, myOpenChatRes] = await Promise.all([
+          getAllRoommateChatUnreadCount(),
+          getOpenChatRooms("MY", 0, 50),
+        ]);
+
+        const roommateUnread = roommateUnreadRes.data || 0;
+        const openChatUnread = (myOpenChatRes.data?.content || []).reduce(
+          (acc, room) => acc + (room.unreadCount || 0),
+          0,
+        );
+
+        setUnreadCount(roommateUnread + openChatUnread);
       } catch (err) {
         console.error("미확인 메시지 조회 실패", err);
       }

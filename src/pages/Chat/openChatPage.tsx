@@ -153,6 +153,7 @@ export default function OpenChatPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   const [roommateUnreadTotal, setRoommateUnreadTotal] = useState(0);
+  const [myOpenChatUnreadTotal, setMyOpenChatUnreadTotal] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -228,6 +229,12 @@ export default function OpenChatPage() {
           const openChatRooms = openChatRes.data.content.filter(
             (room) => room.chatCategory === "OPEN_CHAT",
           );
+          const openUnreadCount = openChatRooms.reduce(
+            (acc, r) => acc + (r.unreadCount || 0),
+            0,
+          );
+          setMyOpenChatUnreadTotal(openUnreadCount);
+
           const dedicatedRoommateRooms = roommateChatRes.data;
           const dedicatedRoommateRoomIds = new Set(
             dedicatedRoommateRooms.map((room) => room.chatRoomId),
@@ -256,8 +263,7 @@ export default function OpenChatPage() {
           ]);
           setRoommateUnreadTotal(unreadRes.data);
         } else {
-          setRoommateRooms([]);
-          const [openChatRes, unreadRes] = await Promise.all([
+          const [openChatRes, myOpenChatRes, unreadRes] = await Promise.all([
             getOpenChatRooms(
               selectedTab,
               0,
@@ -265,8 +271,18 @@ export default function OpenChatPage() {
               searchQuery || undefined,
               "createdAt,desc",
             ),
+            getOpenChatRooms("MY", 0, 50),
             getAllRoommateChatUnreadCount(),
           ]);
+          const myOpenChatRooms = myOpenChatRes.data.content.filter(
+            (room) => room.chatCategory === "OPEN_CHAT",
+          );
+          const openUnreadCount = myOpenChatRooms.reduce(
+            (acc, r) => acc + (r.unreadCount || 0),
+            0,
+          );
+          setMyOpenChatUnreadTotal(openUnreadCount);
+
           setRooms(
             openChatRes.data.content.filter(
               (room) => room.chatCategory === "OPEN_CHAT",
@@ -419,11 +435,7 @@ export default function OpenChatPage() {
     setSelectedRoom(null);
   };
 
-  const openChatUnreadTotal = rooms.reduce(
-    (acc, r) => acc + (r.unreadCount || 0),
-    0,
-  );
-  const totalUnreadCount = roommateUnreadTotal + openChatUnreadTotal;
+  const totalUnreadCount = roommateUnreadTotal + myOpenChatUnreadTotal;
   const normalizedSearchQuery = searchQuery.trim().toLocaleLowerCase("ko-KR");
   const includesSearchQuery = (value: unknown) =>
     String(value ?? "")
