@@ -78,7 +78,6 @@ export default function CalendarEventBottomSheet({
                   </EventItem>
                 );
               })
-              ))
             )}
           </EventList>
 
