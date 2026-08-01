@@ -126,7 +126,7 @@ interface ButtonProps {
   onClick: () => void;
   showTooltip?: boolean;
   onTooltipClose?: () => void;
-  badgeCount?: number;
+  hasBadge?: boolean;
 }
 
 const Button = ({
@@ -136,7 +136,7 @@ const Button = ({
   onClick,
   showTooltip = false,
   onTooltipClose,
-  badgeCount = 0,
+  hasBadge = false,
 }: ButtonProps) => {
   return (
     <ButtonWrapper onClick={onClick}>
@@ -152,9 +152,7 @@ const Button = ({
 
       <BadgeWrapper>
         {icon(isActive)}
-        {badgeCount > 0 && (
-          <Badge>{badgeCount > 99 ? "99+" : badgeCount}</Badge>
-        )}
+        {hasBadge && <Badge />}
       </BadgeWrapper>
 
       <div className={`BtnName ${isActive ? "active" : ""}`}>{buttonName}</div>
@@ -250,7 +248,7 @@ export default function BottomBar() {
             mixpanelTrack.featureClicked("채팅", "BottomBar");
             navigate("/chat");
           }}
-          badgeCount={unreadCount}
+          hasBadge={unreadCount > 0}
         />
         <Button
           icon={(active) => <ComplainIcon isActive={active} />}
@@ -316,29 +314,19 @@ const BadgeWrapper = styled.div`
   height: 24px;
 `;
 
-/** 알림 뱃지 스타일 */
+/** 알림 뱃지 스타일 (OpenChatTab 뱃지 스타일 적용, 숫자 없음) */
 const Badge = styled.div`
   position: absolute;
-  top: -2px;
-  right: -8px;
+  top: 0px;
+  right: -2px;
 
-  background-color: #f97171;
-  color: #ffffff;
-  font-size: 10px;
-  font-weight: 600;
-
-  min-width: 16px;
-  height: 16px;
-  padding: 0 4px;
-  border-radius: 100px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background-color: #ff5a3d;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
 
   border: 1px solid #ffffff;
   box-sizing: border-box;
-  line-height: 1;
 `;
 
 const platform = getMobilePlatform();
