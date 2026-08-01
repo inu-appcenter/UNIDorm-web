@@ -221,13 +221,14 @@ const AiBadge = styled.div`
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 12px;
-  font-weight: 500;
-  color: #9ca3af;
-  line-height: 1.4;
+  color: var(--Gray-Gray700, #555);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 150%;
 
   svg {
     flex-shrink: 0;
-    color: #9ca3af;
+    color: var(--Gray-Gray700, #555);
   }
 `;
