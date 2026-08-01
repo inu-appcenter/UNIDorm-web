@@ -709,7 +709,6 @@ const FilteredEmptyMessage = styled.p`
 const RoomList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 12px;
 `;
 
 const CreateButton = styled.button`
