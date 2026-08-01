@@ -1,5 +1,4 @@
 import styled from "styled-components";
-import profile from "../../assets/profileimg.png";
 import GroupPurchaseInfo from "./GroupPurchaseInfo.tsx";
 import RoundSquareButton from "../button/RoundSquareButton.tsx";
 import { requestRoommateMatchingByChatRoom } from "@/apis/roommate";
@@ -118,21 +117,13 @@ const ChatInfo = ({
 
   return (
     <ChatInfoWrapper>
-      <ImgWrapper>
-        <img
-          src={partnerProfileImageUrl || profile}
-          alt={"프로필이미지"}
-          onError={(e) => {
-            e.currentTarget.onerror = null;
-            e.currentTarget.src = profile;
-          }}
-        />
-      </ImgWrapper>
       <ContentWrapper>
         <div
           style={{
             display: "flex",
             flexDirection: "column",
+            width: "100%",
+            minWidth: 0,
           }}
         >
           <div className="title">{partnerName}</div>
@@ -175,7 +166,7 @@ const ChatInfo = ({
           </RelativeWrapper>
         )}
       </FunctionWrapper>
-      <div style={{ display: "flex", alignItems: "center" }}>
+      <div style={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
         <MdHelpOutline
           color={"gray"}
           size={24}
@@ -308,20 +299,6 @@ const ChatInfoWrapper = styled.div`
   z-index: 100;
 `;
 
-const ImgWrapper = styled.div`
-  width: fit-content;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  img {
-    width: 46px;
-    height: 46px;
-    border-radius: 50%;
-    object-fit: cover;
-  }
-`;
 const ContentWrapper = styled.div`
   flex: 1;
   min-width: 0;
@@ -341,6 +318,7 @@ const ContentWrapper = styled.div`
 
 const BoardTitleButton = styled.button`
   display: flex;
+  width: 100%;
   max-width: 100%;
   align-items: center;
   gap: 2px;
@@ -355,6 +333,7 @@ const BoardTitleButton = styled.button`
   cursor: pointer;
 
   span {
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -369,6 +348,7 @@ const FunctionWrapper = styled.div`
   display: flex;
   align-items: center;
   gap: 16px;
+  flex-shrink: 0;
 `;
 
 const RelativeWrapper = styled.div`

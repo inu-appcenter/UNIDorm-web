@@ -722,12 +722,12 @@ const SemesterSelect = styled.select`
   border-radius: 8px;
   box-sizing: border-box;
   appearance: none;
-  background: transparent;
+  background-color: var(--Bg-Bg3, #EFEFEF);
   background-image: url("${caretDownIcon}");
   background-repeat: no-repeat;
   background-position: right 12px center;
   background-size: 9px 5px;
-  color: var(--Text-Text2, #6f6f6f);
+  color: var(--Gray-Gray500, #8B8B8B);
 
   /* Label 1_Normal */
   font-family: Pretendard;

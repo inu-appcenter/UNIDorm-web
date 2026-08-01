@@ -76,14 +76,15 @@ const CardWrapper = styled.div.withConfig({
   align-items: center;
   gap: 12px;
   padding: 16px;
-  background: #fff;
   border: none;
-  border-radius: 8px;
-  box-shadow: 0 0 2px rgba(0, 0, 0, 0.1);
   width: 100%;
   cursor: ${({ matched }) => (matched ? "not-allowed" : "pointer")};
   box-sizing: border-box;
   overflow: hidden;
+
+  border-radius: 8px;
+  background: var(--Gray-Gray0, #fff);
+  box-shadow: 0 0 4px 0 rgba(0, 0, 0, 0.1);
 
   ${({ matched }) =>
     matched &&
@@ -98,38 +99,48 @@ const DisabledOverlay = styled.div`
   z-index: 1;
 `;
 
-// TopRightBadge (기숙사 타입) 원래 위치 및 스타일 복원
+// TopRightBadge (기숙사 타입)
 const TopRightBadge = styled.div.withConfig({
   shouldForwardProp: (prop) => prop !== "dormType",
 })<{ dormType: string }>`
   position: absolute;
   top: 12px;
   right: 12px;
-  font-size: 12px;
   padding: 4px 8px;
   border-radius: 12px;
   z-index: 0;
-
-  color: var(--Gray-Gray0, #fff);
   text-align: center;
 
+  font-family: Pretendard;
   font-size: 12px;
   font-style: normal;
   font-weight: 400;
   line-height: 150%; /* 18px */
 
-  background: ${({ dormType }) => {
+  ${({ dormType }) => {
     switch (dormType) {
       case "1기숙사":
-        return "#8e8e93"; // 회색 계열
+        return `
+          border: 1px solid #8e8e93;
+          color: #8e8e93;
+        `;
       case "2기숙사":
-        return "var(--Main-Main1, #1677ff)"; // 파랑
+        return `
+          border: 1px solid var(--Main-Main1, #1677FF);
+          color: var(--Main-Main2, #0958D9);
+        `;
       case "3기숙사":
-        return "#ff6b6b"; // 빨강
+        return `
+          border: 1px solid #ff6b6b;
+          color: #ff6b6b;
+        `;
       default:
-        return "#0a84ff"; // 기본값
+        return `
+          border: 1px solid var(--Main-Main1, #1677FF);
+          color: var(--Main-Main2, #0958D9);
+        `;
     }
-  }};
+  }}
 `;
 
 const RightBottomBadge = styled.img.attrs({
@@ -284,4 +295,3 @@ const BottomLine = styled.div`
     line-height: 1;
   }
 `;
-

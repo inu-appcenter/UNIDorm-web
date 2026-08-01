@@ -1387,13 +1387,9 @@ export default function ChattingPage() {
       : openChatOpponentStudentNumber
     : "";
   const basePartnerName =
-    partnerName || (chatType === "roommate" ? "룸메이트 채팅" : "1대1 채팅");
+    chatType === "roommate" ? "룸메이트 채팅" : "1대1 채팅";
   const headerTitle =
-    chatType === "open"
-      ? openChatRoomName || "오픈채팅방"
-      : sharedOpponentStudentNumber
-        ? `${basePartnerName} / ${sharedOpponentStudentNumber}`
-        : basePartnerName;
+    chatType === "open" ? openChatRoomName || "오픈채팅방" : basePartnerName;
 
   useSetHeader({
     title: headerTitle,
@@ -2218,7 +2214,7 @@ export default function ChattingPage() {
                       senderName={
                         chatType === "open" || chatType === "personal"
                           ? msg.nickname || "익명 01"
-                          : undefined
+                          : msg.nickname || partnerName || "상대방"
                       }
                       imageUrls={msg.imageUrls}
                       unreadCount={

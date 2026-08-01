@@ -119,12 +119,11 @@ export default function OpenChatPage() {
   const selectedTab: OpenChatTabType =
     tabParam && VALID_TABS.includes(tabParam) ? tabParam : "MY";
 
-  const handleTabChange = useCallback(
-    (tab: OpenChatTabType) => {
-      setSearchParams({ tab }, { replace: true });
-    },
-    [setSearchParams],
-  );
+  const filterParam = searchParams.get("filter") as MyChatRoomFilter | null;
+  const myChatRoomFilter: MyChatRoomFilter =
+    filterParam && ["ALL", "OPEN_CHAT", "ROOMMATE"].includes(filterParam)
+      ? filterParam
+      : "ALL";
 
   const [rooms, setRooms] = useState<OpenChatRoom[]>([]);
   const [roommateRooms, setRoommateRooms] = useState<RoommateChatRoom[]>([]);
@@ -137,8 +136,28 @@ export default function OpenChatPage() {
   const [roommateUnreadTotal, setRoommateUnreadTotal] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const [myChatRoomFilter, setMyChatRoomFilter] =
-    useState<MyChatRoomFilter>("ALL");
+
+  const handleTabChange = useCallback(
+    (tab: OpenChatTabType) => {
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.set("tab", tab);
+      setSearchParams(nextParams, { replace: true });
+    },
+    [searchParams, setSearchParams],
+  );
+
+  const handleFilterChange = useCallback(
+    (filter: MyChatRoomFilter) => {
+      const nextParams = new URLSearchParams(searchParams);
+      if (filter === "ALL") {
+        nextParams.delete("filter");
+      } else {
+        nextParams.set("filter", filter);
+      }
+      setSearchParams(nextParams, { replace: true });
+    },
+    [searchParams, setSearchParams],
+  );
 
   const fillMissingPersonalLastMessages = useCallback(
     async (chatRooms: OpenChatRoom[]) =>
@@ -496,7 +515,7 @@ export default function OpenChatPage() {
                 type="button"
                 aria-pressed={myChatRoomFilter === filter.value}
                 $active={myChatRoomFilter === filter.value}
-                onClick={() => setMyChatRoomFilter(filter.value)}
+                onClick={() => handleFilterChange(filter.value)}
               >
                 {filter.label}
               </MyChatFilterButton>
