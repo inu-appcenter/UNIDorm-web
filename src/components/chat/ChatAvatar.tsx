@@ -200,17 +200,20 @@ const ThreeAvatarContainer = styled.div`
 
 const FourAvatarContainer = styled.div`
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(2, 1fr);
-  gap: 2px;
+  grid-template-columns: 21px 21px;
+  grid-template-rows: 21px 21px;
+  gap: 3px;
   width: 45px;
   height: 45px;
   flex-shrink: 0;
+  box-sizing: border-box;
 
   img {
-    width: 100%;
-    height: 100%;
+    width: 21px;
+    height: 21px;
+    object-fit: cover;
     border-radius: 6px;
     border: 1px solid #ffffff;
+    box-sizing: border-box;
   }
 `;
