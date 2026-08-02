@@ -174,15 +174,36 @@ export default function BottomBar() {
     ? `${matchingStatus.year % 100}년 ${matchingStatus.semester}학기\n룸메이트 매칭 중!`
     : "룸메이트 매칭 중!";
 
+  const currentSemesterKey = matchingStatus
+    ? `${matchingStatus.year}_${matchingStatus.semester}`
+    : null;
+
   const [unreadCount, setUnreadCount] = useState<number>(0);
-  const [showTooltip, setShowTooltip] = useState(() => {
-    const stored = localStorage.getItem("showRoommateTooltip");
-    return stored !== "false";
-  });
+  const [showTooltip, setShowTooltip] = useState(true);
+
+  useEffect(() => {
+    if (currentSemesterKey) {
+      const closedSemester = localStorage.getItem(
+        "roommateTooltipClosedSemester",
+      );
+      if (closedSemester === currentSemesterKey) {
+        setShowTooltip(false);
+      } else {
+        setShowTooltip(true);
+      }
+    }
+  }, [currentSemesterKey]);
 
   const hideTooltip = () => {
     setShowTooltip(false);
-    localStorage.setItem("showRoommateTooltip", "false");
+    if (currentSemesterKey) {
+      localStorage.setItem(
+        "roommateTooltipClosedSemester",
+        currentSemesterKey,
+      );
+    } else {
+      localStorage.setItem("showRoommateTooltip", "false");
+    }
   };
 
   useEffect(() => {
