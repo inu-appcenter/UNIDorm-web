@@ -620,8 +620,23 @@ export default function ChattingPage() {
     roomId,
     userId,
     token,
+    enabled: chatType === "roommate",
     onMessage: (msg) => {
       const now = new Date();
+
+      const studentIdRequestPayload = parseStudentIdRequestPayload(msg.content);
+      if (studentIdRequestPayload) {
+        setRoommateDisclosureStatus({
+          status:
+            studentIdRequestPayload.requesterId === userId
+              ? "PENDING_SENT"
+              : "PENDING_RECEIVED",
+          requestId: studentIdRequestPayload.requestId,
+          targetStudentNumber: null,
+        });
+        void refreshRoommateDisclosureStatus();
+        return;
+      }
 
       // 학번 공유 관련 특수 메시지 실시간 감지
       const parsed = parseLegacyRoommateShareMessage(msg.content);
@@ -675,7 +690,8 @@ export default function ChattingPage() {
       }
 
       setMessageList((prev) => {
-        const messageId = msg.roommateChatId || Date.now();
+        const messageId =
+          msg.roommateChatId || msg.messageId || Date.now();
         const isMyMessage = msg.userId === userId;
 
         if (prev.some((message) => message.id === messageId)) {
@@ -711,14 +727,27 @@ export default function ChattingPage() {
         ];
       });
     },
-    onRead: (readMessageIds) => {
-      const readIds = new Set(readMessageIds.map(String));
+    onRead: ({ messageIds, lastReadMessageId, markAll }) => {
+      const readIds = new Set(messageIds.map(String));
+      const numericLastReadMessageId = Number(lastReadMessageId);
+      const hasLastReadMessageId = Number.isFinite(numericLastReadMessageId);
+
       setMessageList((current) =>
-        current.map((message) =>
-          readIds.has(String(message.id))
-            ? { ...message, isRead: true }
-            : message,
-        ),
+        current.map((message) => {
+          if (message.sender !== "me" || message.isRead !== false) {
+            return message;
+          }
+
+          const messageId = Number(message.id);
+          const wasRead =
+            markAll ||
+            readIds.has(String(message.id)) ||
+            (hasLastReadMessageId &&
+              Number.isFinite(messageId) &&
+              messageId <= numericLastReadMessageId);
+
+          return wasRead ? { ...message, isRead: true } : message;
+        }),
       );
     },
     onConnect: () => {
@@ -726,11 +755,68 @@ export default function ChattingPage() {
     },
     onDisconnect: () => {
       console.log("🛑 WebSocket 연결 해제됨");
-      if (!isLeavingRef.current) {
-        window.location.reload();
-      }
     },
   });
+
+  const hasUnreadOutgoingRoommateMessage =
+    chatType === "roommate" &&
+    messageList.some(
+      (message) => message.sender === "me" && message.isRead === false,
+    );
+
+  useEffect(() => {
+    if (!hasUnreadOutgoingRoommateMessage || roomId <= 0 || userId <= 0) {
+      return;
+    }
+
+    let cancelled = false;
+    let isRequesting = false;
+
+    const reconcileReadStatus = async () => {
+      if (isRequesting) return;
+      isRequesting = true;
+
+      try {
+        const response = await getRoommateChatHistory(roomId);
+        if (cancelled) return;
+
+        const readMessageIds = new Set(
+          response.data
+            .filter(
+              (message) =>
+                Number(message.userId) === Number(userId) && message.read,
+            )
+            .map((message) =>
+              String(message.roommateChatId || message.messageId),
+            ),
+        );
+
+        if (readMessageIds.size === 0) return;
+
+        setMessageList((current) =>
+          current.map((message) =>
+            message.sender === "me" &&
+            message.isRead === false &&
+            readMessageIds.has(String(message.id))
+              ? { ...message, isRead: true }
+              : message,
+          ),
+        );
+      } catch {
+        // 실시간 읽음 이벤트가 정상 동작하는 경우에는 이 보완 요청이 필요 없다.
+      } finally {
+        isRequesting = false;
+      }
+    };
+
+    void reconcileReadStatus();
+    const intervalId = window.setInterval(reconcileReadStatus, 1_500);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+    };
+  }, [hasUnreadOutgoingRoommateMessage, roomId, userId]);
 
   const {
     connect: connectOpen,
@@ -851,6 +937,8 @@ export default function ChattingPage() {
   });
 
   useEffect(() => {
+    isLeavingRef.current = false;
+
     const init = async () => {
       if (chatType === "roommate") {
         setTypeString("룸메이트");
@@ -941,20 +1029,22 @@ export default function ChattingPage() {
           }
 
           // 기존 API 데이터
-          const formattedMessages: MessageType[] = chats.map((chat) => ({
-            id: chat.roommateChatId,
-            sender: chat.userId === userId ? "me" : "other",
-            content: chat.content,
-            userImageUrl: chat.userImageUrl, // 프로필 이미지 URL 추가
-            isSystem: Boolean(chat.system),
-            time: new Date(chat.createdDate).toLocaleTimeString("ko-KR", {
-              hour: "2-digit",
-              minute: "2-digit",
-              hour12: true,
-            }),
-            createdAt: chat.createdDate, // API에서 받은 날짜 저장
-            isRead: chat.read,
-          }));
+          const formattedMessages: MessageType[] = chats
+            .filter((chat) => !parseStudentIdRequestPayload(chat.content))
+            .map((chat) => ({
+              id: chat.roommateChatId,
+              sender: chat.userId === userId ? "me" : "other",
+              content: chat.content,
+              userImageUrl: chat.userImageUrl, // 프로필 이미지 URL 추가
+              isSystem: Boolean(chat.system),
+              time: new Date(chat.createdDate).toLocaleTimeString("ko-KR", {
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: true,
+              }),
+              createdAt: chat.createdDate, // API에서 받은 날짜 저장
+              isRead: chat.read,
+            }));
 
           const currentStatusRequestId =
             fetchedRoommateDisclosureStatus?.requestId;
@@ -1308,10 +1398,13 @@ export default function ChattingPage() {
     init();
     return () => {
       isLeavingRef.current = true;
-      if (isRoommateConnected) disconnectRoommate();
-      if (isOpenConnected) disconnectOpen();
+      // 연결 여부 state는 effect가 실행될 때의 값을 캡처하므로 cleanup 시점에는
+      // 실제 연결 상태와 다를 수 있다. 채팅 종류에 맞는 소켓을 항상 정리해야
+      // 같은 종류의 다른 방으로 이동할 때 이전 방 연결이 남지 않는다.
+      if (chatType === "roommate") disconnectRoommate();
+      if (chatType === "open" || chatType === "personal") disconnectOpen();
     };
-  }, [chatType]);
+  }, [chatType, roomId]);
 
   const handleInput = () => {
     const el = inputRef.current;
@@ -1680,6 +1773,13 @@ export default function ChattingPage() {
         ) : (
           <>
             {messageList.map((msg, index) => {
+              if (
+                chatType === "roommate" &&
+                parseStudentIdRequestPayload(msg.content)
+              ) {
+                return null;
+              }
+
               // 날짜 구분선 표시 여부 확인
               let showDateLine = false;
               if (index === 0) {
