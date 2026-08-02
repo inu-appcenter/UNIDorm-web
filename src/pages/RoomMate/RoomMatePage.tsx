@@ -77,10 +77,15 @@ export default function RoomMatePage() {
   const hasChecklist = userInfo.roommateCheckList;
 
   const selectedCategory = searchParams.get("tab") || CATEGORY_LIST[0];
+  const semesterParam = searchParams.get("semester");
+  const selectedSemesterCode =
+    semesterParam !== null
+      ? Number(semesterParam)
+      : matchingStatus?.semester
+        ? Number(matchingStatus.semester)
+        : undefined;
+
   const [searchKeyword, setSearchKeyword] = useState("");
-  const [selectedSemesterCode, setSelectedSemesterCode] = useState<
-    number | undefined
-  >(undefined);
   const [debouncedSearchKeyword, setDebouncedSearchKeyword] = useState("");
   const [isOpeningMyPost, setIsOpeningMyPost] = useState(false);
 
@@ -107,11 +112,16 @@ export default function RoomMatePage() {
     return options;
   }, [matchingStatus]);
 
-  useEffect(() => {
-    if (matchingStatus?.semester && selectedSemesterCode === undefined) {
-      setSelectedSemesterCode(Number(matchingStatus.semester));
-    }
-  }, [matchingStatus, selectedSemesterCode]);
+  const handleSemesterChange = (code: number) => {
+    setSearchParams(
+      (prev) => {
+        const newParams = new URLSearchParams(prev);
+        newParams.set("semester", String(code));
+        return newParams;
+      },
+      { replace: true },
+    );
+  };
 
   const filters = useMemo(
     () => location.state?.filters || {},
@@ -119,7 +129,14 @@ export default function RoomMatePage() {
   );
 
   const handleCategoryClick = (category: string) => {
-    setSearchParams({ tab: category }, { replace: true });
+    setSearchParams(
+      (prev) => {
+        const newParams = new URLSearchParams(prev);
+        newParams.set("tab", category);
+        return newParams;
+      },
+      { replace: true },
+    );
   };
 
   useSetHeader({
@@ -497,7 +514,7 @@ export default function RoomMatePage() {
                     : 1)
                 }
                 onChange={(event) => {
-                  setSelectedSemesterCode(Number(event.target.value));
+                  handleSemesterChange(Number(event.target.value));
                 }}
                 aria-label="학기 선택"
               >
