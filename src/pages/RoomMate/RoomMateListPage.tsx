@@ -10,6 +10,7 @@ import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import { useInView } from "react-intersection-observer";
 import { useInfiniteQuery } from "@tanstack/react-query";
+import { useRoommateMatchingStatus } from "@/hooks/useRoommateMatchingStatus";
 
 function FilterTags({ filters }: { filters: Record<string, any> }) {
   const filteredTags = Object.values(filters).filter((value) => {
@@ -120,12 +121,17 @@ export default function RoomMateListPage() {
       if (filters.bedTime && post.bedTime !== filters.bedTime) return false;
       if (filters.arrangement && post.arrangement !== filters.arrangement)
         return false;
-      if (filters.religion && post.religion !== filters.religion) return false;
       return true;
     });
   }, [data, filters]);
 
-  useSetHeader({ title: "2026년 1학기 룸메이트" });
+  const { data: matchingStatus } = useRoommateMatchingStatus();
+
+  const pageTitle = matchingStatus
+    ? `${matchingStatus.year}년 ${matchingStatus.semester}학기 룸메이트`
+    : "룸메이트";
+
+  useSetHeader({ title: pageTitle });
 
   return (
     <RoomMateListPageWrapper>

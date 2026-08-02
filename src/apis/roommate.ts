@@ -8,6 +8,7 @@ import {
   RoommateMatchingByChatRoomRequest,
   RoommateMatchingRequest,
   RoommateMatchingResponse,
+  RoommateMatchingStatus,
   RoommateNotificationFilter,
   RoommatePost,
   RoommatePostRequest,
@@ -293,3 +294,16 @@ export const deleteRoommatePost = async (
   // 게시글 삭제 요청
   return await tokenInstance.delete(`/roommates/${boardId}`);
 };
+
+/**
+ * 룸메이트 매칭 기간/상태 조회 API
+ */
+export const getRoommateMatchingStatus = async (): Promise<
+  AxiosResponse<RoommateMatchingStatus>
+> => {
+  const response = await tokenInstance.get<RoommateMatchingStatus>(
+    "/roommates/matching-status",
+  );
+  return response;
+};
+

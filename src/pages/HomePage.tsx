@@ -33,17 +33,18 @@ import { useSetHeader } from "@/hooks/useSetHeader";
 import RoomMateCard from "@/components/roommate/RoomMateCard.tsx";
 import { useQuery } from "@tanstack/react-query";
 import { getRoomMateScrollList } from "@/apis/roommate.ts";
-import { useFeatureFlag } from "@/hooks/useFeatureFlags";
 import YoutubeWidget from "@/components/home/YoutubeWidget.tsx";
 import { useSetAIChat } from "@/hooks/useSetAIChat";
 import MigrationBanner from "@/components/common/MigrationBanner.tsx";
 import { useFreshmanMigrationBanner } from "@/hooks/useFreshmanMigrationBanner";
 import { motion, AnimatePresence } from "framer-motion";
+import { useRoommateMatchingStatus } from "@/hooks/useRoommateMatchingStatus";
 import { mixpanelTrack } from "@/utils/mixpanel"; // 추가
 
 export default function HomePage() {
   useSetAIChat({ isVisible: true, shouldAnimate: true });
-  const { flag: isMatchingActive } = useFeatureFlag("ROOMMATE_MATCHING");
+  const { data: matchingStatus, isOpen: isMatchingOpen } =
+    useRoommateMatchingStatus();
 
   const [dailyTips, setDailyTips] = useState<Tip[]>([]);
   const [groupOrders, setGroupOrders] = useState<GroupOrder[]>([]);
@@ -215,7 +216,7 @@ export default function HomePage() {
     queryKey: ["roommates", "home"],
     queryFn: () => getRoomMateScrollList(undefined, 10),
     staleTime: 1000 * 60 * 5,
-    enabled: isMatchingActive,
+    enabled: isMatchingOpen,
   });
 
   interface NotificationData {
@@ -327,11 +328,15 @@ export default function HomePage() {
         initial="initial"
         animate="animate"
       >
-        {isMatchingActive && (
+        {isMatchingOpen && (
           <motion.div variants={fadeInUp}>
             <WidgetContainer>
               <TitleContentArea
-                title={"2026년 1학기 룸메이트 모집"}
+                title={
+                  matchingStatus
+                    ? `${matchingStatus.year}년 ${matchingStatus.semester}학기 룸메이트 모집`
+                    : "룸메이트 모집"
+                }
                 description={
                   "룸메이트를 구하고 있는 다양한 UNI들을 찾아보세요!"
                 }

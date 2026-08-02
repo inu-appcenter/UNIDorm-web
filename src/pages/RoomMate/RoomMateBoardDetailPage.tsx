@@ -167,6 +167,14 @@ export default function RoomMateBoardDetailPage() {
         title: "기본 정보",
         color: colors.main.main1,
         rows: [
+          ...(boardData.year && boardData.semester
+            ? [
+                {
+                  label: "모집 학기",
+                  value: `${boardData.year}년 ${boardData.semester}학기`,
+                },
+              ]
+            : []),
           {
             label: "기숙사",
             value: getDisplayValue(boardData.dormType),

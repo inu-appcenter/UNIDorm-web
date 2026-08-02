@@ -32,7 +32,7 @@ export interface RoommatePost extends RoommatePostRequest {
   read?: boolean;
   isRead?: boolean;
   isMyPost?: boolean;
-  semester?: number;
+  semester?: string | number;
   year?: number;
   matchedFilterCount?: number | null;
   matchedFilterFields?: RoommateMatchedFilterField[] | null;
@@ -95,6 +95,12 @@ export interface RoommateNotificationFilter
 }
 
 // --- 매칭 관련 타입 ---
+export interface RoommateMatchingStatus {
+  year: number;
+  semester: string;
+  status: "OPEN" | "CLOSED";
+}
+
 export interface RoommateMatchingRequest {
   receiverStudentNumber: string;
 }

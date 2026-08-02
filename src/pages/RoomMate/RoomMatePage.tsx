@@ -21,7 +21,7 @@ import { useMemo, useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { RoommatePost } from "@/types/roommates";
 import type { MyPost_RoommateBoard } from "@/types/members";
-import { useFeatureFlag } from "@/hooks/useFeatureFlags";
+import { useRoommateMatchingStatus } from "@/hooks/useRoommateMatchingStatus";
 import MatchedRoomMateCard from "@/components/roommate/MatchedRoomMateCard";
 import { colors, typography } from "@/styles/tokens";
 import ChipButton from "@/components/button/ChipButton";
@@ -30,14 +30,6 @@ import caretDownIcon from "@/assets/roommate/caret-down.svg";
 import settingsSlidersIcon from "@/assets/roommate/settings-sliders.svg";
 
 const CURRENT_YEAR = new Date().getFullYear();
-
-const SEMESTER_OPTIONS = [
-  { label: "전체 학기", value: undefined },
-  { label: `${CURRENT_YEAR}년 1학기`, value: 1 },
-  { label: `${CURRENT_YEAR}년 여름계절학기`, value: 3 },
-  { label: `${CURRENT_YEAR}년 2학기`, value: 2 },
-  { label: `${CURRENT_YEAR}년 겨울계절학기`, value: 4 },
-];
 
 function FilterTags({
   filters,
@@ -74,8 +66,11 @@ export default function RoomMatePage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { ref, inView } = useInView();
   const { tokenInfo, userInfo } = useUserStore();
-  const { flag: isMatchingActive, isLoading: isFeatureFlagLoading } =
-    useFeatureFlag("ROOMMATE_MATCHING");
+  const {
+    data: matchingStatus,
+    isClosed: isMatchingClosed,
+    isLoading: isStatusLoading,
+  } = useRoommateMatchingStatus();
 
   const isLoggedIn = Boolean(tokenInfo.accessToken);
   const hasChecklist = userInfo.roommateCheckList;
@@ -87,6 +82,24 @@ export default function RoomMatePage() {
   >(undefined);
   const [debouncedSearchKeyword, setDebouncedSearchKeyword] = useState("");
   const [isOpeningMyPost, setIsOpeningMyPost] = useState(false);
+
+  const semesterOptions = useMemo(() => {
+    if (!matchingStatus) {
+      return [{ label: `${CURRENT_YEAR}년 1학기`, value: 1 }];
+    }
+    return [
+      {
+        label: `${matchingStatus.year}년 ${matchingStatus.semester}학기`,
+        value: Number(matchingStatus.semester) || 1,
+      },
+    ];
+  }, [matchingStatus]);
+
+  useEffect(() => {
+    if (matchingStatus?.semester && selectedSemesterCode === undefined) {
+      setSelectedSemesterCode(Number(matchingStatus.semester));
+    }
+  }, [matchingStatus, selectedSemesterCode]);
 
   const filters = useMemo(
     () => location.state?.filters || {},
@@ -116,8 +129,7 @@ export default function RoomMatePage() {
     showAlarm: true,
   });
 
-  // 배경 잠금 상태 정의
-  const isLocked = !isFeatureFlagLoading && isMatchingActive === false;
+  const isLocked = !isStatusLoading && isMatchingClosed;
 
   useEffect(() => {
     const timer = window.setTimeout(
@@ -178,8 +190,12 @@ export default function RoomMatePage() {
     queryFn: ({ pageParam }) =>
       getRoomMateScrollList(pageParam, 10, {
         keyword: debouncedSearchKeyword || undefined,
-        year: selectedSemesterCode ? CURRENT_YEAR : undefined,
-        semester: selectedSemesterCode,
+        year: matchingStatus?.year,
+        semester:
+          selectedSemesterCode ??
+          (matchingStatus?.semester
+            ? Number(matchingStatus.semester)
+            : undefined),
       }),
     initialPageParam: undefined as number | undefined,
     getNextPageParam: (lastPage) => {
@@ -315,9 +331,13 @@ export default function RoomMatePage() {
 
   return (
     <RoomMatePageWrapper $isLocked={isLocked}>
-      {!isFeatureFlagLoading && !isMatchingActive && (
+      {!isStatusLoading && isMatchingClosed && (
         <ComingSoonOverlay
-          message={"2026년 1학기 룸메이트 매칭 종료!"}
+          message={
+            matchingStatus
+              ? `${matchingStatus.year}년 ${matchingStatus.semester}학기 룸메이트 매칭 종료!`
+              : "룸메이트 매칭 종료!"
+          }
           subMessage={
             "다음 룸메이트 매칭을 기대해 주세요!\n오픈되면 푸시알림으로 알려드릴게요."
           }
@@ -458,17 +478,19 @@ export default function RoomMatePage() {
             location="룸메이트_홈"
             rightAction={
               <SemesterSelect
-                value={selectedSemesterCode ?? "ALL"}
+                value={
+                  selectedSemesterCode ??
+                  (matchingStatus?.semester
+                    ? Number(matchingStatus.semester)
+                    : 1)
+                }
                 onChange={(event) => {
-                  const val = event.target.value;
-                  setSelectedSemesterCode(
-                    val === "ALL" ? undefined : Number(val),
-                  );
+                  setSelectedSemesterCode(Number(event.target.value));
                 }}
                 aria-label="학기 선택"
               >
-                {SEMESTER_OPTIONS.map((opt) => (
-                  <option key={opt.label} value={opt.value ?? "ALL"}>
+                {semesterOptions.map((opt) => (
+                  <option key={opt.label} value={opt.value}>
                     {opt.label}
                   </option>
                 ))}
