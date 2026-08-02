@@ -88,12 +88,23 @@ export default function RoomMatePage() {
     if (!matchingStatus) {
       return [{ label: `${CURRENT_YEAR}년 1학기`, value: 1 }];
     }
-    return [
+    const currentVal = Number(matchingStatus.semester) || 1;
+    const options = [
       {
         label: `${matchingStatus.year}년 ${formatSemesterName(matchingStatus.semester)}`,
-        value: Number(matchingStatus.semester) || 1,
+        value: currentVal,
       },
     ];
+
+    // 임시 테스트용: 현재 학기가 1학기가 아니면 1학기 옵션 추가
+    if (currentVal !== 1) {
+      options.push({
+        label: `${matchingStatus.year}년 1학기`,
+        value: 1,
+      });
+    }
+
+    return options;
   }, [matchingStatus]);
 
   useEffect(() => {
