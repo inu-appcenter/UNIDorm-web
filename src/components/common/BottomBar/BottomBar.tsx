@@ -9,6 +9,7 @@ import { getOpenChatRooms } from "@/apis/openchat";
 import { getMobilePlatform } from "@/utils/getMobilePlatform";
 import TooltipMessage from "@/components/common/TooltipMessage";
 import { useRoommateMatchingStatus } from "@/hooks/useRoommateMatchingStatus";
+import { formatSemesterName } from "@/utils/semester";
 import { mixpanelTrack } from "@/utils/mixpanel";
 import complaintIcon from "@/assets/bottombar/Complaint.svg";
 import complaintClickedIcon from "@/assets/bottombar/complaint-clicked.svg";
@@ -171,7 +172,7 @@ export default function BottomBar() {
     useRoommateMatchingStatus();
 
   const formattedTooltipMessage = matchingStatus
-    ? `${matchingStatus.year % 100}년 ${matchingStatus.semester}학기\n룸메이트 매칭 중!`
+    ? `${matchingStatus.year % 100}년 ${formatSemesterName(matchingStatus.semester)}\n룸메이트 매칭 중!`
     : "룸메이트 매칭 중!";
 
   const currentSemesterKey = matchingStatus

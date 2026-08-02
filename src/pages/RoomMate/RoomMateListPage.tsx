@@ -11,6 +11,7 @@ import { useSetHeader } from "@/hooks/useSetHeader";
 import { useInView } from "react-intersection-observer";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useRoommateMatchingStatus } from "@/hooks/useRoommateMatchingStatus";
+import { formatSemesterName } from "@/utils/semester";
 
 function FilterTags({ filters }: { filters: Record<string, any> }) {
   const filteredTags = Object.values(filters).filter((value) => {
@@ -128,7 +129,7 @@ export default function RoomMateListPage() {
   const { data: matchingStatus } = useRoommateMatchingStatus();
 
   const pageTitle = matchingStatus
-    ? `${matchingStatus.year}년 ${matchingStatus.semester}학기 룸메이트`
+    ? `${matchingStatus.year}년 ${formatSemesterName(matchingStatus.semester)} 룸메이트`
     : "룸메이트";
 
   useSetHeader({ title: pageTitle });

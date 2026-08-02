@@ -22,6 +22,7 @@ import { useInView } from "react-intersection-observer";
 import { RoommatePost } from "@/types/roommates";
 import type { MyPost_RoommateBoard } from "@/types/members";
 import { useRoommateMatchingStatus } from "@/hooks/useRoommateMatchingStatus";
+import { formatSemesterName } from "@/utils/semester";
 import MatchedRoomMateCard from "@/components/roommate/MatchedRoomMateCard";
 import { colors, typography } from "@/styles/tokens";
 import ChipButton from "@/components/button/ChipButton";
@@ -89,7 +90,7 @@ export default function RoomMatePage() {
     }
     return [
       {
-        label: `${matchingStatus.year}년 ${matchingStatus.semester}학기`,
+        label: `${matchingStatus.year}년 ${formatSemesterName(matchingStatus.semester)}`,
         value: Number(matchingStatus.semester) || 1,
       },
     ];
@@ -335,7 +336,7 @@ export default function RoomMatePage() {
         <ComingSoonOverlay
           message={
             matchingStatus
-              ? `${matchingStatus.year}년 ${matchingStatus.semester}학기 룸메이트 매칭 종료!`
+              ? `${matchingStatus.year}년 ${formatSemesterName(matchingStatus.semester)} 룸메이트 매칭 종료!`
               : "룸메이트 매칭 종료!"
           }
           subMessage={

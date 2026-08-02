@@ -18,6 +18,7 @@ import useUserStore from "@/stores/useUserStore";
 import { colors, typography } from "@/styles/tokens";
 import type { RoommatePost } from "@/types/roommates";
 import { getMemberInfo } from "@/apis/members";
+import { formatSemesterName } from "@/utils/semester";
 
 interface DetailRow {
   label: string;
@@ -171,7 +172,7 @@ export default function RoomMateBoardDetailPage() {
             ? [
                 {
                   label: "모집 학기",
-                  value: `${boardData.year}년 ${boardData.semester}학기`,
+                  value: `${boardData.year}년 ${formatSemesterName(boardData.semester)}`,
                 },
               ]
             : []),

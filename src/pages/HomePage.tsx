@@ -39,6 +39,7 @@ import MigrationBanner from "@/components/common/MigrationBanner.tsx";
 import { useFreshmanMigrationBanner } from "@/hooks/useFreshmanMigrationBanner";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRoommateMatchingStatus } from "@/hooks/useRoommateMatchingStatus";
+import { formatSemesterName } from "@/utils/semester";
 import { mixpanelTrack } from "@/utils/mixpanel"; // 추가
 
 export default function HomePage() {
@@ -334,7 +335,7 @@ export default function HomePage() {
               <TitleContentArea
                 title={
                   matchingStatus
-                    ? `${matchingStatus.year}년 ${matchingStatus.semester}학기 룸메이트 모집`
+                    ? `${matchingStatus.year}년 ${formatSemesterName(matchingStatus.semester)} 룸메이트 모집`
                     : "룸메이트 모집"
                 }
                 description={
