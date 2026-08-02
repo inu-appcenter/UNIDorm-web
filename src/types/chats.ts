@@ -34,6 +34,7 @@ export interface RoommateChat {
   createdDate: string;
   roommateChattingRoomId: number;
   roommateChatId: number;
+  messageId?: number;
   userId: number;
   content: string;
   read: boolean;

@@ -16,18 +16,31 @@ type MessageId = string | number;
 
 interface RoommateReadEvent {
   messageId?: MessageId;
+  readMessageId?: MessageId;
+  lastReadMessageId?: MessageId;
+  roommateChatId?: MessageId;
   messageIds?: MessageId[];
   readMessageIds?: MessageId[];
   roommateChatIds?: MessageId[];
   unreadCount?: number;
+  read?: boolean;
+  isRead?: boolean;
+  data?: unknown;
+}
+
+interface RoommateReadUpdate {
+  messageIds: MessageId[];
+  lastReadMessageId?: MessageId;
+  markAll: boolean;
 }
 
 interface UseRoommateChatProps {
   roomId: number;
   userId: number;
   token?: string;
+  enabled?: boolean;
   onMessage: (msg: RoommateChat) => void;
-  onRead?: (readMessageIds: MessageId[]) => void;
+  onRead?: (update: RoommateReadUpdate) => void;
   onConnect?: () => void;
   onDisconnect?: () => void;
 }
@@ -41,42 +54,83 @@ const parseFrameBody = (frame: IMessage): unknown => {
   }
 };
 
-const normalizeReadMessageIds = (payload: unknown): MessageId[] => {
+const isMessageId = (value: unknown): value is MessageId =>
+  typeof value === "string" || typeof value === "number";
+
+const normalizeReadEvent = (payload: unknown): RoommateReadUpdate => {
   if (Array.isArray(payload)) {
-    return payload.filter(
-      (value): value is MessageId =>
-        typeof value === "string" || typeof value === "number",
-    );
+    const messageIds = payload.filter(isMessageId);
+    return {
+      messageIds,
+      lastReadMessageId: messageIds.at(-1),
+      markAll: false,
+    };
   }
 
-  if (!payload || typeof payload !== "object") return [];
+  if (isMessageId(payload)) {
+    return {
+      messageIds: [payload],
+      lastReadMessageId: payload,
+      markAll: false,
+    };
+  }
+
+  if (!payload || typeof payload !== "object") {
+    return { messageIds: [], markAll: payload === true };
+  }
 
   const event = payload as RoommateReadEvent;
+  if (event.data !== undefined) {
+    return normalizeReadEvent(event.data);
+  }
+
   const ids = event.readMessageIds ?? event.messageIds ?? event.roommateChatIds;
 
   if (Array.isArray(ids)) {
-    return ids.filter(
-      (value): value is MessageId =>
-        typeof value === "string" || typeof value === "number",
-    );
+    const messageIds = ids.filter(isMessageId);
+    return {
+      messageIds,
+      lastReadMessageId: event.lastReadMessageId ?? messageIds.at(-1),
+      markAll: false,
+    };
   }
 
   // 일부 서버 버전은 오픈채팅과 같은 단일 메시지 읽음 이벤트를 보낸다.
   // 1:1 룸메이트 채팅에서는 unreadCount가 0일 때 상대방이 읽은 상태다.
+  const lastReadMessageId =
+    event.lastReadMessageId ??
+    event.readMessageId ??
+    event.messageId ??
+    event.roommateChatId;
+
   if (
-    event.messageId !== undefined &&
+    isMessageId(lastReadMessageId) &&
     (event.unreadCount === undefined || event.unreadCount === 0)
   ) {
-    return [event.messageId];
+    return {
+      messageIds: [lastReadMessageId],
+      lastReadMessageId,
+      markAll: false,
+    };
   }
 
-  return [];
+  return {
+    messageIds: [],
+    // 이 콜백은 읽음 전용 채널에서만 실행된다. 구형 서버처럼 ID 없이
+    // 사용자/방 정보만 보내는 이벤트도 1:1 방에서는 전체 읽음 신호다.
+    markAll:
+      event.read === true ||
+      event.isRead === true ||
+      event.unreadCount === undefined ||
+      event.unreadCount === 0,
+  };
 };
 
 export const useRoommateChat = ({
   roomId,
   userId,
   token,
+  enabled = true,
   onMessage,
   onRead,
   onConnect,
@@ -84,7 +138,7 @@ export const useRoommateChat = ({
 }: UseRoommateChatProps) => {
   const clientRef = useRef<Client | null>(null);
   const messageSubscriptionRef = useRef<StompSubscription | null>(null);
-  const readSubscriptionRef = useRef<StompSubscription | null>(null);
+  const readSubscriptionRefs = useRef<StompSubscription[]>([]);
   const [connected, setConnected] = useState(false);
 
   const onMessageRef = useRef(onMessage);
@@ -103,7 +157,7 @@ export const useRoommateChat = ({
     const client = clientRef.current;
     clientRef.current = null;
     messageSubscriptionRef.current = null;
-    readSubscriptionRef.current = null;
+    readSubscriptionRefs.current = [];
     setConnected(false);
 
     if (!client) return;
@@ -115,6 +169,15 @@ export const useRoommateChat = ({
 
   const connect = useCallback(() => {
     if (clientRef.current?.active) return;
+    if (
+      !enabled ||
+      !token ||
+      !Number.isFinite(roomId) ||
+      roomId <= 0 ||
+      userId <= 0
+    ) {
+      return;
+    }
 
     const authorizationHeaders: StompHeaders = token
       ? { Authorization: `Bearer ${token}` }
@@ -138,16 +201,28 @@ export const useRoommateChat = ({
         );
 
         if (onReadRef.current) {
-          readSubscriptionRef.current = client.subscribe(
+          const handleReadFrame = (frame: IMessage) => {
+            const update = normalizeReadEvent(parseFrameBody(frame));
+            if (
+              update.messageIds.length > 0 ||
+              update.lastReadMessageId !== undefined ||
+              update.markAll
+            ) {
+              onReadRef.current?.(update);
+            }
+          };
+
+          // 서버 버전에 따라 사용자별 채널 또는 방 단위 채널로 읽음 이벤트가 온다.
+          // 두 채널의 중복 이벤트는 동일한 메시지를 읽음 처리하므로 안전하다.
+          readSubscriptionRefs.current = [
             `/sub/roommate/chat/read/${roomId}/user/${userId}`,
-            (frame) => {
-              const payload = parseFrameBody(frame);
-              const readMessageIds = normalizeReadMessageIds(payload);
-              if (readMessageIds.length > 0) {
-                onReadRef.current?.(readMessageIds);
-              }
-            },
-            authorizationHeaders,
+            `/sub/roommate/chat/${roomId}/read`,
+          ].map((destination) =>
+            client.subscribe(
+              destination,
+              handleReadFrame,
+              authorizationHeaders,
+            ),
           );
         }
 
@@ -170,7 +245,7 @@ export const useRoommateChat = ({
 
     clientRef.current = client;
     client.activate();
-  }, [roomId, token, userId]);
+  }, [enabled, roomId, token, userId]);
 
   const sendMessage = useCallback(
     (content: string) => {
@@ -194,12 +269,13 @@ export const useRoommateChat = ({
     [roomId, token],
   );
 
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    connect();
+
+    return () => {
       disconnect();
-    },
-    [disconnect, roomId, userId],
-  );
+    };
+  }, [connect, disconnect, enabled, roomId, token, userId]);
 
   return {
     connect,
