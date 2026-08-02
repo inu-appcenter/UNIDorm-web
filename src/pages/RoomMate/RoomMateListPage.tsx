@@ -58,10 +58,25 @@ export default function RoomMateListPage() {
   const navigate = useNavigate();
   const { ref, inView } = useInView();
 
-  const filters = useMemo(
-    () => location.state?.filters || {},
-    [location.state?.filters],
-  );
+  const filters = useMemo(() => {
+    if (location.state?.filters !== undefined) {
+      const stateFilters = location.state.filters || {};
+      sessionStorage.setItem(
+        "roommateSearchFilters",
+        JSON.stringify(stateFilters),
+      );
+      return stateFilters;
+    }
+    const stored = sessionStorage.getItem("roommateSearchFilters");
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch {
+        return {};
+      }
+    }
+    return {};
+  }, [location.state?.filters]);
 
   const {
     data,
