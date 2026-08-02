@@ -24,8 +24,7 @@ export default function OpenChatCreatePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isValid =
-    Boolean(name.trim()) &&
-    (isDerivedRoom || Boolean(description.trim()));
+    Boolean(name.trim()) && (isDerivedRoom || Boolean(description.trim()));
 
   const handleSubmit = async () => {
     if (!isValid || isSubmitting) return;
@@ -103,20 +102,21 @@ export default function OpenChatCreatePage() {
 
         {isDerivedRoom ? (
           <FormGroup>
-            <Label>검색 목록 노출 여부</Label>
+            <Label>목록 노출 여부</Label>
             <ScopeButtonRow>
               <ChipButton active={isPublic} onClick={() => setIsPublic(true)}>
                 노출
               </ChipButton>
-              <ChipButton
-                active={!isPublic}
-                onClick={() => setIsPublic(false)}
-              >
+              <ChipButton active={!isPublic} onClick={() => setIsPublic(false)}>
                 비노출
               </ChipButton>
             </ScopeButtonRow>
             <ScopeDescription>
-              비노출로 설정해도 원본 채팅방에는 입장 링크가 공유돼요.
+              현재 톡방 사람들만 입장이 가능하게 할지 설정하는 옵션이에요.
+              <br />
+              노출로 선택하면 전체 채팅방 목록에 보여지게 돼요.
+              <br /> 비노출로 설정하면 전체 채팅방 목록에는 보여지지 않지만, 이
+              채팅방에는 입장 링크가 공유돼요.
             </ScopeDescription>
           </FormGroup>
         ) : (
