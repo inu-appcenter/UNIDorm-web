@@ -28,6 +28,7 @@ import { OpenChatMessage, OpenChatRoom } from "@/types/openchat";
 import PhotoAttachmentBottomSheet from "@/components/chat/PhotoAttachmentBottomSheet";
 import ChatMessageActionSheet from "@/components/chat/ChatMessageActionSheet";
 import ImageViewerModal from "@/components/chat/ImageViewerModal";
+import TooltipMessage from "@/components/common/TooltipMessage";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import {
@@ -228,6 +229,15 @@ export default function ChattingPage() {
   const [isBlockedPartner, setIsBlockedPartner] = useState(false);
   const { tokenInfo, userInfo } = useUserStore();
   const navigate = useNavigate();
+
+  const [showStudentIdTooltip, setShowStudentIdTooltip] = useState(() => {
+    return localStorage.getItem("hasClosedStudentIdTooltip") !== "true";
+  });
+
+  const handleCloseStudentIdTooltip = () => {
+    setShowStudentIdTooltip(false);
+    localStorage.setItem("hasClosedStudentIdTooltip", "true");
+  };
 
   // 학번 공유 관련 상태 및 Ref
   const opponentIdRef = useRef<number | null>(null);
@@ -2384,18 +2394,29 @@ export default function ChattingPage() {
 
       {/* 하단 플로팅 입력 바 */}
       <S.FloatingInputArea ref={menuContainerRef}>
-        <S.PlusButton
-          type="button"
-          disabled={isBlockedPartner}
-          aria-label={
-            isBlockedPartner
-              ? "차단한 사용자와는 추가 기능을 사용할 수 없습니다"
-              : "채팅 추가 기능"
-          }
-          onClick={() => setMenuOpen((prev) => !prev)}
-        >
-          <Plus size={24} />
-        </S.PlusButton>
+        <div style={{ position: "relative", display: "inline-flex" }}>
+          {chatType === "roommate" && showStudentIdTooltip && (
+            <TooltipMessage
+              message={"상대방에게 학번 공유를 요청해보세요!"}
+              onClose={handleCloseStudentIdTooltip}
+              position={"top"}
+              align={"left"}
+              width={"max-content"}
+            />
+          )}
+          <S.PlusButton
+            type="button"
+            disabled={isBlockedPartner}
+            aria-label={
+              isBlockedPartner
+                ? "차단한 사용자와는 추가 기능을 사용할 수 없습니다"
+                : "채팅 추가 기능"
+            }
+            onClick={() => setMenuOpen((prev) => !prev)}
+          >
+            <Plus size={24} />
+          </S.PlusButton>
+        </div>
 
         {menuOpen && (
           <S.FloatingMenu>
