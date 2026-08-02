@@ -399,7 +399,7 @@ const ModalBackGround = styled.div`
 const Modal = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 8px;
   box-sizing: border-box;
   padding: 32px 20px;
   border-radius: 16px;
