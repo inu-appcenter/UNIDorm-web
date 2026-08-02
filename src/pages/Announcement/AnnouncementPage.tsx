@@ -17,14 +17,12 @@ import {
   ANNOUNCE_SUB_CATEGORY_LIST,
 } from "@/constants/announcement";
 import { CategoryItem, CategoryWrapper } from "@/styles/header";
-import { FaSearch } from "react-icons/fa";
 import { FiX } from "react-icons/fi";
 import {
   FilterWrapper,
   Label,
   RecentSearchWrapper,
   SearchArea,
-  SearchBar,
   Tag,
   TagList,
 } from "@/styles/common";
@@ -44,6 +42,7 @@ import { PopupNotification } from "@/types/popup-notifications";
 import { guardAppOnly, guardLogin } from "@/utils/guard";
 import { mixpanelTrack } from "@/utils/mixpanel";
 import AIOverviewCard from "@/components/announce/AIOverviewCard";
+import searchIcon from "@/assets/roommate/search-normal.svg";
 import useAIChatStore from "@/stores/useAIChatStore";
 import { colors, typography } from "@/styles/tokens";
 import { streamUnidormChat } from "@/apis/unidormChat";
@@ -358,8 +357,15 @@ export default function AnnouncementPage() {
 
       <SearchArea>
         <AnnouncementSearchBar>
-          <input
-            type="text"
+          <SearchSubmitButton
+            type="button"
+            aria-label="공지사항 검색"
+            onClick={handleSearchSubmit}
+          >
+            <SearchIcon src={searchIcon} alt="" aria-hidden />
+          </SearchSubmitButton>
+          <AnnouncementSearchInput
+            type="search"
             placeholder="검색어를 입력하세요"
             value={searchDraft}
             onChange={(e) => setSearchDraft(e.target.value)}
@@ -368,13 +374,6 @@ export default function AnnouncementPage() {
             }}
             onFocus={() => setIsSearchFocused(true)}
           />
-          <SearchSubmitButton
-            type="button"
-            aria-label="공지사항 검색"
-            onClick={handleSearchSubmit}
-          >
-            <FaSearch size={20} aria-hidden="true" />
-          </SearchSubmitButton>
         </AnnouncementSearchBar>
 
         {isSearchFocused && recentSearches.length > 0 && (
@@ -552,32 +551,59 @@ const NoticePageWrapper = styled.div`
   flex: 1;
 `;
 
-const AnnouncementSearchBar = styled(SearchBar)`
+const AnnouncementSearchBar = styled.div`
+  width: 100%;
   height: 40px;
   padding: 8px 12px;
   border: 1px solid ${colors.gray.gray200};
   border-radius: 8px;
-  background: ${colors.gray.gray0};
+  box-sizing: border-box;
+  background: ${colors.bg.bg1};
+  display: flex;
+  align-items: center;
   gap: 8px;
 
-  input {
-    min-width: 0;
-    line-height: 1.5;
+  &:focus-within {
+    border-color: ${colors.blue.blue200};
   }
 `;
 
 const SearchSubmitButton = styled.button`
-  width: 24px;
-  height: 24px;
-  flex: 0 0 24px;
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
   padding: 0;
   border: 0;
   background: transparent;
-  color: ${colors.main.main1};
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+`;
+
+const SearchIcon = styled.img`
+  width: 16px;
+  height: 16px;
+  display: block;
+`;
+
+const AnnouncementSearchInput = styled.input`
+  ${typography.label1Normal}
+  min-width: 0;
+  flex: 1;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: ${colors.gray.gray800};
+
+  &::placeholder {
+    color: ${colors.gray.gray500};
+  }
+
+  &::-webkit-search-cancel-button {
+    display: none;
+  }
 `;
 
 const ResultHeader = styled.div`
