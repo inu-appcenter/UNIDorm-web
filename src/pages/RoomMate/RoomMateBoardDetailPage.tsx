@@ -318,6 +318,8 @@ export default function RoomMateBoardDetailPage() {
           userProfileImageUrl={boardData.userProfileImageUrl}
           postDormType={boardData.dormType}
           postTitle={boardData.title}
+          postYear={boardData.year}
+          postSemester={boardData.semester}
         />
       )}
     </RoomMateDetailPageWrapper>
