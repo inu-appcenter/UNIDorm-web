@@ -10,6 +10,8 @@ import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import { useInView } from "react-intersection-observer";
 import { useInfiniteQuery } from "@tanstack/react-query";
+import { useRoommateMatchingStatus } from "@/hooks/useRoommateMatchingStatus";
+import { formatSemesterName } from "@/utils/semester";
 
 function FilterTags({ filters }: { filters: Record<string, any> }) {
   const filteredTags = Object.values(filters).filter((value) => {
@@ -56,10 +58,25 @@ export default function RoomMateListPage() {
   const navigate = useNavigate();
   const { ref, inView } = useInView();
 
-  const filters = useMemo(
-    () => location.state?.filters || {},
-    [location.state?.filters],
-  );
+  const filters = useMemo(() => {
+    if (location.state?.filters !== undefined) {
+      const stateFilters = location.state.filters || {};
+      sessionStorage.setItem(
+        "roommateSearchFilters",
+        JSON.stringify(stateFilters),
+      );
+      return stateFilters;
+    }
+    const stored = sessionStorage.getItem("roommateSearchFilters");
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch {
+        return {};
+      }
+    }
+    return {};
+  }, [location.state?.filters]);
 
   const {
     data,
@@ -120,12 +137,17 @@ export default function RoomMateListPage() {
       if (filters.bedTime && post.bedTime !== filters.bedTime) return false;
       if (filters.arrangement && post.arrangement !== filters.arrangement)
         return false;
-      if (filters.religion && post.religion !== filters.religion) return false;
       return true;
     });
   }, [data, filters]);
 
-  useSetHeader({ title: "2026년 1학기 룸메이트" });
+  const { data: matchingStatus } = useRoommateMatchingStatus();
+
+  const pageTitle = matchingStatus
+    ? `${matchingStatus.year}년 ${formatSemesterName(matchingStatus.semester)} 룸메이트`
+    : "룸메이트";
+
+  useSetHeader({ title: pageTitle });
 
   return (
     <RoomMateListPageWrapper>

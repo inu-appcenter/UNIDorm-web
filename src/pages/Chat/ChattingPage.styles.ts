@@ -216,7 +216,7 @@ export const FloatingMenu = styled.div`
   display: flex;
   flex-direction: column;
   box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.08);
-  z-index: 101;
+  z-index: 3000;
 
   /* 아래에서 위 방향으로의 트랜지션 애니메이션 탑재 */
   transform-origin: bottom left;

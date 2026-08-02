@@ -20,15 +20,11 @@ export default function OpenChatCreatePage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [scope, setScope] = useState<OpenChatScope>("DORMITORY");
-  const [maxParticipants, setMaxParticipants] = useState(100);
   const [isPublic, setIsPublic] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isValid =
-    Boolean(name.trim()) &&
-    (isDerivedRoom || Boolean(description.trim())) &&
-    maxParticipants >= 2 &&
-    maxParticipants <= 100;
+    Boolean(name.trim()) && (isDerivedRoom || Boolean(description.trim()));
 
   const handleSubmit = async () => {
     if (!isValid || isSubmitting) return;
@@ -41,7 +37,7 @@ export default function OpenChatCreatePage() {
           originRoomId,
           name: name.trim(),
           description: description.trim() || undefined,
-          maxParticipants,
+          maxParticipants: 100,
           isPublic,
         });
 
@@ -105,43 +101,24 @@ export default function OpenChatCreatePage() {
         </FormGroup>
 
         {isDerivedRoom ? (
-          <>
-            <FormGroup>
-              <Label htmlFor="max-participants">최대 참여 인원</Label>
-              <NumberInput
-                id="max-participants"
-                type="number"
-                min={2}
-                max={100}
-                value={maxParticipants}
-                onChange={(event) => {
-                  const nextValue = Number(event.target.value);
-                  setMaxParticipants(Number.isNaN(nextValue) ? 2 : nextValue);
-                }}
-              />
-              <ScopeDescription>
-                2명부터 100명까지 설정할 수 있어요.
-              </ScopeDescription>
-            </FormGroup>
-
-            <FormGroup>
-              <Label>검색 목록 노출 여부</Label>
-              <ScopeButtonRow>
-                <ChipButton active={isPublic} onClick={() => setIsPublic(true)}>
-                  노출
-                </ChipButton>
-                <ChipButton
-                  active={!isPublic}
-                  onClick={() => setIsPublic(false)}
-                >
-                  비노출
-                </ChipButton>
-              </ScopeButtonRow>
-              <ScopeDescription>
-                비노출로 설정해도 원본 채팅방에는 입장 링크가 공유돼요.
-              </ScopeDescription>
-            </FormGroup>
-          </>
+          <FormGroup>
+            <Label>목록 노출 여부</Label>
+            <ScopeButtonRow>
+              <ChipButton active={isPublic} onClick={() => setIsPublic(true)}>
+                노출
+              </ChipButton>
+              <ChipButton active={!isPublic} onClick={() => setIsPublic(false)}>
+                비노출
+              </ChipButton>
+            </ScopeButtonRow>
+            <ScopeDescription>
+              현재 톡방 사람들만 입장이 가능하게 할지 설정하는 옵션이에요.
+              <br />
+              노출로 선택하면 전체 채팅방 목록에 보여지게 돼요.
+              <br /> 비노출로 설정하면 전체 채팅방 목록에는 보여지지 않지만, 이
+              채팅방에는 입장 링크가 공유돼요.
+            </ScopeDescription>
+          </FormGroup>
         ) : (
           <FormGroup>
             <Label>공개 범위</Label>
@@ -263,15 +240,6 @@ const TextInput = styled.input`
 
   &:focus {
     background: #f0f0f0;
-  }
-`;
-
-const NumberInput = styled(TextInput)`
-  appearance: textfield;
-
-  &::-webkit-inner-spin-button,
-  &::-webkit-outer-spin-button {
-    margin: 0;
   }
 `;
 
