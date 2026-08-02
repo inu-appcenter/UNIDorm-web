@@ -2377,7 +2377,7 @@ export default function ChattingPage() {
       {/* 하단 플로팅 입력 바 */}
       <S.FloatingInputArea ref={menuContainerRef}>
         <div style={{ position: "relative", display: "inline-flex" }}>
-          {!menuOpen && chatType === "roommate" && showStudentIdTooltip && (
+          {chatType === "roommate" && showStudentIdTooltip && (
             <TooltipMessage
               message={"상대방에게\n학번 공유를 요청해보세요!"}
               onClose={handleCloseStudentIdTooltip}
