@@ -8,12 +8,11 @@ import { getAllRoommateChatUnreadCount } from "@/apis/chat";
 import { getOpenChatRooms } from "@/apis/openchat";
 import { getMobilePlatform } from "@/utils/getMobilePlatform";
 import TooltipMessage from "@/components/common/TooltipMessage";
-import { useFeatureFlag } from "@/hooks/useFeatureFlags";
+import { useRoommateMatchingStatus } from "@/hooks/useRoommateMatchingStatus";
+import { formatSemesterName } from "@/utils/semester";
 import { mixpanelTrack } from "@/utils/mixpanel";
 import complaintIcon from "@/assets/bottombar/Complaint.svg";
 import complaintClickedIcon from "@/assets/bottombar/complaint-clicked.svg";
-
-const ROOMMATE_MATCHING_FEATURE_FLAG_KEY = "ROOMMATE_MATCHING";
 
 // SVG Icon components matching Figma Vuesax icons
 const HomeIcon = ({ isActive }: { isActive: boolean }) => (
@@ -126,6 +125,7 @@ interface ButtonProps {
   isActive: boolean;
   onClick: () => void;
   showTooltip?: boolean;
+  tooltipMessage?: string;
   onTooltipClose?: () => void;
   hasBadge?: boolean;
 }
@@ -136,6 +136,7 @@ const Button = ({
   isActive,
   onClick,
   showTooltip = false,
+  tooltipMessage,
   onTooltipClose,
   hasBadge = false,
 }: ButtonProps) => {
@@ -143,7 +144,7 @@ const Button = ({
     <ButtonWrapper onClick={onClick}>
       {showTooltip && onTooltipClose && (
         <TooltipMessage
-          message={"26년 1학기\n룸메이트 매칭 중!"}
+          message={tooltipMessage || "룸메이트 매칭 중!"}
           onClose={onTooltipClose}
           position={"top"}
           align={"center"}
@@ -167,19 +168,43 @@ export default function BottomBar() {
   const pathname = location.pathname;
   const { tokenInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
-  const { flag: isMatchingActive } = useFeatureFlag(
-    ROOMMATE_MATCHING_FEATURE_FLAG_KEY,
-  );
+  const { data: matchingStatus, isOpen: isMatchingOpen } =
+    useRoommateMatchingStatus();
+
+  const formattedTooltipMessage = matchingStatus
+    ? `${matchingStatus.year % 100}년 ${formatSemesterName(matchingStatus.semester)}\n룸메이트 매칭 중!`
+    : "룸메이트 매칭 중!";
+
+  const currentSemesterKey = matchingStatus
+    ? `${matchingStatus.year}_${matchingStatus.semester}`
+    : null;
 
   const [unreadCount, setUnreadCount] = useState<number>(0);
-  const [showTooltip, setShowTooltip] = useState(() => {
-    const stored = localStorage.getItem("showRoommateTooltip");
-    return stored !== "false";
-  });
+  const [showTooltip, setShowTooltip] = useState(true);
+
+  useEffect(() => {
+    if (currentSemesterKey) {
+      const closedSemester = localStorage.getItem(
+        "roommateTooltipClosedSemester",
+      );
+      if (closedSemester === currentSemesterKey) {
+        setShowTooltip(false);
+      } else {
+        setShowTooltip(true);
+      }
+    }
+  }, [currentSemesterKey]);
 
   const hideTooltip = () => {
     setShowTooltip(false);
-    localStorage.setItem("showRoommateTooltip", "false");
+    if (currentSemesterKey) {
+      localStorage.setItem(
+        "roommateTooltipClosedSemester",
+        currentSemesterKey,
+      );
+    } else {
+      localStorage.setItem("showRoommateTooltip", "false");
+    }
   };
 
   useEffect(() => {
@@ -248,7 +273,8 @@ export default function BottomBar() {
               navigate("/roommate");
             }
           }}
-          showTooltip={showTooltip && isMatchingActive === true}
+          showTooltip={showTooltip && isMatchingOpen === true}
+          tooltipMessage={formattedTooltipMessage}
           onTooltipClose={hideTooltip}
         />
         <Button

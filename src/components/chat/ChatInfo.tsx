@@ -232,9 +232,21 @@ const ChatInfo = ({
                     <strong style={{ color: "red" }}>
                       반드시 룸메이트 사전 지정 기간에 인천대학교 포털에서
                       신청해주세요!!!!
-                      <br />❍ 신청기간 : 2026. 02. 14(토) 00:00 ~ 02. 18(수)
-                      23:59
+                      <br />❍ 신청기간은 공지사항을 확인해주세요.
                     </strong>
+                    <br />
+                    <NoticeButtonRow>
+                      <NoticeShortcutButton
+                        type="button"
+                        onClick={() => {
+                          setShowInfoModal(false);
+                          navigate("/announcements");
+                        }}
+                      >
+                        공지사항 바로가기
+                        <ChevronRight size={14} />
+                      </NoticeShortcutButton>
+                    </NoticeButtonRow>
                     <br />
                     ❍ 신청방법
                     <br />- 포털(
@@ -387,7 +399,7 @@ const ModalBackGround = styled.div`
 const Modal = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 8px;
   box-sizing: border-box;
   padding: 32px 20px;
   border-radius: 16px;
@@ -457,4 +469,27 @@ const ButtonGroupWrapper = styled.div`
   display: flex;
   flex-direction: row;
   gap: 6px;
+`;
+
+const NoticeButtonRow = styled.div`
+  margin: 8px 0 12px 0;
+`;
+
+const NoticeShortcutButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background-color: #1677ff;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #0958d9;
+  }
 `;

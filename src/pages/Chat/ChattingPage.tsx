@@ -28,6 +28,7 @@ import { OpenChatMessage, OpenChatRoom } from "@/types/openchat";
 import PhotoAttachmentBottomSheet from "@/components/chat/PhotoAttachmentBottomSheet";
 import ChatMessageActionSheet from "@/components/chat/ChatMessageActionSheet";
 import ImageViewerModal from "@/components/chat/ImageViewerModal";
+import TooltipMessage from "@/components/common/TooltipMessage";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import {
@@ -100,9 +101,7 @@ const parseStudentIdRequestPayload = (
 
   try {
     const payload = JSON.parse(content) as Record<string, unknown>;
-    const requestId = Number(
-      payload.requestId ?? payload.disclosureRequestId,
-    );
+    const requestId = Number(payload.requestId ?? payload.disclosureRequestId);
     const requesterId = Number(payload.requesterId);
     const requesterNickname =
       typeof payload.requesterNickname === "string"
@@ -131,10 +130,7 @@ const dedupeStudentIdDisclosureMessages = (messages: MessageType[]) => {
   const seenRequestIds = new Set<number>();
 
   return messages.filter((message) => {
-    if (
-      message.type === "STUDENT_ID_REQUEST" &&
-      message.disclosureRequestId
-    ) {
+    if (message.type === "STUDENT_ID_REQUEST" && message.disclosureRequestId) {
       if (seenRequestIds.has(message.disclosureRequestId)) return false;
       seenRequestIds.add(message.disclosureRequestId);
     }
@@ -229,6 +225,15 @@ export default function ChattingPage() {
   const { tokenInfo, userInfo } = useUserStore();
   const navigate = useNavigate();
 
+  const [showStudentIdTooltip, setShowStudentIdTooltip] = useState(() => {
+    return localStorage.getItem("hasClosedStudentIdTooltip") !== "true";
+  });
+
+  const handleCloseStudentIdTooltip = () => {
+    setShowStudentIdTooltip(false);
+    localStorage.setItem("hasClosedStudentIdTooltip", "true");
+  };
+
   // 학번 공유 관련 상태 및 Ref
   const opponentIdRef = useRef<number | null>(null);
   const [opponentStudentNumber, setOpponentStudentNumber] =
@@ -316,13 +321,8 @@ export default function ChattingPage() {
   const userId = userInfo.id;
   const token = tokenInfo.accessToken;
 
-  const refreshBlockedPartnerStatus = async (
-    targetUserId?: number | null,
-  ) => {
-    if (
-      !targetUserId ||
-      (chatType !== "roommate" && chatType !== "personal")
-    ) {
+  const refreshBlockedPartnerStatus = async (targetUserId?: number | null) => {
+    if (!targetUserId || (chatType !== "roommate" && chatType !== "personal")) {
       setIsBlockedPartner(false);
       return;
     }
@@ -690,8 +690,7 @@ export default function ChattingPage() {
       }
 
       setMessageList((prev) => {
-        const messageId =
-          msg.roommateChatId || msg.messageId || Date.now();
+        const messageId = msg.roommateChatId || msg.messageId || Date.now();
         const isMyMessage = msg.userId === userId;
 
         if (prev.some((message) => message.id === messageId)) {
@@ -793,9 +792,7 @@ export default function ChattingPage() {
         }
         setOpenChatDisclosureStatus({
           status:
-            normalizedSenderId === userId
-              ? "PENDING_SENT"
-              : "PENDING_RECEIVED",
+            normalizedSenderId === userId ? "PENDING_SENT" : "PENDING_RECEIVED",
           requestId: normalizedRequestId,
           targetStudentNumber: null,
         });
@@ -807,9 +804,7 @@ export default function ChattingPage() {
         const nextMessage: MessageType = {
           id: msg.messageId || Date.now(),
           sender: normalizedSenderId === userId ? "me" : "other",
-          content: studentIdRequestPayload
-            ? "학번 공유 요청"
-            : msg.content,
+          content: studentIdRequestPayload ? "학번 공유 요청" : msg.content,
           nickname: normalizedNickname || undefined,
           userImageUrl: null,
           isSystem: normalizedType === "SYSTEM",
@@ -853,10 +848,7 @@ export default function ChattingPage() {
 
           // 최신 메시지를 읽었다면 그보다 앞선 메시지도 읽은 상태다.
           // 기존 값보다 커지지 않도록 줄어드는 방향으로만 소급 반영한다.
-          const nextUnreadCount = Math.min(
-            message.unreadCount,
-            unreadCount,
-          );
+          const nextUnreadCount = Math.min(message.unreadCount, unreadCount);
 
           return nextUnreadCount === message.unreadCount
             ? message
@@ -2323,18 +2315,29 @@ export default function ChattingPage() {
 
       {/* 하단 플로팅 입력 바 */}
       <S.FloatingInputArea ref={menuContainerRef}>
-        <S.PlusButton
-          type="button"
-          disabled={isBlockedPartner}
-          aria-label={
-            isBlockedPartner
-              ? "차단한 사용자와는 추가 기능을 사용할 수 없습니다"
-              : "채팅 추가 기능"
-          }
-          onClick={() => setMenuOpen((prev) => !prev)}
-        >
-          <Plus size={24} />
-        </S.PlusButton>
+        <div style={{ position: "relative", display: "inline-flex" }}>
+          {chatType === "roommate" && showStudentIdTooltip && (
+            <TooltipMessage
+              message={"상대방에게\n학번 공유를 요청해보세요!"}
+              onClose={handleCloseStudentIdTooltip}
+              position={"top"}
+              align={"left"}
+              width={"max-content"}
+            />
+          )}
+          <S.PlusButton
+            type="button"
+            disabled={isBlockedPartner}
+            aria-label={
+              isBlockedPartner
+                ? "차단한 사용자와는 추가 기능을 사용할 수 없습니다"
+                : "채팅 추가 기능"
+            }
+            onClick={() => setMenuOpen((prev) => !prev)}
+          >
+            <Plus size={24} />
+          </S.PlusButton>
+        </div>
 
         {menuOpen && (
           <S.FloatingMenu>

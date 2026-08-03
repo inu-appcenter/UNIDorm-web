@@ -12,6 +12,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import { colors, typography } from "@/styles/tokens";
 import HeartToggleButton from "@/components/common/HeartToggleButton";
+import { useRoommateMatchingStatus } from "@/hooks/useRoommateMatchingStatus";
 
 const RoomMateBottomBar = ({
   partnerName,
@@ -19,18 +20,31 @@ const RoomMateBottomBar = ({
   postDormType,
   postTitle,
   currentPeriod,
+  postYear,
+  postSemester,
 }: {
   partnerName: string;
   userProfileImageUrl: string;
   postDormType?: string;
   postTitle?: string;
   currentPeriod?: boolean;
+  postYear?: number;
+  postSemester?: string | number;
 }) => {
   const { boardId } = useParams<{ boardId: string }>();
   const queryClient = useQueryClient();
 
   const { tokenInfo, userInfo } = useUserStore();
+  const { data: matchingStatus } = useRoommateMatchingStatus();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
+
+  const isCurrentMatchingPeriod =
+    !matchingStatus ||
+    !postYear ||
+    !postSemester ||
+    (matchingStatus.year === postYear &&
+      String(matchingStatus.semester) === String(postSemester));
+
   const isSameDorm =
     !isLoggedIn ||
     !userInfo.dormType ||
@@ -64,6 +78,11 @@ const RoomMateBottomBar = ({
     if (!isLoggedIn) {
       alert("로그인 후 이용해주세요.");
       navigate("/login");
+      return;
+    }
+
+    if (!isCurrentMatchingPeriod) {
+      alert("이번 학기 모집 게시물이 아니에요.");
       return;
     }
 
@@ -126,6 +145,11 @@ const RoomMateBottomBar = ({
     if (!isLoggedIn) {
       alert("로그인 후 이용해주세요.");
       navigate("/login");
+      return;
+    }
+
+    if (!isCurrentMatchingPeriod) {
+      alert("이번 학기 모집 게시물이 아니에요.");
       return;
     }
 
