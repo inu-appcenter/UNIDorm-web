@@ -31,7 +31,6 @@ interface RoommateReadEvent {
 interface RoommateReadUpdate {
   messageIds: MessageId[];
   lastReadMessageId?: MessageId;
-  markAll: boolean;
 }
 
 interface UseRoommateChatProps {
@@ -62,21 +61,17 @@ const normalizeReadEvent = (payload: unknown): RoommateReadUpdate => {
     const messageIds = payload.filter(isMessageId);
     return {
       messageIds,
-      lastReadMessageId: messageIds.at(-1),
-      markAll: false,
     };
   }
 
   if (isMessageId(payload)) {
     return {
       messageIds: [payload],
-      lastReadMessageId: payload,
-      markAll: false,
     };
   }
 
   if (!payload || typeof payload !== "object") {
-    return { messageIds: [], markAll: payload === true };
+    return { messageIds: [] };
   }
 
   const event = payload as RoommateReadEvent;
@@ -90,8 +85,7 @@ const normalizeReadEvent = (payload: unknown): RoommateReadUpdate => {
     const messageIds = ids.filter(isMessageId);
     return {
       messageIds,
-      lastReadMessageId: event.lastReadMessageId ?? messageIds.at(-1),
-      markAll: false,
+      lastReadMessageId: event.lastReadMessageId,
     };
   }
 
@@ -109,21 +103,12 @@ const normalizeReadEvent = (payload: unknown): RoommateReadUpdate => {
   ) {
     return {
       messageIds: [lastReadMessageId],
-      lastReadMessageId,
-      markAll: false,
+      lastReadMessageId: event.lastReadMessageId,
     };
   }
 
-  return {
-    messageIds: [],
-    // 이 콜백은 읽음 전용 채널에서만 실행된다. 구형 서버처럼 ID 없이
-    // 사용자/방 정보만 보내는 이벤트도 1:1 방에서는 전체 읽음 신호다.
-    markAll:
-      event.read === true ||
-      event.isRead === true ||
-      event.unreadCount === undefined ||
-      event.unreadCount === 0,
-  };
+  // 메시지 ID가 없는 이벤트만으로는 상대방이 실제로 읽었다고 판단하지 않는다.
+  return { messageIds: [] };
 };
 
 export const useRoommateChat = ({
@@ -155,12 +140,26 @@ export const useRoommateChat = ({
 
   const disconnect = useCallback(() => {
     const client = clientRef.current;
+    const messageSubscription = messageSubscriptionRef.current;
+    const readSubscriptions = [...readSubscriptionRefs.current];
+
     clientRef.current = null;
     messageSubscriptionRef.current = null;
     readSubscriptionRefs.current = [];
     setConnected(false);
 
     if (!client) return;
+
+    if (client.connected) {
+      try {
+        messageSubscription?.unsubscribe();
+        readSubscriptions.forEach((subscription) => {
+          subscription.unsubscribe();
+        });
+      } catch (error) {
+        console.error("룸메이트 채팅 구독 해제 실패:", error);
+      }
+    }
 
     void client.deactivate().finally(() => {
       onDisconnectRef.current?.();
@@ -205,18 +204,16 @@ export const useRoommateChat = ({
             const update = normalizeReadEvent(parseFrameBody(frame));
             if (
               update.messageIds.length > 0 ||
-              update.lastReadMessageId !== undefined ||
-              update.markAll
+              update.lastReadMessageId !== undefined
             ) {
               onReadRef.current?.(update);
             }
           };
 
-          // 서버 버전에 따라 사용자별 채널 또는 방 단위 채널로 읽음 이벤트가 온다.
-          // 두 채널의 중복 이벤트는 동일한 메시지를 읽음 처리하므로 안전하다.
+          // 이 채널은 상대방이 현재 사용자가 보낸 메시지를 읽었을 때
+          // 해당 메시지 ID를 전달하는 룸메이트 전용 사용자 채널이다.
           readSubscriptionRefs.current = [
             `/sub/roommate/chat/read/${roomId}/user/${userId}`,
-            `/sub/roommate/chat/${roomId}/read`,
           ].map((destination) =>
             client.subscribe(
               destination,

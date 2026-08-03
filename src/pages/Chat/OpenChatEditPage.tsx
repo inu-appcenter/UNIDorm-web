@@ -110,8 +110,8 @@ export default function OpenChatEditPage() {
   const isValid =
     Boolean(name.trim()) &&
     description.trim().length <= 100 &&
-    maxParticipants >= minimumParticipants &&
-    maxParticipants <= 100;
+    (isDerivedRoom ||
+      (maxParticipants >= minimumParticipants && maxParticipants <= 100));
 
   const handleSubmit = async () => {
     if (!room || !isValid || isSubmitting) return;
@@ -120,8 +120,8 @@ export default function OpenChatEditPage() {
       name: name.trim(),
       description: description.trim(),
       scope,
-      maxParticipants,
       isPublic,
+      ...(isDerivedRoom ? {} : { maxParticipants }),
     };
 
     setIsSubmitting(true);
@@ -219,23 +219,25 @@ export default function OpenChatEditPage() {
           </ChoiceRow>
         </FormGroup>
 
-        <FormGroup>
-          <Label htmlFor="edit-max-participants">최대 참여 인원</Label>
-          <TextInput
-            id="edit-max-participants"
-            type="number"
-            min={minimumParticipants}
-            max={100}
-            value={maxParticipants}
-            onChange={(event) =>
-              setMaxParticipants(Number(event.target.value) || 0)
-            }
-          />
-          <Helper>
-            현재 참여 인원보다 작게 설정할 수 없습니다. (최소{" "}
-            {minimumParticipants}명)
-          </Helper>
-        </FormGroup>
+        {!isDerivedRoom && (
+          <FormGroup>
+            <Label htmlFor="edit-max-participants">최대 참여 인원</Label>
+            <TextInput
+              id="edit-max-participants"
+              type="number"
+              min={minimumParticipants}
+              max={100}
+              value={maxParticipants}
+              onChange={(event) =>
+                setMaxParticipants(Number(event.target.value) || 0)
+              }
+            />
+            <Helper>
+              현재 참여 인원보다 작게 설정할 수 없습니다. (최소{" "}
+              {minimumParticipants}명)
+            </Helper>
+          </FormGroup>
+        )}
 
         <FormGroup>
           <Label>{isDerivedRoom ? "노출 여부" : "공개 여부"}</Label>

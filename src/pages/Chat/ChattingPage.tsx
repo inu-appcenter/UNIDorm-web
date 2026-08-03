@@ -727,7 +727,7 @@ export default function ChattingPage() {
         ];
       });
     },
-    onRead: ({ messageIds, lastReadMessageId, markAll }) => {
+    onRead: ({ messageIds, lastReadMessageId }) => {
       const readIds = new Set(messageIds.map(String));
       const numericLastReadMessageId = Number(lastReadMessageId);
       const hasLastReadMessageId = Number.isFinite(numericLastReadMessageId);
@@ -740,7 +740,6 @@ export default function ChattingPage() {
 
           const messageId = Number(message.id);
           const wasRead =
-            markAll ||
             readIds.has(String(message.id)) ||
             (hasLastReadMessageId &&
               Number.isFinite(messageId) &&
@@ -757,66 +756,6 @@ export default function ChattingPage() {
       console.log("🛑 WebSocket 연결 해제됨");
     },
   });
-
-  const hasUnreadOutgoingRoommateMessage =
-    chatType === "roommate" &&
-    messageList.some(
-      (message) => message.sender === "me" && message.isRead === false,
-    );
-
-  useEffect(() => {
-    if (!hasUnreadOutgoingRoommateMessage || roomId <= 0 || userId <= 0) {
-      return;
-    }
-
-    let cancelled = false;
-    let isRequesting = false;
-
-    const reconcileReadStatus = async () => {
-      if (isRequesting) return;
-      isRequesting = true;
-
-      try {
-        const response = await getRoommateChatHistory(roomId);
-        if (cancelled) return;
-
-        const readMessageIds = new Set(
-          response.data
-            .filter(
-              (message) =>
-                Number(message.userId) === Number(userId) && message.read,
-            )
-            .map((message) =>
-              String(message.roommateChatId || message.messageId),
-            ),
-        );
-
-        if (readMessageIds.size === 0) return;
-
-        setMessageList((current) =>
-          current.map((message) =>
-            message.sender === "me" &&
-            message.isRead === false &&
-            readMessageIds.has(String(message.id))
-              ? { ...message, isRead: true }
-              : message,
-          ),
-        );
-      } catch {
-        // 실시간 읽음 이벤트가 정상 동작하는 경우에는 이 보완 요청이 필요 없다.
-      } finally {
-        isRequesting = false;
-      }
-    };
-
-    void reconcileReadStatus();
-    const intervalId = window.setInterval(reconcileReadStatus, 1_500);
-
-    return () => {
-      cancelled = true;
-      window.clearInterval(intervalId);
-    };
-  }, [hasUnreadOutgoingRoommateMessage, roomId, userId]);
 
   const {
     connect: connectOpen,
