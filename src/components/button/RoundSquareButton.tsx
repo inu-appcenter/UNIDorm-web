@@ -5,6 +5,7 @@ interface RoundSquareButtonProps {
   btnName: string;
   color?: string;
   onClick?: () => void;
+  disabled?: boolean;
 }
 
 // 2. 컴포넌트 이름 변경 및 color prop 받기
@@ -12,10 +13,16 @@ const RoundSquareButton = ({
   btnName,
   onClick,
   color = "#0a84ff", // 기본값을 기존 파란색으로 설정
+  disabled = false,
 }: RoundSquareButtonProps) => {
   return (
     // 3. styled-component에 color prop 전달
-    <RoundSquareButtonWrapper onClick={onClick} color={color}>
+    <RoundSquareButtonWrapper
+      type="button"
+      onClick={onClick}
+      color={color}
+      disabled={disabled}
+    >
       {btnName}
     </RoundSquareButtonWrapper>
   );
@@ -56,4 +63,10 @@ const RoundSquareButtonWrapper = styled.button<{ color: string }>`
   overflow: hidden;
   /* 넘치는 텍스트 말줄임 표시 (필요 시) */
   text-overflow: ellipsis;
+
+  &:disabled {
+    background: #dfdfdf;
+    color: #8b8b8b;
+    cursor: not-allowed;
+  }
 `;

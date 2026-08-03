@@ -23,8 +23,16 @@ export default function Header({ hasBack = false, backPath }: HeaderProps) {
   const { userInfo, setUserInfo } = useUserStore();
   const platform = getMobilePlatform();
 
-  const { title, menuItems, settingOnClick, showAlarm, secondHeader, hamburgerOnClick, headerRightElement } =
-    useHeaderStore();
+  const {
+    title,
+    titleBadge,
+    menuItems,
+    settingOnClick,
+    showAlarm,
+    secondHeader,
+    hamburgerOnClick,
+    headerRightElement,
+  } = useHeaderStore();
 
   const [showSettingTooltip, setShowSettingTooltip] = useState(() => {
     return localStorage.getItem("showKeywordSettingTooltip") !== "false";
@@ -67,7 +75,14 @@ export default function Header({ hasBack = false, backPath }: HeaderProps) {
             />
           )}
           <div className="Title">
-            {isHome ? <img className="logo" src={logo} alt="로고" /> : title}
+            {isHome ? (
+              <img className="logo" src={logo} alt="로고" />
+            ) : (
+              <>
+                {title}
+                {titleBadge && <TitleBadge>{titleBadge}</TitleBadge>}
+              </>
+            )}
           </div>
         </Left>
         <Right>
@@ -134,10 +149,11 @@ const StyledHeader = styled.header<{ $isHome: boolean }>`
   z-index: 10000;
   width: 100%;
   box-sizing: border-box;
-  background: ${({ $isHome }) =>
-    $isHome
-      ? "linear-gradient(360deg, rgba(255, 255, 255, 0) 0%, #FFFFFF 80.71%)"
-      : "rgba(244, 244, 244, 0.6)"};
+  background: color-mix(
+    in srgb,
+    var(--page-bg, var(--Bg-Bg2, #f7f7f7)) 80%,
+    transparent
+  );
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 
@@ -172,6 +188,23 @@ const MainLine = styled.div`
   padding: 16px 20px;
   height: 70px;
   box-sizing: border-box;
+`;
+
+const TitleBadge = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 22px;
+  margin-left: 8px;
+  padding: 0 8px;
+  box-sizing: border-box;
+  border-radius: 999px;
+  background: #1677ff;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
 `;
 
 const Left = styled.div`

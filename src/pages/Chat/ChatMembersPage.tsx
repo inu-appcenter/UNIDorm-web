@@ -1,562 +1,1013 @@
-import { useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import styled from "styled-components";
-import { User, ChevronRight } from "lucide-react";
+import { Ban, ChevronRight, User } from "lucide-react";
+import { Drawer } from "vaul";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import useUserStore from "@/stores/useUserStore";
 import { deleteRoommateChatRoom } from "@/apis/roommate";
-import { Drawer } from "vaul";
+import { getRoommateChatRooms } from "@/apis/chat";
+import {
+  createPersonalOpenChatRoom,
+  getOpenChatParticipants,
+  getOpenChatRooms,
+  kickOpenChatParticipant,
+  leaveOpenChatRoom,
+  transferOpenChatHost,
+} from "@/apis/openchat";
+import { OpenChatParticipant, OpenChatRoom } from "@/types/openchat";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
+import { blockUser, getBlockedUsers } from "@/apis/block";
+import { requestStudentIdDisclosure } from "@/apis/studentIdDisclosure";
+import { isAxiosError } from "axios";
 
-interface ParticipantType {
-  id: number;
-  nickname: string;
-  isMe: boolean;
-  desc: string;
-}
+type Sheet = "profile" | "create" | null;
 
 export default function ChatMembersPage() {
   const { chatType, id } = useParams();
   const roomId = Number(id);
   const navigate = useNavigate();
   const location = useLocation();
-
   const partnerName = location.state?.partnerName ?? "상대방";
+  const routeRoom = location.state?.room as OpenChatRoom | undefined;
+  const partnerProfileImageUrl =
+    location.state?.partnerProfileImageUrl ?? undefined;
+  const routePartnerId = Number(location.state?.partnerId) || null;
   const { userInfo } = useUserStore();
+  const isOpenChatRoom = chatType === "open" || chatType === "personal";
 
-  // 바텀시트 상태 관리: "profile" | "create" | null
-  const [activeSheet, setActiveSheet] = useState<"profile" | "create" | null>(null);
-  const [selectedUser, setSelectedUser] = useState<ParticipantType | null>(null);
-
-  // 1:1 대화 만들기 방 설정 인풋 상태
+  const [participants, setParticipants] = useState<OpenChatParticipant[]>([]);
+  const [directChatPartner, setDirectChatPartner] =
+    useState<OpenChatParticipant | null>(
+      routePartnerId
+        ? {
+            userId: routePartnerId,
+            nickname: partnerName,
+            joinedAt: "",
+            isHost: false,
+            isAdmin: false,
+          }
+        : null,
+    );
+  const [loading, setLoading] = useState(
+    isOpenChatRoom || chatType === "roommate",
+  );
+  const [activeSheet, setActiveSheet] = useState<Sheet>(null);
+  const [selectedUser, setSelectedUser] = useState<OpenChatParticipant | null>(
+    null,
+  );
   const [roomName, setRoomName] = useState("");
-  const [roomPassword, setRoomPassword] = useState("");
+  const [leavePromptOpen, setLeavePromptOpen] = useState(false);
+  const [selectingNewHost, setSelectingNewHost] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [blockedUserIds, setBlockedUserIds] = useState<Set<number>>(new Set());
 
-  // 참여자 목록 정의
-  const getParticipants = (): ParticipantType[] => {
-    if (chatType === "open") {
-      return [
-        { id: 101, nickname: "방장횃불이", isMe: false, desc: "1긱 오픈채팅 참여중" },
-        { id: 102, nickname: "동네UNI", isMe: false, desc: "1긱 오픈채팅 참여중" },
-        { id: userInfo.id, nickname: userInfo.name || "나 자신", isMe: true, desc: "나" },
-        { id: 103, nickname: "익명 03", isMe: false, desc: "1긱 오픈채팅 참여중" },
-        { id: 104, nickname: "익명 04", isMe: false, desc: "1긱 오픈채팅 참여중" },
-        { id: 105, nickname: "익명 05", isMe: false, desc: "1긱 오픈채팅 참여중" },
-      ];
-    } else {
-      // 룸메이트 및 1대1 대화의 경우
-      return [
-        { id: userInfo.id, nickname: userInfo.name || "나 자신", isMe: true, desc: "나" },
-        { id: 999, nickname: partnerName, isMe: false, desc: chatType === "roommate" ? "내 룸메이트" : "대화 상대방" },
-      ];
+  const fetchParticipants = useCallback(async () => {
+    if (!isOpenChatRoom && chatType !== "roommate") return;
+    setLoading(true);
+    try {
+      if (chatType === "roommate") {
+        const response = await getRoommateChatRooms();
+        const currentRoom = response.data.find(
+          (room) => room.chatRoomId === roomId,
+        );
+
+        if (currentRoom) {
+          setDirectChatPartner({
+            userId: currentRoom.partnerId,
+            nickname:
+              currentRoom.partnerName ||
+              currentRoom.opponentNickname ||
+              partnerName,
+            joinedAt: "",
+            isHost: false,
+            isAdmin: false,
+          });
+        }
+      } else {
+        const response = await getOpenChatParticipants(roomId);
+        setParticipants(response.data.participants);
+      }
+    } catch (error) {
+      console.error("참여자 목록 조회 실패:", error);
+      if (chatType !== "roommate" || !routePartnerId) {
+        alert("참여자 목록을 불러오지 못했습니다.");
+      }
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [chatType, isOpenChatRoom, partnerName, routePartnerId, roomId]);
 
-  const participants = getParticipants();
+  useEffect(() => {
+    fetchParticipants();
+  }, [fetchParticipants]);
 
-  // 공용 헤더 설정
+  useEffect(() => {
+    getBlockedUsers()
+      .then((response) => {
+        setBlockedUserIds(
+          new Set(response.data.map((user) => user.blockedUserId)),
+        );
+      })
+      .catch((error) => {
+        console.error("차단 목록 조회 실패:", error);
+      });
+  }, []);
+
+  const me = useMemo(
+    () =>
+      participants.find((participant) => participant.userId === userInfo.id),
+    [participants, userInfo.id],
+  );
+  const others = useMemo(
+    () =>
+      participants.filter((participant) => participant.userId !== userInfo.id),
+    [participants, userInfo.id],
+  );
+
   useSetHeader({
     title: "참여중인 인원",
     headerRightElement: (
-      <HeaderRightContainer>
+      <HeaderRight>
         <User size={16} color="#8b8b8b" />
-        <span className="count-text">{chatType === "open" ? "18" : "2"}</span>
-      </HeaderRightContainer>
+        <span>{isOpenChatRoom ? participants.length : 2}</span>
+      </HeaderRight>
     ),
   });
 
-  // 참여자 클릭 핸들러
-  const handleUserClick = (user: ParticipantType) => {
-    if (user.isMe) return; // 나 자신은 1:1 신청 불가
-    setSelectedUser(user);
+  const handleUserClick = async (participant: OpenChatParticipant) => {
+    if (participant.userId === userInfo.id) return;
+    if (blockedUserIds.has(participant.userId)) return;
+    if (selectingNewHost) {
+      const confirmed = window.confirm(
+        `${participant.nickname}님에게 방장을 위임하고 채팅방을 나갈까요?`,
+      );
+      if (!confirmed) return;
+      setSubmitting(true);
+      try {
+        await leaveOpenChatRoom(roomId, participant.userId);
+        navigate("/chat");
+      } catch (error) {
+        console.error("방장 위임 후 나가기 실패:", error);
+        alert("방장 위임 후 나가기에 실패했습니다.");
+      } finally {
+        setSubmitting(false);
+      }
+      return;
+    }
+    setSelectedUser(participant);
     setActiveSheet("profile");
   };
 
-  // 1대1 대화방 개설 생성 완료 처리
-  const handleCreateChat = () => {
-    if (chatType === "open" && !roomName.trim()) {
-      alert("방 이름을 입력해주세요.");
+  const handleCreatePersonalChat = async () => {
+    if (!selectedUser || !roomName.trim() || submitting) {
+      if (!roomName.trim()) alert("방 이름을 입력해주세요.");
       return;
     }
-    alert(`${selectedUser?.nickname}님과의 1대1 대화방이 생성되었습니다!`);
-    setActiveSheet(null);
-    setRoomName("");
-    setRoomPassword("");
-    // 생성 완료 후 가상의 1대1 대화방 페이지로 이동
-    navigate(`/chat/personal/100`, {
-      state: { partnerName: selectedUser?.nickname ?? "상대방" },
-    });
+    setSubmitting(true);
+
+    const navigateToPersonalChat = (personalRoomId: number) => {
+      navigate(`/chat/personal/${personalRoomId}`, {
+        state: {
+          partnerName: selectedUser.nickname,
+          partnerId: selectedUser.userId,
+        },
+      });
+    };
+
+    const findExistingPersonalRoomId = async () => {
+      let page = 0;
+      let totalPages = 1;
+
+      while (page < totalPages) {
+        const roomsResponse = await getOpenChatRooms("MY", page, 50);
+        totalPages = roomsResponse.data.totalPages;
+        const personalRooms = roomsResponse.data.content.filter(
+          (room) => room.roomType === "PERSONAL" && room.joined,
+        );
+
+        const participantResults = await Promise.all(
+          personalRooms.map(async (room) => {
+            try {
+              const participantsResponse = await getOpenChatParticipants(
+                room.roomId,
+              );
+              const hasTargetUser =
+                participantsResponse.data.participants.some(
+                  (participant) =>
+                    participant.userId === selectedUser.userId,
+                );
+
+              return hasTargetUser ? room.roomId : null;
+            } catch {
+              return null;
+            }
+          }),
+        );
+        const existingRoomId = participantResults.find(
+          (candidate): candidate is number => candidate !== null,
+        );
+
+        if (existingRoomId) return existingRoomId;
+        page += 1;
+      }
+
+      return null;
+    };
+
+    try {
+      const response = await createPersonalOpenChatRoom({
+        name: roomName.trim(),
+        targetUserId: selectedUser.userId,
+      });
+      navigateToPersonalChat(response.data.roomId);
+    } catch (error) {
+      console.error("1:1 채팅 생성 실패:", error);
+
+      if (isAxiosError(error) && error.response?.status === 409) {
+        const responseData = error.response.data as
+          | { roomId?: number; data?: { roomId?: number } }
+          | undefined;
+        const conflictRoomId = Number(
+          responseData?.roomId ?? responseData?.data?.roomId,
+        );
+
+        if (Number.isInteger(conflictRoomId) && conflictRoomId > 0) {
+          navigateToPersonalChat(conflictRoomId);
+          return;
+        }
+
+        try {
+          const existingRoomId = await findExistingPersonalRoomId();
+          if (existingRoomId) {
+            navigateToPersonalChat(existingRoomId);
+            return;
+          }
+        } catch (findError) {
+          console.error("기존 1:1 채팅방 조회 실패:", findError);
+        }
+      }
+
+      alert("1:1 채팅방 생성에 실패했습니다. 잠시 후 다시 시도해주세요.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  // 채팅방 퇴장 처리
-  const handleLeaveRoom = async () => {
-    const confirmed = window.confirm(
-      "정말 채팅방을 나갈까요?\n나간 채팅방은 대화 목록에서 사라지며 복구할 수 없습니다."
-    );
-    if (!confirmed) return;
+  const handleBlockUser = async () => {
+    if (!selectedUser || submitting) return;
 
-    if (chatType === "roommate") {
-      try {
-        const response = await deleteRoommateChatRoom(roomId);
-        if (response.status === 201) {
-          alert("채팅방에서 퇴장하였습니다.");
-          navigate("/chat");
+    const targetUser = selectedUser;
+    if (blockedUserIds.has(targetUser.userId)) return;
+    if (
+      !window.confirm(
+        `${targetUser.nickname}님을 차단할까요?\n차단 후 해당 사용자와 1:1 채팅방 생성 및 메시지 전송이 제한됩니다.`,
+      )
+    ) {
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await blockUser(targetUser.userId);
+      setBlockedUserIds((current) => {
+        const next = new Set(current);
+        next.add(targetUser.userId);
+        return next;
+      });
+      setActiveSheet(null);
+      setSelectedUser(null);
+      alert(`${targetUser.nickname}님을 차단했습니다.`);
+    } catch (error) {
+      console.error("사용자 차단 실패:", error);
+
+      if (isAxiosError(error)) {
+        if (error.response?.status === 401) {
+          alert("로그인이 필요합니다.");
+          navigate("/login");
+        } else if (error.response?.status === 404) {
+          alert("차단할 사용자를 찾을 수 없습니다.");
+        } else if (error.response?.status === 409) {
+          alert("이미 차단한 사용자입니다.");
+        } else {
+          alert("사용자 차단에 실패했습니다. 다시 시도해 주세요.");
         }
-      } catch (error) {
-        alert("퇴장에 실패했습니다. " + String(error));
+      } else {
+        alert("사용자 차단 중 오류가 발생했습니다.");
       }
-    } else {
-      // 오픈채팅 및 1대1 대화 퇴장 목업 처리
-      alert("채팅방에서 퇴장하였습니다.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleRequestStudentIdDisclosure = async () => {
+    if (
+      !selectedUser ||
+      submitting ||
+      (chatType !== "personal" && chatType !== "roommate")
+    ) {
+      return;
+    }
+
+    if (
+      !window.confirm(`${selectedUser.nickname}님에게 학번 공유를 요청할까요?`)
+    ) {
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const response = await requestStudentIdDisclosure(
+        roomId,
+        selectedUser.userId,
+      );
+
+      navigate(`/chat/${chatType}/${roomId}`, {
+        replace: true,
+        state: {
+          partnerName: selectedUser.nickname,
+          partnerId: selectedUser.userId,
+          partnerProfileImageUrl,
+          disclosureRequestId: response.data.requestId,
+        },
+      });
+    } catch (error) {
+      console.error("학번 공유 요청 실패:", error);
+      alert(
+        "학번 공유 요청에 실패했습니다. 이미 요청을 보냈거나 처리 중일 수 있습니다.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleTransferHost = async () => {
+    if (!selectedUser || submitting) return;
+    if (!window.confirm(`${selectedUser.nickname}님에게 방장을 위임할까요?`))
+      return;
+    setSubmitting(true);
+    try {
+      await transferOpenChatHost(roomId, selectedUser.userId);
+      setActiveSheet(null);
+      await fetchParticipants();
+    } catch (error) {
+      console.error("방장 위임 실패:", error);
+      alert("방장 위임에 실패했습니다.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleKickUser = async () => {
+    if (!selectedUser || submitting || !me?.isHost || selectedUser.isHost)
+      return;
+    if (
+      !window.confirm(`${selectedUser.nickname}님을 이 채팅방에서 강퇴할까요?`)
+    ) {
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await kickOpenChatParticipant(roomId, selectedUser.userId, "OTHER");
+      setActiveSheet(null);
+      setSelectedUser(null);
+      await fetchParticipants();
+      alert("참여자를 강퇴했습니다.");
+    } catch (error) {
+      console.error("참여자 강퇴 실패:", error);
+      alert("참여자 강퇴에 실패했습니다.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleLeaveRoom = async () => {
+    if (chatType === "roommate") {
+      if (!window.confirm("정말 채팅방을 나갈까요?")) return;
+      try {
+        await deleteRoommateChatRoom(roomId);
+        navigate("/chat", { replace: true });
+      } catch (error) {
+        console.error("채팅방 나가기 실패:", error);
+        alert("채팅방 나가기에 실패했습니다.");
+      }
+      return;
+    }
+
+    if (!isOpenChatRoom) {
       navigate("/chat");
+      return;
+    }
+
+    if (chatType === "open" && me?.isHost && others.length > 0) {
+      setLeavePromptOpen(true);
+      return;
+    }
+
+    if (!window.confirm("정말 채팅방을 나갈까요?")) return;
+    try {
+      await leaveOpenChatRoom(roomId);
+      navigate("/chat");
+    } catch (error) {
+      console.error("오픈채팅방 나가기 실패:", error);
+      alert("채팅방 나가기에 실패했습니다.");
     }
   };
 
   return (
-    <PageContainer>
-      <ScrollContainer>
-        <ListContainer>
-          {participants.map((user) => (
-            <UserCard 
-              key={user.id} 
-              $isMe={user.isMe}
-              onClick={() => handleUserClick(user)}
-            >
-              <UserName>{user.nickname} {user.isMe && "(나)"}</UserName>
-              {!user.isMe && (
-                <ChevronRight size={18} color="#8b8b8b" />
-              )}
-            </UserCard>
-          ))}
-        </ListContainer>
-      </ScrollContainer>
+    <Page>
+      {selectingNewHost && (
+        <Guide>새 방장으로 지정할 참여자를 선택해주세요.</Guide>
+      )}
+      <Scroll>
+        {loading ? (
+          <LoadingSpinner message="참여자를 불러오고 있습니다..." />
+        ) : isOpenChatRoom ? (
+          <>
+            {me && (
+              <Section>
+                <SectionTitle>나</SectionTitle>
+                <ParticipantCard $selectable={false}>
+                  <NameArea>
+                    <ParticipantName>{me.nickname}</ParticipantName>
+                    {me.isHost && <HostBadge>방장</HostBadge>}
+                  </NameArea>
+                </ParticipantCard>
+              </Section>
+            )}
+            <Section>
+              <SectionTitle>다른 참여자</SectionTitle>
+              <ParticipantList>
+                {others.map((participant) => {
+                  const isBlocked = blockedUserIds.has(participant.userId);
 
-      {/* 하단 고정 제어 바 */}
-      <BottomControlBar>
-        {chatType === "roommate" && (
-          <SecondaryButton onClick={() => navigate("/roommate/list/opponent", { state: { partnerName, roomId } })}>
-            상대방 체크리스트 보기
-          </SecondaryButton>
+                  return (
+                    <ParticipantCard
+                      as="button"
+                      type="button"
+                      key={participant.userId}
+                      $selectable={!isBlocked}
+                      disabled={submitting || isBlocked}
+                      onClick={() => handleUserClick(participant)}
+                    >
+                      <NameArea>
+                        <ParticipantName>{participant.nickname}</ParticipantName>
+                        {participant.isHost && <HostBadge>방장</HostBadge>}
+                      </NameArea>
+                      {isBlocked ? (
+                        <Ban size={20} color="#bfbfbf" aria-label="차단된 사용자" />
+                      ) : (
+                        <ChevronRight size={18} color="#555" />
+                      )}
+                    </ParticipantCard>
+                  );
+                })}
+              </ParticipantList>
+            </Section>
+          </>
+        ) : (
+          <Section>
+            <SectionTitle>참여자</SectionTitle>
+            <ParticipantList>
+              <ParticipantCard $selectable={false}>
+                <ParticipantName>나</ParticipantName>
+              </ParticipantCard>
+              <ParticipantCard
+                as="button"
+                type="button"
+                $selectable={Boolean(
+                  directChatPartner &&
+                    !blockedUserIds.has(directChatPartner.userId),
+                )}
+                disabled={
+                  !directChatPartner ||
+                  submitting ||
+                  blockedUserIds.has(directChatPartner.userId)
+                }
+                onClick={() =>
+                  directChatPartner && handleUserClick(directChatPartner)
+                }
+              >
+                <ParticipantName>
+                  {directChatPartner?.nickname || partnerName}
+                </ParticipantName>
+                {directChatPartner &&
+                  (blockedUserIds.has(directChatPartner.userId) ? (
+                    <Ban
+                      size={20}
+                      color="#bfbfbf"
+                      aria-label="차단된 사용자"
+                    />
+                  ) : (
+                    <ChevronRight size={18} color="#555" />
+                  ))}
+              </ParticipantCard>
+            </ParticipantList>
+          </Section>
         )}
-        <SecondaryButton onClick={() => navigate(`/chat/${chatType}/${roomId}/notifications`, { state: { partnerName } })}>
-          알림 설정
-        </SecondaryButton>
-        <DangerButton onClick={handleLeaveRoom}>
-          채팅방 나가기
-        </DangerButton>
-      </BottomControlBar>
+      </Scroll>
 
-      {/* 1. 프로필 바텀시트 (vaul 사용) */}
+      <BottomActions>
+        {chatType === "open" && me?.isHost && (
+          <EditRoomAction
+            type="button"
+            onClick={() =>
+              navigate(`/chat/open/${roomId}/edit`, {
+                state: { room: routeRoom },
+              })
+            }
+          >
+            채팅방 수정
+          </EditRoomAction>
+        )}
+        <TextAction
+          onClick={() =>
+            navigate(`/chat/${chatType}/${roomId}/notifications`, {
+              state: { partnerName },
+            })
+          }
+        >
+          알림 설정
+        </TextAction>
+        <LeaveAction onClick={handleLeaveRoom}>채팅방 나가기</LeaveAction>
+      </BottomActions>
+
       <Drawer.Root
         open={activeSheet === "profile"}
-        onOpenChange={(open) => {
-          if (!open) setActiveSheet(null);
-        }}
-        repositionInputs={false}
+        onOpenChange={(open) => !open && setActiveSheet(null)}
       >
         <Drawer.Portal>
           <Overlay />
-          <Content>
-            <SwipeHandle />
+          <Sheet>
+            <Handle />
             {selectedUser && (
-              <SheetBody data-vaul-no-drag>
-                <UserInfoArea>
-                  <Drawer.Title asChild>
-                    <UserNameText>{selectedUser.nickname}</UserNameText>
-                  </Drawer.Title>
-                  <Drawer.Description asChild>
-                    <UserDescText>{selectedUser.desc}</UserDescText>
-                  </Drawer.Description>
-                </UserInfoArea>
-                {chatType === "open" && (
-                  <PrimaryButton onClick={() => setActiveSheet("create")}>
-                    1:1 채팅하기
-                  </PrimaryButton>
-                )}
+              <SheetBody>
+                <Drawer.Title>{selectedUser.nickname}</Drawer.Title>
+                <Drawer.Description>
+                  {chatType === "open"
+                    ? "1긱 오픈채팅 참여중"
+                    : chatType === "roommate"
+                      ? "룸메이트 채팅 참여중"
+                      : "1:1 채팅 참여중"}
+                </Drawer.Description>
+                <SheetButtons>
+                  {chatType === "open" ? (
+                    <>
+                      <OpenChatPrimaryActions
+                        $single={!me?.isHost || selectedUser.isHost}
+                      >
+                        <PrimaryButton
+                          type="button"
+                          disabled={submitting}
+                          onClick={() => {
+                            setRoomName("");
+                            setActiveSheet("create");
+                          }}
+                        >
+                          1:1 채팅하기
+                        </PrimaryButton>
+                        {me?.isHost && !selectedUser.isHost && (
+                          <DarkButton
+                            type="button"
+                            disabled={submitting}
+                            onClick={handleTransferHost}
+                          >
+                            방장 위임하기
+                          </DarkButton>
+                        )}
+                      </OpenChatPrimaryActions>
+                      <DangerActionList>
+                        {me?.isHost && !selectedUser.isHost && (
+                          <DangerActionButton
+                            type="button"
+                            disabled={submitting}
+                            onClick={handleKickUser}
+                          >
+                            강퇴시키기
+                          </DangerActionButton>
+                        )}
+                        <DangerActionButton
+                          type="button"
+                          disabled={
+                            submitting ||
+                            blockedUserIds.has(selectedUser.userId)
+                          }
+                          onClick={handleBlockUser}
+                        >
+                          {blockedUserIds.has(selectedUser.userId)
+                            ? "차단됨"
+                            : submitting
+                              ? "처리 중..."
+                              : "차단하기"}
+                        </DangerActionButton>
+                      </DangerActionList>
+                    </>
+                  ) : (
+                    <ProfileActionRow>
+                      <BlockButton
+                        type="button"
+                        disabled={
+                          submitting || blockedUserIds.has(selectedUser.userId)
+                        }
+                        onClick={handleBlockUser}
+                      >
+                        {blockedUserIds.has(selectedUser.userId)
+                          ? "차단됨"
+                          : submitting
+                            ? "처리 중..."
+                            : "차단하기"}
+                      </BlockButton>
+                      <PrimaryButton
+                        type="button"
+                        disabled={submitting}
+                        onClick={handleRequestStudentIdDisclosure}
+                      >
+                        {submitting ? "처리 중..." : "학번 공유하기"}
+                      </PrimaryButton>
+                    </ProfileActionRow>
+                  )}
+                </SheetButtons>
               </SheetBody>
             )}
-          </Content>
+          </Sheet>
         </Drawer.Portal>
       </Drawer.Root>
 
-      {/* 2. 1:1 대화 만들기 바텀시트 (vaul 사용) */}
       <Drawer.Root
         open={activeSheet === "create"}
-        onOpenChange={(open) => {
-          if (!open) setActiveSheet(null);
-        }}
+        onOpenChange={(open) => !open && setActiveSheet(null)}
         repositionInputs={false}
       >
         <Drawer.Portal>
           <Overlay />
-          <Content>
-            <SwipeHandle />
-            {selectedUser && (
-              <SheetBody data-vaul-no-drag>
-                <FormContainer>
-                  <FormHeader>
-                    <Drawer.Title asChild>
-                      <FormTitle>1:1 채팅 만들기</FormTitle>
-                    </Drawer.Title>
-                    <Drawer.Description asChild>
-                      <FormSub>
-                        <span className="label">상대</span>
-                        <span className="value">{selectedUser.nickname}</span>
-                      </FormSub>
-                    </Drawer.Description>
-                  </FormHeader>
-
-                  <InputGroup>
-                    <InputLabel>방 이름</InputLabel>
-                    <TextInput 
-                      type="text" 
-                      placeholder="예: 공동구매 관련 대화" 
-                      value={roomName}
-                      onChange={(e) => setRoomName(e.target.value)}
-                    />
-                  </InputGroup>
-
-                  <InputGroup>
-                    <InputLabel>비밀번호 (선택)</InputLabel>
-                    <TextInput 
-                      type="password" 
-                      placeholder="비밀번호 입력" 
-                      value={roomPassword}
-                      onChange={(e) => setRoomPassword(e.target.value)}
-                    />
-                  </InputGroup>
-
-                  <WarningBox>
-                    <WarningTitle>주의</WarningTitle>
-                    <WarningText>
-                      개인정보 공개 및 외부 연락처 교환은 사용자 책임 하에 이루어집니다.
-                    </WarningText>
-                  </WarningBox>
-
-                  <PrimaryButton onClick={handleCreateChat}>
-                    만들기
-                  </PrimaryButton>
-                </FormContainer>
-              </SheetBody>
-            )}
-          </Content>
+          <Sheet>
+            <Handle />
+            <SheetBody>
+              <Drawer.Title>1:1 채팅 만들기</Drawer.Title>
+              <Drawer.Description>
+                상대 {selectedUser?.nickname}
+              </Drawer.Description>
+              <FormField>
+                <label>방 이름</label>
+                <input
+                  value={roomName}
+                  placeholder="방 이름을 입력해주세요"
+                  maxLength={30}
+                  onChange={(event) => setRoomName(event.target.value)}
+                />
+              </FormField>
+              <PrimaryButton
+                disabled={submitting}
+                onClick={handleCreatePersonalChat}
+              >
+                만들기
+              </PrimaryButton>
+            </SheetBody>
+          </Sheet>
         </Drawer.Portal>
       </Drawer.Root>
-    </PageContainer>
+
+      {leavePromptOpen && (
+        <ModalOverlay role="presentation">
+          <Modal role="dialog" aria-modal="true" aria-labelledby="leave-title">
+            <h2 id="leave-title">새 방장을 먼저 위임해 주세요</h2>
+            <p>
+              방장은 위임 없이 채팅방 나가기가 불가해요.
+              <br />
+              확인 후 팀원에게 방장을 위임해 주세요.
+            </p>
+            <ModalButtons>
+              <ModalCancel onClick={() => setLeavePromptOpen(false)}>
+                취소
+              </ModalCancel>
+              <ModalConfirm
+                onClick={() => {
+                  setLeavePromptOpen(false);
+                  setSelectingNewHost(true);
+                }}
+              >
+                확인
+              </ModalConfirm>
+            </ModalButtons>
+          </Modal>
+        </ModalOverlay>
+      )}
+    </Page>
   );
 }
 
-/* Styled Components */
-const PageContainer = styled.div`
-  width: 100%;
+const Page = styled.div`
   height: calc(100vh - 70px);
-  background-color: #ffffff;
   display: flex;
   flex-direction: column;
-  position: relative;
+  background: #fff;
   overflow: hidden;
+  position: relative;
 `;
-
-const ScrollContainer = styled.div`
+const Guide = styled.div`
+  padding: 10px 20px;
+  background: #e6f4ff;
+  color: #0958d9;
+  font:
+    400 14px/1.5 Pretendard,
+    sans-serif;
+`;
+const Scroll = styled.div`
   flex: 1;
   overflow-y: auto;
-  padding: 16px 20px;
-  /* 하단 고정 버튼 영역 패딩 확보 */
-  padding-bottom: 220px; 
-  box-sizing: border-box;
+  padding-bottom: 130px;
 `;
-
-const HeaderRightContainer = styled.div`
+const Section = styled.section`
+  padding: 16px 20px 0;
+`;
+const SectionTitle = styled.h2`
+  margin: 0 0 8px;
+  color: #3d3d3d;
+  font:
+    400 14px/1.5 Pretendard,
+    sans-serif;
+`;
+const ParticipantList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+const ParticipantCard = styled.div<{ $selectable: boolean }>`
+  width: 100%;
+  min-height: 56px;
+  box-sizing: border-box;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid #dfdfdf;
+  border-radius: 16px;
+  background: white;
+  color: #3d3d3d;
+  text-align: left;
+  cursor: ${({ $selectable }) => ($selectable ? "pointer" : "default")};
+`;
+const NameArea = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+const ParticipantName = styled.span`
+  font:
+    600 16px/1.5 Pretendard,
+    sans-serif;
+`;
+const HostBadge = styled.span`
+  padding: 2px 8px;
+  border-radius: 16px;
+  background: #1677ff;
+  color: #fff;
+  font:
+    400 12px/1.5 Pretendard,
+    sans-serif;
+`;
+const HeaderRight = styled.div`
   display: flex;
   align-items: center;
   gap: 2px;
   padding-right: 8px;
-
-  .count-text {
-    font-family: "Pretendard", sans-serif;
-    font-size: 14px;
-    font-weight: 400;
-    color: #8b8b8b;
-  }
+  color: #8b8b8b;
+  font:
+    400 14px/1.5 Pretendard,
+    sans-serif;
 `;
-
-const ListContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  width: 100%;
-`;
-
-const UserCard = styled.div<{ $isMe: boolean }>`
-  background-color: #ffffff;
-  border: 1px solid #dfdfdf;
-  border-radius: 16px;
-  padding: 16px;
-  box-sizing: border-box;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  cursor: ${({ $isMe }) => ($isMe ? "default" : "pointer")};
-  transition: background-color 0.2s ease;
-
-  &:hover {
-    background-color: ${({ $isMe }) => ($isMe ? "#ffffff" : "#f5f5f5")};
-  }
-`;
-
-const UserName = styled.span`
-  font-family: "Pretendard", sans-serif;
-  font-size: 16px;
-  font-weight: 600;
-  color: #3d3d3d;
-`;
-
-const BottomControlBar = styled.div`
+const BottomActions = styled.div`
   position: absolute;
-  bottom: 0;
   left: 0;
-  width: 100%;
-  background: white;
-  border-top: 1px solid #dfdfdf;
-  padding: 16px 20px;
-  box-sizing: border-box;
+  right: 0;
+  bottom: 0;
+  padding: 16px 20px 24px;
+  border-top: 1px solid #efefef;
+  background: #fff;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  z-index: 10;
+  gap: 16px;
 `;
-
+const TextAction = styled.button`
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #3d3d3d;
+  text-align: left;
+  font:
+    400 16px/1.5 Pretendard,
+    sans-serif;
+  cursor: pointer;
+`;
+const LeaveAction = styled(TextAction)`
+  color: #f5222d;
+`;
+const EditRoomAction = styled(TextAction)`
+  color: #1677ff;
+  font-weight: 600;
+`;
+const Overlay = styled(Drawer.Overlay)`
+  position: fixed;
+  inset: 0;
+  z-index: 20000;
+  background: rgba(0, 0, 0, 0.4);
+`;
+const Sheet = styled(Drawer.Content)`
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20001;
+  max-width: 420px;
+  margin: 0 auto;
+  border-radius: 16px 16px 0 0;
+  background: white;
+  outline: none;
+`;
+const Handle = styled.div`
+  width: 60px;
+  height: 4px;
+  margin: 12px auto 16px;
+  border-radius: 4px;
+  background: #dfdfdf;
+`;
+const SheetBody = styled.div`
+  padding: 0 20px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  h2 {
+    margin: 0;
+    color: #3d3d3d;
+    font:
+      600 20px/1.5 Pretendard,
+      sans-serif;
+  }
+  p {
+    margin: -12px 0 16px;
+    color: #8b8b8b;
+    font:
+      400 12px/1.5 Pretendard,
+      sans-serif;
+  }
+`;
+const SheetButtons = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+`;
+const ProfileActionRow = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.4fr);
+  gap: 10px;
+`;
+const OpenChatPrimaryActions = styled.div<{ $single: boolean }>`
+  display: grid;
+  grid-template-columns: ${({ $single }) =>
+    $single ? "minmax(0, 1fr)" : "repeat(2, minmax(0, 1fr))"};
+  gap: 8px;
+`;
 const PrimaryButton = styled.button`
   width: 100%;
   height: 48px;
-  background-color: #1677ff;
+  border: 0;
+  border-radius: 8px;
+  background: #1677ff;
   color: white;
-  border: none;
-  border-radius: 8px;
-  font-family: "Pretendard", sans-serif;
-  font-size: 16px;
-  font-weight: 600;
+  font:
+    600 16px/1.5 Pretendard,
+    sans-serif;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background-color 0.2s ease;
-  
-  &:hover {
-    background-color: #0958d9;
+  &:disabled {
+    opacity: 0.5;
   }
 `;
-
-const SecondaryButton = styled.button`
+const BlockButton = styled.button`
   width: 100%;
   height: 48px;
-  background-color: white;
-  color: #1677ff;
-  border: 1px solid #1677ff;
+  border: 0;
   border-radius: 8px;
-  font-family: "Pretendard", sans-serif;
-  font-size: 16px;
-  font-weight: 600;
+  background: #f7f7f7;
+  color: #ff4242;
+  font:
+    600 16px/1.5 Pretendard,
+    sans-serif;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background-color 0.2s ease;
-  
-  &:hover {
-    background-color: #e6f4ff;
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.5;
   }
 `;
-
-const DangerButton = styled.button`
+const DarkButton = styled(PrimaryButton)`
+  background: #0958d9;
+`;
+const DangerActionList = styled.div`
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid #efefef;
+`;
+const DangerActionButton = styled.button`
+  display: flex;
   width: 100%;
-  height: 48px;
-  background-color: white;
-  color: #ff4d4f;
-  border: 1px solid #ff4d4f;
-  border-radius: 8px;
-  font-family: "Pretendard", sans-serif;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
   align-items: center;
-  justify-content: center;
-  transition: background-color 0.2s ease;
-  
-  &:hover {
-    background-color: #fff2f0;
+  padding: 8px;
+  border: 0;
+  background: transparent;
+  color: #eb0000;
+  font:
+    400 16px/1.6 Pretendard,
+    sans-serif;
+  text-align: left;
+  cursor: pointer;
+
+  &:first-child {
+    padding-top: 16px;
+  }
+
+  &:last-child {
+    padding-bottom: 16px;
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.5;
   }
 `;
-
-/* vaul Drawer 스타일 */
-const Overlay = styled(({ ...props }) => (
-  <Drawer.Overlay {...props} />
-))`
+const FormField = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  label {
+    color: #3d3d3d;
+    font:
+      500 14px/1.5 Pretendard,
+      sans-serif;
+  }
+  input {
+    height: 40px;
+    box-sizing: border-box;
+    padding: 8px 12px;
+    border: 0;
+    border-radius: 8px;
+    background: #f7f7f7;
+    color: #3d3d3d;
+    font:
+      400 14px/1.5 Pretendard,
+      sans-serif;
+    outline: none;
+  }
+`;
+const ModalOverlay = styled.div`
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.4);
-  z-index: 20000;
+  z-index: 21000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.4);
 `;
-
-const Content = styled(({ ...props }) => (
-  <Drawer.Content {...props} />
-))`
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 20001;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  border-top-left-radius: 16px;
-  border-top-right-radius: 16px;
-  background-color: white;
-  max-width: 420px;
-  margin: 0 auto;
-  outline: none;
-  max-height: 85dvh; /* 키보드가 올라오거나 화면이 작을 때 최대 높이 제한 */
-`;
-
-const SwipeHandle = styled.div`
-  margin: 12px auto;
-  width: 60px;
-  height: 4px;
-  flex-shrink: 0;
-  border-radius: 4px;
-  background-color: #dfdfdf;
-`;
-
-const SheetBody = styled.div`
-  width: 100%;
-  padding: 0 20px 24px 20px;
+const Modal = styled.div`
+  width: min(320px, 100%);
   box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  overflow-y: auto; /* 영역 부족 시 내부 스크롤 허용 */
+  padding: 16px;
+  border-radius: 16px;
+  background: white;
+  h2 {
+    margin: 0;
+    color: #3d3d3d;
+    font:
+      600 20px/1.5 Pretendard,
+      sans-serif;
+  }
+  p {
+    margin: 16px 0 24px;
+    color: #8b8b8b;
+    font:
+      400 12px/1.75 Pretendard,
+      sans-serif;
+  }
 `;
-
-const UserInfoArea = styled.div`
-  width: 100%;
-  text-align: left;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-bottom: 12px;
-`;
-
-const UserNameText = styled.h3`
-  margin: 0;
-  font-family: "Pretendard", sans-serif;
-  font-size: 20px;
-  font-weight: 600;
-  color: #3d3d3d;
-`;
-
-const UserDescText = styled.p`
-  margin: 0;
-  font-family: "Pretendard", sans-serif;
-  font-size: 12px;
-  color: #8b8b8b;
-`;
-
-const FormContainer = styled.div`
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-`;
-
-const FormHeader = styled.div`
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  text-align: left;
-`;
-
-const FormTitle = styled.h3`
-  margin: 0;
-  font-family: "Pretendard", sans-serif;
-  font-size: 20px;
-  font-weight: 600;
-  color: #3d3d3d;
-`;
-
-const FormSub = styled.div`
+const ModalButtons = styled.div`
   display: flex;
   gap: 8px;
-  font-family: "Pretendard", sans-serif;
-  font-size: 12px;
-  
-  .label {
-    color: #3d3d3d;
-  }
-  
-  .value {
-    color: #8b8b8b;
-  }
 `;
-
-const InputGroup = styled.div`
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  text-align: left;
+const ModalButton = styled.button`
+  flex: 1;
+  height: 37px;
+  border: 0;
+  border-radius: 20px;
+  font:
+    400 14px/1.5 Pretendard,
+    sans-serif;
+  cursor: pointer;
 `;
-
-const InputLabel = styled.span`
-  font-family: "Pretendard", sans-serif;
-  font-size: 14px;
-  font-weight: 500;
-  color: #3d3d3d;
+const ModalCancel = styled(ModalButton)`
+  background: #f7f7f7;
+  color: #8b8b8b;
 `;
-
-const TextInput = styled.input`
-  width: 100%;
-  height: 40px;
-  background-color: #f7f7f7;
-  border: none;
-  border-radius: 8px;
-  padding: 8px 12px;
-  box-sizing: border-box;
-  font-family: "Pretendard", sans-serif;
-  font-size: 14px;
-  outline: none;
-  color: #3d3d3d;
-
-  &::placeholder {
-    color: #8b8b8b;
-  }
-`;
-
-const WarningBox = styled.div`
-  background-color: #fffbe6;
-  border: 1px solid #ffe58f;
-  border-radius: 8px;
-  padding: 16px;
-  width: 100%;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  text-align: left;
-`;
-
-const WarningTitle = styled.span`
-  font-family: "Pretendard", sans-serif;
-  font-size: 14px;
-  font-weight: 600;
-  color: #ad6800;
-`;
-
-const WarningText = styled.p`
-  margin: 0;
-  font-family: "Pretendard", sans-serif;
-  font-size: 12px;
-  line-height: 1.5;
-  color: #613400;
+const ModalConfirm = styled(ModalButton)`
+  background: #1677ff;
+  color: white;
 `;

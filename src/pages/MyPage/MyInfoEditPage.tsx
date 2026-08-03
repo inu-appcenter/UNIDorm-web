@@ -148,7 +148,6 @@ export default function MyInfoEditPage() {
         trimmedNickname,
         colleges[selectedCollegeIndex],
         dormitory[selectedDomitoryIndex],
-        0,
       );
       console.log(response);
 

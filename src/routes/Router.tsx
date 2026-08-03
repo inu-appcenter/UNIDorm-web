@@ -26,7 +26,6 @@ import FreshmanSignupPage from "@/pages/FreshmanSignupPage";
 import HomePage from "@/pages/HomePage";
 import RoomMatePage from "@/pages/RoomMate/RoomMatePage";
 import GroupPurchaseMainPage from "@/pages/GroupPurchase/GroupPurchaseMainPage";
-import ChatListPage from "@/pages/Chat/ChatListPage";
 import MyPage from "@/pages/MyPage";
 
 /* 페이지 - 서브 상세 (SubPage 하위) */
@@ -49,9 +48,11 @@ import RoomMateAddPage from "@/pages/RoomMate/RoomMateAddPage";
 /*OpenCHAT*/
 import OpenChatPage from "@/pages/Chat/openChatPage";
 import OpenChatCreatePage from "../pages/Chat/OpenChatCreatePage";
+import OpenChatEditPage from "../pages/Chat/OpenChatEditPage";
 import ChattingPage from "@/pages/Chat/ChattingPage";
 import ChatMembersPage from "@/pages/Chat/ChatMembersPage";
 import ChatNotificationSettingsPage from "@/pages/Chat/ChatNotificationSettingsPage";
+import BlockListPage from "@/pages/Chat/BlockListPage";
 
 import GroupPurchasePostPage from "@/pages/GroupPurchase/GroupPurchasePostPage";
 import GroupPurchaseWritePage from "@/pages/GroupPurchase/GroupPurchaseWritePage";
@@ -86,6 +87,7 @@ import RoomMateFindSettingPage from "@/pages/RoomMate/RoomMateFindSettingPage";
 import DebugLogPage from "@/pages/MyPage/DebugLogPage";
 import SettingsPage from "@/pages/MyPage/SettingsPage";
 import StatisticsPage from "@/pages/Admin/StatisticsPage";
+import OpenChatReportAdminPage from "@/pages/Admin/OpenChatReportAdminPage";
 
 export const router = createBrowserRouter([
   {
@@ -110,8 +112,8 @@ export const router = createBrowserRouter([
           { path: "roommate", element: <RoomMatePage /> },
           { path: "roommate/my", element: <MyRoomMatePage /> },
           { path: "groupPurchase", element: <GroupPurchaseMainPage /> },
-          { path: "chat", element: <ChatListPage /> },
-          { path: "chat/open", element: <OpenChatPage /> },
+          { path: "chat", element: <OpenChatPage /> },
+          { path: "complain", element: <ComplainListPage /> },
           { path: "mypage", element: <MyPage /> },
         ],
       },
@@ -218,6 +220,8 @@ export const router = createBrowserRouter([
             element: <SubPage />,
             children: [
               { path: "open/create", element: <OpenChatCreatePage /> },
+              { path: "open/:id/edit", element: <OpenChatEditPage /> },
+              { path: "blocked", element: <BlockListPage /> },
               { path: ":chatType/:id", element: <ChattingPage /> },
               { path: ":chatType/:id/members", element: <ChatMembersPage /> },
               {
@@ -261,7 +265,6 @@ export const router = createBrowserRouter([
             path: "complain",
             element: <SubPage />,
             children: [
-              { index: true, element: <ComplainListPage /> },
               { path: ":complainId", element: <ComplainDetailPage /> },
               { path: "write", element: <ComplainWritePage /> },
             ],
@@ -315,6 +318,10 @@ export const router = createBrowserRouter([
               { path: "fcm", element: <FCMPage /> },
               { path: "feature-flag", element: <FeatureFlagManagePage /> },
               { path: "statistics", element: <StatisticsPage /> },
+              {
+                path: "open-chat-reports",
+                element: <OpenChatReportAdminPage />,
+              },
             ],
           },
         ],

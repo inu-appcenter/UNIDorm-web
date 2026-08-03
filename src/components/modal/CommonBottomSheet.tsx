@@ -96,7 +96,7 @@ const Overlay = styled(({ overlay, ...props }) => (
   position: fixed;
   inset: 0;
   background-color: rgba(0, 0, 0, 0.4);
-  z-index: 40;
+  z-index: 10010;
 `;
 
 const Content = styled(({ overlay, ...props }) => (
@@ -106,14 +106,16 @@ const Content = styled(({ overlay, ...props }) => (
   bottom: 0;
   left: 0;
   right: 0;
-  z-index: 9999;
-  margin: 6rem auto 0 auto;
+  z-index: 10011;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  border-top-left-radius: 10px;
-  border-top-right-radius: 10px;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
   background-color: white;
+  height: fit-content;
   max-height: 80vh;
+
   /* 스마트폰이 아닐 때만 적용 */
   @media (min-width: 769px) {
     max-width: 50vw;
@@ -121,7 +123,7 @@ const Content = styled(({ overlay, ...props }) => (
 `;
 
 const SwipeHandle = styled.div`
-  margin: 1rem auto;
+  margin: 12px auto 8px auto;
   width: 3rem;
   height: 0.375rem;
   flex-shrink: 0;
@@ -131,27 +133,31 @@ const SwipeHandle = styled.div`
 
 const ModalHeader = styled.div`
   flex-shrink: 0;
-  //margin-bottom: 12px;
+  margin-bottom: 6px;
   display: flex;
   flex-direction: column;
-  align-items: center; /* 중앙 정렬 */
+  align-items: center;
   text-align: center;
-  padding-right: 0; /* 중앙 정렬 시 불필요 */
   word-break: keep-all;
-  white-space: pre-wrap; /* 줄바꿈 유지 + 자동 줄바꿈 */
-
-  //gap: 12px;
+  white-space: pre-wrap;
 
   color: #1c408c;
   width: 100%;
   img {
     width: 60%;
-    margin-bottom: 12px; /* 이미지와 제목 간 간격 */
+    margin-bottom: 8px;
   }
 
   h2 {
     margin: 0;
     font-size: 24px;
+    font-weight: 700;
+  }
+
+  p {
+    margin: 0;
+    padding: 0;
+    display: none;
   }
 
   span {
@@ -160,7 +166,7 @@ const ModalHeader = styled.div`
 `;
 
 const ScrollContent = styled.div`
-  flex: 1;
+  flex: 0 1 auto;
   overflow-y: auto;
 
   img {

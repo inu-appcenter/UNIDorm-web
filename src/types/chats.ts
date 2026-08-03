@@ -18,14 +18,26 @@ export interface RoommateChatRoom {
   partnerId: number;
   partnerName: string;
   partnerProfileImageUrl: string;
+  isMyRoommate?: boolean;
+  myRoommate?: boolean;
+  matched?: boolean;
+  isRoommate?: boolean;
+  roommate?: boolean;
+  opponentLeft?: boolean;
+  unreadCount?: number;
+  myBoardTitle?: string | null;
+  opponentBoardTitle?: string | null;
 }
+
 
 export interface RoommateChat {
   createdDate: string;
   roommateChattingRoomId: number;
   roommateChatId: number;
+  messageId?: number;
   userId: number;
   content: string;
   read: boolean;
   userImageUrl: string | null;
+  system?: boolean;
 }

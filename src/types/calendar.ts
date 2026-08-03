@@ -4,8 +4,8 @@ export interface CalendarItem {
   startDate: string;
   endDate: string;
   title: string;
-  link: string;
-  sourceAnnouncementId?: number;
+  link?: string | null;
+  sourceAnnouncementId?: number | null;
 }
 
 export interface CreateCalendarDto {

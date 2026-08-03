@@ -9,6 +9,7 @@ export interface MenuItem {
 /** 헤더 설정 인터페이스 (공용) */
 export interface HeaderConfig {
   title?: string; // 헤더 타이틀
+  titleBadge?: string | null; // 헤더 타이틀 옆 배지
   menuItems?: MenuItem[] | null; // 우측 드롭다운 메뉴
   settingOnClick?: (() => void) | null; // 설정 아이콘 클릭 핸들러
   showAlarm?: boolean; // 알림 벨 노출 여부

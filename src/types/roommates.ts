@@ -29,9 +29,36 @@ export interface RoommatePost extends RoommatePostRequest {
   userName: string;
   userProfileImageUrl: string;
   createDate: string;
+  read?: boolean;
+  isRead?: boolean;
+  isMyPost?: boolean;
+  semester?: string | number;
+  year?: number;
+  matchedFilterCount?: number | null;
+  matchedFilterFields?: RoommateMatchedFilterField[] | null;
+  currentPeriod?: boolean;
 }
 
-export interface RoommatePostResponse extends RoommatePost {}
+export type RoommateMatchedFilterField =
+  | "dormType"
+  | "dormPeriodDays"
+  | "colleges"
+  | "smoking"
+  | "snoring"
+  | "toothGrind"
+  | "sleeper"
+  | "showerHour"
+  | "showerTime"
+  | "bedTime"
+  | "arrangement"
+  | "religions";
+
+export interface FilteredRoommatePost {
+  post: RoommatePost;
+  matchedFilterFields: RoommateMatchedFilterField[];
+}
+
+export type RoommatePostResponse = RoommatePost;
 
 export interface SimilarRoommatePost
   extends Omit<
@@ -56,7 +83,9 @@ export interface RoomMateCardProps {
   matched: boolean;
   percentage?: number;
   location?: string;
+  isMyPost?: boolean;
 }
+
 
 // --- 알림 필터 관련 ---
 export interface RoommateNotificationFilter
@@ -67,6 +96,12 @@ export interface RoommateNotificationFilter
 }
 
 // --- 매칭 관련 타입 ---
+export interface RoommateMatchingStatus {
+  year: number;
+  semester: string;
+  status: "OPEN" | "CLOSED";
+}
+
 export interface RoommateMatchingRequest {
   receiverStudentNumber: string;
 }
@@ -144,5 +179,8 @@ export const INITIAL_FORM_STATE: CheckListForm = {
 
 export interface StepProps {
   data: CheckListForm;
-  onChange: (key: keyof CheckListForm, value: any) => void;
+  onChange: (
+    key: keyof CheckListForm,
+    value: CheckListForm[keyof CheckListForm],
+  ) => void;
 }

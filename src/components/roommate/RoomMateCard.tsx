@@ -76,13 +76,15 @@ const CardWrapper = styled.div.withConfig({
   align-items: center;
   gap: 12px;
   padding: 16px;
-  background: #fff;
-  border: 1px solid #dcdcdc;
-  border-radius: 12px;
+  border: none;
   width: 100%;
   cursor: ${({ matched }) => (matched ? "not-allowed" : "pointer")};
   box-sizing: border-box;
   overflow: hidden;
+
+  border-radius: 8px;
+  background: var(--Gray-Gray0, #fff);
+  box-shadow: 0 0 4px 0 rgba(0, 0, 0, 0.1);
 
   ${({ matched }) =>
     matched &&
@@ -97,32 +99,48 @@ const DisabledOverlay = styled.div`
   z-index: 1;
 `;
 
-// TopRightBadge (기숙사 타입) 원래 위치 및 스타일 복원
+// TopRightBadge (기숙사 타입)
 const TopRightBadge = styled.div.withConfig({
   shouldForwardProp: (prop) => prop !== "dormType",
 })<{ dormType: string }>`
   position: absolute;
   top: 12px;
   right: 12px;
-  font-size: 12px;
-  color: white;
   padding: 4px 8px;
-  border-radius: 8px;
-  font-weight: 600;
+  border-radius: 12px;
   z-index: 0;
+  text-align: center;
 
-  background: ${({ dormType }) => {
+  font-family: Pretendard;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 150%; /* 18px */
+
+  ${({ dormType }) => {
     switch (dormType) {
       case "1기숙사":
-        return "#8e8e93"; // 회색 계열
+        return `
+          border: 1px solid #8e8e93;
+          color: #8e8e93;
+        `;
       case "2기숙사":
-        return "#0a84ff"; // 파랑
+        return `
+          border: 1px solid var(--Main-Main1, #1677FF);
+          color: var(--Main-Main2, #0958D9);
+        `;
       case "3기숙사":
-        return "#ff6b6b"; // 빨강
+        return `
+          border: 1px solid #ff6b6b;
+          color: #ff6b6b;
+        `;
       default:
-        return "#0a84ff"; // 기본값
+        return `
+          border: 1px solid var(--Main-Main1, #1677FF);
+          color: var(--Main-Main2, #0958D9);
+        `;
     }
-  }};
+  }}
 `;
 
 const RightBottomBadge = styled.img.attrs({
@@ -218,21 +236,27 @@ const Tag = styled.div.withConfig({
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
-  color: #1c1c1e;
+
   padding: 4px 8px;
-  border-radius: 6px;
-  font-weight: 500;
+  border-radius: 12px;
+
+  color: var(--Gray-Gray800, #3d3d3d);
+  text-align: center;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 150%; /* 18px */
+
   background: ${({ category }) => {
     switch (category) {
       case "mbti":
-        return "#E4F6ED";
+        return "#E1F7EE";
       case "college":
-        return "#FCEEF3";
+        return "#FFEDF3";
       case "smoker":
-        return "#E8F0FE";
+        return "#E6F0FE";
       case "clean":
-        return "#F3F4F6";
+        return "var(--Gray-Gray100, #EFEFEF)";
       default:
         return "#f1f1f1";
     }
@@ -255,16 +279,19 @@ const Description = styled.div`
 const BottomLine = styled.div`
   display: flex;
   align-items: center;
+  gap: 4px;
   font-size: 12px;
   color: #1c1c1e;
 
   img {
-    width: 16px;
-    height: 16px;
-    margin-right: 4px;
+    width: 18px;
+    height: 18px;
+    display: block;
   }
 
   span {
-    margin-right: 8px;
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
   }
 `;

@@ -16,28 +16,28 @@ export default function OpenChatEmptyState({
     <Container>
       {isMyChat ? (
         <>
-          <Title>아직 참여한 채팅방이 없어요</Title>
-
-          <Description>
-            내 기숙사 방이나 전체 방에서 설명을 보고
-            <br />
-            참여해보세요
-          </Description>
+          <TextGroup>
+            <Title>아직 참여한 채팅방이 없어요</Title>
+            <Description>
+              내 기숙사 방이나 전체 방에서
+              <br />
+              설명을 보고 참여해보세요
+            </Description>
+          </TextGroup>
 
           <MoveButton type="button" onClick={onClickMoveDormitory}>
-            내 기숙사 방 보기
+            참여하기
           </MoveButton>
         </>
       ) : (
-        <>
+        <TextGroup>
           <Title>지금 참여 가능한 방이 없어요</Title>
-
           <Description>
-            나중에 다시 확인하거나 전체 방 탭으로 이동해
+            나중에 다시 확인하거나
             <br />
-            보세요
+            전체 방 탭으로 이동해 보세요
           </Description>
-        </>
+        </TextGroup>
       )}
     </Container>
   );
@@ -45,47 +45,62 @@ export default function OpenChatEmptyState({
 
 const Container = styled.div`
   width: 100%;
-  max-width: 288px;
-  min-height: 200px;
-  margin: 48px auto 0;
-  padding: 32px 20px;
-  border: 1px solid #e4e7ec;
-  border-radius: 20px;
-  background: #f9fafb;
+  padding: 24px 16px;
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0px 4px 7px rgba(223, 223, 223, 0.5);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 24px;
+  box-sizing: border-box;
+  margin-top: 16px;
+`;
+
+const TextGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
 `;
 
 const Title = styled.h3`
   margin: 0;
-  font-size: 24px;
-  font-weight: 800;
-  line-height: 1.35;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.5;
   text-align: center;
-  color: #1f2430;
+  color: #3d3d3d;
   word-break: keep-all;
 `;
 
 const Description = styled.p`
-  margin: 20px 0 28px;
-  font-size: 15px;
-  font-weight: 500;
-  line-height: 1.6;
-  color: #8a93a3;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #8b8b8b;
   text-align: center;
   word-break: keep-all;
 `;
 
 const MoveButton = styled.button`
-  width: 200px;
-  height: 46px;
+  width: 140px;
+  height: 38px;
   border: none;
-  border-radius: 999px;
-  background: #2563eb;
+  border-radius: 20px;
+  background-color: #1677ff;
   color: #ffffff;
-  font-size: 15px;
-  font-weight: 800;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #0958d9;
+  }
 `;

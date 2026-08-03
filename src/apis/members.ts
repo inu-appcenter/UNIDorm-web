@@ -1,7 +1,12 @@
 import axiosInstance from "../apis/axiosInstance";
 import tokenInstance from "../apis/tokenInstance";
 import { ApiResponse } from "@/types/common";
-import { MyPost_GroupOrder, TokenInfo, UserInfo } from "@/types/members";
+import {
+  MyPost,
+  MyPost_GroupOrder,
+  TokenInfo,
+  UserInfo,
+} from "@/types/members";
 import { appendDebugLog } from "@/utils/debugLog";
 import { AxiosError, AxiosResponse } from "axios";
 
@@ -106,18 +111,17 @@ export const putMember = async (
   name: string,
   college: string,
   dormType: string,
-  penalty: number,
 ): Promise<AxiosResponse<TokenInfo>> => {
-  console.log(name, college, dormType, penalty);
+  console.log(name, college, dormType);
   const response = await tokenInstance.put<TokenInfo>(`/users`, {
     name,
     college,
     dormType,
-    penalty,
   });
 
   return response;
 };
+
 
 type RefreshResponsePayload = Partial<TokenInfo> & {
   data?: Partial<TokenInfo>;
@@ -226,9 +230,9 @@ export const getMemberPosts = async (): Promise<
 };
 
 export const getMemberLikePosts = async (): Promise<
-  AxiosResponse<MyPost_GroupOrder[]>
+  AxiosResponse<MyPost[]>
 > => {
-  const response = await tokenInstance.get<MyPost_GroupOrder[]>(`/users/like`);
+  const response = await tokenInstance.get<MyPost[]>(`/users/like`);
   console.log(response);
   return response;
 };

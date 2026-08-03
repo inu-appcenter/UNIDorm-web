@@ -28,7 +28,7 @@ const LogoutPage = () => {
       studentNumber: "",
       dormType: "",
       college: "",
-      penalty: 0,
+      reportedCount: 0,
       hasTimeTableImage: false,
       // 새로 추가된 필드들
       hasUnreadNotifications: false,

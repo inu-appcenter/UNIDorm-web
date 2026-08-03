@@ -26,6 +26,7 @@ import useUserStore from "../../stores/useUserStore.ts";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import { PATHS } from "@/constants/paths";
+import { CATEGORY_LIST } from "@/constants/roommate";
 
 export default function RoomMateFilterPage() {
   const { userInfo } = useUserStore();
@@ -34,7 +35,19 @@ export default function RoomMateFilterPage() {
 
   const roomId = location.state?.roomId;
   const isViewerMode = !!roomId;
-  const filters = location.state?.filters;
+  const filters =
+    location.state?.filters ??
+    (() => {
+      const stored = sessionStorage.getItem("roommateSearchFilters");
+      if (stored) {
+        try {
+          return JSON.parse(stored);
+        } catch {
+          return undefined;
+        }
+      }
+      return undefined;
+    })();
 
   /** Helper Functions */
   const getIndex = (arr: string[], value: string | undefined | null) => {
@@ -183,16 +196,31 @@ export default function RoomMateFilterPage() {
       ),
     );
 
-    // ✅ 필터가 비어있다면 state 없이 이동 (초기화 효과)
+    // ✅ 필터가 비어있다면 초기화 및 state 없이 이동
     if (Object.keys(filteredFilters).length === 0) {
-      navigate(`${PATHS.ROOMMATE.ROOT}?tab=전체`);
-    } else {
-      // 필터가 있다면 state에 담아서 이동
-      navigate(`${PATHS.ROOMMATE.ROOT}?tab=전체`, {
-        state: {
-          filters: filteredFilters,
+      sessionStorage.removeItem("roommateSearchFilters");
+      navigate(
+        `${PATHS.ROOMMATE.ROOT}?tab=${encodeURIComponent(CATEGORY_LIST[0])}`,
+        {
+          state: {
+            filters: {},
+          },
         },
-      });
+      );
+    } else {
+      // 필터가 있다면 sessionStorage 및 state에 담아서 이동
+      sessionStorage.setItem(
+        "roommateSearchFilters",
+        JSON.stringify(filteredFilters),
+      );
+      navigate(
+        `${PATHS.ROOMMATE.ROOT}?tab=${encodeURIComponent(CATEGORY_LIST[0])}`,
+        {
+          state: {
+            filters: filteredFilters,
+          },
+        },
+      );
     }
   };
 

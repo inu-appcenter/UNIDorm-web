@@ -32,6 +32,7 @@ import { useSetHeader } from "@/hooks/useSetHeader";
 import { PATHS } from "@/constants/paths";
 import ToggleLine from "@/components/common/ToggleLine";
 import TitleContentArea from "@/components/common/TitleContentArea";
+import { CATEGORY_LIST } from "@/constants/roommate";
 
 export default function RoomMateFilterPage() {
   const navigate = useNavigate();
@@ -145,19 +146,19 @@ export default function RoomMateFilterPage() {
       await queryClient.invalidateQueries({
         queryKey: ["roommates", "matching"],
       });
+      await queryClient.invalidateQueries({
+        queryKey: ["roommateNotificationFilter"],
+      });
 
       setFormData({
         ...INITIAL_FORM_STATE,
         college: [] as any,
         religion: [] as any,
       });
+      setCurrentStep(1);
 
       if (!silent) {
         alert("필터가 초기화되었습니다.");
-        navigate({
-          pathname: PATHS.ROOMMATE.ROOT,
-          search: "?tab=맞춤+룸메이트",
-        });
       }
     } catch (err) {
       if (!silent) alert("처리 실패");
@@ -214,13 +215,16 @@ export default function RoomMateFilterPage() {
       await queryClient.invalidateQueries({
         queryKey: ["roommates", "matching"],
       });
+      await queryClient.invalidateQueries({
+        queryKey: ["roommateNotificationFilter"],
+      });
 
       alert(
         "맞춤 필터 설정이 완료되었습니다!\n조건이 일치하는 새 글이 올라오면 알려드릴게요😊",
       );
       navigate({
         pathname: PATHS.ROOMMATE.ROOT,
-        search: "?tab=맞춤+룸메이트",
+        search: `?tab=${encodeURIComponent(CATEGORY_LIST[0])}`,
       });
     } catch (err) {
       alert("저장 실패");

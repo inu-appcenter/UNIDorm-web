@@ -28,6 +28,11 @@ export const mbti4 = ["P", "J"];
 export const smoking = ["안피워요", "피워요"];
 export const snoring = ["안골아요", "골아요"];
 export const toothgrinding = ["안갈아요", "갈아요"];
+
+export const smokingDisplay = ["안 피워요", "피워요"];
+export const snoringDisplay = ["안 골아요", "골아요"];
+export const toothgrindingDisplay = ["안 갈아요", "갈아요"];
+
 export const isLightSleeper = ["밝아요", "어두워요", "몰라요"];
 export const showertime = ["아침", "저녁", "둘다"];
 export const showerDuration = ["10분 이내", "30분 이내", "1시간 이내"];

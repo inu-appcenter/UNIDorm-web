@@ -13,6 +13,7 @@ import BottomBar from "../../components/common/BottomBar/BottomBar.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import { motion, AnimatePresence } from "framer-motion";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
+import { formatChatMessagePreview } from "@/utils/chatMessagePreview";
 
 export default function ChatListPage() {
   const navigate = useNavigate();
@@ -54,25 +55,31 @@ export default function ChatListPage() {
     }
   }, [selectedTab, isLoggedIn]);
 
-  const handleChatClick = async (
-    chatRoomId: number,
-    partnerName?: string,
-    partnerProfileImageUrl?: string,
-  ) => {
+  const handleChatClick = async (room: RoommateChatRoom) => {
     if (selectedTab === "룸메이트") {
       try {
         // 채팅방 진입 시 읽음 처리 API 호출
-        await patchRoommateChatRead(chatRoomId);
+        await patchRoommateChatRead(room.chatRoomId);
       } catch (err) {
         console.error("채팅 읽음 처리 실패", err);
         // 에러가 나더라도 채팅방 입장은 가능하게 할지 여부에 따라 처리
       }
 
-      navigate(`/chat/roommate/${chatRoomId}`, {
-        state: { partnerName, partnerProfileImageUrl },
+      const opponentBoardTitle = room.opponentBoardTitle?.trim();
+      const myBoardTitle = room.myBoardTitle?.trim();
+
+      navigate(`/chat/roommate/${room.chatRoomId}`, {
+        state: {
+          partnerName: room.partnerName,
+          partnerProfileImageUrl: room.partnerProfileImageUrl,
+          roommateBoardTitle: opponentBoardTitle || myBoardTitle,
+          roommateBoardOwner: opponentBoardTitle
+            ? "opponent"
+            : myBoardTitle
+              ? "me"
+              : undefined,
+        },
       });
-    } else if (selectedTab === "공동구매") {
-      navigate(`/chat/groupPurchase/${chatRoomId}`);
     }
   };
 
@@ -84,7 +91,7 @@ export default function ChatListPage() {
   const fadeInUp = {
     initial: { opacity: 0, y: 15 },
     animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.3 }
+    transition: { duration: 0.3 },
   };
 
   return (
@@ -111,7 +118,9 @@ export default function ChatListPage() {
                     <ChatListItem
                       chatRoomId={room.chatRoomId}
                       selectedTab={selectedTab}
-                      onClick={() => handleChatClick(room.chatRoomId)}
+                      onClick={() =>
+                        navigate(`/chat/groupPurchase/${room.chatRoomId}`)
+                      }
                       title={room.chatRoomTitle}
                       message={room.recentChatContent}
                       time={room.recentChatTime}
@@ -157,17 +166,13 @@ export default function ChatListPage() {
                   <ChatListItem
                     chatRoomId={room.chatRoomId}
                     selectedTab={selectedTab}
-                    onClick={() =>
-                      handleChatClick(
-                        room.chatRoomId,
-                        room.partnerName,
-                        room.partnerProfileImageUrl,
-                      )
-                    }
+                    onClick={() => handleChatClick(room)}
                     title={room.partnerName}
-                    message={room.lastMessage}
+                    message={formatChatMessagePreview(room.lastMessage)}
                     time={room.lastMessageTime}
                     partnerProfileImageUrl={room.partnerProfileImageUrl}
+                    isRoommate={room.isRoommate}
+                    boardTitle={room.opponentBoardTitle || room.myBoardTitle}
                   />
                 </motion.div>
               ))
@@ -213,10 +218,10 @@ export default function ChatListPage() {
 }
 
 const ChatListPageWrapper = styled.div`
-  padding-bottom: 100px;
+  padding: 16px 16px 100px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
   box-sizing: border-box;
   width: 100%;
   flex: 1;
@@ -229,7 +234,6 @@ const ChatListPageWrapper = styled.div`
 `;
 
 const ContentWrapper = styled.div`
-  padding-bottom: 100px;
   display: flex;
   flex-direction: column;
   height: 100%;

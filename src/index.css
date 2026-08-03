@@ -1,11 +1,26 @@
 /* src/index.css */
+*, *::before, *::after {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+}
+
 html, body, #root {
     margin: 0;
     padding: 0;
     width: 100%;
     height: 100%;
     /*overscroll-behavior: contain;*/
+}
 
+input, textarea, [contenteditable="true"], .selectable {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: default;
 }
 
 input {

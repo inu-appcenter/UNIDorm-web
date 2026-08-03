@@ -42,7 +42,6 @@ export const getRoommateChatHistory = async (
   const response = await tokenInstance.get<RoommateChat[]>(
     `/roommate/chat/${roomId}`,
   );
-  console.log(response); // 디버깅용
   return response;
 };
 

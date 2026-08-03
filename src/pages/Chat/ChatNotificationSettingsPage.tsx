@@ -1,35 +1,46 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import styled from "styled-components";
 import { useSetHeader } from "@/hooks/useSetHeader";
+import {
+  updateOpenChatNotificationMode,
+  NotificationMode,
+} from "@/apis/openchat";
 
 interface NotificationOption {
   id: number;
   title: string;
   desc: string;
+  mode: NotificationMode;
 }
 
 export default function ChatNotificationSettingsPage() {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const roomId = Number(id);
 
   // 피그마와 일치하도록 기본값은 2번 옵션("같은 채팅방 묶어서 받기")으로 설정합니다.
   const [selectedId, setSelectedId] = useState<number>(2);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const options: NotificationOption[] = [
     {
       id: 1,
       title: "메시지 올 때마다 받기",
       desc: "새 메시지가 올 때 바로 알림",
+      mode: "EVERY",
     },
     {
       id: 2,
       title: "같은 채팅방 묶어서 받기",
       desc: "같은 방 알림을 묶어서 한 번에 표시",
+      mode: "BUNDLED",
     },
     {
       id: 3,
       title: "알림 끄기",
       desc: "해당 채팅방 알림을 받지 않음",
+      mode: "OFF",
     },
   ];
 
@@ -38,11 +49,22 @@ export default function ChatNotificationSettingsPage() {
     title: "채팅방 알림 설정",
   });
 
-  const handleSelectOption = (optionId: number) => {
-    setSelectedId(optionId);
-    alert("알림 설정이 변경되었습니다.");
-    // 피그마 시안 동작 흐름에 맞춰 설정 변경 시 이전 화면(참여 인원)으로 복귀
-    navigate(-1);
+  const handleSelectOption = async (option: NotificationOption) => {
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+    try {
+      await updateOpenChatNotificationMode(roomId, option.mode);
+      setSelectedId(option.id);
+      alert("알림 설정이 변경되었습니다.");
+      // 피그마 시안 동작 흐름에 맞춰 설정 변경 시 이전 화면(참여 인원)으로 복귀
+      navigate(-1);
+    } catch (error) {
+      console.error("알림 설정 변경 실패:", error);
+      alert("알림 설정 변경에 실패했습니다. 다시 시도해 주세요.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -56,7 +78,7 @@ export default function ChatNotificationSettingsPage() {
               <OptionCard 
                 key={opt.id} 
                 $active={isActive}
-                onClick={() => handleSelectOption(opt.id)}
+                onClick={() => handleSelectOption(opt)}
               >
                 <RadioCircle $active={isActive}>
                   {isActive && <RadioDot />}

@@ -26,6 +26,7 @@ const ModalContentWrapper = styled.div`
   font-size: 19px;
   font-style: normal;
   font-weight: 500;
+  padding: 0 16px;
 
   .strong {
     font-weight: 600;

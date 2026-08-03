@@ -67,6 +67,17 @@ export const BackgroundImage = styled.div`
   background-image: url("data:image/svg+xml;base64,PHN2ZyBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIiB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBvdmVyZmxvdz0idmlzaWJsZSIgc3R5bGU9ImRpc3BsYXk6IGJsb2NrOyIgdmlld0JveD0iMCAwIDU1MiA1NzYuMDUyIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8ZyBpZD0iRWxsaXBzZSAyIiBmaWx0ZXI9InVybCgjZmlsdGVyMF9mXzMzNDdfOTYzMykiPgo8cGF0aCBkPSJNNTMyIDMwMC4wNTJDNTMyIDQ0MS40MzcgNDE3LjM4NSA1NTYuMDUyIDI3NiA1NTYuMDUyQzEzNC42MTUgNTU2LjA1MiAyMCA0NDEuNDM3IDIwIDMwMC4wNTJDMjAgMTkzLjg2MSAxNjUuMjYxIDgxLjYxNjUgMjM3LjU3OCAzMi4zMTY0QzI2MS43ODcgMTUuODEyIDkyLjE3OSAxNS45MDEgMzE3LjI5MSAzMi41NDY4QzM4OC44NzggODEuOTY1NiA1MzIgMTk0LjAyNiA1MzIgMzAwLjA1MloiIGZpbGw9InVybCgjcGFpbnQwX3JhZGlhbF8zMzQ3Xzk2MzMpIiBmaWxsLW9wYWNpdHk9IjAuNSIvPgo8L2c+CjxkZWZzPgo8ZmlsdGVyIGlkPSJmaWx0ZXIwX2ZfMzM0N185NjMzIiB4PSIwIiB5PSIwIiB3aWR0aD0iNTUyIiBoZWlnaHQ9IjU3Ni4wNTIiIGZpbHRlclVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgY29sb3ItaW50ZXJwb2xhdGlvbi1maWx0ZXJzPSJzUkdCIj4KPGZlRmxvb2QgZmxvb2Qtb3BhY2l0eT0iMCIgcmVzdWx0PSJCYWNrZ3JvdW5kSW1hZ2VGaXgiLz4KPGZlQmxlbmQgbW9kZT0ibm9ybWFsIiBpbj0iU291cmNlR3JhcGhpYyIgaW4yPSJCYWNrZ3JvdW5kSW1hZ2VGaXgiIHJlc3VsdD0ic2hhcGUiLz4KPGZlR2F1c3NpYW5CbHVyIHN0ZERldmlhdGlvbj0iMTAiIHJlc3VsdD0iZWZmZWN0MV9mb3JlZ3JvdW5kQmx1cl8zMzQ3Xzk2MzMiLz4KPC9maWx0ZXI+CjxyYWRpYWxHcmFkaWVudCBpZD0icGFpbnQwX3JhZGlhbF8zMzQ3Xzk2MzMiIGN4PSIwIiBjeT0iMCIgcj0iMSIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiIGdyYWRpZW50VHJhbnNmb3JtPSJ0cmFuc2xhdGUoMjc2IDQxNi41NTIpIHJvdGF0ZSgtOTApIHNjYWxlKDQwMC41IDQwMC41KSI+CjxzdG9wIHN0b3AtY29sb3I9IiMxNjc3RkYiLz4KPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjMTY3N0ZCIiBzdG9wLW9wYWNpdHk9IjAiLz4KPC9yYWRpYWxHcmFkaWVudD4KPC9kZWZzPgo8L3N2Zz4=");
   background-size: contain;
   background-repeat: no-repeat;
+  width: min(160vw, 760px);
+  max-width: none;
+  height: min(62dvh, 640px);
+  bottom: clamp(-140px, -12dvh, -72px);
+  background-image: radial-gradient(
+    ellipse at 50% 88%,
+    rgba(22, 119, 255, 0.38) 0%,
+    rgba(22, 119, 255, 0.17) 42%,
+    rgba(22, 119, 255, 0) 72%
+  );
+  background-size: 100% 100%;
   pointer-events: none;
   z-index: 0;
 `;
@@ -174,6 +185,11 @@ export const PlusButton = styled.button`
   color: #1677ff;
   flex-shrink: 0;
   padding: 0;
+
+  &:disabled {
+    color: #bfbfbf;
+    cursor: not-allowed;
+  }
 `;
 
 const unfurlBottomToTop = keyframes`
@@ -200,7 +216,7 @@ export const FloatingMenu = styled.div`
   display: flex;
   flex-direction: column;
   box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.08);
-  z-index: 101;
+  z-index: 3000;
 
   /* 아래에서 위 방향으로의 트랜지션 애니메이션 탑재 */
   transform-origin: bottom left;
@@ -250,6 +266,11 @@ export const FloatingInput = styled.textarea`
   &::placeholder {
     color: #8b8b8b;
   }
+
+  &:disabled {
+    color: #8b8b8b;
+    cursor: not-allowed;
+  }
 `;
 
 export const SendCircleButton = styled.button`
@@ -269,6 +290,12 @@ export const SendCircleButton = styled.button`
   &:hover {
     background-color: #1677ff;
   }
+
+  &:disabled {
+    background-color: #bfbfbf;
+    box-shadow: none;
+    cursor: not-allowed;
+  }
 `;
 
 export const ShareCardWrapper = styled.div`
@@ -277,22 +304,18 @@ export const ShareCardWrapper = styled.div`
   border-radius: 16px;
   padding: 16px;
   width: 100%;
+  max-width: 360px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
   box-shadow: 0px 1px 0.85px rgba(0, 0, 0, 0.1);
-
-  @media (min-width: 768px) {
-    max-width: 320px;
-  }
 `;
 
 export const ShareCardTextSection = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding-bottom: 8px;
+  gap: 6px;
 `;
 
 export const ShareCardTitle = styled.p`
@@ -308,7 +331,7 @@ export const ShareCardSubtitle = styled.div`
   font-family: "Pretendard", sans-serif;
   font-size: 12px;
   font-weight: 400;
-  color: #555555;
+  color: #6b6b6b;
 
   p {
     margin: 0;
@@ -318,7 +341,8 @@ export const ShareCardSubtitle = styled.div`
 
 export const ShareCardButtonGroup = styled.div`
   display: flex;
-  gap: 12px;
+  justify-content: flex-start;
+  gap: 8px;
 `;
 
 export const ShareCardButton = styled.button<{
@@ -327,7 +351,9 @@ export const ShareCardButton = styled.button<{
   font-family: "Pretendard", sans-serif;
   font-size: 14px;
   font-weight: 400;
-  padding: 4px 12px;
+  min-width: 52px;
+  min-height: 34px;
+  padding: 6px 16px;
   border-radius: 20px;
   cursor: pointer;
   display: inline-flex;
@@ -356,66 +382,71 @@ export const ShareCardButton = styled.button<{
 
 export const ShareSuccessCard = styled.div`
   background-color: #ffffff;
-  border: 1px solid #bae0ff;
+  border: 1px solid #dfdfdf;
   border-radius: 16px;
   padding: 16px;
   width: 100%;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  box-shadow: 0px 4px 12px rgba(22, 119, 255, 0.05);
+  gap: 16px;
 
-  @media (min-width: 768px) {
-    max-width: 320px;
-  }
+  max-width: 360px;
 `;
 
 export const ShareSuccessTitle = styled.div`
-  font-family: "Pretendard", sans-serif;
-  font-size: 15px;
-  font-weight: 600;
-  color: #0958d9;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  font-family: "Pretendard", sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: #3d3d3d;
   margin: 0;
+  white-space: nowrap;
 `;
 
 export const ShareSuccessInfo = styled.div`
   display: flex;
-  justify-content: space-around;
-  align-items: center;
-  background-color: #f0f5ff;
-  border: 1px solid #adc6ff;
-  border-radius: 12px;
-  padding: 12px;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 0 0 28px;
+  width: 100%;
+  box-sizing: border-box;
 `;
 
-export const ShareSuccessInfoItem = styled.div`
+export const ShareSuccessInfoRow = styled.div`
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 16px;
+  line-height: 1.5;
 
   .label {
+    width: 37px;
     font-family: "Pretendard", sans-serif;
-    font-size: 11px;
-    color: #8b8b8b;
+    font-size: 14px;
+    font-weight: 400;
+    color: #3d3d3d;
+    flex-shrink: 0;
+  }
+
+  .label-other {
+    font-family: "Pretendard", sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    color: #3d3d3d;
+    flex-shrink: 0;
   }
 
   .value {
     font-family: "Pretendard", sans-serif;
     font-size: 16px;
-    font-weight: 700;
-    color: #1677ff;
+    font-weight: 600;
+    color: #3d3d3d;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
-`;
-
-export const ShareSuccessInfoDivider = styled.div`
-  width: 1px;
-  height: 24px;
-  background-color: #adc6ff;
 `;
 
 export const ShareSystemMessage = styled.div`
@@ -441,17 +472,41 @@ export const ShareCardRowOther = styled.div`
   width: 100%;
   height: fit-content;
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
+  padding: 12px 20px;
+  box-sizing: border-box;
+`;
+
+export const ShareRejectedCard = styled.div`
+  width: 100%;
+  max-width: 360px;
+  min-height: 64px;
   padding: 16px 20px;
   box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #dfdfdf;
+  border-radius: 16px;
+  background-color: #ffffff;
+  color: #3d3d3d;
+  font-family: "Pretendard", sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.5;
+
+  svg {
+    flex-shrink: 0;
+    color: #ff4d4f;
+  }
 `;
 
 export const ShareCardRowMy = styled.div`
   width: 100%;
   height: fit-content;
   display: flex;
-  justify-content: center;
-  padding: 16px 20px;
+  justify-content: flex-end;
+  padding: 12px 20px;
   box-sizing: border-box;
 `;
 
@@ -474,4 +529,85 @@ export const ShareTimeArea = styled.div`
     letter-spacing: 0.38px;
     color: #8b8b8b;
   }
+`;
+
+export const RoomLinkRow = styled.div`
+  width: 100%;
+  padding: 12px 20px;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+`;
+
+export const RoomLinkCard = styled.button`
+  width: min(100%, 420px);
+  min-height: 112px;
+  padding: 18px 20px;
+  border: 1px solid #b7d5ff;
+  border-radius: 16px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(22, 119, 255, 0.08);
+
+  &:disabled {
+    cursor: wait;
+    opacity: 0.65;
+  }
+`;
+
+export const RoomLinkTextArea = styled.span`
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+`;
+
+export const RoomLinkLabel = styled.span`
+  color: #1677ff;
+  font-family: "Pretendard", sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+`;
+
+export const RoomLinkName = styled.span`
+  color: #222222;
+  font-family: "Pretendard", sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+export const RoomLinkDescription = styled.span`
+  color: #5f5f5f;
+  font-family: "Pretendard", sans-serif;
+  font-size: 13px;
+  line-height: 1.45;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+`;
+
+export const RoomLinkMeta = styled.span`
+  color: #8b8b8b;
+  font-family: "Pretendard", sans-serif;
+  font-size: 12px;
+`;
+
+export const RoomLinkAction = styled.span`
+  flex-shrink: 0;
+  color: #1677ff;
+  font-family: "Pretendard", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 `;

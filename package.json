@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host",
-    "build": "tsc -b && vite build --mode production",
+    "build": "npm run build:tokens && tsc -b && vite build --mode production",
+    "build:tokens": "node scripts/generate-tokens.js",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -33,7 +34,8 @@
     "react-intersection-observer": "^10.0.2",
     "react-mobile-picker": "^1.1.2",
     "react-modal-sheet": "^5.2.1",
-    "react-router-dom": "^7.4.0",
+    "react-router": "^8.3.0",
+    "react-router-dom": "^7.18.2",
     "react-swipeable": "^7.0.2",
     "recharts": "^3.7.0",
     "sockjs-client": "^1.6.1",
@@ -58,6 +60,7 @@
     "typescript": "~5.7.2",
     "typescript-eslint": "^8.24.1",
     "vite": "^6.2.0",
+    "vite-plugin-svgr": "^5.2.0",
     "vite-tsconfig-paths": "^6.0.4"
   }
 }

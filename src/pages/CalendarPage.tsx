@@ -9,7 +9,9 @@ const CalendarPage = () => {
     <CalendarPageWrapper>
       <TitleContentArea
         title={""}
-        description={"인천대학교 생활원 각종 행사 일정입니다."}
+        description={
+          "인천대학교 생활원 각종 행사 일정입니다. 일부 일정은 횃불이 AI를 통해 공지사항을 기반으로 생성되었습니다. 중요한 일정은 직접 확인하세요."
+        }
         children={<Calendar location="일정페이지" />}
       />
     </CalendarPageWrapper>

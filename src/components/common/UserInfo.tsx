@@ -4,9 +4,23 @@ import profileimg from "../../assets/profileimg.png";
 interface Props {
   authorImagePath: string;
   username: string;
-  createDate: string;
+  createDate?: string | null;
   groupOrderType?: string;
 }
+
+const formatCreatedDate = (createDate?: string | null) => {
+  if (!createDate) return "";
+
+  const date = new Date(createDate);
+  if (Number.isNaN(date.getTime())) return createDate;
+
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+
+  return `${month}/${day} ${hours}:${minutes}`;
+};
 
 const UserInfo = ({
   authorImagePath,
@@ -15,6 +29,7 @@ const UserInfo = ({
   groupOrderType,
 }: Props) => {
   const imageSrc = authorImagePath || profileimg;
+  const formattedCreateDate = formatCreatedDate(createDate);
 
   return (
     <Wrapper>
@@ -24,16 +39,7 @@ const UserInfo = ({
 
       <UserText>
         <Nickname>{username}</Nickname>
-        <DateText>
-          {(() => {
-            const d = new Date(createDate);
-            const month = String(d.getMonth() + 1).padStart(2, "0");
-            const day = String(d.getDate()).padStart(2, "0");
-            const hours = String(d.getHours()).padStart(2, "0");
-            const minutes = String(d.getMinutes()).padStart(2, "0");
-            return `${month}/${day} ${hours}:${minutes}`;
-          })()}
-        </DateText>
+        {formattedCreateDate && <DateText>{formattedCreateDate}</DateText>}
       </UserText>
 
       <Spacer />
@@ -48,7 +54,7 @@ const Wrapper = styled.div`
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 16px;
+  //margin-bottom: 16px;
 `;
 
 const ProfileImageWrapper = styled.div`

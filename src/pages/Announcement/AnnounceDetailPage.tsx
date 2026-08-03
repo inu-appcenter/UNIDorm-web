@@ -36,6 +36,26 @@ export default function AnnounceDetailPage() {
   const navigate = useNavigate();
   const { isAdmin } = useUserRole();
 
+  // 알림 읽음 처리 및 iOS 네이티브 브릿지 호출
+  useEffect(() => {
+    if (!boardId) return;
+
+    const markReadAndNotifyNative = async () => {
+      if (window.webkit?.messageHandlers?.enterDetailView) {
+        try {
+          window.webkit.messageHandlers.enterDetailView.postMessage({
+            type: "NOTICE",
+            id: boardId,
+          });
+        } catch (err) {
+          console.error("iOS enterDetailView 브릿지 호출 실패:", err);
+        }
+      }
+    };
+
+    markReadAndNotifyNative();
+  }, [boardId]);
+
   useEffect(() => {
     if (!boardId) {
       setIsLoading(false);

@@ -2,7 +2,7 @@ import styled from "styled-components";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { BsEye } from "react-icons/bs";
 import { Bell } from "lucide-react";
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../../constants/EmptyMessage.tsx";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -17,14 +17,12 @@ import {
   ANNOUNCE_SUB_CATEGORY_LIST,
 } from "@/constants/announcement";
 import { CategoryItem, CategoryWrapper } from "@/styles/header";
-import { FaSearch } from "react-icons/fa";
 import { FiX } from "react-icons/fi";
 import {
   FilterWrapper,
   Label,
   RecentSearchWrapper,
   SearchArea,
-  SearchBar,
   Tag,
   TagList,
 } from "@/styles/common";
@@ -43,12 +41,18 @@ import { getPopupNotifications } from "@/apis/popup-notification";
 import { PopupNotification } from "@/types/popup-notifications";
 import { guardAppOnly, guardLogin } from "@/utils/guard";
 import { mixpanelTrack } from "@/utils/mixpanel";
+import AIOverviewCard from "@/components/announce/AIOverviewCard";
+import searchIcon from "@/assets/roommate/search-normal.svg";
+import useAIChatStore from "@/stores/useAIChatStore";
+import { colors, typography } from "@/styles/tokens";
+import { streamUnidormChat } from "@/apis/unidormChat";
 
 export default function AnnouncementPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { isLoggedIn, isAdmin } = useUserRole();
   const { ref, inView } = useInView();
+  const openAIChat = useAIChatStore((state) => state.openChat);
 
   // 홈 공지사항 리스트 및 상세 바텀시트 상태
   const [isListOpen, setIsListOpen] = useState(false);
@@ -71,6 +75,7 @@ export default function AnnouncementPage() {
     "ALL") as (typeof ANNOUNCE_CATEGORY_LIST)[number]["value"];
 
   const selectedSubValue = searchParams.get("sub");
+  const searchQueryParam = searchParams.get("q")?.trim() ?? "";
 
   const selectedSubCategoryIndex = useMemo(() => {
     if (!selectedSubValue) return 0;
@@ -80,14 +85,50 @@ export default function AnnouncementPage() {
     return index >= 0 ? index : 0;
   }, [selectedSubValue]);
 
-  const handleCategoryClick = (
-    category: (typeof ANNOUNCE_CATEGORY_LIST)[number]["value"],
-  ) => {
-    mixpanelTrack.categoryFiltered(category, "ALL", "공지사항_상단탭");
-    setSearchParams({ tab: category }, { replace: true });
-  };
+  const [searchDraft, setSearchDraft] = useState(searchQueryParam);
+  const [submittedSearch, setSubmittedSearch] = useState(searchQueryParam);
+  const [searchRequestId, setSearchRequestId] = useState(0);
+  const [aiAnswer, setAIAnswer] = useState("");
+  const [isAILoading, setIsAILoading] = useState(false);
+  const [aiError, setAIError] = useState<string | null>(null);
+  const [recentSearches, setRecentSearches] = useState<string[]>(
+    JSON.parse(localStorage.getItem("recentSearches_announcement") || "[]"),
+  );
+
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+
+  useEffect(() => {
+    setSearchDraft(searchQueryParam);
+    setSubmittedSearch(searchQueryParam);
+
+    if (!searchQueryParam) {
+      setAIAnswer("");
+      setAIError(null);
+      setIsAILoading(false);
+      setIsSearchFocused(false);
+    }
+  }, [searchQueryParam]);
+
+  // 검색어 및 AI 상태 초기화 함수
+  const resetSearchState = useCallback(() => {
+    setSearchDraft("");
+    setSubmittedSearch("");
+    setAIAnswer("");
+    setAIError(null);
+    setIsAILoading(false);
+  }, []);
+
+  const handleCategoryClick = useCallback(
+    (category: (typeof ANNOUNCE_CATEGORY_LIST)[number]["value"]) => {
+      resetSearchState();
+      mixpanelTrack.categoryFiltered(category, "ALL", "공지사항_상단탭");
+      setSearchParams({ tab: category }, { replace: true });
+    },
+    [resetSearchState, setSearchParams],
+  );
 
   const handleSubCategoryClick = (index: number) => {
+    resetSearchState();
     const subValue = ANNOUNCE_SUB_CATEGORY_LIST[index]?.value;
 
     mixpanelTrack.categoryFiltered(
@@ -104,23 +145,35 @@ export default function AnnouncementPage() {
         } else {
           newParams.delete("sub");
         }
+        newParams.delete("q");
         return newParams;
       },
       { replace: true },
     );
   };
 
-  const [search, setSearch] = useState("");
-  const [recentSearches, setRecentSearches] = useState<string[]>(
-    JSON.parse(localStorage.getItem("recentSearches_announcement") || "[]"),
-  );
-
-  const [isSearchFocused, setIsSearchFocused] = useState(false);
-
   const subCategoryValue = useMemo(() => {
     if (selectedCategory !== "DORMITORY") return "ALL";
     return selectedSubValue || ANNOUNCE_SUB_CATEGORY_LIST[0].value;
   }, [selectedCategory, selectedSubValue]);
+
+  // AI 검색은 전체/생활원 탭에서만 제공한다.
+  // 서포터즈/유니돔 탭은 공지 목록 검색만 수행한다.
+  const isAIEnabledCategory =
+    selectedCategory === "ALL" || selectedCategory === "DORMITORY";
+
+  // AI 개요 노출 조건 판단
+  const isAIOverviewVisible = useMemo(() => {
+    return isAIEnabledCategory && Boolean(submittedSearch);
+  }, [isAIEnabledCategory, submittedSearch]);
+
+  useEffect(() => {
+    if (isAIEnabledCategory) return;
+
+    setAIAnswer("");
+    setAIError(null);
+    setIsAILoading(false);
+  }, [isAIEnabledCategory]);
 
   // 탭/서브탭 변경 시 스크롤 최상단 이동 (Window + Element 모두 대응)
   useEffect(() => {
@@ -148,13 +201,14 @@ export default function AnnouncementPage() {
       "scroll",
       selectedCategory,
       subCategoryValue,
-      search.trim(),
+      submittedSearch,
+      searchRequestId,
     ],
     queryFn: ({ pageParam }) =>
       getAnnouncementScrollList(
         selectedCategory,
         subCategoryValue,
-        search.trim(),
+        submittedSearch,
         pageParam as number | undefined,
         pageSize,
       ),
@@ -174,11 +228,55 @@ export default function AnnouncementPage() {
     return (data?.pages.flat() ?? []) as AnnouncementPost[];
   }, [data]);
 
-  const handleSearchSubmit = () => {
-    const rawTerm = search;
-    const trimmedTerm = search.trim();
+  useEffect(() => {
+    if (!isAIOverviewVisible) return;
 
-    if (rawTerm.trim() === "") return;
+    const controller = new AbortController();
+    let accumulatedAnswer = "";
+
+    setAIAnswer("");
+    setAIError(null);
+    setIsAILoading(true);
+
+    streamUnidormChat({
+      question: submittedSearch,
+      history: [],
+      signal: controller.signal,
+      onChunk: (chunk) => {
+        accumulatedAnswer += chunk;
+        setAIAnswer(accumulatedAnswer);
+      },
+    })
+      .then(() => {
+        if (!controller.signal.aborted && accumulatedAnswer.trim() === "") {
+          setAIError("답변을 받지 못했어요. 아래 관련 공지를 확인해 주세요.");
+        }
+      })
+      .catch((error: unknown) => {
+        if (
+          controller.signal.aborted ||
+          (error instanceof DOMException && error.name === "AbortError")
+        ) {
+          return;
+        }
+
+        setAIError(
+          "챗불이 답변을 불러오지 못했어요. 아래 관련 공지를 확인해 주세요.",
+        );
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setIsAILoading(false);
+        }
+      });
+
+    return () => controller.abort();
+  }, [submittedSearch, searchRequestId, isAIOverviewVisible]);
+
+  const handleSearchSubmit = () => {
+    const trimmedTerm = searchDraft.trim();
+
+    if (trimmedTerm === "") return;
 
     // 검색 수행 추적 추가
     mixpanelTrack.searchPerformed(trimmedTerm, "공지사항_리스트");
@@ -194,7 +292,15 @@ export default function AnnouncementPage() {
       JSON.stringify(updatedSearches),
     );
 
-    setSearch(trimmedTerm);
+    setSearchDraft(trimmedTerm);
+    setSubmittedSearch(trimmedTerm);
+    setSearchRequestId((currentId) => currentId + 1);
+    setIsSearchFocused(false);
+
+    const nextParams = new URLSearchParams(searchParams);
+    const alreadySearching = Boolean(nextParams.get("q"));
+    nextParams.set("q", trimmedTerm);
+    setSearchParams(nextParams, { replace: alreadySearching });
   };
 
   const handleDeleteRecent = (e: React.MouseEvent, term: string) => {
@@ -231,7 +337,7 @@ export default function AnnouncementPage() {
         </CategoryWrapper>
       ),
     }),
-    [selectedCategory],
+    [handleCategoryClick, selectedCategory],
   );
   useSetHeader(headerConfig);
 
@@ -250,19 +356,25 @@ export default function AnnouncementPage() {
       )}
 
       <SearchArea>
-        <SearchBar>
-          <FaSearch size={16} color="#999" />
-          <input
-            type="text"
+        <AnnouncementSearchBar>
+          <SearchSubmitButton
+            type="button"
+            aria-label="공지사항 검색"
+            onClick={handleSearchSubmit}
+          >
+            <SearchIcon src={searchIcon} alt="" aria-hidden />
+          </SearchSubmitButton>
+          <AnnouncementSearchInput
+            type="search"
             placeholder="검색어를 입력하세요"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            value={searchDraft}
+            onChange={(e) => setSearchDraft(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") handleSearchSubmit();
             }}
             onFocus={() => setIsSearchFocused(true)}
           />
-        </SearchBar>
+        </AnnouncementSearchBar>
 
         {isSearchFocused && recentSearches.length > 0 && (
           <RecentSearchWrapper>
@@ -272,7 +384,7 @@ export default function AnnouncementPage() {
                 <Tag
                   key={term}
                   onClick={() => {
-                    setSearch(term);
+                    setSearchDraft(term);
                   }}
                 >
                   {term}{" "}
@@ -288,8 +400,36 @@ export default function AnnouncementPage() {
         )}
       </SearchArea>
 
+      {isAIOverviewVisible && (
+        <>
+          <AIOverviewCard
+            query={submittedSearch}
+            answer={aiAnswer}
+            isLoading={isAILoading}
+            error={aiError}
+            notices={notices}
+            onOpenNotice={(noticeId) => navigate(`/announcements/${noticeId}`)}
+            onOpenChat={() => {
+              mixpanelTrack.featureClicked("챗불이 AI", "공지사항_AI개요");
+              openAIChat();
+            }}
+          />
+
+          <ResultHeader>
+            <h2>관련 게시글</h2>
+            <p>검색어와 관련된 공지사항을 보여드려요.</p>
+          </ResultHeader>
+        </>
+      )}
+
       {isLoading ? (
-        <LoadingSpinner message="공지사항을 불러오는 중..." />
+        <LoadingSpinner
+          message={
+            submittedSearch
+              ? "관련 공지사항을 불러오는 중..."
+              : "최신 공지사항을 불러오는 중..."
+          }
+        />
       ) : isError ? (
         <EmptyMessage message="공지사항을 불러오지 못했습니다." />
       ) : notices.length > 0 ? (
@@ -339,7 +479,13 @@ export default function AnnouncementPage() {
           </div>
         </>
       ) : (
-        <EmptyMessage message="등록된 공지사항이 없습니다." />
+        <EmptyMessage
+          message={
+            submittedSearch
+              ? "관련 공지사항이 없습니다."
+              : "등록된 공지사항이 없습니다."
+          }
+        />
       )}
 
       {isAdmin && (
@@ -395,7 +541,7 @@ export default function AnnouncementPage() {
 }
 
 const NoticePageWrapper = styled.div`
-  padding: 40px 16px 100px;
+  padding: 56px 16px 100px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -403,6 +549,80 @@ const NoticePageWrapper = styled.div`
   overflow-y: auto;
   background: #fafafa;
   flex: 1;
+`;
+
+const AnnouncementSearchBar = styled.div`
+  width: 100%;
+  height: 40px;
+  padding: 8px 12px;
+  border: 1px solid ${colors.gray.gray200};
+  border-radius: 8px;
+  box-sizing: border-box;
+  background: ${colors.bg.bg1};
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  &:focus-within {
+    border-color: ${colors.blue.blue200};
+  }
+`;
+
+const SearchSubmitButton = styled.button`
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+`;
+
+const SearchIcon = styled.img`
+  width: 16px;
+  height: 16px;
+  display: block;
+`;
+
+const AnnouncementSearchInput = styled.input`
+  ${typography.label1Normal}
+  min-width: 0;
+  flex: 1;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: ${colors.gray.gray800};
+
+  &::placeholder {
+    color: ${colors.gray.gray500};
+  }
+
+  &::-webkit-search-cancel-button {
+    display: none;
+  }
+`;
+
+const ResultHeader = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 4px;
+
+  h2 {
+    ${typography.headline2}
+    margin: 0;
+    color: ${colors.gray.gray800};
+  }
+
+  p {
+    ${typography.caption1}
+    margin: 0;
+    color: ${colors.gray.gray400};
+  }
 `;
 
 const FloatingAlertButton = styled.button`

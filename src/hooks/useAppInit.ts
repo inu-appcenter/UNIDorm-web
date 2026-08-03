@@ -5,6 +5,8 @@ import { getMemberInfo } from "@/apis/members";
 import tokenInstance from "../apis/tokenInstance";
 // import { getMobilePlatform } from "@/utils/getMobilePlatform";
 import { PATHS } from "@/constants/paths";
+import { getRoommateChatRooms, getGroupOrderChatRooms } from "@/apis/chat";
+import { getOpenChatRooms } from "@/apis/openchat";
 
 export const useAppInit = () => {
   const { tokenInfo, setUserInfo, setLoading } = useUserStore();
@@ -64,17 +66,110 @@ export const useAppInit = () => {
 
   // 웹뷰 FCM 토큰 수신 설정
   useEffect(() => {
-    (window as any).onReceiveFcmToken = async function (token: string) {
-      // 토큰이 존재하고 빈 문자열이 아닌 경우에만 처리
+    const handleToken = (token: string) => {
       if (token && token.trim() !== "") {
         localStorage.setItem("fcmToken", token);
         setFcmToken(token);
       }
     };
+
+    // React가 마운트된 이후에도 호출될 수 있으므로 전역 함수 등록 유지
+    (window as any).onReceiveFcmToken = async function (token: string) {
+      handleToken(token);
+    };
+
+    // 커스텀 이벤트 리스너 등록 (index.html에서 조기 수신한 경우 대응)
+    const onTokenReceived = (e: Event) => {
+      const customEvent = e as CustomEvent<string>;
+      if (customEvent.detail) {
+        setFcmToken(customEvent.detail);
+      }
+    };
+
+    window.addEventListener("fcmTokenReceived", onTokenReceived);
+
+    // 마운트 시점에 이미 localStorage에 토큰이 있다면 상태 동기화
+    const storedToken = localStorage.getItem("fcmToken");
+    if (storedToken) {
+      setFcmToken(storedToken);
+    }
+
     return () => {
       (window as any).onReceiveFcmToken = null;
+      window.removeEventListener("fcmTokenReceived", onTokenReceived);
     };
   }, []);
+
+  // 알림 클릭 시 라우팅 핸들러 설정
+  useEffect(() => {
+    const resolveChatPath = async (id: string): Promise<string> => {
+      try {
+        const numericId = Number(id);
+        const [roommateRes, groupRes, openRes] = await Promise.allSettled([
+          getRoommateChatRooms(),
+          getGroupOrderChatRooms(),
+          getOpenChatRooms("MY", 0, 100)
+        ]);
+        
+        if (roommateRes.status === "fulfilled") {
+          const exists = roommateRes.value.data.some(r => r.chatRoomId === numericId);
+          if (exists) return `/chat/roommate/${id}`;
+        }
+        
+        if (groupRes.status === "fulfilled") {
+          const exists = groupRes.value.data.some(r => r.chatRoomId === numericId);
+          if (exists) return `/chat/groupPurchase/${id}`;
+        }
+
+        if (openRes.status === "fulfilled") {
+          const exists = openRes.value.data.content.some(r => r.roomId === numericId);
+          if (exists) return `/chat/open/${id}`;
+        }
+      } catch (e) {
+        console.error("Resolve chat path error:", e);
+      }
+      return `/chat/roommate/${id}`;
+    };
+
+    window.navigateToPath = async function (path: string) {
+      if (!path) return;
+      
+      let targetPath = path;
+      
+      // 1. 공지사항 경로 변환 (/notice/5678 -> /announcements/5678)
+      if (path.startsWith("/notice/")) {
+        const id = path.split("/")[2];
+        targetPath = `/announcements/${id}`;
+      }
+      
+      // 2. 채팅 경로 변환 (/chat/1234 -> /chat/roommate/1234 or /chat/groupPurchase/1234)
+      const chatMatch = path.match(/^\/chat\/(\d+)$/);
+      if (chatMatch) {
+        const id = chatMatch[1];
+        targetPath = await resolveChatPath(id);
+      }
+      
+      navigate(targetPath);
+    };
+
+    // React 마운트 및 navigateToPath 준비 완료 신호를 비동기로 네이티브(Android & iOS)에 안전하게 전송
+    setTimeout(() => {
+      try {
+        if (window.AndroidBridge?.onAppReady) {
+          window.AndroidBridge.onAppReady();
+        }
+        if (window.webkit?.messageHandlers?.onAppReady) {
+          window.webkit.messageHandlers.onAppReady.postMessage("");
+        }
+      } catch (e) {
+        console.error("onAppReady bridge error:", e);
+      }
+    }, 50);
+
+    return () => {
+      window.navigateToPath = undefined;
+    };
+  }, [navigate]);
 
   // FCM 토큰 서버 등록 (로컬 스토리지 기반 무조건 전송)
   useEffect(() => {

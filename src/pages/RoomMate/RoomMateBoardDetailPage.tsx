@@ -1,250 +1,326 @@
+import { useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import styled from "styled-components";
-import { useEffect, useState } from "react";
-import { useLocation, useParams, useNavigate } from "react-router-dom";
 
-import profileimg from "../../assets/profileimg.png";
-import RoomMateBottomBar from "../../components/roommate/RoomMateBottomBar";
 import {
+  deleteRoommatePost,
   getOpponentChecklist,
   getRoomMateDetail,
-  deleteRoommatePost,
 } from "@/apis/roommate";
-import { RoommatePost } from "@/types/roommates";
-import UseUserStore from "../../stores/useUserStore.ts";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
+import RoomMateBottomBar from "@/components/roommate/RoomMateBottomBar";
+import UserInfo from "@/components/common/UserInfo";
+import { PATHS } from "@/constants/paths";
+import { CATEGORY_LIST } from "@/constants/roommate";
 import { useSetHeader } from "@/hooks/useSetHeader";
+import useUserStore from "@/stores/useUserStore";
+import { colors, typography } from "@/styles/tokens";
+import type { RoommatePost } from "@/types/roommates";
+import { getMemberInfo } from "@/apis/members";
+import { formatSemesterName } from "@/utils/semester";
 
-const InfoCard = ({
-  color,
-  icon,
-  title,
-  description,
-  matched = false,
-}: {
-  color: string;
-  icon: string;
+interface DetailRow {
+  label: string;
+  value: string;
+  fieldKey?: string | string[];
+}
+
+interface DetailSection {
   title: string;
-  description: string;
-  matched?: boolean;
-}) => {
-  return (
-    <CardItem
-      style={{
-        backgroundColor: color,
-      }}
-    >
-      <div className="icon-title">
-        <div className="icon">{icon}</div>
-        <div className="title">{title}</div>
-      </div>
-      <div className="description">{description}</div>
-      {matched && <div className="match-icon">✅</div>}
-    </CardItem>
-  );
-};
+  color: string;
+  rows: DetailRow[];
+}
 
-const religionEmojiMap: Record<string, string> = {
-  기독교: "✝️",
-  천주교: "✝️",
-  불교: "🪷",
-  이슬람교: "☪️",
-  힌두교: "🕉️",
-  유대교: "✡️",
-  무교: "🙏",
-  기타: "🙏",
+const getDisplayValue = (value?: string | null) => {
+  if (!value) return "정보 없음";
+  if (value === "안골아요") return "안 골아요";
+  if (value === "안갈아요") return "안 갈아요";
+  if (value === "안피워요") return "안 피워요";
+  return value;
 };
 
 export default function RoomMateBoardDetailPage() {
   const { boardId } = useParams<{ boardId: string }>();
   const navigate = useNavigate();
-  // 서버 응답 구조 변경에 대응하기 위해 any 혹은 확장된 타입을 사용합니다.
-  const [boardData, setBoardData] = useState<any | null>(null);
-  const [myData] = useState<RoommatePost | null>(null);
-
   const location = useLocation();
-  const partnerName = location.state?.partnerName;
-  const roomId = location.state?.roomId;
-  const { userInfo, tokenInfo } = UseUserStore();
-  const isLoggedIn = Boolean(tokenInfo.accessToken);
+
+  const queryClient = useQueryClient();
+  const roomId = location.state?.roomId as number | undefined;
+
+  const partnerName = location.state?.partnerName as string | undefined;
+  const routeMatchedFilterFields = location.state?.matchedFilterFields as
+    | string[]
+    | undefined;
+  const { userInfo, setUserInfo } = useUserStore();
+
+  const [boardData, setBoardData] = useState<RoommatePost | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
 
   useEffect(() => {
-    if (!boardId || boardId === "opponent") return;
+    let isActive = true;
+
     const fetchBoardData = async () => {
+      setIsLoading(true);
+      setIsError(false);
+
       try {
-        const response = await getRoomMateDetail(Number(boardId));
-        setBoardData(response.data);
+        const response = roomId
+          ? await getOpponentChecklist(roomId)
+          : boardId && boardId !== "opponent"
+            ? await getRoomMateDetail(Number(boardId))
+            : null;
+
+        if (isActive && response) {
+          setBoardData(response.data);
+          queryClient.invalidateQueries({ queryKey: ["matchingRoommates"] });
+          queryClient.invalidateQueries({ queryKey: ["roommates"] });
+        }
       } catch (error) {
         console.error("게시글 데이터를 불러오지 못했습니다:", error);
+        if (isActive) setIsError(true);
+      } finally {
+        if (isActive) setIsLoading(false);
       }
     };
 
     fetchBoardData();
-  }, [boardId]);
 
-  useEffect(() => {
-    if (!roomId) return;
-
-    const fetchOpponentChecklist = async () => {
-      try {
-        const response = await getOpponentChecklist(roomId);
-        setBoardData(response.data);
-      } catch (error) {
-        console.error("상대방 체크리스트 불러오기 실패", error);
-      }
+    return () => {
+      isActive = false;
     };
-
-    fetchOpponentChecklist();
-  }, [roomId]);
+  }, [boardId, roomId]);
 
   const handleDelete = async () => {
-    if (!boardId || !window.confirm("정말로 이 게시글을 삭제하시겠습니까?"))
+    const targetBoardId = boardData?.boardId || Number(boardId);
+
+    if (
+      !targetBoardId ||
+      Number.isNaN(targetBoardId) ||
+      boardId === "opponent" ||
+      !window.confirm("정말로 이 게시글을 삭제하시겠습니까?")
+    ) {
       return;
+    }
+
     try {
-      await deleteRoommatePost(Number(boardId));
+      await deleteRoommatePost(targetBoardId);
+
+      try {
+        const memberResponse = await getMemberInfo();
+        setUserInfo(memberResponse.data);
+      } catch (memberError) {
+        console.error("체크리스트 삭제 후 사용자 정보 갱신 실패:", memberError);
+      }
+
+      queryClient.invalidateQueries({ queryKey: ["roommates"] });
       alert("게시글이 삭제되었습니다.");
-      navigate("/roommates", { replace: true });
+      navigate(
+        `${PATHS.ROOMMATE.ROOT}?tab=${encodeURIComponent(CATEGORY_LIST[0])}`,
+        { replace: true },
+      );
     } catch (error) {
       console.error("삭제 실패:", error);
       alert("삭제 중 오류가 발생했습니다.");
     }
   };
 
-  // 핵심 수정 부분: 게시글 작성자의 userId와 로그인한 사용자의 id를 비교합니다.
-  const isMyPost = boardData && userInfo.id === boardData.userId;
+  const handleEdit = () => {
+    navigate(PATHS.ROOMMATE.CHECKLIST, {
+      state: { mode: "edit", boardId: boardData?.boardId },
+    });
+  };
 
-  // 헤더 설정: 본인일 때만 '삭제하기' 메뉴를 주입
+  const isMyPost = Boolean(boardData && userInfo.id === boardData.userId);
+
   useSetHeader({
-    title: "게시글 상세",
-    menuItems: isMyPost ? [{ label: "삭제하기", onClick: handleDelete }] : [],
+    title: "",
+    menuItems: isMyPost
+      ? [
+          { label: "수정하기", onClick: handleEdit },
+          { label: "삭제하기", onClick: handleDelete },
+        ]
+      : null,
   });
 
-  if (!boardData) return <div>로딩 중...</div>;
+  const isMatchedRow = (row: DetailRow) => {
+    const matchedFilterFields =
+      boardData?.matchedFilterFields ?? routeMatchedFilterFields;
+
+    if (
+      !matchedFilterFields ||
+      matchedFilterFields.length === 0 ||
+      !row.fieldKey
+    )
+      return false;
+    if (Array.isArray(row.fieldKey)) {
+      return row.fieldKey.some((k) => matchedFilterFields.includes(k));
+    }
+    return matchedFilterFields.includes(row.fieldKey);
+  };
+
+  const sections = useMemo<DetailSection[]>(() => {
+    if (!boardData) return [];
+
+    return [
+      {
+        title: "기본 정보",
+        color: colors.main.main1,
+        rows: [
+          ...(boardData.year && boardData.semester
+            ? [
+                {
+                  label: "모집 학기",
+                  value: `${boardData.year}년 ${formatSemesterName(boardData.semester)}`,
+                },
+              ]
+            : []),
+          {
+            label: "기숙사",
+            value: getDisplayValue(boardData.dormType),
+            fieldKey: "dormType",
+          },
+          {
+            label: "상주 기간",
+            value: boardData.dormPeriod?.join(", ") || "정보 없음",
+            fieldKey: "dormPeriodDays",
+          },
+          {
+            label: "단과대",
+            value: getDisplayValue(boardData.college),
+            fieldKey: "colleges",
+          },
+          {
+            label: "MBTI",
+            value: getDisplayValue(boardData.mbti),
+            fieldKey: "mbti",
+          },
+        ],
+      },
+      {
+        title: "생활패턴",
+        color: colors.main.main4,
+        rows: [
+          {
+            label: "취침",
+            value: getDisplayValue(boardData.bedTime),
+            fieldKey: "bedTime",
+          },
+          {
+            label: "샤워",
+            value:
+              [boardData.showerHour, boardData.showerTime]
+                .filter(Boolean)
+                .join(" · ") || "정보 없음",
+            fieldKey: ["showerHour", "showerTime"],
+          },
+          {
+            label: "잠귀",
+            value: getDisplayValue(boardData.sleeper),
+            fieldKey: "sleeper",
+          },
+        ],
+      },
+      {
+        title: "민감 포인트",
+        color: "#f5222d",
+        rows: [
+          {
+            label: "흡연",
+            value: getDisplayValue(boardData.smoking),
+            fieldKey: "smoking",
+          },
+          {
+            label: "코골이",
+            value: getDisplayValue(boardData.snoring),
+            fieldKey: "snoring",
+          },
+          {
+            label: "이갈이",
+            value: getDisplayValue(boardData.toothGrind),
+            fieldKey: "toothGrind",
+          },
+          {
+            label: "정리정돈",
+            value: getDisplayValue(boardData.arrangement),
+            fieldKey: "arrangement",
+          },
+          {
+            label: "종교",
+            value: getDisplayValue(boardData.religion),
+            fieldKey: "religions",
+          },
+        ],
+      },
+    ];
+  }, [boardData]);
+
+  if (isLoading) {
+    return <LoadingSpinner message="게시글을 불러오는 중..." />;
+  }
+
+  if (isError || !boardData) {
+    return <ErrorMessage>게시글을 불러오지 못했습니다.</ErrorMessage>;
+  }
+
+  const shouldShowBottomBar = !roomId && !isMyPost;
+
+  const displayUserName =
+    boardData.userName || (roomId && partnerName ? partnerName : "익명");
 
   return (
     <RoomMateDetailPageWrapper>
-      <TitleArea>
-        <UserArea>
-          <img
-            src={boardData.userProfileImageUrl || profileimg}
-            className="profile-img"
-            alt="profile"
+      <DetailContent>
+        <UserSummaryRow>
+          <UserInfo
+            username={displayUserName}
+            createDate={boardData.createDate}
+            authorImagePath={boardData.userProfileImageUrl}
           />
-          <div className="description">
-            <div className="name">{partnerName || boardData.userName}</div>
-            <div className="date">
-              {boardData.createDate &&
-                new Date(boardData.createDate).toLocaleTimeString("ko-KR", {
-                  day: "2-digit",
-                  month: "2-digit",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-            </div>
-          </div>
-        </UserArea>
-        <TopRightBadge dormType={boardData.dormType}>
-          {boardData.dormType}
-        </TopRightBadge>
-      </TitleArea>
+          {typeof boardData.matchedFilterCount === "number" && (
+            <MatchedFilterBadge>
+              {boardData.matchedFilterCount}개 항목 일치
+            </MatchedFilterBadge>
+          )}
+        </UserSummaryRow>
 
-      <ContentArea>
-        <div className="board-title">{boardData.title}</div>
-        <div className="board-content">{boardData.comment}</div>
+        {boardData.title && <PostTitle>{boardData.title}</PostTitle>}
 
-        <CardGrid>
-          <InfoCard
-            color="#EAF4FF"
-            icon="🏠"
-            title="상주요일"
-            description={boardData.dormPeriod?.join(", ") || "정보 없음"}
-            matched={
-              myData?.dormPeriod?.join(",") === boardData.dormPeriod?.join(",")
-            }
-          />
-          <InfoCard
-            color="#FCEEF3"
-            icon="🎓"
-            title="단과대"
-            description={boardData.college || "정보 없음"}
-            matched={myData?.college === boardData.college}
-          />
-          <InfoCard
-            color="#E4F6ED"
-            icon="🧬"
-            title="MBTI"
-            description={boardData.mbti || "정보 없음"}
-            matched={myData?.mbti === boardData.mbti}
-          />
-          <InfoCard
-            color="#E8F0FE"
-            icon="🚭"
-            title="흡연여부"
-            description={boardData.smoking || "정보 없음"}
-            matched={myData?.smoking === boardData.smoking}
-          />
-          <InfoCard
-            color="#F3F4F6"
-            icon="😴"
-            title="코골이 유무"
-            description={boardData.snoring || "정보 없음"}
-            matched={myData?.snoring === boardData.snoring}
-          />
-          <InfoCard
-            color="#FFF6E9"
-            icon="😬"
-            title="이갈이 유무"
-            description={boardData.toothGrind || "정보 없음"}
-            matched={myData?.toothGrind === boardData.toothGrind}
-          />
-          <InfoCard
-            color="#EAF4FF"
-            icon="🛏️"
-            title="잠귀"
-            description={boardData.sleeper || "정보 없음"}
-            matched={myData?.sleeper === boardData.sleeper}
-          />
-          <InfoCard
-            color="#FCEEF3"
-            icon="🚿"
-            title="샤워 시기"
-            description={boardData.showerHour || "정보 없음"}
-            matched={myData?.showerHour === boardData.showerHour}
-          />
-          <InfoCard
-            color="#E4F6ED"
-            icon="⏰"
-            title="샤워 시간"
-            description={boardData.showerTime || "정보 없음"}
-            matched={myData?.showerTime === boardData.showerTime}
-          />
-          <InfoCard
-            color="#E8F0FE"
-            icon="🛌"
-            title="취침 시기"
-            description={boardData.bedTime || "정보 없음"}
-            matched={myData?.bedTime === boardData.bedTime}
-          />
-          <InfoCard
-            color="#F3F4F6"
-            icon="🧼"
-            title="정리정돈"
-            description={boardData.arrangement || "정보 없음"}
-            matched={myData?.arrangement === boardData.arrangement}
-          />
-          <InfoCard
-            color="#F3F4F6"
-            icon={religionEmojiMap[boardData.religion] || "🙏"}
-            title="종교"
-            description={boardData.religion || "정보 없음"}
-            matched={myData?.religion === boardData.religion}
-          />
-        </CardGrid>
-      </ContentArea>
-      {((!roomId && userInfo.dormType === boardData.dormType) ||
-        !isLoggedIn) && (
+        {boardData.comment && (
+          <PostDescription>{boardData.comment}</PostDescription>
+        )}
+
+        <SectionList>
+          {sections.map((section) => (
+            <InfoSection key={section.title}>
+              <SectionTitle>
+                <SectionDot $color={section.color} />
+                {section.title}
+              </SectionTitle>
+
+              <InfoRows>
+                {section.rows.map((row) => (
+                  <InfoRow key={row.label} $isMatched={isMatchedRow(row)}>
+                    <span>{row.label}</span>
+                    <strong>{row.value}</strong>
+                  </InfoRow>
+                ))}
+              </InfoRows>
+            </InfoSection>
+          ))}
+        </SectionList>
+      </DetailContent>
+
+      {shouldShowBottomBar && (
         <RoomMateBottomBar
           partnerName={boardData.userName}
           userProfileImageUrl={boardData.userProfileImageUrl}
+          postDormType={boardData.dormType}
+          postTitle={boardData.title}
+          currentPeriod={boardData.currentPeriod}
+          postYear={boardData.year}
+          postSemester={boardData.semester}
         />
       )}
     </RoomMateDetailPageWrapper>
@@ -252,162 +328,116 @@ export default function RoomMateBoardDetailPage() {
 }
 
 const RoomMateDetailPageWrapper = styled.div`
-  padding: 0 16px 100px;
+  min-height: calc(100vh - 70px);
+  padding-bottom: 104px;
+  box-sizing: border-box;
+  overflow-y: auto;
+  background: ${colors.bg.bg2};
+`;
+
+const DetailContent = styled.div`
+  padding: 16px 20px;
+  box-sizing: border-box;
+  display: flex;
+  gap: 20px;
+  flex-direction: column;
+`;
+
+const UserSummaryRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+`;
+
+const MatchedFilterBadge = styled.span`
+  ${typography.label1Normal}
+  flex: 0 0 auto;
+  padding: 8px 12px;
+
+  border-radius: 20px;
+  background: var(--Gray-Gray50, #f7f7f7);
+
+  color: var(--Gray-Gray700, #555);
+  text-align: center;
+
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 150%;
+`;
+
+const PostTitle = styled.h1`
+  ${typography.body1Normal}
+  font-size: 16px;
+  font-weight: 600;
+  color: ${colors.gray.gray800};
+  margin: 0;
+`;
+
+const PostDescription = styled.p`
+  ${typography.label1Normal}
+  margin: 0;
+  color: ${colors.gray.gray800};
+  white-space: pre-line;
+`;
+
+const SectionList = styled.div`
   display: flex;
   flex-direction: column;
   gap: 16px;
-  box-sizing: border-box;
-  overflow-y: auto;
-  background: #fafafa;
 `;
 
-const UserArea = styled.div`
+const InfoSection = styled.section`
   display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  min-width: fit-content;
-  height: fit-content;
+  flex-direction: column;
   gap: 4px;
-
-  .profile-img {
-    width: 44px;
-    min-width: 44px;
-    height: 44px;
-    min-height: 44px;
-    border-radius: 50%;
-    object-fit: cover;
-  }
-
-  .description {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    font-style: normal;
-    font-size: 16px;
-    line-height: 24px;
-    align-items: start;
-    justify-content: center;
-    letter-spacing: 0.38px;
-    color: #1c1c1e;
-
-    .name {
-      font-weight: 700;
-      font-size: 14px;
-    }
-
-    .date {
-      font-weight: 400;
-      font-size: 10px;
-    }
-  }
 `;
 
-const ContentArea = styled.div`
+const SectionTitle = styled.h2`
+  ${typography.body1Normal}
   display: flex;
-  flex-direction: column;
-  width: 100%;
-  height: fit-content;
-
-  .board-title {
-    font-style: normal;
-    font-weight: 700;
-    font-size: 16px;
-    line-height: 24px;
-    display: flex;
-    align-items: center;
-    letter-spacing: 0.38px;
-    color: #1c1c1e;
-    margin-bottom: 10px;
-  }
-
-  .board-content {
-    font-style: normal;
-    font-weight: 500;
-    font-size: 12px;
-    line-height: 24px;
-    display: flex;
-    align-items: center;
-    letter-spacing: 0.38px;
-    color: #1c1c1e;
-    margin-bottom: 16px;
-    white-space: pre-line;
-  }
-`;
-
-const CardGrid = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-`;
-
-const CardItem = styled.div`
-  flex: 1 1 calc(50% - 12px);
-  border-radius: 16px;
-  padding: 16px;
-  box-sizing: border-box;
-  min-width: 140px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  position: relative;
-
-  .icon-title {
-    display: flex;
-    gap: 6px;
-  }
-
-  .icon {
-    font-size: 20px;
-    line-height: 1;
-  }
-
-  .title {
-    font-size: 13px;
-    font-weight: 600;
-    color: #1c1c1e;
-  }
-
-  .description {
-    font-size: 12px;
-    color: #3a3a3c;
-  }
-
-  .match-icon {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    font-size: 16px;
-  }
-`;
-
-const TitleArea = styled.div`
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
   align-items: center;
-  width: 100%;
+  gap: 8px;
+  margin: 0;
+  color: ${colors.gray.gray800};
 `;
 
-const TopRightBadge = styled.div.withConfig({
-  shouldForwardProp: (prop) => prop !== "dormType",
-})<{ dormType: string }>`
-  font-size: 12px;
-  color: white;
-  padding: 4px 8px;
-  border-radius: 8px;
-  font-weight: 600;
-  z-index: 1;
-  height: fit-content;
+const SectionDot = styled.span<{ $color: string }>`
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: ${({ $color }) => $color};
+  flex: 0 0 auto;
+`;
 
-  background: ${({ dormType }) => {
-    switch (dormType) {
-      case "2기숙사":
-        return "#0a84ff";
-      case "3기숙사":
-        return "#ff6b6b";
-      default:
-        return "#0a84ff";
-    }
-  }};
+const InfoRows = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+`;
+
+const InfoRow = styled.div<{ $isMatched?: boolean }>`
+  ${typography.label1Normal}
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  color: ${({ $isMatched }) =>
+    $isMatched ? colors.main.main1 : colors.gray.gray500};
+  font-weight: ${({ $isMatched }) => ($isMatched ? "600" : "400")};
+
+  strong {
+    color: ${({ $isMatched }) =>
+      $isMatched ? colors.main.main1 : colors.gray.gray800};
+    font: inherit;
+    font-weight: ${({ $isMatched }) => ($isMatched ? "700" : "600")};
+    text-align: right;
+  }
+`;
+
+const ErrorMessage = styled.div`
+  ${typography.label1Normal}
+  padding: 48px 20px;
+  color: ${colors.gray.gray500};
+  text-align: center;
 `;

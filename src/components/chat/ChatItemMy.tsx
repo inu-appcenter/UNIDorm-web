@@ -1,27 +1,75 @@
 import styled from "styled-components";
+import ChatMessageContent from "./ChatMessageContent";
 
 type Props = {
   content: string;
   time: string;
+  showTime?: boolean;
+  imageUrls?: string[];
+  unreadCount?: number;
+  onMessageClick?: () => void;
+  onImageClick?: (url: string) => void;
 };
 
-const ChatItemMy = ({ content, time }: Props) => {
+const ChatItemMy = ({
+  content,
+  time,
+  showTime = true,
+  imageUrls,
+  unreadCount,
+  onMessageClick,
+  onImageClick,
+}: Props) => {
+  const unreadLabel =
+    typeof unreadCount === "number"
+      ? unreadCount > 0
+        ? unreadCount > 99
+          ? "99+"
+          : String(unreadCount)
+        : null
+      : null;
+
   return (
-    <ChatItemMyWrapper>
+    <ChatItemMyWrapper
+      onClick={onMessageClick}
+      $clickable={Boolean(onMessageClick)}
+    >
       <ContentArea>
-        <div className="message">{content}</div>
+        {imageUrls?.length ? (
+          <ImageGrid>
+            {imageUrls.map((url) => (
+              <img
+                key={url}
+                src={url}
+                alt="첨부 사진"
+                onClick={(e) => {
+                  if (onImageClick) {
+                    e.stopPropagation();
+                    onImageClick(url);
+                  }
+                }}
+              />
+            ))}
+          </ImageGrid>
+        ) : (
+          <div className="message">
+            <ChatMessageContent content={content} />
+          </div>
+        )}
       </ContentArea>
-      <TimeArea>
-        <div className="time">{time}</div>
-        {/*<div className="isRead">1</div>*/}
-      </TimeArea>
+      {(showTime || unreadLabel) && (
+        <TimeArea>
+          {showTime && <div className="time">{time}</div>}
+          {unreadLabel && <div className="isRead">{unreadLabel}</div>}
+        </TimeArea>
+      )}
     </ChatItemMyWrapper>
   );
 };
 
 export default ChatItemMy;
 
-const ChatItemMyWrapper = styled.div`
+const ChatItemMyWrapper = styled.div<{ $clickable: boolean }>`
   width: 100%;
   height: fit-content;
   display: flex;
@@ -31,6 +79,26 @@ const ChatItemMyWrapper = styled.div`
   box-sizing: border-box;
 
   gap: 4px;
+  cursor: ${({ $clickable }) => ($clickable ? "pointer" : "default")};
+`;
+
+const ImageGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 140px));
+  gap: 4px;
+  overflow: hidden;
+  border-radius: 16px;
+  img {
+    width: 100%;
+    max-height: 220px;
+    object-fit: cover;
+    display: block;
+    cursor: pointer;
+  }
+  img:only-child {
+    grid-column: 1 / -1;
+    min-width: 140px;
+  }
 `;
 
 const ContentArea = styled.div`
@@ -60,6 +128,8 @@ const ContentArea = styled.div`
     background: #1677ff;
     padding: 8px 12px;
     border-radius: 16px;
+    white-space: pre-wrap;
+    word-break: break-word;
   }
 `;
 

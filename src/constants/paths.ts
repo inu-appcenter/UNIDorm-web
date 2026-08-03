@@ -73,5 +73,6 @@ export const PATHS = {
       `/admin/form/${id}/result`,
     FCM: "/admin/fcm",
     STATISTICS: "/admin/statistics",
+    OPEN_CHAT_REPORTS: "/admin/open-chat-reports",
   },
 } as const;
