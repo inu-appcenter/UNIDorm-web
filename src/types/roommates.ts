@@ -36,6 +36,7 @@ export interface RoommatePost extends RoommatePostRequest {
   year?: number;
   matchedFilterCount?: number | null;
   matchedFilterFields?: RoommateMatchedFilterField[] | null;
+  currentPeriod?: boolean;
 }
 
 export type RoommateMatchedFilterField =

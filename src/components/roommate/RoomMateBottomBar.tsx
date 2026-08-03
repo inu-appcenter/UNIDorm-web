@@ -19,6 +19,7 @@ const RoomMateBottomBar = ({
   userProfileImageUrl,
   postDormType,
   postTitle,
+  currentPeriod,
   postYear,
   postSemester,
 }: {
@@ -26,6 +27,7 @@ const RoomMateBottomBar = ({
   userProfileImageUrl: string;
   postDormType?: string;
   postTitle?: string;
+  currentPeriod?: boolean;
   postYear?: number;
   postSemester?: string | number;
 }) => {
@@ -48,6 +50,7 @@ const RoomMateBottomBar = ({
     !userInfo.dormType ||
     !postDormType ||
     userInfo.dormType === postDormType;
+  const isCurrentPeriod = currentPeriod !== false;
 
   const [liked, setLiked] = useState<boolean>(false);
   const [isLikeSubmitting, setIsLikeSubmitting] = useState(false);
@@ -134,6 +137,11 @@ const RoomMateBottomBar = ({
   };
 
   const handleChatClick = async () => {
+    if (!isCurrentPeriod) {
+      alert("지난 학기 게시글에는 메시지를 보낼 수 없어요.");
+      return;
+    }
+
     if (!isLoggedIn) {
       alert("로그인 후 이용해주세요.");
       navigate("/login");
@@ -179,12 +187,16 @@ const RoomMateBottomBar = ({
 
   return (
     <RoomMateBottomBarWrapper>
-      <MessageButton type="button" onClick={handleChatClick}>
-        {!isCurrentMatchingPeriod
-          ? "이번 학기 모집 게시물이 아니에요."
+      <MessageButton
+        type="button"
+        onClick={handleChatClick}
+        disabled={!isCurrentPeriod}
+      >
+        {!isCurrentPeriod
+          ? "지난 학기 게시글입니다"
           : isSameDorm
-            ? "메시지 보내기"
-            : "나와 같은 기숙사생에게만 보낼 수 있어요."}
+          ? "메시지 보내기"
+          : "나와 같은 기숙사생에게만 보낼 수 있어요."}
       </MessageButton>
 
       <HeartToggleButton
@@ -237,5 +249,10 @@ const MessageButton = styled.button`
 
   &:hover {
     opacity: 0.9;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
   }
 `;
