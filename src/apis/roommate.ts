@@ -306,4 +306,3 @@ export const getRoommateMatchingStatus = async (): Promise<
   );
   return response;
 };
-

@@ -46,9 +46,9 @@ const RoomMateCard = ({
       <TopRightBadge dormType={dormType}>{dormType}</TopRightBadge>
       {matched && <RightBottomBadge src={매칭완료} />}
 
-      <ContentContainer isPercentageVisible={percentage !== undefined}>
+      <ContentContainer>
         <span className="title">{title}</span>
-        {description && <Description>{description}</Description>}
+        <Description>{description || "\u00a0"}</Description>
         <TagRow>
           <Tag category="mbti">{mbti}</Tag>
           <Tag category="college">{college}</Tag>
@@ -73,11 +73,12 @@ const CardWrapper = styled.div.withConfig({
   position: relative;
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: stretch;
   gap: 12px;
   padding: 16px;
   border: none;
   width: 100%;
+  height: 176px;
   cursor: ${({ matched }) => (matched ? "not-allowed" : "pointer")};
   box-sizing: border-box;
   overflow: hidden;
@@ -198,26 +199,25 @@ const LeftCircle = styled.div.withConfig({
   }
 `;
 
-interface ContentContainerProps {
-  isPercentageVisible: boolean;
-}
-
-const ContentContainer = styled.div.withConfig({
-  shouldForwardProp: (prop) => prop !== "isPercentageVisible",
-})<ContentContainerProps>`
-  padding-top: ${({ isPercentageVisible }) =>
-    isPercentageVisible ? "10px" : "0"};
+const ContentContainer = styled.div`
   display: flex;
   flex-direction: column;
+  min-width: 0;
   width: 100%;
+  height: 100%;
   gap: 6px;
 
   .title {
+    display: block;
+    padding-right: 72px;
     font-style: normal;
     font-weight: 700;
     font-size: 16px;
     line-height: 24px;
     letter-spacing: 0.38px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 
     color: #1c1c1e;
   }
@@ -225,9 +225,10 @@ const ContentContainer = styled.div.withConfig({
 
 const TagRow = styled.div`
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 6px;
-  //margin-right: 60px;
+  min-height: 26px;
+  overflow: hidden;
 `;
 
 const Tag = styled.div.withConfig({
@@ -236,6 +237,7 @@ const Tag = styled.div.withConfig({
   display: flex;
   align-items: center;
   justify-content: center;
+  min-width: 0;
 
   padding: 4px 8px;
   border-radius: 12px;
@@ -246,6 +248,9 @@ const Tag = styled.div.withConfig({
   font-style: normal;
   font-weight: 400;
   line-height: 150%; /* 18px */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 
   background: ${({ category }) => {
     switch (category) {
@@ -266,10 +271,15 @@ const Tag = styled.div.withConfig({
 const StayInfo = styled.div`
   font-size: 12px;
   color: #3a3a3c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
 const Description = styled.div`
   font-size: 13px;
+  line-height: 20px;
+  min-height: 20px;
   color: #1c1c1e;
   white-space: nowrap;
   overflow: hidden;
@@ -280,6 +290,7 @@ const BottomLine = styled.div`
   display: flex;
   align-items: center;
   gap: 4px;
+  margin-top: auto;
   font-size: 12px;
   color: #1c1c1e;
 

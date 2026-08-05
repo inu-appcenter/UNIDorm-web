@@ -62,7 +62,7 @@ export default function Step4Personality({
           value={data.title}
           onChange={(e) => onChange("title", e.target.value.slice(0, 30))}
           maxLength={30}
-          placeholder={"제목을 입력하세요 (최대 20자)"}
+          placeholder={"제목을 입력하세요 (최대 30자)"}
         />
 
         {!data.title && (
