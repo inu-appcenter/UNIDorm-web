@@ -22,7 +22,8 @@ import { useInView } from "react-intersection-observer";
 import { ChevronRight } from "lucide-react";
 import { RoommatePost } from "@/types/roommates";
 import type { MyPost_RoommateBoard } from "@/types/members";
-import { useFeatureFlag } from "@/hooks/useFeatureFlags";
+import { useRoommateMatchingStatus } from "@/hooks/useRoommateMatchingStatus";
+import { formatSemesterName } from "@/utils/semester";
 import MatchedRoomMateCard from "@/components/roommate/MatchedRoomMateCard";
 import { colors, typography } from "@/styles/tokens";
 import ChipButton from "@/components/button/ChipButton";
@@ -31,14 +32,6 @@ import caretDownIcon from "@/assets/roommate/caret-down.svg";
 import settingsSlidersIcon from "@/assets/roommate/settings-sliders.svg";
 
 const CURRENT_YEAR = new Date().getFullYear();
-
-const SEMESTER_OPTIONS = [
-  { label: "전체 학기", value: undefined },
-  { label: `${CURRENT_YEAR}년 1학기`, value: 1 },
-  { label: `${CURRENT_YEAR}년 여름계절학기`, value: 3 },
-  { label: `${CURRENT_YEAR}년 2학기`, value: 2 },
-  { label: `${CURRENT_YEAR}년 겨울계절학기`, value: 4 },
-];
 
 function FilterTags({
   filters,
@@ -75,17 +68,25 @@ export default function RoomMatePage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { ref, inView } = useInView();
   const { tokenInfo, userInfo } = useUserStore();
-  const { flag: isMatchingActive, isLoading: isFeatureFlagLoading } =
-    useFeatureFlag("ROOMMATE_MATCHING");
+  const {
+    data: matchingStatus,
+    isClosed: isMatchingClosed,
+    isLoading: isStatusLoading,
+  } = useRoommateMatchingStatus();
 
   const isLoggedIn = Boolean(tokenInfo.accessToken);
   const hasChecklist = userInfo.roommateCheckList;
 
   const selectedCategory = searchParams.get("tab") || CATEGORY_LIST[0];
+  const semesterParam = searchParams.get("semester");
+  const selectedSemesterCode =
+    semesterParam !== null
+      ? Number(semesterParam)
+      : matchingStatus?.semester
+        ? Number(matchingStatus.semester)
+        : undefined;
+
   const [searchKeyword, setSearchKeyword] = useState("");
-  const [selectedSemesterCode, setSelectedSemesterCode] = useState<
-    number | undefined
-  >(undefined);
   const [debouncedSearchKeyword, setDebouncedSearchKeyword] = useState("");
   const [isOpeningMyPost, setIsOpeningMyPost] = useState(false);
   const matchingCardRailRef = useRef<HTMLDivElement>(null);
@@ -100,13 +101,69 @@ export default function RoomMatePage() {
     });
   };
 
-  const filters = useMemo(
-    () => location.state?.filters || {},
-    [location.state?.filters],
-  );
+  const semesterOptions = useMemo(() => {
+    if (!matchingStatus) {
+      return [{ label: `${CURRENT_YEAR}년 1학기`, value: 1 }];
+    }
+    const currentVal = Number(matchingStatus.semester) || 1;
+    const options = [
+      {
+        label: `${matchingStatus.year}년 ${formatSemesterName(matchingStatus.semester)}`,
+        value: currentVal,
+      },
+    ];
+
+    // 임시 테스트용: 현재 학기가 1학기가 아니면 1학기 옵션 추가
+    if (currentVal !== 1) {
+      options.push({
+        label: `${matchingStatus.year}년 1학기`,
+        value: 1,
+      });
+    }
+
+    return options;
+  }, [matchingStatus]);
+
+  const handleSemesterChange = (code: number) => {
+    setSearchParams(
+      (prev) => {
+        const newParams = new URLSearchParams(prev);
+        newParams.set("semester", String(code));
+        return newParams;
+      },
+      { replace: true },
+    );
+  };
+
+  const filters = useMemo(() => {
+    if (location.state?.filters !== undefined) {
+      const stateFilters = location.state.filters || {};
+      sessionStorage.setItem(
+        "roommateSearchFilters",
+        JSON.stringify(stateFilters),
+      );
+      return stateFilters;
+    }
+    const stored = sessionStorage.getItem("roommateSearchFilters");
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch {
+        return {};
+      }
+    }
+    return {};
+  }, [location.state?.filters]);
 
   const handleCategoryClick = (category: string) => {
-    setSearchParams({ tab: category }, { replace: true });
+    setSearchParams(
+      (prev) => {
+        const newParams = new URLSearchParams(prev);
+        newParams.set("tab", category);
+        return newParams;
+      },
+      { replace: true },
+    );
   };
 
   useSetHeader({
@@ -128,8 +185,7 @@ export default function RoomMatePage() {
     showAlarm: true,
   });
 
-  // 배경 잠금 상태 정의
-  const isLocked = !isFeatureFlagLoading && isMatchingActive === false;
+  const isLocked = !isStatusLoading && isMatchingClosed;
 
   useEffect(() => {
     const timer = window.setTimeout(
@@ -190,8 +246,12 @@ export default function RoomMatePage() {
     queryFn: ({ pageParam }) =>
       getRoomMateScrollList(pageParam, 10, {
         keyword: debouncedSearchKeyword || undefined,
-        year: selectedSemesterCode ? CURRENT_YEAR : undefined,
-        semester: selectedSemesterCode,
+        year: matchingStatus?.year,
+        semester:
+          selectedSemesterCode ??
+          (matchingStatus?.semester
+            ? Number(matchingStatus.semester)
+            : undefined),
       }),
     initialPageParam: undefined as number | undefined,
     getNextPageParam: (lastPage) => {
@@ -327,9 +387,13 @@ export default function RoomMatePage() {
 
   return (
     <RoomMatePageWrapper $isLocked={isLocked}>
-      {!isFeatureFlagLoading && !isMatchingActive && (
+      {!isStatusLoading && isMatchingClosed && (
         <ComingSoonOverlay
-          message={"2026년 1학기 룸메이트 매칭 종료!"}
+          message={
+            matchingStatus
+              ? `${matchingStatus.year}년 ${formatSemesterName(matchingStatus.semester)} 룸메이트 매칭 종료!`
+              : "룸메이트 매칭 종료!"
+          }
           subMessage={
             "다음 룸메이트 매칭을 기대해 주세요!\n오픈되면 푸시알림으로 알려드릴게요."
           }
@@ -479,17 +543,19 @@ export default function RoomMatePage() {
             location="룸메이트_홈"
             rightAction={
               <SemesterSelect
-                value={selectedSemesterCode ?? "ALL"}
+                value={
+                  selectedSemesterCode ??
+                  (matchingStatus?.semester
+                    ? Number(matchingStatus.semester)
+                    : 1)
+                }
                 onChange={(event) => {
-                  const val = event.target.value;
-                  setSelectedSemesterCode(
-                    val === "ALL" ? undefined : Number(val),
-                  );
+                  handleSemesterChange(Number(event.target.value));
                 }}
                 aria-label="학기 선택"
               >
-                {SEMESTER_OPTIONS.map((opt) => (
-                  <option key={opt.label} value={opt.value ?? "ALL"}>
+                {semesterOptions.map((opt) => (
+                  <option key={opt.label} value={opt.value}>
                     {opt.label}
                   </option>
                 ))}

@@ -18,6 +18,7 @@ import useUserStore from "@/stores/useUserStore";
 import { colors, typography } from "@/styles/tokens";
 import type { RoommatePost } from "@/types/roommates";
 import { getMemberInfo } from "@/apis/members";
+import { formatSemesterName } from "@/utils/semester";
 
 interface DetailRow {
   label: string;
@@ -167,6 +168,14 @@ export default function RoomMateBoardDetailPage() {
         title: "기본 정보",
         color: colors.main.main1,
         rows: [
+          ...(boardData.year && boardData.semester
+            ? [
+                {
+                  label: "모집 학기",
+                  value: `${boardData.year}년 ${formatSemesterName(boardData.semester)}`,
+                },
+              ]
+            : []),
           {
             label: "기숙사",
             value: getDisplayValue(boardData.dormType),
@@ -311,6 +320,8 @@ export default function RoomMateBoardDetailPage() {
           postDormType={boardData.dormType}
           postTitle={boardData.title}
           currentPeriod={boardData.currentPeriod}
+          postYear={boardData.year}
+          postSemester={boardData.semester}
         />
       )}
     </RoomMateDetailPageWrapper>
