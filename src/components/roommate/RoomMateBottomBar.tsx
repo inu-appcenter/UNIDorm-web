@@ -12,6 +12,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import { colors, typography } from "@/styles/tokens";
 import HeartToggleButton from "@/components/common/HeartToggleButton";
+import { getBlockedUsers } from "@/apis/block";
 
 const RoomMateBottomBar = ({
   partnerName,
@@ -19,12 +20,14 @@ const RoomMateBottomBar = ({
   postDormType,
   postTitle,
   currentPeriod,
+  partnerId,
 }: {
   partnerName: string;
   userProfileImageUrl: string;
   postDormType?: string;
   postTitle?: string;
   currentPeriod?: boolean;
+  partnerId: number;
 }) => {
   const { boardId } = useParams<{ boardId: string }>();
   const queryClient = useQueryClient();
@@ -40,7 +43,49 @@ const RoomMateBottomBar = ({
 
   const [liked, setLiked] = useState<boolean>(false);
   const [isLikeSubmitting, setIsLikeSubmitting] = useState(false);
+  const [isBlockedPartner, setIsBlockedPartner] = useState(false);
+  const [isBlockStatusLoading, setIsBlockStatusLoading] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    let isActive = true;
+
+    if (!isLoggedIn || !partnerId || partnerId === userInfo.id) {
+      setIsBlockedPartner(false);
+      setIsBlockStatusLoading(false);
+      return;
+    }
+
+    const fetchBlockStatus = async () => {
+      setIsBlockStatusLoading(true);
+
+      try {
+        const response = await getBlockedUsers();
+        const isBlocked = response.data.some(
+          (blockedUser) => Number(blockedUser.blockedUserId) === partnerId,
+        );
+
+        if (isActive) {
+          setIsBlockedPartner(isBlocked);
+        }
+      } catch (error) {
+        console.error("차단 상태를 확인하지 못했습니다.", error);
+        if (isActive) {
+          setIsBlockedPartner(false);
+        }
+      } finally {
+        if (isActive) {
+          setIsBlockStatusLoading(false);
+        }
+      }
+    };
+
+    void fetchBlockStatus();
+
+    return () => {
+      isActive = false;
+    };
+  }, [isLoggedIn, partnerId, userInfo.id]);
 
   // 좋아요 상태 초기값 세팅이 필요하면 API로 받아오는 로직 추가 가능
   useEffect(() => {
@@ -118,6 +163,13 @@ const RoomMateBottomBar = ({
   };
 
   const handleChatClick = async () => {
+    if (isBlockStatusLoading) return;
+
+    if (isBlockedPartner) {
+      alert("차단한 사람과는 대화할 수 없습니다.");
+      return;
+    }
+
     if (!isCurrentPeriod) {
       alert("지난 학기 게시글에는 메시지를 보낼 수 없어요.");
       return;
@@ -166,9 +218,15 @@ const RoomMateBottomBar = ({
       <MessageButton
         type="button"
         onClick={handleChatClick}
-        disabled={!isCurrentPeriod}
+        disabled={
+          !isCurrentPeriod || isBlockedPartner || isBlockStatusLoading
+        }
       >
-        {!isCurrentPeriod
+        {isBlockedPartner
+          ? "차단한 사람과는 대화할 수 없습니다."
+          : isBlockStatusLoading
+          ? "차단 상태를 확인하고 있어요."
+          : !isCurrentPeriod
           ? "지난 학기 게시글입니다"
           : isSameDorm
           ? "메시지 보내기"

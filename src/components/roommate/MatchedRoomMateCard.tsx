@@ -68,7 +68,7 @@ const Card = styled.button.withConfig({
   position: relative;
   flex: 0 0 116px;
   width: 116px;
-  min-height: 130px;
+  height: 130px;
   padding: 12px 10px;
   border-radius: 8px;
   border: ${({ $isRead }) =>
@@ -114,6 +114,7 @@ const RightBottomBadge = styled.img`
 const HeaderArea = styled.div`
   display: flex;
   flex-direction: column;
+  min-width: 0;
   width: 100%;
 `;
 

@@ -89,7 +89,7 @@ export default function RoomMateBoardDetailPage() {
     return () => {
       isActive = false;
     };
-  }, [boardId, roomId]);
+  }, [boardId, queryClient, roomId]);
 
   const handleDelete = async () => {
     const targetBoardId = boardData?.boardId || Number(boardId);
@@ -305,6 +305,7 @@ export default function RoomMateBoardDetailPage() {
 
       {shouldShowBottomBar && (
         <RoomMateBottomBar
+          partnerId={boardData.userId}
           partnerName={boardData.userName}
           userProfileImageUrl={boardData.userProfileImageUrl}
           postDormType={boardData.dormType}

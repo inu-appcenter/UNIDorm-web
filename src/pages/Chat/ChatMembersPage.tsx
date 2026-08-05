@@ -56,7 +56,6 @@ export default function ChatMembersPage() {
   const [selectedUser, setSelectedUser] = useState<OpenChatParticipant | null>(
     null,
   );
-  const [roomName, setRoomName] = useState("");
   const [leavePromptOpen, setLeavePromptOpen] = useState(false);
   const [selectingNewHost, setSelectingNewHost] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -160,10 +159,7 @@ export default function ChatMembersPage() {
   };
 
   const handleCreatePersonalChat = async () => {
-    if (!selectedUser || !roomName.trim() || submitting) {
-      if (!roomName.trim()) alert("방 이름을 입력해주세요.");
-      return;
-    }
+    if (!selectedUser || submitting) return;
     setSubmitting(true);
 
     const navigateToPersonalChat = (personalRoomId: number) => {
@@ -217,7 +213,7 @@ export default function ChatMembersPage() {
 
     try {
       const response = await createPersonalOpenChatRoom({
-        name: roomName.trim(),
+        name: selectedUser.nickname.trim() || "1:1 채팅",
         targetUserId: selectedUser.userId,
       });
       navigateToPersonalChat(response.data.roomId);
@@ -561,7 +557,6 @@ export default function ChatMembersPage() {
                           type="button"
                           disabled={submitting}
                           onClick={() => {
-                            setRoomName("");
                             setActiveSheet("create");
                           }}
                         >
@@ -646,17 +641,8 @@ export default function ChatMembersPage() {
             <SheetBody>
               <Drawer.Title>1:1 채팅 만들기</Drawer.Title>
               <Drawer.Description>
-                상대 {selectedUser?.nickname}
+                {selectedUser?.nickname}님과 1:1 채팅을 시작합니다.
               </Drawer.Description>
-              <FormField>
-                <label>방 이름</label>
-                <input
-                  value={roomName}
-                  placeholder="방 이름을 입력해주세요"
-                  maxLength={30}
-                  onChange={(event) => setRoomName(event.target.value)}
-                />
-              </FormField>
               <PrimaryButton
                 disabled={submitting}
                 onClick={handleCreatePersonalChat}
@@ -933,30 +919,6 @@ const DangerActionButton = styled.button`
   &:disabled {
     cursor: default;
     opacity: 0.5;
-  }
-`;
-const FormField = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  label {
-    color: #3d3d3d;
-    font:
-      500 14px/1.5 Pretendard,
-      sans-serif;
-  }
-  input {
-    height: 40px;
-    box-sizing: border-box;
-    padding: 8px 12px;
-    border: 0;
-    border-radius: 8px;
-    background: #f7f7f7;
-    color: #3d3d3d;
-    font:
-      400 14px/1.5 Pretendard,
-      sans-serif;
-    outline: none;
   }
 `;
 const ModalOverlay = styled.div`

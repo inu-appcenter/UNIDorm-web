@@ -56,10 +56,12 @@ const Overlay = styled.div`
 `;
 
 const ModalBox = styled.div`
-  width: 320px;
+  width: min(320px, calc(100vw - 32px));
+  box-sizing: border-box;
   padding: 30px 24px 22px;
   border-radius: 24px;
   background: #ffffff;
+  overflow: hidden;
 `;
 
 const Title = styled.h2`
@@ -71,6 +73,7 @@ const Title = styled.h2`
 `;
 
 const InfoGroup = styled.div`
+  min-width: 0;
   margin-bottom: 24px;
 `;
 
@@ -82,12 +85,18 @@ const Label = styled.p`
 `;
 
 const Value = styled.p`
+  display: -webkit-box;
   margin: 0 0 16px;
+  max-width: 100%;
   font-size: 15px;
   font-weight: 700;
   color: #4b5563;
   line-height: 1.45;
-  word-break: keep-all;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 
   &:last-child {
     margin-bottom: 0;
@@ -97,10 +106,12 @@ const Value = styled.p`
 const ButtonRow = styled.div`
   display: flex;
   gap: 12px;
+  min-width: 0;
 `;
 
 const BaseButton = styled.button`
   flex: 1;
+  min-width: 0;
   height: 46px;
   border-radius: 999px;
   font-size: 15px;

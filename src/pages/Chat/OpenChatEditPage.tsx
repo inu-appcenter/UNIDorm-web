@@ -26,8 +26,6 @@ export default function OpenChatEditPage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [scope, setScope] = useState<OpenChatScope>("DORMITORY");
-  const [maxParticipants, setMaxParticipants] = useState(2);
-  const [isPublic, setIsPublic] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -41,13 +39,6 @@ export default function OpenChatEditPage() {
     setName(nextRoom.name ?? "");
     setDescription(nextRoom.description ?? "");
     setScope(nextRoom.scope ?? "DORMITORY");
-    setMaxParticipants(
-      Math.max(
-        nextRoom.currentParticipants ?? 2,
-        nextRoom.maxParticipants ?? 2,
-      ),
-    );
-    setIsPublic(nextRoom.isPublic ?? nextRoom.public ?? true);
   }, []);
 
   useEffect(() => {
@@ -105,13 +96,7 @@ export default function OpenChatEditPage() {
     };
   }, [applyRoom, navigate, roomId, routeState?.room]);
 
-  const minimumParticipants = Math.max(room?.currentParticipants ?? 2, 2);
-  const isDerivedRoom = room?.roomType === "DERIVED";
-  const isValid =
-    Boolean(name.trim()) &&
-    description.trim().length <= 100 &&
-    (isDerivedRoom ||
-      (maxParticipants >= minimumParticipants && maxParticipants <= 100));
+  const isValid = Boolean(name.trim()) && description.trim().length <= 100;
 
   const handleSubmit = async () => {
     if (!room || !isValid || isSubmitting) return;
@@ -120,8 +105,6 @@ export default function OpenChatEditPage() {
       name: name.trim(),
       description: description.trim(),
       scope,
-      isPublic,
-      ...(isDerivedRoom ? {} : { maxParticipants }),
     };
 
     setIsSubmitting(true);
@@ -133,9 +116,6 @@ export default function OpenChatEditPage() {
         name: request.name ?? room.name,
         description: request.description ?? room.description,
         scope: request.scope ?? room.scope,
-        maxParticipants: request.maxParticipants ?? room.maxParticipants,
-        isPublic: request.isPublic ?? room.isPublic,
-        public: request.isPublic ?? room.public,
       };
 
       navigate(`/chat/open/${roomId}`, {
@@ -219,49 +199,6 @@ export default function OpenChatEditPage() {
           </ChoiceRow>
         </FormGroup>
 
-        {!isDerivedRoom && (
-          <FormGroup>
-            <Label htmlFor="edit-max-participants">최대 참여 인원</Label>
-            <TextInput
-              id="edit-max-participants"
-              type="number"
-              min={minimumParticipants}
-              max={100}
-              value={maxParticipants}
-              onChange={(event) =>
-                setMaxParticipants(Number(event.target.value) || 0)
-              }
-            />
-            <Helper>
-              현재 참여 인원보다 작게 설정할 수 없습니다. (최소{" "}
-              {minimumParticipants}명)
-            </Helper>
-          </FormGroup>
-        )}
-
-        <FormGroup>
-          <Label>{isDerivedRoom ? "노출 여부" : "공개 여부"}</Label>
-          <ChoiceRow>
-            <ChoiceButton
-              type="button"
-              $active={isPublic}
-              onClick={() => setIsPublic(true)}
-            >
-              {isDerivedRoom ? "노출" : "공개"}
-            </ChoiceButton>
-            <ChoiceButton
-              type="button"
-              $active={!isPublic}
-              onClick={() => setIsPublic(false)}
-            >
-              {isDerivedRoom ? "비노출" : "비공개"}
-            </ChoiceButton>
-          </ChoiceRow>
-          <Helper>
-            {isDerivedRoom ? "비노출" : "비공개"}로 설정해도 기존 채팅방의 공유
-            링크를 통해 입장할 수 있습니다.
-          </Helper>
-        </FormGroup>
       </Content>
 
       <SubmitArea>
