@@ -143,6 +143,7 @@ const LeftArea = styled.div`
 const TextArea = styled.div`
   display: flex;
   flex-direction: column;
+  min-width: 0;
   gap: 4px;
 `;
 

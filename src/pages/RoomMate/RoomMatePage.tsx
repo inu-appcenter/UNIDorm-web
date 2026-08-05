@@ -17,8 +17,9 @@ import { useSetHeader } from "@/hooks/useSetHeader";
 import { PATHS } from "@/constants/paths";
 import { CategoryItem, CategoryWrapper } from "@/styles/header";
 import { CATEGORY_LIST } from "@/constants/roommate";
-import { useMemo, useEffect, useState } from "react";
+import { useMemo, useEffect, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { RoommatePost } from "@/types/roommates";
 import type { MyPost_RoommateBoard } from "@/types/members";
 import { useRoommateMatchingStatus } from "@/hooks/useRoommateMatchingStatus";
@@ -88,6 +89,31 @@ export default function RoomMatePage() {
   const [searchKeyword, setSearchKeyword] = useState("");
   const [debouncedSearchKeyword, setDebouncedSearchKeyword] = useState("");
   const [isOpeningMyPost, setIsOpeningMyPost] = useState(false);
+  const matchingCardRailRef = useRef<HTMLDivElement>(null);
+  const [canScrollMatchingRailLeft, setCanScrollMatchingRailLeft] =
+    useState(false);
+  const [canScrollMatchingRailRight, setCanScrollMatchingRailRight] =
+    useState(false);
+
+  const updateMatchingRailButtons = () => {
+    const rail = matchingCardRailRef.current;
+    if (!rail) return;
+
+    const maxScrollLeft = rail.scrollWidth - rail.clientWidth;
+    setCanScrollMatchingRailLeft(rail.scrollLeft > 1);
+    setCanScrollMatchingRailRight(rail.scrollLeft < maxScrollLeft - 1);
+  };
+
+  const handleMatchingRailScroll = (direction: "left" | "right") => {
+    const rail = matchingCardRailRef.current;
+    if (!rail) return;
+
+    rail.scrollBy({
+      left:
+        (direction === "left" ? -1 : 1) * Math.max(220, rail.clientWidth * 0.7),
+      behavior: "smooth",
+    });
+  };
 
   const semesterOptions = useMemo(() => {
     if (!matchingStatus) {
@@ -315,6 +341,18 @@ export default function RoomMatePage() {
     staleTime: 1000 * 60 * 5,
   });
 
+  useEffect(() => {
+    const animationFrame = window.requestAnimationFrame(
+      updateMatchingRailButtons,
+    );
+    window.addEventListener("resize", updateMatchingRailButtons);
+
+    return () => {
+      window.cancelAnimationFrame(animationFrame);
+      window.removeEventListener("resize", updateMatchingRailButtons);
+    };
+  }, [matchingRoommates?.length]);
+
   const {
     data: likedRoommates = [],
     isLoading: isLikedLoading,
@@ -460,7 +498,10 @@ export default function RoomMatePage() {
                   <>
                     {matchingRoommates && matchingRoommates.length > 0 ? (
                       <MatchingCardRailWrapper>
-                        <MatchingCardRail>
+                        <MatchingCardRail
+                          ref={matchingCardRailRef}
+                          onScroll={updateMatchingRailButtons}
+                        >
                           {matchingRoommates.map((item) => {
                             const post =
                               "post" in item
@@ -480,6 +521,28 @@ export default function RoomMatePage() {
                             );
                           })}
                         </MatchingCardRail>
+                        {matchingRoommates.length > 1 &&
+                          canScrollMatchingRailLeft && (
+                            <MatchingRailButton
+                              type="button"
+                              $side="left"
+                              aria-label="이전 맞춤 룸메이트 보기"
+                              onClick={() => handleMatchingRailScroll("left")}
+                            >
+                              <ChevronLeft size={20} aria-hidden="true" />
+                            </MatchingRailButton>
+                          )}
+                        {matchingRoommates.length > 1 &&
+                          canScrollMatchingRailRight && (
+                            <MatchingRailButton
+                              type="button"
+                              $side="right"
+                              aria-label="다음 맞춤 룸메이트 보기"
+                              onClick={() => handleMatchingRailScroll("right")}
+                            >
+                              <ChevronRight size={20} aria-hidden="true" />
+                            </MatchingRailButton>
+                          )}
                       </MatchingCardRailWrapper>
                     ) : !isFilterSet ? (
                       <EmptyStateCard>
@@ -882,10 +945,40 @@ const MatchingCardRail = styled.div`
   overflow-x: auto;
   scroll-padding-inline: 16px;
   scroll-snap-type: x proximity;
+  scroll-behavior: smooth;
   scrollbar-width: none;
 
   &::-webkit-scrollbar {
     display: none;
+  }
+`;
+
+const MatchingRailButton = styled.button<{ $side: "left" | "right" }>`
+  position: absolute;
+  top: 50%;
+  ${({ $side }) => `${$side}: 8px;`}
+  z-index: 3;
+  display: flex;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid ${colors.gray.gray200};
+  border-radius: 50%;
+  background: ${colors.bg.bg1};
+  color: ${colors.main.main1};
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.12));
+  cursor: pointer;
+  transform: translateY(-50%);
+
+  &:hover {
+    background: ${colors.gray.gray100};
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${colors.main.main1};
+    outline-offset: 2px;
   }
 `;
 

@@ -79,7 +79,7 @@ export default function Header({ hasBack = false, backPath }: HeaderProps) {
               <img className="logo" src={logo} alt="로고" />
             ) : (
               <>
-                {title}
+                <TitleText>{title}</TitleText>
                 {titleBadge && <TitleBadge>{titleBadge}</TitleBadge>}
               </>
             )}
@@ -172,6 +172,8 @@ const StyledHeader = styled.header<{ $isHome: boolean }>`
     height: auto;
   }
   .Title {
+    flex: 1;
+    min-width: 0;
     font-weight: 600;
     font-size: 20px;
     color: #1c1c1e;
@@ -191,6 +193,7 @@ const MainLine = styled.div`
 `;
 
 const TitleBadge = styled.span`
+  flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -208,17 +211,31 @@ const TitleBadge = styled.span`
 `;
 
 const Left = styled.div`
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 100%;
+
+  > img {
+    flex-shrink: 0;
+  }
+`;
+
+const Right = styled.div`
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 12px;
   height: 100%;
 `;
 
-const Right = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  height: 100%;
+const TitleText = styled.span`
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 `;
 
 const SecondLine = styled.div`
