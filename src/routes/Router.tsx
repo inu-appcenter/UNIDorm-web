@@ -323,12 +323,13 @@ export const router = createBrowserRouter([
                 element: <OpenChatReportAdminPage />,
               },
             ],
-          // 404 / 알 수 없는 라우트 처리 (루트 라우트로 리다이렉트)
-          {
-            path: "*",
-            element: <Navigate to={PATHS.ROOT} replace />,
           },
         ],
+      },
+      // 404 / 알 수 없는 라우트 처리 (루트 라우트로 리다이렉트)
+      {
+        path: "*",
+        element: <Navigate to={PATHS.ROOT} replace />,
       },
     ],
   },
