@@ -12,7 +12,7 @@ interface HomeCardProps {
 const HomeTipsCard = ({ index, id, content }: HomeCardProps) => {
   const navigate = useNavigate();
   const handleClickCard = () => {
-    mixpanelTrack.itemClicked("꿀팁", id, content, "홈_오늘의꿀팁");
+    mixpanelTrack.tipItemClicked(id, index, "목록형");
     navigate(`/tips/${id}`);
   };
 

@@ -278,6 +278,11 @@ export default function Calendar({ mode = "month", location }: CalendarProps) {
     setSelectedEvents(clickedEvents);
     setIsCalendarSheetOpen(true);
 
+    mixpanelTrack.calendarDateClicked(
+      format(date, "yyyy-MM-dd"),
+      clickedEvents.length > 0,
+    );
+
     if (clickedEvents.length === 0) return;
 
     try {
@@ -299,6 +304,8 @@ export default function Calendar({ mode = "month", location }: CalendarProps) {
   };
 
   const handleClickEvent = (event: CalendarItem) => {
+    mixpanelTrack.calendarEventClicked(event.id, event.startDate);
+
     if (typeof event.sourceAnnouncementId === "number") {
       setIsCalendarSheetOpen(false);
       navigate(`/announcements/${event.sourceAnnouncementId}`);
