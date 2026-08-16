@@ -21,7 +21,7 @@ interface UseHomeVariantResult {
  * - 로그인: group이 "A"/"B"면 그대로 사용, 실험이 꺼져있는 "OFF"면 B로 폴백
  * - 개발 모드에서는 localStorage(HOME_AB_DEV_OVERRIDE_KEY)로 강제 override 가능 (QA용)
  */
-export const useHomeVariant = (): UseHomeVariantResult => {
+export const useHomeVariant = (search?: string): UseHomeVariantResult => {
   const { tokenInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
 
@@ -36,16 +36,28 @@ export const useHomeVariant = (): UseHomeVariantResult => {
   });
 
   const variant = useMemo<HomeVariant>(() => {
-    if (!isLoggedIn) return "B";
-
+    // 1. 개발/테스트 모드: URL 쿼리 파라미터(?homeVariant=A|B) 및 localStorage override를 최우선 적용 (로그인 무관)
     if (import.meta.env.DEV) {
+      const searchParams = new URLSearchParams(search ?? window.location.search);
+      const qp = searchParams.get("homeVariant");
+      if (qp === "A" || qp === "B") {
+        localStorage.setItem(HOME_AB_DEV_OVERRIDE_KEY, qp);
+        return qp;
+      } else if (qp === "reset" || qp === "clear") {
+        localStorage.removeItem(HOME_AB_DEV_OVERRIDE_KEY);
+      }
+
       const devOverride = localStorage.getItem(HOME_AB_DEV_OVERRIDE_KEY);
       if (devOverride === "A" || devOverride === "B") return devOverride;
     }
 
+    // 2. 비로그인: 신규 홈(B) 기본
+    if (!isLoggedIn) return "B";
+
+    // 3. 서버 배정값 적용
     if (data?.group === "A" || data?.group === "B") return data.group;
     return "B"; // OFF 이거나 아직 응답 전이면 신규 홈으로 폴백
-  }, [isLoggedIn, data]);
+  }, [search, isLoggedIn, data]);
 
   return {
     variant,

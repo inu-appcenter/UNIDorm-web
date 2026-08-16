@@ -165,7 +165,7 @@ const ComplainListPage = () => {
 
       <TitleContentArea
         description={
-          "생활원 민원을 접수할 수 있습니다.\n통합행정실 업무시간 내 처리되며, 담당자 사정에 따라 확인 및 처리가 늦어질 수 있습니다."
+          "생활원 민원을 접수할 수 있습니다.\n통합행정실 업무시간 내 처리되며, 담당자 사정에 따라 확인 및 처리가 늦어질 수 있습니다.\n유니돔 앱 관련 문의는 마이페이지의 1대1 문의를 이용해주세요."
         }
       />
 
@@ -199,11 +199,6 @@ const ComplainListPage = () => {
         {/* 최근 민원 현황: 로딩 중이거나 데이터가 있을 때만 섹션을 표시 */}
         {(isRecentLoading || recentComplain) && (
           <LeftSection>
-            <TitleContentArea
-              description={
-                "인천대학교 생활원 민원을 작성할 수 있습니다.\n유니돔 앱 관련 문의는 마이페이지의 1대1 문의를 이용해주세요."
-              }
-            />
             <TitleContentArea title={"최근 민원 현황"}>
               {isRecentLoading ? (
                 <LoadingSpinner />

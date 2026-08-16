@@ -4,7 +4,6 @@ import HomePage from "./HomePage";
 import HomePageOld from "./HomePageOld";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import {
-  HOME_AB_DEV_OVERRIDE_KEY,
   HomeVariant,
   useHomeVariant,
 } from "@/hooks/useHomeVariant";
@@ -21,17 +20,8 @@ const LAST_VARIANT_KEY = "home_ab_last_variant";
  * 실험 관련 mixpanel 이벤트를 기록한다.
  */
 export default function HomeGate() {
-  const { variant, isLoading, abTestGroup } = useHomeVariant();
   const location = useLocation();
-
-  // QA용: 개발 모드에서 ?homeVariant=A|B 로 접속하면 강제 배정
-  useEffect(() => {
-    if (!import.meta.env.DEV) return;
-    const qp = new URLSearchParams(location.search).get("homeVariant");
-    if (qp === "A" || qp === "B") {
-      localStorage.setItem(HOME_AB_DEV_OVERRIDE_KEY, qp);
-    }
-  }, [location.search]);
+  const { variant, isLoading, abTestGroup } = useHomeVariant(location.search);
 
   const expectedPath = variant === "A" ? PATHS.HOME_OLD : PATHS.HOME;
   const isOnExpectedPath = location.pathname === expectedPath;
