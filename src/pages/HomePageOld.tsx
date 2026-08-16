@@ -1,5 +1,4 @@
 import styled from "styled-components";
-import { colors, typography } from "@/styles/tokens";
 import TitleContentArea from "../components/common/TitleContentArea.tsx";
 import HomeNoticeCardOld from "../components/home/HomeNoticeCardOld.tsx";
 import HomeTipsCardOld from "../components/home/HomeTipsCardOld.tsx";

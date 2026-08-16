@@ -3,6 +3,7 @@ import { AxiosResponse } from "axios";
 import tokenInstance from "./tokenInstance.ts";
 import {
   FilteredRoommatePost,
+  MyRoommateBoardIdResponse,
   MyRoommateInfoResponse,
   ReceivedMatchingRequest,
   RoommateMatchingByChatRoomRequest,
@@ -168,6 +169,17 @@ export const getMyChecklist = async (): Promise<
     `/roommates/my-checklist`,
   );
   return response;
+};
+
+/**
+ * 로그인한 사용자의 현재 학기 룸메이트 게시물 ID 조회
+ */
+export const getMyRoommateBoardId = async (): Promise<
+  AxiosResponse<MyRoommateBoardIdResponse>
+> => {
+  return await tokenInstance.get<MyRoommateBoardIdResponse>(
+    `/roommates/my-checklist/board-id`,
+  );
 };
 
 /**
