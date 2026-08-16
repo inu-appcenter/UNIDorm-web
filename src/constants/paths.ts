@@ -6,7 +6,6 @@ export const PATHS = {
   LOGOUT: "/logout",
   ONBOARDING: "/onboarding",
   HOME: "/home",
-  HOME_OLD: "/home-old",
   MYPAGE: "/mypage",
   SETTINGS: "/settings",
   SETTINGS_LOGS: "/settings/logs",

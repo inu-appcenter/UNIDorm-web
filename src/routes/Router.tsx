@@ -109,7 +109,6 @@ export const router = createBrowserRouter([
         element: <RootPage />,
         children: [
           { path: "home", element: <HomeGate /> },
-          { path: "home-old", element: <HomeGate /> },
           { path: "roommate", element: <RoomMatePage /> },
           { path: "roommate/my", element: <MyRoomMatePage /> },
           { path: "groupPurchase", element: <GroupPurchaseMainPage /> },

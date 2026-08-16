@@ -50,10 +50,7 @@ const AIChatFloatingButton = () => {
     toggleChat();
   };
 
-  const isHomePage =
-    location.pathname === "/home" ||
-    location.pathname === "/home-old" ||
-    location.pathname === "/";
+  const isHomePage = location.pathname === "/home" || location.pathname === "/";
 
   if (!isOpen && (!isVisible || !isHomePage)) return null;
 

@@ -38,10 +38,7 @@ export default function Header({ hasBack = false, backPath }: HeaderProps) {
     return localStorage.getItem("showKeywordSettingTooltip") !== "false";
   });
 
-  const isHome =
-    location.pathname === "/home" ||
-    location.pathname === "/home-old" ||
-    location.pathname === "/";
+  const isHome = location.pathname === "/home" || location.pathname === "/";
   // 공동구매 페이지 여부 확인
   const isGroupPurchase = location.pathname === "/groupPurchase";
 

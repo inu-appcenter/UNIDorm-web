@@ -248,11 +248,7 @@ export default function BottomBar() {
         <Button
           icon={(active) => <HomeIcon isActive={active} />}
           buttonName="홈"
-          isActive={
-            pathname === "/home" ||
-            pathname === "/home-old" ||
-            pathname === "/"
-          }
+          isActive={pathname === "/home" || pathname === "/"}
           onClick={() => {
             mixpanelTrack.featureClicked("홈", "BottomBar");
             navigate("/home");
