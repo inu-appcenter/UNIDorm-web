@@ -1,4 +1,7 @@
 import mixpanel from "mixpanel-browser";
+import { getSessionId } from "@/utils/session";
+import { APP_VERSION, getOsHeaderValue } from "@/utils/deviceInfo";
+import { HOME_AB_EXPERIMENT_KEY } from "@/constants/experiment";
 
 const MIXPANEL_TOKEN = import.meta.env.VITE_MIXPANEL_TOKEN;
 
@@ -63,6 +66,130 @@ export const mixpanelTrack = {
   // loginCompleted: (method: string) => {
   //   trackEvent("로그인 완료", { method });
   // },
+
+  // --- 0. 홈 A/B 실험 (Home A/B Experiment) ---
+  // 서버 GET /features/ab/{key} 응답(experimentId/userId/userType/timestamp) +
+  // 클라이언트가 아는 정보(session_id/app_version/os)를 합쳐서 전송한다.
+  homeAbTestAssigned: (params: {
+    variant: "A" | "B";
+    experimentId?: string;
+    userId?: string;
+    userType?: "existing" | "new";
+    timestamp?: string;
+    previousVariant?: "A" | "B" | null;
+    entrySource?: string;
+  }) => {
+    trackEvent("AB_TEST_ASSIGNED", {
+      experiment_id: params.experimentId ?? HOME_AB_EXPERIMENT_KEY,
+      variant: params.variant,
+      user_id: params.userId,
+      user_type: params.userType,
+      timestamp: params.timestamp,
+      session_id: getSessionId(),
+      app_version: APP_VERSION,
+      os: getOsHeaderValue(),
+      previous_home_variant: params.previousVariant ?? undefined,
+      assignment_changed:
+        params.previousVariant != null &&
+        params.previousVariant !== params.variant,
+      entry_source: params.entrySource,
+    });
+  },
+  homeViewed: (variant: "A" | "B") => {
+    trackEvent("홈 진입", {
+      experiment_id: HOME_AB_EXPERIMENT_KEY,
+      variant,
+    });
+  },
+  homeLoadComplete: (loadTimeMs: number) => {
+    trackEvent("홈 로드 완료", { load_time_ms: loadTimeMs });
+  },
+  homeLoadFail: (errorType: string, apiName: string) => {
+    trackEvent("홈 로드 실패", { error_type: errorType, api_name: apiName });
+  },
+
+  // --- 0-1. 홈 공지사항 (Home Notice) ---
+  noticeItemClicked: (
+    noticeId: number | string,
+    noticeCategory: string | undefined,
+    noticeOrder: number,
+    isUrgent: boolean,
+    layoutType: "카드형" | "목록형",
+  ) => {
+    trackEvent("공지 항목 클릭", {
+      notice_id: noticeId,
+      notice_category: noticeCategory,
+      notice_order: noticeOrder,
+      is_urgent: isUrgent,
+      layout_type: layoutType,
+    });
+  },
+
+  // --- 0-2. 홈 INU 폼 (Home Pum Widget) ---
+  pumEntryClick: (entrySource: string) => {
+    trackEvent("품 진입 버튼 클릭", { entry_source: entrySource });
+  },
+  pumProgramClicked: (
+    programId: number | string,
+    programStatus: string,
+    programOrder: number,
+    clickArea: "카드" | "제목",
+  ) => {
+    trackEvent("품 프로그램 클릭", {
+      program_id: programId,
+      program_status: programStatus,
+      program_order: programOrder,
+      click_area: clickArea,
+    });
+  },
+
+  // --- 0-3. 홈 꿀팁 (Home Tips) ---
+  tipItemClicked: (
+    tipId: number | string,
+    tipOrder: number,
+    layoutType: "카드형" | "목록형",
+  ) => {
+    trackEvent("꿀팁 항목 클릭", {
+      tip_id: tipId,
+      tip_order: tipOrder,
+      layout_type: layoutType,
+    });
+  },
+
+  // --- 0-4. 생활원 YouTube ---
+  youtubeTabClicked: (tabName: "최신순" | "인기순") => {
+    trackEvent("유튜브 탭 클릭", { tab_name: tabName });
+  },
+  youtubeVideoClicked: (
+    videoId: string,
+    videoOrder: number,
+    sortType: "date" | "viewCount",
+  ) => {
+    trackEvent("유튜브 영상 클릭", {
+      video_id: videoId,
+      video_order: videoOrder,
+      sort_type: sortType,
+    });
+  },
+
+  // --- 0-5. 생활원 일정 (Home Calendar) ---
+  calendarDateClicked: (selectedDate: string, hasEvent: boolean) => {
+    trackEvent("일정 날짜 클릭", {
+      selected_date: selectedDate,
+      has_event: hasEvent,
+    });
+  },
+  calendarEventClicked: (eventId: number | string, eventDate: string) => {
+    trackEvent("일정 이벤트 클릭", {
+      event_id: eventId,
+      event_date: eventDate,
+    });
+  },
+
+  // --- 0-6. 민원 진입 (A안 홈 상단 버튼 전용) ---
+  complaintEntryClick: (entrySource: string) => {
+    trackEvent("민원 진입 클릭", { entry_source: entrySource });
+  },
 
   // --- 2. 진입점 (Navigation) ---
   featureClicked: (featureName: string, location: string) => {

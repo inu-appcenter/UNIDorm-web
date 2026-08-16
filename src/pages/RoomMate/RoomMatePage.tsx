@@ -1,3 +1,4 @@
+import { isAxiosError } from "axios";
 import styled from "styled-components";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import RoomMateCard from "../../components/roommate/RoomMateCard.tsx";
@@ -5,7 +6,7 @@ import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import useUserStore from "../../stores/useUserStore.ts";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import {
-  getMyRoommatePost,
+  getMyRoommateBoardId,
   getRoomMateScrollList,
   getMatchingPostList,
   getNotificationFilter,
@@ -395,17 +396,19 @@ export default function RoomMatePage() {
     setIsOpeningMyPost(true);
 
     try {
-      const loadedMyPost = scrollData?.pages
-        .flat()
-        .find((post) => post.isMyPost || post.userId === userInfo.id);
-      const myPost = loadedMyPost ?? (await getMyRoommatePost()).data;
+      const response = await getMyRoommateBoardId();
+      const boardId = response.data.boardId;
 
-      navigate(PATHS.ROOMMATE.DETAIL(myPost.boardId), {
+      navigate(PATHS.ROOMMATE.DETAIL(boardId), {
         state: { isMyPost: true },
       });
     } catch (error) {
       console.error("내 체크리스트 게시글 조회 실패:", error);
-      alert("내 체크리스트 게시글을 불러오지 못했습니다.");
+      if (isAxiosError(error) && error.response?.status === 404) {
+        alert("작성된 룸메이트 게시글을 찾을 수 없습니다.");
+      } else {
+        alert("내 체크리스트 게시글을 불러오지 못했습니다.");
+      }
     } finally {
       setIsOpeningMyPost(false);
     }

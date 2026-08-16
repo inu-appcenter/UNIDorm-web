@@ -1,11 +1,38 @@
 import { AxiosResponse } from "axios";
 import axiosInstance from "@/apis/axiosInstance";
 import tokenInstance from "@/apis/tokenInstance";
+import { getSessionId } from "@/utils/session";
+import { APP_VERSION, getOsHeaderValue } from "@/utils/deviceInfo";
 
 export interface FeatureFlag {
   key: string;
   flag: boolean;
 }
+
+export interface AbTestGroup {
+  group: "A" | "B" | "OFF";
+  experimentId?: string;
+  userId?: string;
+  userType?: "existing" | "new";
+  timestamp?: string;
+}
+
+// 로그인 유저의 A/B 실험 그룹 조회
+export const getAbTestGroup = async (
+  key: string,
+): Promise<AxiosResponse<AbTestGroup>> => {
+  const response = await tokenInstance.get<AbTestGroup>(
+    `/features/ab/${key}`,
+    {
+      headers: {
+        "X-App-Version": APP_VERSION,
+        "X-OS": getOsHeaderValue(),
+        "X-Session-Id": getSessionId(),
+      },
+    },
+  );
+  return response;
+};
 
 // 전체 기능 플래그 목록 조회
 export const getFeatureFlags = async (): Promise<

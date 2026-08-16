@@ -23,7 +23,7 @@ import FreshmanLoginPage from "@/pages/FreshmanLoginPage";
 import FreshmanSignupPage from "@/pages/FreshmanSignupPage";
 
 /* 페이지 - 메인 5개 탭 (RootPage 하위) */
-import HomePage from "@/pages/HomePage";
+import HomeGate from "@/pages/HomeGate";
 import RoomMatePage from "@/pages/RoomMate/RoomMatePage";
 import GroupPurchaseMainPage from "@/pages/GroupPurchase/GroupPurchaseMainPage";
 import MyPage from "@/pages/MyPage";
@@ -108,7 +108,7 @@ export const router = createBrowserRouter([
       {
         element: <RootPage />,
         children: [
-          { path: "home", element: <HomePage /> },
+          { path: "home", element: <HomeGate /> },
           { path: "roommate", element: <RoomMatePage /> },
           { path: "roommate/my", element: <MyRoomMatePage /> },
           { path: "groupPurchase", element: <GroupPurchaseMainPage /> },
