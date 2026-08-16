@@ -16,16 +16,19 @@ interface UseHomeVariantResult {
 }
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
-const HOME_AB_STORAGE_KEY = `home_ab_cache_${HOME_AB_EXPERIMENT_KEY}`;
 
 interface CachedAbTest {
   data: AbTestGroup;
   cachedAt: number;
 }
 
-const getCachedAbTest = (): CachedAbTest | null => {
+const getStorageKey = (userKey: string) =>
+  `home_ab_cache_${HOME_AB_EXPERIMENT_KEY}_${userKey}`;
+
+const getCachedAbTest = (userKey: string): CachedAbTest | null => {
+  if (!userKey) return null;
   try {
-    const raw = localStorage.getItem(HOME_AB_STORAGE_KEY);
+    const raw = localStorage.getItem(getStorageKey(userKey));
     if (!raw) return null;
     return JSON.parse(raw) as CachedAbTest;
   } catch {
@@ -33,13 +36,14 @@ const getCachedAbTest = (): CachedAbTest | null => {
   }
 };
 
-const setCachedAbTest = (data: AbTestGroup) => {
+const setCachedAbTest = (userKey: string, data: AbTestGroup) => {
+  if (!userKey) return;
   try {
     const payload: CachedAbTest = {
       data,
       cachedAt: Date.now(),
     };
-    localStorage.setItem(HOME_AB_STORAGE_KEY, JSON.stringify(payload));
+    localStorage.setItem(getStorageKey(userKey), JSON.stringify(payload));
   } catch (error) {
     console.error("Failed to cache AB test group:", error);
   }
@@ -48,20 +52,26 @@ const setCachedAbTest = (data: AbTestGroup) => {
 /**
  * 로그인 사용자의 홈 화면 A/B 배정값을 서버(GET /features/ab/{key})에서 조회합니다.
  * - 비로그인: 항상 B(신규 홈), API 호출 안 함
- * - 로그인: 1일(24시간) 동안 localStorage에 캐싱하여 재접속/새로고침 시 스피너 없이 즉시 렌더링
+ * - 계정별 격리 캐싱: 유저 ID(또는 토큰)별로 1일간 독립 캐싱하여, 다른 계정으로 로그인 시 즉시 새 계정 기준으로 재조회
  * - staleTime(1일) 경과 시 백그라운드에서 배정 그룹 재조회 및 캐시 갱신
  * - 개발 모드에서는 localStorage(HOME_AB_DEV_OVERRIDE_KEY)로 강제 override 가능 (QA용)
  */
 export const useHomeVariant = (search?: string): UseHomeVariantResult => {
-  const { tokenInfo } = useUserStore();
+  const { tokenInfo, userInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
-  const cached = useMemo(() => getCachedAbTest(), []);
+  const userKey = userInfo.id
+    ? String(userInfo.id)
+    : tokenInfo.accessToken
+      ? tokenInfo.accessToken.slice(-20)
+      : "";
+
+  const cached = useMemo(() => getCachedAbTest(userKey), [userKey]);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["homeAbTestGroup", HOME_AB_EXPERIMENT_KEY, tokenInfo.accessToken],
+    queryKey: ["homeAbTestGroup", HOME_AB_EXPERIMENT_KEY, userKey],
     queryFn: async () => {
       const response = await getAbTestGroup(HOME_AB_EXPERIMENT_KEY);
-      setCachedAbTest(response.data);
+      setCachedAbTest(userKey, response.data);
       return response.data;
     },
     enabled: isLoggedIn,
