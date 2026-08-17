@@ -3,7 +3,6 @@ import tokenInstance from "../apis/tokenInstance";
 import { ApiResponse } from "@/types/common";
 import {
   MyPost,
-  MyPost_GroupOrder,
   TokenInfo,
   UserInfo,
 } from "@/types/members";
@@ -222,9 +221,9 @@ export const refresh = async (): Promise<TokenInfo> => {
 };
 
 export const getMemberPosts = async (): Promise<
-  AxiosResponse<MyPost_GroupOrder[]>
+  AxiosResponse<MyPost[]>
 > => {
-  const response = await tokenInstance.get<MyPost_GroupOrder[]>(`/users/board`);
+  const response = await tokenInstance.get<MyPost[]>(`/users/board`);
   console.log(response);
   return response;
 };

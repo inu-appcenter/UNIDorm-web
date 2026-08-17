@@ -21,6 +21,7 @@ const RoomMateBottomBar = ({
   postDormType,
   postTitle,
   currentPeriod,
+  isBlockedByAuthor,
   partnerId,
   postYear,
   postSemester,
@@ -30,6 +31,7 @@ const RoomMateBottomBar = ({
   postDormType?: string;
   postTitle?: string;
   currentPeriod?: boolean;
+  isBlockedByAuthor?: boolean;
   partnerId: number;
   postYear?: number;
   postSemester?: string | number;
@@ -59,6 +61,7 @@ const RoomMateBottomBar = ({
   const [isLikeSubmitting, setIsLikeSubmitting] = useState(false);
   const [isBlockedPartner, setIsBlockedPartner] = useState(false);
   const [isBlockStatusLoading, setIsBlockStatusLoading] = useState(false);
+  const isChatBlocked = isBlockedPartner || Boolean(isBlockedByAuthor);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -184,6 +187,11 @@ const RoomMateBottomBar = ({
   const handleChatClick = async () => {
     if (isBlockStatusLoading) return;
 
+    if (isBlockedByAuthor) {
+      alert("상대방의 차단으로 메시지를 보낼 수 없습니다.");
+      return;
+    }
+
     if (isBlockedPartner) {
       alert("차단한 사람과는 대화할 수 없습니다.");
       return;
@@ -243,10 +251,12 @@ const RoomMateBottomBar = ({
         type="button"
         onClick={handleChatClick}
         disabled={
-          !isCurrentPeriod || isBlockedPartner || isBlockStatusLoading
+          !isCurrentPeriod || isChatBlocked || isBlockStatusLoading
         }
       >
-        {isBlockedPartner
+        {isBlockedByAuthor
+          ? "상대방의 차단으로 메시지를 보낼 수 없습니다."
+          : isBlockedPartner
           ? "차단한 사람과는 대화할 수 없습니다."
           : isBlockStatusLoading
           ? "차단 상태를 확인하고 있어요."

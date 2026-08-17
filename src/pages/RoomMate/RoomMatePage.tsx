@@ -403,12 +403,18 @@ export default function RoomMatePage() {
         state: { isMyPost: true },
       });
     } catch (error) {
-      console.error("내 체크리스트 게시글 조회 실패:", error);
-      if (isAxiosError(error) && error.response?.status === 404) {
-        alert("작성된 룸메이트 게시글을 찾을 수 없습니다.");
-      } else {
-        alert("내 체크리스트 게시글을 불러오지 못했습니다.");
+      if (
+        isAxiosError<{ errorCode?: string }>(error) &&
+        error.response?.status === 404 &&
+        error.response.data?.errorCode === "ROOMMATE_BOARD_NOT_FOUND"
+      ) {
+        alert("작성된 룸메이트 게시글이 없습니다. 체크리스트를 작성해주세요.");
+        navigate(PATHS.ROOMMATE.CHECKLIST);
+        return;
       }
+
+      console.error("내 체크리스트 게시글 조회 실패:", error);
+      alert("내 체크리스트 게시글을 불러오지 못했습니다.");
     } finally {
       setIsOpeningMyPost(false);
     }

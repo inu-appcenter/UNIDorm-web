@@ -4,11 +4,11 @@ import styled from "styled-components";
 import { useEffect, useState } from "react";
 import TitleContentArea from "../components/common/TitleContentArea.tsx";
 import MyPostLikeCard from "../components/mypage/MyPostLikeCard.tsx";
-import { MyPost_GroupOrder } from "@/types/members";
+import { MyPost } from "@/types/members";
 import { getMemberPosts } from "@/apis/members";
 
 export default function MyPostsPage() {
-  const [posts, setPosts] = useState<MyPost_GroupOrder[]>([]);
+  const [posts, setPosts] = useState<MyPost[]>([]);
 
   useEffect(() => {
     const fetchPosts = async () => {

@@ -78,6 +78,7 @@ export default function ChatListPage() {
             : myBoardTitle
               ? "me"
               : undefined,
+          isBlockedByPartner: room.isBlockedByPartner,
         },
       });
     }

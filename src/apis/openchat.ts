@@ -12,6 +12,7 @@ import {
   CreateDerivedOpenChatRoomRequest,
   CreateDerivedOpenChatRoomResponse,
   LeaveOpenChatRoomResponse,
+  JoinOpenChatRoomResponse,
   UpdateOpenChatRoomRequest,
 } from "@/types/openchat";
 import { AxiosResponse } from "axios";
@@ -67,8 +68,8 @@ export const updateOpenChatRoom = (
 export const joinOpenChatRoom = async (
   roomId: number,
   password?: string,
-): Promise<AxiosResponse<CreatedOpenChatRoomResponse>> => {
-  const response = await tokenInstance.post<CreatedOpenChatRoomResponse>(
+): Promise<AxiosResponse<JoinOpenChatRoomResponse>> => {
+  const response = await tokenInstance.post<JoinOpenChatRoomResponse>(
     `/open-chat-rooms/${roomId}/participants/me`,
     null,
     {
