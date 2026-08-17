@@ -27,6 +27,7 @@ export interface RoommateChatRoom {
   unreadCount?: number;
   myBoardTitle?: string | null;
   opponentBoardTitle?: string | null;
+  isBlockedByPartner: boolean;
 }
 
 

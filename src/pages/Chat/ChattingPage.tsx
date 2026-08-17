@@ -9,7 +9,7 @@ import { useOpenChat } from "./useOpenChat";
 import useUserStore from "../../stores/useUserStore.ts";
 import {
   getRoommateChatHistory,
-  getRoommateChatRooms,
+  getRoommateChatRoom,
   patchRoommateChatRead,
 } from "@/apis/chat";
 import { patchNotificationsRead } from "@/apis/notification";
@@ -222,6 +222,11 @@ export default function ChattingPage() {
   const [inputValue, setInputValue] = useState<string>("");
   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
   const [isBlockedPartner, setIsBlockedPartner] = useState(false);
+  const [isBlockedByPartner, setIsBlockedByPartner] = useState(false);
+  const isChatBlocked = isBlockedPartner || isBlockedByPartner;
+  const blockedChatMessage = isBlockedByPartner
+    ? "상대방의 차단으로 메시지를 보낼 수 없습니다."
+    : "차단한 사람과는 대화할 수 없습니다.";
   const { tokenInfo, userInfo } = useUserStore();
   const navigate = useNavigate();
 
@@ -341,11 +346,11 @@ export default function ChattingPage() {
   };
 
   useEffect(() => {
-    if (isBlockedPartner) {
+    if (isChatBlocked) {
       setMenuOpen(false);
       setInputValue("");
     }
-  }, [isBlockedPartner]);
+  }, [isChatBlocked]);
 
   const clearPendingDisclosureRouteState = () => {
     if (!pendingDisclosureRequestId) return;
@@ -874,19 +879,21 @@ export default function ChattingPage() {
       if (chatType === "roommate") {
         setTypeString("룸메이트");
         setIsHistoryLoading(true);
+        setIsBlockedByPartner(Boolean(location.state?.isBlockedByPartner));
         try {
           // 1. 상대방 ID 조회
           let oppId: number | null = null;
           let fetchedRoommateDisclosureStatus: StudentIdDisclosureStatus | null =
             null;
           try {
-            const roomsResponse = await getRoommateChatRooms();
-            const currentRoom = roomsResponse.data.find(
-              (r) => r.chatRoomId === roomId,
-            );
+            const roomResponse = await getRoommateChatRoom(roomId);
+            const currentRoom = roomResponse.data;
             if (currentRoom) {
               oppId = currentRoom.partnerId;
               opponentIdRef.current = oppId;
+              setIsBlockedByPartner(
+                Boolean(currentRoom.isBlockedByPartner),
+              );
               void refreshBlockedPartnerStatus(oppId);
 
               const opponentBoardTitle = currentRoom.opponentBoardTitle?.trim();
@@ -1049,31 +1056,33 @@ export default function ChattingPage() {
       } else if (chatType === "open" || chatType === "personal") {
         setTypeString(chatType === "open" ? "오픈채팅" : "1대1 채팅");
         setIsHistoryLoading(true);
+        setIsBlockedByPartner(Boolean(routeRoom?.isBlockedByPartner));
 
-        if (chatType === "open" && !routeRoomName) {
-          void (async () => {
-            try {
-              let page = 0;
-              let totalPages = 1;
+        if (chatType === "open" || chatType === "personal") {
+          try {
+            let page = 0;
+            let totalPages = 1;
 
-              while (page < totalPages) {
-                const roomsResponse = await getOpenChatRooms("MY", page);
-                const currentRoom = roomsResponse.data.content.find(
-                  (room) => room.roomId === roomId,
+            while (page < totalPages) {
+              const roomsResponse = await getOpenChatRooms("MY", page);
+              const currentRoom = roomsResponse.data.content.find(
+                (room) => room.roomId === roomId,
+              );
+
+              if (currentRoom) {
+                setOpenChatRoomName(currentRoom.name);
+                setIsBlockedByPartner(
+                  Boolean(currentRoom.isBlockedByPartner),
                 );
-
-                if (currentRoom) {
-                  setOpenChatRoomName(currentRoom.name);
-                  return;
-                }
-
-                totalPages = roomsResponse.data.totalPages;
-                page += 1;
+                break;
               }
-            } catch (error) {
-              console.error("오픈채팅방 이름 조회 실패:", error);
+
+              totalPages = roomsResponse.data.totalPages;
+              page += 1;
             }
-          })();
+          } catch (error) {
+            console.error("오픈채팅방 정보 조회 실패:", error);
+          }
         }
 
         try {
@@ -1346,8 +1355,8 @@ export default function ChattingPage() {
   };
 
   const handleSendMessage = () => {
-    if (isBlockedPartner) {
-      alert("차단한 사람과는 대화할 수 없습니다.");
+    if (isChatBlocked) {
+      alert(blockedChatMessage);
       return;
     }
     if (!inputValue.trim()) return;
@@ -1399,6 +1408,11 @@ export default function ChattingPage() {
   });
 
   const handleSendImages = async (files: File[]) => {
+    if (isChatBlocked) {
+      alert(blockedChatMessage);
+      return;
+    }
+
     try {
       const response = await sendOpenChatImages(roomId, files);
       setMessageList((current) => {
@@ -1532,6 +1546,10 @@ export default function ChattingPage() {
   const handleRequestShareClick = async () => {
     setMenuOpen(false);
     if (chatType !== "roommate" && chatType !== "personal") return;
+    if (isChatBlocked) {
+      alert(blockedChatMessage);
+      return;
+    }
 
     const targetId =
       chatType === "roommate"
@@ -1658,7 +1676,7 @@ export default function ChattingPage() {
             boardTitle={roommateBoardLink?.title}
             onBoardTitleClick={handleRoommateBoardClick}
             isMyRoommate={isMyRoommateState}
-            isBlocked={isBlockedPartner}
+            isBlocked={isChatBlocked}
           />
         )}
         {chatType === "open" && (
@@ -2316,21 +2334,23 @@ export default function ChattingPage() {
       {/* 하단 플로팅 입력 바 */}
       <S.FloatingInputArea ref={menuContainerRef}>
         <div style={{ position: "relative", display: "inline-flex" }}>
-          {chatType === "roommate" && showStudentIdTooltip && (
-            <TooltipMessage
-              message={"상대방에게\n학번 공유를 요청해보세요!"}
-              onClose={handleCloseStudentIdTooltip}
-              position={"top"}
-              align={"left"}
-              width={"max-content"}
-            />
-          )}
+          {chatType === "roommate" &&
+            !isChatBlocked &&
+            showStudentIdTooltip && (
+              <TooltipMessage
+                message={"상대방에게\n학번 공유를 요청해보세요!"}
+                onClose={handleCloseStudentIdTooltip}
+                position={"top"}
+                align={"left"}
+                width={"max-content"}
+              />
+            )}
           <S.PlusButton
             type="button"
-            disabled={isBlockedPartner}
+            disabled={isChatBlocked}
             aria-label={
-              isBlockedPartner
-                ? "차단한 사용자와는 추가 기능을 사용할 수 없습니다"
+              isChatBlocked
+                ? blockedChatMessage
                 : "채팅 추가 기능"
             }
             onClick={() => setMenuOpen((prev) => !prev)}
@@ -2372,11 +2392,11 @@ export default function ChattingPage() {
 
         <S.FloatingInput
           placeholder={
-            isBlockedPartner
-              ? "차단한 사람과는 대화할 수 없습니다."
+            isChatBlocked
+              ? blockedChatMessage
               : "메시지 보내기"
           }
-          disabled={isBlockedPartner}
+          disabled={isChatBlocked}
           ref={inputRef}
           onInput={handleInput}
           rows={1}
@@ -2391,7 +2411,7 @@ export default function ChattingPage() {
         />
         <S.SendCircleButton
           type="button"
-          disabled={isBlockedPartner}
+          disabled={isChatBlocked}
           onClick={handleSendMessage}
         >
           <ArrowRight size={20} color="white" />

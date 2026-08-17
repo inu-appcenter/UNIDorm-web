@@ -320,6 +320,7 @@ export default function RoomMateBoardDetailPage() {
           postDormType={boardData.dormType}
           postTitle={boardData.title}
           currentPeriod={boardData.currentPeriod}
+          isBlockedByAuthor={boardData.isBlockedByAuthor}
           postYear={boardData.year}
           postSemester={boardData.semester}
         />

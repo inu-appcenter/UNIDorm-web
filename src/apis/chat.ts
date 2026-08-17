@@ -26,6 +26,14 @@ export const getRoommateChatRooms = async (): Promise<
   return response;
 };
 
+export const getRoommateChatRoom = async (
+  chatRoomId: number,
+): Promise<AxiosResponse<RoommateChatRoom>> => {
+  return tokenInstance.get<RoommateChatRoom>(
+    `/roommate-chatting-room/${chatRoomId}`,
+  );
+};
+
 export const createRoommateChatRoom = async (
   roommateBoardId: number,
 ): Promise<AxiosResponse<number>> => {
@@ -74,12 +82,6 @@ export const patchRoommateChatRead = async (
   );
   return response;
 };
-
-export type NotificationMode = "EVERY" | "BUNDLED" | "OFF";
-
-interface UpdateOpenChatNotificationRequest {
-  mode: NotificationMode;
-}
 
 export type NotificationMode = "EVERY" | "BUNDLED" | "OFF";
 

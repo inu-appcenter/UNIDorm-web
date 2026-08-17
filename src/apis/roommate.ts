@@ -182,14 +182,6 @@ export const getMyRoommateBoardId = async (): Promise<
   );
 };
 
-/**
- * 내 룸메이트 게시글 조회.
- * 백엔드의 신규 전용 API가 확정되면 이 함수의 요청 경로만 교체한다.
- */
-export const getMyRoommatePost = async (): Promise<
-  AxiosResponse<RoommatePost>
-> => getMyChecklist();
-
 export const deleteRoommateChatRoom = async (
   chatRoomId: number,
 ): Promise<AxiosResponse<void>> => {
