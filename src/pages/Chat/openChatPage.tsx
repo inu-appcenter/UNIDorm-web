@@ -256,6 +256,7 @@ export default function OpenChatPage() {
                 partnerName: room.name,
                 partnerProfileImageUrl: "",
                 unreadCount: room.unreadCount,
+                isBlockedByPartner: room.isBlockedByPartner ?? false,
               }));
           setRooms(await fillMissingPersonalLastMessages(openChatRooms));
           setRoommateRooms([
@@ -357,6 +358,7 @@ export default function OpenChatPage() {
         roommateBoardTitle: opponentBoardTitle || "삭제된 게시물입니다",
         roommateBoardOwner: "opponent",
         isMyRoommate,
+        isBlockedByPartner: room.isBlockedByPartner,
       },
     });
   };

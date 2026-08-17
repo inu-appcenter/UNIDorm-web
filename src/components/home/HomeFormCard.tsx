@@ -12,9 +12,10 @@ import { mixpanelTrack } from "@/utils/mixpanel";
 
 interface HomeFormCardProps {
   survey: SurveySummary;
+  order?: number;
 }
 
-const HomeFormCard = ({ survey }: HomeFormCardProps) => {
+const HomeFormCard = ({ survey, order = 0 }: HomeFormCardProps) => {
   const navigate = useNavigate();
   const { isAdmin } = useUserRole();
   const { tokenInfo } = useUserStore();
@@ -34,7 +35,7 @@ const HomeFormCard = ({ survey }: HomeFormCardProps) => {
   };
 
   const handleClick = () => {
-    mixpanelTrack.itemClicked("폼", survey.id, survey.title, "홈_폼목록");
+    mixpanelTrack.pumProgramClicked(survey.id, survey.status, order, "카드");
     if (!isLoggedIn) {
       alert("로그인 후 사용할 수 있습니다.");
       navigate("/login");

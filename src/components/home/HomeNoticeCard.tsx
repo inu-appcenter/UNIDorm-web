@@ -15,6 +15,8 @@ interface HomeCardProps {
   isEmergency: boolean;
   createdDate: string;
   type?: (typeof ANNOUNCE_CATEGORY_LIST)[number]["value"];
+  order?: number;
+  layoutType?: "카드형" | "목록형";
 }
 
 const HomeNoticeCard = ({
@@ -24,13 +26,21 @@ const HomeNoticeCard = ({
   isEmergency,
   createdDate,
   type,
+  order = 0,
+  layoutType = "목록형",
 }: HomeCardProps) => {
   const navigate = useNavigate();
 
   return (
     <NoticeItemWrapper
       onClick={() => {
-        mixpanelTrack.itemClicked("공지", id, title, "홈_공지사항목록");
+        mixpanelTrack.noticeItemClicked(
+          id,
+          type,
+          order,
+          isEmergency,
+          layoutType,
+        );
         navigate("/announcements/" + id);
       }}
     >

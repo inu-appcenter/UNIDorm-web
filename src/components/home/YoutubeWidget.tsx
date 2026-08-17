@@ -104,19 +104,19 @@ const YoutubeListWidget = () => {
     return `${num.toLocaleString()}회`;
   };
 
-  const handleVideoClick = (videoId: string, title: string) => {
+  const handleVideoClick = (videoId: string, order: number) => {
     const url = `https://www.youtube.com/watch?v=${videoId}`;
-    mixpanelTrack.externalLinkClicked(title, url, "홈_유튜브위젯");
+    mixpanelTrack.youtubeVideoClicked(
+      videoId,
+      order,
+      sort as "date" | "viewCount",
+    );
     window.open(url, "_blank");
   };
 
   const handleSortChange = (newSort: string) => {
     setSort(newSort);
-    mixpanelTrack.categoryFiltered(
-      "유튜브",
-      newSort === "date" ? "최신순" : "조회수순",
-      "홈",
-    );
+    mixpanelTrack.youtubeTabClicked(newSort === "date" ? "최신순" : "인기순");
   };
 
   return (
@@ -153,7 +153,7 @@ const YoutubeListWidget = () => {
         <ListContainer>
           {videos.map((video, i) => (
             <div key={video.id}>
-              <VideoItem onClick={() => handleVideoClick(video.id, video.title)}>
+              <VideoItem onClick={() => handleVideoClick(video.id, i)}>
                 <Thumbnail src={video.thumbnailUrl} alt={video.title} />
                 <InfoWrapper>
                   <VideoTitle

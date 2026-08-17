@@ -50,6 +50,8 @@ export interface MyPost_GroupOrder extends MyPostBase {
 export interface MyPost_RoommateBoard extends MyPostBase {
   type: "ROOMMATE";
 
+  myPost: boolean;
+  currentPeriod: boolean;
   arrangement: string;
   bedTime: string;
   college: string;

@@ -18,6 +18,7 @@ export interface OpenChatRoom {
   isPublic?: boolean;
   public?: boolean;
   joined: boolean;
+  isBlockedByPartner?: boolean;
 }
 
 export interface OpenChatRoomPageResponse {
@@ -56,6 +57,11 @@ export interface CreatedOpenChatRoomResponse {
   maxParticipants: number;
   createdAt: string;
   official: boolean;
+}
+
+export interface JoinOpenChatRoomResponse
+  extends CreatedOpenChatRoomResponse {
+  isBlockedByPartner: boolean;
 }
 
 export interface CreateDerivedOpenChatRoomRequest {
