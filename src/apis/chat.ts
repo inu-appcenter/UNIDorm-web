@@ -74,3 +74,41 @@ export const patchRoommateChatRead = async (
   );
   return response;
 };
+
+export type NotificationMode = "EVERY" | "BUNDLED" | "OFF";
+
+interface UpdateOpenChatNotificationRequest {
+  mode: NotificationMode;
+}
+
+export type NotificationMode = "EVERY" | "BUNDLED" | "OFF";
+
+export interface NotificationModeResponse {
+  mode: NotificationMode;
+}
+
+interface UpdateOpenChatNotificationRequest {
+  mode: NotificationMode;
+}
+
+/** 오픈채팅방 내 FCM 알림 모드 조회 */
+export const getOpenChatNotificationMode = async (
+  roomId: number,
+): Promise<AxiosResponse<NotificationModeResponse>> => {
+  const response = await tokenInstance.get<NotificationModeResponse>(
+    `/open-chat-rooms/${roomId}/participants/me/notification`,
+  );
+  return response;
+};
+
+/** 오픈채팅방 FCM 알림 모드 변경 */
+export const updateOpenChatNotificationMode = async (
+  roomId: number,
+  mode: NotificationMode,
+): Promise<AxiosResponse<void>> => {
+  const response = await tokenInstance.patch<void>(
+    `/open-chat-rooms/${roomId}/participants/me/notification`,
+    { mode } as UpdateOpenChatNotificationRequest,
+  );
+  return response;
+};
