@@ -23,10 +23,10 @@ const ChatItemBot = ({
 
   return (
     <Wrapper>
-      <Bubble>
-        <BotLabel>💬 챗봇</BotLabel>
-        <ChatMessageContent content={content} />
-      </Bubble>
+      <ContentArea>
+        <SenderName>횃불이</SenderName>
+        <Bubble><ChatMessageContent content={content} /></Bubble>
+      </ContentArea>
       {(showTime || unreadLabel) && (
         <TimeArea>
           {showTime && <span>{time}</span>}
@@ -48,8 +48,21 @@ const Wrapper = styled.div`
   box-sizing: border-box;
 `;
 
-const Bubble = styled.div`
+const ContentArea = styled.div`
+  display: flex;
+  flex-direction: column;
   max-width: 60%;
+`;
+
+const SenderName = styled.div`
+  margin: 0 0 4px 4px;
+  font-family: "Pretendard", sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  color: #3d3d3d;
+`;
+
+const Bubble = styled.div`
   padding: 10px 14px;
   border-radius: 18px;
   background: #e9ddff;
@@ -60,12 +73,6 @@ const Bubble = styled.div`
   line-height: 1.5;
   white-space: pre-wrap;
   word-break: break-word;
-`;
-
-const BotLabel = styled.div`
-  margin-bottom: 3px;
-  font-size: 13px;
-  font-weight: 600;
 `;
 
 const TimeArea = styled.div`
