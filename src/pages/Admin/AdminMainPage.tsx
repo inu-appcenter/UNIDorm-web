@@ -125,6 +125,13 @@ const AdminMainPage: React.FC = () => {
       isExternal: true,
       category: "운영 및 시스템",
     },
+    {
+      label: "챗봇 메시지 발송",
+      path: "/admin/open-chat-bot",
+      description: "오픈채팅방에 챗봇 안내 메시지를 발송합니다.",
+      icon: <Bot size={20} />,
+      category: "운영 및 시스템",
+    },
   ];
 
   const filteredPages = isSupporters

@@ -14,6 +14,7 @@ import {
   LeaveOpenChatRoomResponse,
   JoinOpenChatRoomResponse,
   UpdateOpenChatRoomRequest,
+  AdminOpenChatRoom,
 } from "@/types/openchat";
 import { AxiosResponse } from "axios";
 import tokenInstance from "./tokenInstance.ts";
@@ -166,3 +167,15 @@ export const updateOpenChatNotificationMode = (
     `/open-chat-rooms/${roomId}/participants/me/notification`,
     { mode },
   );
+
+/** 관리자용: 개인 채팅방을 제외한 오픈채팅방 목록을 조회합니다. */
+export const getAdminOpenChatRooms = (): Promise<
+  AxiosResponse<AdminOpenChatRoom[]>
+> => tokenInstance.get("/admin/open-chat-rooms");
+
+/** 관리자용: 채팅방에 참여하지 않고 챗봇 메시지를 발송합니다. */
+export const sendOpenChatBotMessage = (
+  roomId: number,
+  content: string,
+): Promise<AxiosResponse<void>> =>
+  tokenInstance.post(`/admin/open-chat-rooms/${roomId}/bot`, { content });
