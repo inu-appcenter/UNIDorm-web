@@ -83,7 +83,14 @@ export interface OpenChatMessage {
   senderId: number | null;
   senderNickname: string | null;
   content: string;
-  type: "TEXT" | "IMAGE" | "SYSTEM" | "ROOM_LINK" | "STUDENT_ID_REQUEST";
+  type:
+    | "TEXT"
+    | "IMAGE"
+    | "SYSTEM"
+    | "ROOM_LINK"
+    | "STUDENT_ID_REQUEST"
+    | "BOT";
+  isBot: boolean;
   imageUrls?: string[];
   unreadCount: number;
   createdAt: string;
@@ -92,6 +99,11 @@ export interface OpenChatMessage {
   linkedRoomDescription?: string | null;
   linkedRoomMaxParticipants?: number | null;
   disclosureRequestId?: number | null;
+}
+
+export interface AdminOpenChatRoom {
+  roomId: number;
+  roomName: string;
 }
 
 export interface OpenChatReadEvent {
