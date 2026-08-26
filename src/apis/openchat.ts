@@ -15,6 +15,8 @@ import {
   JoinOpenChatRoomResponse,
   UpdateOpenChatRoomRequest,
   AdminOpenChatRoom,
+  CreateDormOfficialRoomRequest,
+  UpdateDormOfficialRoomRequest,
 } from "@/types/openchat";
 import { AxiosResponse } from "axios";
 import tokenInstance from "./tokenInstance.ts";
@@ -172,6 +174,25 @@ export const updateOpenChatNotificationMode = (
 export const getAdminOpenChatRooms = (): Promise<
   AxiosResponse<AdminOpenChatRoom[]>
 > => tokenInstance.get("/admin/open-chat-rooms");
+
+/** 관리자용: 기숙사 공식 채팅방을 생성합니다. */
+export const createDormOfficialRoom = (
+  data: CreateDormOfficialRoomRequest,
+): Promise<AxiosResponse<unknown>> =>
+  tokenInstance.post("/admin/open-chat-rooms/dorm", data);
+
+/** 관리자용: 기숙사 공식 채팅방 정보를 수정합니다. */
+export const updateDormOfficialRoom = (
+  roomId: number,
+  data: UpdateDormOfficialRoomRequest,
+): Promise<AxiosResponse<void>> =>
+  tokenInstance.patch(`/admin/open-chat-rooms/dorm/${roomId}`, data);
+
+/** 관리자용: 기숙사 공식 채팅방을 삭제합니다. */
+export const deleteDormOfficialRoom = (
+  roomId: number,
+): Promise<AxiosResponse<void>> =>
+  tokenInstance.delete(`/admin/open-chat-rooms/dorm/${roomId}`);
 
 /** 관리자용: 채팅방에 참여하지 않고 챗봇 메시지를 발송합니다. */
 export const sendOpenChatBotMessage = (

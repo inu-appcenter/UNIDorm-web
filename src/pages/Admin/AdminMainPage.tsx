@@ -20,6 +20,7 @@ import {
   ChevronRight,
   ShieldCheck,
   Siren,
+  MessagesSquare,
 } from "lucide-react";
 
 interface AdminPageItem {
@@ -126,10 +127,10 @@ const AdminMainPage: React.FC = () => {
       category: "운영 및 시스템",
     },
     {
-      label: "챗봇 메시지 발송",
-      path: "/admin/open-chat-bot",
-      description: "오픈채팅방에 챗봇 안내 메시지를 발송합니다.",
-      icon: <Bot size={20} />,
+      label: "오픈채팅방 관리",
+      path: "/admin/open-chat-rooms",
+      description: "기숙사 공식 채팅방 생성·수정·삭제 및 챗봇 메시지 발송",
+      icon: <MessagesSquare size={20} />,
       category: "운영 및 시스템",
     },
   ];
@@ -146,7 +147,9 @@ const AdminMainPage: React.FC = () => {
         ].includes(page.label),
       )
     : allAdminPages.filter(
-        (page) => page.label !== "채팅 신고 관리" || isMainAdmin,
+        (page) =>
+          !["채팅 신고 관리", "오픈채팅방 관리"].includes(page.label) ||
+          isMainAdmin,
       );
 
   let categories = Array.from(

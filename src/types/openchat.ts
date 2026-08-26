@@ -106,6 +106,17 @@ export interface AdminOpenChatRoom {
   roomName: string;
 }
 
+export interface CreateDormOfficialRoomRequest {
+  name: string;
+  description: string;
+  dormType: string;
+}
+
+export interface UpdateDormOfficialRoomRequest {
+  name: string;
+  description: string;
+}
+
 export interface OpenChatReadEvent {
   messageId: number;
   unreadCount: number;
