@@ -1703,8 +1703,9 @@ export default function ChattingPage() {
 
             <S.NoticeBody $expanded={isNoticeExpanded}>
               <S.NoticeParagraph>
-                {routeRoomDescription?.trim() ||
-                  "생활 정보 공유, 공동구매, 배달 메이트 등 자유롭게 이야기해보세요."}
+                {routeRoomDescription?.trim()
+                  ? routeRoomDescription.replace(/\\n/g, "\n").trim()
+                  : "생활 정보 공유, 공동구매, 배달 메이트 등 자유롭게 이야기해보세요."}
               </S.NoticeParagraph>
               {!routeRoomDescription?.trim() && (
                 <>
