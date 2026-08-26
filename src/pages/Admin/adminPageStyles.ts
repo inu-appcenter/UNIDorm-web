@@ -517,11 +517,29 @@ export const AdminInput = styled.input`
   }
 `;
 
+export const AdminSelect = styled.select`
+  ${inputBaseStyle};
+  cursor: pointer;
+`;
+
 export const AdminTextarea = styled.textarea`
   ${inputBaseStyle};
   min-height: 150px;
   resize: vertical;
   line-height: 1.6;
+`;
+
+export const AdminNotice = styled.div<{ $tone: "error" | "success" }>`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 15px;
+  border-radius: 14px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: ${({ $tone }) => ($tone === "error" ? "#be123c" : "#047857")};
+  background: ${({ $tone }) => ($tone === "error" ? "#fff1f2" : "#ecfdf5")};
+  border: 1px solid ${({ $tone }) => ($tone === "error" ? "#fecdd3" : "#a7f3d0")};
 `;
 
 export const AdminChoiceGrid = styled.div<{ $minWidth?: string }>`

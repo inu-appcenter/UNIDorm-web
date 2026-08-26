@@ -145,8 +145,8 @@ export const NoticeBody = styled.div<{ $expanded: boolean }>`
   color: #555555;
 
   /* 슬라이드 애니메이션 효과 */
-  overflow: hidden;
-  max-height: ${({ $expanded }) => ($expanded ? "150px" : "0px")};
+  overflow-y: auto;
+  max-height: ${({ $expanded }) => ($expanded ? "320px" : "0px")};
   opacity: ${({ $expanded }) => ($expanded ? "1" : "0")};
   margin-top: ${({ $expanded }) => ($expanded ? "12px" : "0px")};
   transition:
@@ -157,6 +157,8 @@ export const NoticeBody = styled.div<{ $expanded: boolean }>`
 
 export const NoticeParagraph = styled.p`
   margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
 `;
 
 export const FloatingInputArea = styled.div`

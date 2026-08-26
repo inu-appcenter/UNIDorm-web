@@ -88,6 +88,8 @@ import DebugLogPage from "@/pages/MyPage/DebugLogPage";
 import SettingsPage from "@/pages/MyPage/SettingsPage";
 import StatisticsPage from "@/pages/Admin/StatisticsPage";
 import OpenChatReportAdminPage from "@/pages/Admin/OpenChatReportAdminPage";
+import OpenChatBotPage from "@/pages/Admin/OpenChatBotPage";
+import OpenChatAdminPage from "@/pages/Admin/OpenChatAdminPage";
 
 export const router = createBrowserRouter([
   {
@@ -322,6 +324,8 @@ export const router = createBrowserRouter([
                 path: "open-chat-reports",
                 element: <OpenChatReportAdminPage />,
               },
+              { path: "open-chat-bot", element: <OpenChatBotPage /> },
+              { path: "open-chat-rooms", element: <OpenChatAdminPage /> },
             ],
           },
         ],

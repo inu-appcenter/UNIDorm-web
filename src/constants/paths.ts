@@ -74,5 +74,7 @@ export const PATHS = {
     FCM: "/admin/fcm",
     STATISTICS: "/admin/statistics",
     OPEN_CHAT_REPORTS: "/admin/open-chat-reports",
+    OPEN_CHAT_ROOMS: "/admin/open-chat-rooms",
+    OPEN_CHAT_BOT: "/admin/open-chat-bot",
   },
 } as const;

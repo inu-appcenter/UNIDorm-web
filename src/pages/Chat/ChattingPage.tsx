@@ -4,6 +4,7 @@ import React from "react";
 import ChatInfo from "../../components/chat/ChatInfo.tsx";
 import ChatItemOtherPerson from "../../components/chat/ChatItemOtherPerson.tsx";
 import ChatItemMy from "../../components/chat/ChatItemMy.tsx";
+import ChatItemBot from "@/components/chat/ChatItemBot";
 import { useRoommateChat } from "./useRoommateChat.ts";
 import { useOpenChat } from "./useOpenChat";
 import useUserStore from "../../stores/useUserStore.ts";
@@ -61,6 +62,7 @@ type MessageType = {
   userImageUrl?: string | null; // 프로필 이미지 URL NULL 구분
   nickname?: string;
   isSystem?: boolean; // 시스템 메시지 플래그 추가
+  isBot?: boolean;
   senderId?: number | null;
   type?: OpenChatMessage["type"];
   imageUrls?: string[];
@@ -813,6 +815,7 @@ export default function ChattingPage() {
           nickname: normalizedNickname || undefined,
           userImageUrl: null,
           isSystem: normalizedType === "SYSTEM",
+          isBot: msg.isBot || normalizedType === "BOT",
           senderId: normalizedSenderId,
           type: normalizedType,
           imageUrls: msg.imageUrls ?? [],
@@ -1179,6 +1182,7 @@ export default function ChattingPage() {
                     undefined,
                   userImageUrl: null,
                   isSystem: normalizedType === "SYSTEM",
+                  isBot: chat.isBot || normalizedType === "BOT",
                   senderId: normalizedSenderId,
                   type: normalizedType,
                   imageUrls: chat.imageUrls ?? [],
@@ -1391,6 +1395,7 @@ export default function ChattingPage() {
     content: message.content,
     nickname: message.senderNickname ?? undefined,
     isSystem: message.type === "SYSTEM",
+    isBot: message.isBot || message.type === "BOT",
     type: message.type,
     imageUrls: message.imageUrls ?? [],
     disclosureRequestId: message.disclosureRequestId,
@@ -1510,6 +1515,7 @@ export default function ChattingPage() {
   const isRegularBubbleMessage = (message: MessageType) => {
     if (
       message.isSystem ||
+      message.isBot ||
       message.type === "ROOM_LINK" ||
       message.type === "STUDENT_ID_REQUEST"
     ) {
@@ -1697,8 +1703,9 @@ export default function ChattingPage() {
 
             <S.NoticeBody $expanded={isNoticeExpanded}>
               <S.NoticeParagraph>
-                {routeRoomDescription?.trim() ||
-                  "생활 정보 공유, 공동구매, 배달 메이트 등 자유롭게 이야기해보세요."}
+                {routeRoomDescription?.trim()
+                  ? routeRoomDescription.replace(/\\n/g, "\n").trim()
+                  : "생활 정보 공유, 공동구매, 배달 메이트 등 자유롭게 이야기해보세요."}
               </S.NoticeParagraph>
               {!routeRoomDescription?.trim() && (
                 <>
@@ -1791,6 +1798,33 @@ export default function ChattingPage() {
                       </S.DateDivider>
                     )}
                     <S.ShareSystemMessage>{msg.content}</S.ShareSystemMessage>
+                  </React.Fragment>
+                );
+              }
+
+              if (msg.isBot) {
+                const nextMessage = messageList[index + 1];
+                const showMessageTime =
+                  !nextMessage ||
+                  !isRegularBubbleMessage(nextMessage) ||
+                  !isSameMessageSender(msg, nextMessage) ||
+                  !isSameMinute(msg.createdAt, nextMessage.createdAt);
+
+                return (
+                  <React.Fragment key={msg.id}>
+                    {showDateLine && (
+                      <S.DateDivider>{formatDateLine(msg.createdAt)}</S.DateDivider>
+                    )}
+                    <ChatItemBot
+                      content={msg.content}
+                      time={msg.time}
+                      showTime={showMessageTime}
+                      unreadCount={
+                        chatType === "open" || chatType === "personal"
+                          ? msg.unreadCount
+                          : undefined
+                      }
+                    />
                   </React.Fragment>
                 );
               }
