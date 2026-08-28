@@ -12,6 +12,7 @@ import {
   getRoommateChatUnreadCount,
   getAllRoommateChatUnreadCount,
 } from "@/apis/chat";
+import { patchNotificationsRead } from "@/apis/notification";
 import OpenChatRoomCard from "@/components/chat/OpenChatRoomCard";
 import ChatAvatar from "@/components/chat/ChatAvatar";
 import OpenChatTab from "@/components/chat/OpenChatTab";
@@ -341,6 +342,17 @@ export default function OpenChatPage() {
       console.error("채팅 읽음 처리 실패", err);
     }
 
+    void patchNotificationsRead("CHAT", String(room.chatRoomId)).catch(() => {});
+
+    setRoommateRooms((prev) =>
+      prev.map((r) =>
+        r.chatRoomId === room.chatRoomId ? { ...r, unreadCount: 0 } : r,
+      ),
+    );
+    setRoommateUnreadTotal((prev) =>
+      Math.max(0, prev - (room.unreadCount || 0)),
+    );
+
     const isMyRoommate = Boolean(
       room.roommate ||
         room.isMyRoommate ||
@@ -365,13 +377,24 @@ export default function OpenChatPage() {
 
   const handleClickRoom = (room: OpenChatRoom) => {
     if (room.joined) {
+      void patchNotificationsRead("CHAT", String(room.roomId)).catch(() => {});
+
+      setRooms((prev) =>
+        prev.map((r) =>
+          r.roomId === room.roomId ? { ...r, unreadCount: 0 } : r,
+        ),
+      );
+      setMyOpenChatUnreadTotal((prev) =>
+        Math.max(0, prev - (room.unreadCount || 0)),
+      );
+
       const chatRoute = room.roomType === "PERSONAL" ? "personal" : "open";
       navigate(`/chat/${chatRoute}/${room.roomId}`, {
         state: {
           partnerName: room.roomType === "PERSONAL" ? room.name : undefined,
           roomName: room.name,
           roomDescription: room.description,
-          room,
+          room: { ...room, unreadCount: 0 },
         },
       });
       return;

@@ -1049,6 +1049,7 @@ export default function ChattingPage() {
     connect: connectOpen,
     disconnect: disconnectOpen,
     sendMessage: sendOpenMessage,
+    sendRead: sendOpenRead,
     isConnected: isOpenConnected,
   } = useOpenChat({
     roomId,
@@ -1066,6 +1067,10 @@ export default function ChattingPage() {
         studentIdRequestPayload?.requesterId ?? msg.senderId ?? null;
       const normalizedNickname =
         msg.senderNickname || studentIdRequestPayload?.requesterNickname;
+
+      if (normalizedSenderId !== userId && msg.messageId) {
+        sendOpenRead(msg.messageId);
+      }
 
       if (chatType === "open" && normalizedType === "STUDENT_ID_REQUEST") {
         return;
@@ -1148,6 +1153,7 @@ export default function ChattingPage() {
     },
     onConnect: () => {
       console.log("✅ Open WebSocket 연결됨");
+      sendOpenRead();
     },
     onDisconnect: () => {
       console.log("🛑 Open WebSocket 연결 해제됨");

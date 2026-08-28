@@ -146,6 +146,17 @@ export const useOpenChat = ({
     stompSend("/pub/openchat/socketchat", message);
   };
 
+  const sendRead = (lastMessageId?: number | null) => {
+    const payload = {
+      roomId,
+      userId,
+      messageId: lastMessageId ?? null,
+    };
+
+    console.log("📖 [SEND READ] 오픈채팅 읽음 처리 전송:", payload);
+    stompSend("/pub/openchat/read", payload);
+  };
+
   const disconnect = () => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       wsRef.current.send("DISCONNECT\n\n\u0000");
@@ -176,6 +187,7 @@ export const useOpenChat = ({
     connect,
     disconnect,
     sendMessage,
+    sendRead,
     isConnected: connected,
   };
 };
