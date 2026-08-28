@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { OpenChatMessage, OpenChatReadEvent } from "@/types/openchat";
 
 interface OpenChatMessagePayload {
@@ -30,6 +30,20 @@ export const useOpenChat = ({
   const subscriptions = useRef<string[]>([]);
   const callbacks = useRef<Record<string, (payload: unknown) => void>>({});
   const pendingSubscriptions = useRef<string[]>([]);
+  const isManualDisconnect = useRef(false);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const onMessageRef = useRef(onMessage);
+  const onReadRef = useRef(onRead);
+  const onConnectRef = useRef(onConnect);
+  const onDisconnectRef = useRef(onDisconnect);
+
+  useEffect(() => {
+    onMessageRef.current = onMessage;
+    onReadRef.current = onRead;
+    onConnectRef.current = onConnect;
+    onDisconnectRef.current = onDisconnect;
+  }, [onMessage, onRead, onConnect, onDisconnect]);
 
   const stompSend = (destination: string, body: unknown) => {
     if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
@@ -48,8 +62,32 @@ export const useOpenChat = ({
     wsRef.current.send(frame);
   };
 
-  const connect = () => {
-    if (connected || wsRef.current?.readyState === WebSocket.OPEN) return;
+  const doSubscribe = (destination: string) => {
+    const id = Math.random().toString(36).substring(2, 10);
+    const frame =
+      `SUBSCRIBE\nid:${id}\ndestination:${destination}\n` +
+      (token ? `Authorization:Bearer ${token}\n` : ``) +
+      `\n\u0000`;
+    wsRef.current?.send(frame);
+    if (!subscriptions.current.includes(destination)) {
+      subscriptions.current.push(destination);
+    }
+  };
+
+  const connect = useCallback(() => {
+    if (
+      wsRef.current?.readyState === WebSocket.OPEN ||
+      wsRef.current?.readyState === WebSocket.CONNECTING
+    ) {
+      return;
+    }
+    if (!token || !roomId || !userId) return;
+
+    isManualDisconnect.current = false;
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
 
     const socket = new WebSocket(
       `wss://${import.meta.env.VITE_API_SUBDOMAIN}.inuappcenter.kr/ws-stomp`,
@@ -70,7 +108,11 @@ export const useOpenChat = ({
 
       if (data.startsWith("CONNECTED")) {
         setConnected(true);
-        onConnect?.();
+        onConnectRef.current?.();
+
+        subscriptions.current = [];
+        doSubscribe(`/sub/openchat/${roomId}`);
+        doSubscribe(`/sub/openchat/${roomId}/read`);
 
         pendingSubscriptions.current.forEach((dest) => {
           doSubscribe(dest);
@@ -88,10 +130,16 @@ export const useOpenChat = ({
         try {
           const parsed = JSON.parse(body);
           console.log("📩 [RECEIVED MESSAGE]:", parsed);
-          const callback = callbacks.current[destination];
 
-          if (callback) {
-            callback(parsed);
+          if (destination === `/sub/openchat/${roomId}`) {
+            onMessageRef.current?.(parsed as OpenChatMessage);
+          } else if (destination === `/sub/openchat/${roomId}/read`) {
+            onReadRef.current?.(parsed as OpenChatReadEvent);
+          } else {
+            const callback = callbacks.current[destination];
+            if (callback) {
+              callback(parsed);
+            }
           }
         } catch (e) {
           console.error("메시지 파싱 실패:", e);
@@ -103,36 +151,32 @@ export const useOpenChat = ({
 
     socket.onclose = () => {
       setConnected(false);
-      onDisconnect?.();
+      onDisconnectRef.current?.();
+
+      if (!isManualDisconnect.current) {
+        reconnectTimeoutRef.current = setTimeout(() => {
+          connect();
+        }, 3000);
+      }
     };
 
     socket.onerror = (e) => {
       console.error("WebSocket error", e);
     };
-  };
-
-  const doSubscribe = (destination: string) => {
-    const id = Math.random().toString(36).substring(2, 10);
-    const frame =
-      `SUBSCRIBE\nid:${id}\ndestination:${destination}\n` +
-      (token ? `Authorization:Bearer ${token}\n` : ``) +
-      `\n\u0000`;
-    wsRef.current?.send(frame);
-    subscriptions.current.push(destination);
-  };
+  }, [roomId, token, userId]);
 
   const subscribe = (
     destination: string,
     callback: (payload: unknown) => void,
   ) => {
-    if (subscriptions.current.includes(destination)) return;
-
     callbacks.current[destination] = callback;
 
     if (connected && wsRef.current?.readyState === WebSocket.OPEN) {
       doSubscribe(destination);
     } else {
-      pendingSubscriptions.current.push(destination);
+      if (!pendingSubscriptions.current.includes(destination)) {
+        pendingSubscriptions.current.push(destination);
+      }
     }
   };
 
@@ -157,37 +201,35 @@ export const useOpenChat = ({
     stompSend("/pub/openchat/read", payload);
   };
 
-  const disconnect = () => {
+  const disconnect = useCallback(() => {
+    isManualDisconnect.current = true;
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       wsRef.current.send("DISCONNECT\n\n\u0000");
       wsRef.current.close();
     }
+    wsRef.current = null;
     subscriptions.current = [];
     pendingSubscriptions.current = [];
     callbacks.current = {};
     setConnected(false);
-  };
+  }, []);
 
   useEffect(() => {
-    subscribe(`/sub/openchat/${roomId}`, (payload) =>
-      onMessage(payload as OpenChatMessage),
-    );
-    if (onRead) {
-      subscribe(`/sub/openchat/${roomId}/read`, (payload) =>
-        onRead(payload as OpenChatReadEvent),
-      );
-    }
-
     return () => {
       disconnect();
     };
-  }, [roomId, userId]);
+  }, [disconnect]);
 
   return {
     connect,
     disconnect,
     sendMessage,
     sendRead,
+    subscribe,
     isConnected: connected,
   };
 };

@@ -573,14 +573,18 @@ export default function ChattingPage() {
     // 2. 새로운 메시지가 하단에 추가되었을 때
     if (isNewMessageAtBottom) {
       // 본인이 보낸 메시지이거나 현재 스크롤이 바닥 근처에 있으면 아래로 스크롤
-      if (latestMessage.sender === "me" || isNearBottom()) {
+      // 단, 이미지 뷰어가 열려있는 동안에는 스크롤로 인한 화면 방해를 막기 위해 스킵
+      if (
+        (latestMessage.sender === "me" || isNearBottom()) &&
+        !selectedImageUrl
+      ) {
         const timer = setTimeout(() => {
           scrollToBottom();
         }, 50);
         return () => clearTimeout(timer);
       }
     }
-  }, [messageList]);
+  }, [messageList, selectedImageUrl]);
 
   // 오픈채팅 / 1:1 개인 오픈채팅 과거 메시지 페칭 (서버 커서 기반)
   const fetchOlderOpenChatMessages = useCallback(async () => {
@@ -1157,9 +1161,6 @@ export default function ChattingPage() {
     },
     onDisconnect: () => {
       console.log("🛑 Open WebSocket 연결 해제됨");
-      if (!isLeavingRef.current) {
-        window.location.reload();
-      }
     },
   });
 
