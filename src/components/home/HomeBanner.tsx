@@ -22,9 +22,9 @@ export default function HomeBanner() {
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const handleIntipBannerClick = () => {
-    if (platform === "ios_webview") {
+    if (platform === "ios_unidorm_app") {
       window.open("https://apps.apple.com/kr/app/intip/id6740070975", "_blank");
-    } else if (platform === "android_webview") {
+    } else if (platform === "android_unidorm_app") {
       window.open(
         "https://play.google.com/store/apps/details?id=inu.appcenter.intip_android",
         "_blank",

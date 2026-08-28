@@ -380,7 +380,7 @@ const StyledBottomBar = styled.footer`
 
   width: 100%;
   padding: 8px 20px 16px 20px;
-  padding-bottom: ${platform === "ios_webview" ? "24px" : "16px"};
+  padding-bottom: ${platform === "ios_unidorm_app" ? "24px" : "16px"};
   box-sizing: border-box;
   pointer-events: none;
 `;

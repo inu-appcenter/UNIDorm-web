@@ -121,7 +121,7 @@ const ComplainListPage = () => {
 
   useEffect(() => {
     const platform = getMobilePlatform();
-    if (platform !== "ios_webview" && platform !== "android_webview") {
+    if (platform !== "ios_unidorm_app" && platform !== "android_unidorm_app") {
       setNotification({
         title: "민원 처리 상태 알림은 앱에서만 받을 수 있어요",
         message: `스토어에서 유니돔 앱을 설치 후 로그인하세요.`,

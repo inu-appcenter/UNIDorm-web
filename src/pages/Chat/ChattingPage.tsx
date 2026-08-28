@@ -131,6 +131,18 @@ const parseStudentIdRequestPayload = (
   }
 };
 
+const isOpenChatLeaveMessage = (content?: string | null) => {
+  if (!content) return false;
+  const trimmed = content.trim();
+  return (
+    trimmed.includes("님이 퇴장했습니다") ||
+    trimmed.includes("님이 퇴장하셨습니다") ||
+    trimmed.includes("님이 나갔습니다") ||
+    trimmed.includes("님이 채팅방을 나갔습니다") ||
+    trimmed.includes("님이 채팅방을 퇴장했습니다")
+  );
+};
+
 const dedupeStudentIdDisclosureMessages = (messages: MessageType[]) => {
   const seenRequestIds = new Set<number>();
 
@@ -636,7 +648,15 @@ export default function ChattingPage() {
 
       const visibleChats =
         chatType === "open"
-          ? sortedOlderChats.filter((m) => m.type !== "STUDENT_ID_REQUEST")
+          ? sortedOlderChats
+              .filter((m) => m.type !== "STUDENT_ID_REQUEST")
+              .filter(
+                (m) =>
+                  !(
+                    m.type === "SYSTEM" &&
+                    isOpenChatLeaveMessage(m.content)
+                  ),
+              )
           : sortedOlderChats;
 
       const formattedOlderMessages: MessageType[] =
@@ -1083,7 +1103,11 @@ export default function ChattingPage() {
         sendOpenRead(msg.messageId);
       }
 
-      if (chatType === "open" && normalizedType === "STUDENT_ID_REQUEST") {
+      if (
+        chatType === "open" &&
+        (normalizedType === "STUDENT_ID_REQUEST" ||
+          (normalizedType === "SYSTEM" && isOpenChatLeaveMessage(msg.content)))
+      ) {
         return;
       }
 
@@ -1414,7 +1438,15 @@ export default function ChattingPage() {
           });
           const visibleChats =
             chatType === "open"
-              ? chats.filter((message) => message.type !== "STUDENT_ID_REQUEST")
+              ? chats
+                  .filter((message) => message.type !== "STUDENT_ID_REQUEST")
+                  .filter(
+                    (message) =>
+                      !(
+                        message.type === "SYSTEM" &&
+                        isOpenChatLeaveMessage(message.content)
+                      ),
+                  )
               : chats;
           let disclosureOpponentId =
             chatType === "personal" ? openChatOpponentIdRef.current : null;
@@ -2191,6 +2223,13 @@ export default function ChattingPage() {
               }
 
               if (msg.isSystem) {
+                if (
+                  chatType === "open" &&
+                  isOpenChatLeaveMessage(msg.content)
+                ) {
+                  return null;
+                }
+
                 return (
                   <React.Fragment key={msg.id}>
                     {showDateLine && (
