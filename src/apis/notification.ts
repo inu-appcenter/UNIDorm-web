@@ -126,9 +126,11 @@ export const patchNotificationsRead = async (
   type: "NOTICE" | "CHAT",
   targetId: string,
 ): Promise<AxiosResponse<void>> => {
+  const numericId = Number(targetId);
   const response = await tokenInstance.patch<void>("/notifications/read", {
     type,
     targetId,
+    targetIdAsLong: Number.isFinite(numericId) ? numericId : undefined,
   });
   return response;
 };

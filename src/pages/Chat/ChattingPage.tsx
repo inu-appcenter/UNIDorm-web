@@ -1,5 +1,5 @@
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import React from "react";
 import ChatInfo from "../../components/chat/ChatInfo.tsx";
 import ChatItemOtherPerson from "../../components/chat/ChatItemOtherPerson.tsx";
@@ -139,6 +139,49 @@ const dedupeStudentIdDisclosureMessages = (messages: MessageType[]) => {
 
     return true;
   });
+};
+
+const mapOpenChatMessageToMessageType = (
+  chat: OpenChatMessage,
+  userId: number,
+): MessageType => {
+  const studentIdRequestPayload = parseStudentIdRequestPayload(chat.content);
+  const normalizedType = studentIdRequestPayload
+    ? "STUDENT_ID_REQUEST"
+    : chat.type;
+  const normalizedSenderId =
+    studentIdRequestPayload?.requesterId ?? chat.senderId ?? null;
+
+  return {
+    id: chat.messageId,
+    sender: normalizedSenderId === userId ? "me" : "other",
+    content: studentIdRequestPayload ? "학번 공유 요청" : chat.content,
+    nickname:
+      chat.senderNickname ||
+      studentIdRequestPayload?.requesterNickname ||
+      undefined,
+    userImageUrl: null,
+    isSystem: normalizedType === "SYSTEM",
+    isBot: chat.isBot || normalizedType === "BOT",
+    senderId: normalizedSenderId,
+    type: normalizedType,
+    imageUrls: chat.imageUrls ?? [],
+    disclosureRequestId:
+      chat.disclosureRequestId ??
+      studentIdRequestPayload?.requestId ??
+      null,
+    linkedRoomId: chat.linkedRoomId,
+    linkedRoomName: chat.linkedRoomName,
+    linkedRoomDescription: chat.linkedRoomDescription,
+    linkedRoomMaxParticipants: chat.linkedRoomMaxParticipants,
+    unreadCount: chat.unreadCount,
+    time: new Date(chat.createdAt).toLocaleTimeString("ko-KR", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    }),
+    createdAt: chat.createdAt,
+  };
 };
 
 const parseLegacyRoommateShareMessage = (
@@ -323,6 +366,17 @@ export default function ChattingPage() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const noticeRef = useRef<HTMLDivElement>(null);
+  const topSentinelRef = useRef<HTMLDivElement>(null);
+  const lastMessageIdRef = useRef<number | null>(null);
+  const isInitialLoadedRef = useRef(false);
+  const isInitialScrollReadyRef = useRef(false);
+  const allRoommateMessagesRef = useRef<MessageType[]>([]);
+  const roommateLoadedCountRef = useRef(30);
+
+  const [hasNextMessages, setHasNextMessages] = useState(false);
+  const [nextCursor, setNextCursor] = useState<number | null>(null);
+  const [isFetchingOlderMessages, setIsFetchingOlderMessages] = useState(false);
+  const [isInitialScrollReady, setIsInitialScrollReady] = useState(false);
 
   const roomId = Number(id);
   const userId = userInfo.id;
@@ -459,19 +513,247 @@ export default function ChattingPage() {
     };
   }, [isNoticeExpanded]);
 
+  // 방이 바뀌었을 때 초기화
+  useEffect(() => {
+    isInitialLoadedRef.current = false;
+    isInitialScrollReadyRef.current = false;
+    setIsInitialScrollReady(false);
+    lastMessageIdRef.current = null;
+    setHasNextMessages(false);
+    setNextCursor(null);
+    allRoommateMessagesRef.current = [];
+    roommateLoadedCountRef.current = 30;
+  }, [id, chatType]);
+
   // 내부 스크롤 이동
-  const scrollToBottom = () => {
+  const scrollToBottom = (smooth = false) => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      if (smooth) {
+        scrollRef.current.scrollTo({
+          top: scrollRef.current.scrollHeight,
+          behavior: "smooth",
+        });
+      } else {
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      }
     }
   };
 
+  const isNearBottom = () => {
+    if (!scrollRef.current) return true;
+    const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+    return scrollHeight - scrollTop - clientHeight < 150;
+  };
+
+  // 메시지 리스트 변경 시 스크롤 위치 제어
   useEffect(() => {
-    const timer = setTimeout(() => {
-      scrollToBottom();
-    }, 50);
-    return () => clearTimeout(timer);
+    if (messageList.length === 0) return;
+
+    const latestMessage = messageList[messageList.length - 1];
+    const isNewMessageAtBottom =
+      latestMessage.id !== lastMessageIdRef.current;
+    lastMessageIdRef.current = latestMessage.id;
+
+    // 1. 첫 로딩 시 맨 아래로 이동하고 안착된 후에만 무한스크롤 옵저버 활성화
+    if (!isInitialLoadedRef.current) {
+      isInitialLoadedRef.current = true;
+      if (scrollRef.current) {
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      }
+      const timer = setTimeout(() => {
+        scrollToBottom();
+        requestAnimationFrame(() => {
+          isInitialScrollReadyRef.current = true;
+          setIsInitialScrollReady(true);
+        });
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+
+    // 2. 새로운 메시지가 하단에 추가되었을 때
+    if (isNewMessageAtBottom) {
+      // 본인이 보낸 메시지이거나 현재 스크롤이 바닥 근처에 있으면 아래로 스크롤
+      if (latestMessage.sender === "me" || isNearBottom()) {
+        const timer = setTimeout(() => {
+          scrollToBottom();
+        }, 50);
+        return () => clearTimeout(timer);
+      }
+    }
   }, [messageList]);
+
+  // 오픈채팅 / 1:1 개인 오픈채팅 과거 메시지 페칭 (서버 커서 기반)
+  const fetchOlderOpenChatMessages = useCallback(async () => {
+    if (
+      !hasNextMessages ||
+      isFetchingOlderMessages ||
+      nextCursor == null ||
+      (chatType !== "open" && chatType !== "personal") ||
+      !isInitialScrollReadyRef.current
+    ) {
+      return;
+    }
+
+    const container = scrollRef.current;
+    if (!container) return;
+
+    const prevScrollHeight = container.scrollHeight;
+    const prevScrollTop = container.scrollTop;
+
+    setIsFetchingOlderMessages(true);
+
+    try {
+      const response = await getOpenChatMessages(roomId, nextCursor, 30);
+      const { messages: olderChats, hasNext, nextCursor: newCursor } =
+        response.data;
+
+      setHasNextMessages(hasNext);
+      setNextCursor(newCursor);
+
+      if (olderChats.length === 0) return;
+
+      const sortedOlderChats = [...olderChats].sort((a, b) => {
+        const createdAtDifference =
+          Date.parse(a.createdAt) - Date.parse(b.createdAt);
+
+        if (Number.isFinite(createdAtDifference)) {
+          return createdAtDifference || a.messageId - b.messageId;
+        }
+
+        return a.messageId - b.messageId;
+      });
+
+      const visibleChats =
+        chatType === "open"
+          ? sortedOlderChats.filter((m) => m.type !== "STUDENT_ID_REQUEST")
+          : sortedOlderChats;
+
+      const formattedOlderMessages: MessageType[] =
+        dedupeStudentIdDisclosureMessages(
+          visibleChats.map((chat) =>
+            mapOpenChatMessageToMessageType(chat, userId),
+          ),
+        );
+
+      setMessageList((prev) => {
+        const existingIds = new Set(prev.map((m) => m.id));
+        const uniqueOlder = formattedOlderMessages.filter(
+          (m) => !existingIds.has(m.id),
+        );
+        if (uniqueOlder.length === 0) return prev;
+        return [...uniqueOlder, ...prev];
+      });
+
+      // 스크롤 위치 복원 (사용자가 보고 있던 위치 유지)
+      requestAnimationFrame(() => {
+        if (scrollRef.current) {
+          const newScrollHeight = scrollRef.current.scrollHeight;
+          scrollRef.current.scrollTop =
+            newScrollHeight - prevScrollHeight + prevScrollTop;
+        }
+      });
+    } catch (error) {
+      console.error("이전 오픈채팅 메시지 불러오기 실패:", error);
+    } finally {
+      setIsFetchingOlderMessages(false);
+    }
+  }, [
+    hasNextMessages,
+    isFetchingOlderMessages,
+    nextCursor,
+    chatType,
+    roomId,
+    userId,
+  ]);
+
+  // 룸메이트 1:1 채팅 과거 메시지 페칭 (클라이언트 무한 스크롤)
+  const fetchOlderRoommateMessages = useCallback(() => {
+    if (
+      !hasNextMessages ||
+      isFetchingOlderMessages ||
+      chatType !== "roommate" ||
+      !isInitialScrollReadyRef.current
+    ) {
+      return;
+    }
+
+    const container = scrollRef.current;
+    if (!container) return;
+
+    const prevScrollHeight = container.scrollHeight;
+    const prevScrollTop = container.scrollTop;
+
+    setIsFetchingOlderMessages(true);
+
+    const all = allRoommateMessagesRef.current;
+    const currentCount = roommateLoadedCountRef.current;
+    const nextCount = currentCount + 30;
+    const startIndex = Math.max(0, all.length - nextCount);
+    const endIndex = all.length - currentCount;
+    const olderSlice = all.slice(startIndex, endIndex);
+
+    roommateLoadedCountRef.current = nextCount;
+    if (startIndex <= 0) {
+      setHasNextMessages(false);
+    }
+
+    setMessageList((prev) => [...olderSlice, ...prev]);
+
+    requestAnimationFrame(() => {
+      if (scrollRef.current) {
+        const newScrollHeight = scrollRef.current.scrollHeight;
+        scrollRef.current.scrollTop =
+          newScrollHeight - prevScrollHeight + prevScrollTop;
+      }
+      setIsFetchingOlderMessages(false);
+    });
+  }, [hasNextMessages, isFetchingOlderMessages, chatType]);
+
+  // 통합 과거 메시지 페칭
+  const fetchOlderMessages = useCallback(() => {
+    if (!isInitialScrollReadyRef.current) return;
+    if (chatType === "roommate") {
+      fetchOlderRoommateMessages();
+    } else if (chatType === "open" || chatType === "personal") {
+      fetchOlderOpenChatMessages();
+    }
+  }, [chatType, fetchOlderRoommateMessages, fetchOlderOpenChatMessages]);
+
+  // 상단 스크롤 감지 (IntersectionObserver)
+  useEffect(() => {
+    if (!isInitialScrollReady || !hasNextMessages || isFetchingOlderMessages)
+      return;
+
+    const sentinel = topSentinelRef.current;
+    const container = scrollRef.current;
+    if (!sentinel || !container) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (
+          entries[0].isIntersecting &&
+          isInitialScrollReadyRef.current &&
+          hasNextMessages &&
+          !isFetchingOlderMessages
+        ) {
+          fetchOlderMessages();
+        }
+      },
+      {
+        root: container,
+        rootMargin: "80px 0px 0px 0px",
+        threshold: 0.01,
+      },
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [
+    isInitialScrollReady,
+    hasNextMessages,
+    isFetchingOlderMessages,
+    fetchOlderMessages,
+  ]);
 
   // 로컬 메시지 리스트에 커스텀 메시지를 직접 추가하는 헬퍼 함수
   const appendCustomMessageLocal = (content: string) => {
@@ -767,6 +1049,7 @@ export default function ChattingPage() {
     connect: connectOpen,
     disconnect: disconnectOpen,
     sendMessage: sendOpenMessage,
+    sendRead: sendOpenRead,
     isConnected: isOpenConnected,
   } = useOpenChat({
     roomId,
@@ -784,6 +1067,10 @@ export default function ChattingPage() {
         studentIdRequestPayload?.requesterId ?? msg.senderId ?? null;
       const normalizedNickname =
         msg.senderNickname || studentIdRequestPayload?.requesterNickname;
+
+      if (normalizedSenderId !== userId && msg.messageId) {
+        sendOpenRead(msg.messageId);
+      }
 
       if (chatType === "open" && normalizedType === "STUDENT_ID_REQUEST") {
         return;
@@ -866,6 +1153,7 @@ export default function ChattingPage() {
     },
     onConnect: () => {
       console.log("✅ Open WebSocket 연결됨");
+      sendOpenRead();
     },
     onDisconnect: () => {
       console.log("🛑 Open WebSocket 연결 해제됨");
@@ -1048,7 +1336,18 @@ export default function ChattingPage() {
             });
           }
 
-          setMessageList(formattedMessages);
+          allRoommateMessagesRef.current = formattedMessages;
+          roommateLoadedCountRef.current = 30;
+
+          if (formattedMessages.length > 30) {
+            setHasNextMessages(true);
+            setMessageList(
+              formattedMessages.slice(formattedMessages.length - 30),
+            );
+          } else {
+            setHasNextMessages(false);
+            setMessageList(formattedMessages);
+          }
           clearPendingDisclosureRouteState();
         } catch (error) {
           console.error("채팅 내역 불러오기 실패:", error);
@@ -1090,9 +1389,12 @@ export default function ChattingPage() {
 
         try {
           const [response, participantsResponse] = await Promise.all([
-            getOpenChatMessages(roomId),
+            getOpenChatMessages(roomId, null, 30),
             getOpenChatParticipants(roomId),
           ]);
+          setHasNextMessages(response.data.hasNext);
+          setNextCursor(response.data.nextCursor);
+
           const participants = participantsResponse.data.participants;
           setIsOpenChatHost(
             participants.some(
@@ -1160,49 +1462,9 @@ export default function ChattingPage() {
 
           const formattedMessages: MessageType[] =
             dedupeStudentIdDisclosureMessages(
-              visibleChats.map((chat) => {
-                const studentIdRequestPayload = parseStudentIdRequestPayload(
-                  chat.content,
-                );
-                const normalizedType = studentIdRequestPayload
-                  ? "STUDENT_ID_REQUEST"
-                  : chat.type;
-                const normalizedSenderId =
-                  studentIdRequestPayload?.requesterId ?? chat.senderId ?? null;
-
-                return {
-                  id: chat.messageId,
-                  sender: normalizedSenderId === userId ? "me" : "other",
-                  content: studentIdRequestPayload
-                    ? "학번 공유 요청"
-                    : chat.content,
-                  nickname:
-                    chat.senderNickname ||
-                    studentIdRequestPayload?.requesterNickname ||
-                    undefined,
-                  userImageUrl: null,
-                  isSystem: normalizedType === "SYSTEM",
-                  isBot: chat.isBot || normalizedType === "BOT",
-                  senderId: normalizedSenderId,
-                  type: normalizedType,
-                  imageUrls: chat.imageUrls ?? [],
-                  disclosureRequestId:
-                    chat.disclosureRequestId ??
-                    studentIdRequestPayload?.requestId ??
-                    null,
-                  linkedRoomId: chat.linkedRoomId,
-                  linkedRoomName: chat.linkedRoomName,
-                  linkedRoomDescription: chat.linkedRoomDescription,
-                  linkedRoomMaxParticipants: chat.linkedRoomMaxParticipants,
-                  unreadCount: chat.unreadCount,
-                  time: new Date(chat.createdAt).toLocaleTimeString("ko-KR", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    hour12: true,
-                  }),
-                  createdAt: chat.createdAt,
-                };
-              }),
+              visibleChats.map((chat) =>
+                mapOpenChatMessageToMessageType(chat, userId),
+              ),
             );
 
           const currentOpenChatRequestId =
@@ -1728,6 +1990,25 @@ export default function ChattingPage() {
           <LoadingSpinner message="채팅 내역을 가져오고 있습니다..." />
         ) : (
           <>
+            {isInitialScrollReady && hasNextMessages && (
+              <div
+                ref={topSentinelRef}
+                style={{ height: "1px", width: "100%", pointerEvents: "none" }}
+              />
+            )}
+            {isFetchingOlderMessages && (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  padding: "10px 0",
+                  gap: "8px",
+                }}
+              >
+                <LoadingSpinner />
+              </div>
+            )}
             {messageList.map((msg, index) => {
               if (
                 chatType === "roommate" &&
