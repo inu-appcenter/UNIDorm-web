@@ -14,6 +14,7 @@ type Props = {
   unreadCount?: number;
   onMessageClick?: () => void;
   onImageClick?: (url: string) => void;
+  onAvatarClick?: () => void;
 };
 
 const ChatItemOtherPerson = ({
@@ -27,6 +28,7 @@ const ChatItemOtherPerson = ({
   unreadCount,
   onMessageClick,
   onImageClick,
+  onAvatarClick,
 }: Props) => {
   const unreadLabel =
     typeof unreadCount === "number"
@@ -48,16 +50,34 @@ const ChatItemOtherPerson = ({
     <ChatItemOtherPersonWrapper>
       <ProfileImg
         $hidden={!showSenderInfo}
+        $clickable={Boolean(onAvatarClick)}
         src={userImageUrl && userImageUrl !== "string" ? userImageUrl : profile}
         alt="상대방"
         onError={(e) => {
           e.currentTarget.onerror = null;
           e.currentTarget.src = profile;
         }}
+        onClick={(e) => {
+          if (onAvatarClick) {
+            e.stopPropagation();
+            onAvatarClick();
+          }
+        }}
       />
       <ContentArea>
         {showSenderInfo && senderName && (
-          <div className="sender-name">{senderName}</div>
+          <div
+            className="sender-name"
+            style={{ cursor: onAvatarClick ? "pointer" : "default" }}
+            onClick={(e) => {
+              if (onAvatarClick) {
+                e.stopPropagation();
+                onAvatarClick();
+              }
+            }}
+          >
+            {senderName}
+          </div>
         )}
         {imageUrls?.length ? (
           <ImageGrid
@@ -141,13 +161,24 @@ const ImageGrid = styled.div<{ $clickable?: boolean }>`
   }
 `;
 
-const ProfileImg = styled.img<{ $hidden: boolean }>`
+const ProfileImg = styled.img<{ $hidden: boolean; $clickable?: boolean }>`
   width: 30px;
   height: 30px;
   border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
   visibility: ${({ $hidden }) => ($hidden ? "hidden" : "visible")};
+  cursor: ${({ $clickable }) => ($clickable ? "pointer" : "default")};
+  transition: transform 0.15s ease, filter 0.15s ease;
+
+  &:active {
+    ${({ $clickable }) =>
+      $clickable &&
+      `
+      transform: scale(0.92);
+      filter: brightness(0.9);
+    `}
+  }
 `;
 
 const ContentArea = styled.div`

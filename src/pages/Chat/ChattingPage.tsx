@@ -18,6 +18,8 @@ import {
   getOpenChatMessages,
   getOpenChatRooms,
   joinOpenChatRoom,
+  createPersonalOpenChatRoom,
+  transferOpenChatHost,
 } from "@/apis/openchat";
 import {
   getOpenChatParticipants,
@@ -25,9 +27,10 @@ import {
   sendOpenChatImages,
 } from "@/apis/openchat";
 import { OpenChatReportReason, reportOpenChatMessage } from "@/apis/report";
-import { OpenChatMessage, OpenChatRoom } from "@/types/openchat";
+import { OpenChatMessage, OpenChatParticipant, OpenChatRoom } from "@/types/openchat";
 import PhotoAttachmentBottomSheet from "@/components/chat/PhotoAttachmentBottomSheet";
 import ChatMessageActionSheet from "@/components/chat/ChatMessageActionSheet";
+import ChatMemberActionSheet from "@/components/chat/ChatMemberActionSheet";
 import ImageViewerModal from "@/components/chat/ImageViewerModal";
 import TooltipMessage from "@/components/common/TooltipMessage";
 import { useSetHeader } from "@/hooks/useSetHeader";
@@ -51,7 +54,7 @@ import {
 import { getMyRoommateInfo } from "@/apis/roommate";
 import type { StudentIdDisclosureStatus } from "@/apis/studentIdDisclosure";
 import { isAxiosError } from "axios";
-import { getBlockedUsers } from "@/apis/block";
+import { blockUser, getBlockedUsers } from "@/apis/block";
 
 type MessageType = {
   id: number;
@@ -455,6 +458,10 @@ export default function ChattingPage() {
   );
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
   const [isOpenChatHost, setIsOpenChatHost] = useState(false);
+  const [participants, setParticipants] = useState<OpenChatParticipant[]>([]);
+  const [selectedMember, setSelectedMember] =
+    useState<OpenChatParticipant | null>(null);
+  const [memberActionSheetOpen, setMemberActionSheetOpen] = useState(false);
   const menuContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -573,14 +580,18 @@ export default function ChattingPage() {
     // 2. 새로운 메시지가 하단에 추가되었을 때
     if (isNewMessageAtBottom) {
       // 본인이 보낸 메시지이거나 현재 스크롤이 바닥 근처에 있으면 아래로 스크롤
-      if (latestMessage.sender === "me" || isNearBottom()) {
+      // 단, 이미지 뷰어가 열려있는 동안에는 스크롤로 인한 화면 방해를 막기 위해 스킵
+      if (
+        (latestMessage.sender === "me" || isNearBottom()) &&
+        !selectedImageUrl
+      ) {
         const timer = setTimeout(() => {
           scrollToBottom();
         }, 50);
         return () => clearTimeout(timer);
       }
     }
-  }, [messageList]);
+  }, [messageList, selectedImageUrl]);
 
   // 오픈채팅 / 1:1 개인 오픈채팅 과거 메시지 페칭 (서버 커서 기반)
   const fetchOlderOpenChatMessages = useCallback(async () => {
@@ -1157,9 +1168,6 @@ export default function ChattingPage() {
     },
     onDisconnect: () => {
       console.log("🛑 Open WebSocket 연결 해제됨");
-      if (!isLeavingRef.current) {
-        window.location.reload();
-      }
     },
   });
 
@@ -1360,27 +1368,16 @@ export default function ChattingPage() {
         setIsHistoryLoading(true);
         setIsBlockedByPartner(Boolean(routeRoom?.isBlockedByPartner));
 
-        if (chatType === "open" || chatType === "personal") {
+        if ((chatType === "open" || chatType === "personal") && !openChatRoomName) {
           try {
-            let page = 0;
-            let totalPages = 1;
+            const roomsResponse = await getOpenChatRooms("MY", 0, 50);
+            const currentRoom = roomsResponse.data.content.find(
+              (room) => room.roomId === roomId,
+            );
 
-            while (page < totalPages) {
-              const roomsResponse = await getOpenChatRooms("MY", page);
-              const currentRoom = roomsResponse.data.content.find(
-                (room) => room.roomId === roomId,
-              );
-
-              if (currentRoom) {
-                setOpenChatRoomName(currentRoom.name);
-                setIsBlockedByPartner(
-                  Boolean(currentRoom.isBlockedByPartner),
-                );
-                break;
-              }
-
-              totalPages = roomsResponse.data.totalPages;
-              page += 1;
+            if (currentRoom) {
+              setOpenChatRoomName(currentRoom.name);
+              setIsBlockedByPartner(Boolean(currentRoom.isBlockedByPartner));
             }
           } catch (error) {
             console.error("오픈채팅방 정보 조회 실패:", error);
@@ -1395,9 +1392,10 @@ export default function ChattingPage() {
           setHasNextMessages(response.data.hasNext);
           setNextCursor(response.data.nextCursor);
 
-          const participants = participantsResponse.data.participants;
+          const participantsData = participantsResponse.data.participants;
+          setParticipants(participantsData);
           setIsOpenChatHost(
-            participants.some(
+            participantsData.some(
               (participant) =>
                 participant.userId === userId && participant.isHost,
             ),
@@ -1424,7 +1422,7 @@ export default function ChattingPage() {
             null;
 
           if (chatType === "personal") {
-            const opponent = participants.find(
+            const opponent = participantsData.find(
               (participant) => participant.userId !== userId,
             );
             if (opponent) {
@@ -1715,6 +1713,128 @@ export default function ChattingPage() {
     if (!selectedMessage?.senderId) return;
     await kickOpenChatParticipant(roomId, selectedMessage.senderId, "OTHER");
     alert("참여자를 퇴장시켰습니다.");
+  };
+
+  const handleAvatarClick = (msg: MessageType) => {
+    if (
+      msg.isBot ||
+      msg.isSystem ||
+      !msg.senderId ||
+      msg.senderId === userId
+    ) {
+      return;
+    }
+
+    if (chatType === "open") {
+      const found = participants.find((p) => p.userId === msg.senderId);
+      const target: OpenChatParticipant = found ?? {
+        userId: msg.senderId,
+        nickname: msg.nickname || "익명",
+        joinedAt: "",
+        isHost: false,
+        isAdmin: false,
+      };
+      setSelectedMember(target);
+      setMemberActionSheetOpen(true);
+    } else if (chatType === "personal" || chatType === "roommate") {
+      const target: OpenChatParticipant = {
+        userId: msg.senderId,
+        nickname: msg.nickname || partnerName || "상대방",
+        joinedAt: "",
+        isHost: false,
+        isAdmin: false,
+      };
+      setSelectedMember(target);
+      setMemberActionSheetOpen(true);
+    }
+  };
+
+  const handleCreatePersonalChatFromSheet = async () => {
+    if (!selectedMember) return;
+    try {
+      const response = await createPersonalOpenChatRoom({
+        name: selectedMember.nickname.trim() || "1:1 채팅",
+        targetUserId: selectedMember.userId,
+      });
+      navigate(`/chat/personal/${response.data.roomId}`, {
+        state: {
+          partnerName: selectedMember.nickname,
+          partnerId: selectedMember.userId,
+        },
+      });
+    } catch (error) {
+      if (isAxiosError(error) && error.response?.status === 409) {
+        const responseData = error.response.data as
+          | { roomId?: number; data?: { roomId?: number } }
+          | undefined;
+        const conflictRoomId = Number(
+          responseData?.roomId ?? responseData?.data?.roomId,
+        );
+        if (Number.isInteger(conflictRoomId) && conflictRoomId > 0) {
+          navigate(`/chat/personal/${conflictRoomId}`, {
+            state: {
+              partnerName: selectedMember.nickname,
+              partnerId: selectedMember.userId,
+            },
+          });
+          return;
+        }
+      }
+      console.error("1:1 채팅방 생성 실패:", error);
+      alert("1:1 채팅방 생성에 실패했습니다. 잠시 후 다시 시도해주세요.");
+    }
+  };
+
+  const handleTransferHostFromSheet = async () => {
+    if (!selectedMember) return;
+    if (
+      !window.confirm(`${selectedMember.nickname}님에게 방장을 위임할까요?`)
+    ) {
+      return;
+    }
+    try {
+      await transferOpenChatHost(roomId, selectedMember.userId);
+      setIsOpenChatHost(false);
+      const res = await getOpenChatParticipants(roomId);
+      setParticipants(res.data.participants);
+      alert("방장을 위임했습니다.");
+    } catch (error) {
+      console.error("방장 위임 실패:", error);
+      alert("방장 위임에 실패했습니다.");
+    }
+  };
+
+  const handleKickUserFromSheet = async () => {
+    if (!selectedMember) return;
+    if (!window.confirm(`${selectedMember.nickname}님을 강퇴할까요?`)) return;
+    try {
+      await kickOpenChatParticipant(roomId, selectedMember.userId, "OTHER");
+      const res = await getOpenChatParticipants(roomId);
+      setParticipants(res.data.participants);
+      alert("참여자를 강퇴했습니다.");
+    } catch (error) {
+      console.error("참여자 강퇴 실패:", error);
+      alert("참여자 강퇴에 실패했습니다.");
+    }
+  };
+
+  const handleBlockUserFromSheet = async () => {
+    if (!selectedMember) return;
+    if (
+      !window.confirm(
+        `${selectedMember.nickname}님을 차단할까요?\n차단 후 해당 사용자와 1:1 채팅방 생성 및 메시지 전송이 제한됩니다.`,
+      )
+    ) {
+      return;
+    }
+    try {
+      await blockUser(selectedMember.userId);
+      setIsBlockedPartner(true);
+      alert(`${selectedMember.nickname}님을 차단했습니다.`);
+    } catch (error) {
+      console.error("사용자 차단 실패:", error);
+      alert("사용자 차단에 실패했습니다. 다시 시도해 주세요.");
+    }
   };
 
   const basePartnerName =
@@ -2637,6 +2757,7 @@ export default function ChattingPage() {
                       }
                       onMessageClick={() => openMessageActions(msg)}
                       onImageClick={(url) => setSelectedImageUrl(url)}
+                      onAvatarClick={() => handleAvatarClick(msg)}
                     />
                   )}
                 </React.Fragment>
@@ -2747,6 +2868,20 @@ export default function ChattingPage() {
         canKick={isOpenChatHost}
         onReport={handleReportMessage}
         onKick={handleKickSender}
+      />
+
+      <ChatMemberActionSheet
+        open={memberActionSheetOpen}
+        onOpenChange={setMemberActionSheetOpen}
+        selectedUser={selectedMember}
+        chatType={chatType || "open"}
+        isHost={isOpenChatHost}
+        isBlocked={isBlockedPartner}
+        onBlockUser={handleBlockUserFromSheet}
+        onCreatePersonalChat={handleCreatePersonalChatFromSheet}
+        onTransferHost={handleTransferHostFromSheet}
+        onKickUser={handleKickUserFromSheet}
+        onRequestStudentIdDisclosure={handleRequestShareClick}
       />
 
       <ImageViewerModal

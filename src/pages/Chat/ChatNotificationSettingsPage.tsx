@@ -17,17 +17,17 @@ interface NotificationOption {
 const NOTIFICATION_OPTIONS: NotificationOption[] = [
   {
     title: "메시지 올 때마다 받기",
-    desc: "새 메시지가 올 때 바로 알림",
+    desc: "새 메시지가 올 때 바로 알림을 받아요.",
     mode: "EVERY",
   },
   {
-    title: "같은 채팅방 묶어서 받기",
-    desc: "같은 방 알림을 묶어서 한 번에 표시",
+    title: "1시간마다 모아 받기",
+    desc: "새 메시지가 올 때마다 알림을 받지 않고, 1시간마다 모아서 채팅 알림을 받아요.",
     mode: "BUNDLED",
   },
   {
     title: "알림 끄기",
-    desc: "해당 채팅방 알림을 받지 않음",
+    desc: "새 메시지가 와도 알림을 받지 않아요.",
     mode: "OFF",
   },
 ];
@@ -85,7 +85,7 @@ export default function ChatNotificationSettingsPage() {
   return (
     <PageContainer>
       <ContentContainer>
-        <Heading>알림 방식 선택</Heading>
+        <Heading>설정값은 이 채팅방에만 적용돼요.</Heading>
         {isLoading ? (
           <LoadingText>설정을 불러오는 중입니다...</LoadingText>
         ) : (
