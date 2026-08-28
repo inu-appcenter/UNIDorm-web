@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { isAxiosError } from "axios";
 import {
-  getOpenChatMessages,
   getOpenChatRooms,
   joinOpenChatRoom,
 } from "@/apis/openchat";
@@ -24,6 +23,7 @@ import { RoommateChatRoom } from "@/types/chats";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import useUserStore from "@/stores/useUserStore";
+import { useChatListStore } from "@/stores/useChatListStore";
 import { Search, Plus, MapPin, User } from "lucide-react";
 import { formatChatMessagePreview } from "@/utils/chatMessagePreview";
 
@@ -46,21 +46,27 @@ const formatTime = (isoString: string) => {
 
 function RoommateChatCard({
   room,
+  hasUnreadTotal,
   onClick,
 }: {
   room: RoommateChatRoom;
+  hasUnreadTotal?: boolean;
   onClick: () => void;
 }) {
   const [unreadCount, setUnreadCount] = useState(room.unreadCount ?? 0);
 
   useEffect(() => {
     setUnreadCount(room.unreadCount ?? 0);
+    if (!hasUnreadTotal) {
+      setUnreadCount(0);
+      return;
+    }
     getRoommateChatUnreadCount(room.chatRoomId)
       .then((res) => setUnreadCount(res.data))
       .catch((err) =>
         console.error("룸메이트 안 읽은 메시지 수 조회 실패", err),
       );
-  }, [room.chatRoomId, room.unreadCount]);
+  }, [hasUnreadTotal, room.chatRoomId, room.unreadCount]);
 
   const isMyRoommate = Boolean(
     room.roommate ||
@@ -146,16 +152,25 @@ export default function OpenChatPage() {
       ? filterParam
       : "ALL";
 
-  const [rooms, setRooms] = useState<OpenChatRoom[]>([]);
-  const [roommateRooms, setRoommateRooms] = useState<RoommateChatRoom[]>([]);
+  const {
+    roomsByTab,
+    roommateRooms,
+    roommateUnreadTotal,
+    myOpenChatUnreadTotal,
+    isInitialized,
+    setChatListData,
+    markOpenChatRoomAsRead,
+    markRoommateChatRoomAsRead,
+    resetChatList,
+  } = useChatListStore();
+
+  const rooms = roomsByTab[selectedTab] || [];
   const [selectedRoom, setSelectedRoom] = useState<OpenChatRoom | null>(null);
 
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const [roommateUnreadTotal, setRoommateUnreadTotal] = useState(0);
-  const [myOpenChatUnreadTotal, setMyOpenChatUnreadTotal] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -181,47 +196,16 @@ export default function OpenChatPage() {
     [searchParams, setSearchParams],
   );
 
-  const fillMissingPersonalLastMessages = useCallback(
-    async (chatRooms: OpenChatRoom[]) =>
-      Promise.all(
-        chatRooms.map(async (room) => {
-          const needsMessageFallback = !String(room.lastMessage ?? "").trim();
-          if (room.roomType !== "PERSONAL" || !needsMessageFallback)
-            return room;
-
-          try {
-            const messagesResponse = await getOpenChatMessages(
-              room.roomId,
-              null,
-              1,
-            );
-            const latestMessage = messagesResponse.data.messages[0];
-
-            return {
-              ...room,
-              lastMessage: latestMessage?.content || "",
-              lastMessageAt: latestMessage?.createdAt || room.lastMessageAt,
-            };
-          } catch (error) {
-            console.error("개인 채팅 최신 메시지 조회 실패:", error);
-            return room;
-          }
-        }),
-      ),
-    [],
-  );
-
   const fetchChatRooms = useCallback(
     async ({ silent = false }: { silent?: boolean } = {}) => {
       if (!isLoggedIn) {
-        setRooms([]);
-        setRoommateRooms([]);
-        setRoommateUnreadTotal(0);
+        resetChatList();
         return;
       }
 
+      const shouldShowSpinner = !isInitialized && !silent;
       try {
-        if (!silent) setIsLoading(true);
+        if (shouldShowSpinner) setIsLoading(true);
         if (selectedTab === "MY") {
           const [openChatRes, roommateChatRes, unreadRes] = await Promise.all([
             getOpenChatRooms("MY", 0, 20, searchQuery || undefined),
@@ -231,11 +215,6 @@ export default function OpenChatPage() {
           const openChatRooms = openChatRes.data.content.filter(
             (room) => room.chatCategory === "OPEN_CHAT",
           );
-          const openUnreadCount = openChatRooms.reduce(
-            (acc, r) => acc + (r.unreadCount || 0),
-            0,
-          );
-          setMyOpenChatUnreadTotal(openUnreadCount);
 
           const dedicatedRoommateRooms = roommateChatRes.data;
           const dedicatedRoommateRoomIds = new Set(
@@ -259,12 +238,17 @@ export default function OpenChatPage() {
                 unreadCount: room.unreadCount,
                 isBlockedByPartner: room.isBlockedByPartner ?? false,
               }));
-          setRooms(await fillMissingPersonalLastMessages(openChatRooms));
-          setRoommateRooms([
-            ...dedicatedRoommateRooms,
-            ...restoredRoommateRooms,
-          ]);
-          setRoommateUnreadTotal(unreadRes.data);
+
+          setChatListData({
+            tab: "MY",
+            rooms: openChatRooms,
+            roommateRooms: [
+              ...dedicatedRoommateRooms,
+              ...restoredRoommateRooms,
+            ],
+            roommateUnreadTotal: unreadRes.data,
+            myOpenChatUnreadTotal: openChatRes.data.totalUnreadCount ?? 0,
+          });
         } else {
           const [openChatRes, myOpenChatRes, unreadRes] = await Promise.all([
             getOpenChatRooms(
@@ -274,39 +258,32 @@ export default function OpenChatPage() {
               searchQuery || undefined,
               "createdAt,desc",
             ),
-            getOpenChatRooms("MY", 0, 50),
+            getOpenChatRooms("MY", 0, 1),
             getAllRoommateChatUnreadCount(),
           ]);
-          const myOpenChatRooms = myOpenChatRes.data.content.filter(
-            (room) => room.chatCategory === "OPEN_CHAT",
-          );
-          const openUnreadCount = myOpenChatRooms.reduce(
-            (acc, r) => acc + (r.unreadCount || 0),
-            0,
-          );
-          setMyOpenChatUnreadTotal(openUnreadCount);
 
-          setRooms(
-            openChatRes.data.content.filter(
+          setChatListData({
+            tab: selectedTab,
+            rooms: openChatRes.data.content.filter(
               (room) => room.chatCategory === "OPEN_CHAT",
             ),
-          );
-          setRoommateUnreadTotal(unreadRes.data);
+            roommateUnreadTotal: unreadRes.data,
+            myOpenChatUnreadTotal: myOpenChatRes.data.totalUnreadCount ?? 0,
+          });
         }
       } catch (error) {
         console.error("채팅방 목록 조회 실패", error);
-        setRooms([]);
-        setRoommateRooms([]);
-        setRoommateUnreadTotal(0);
       } finally {
-        if (!silent) setIsLoading(false);
+        if (shouldShowSpinner) setIsLoading(false);
       }
     },
     [
-      fillMissingPersonalLastMessages,
+      isInitialized,
       isLoggedIn,
+      resetChatList,
       searchQuery,
       selectedTab,
+      setChatListData,
     ],
   );
 
@@ -344,14 +321,7 @@ export default function OpenChatPage() {
 
     void patchNotificationsRead("CHAT", String(room.chatRoomId)).catch(() => {});
 
-    setRoommateRooms((prev) =>
-      prev.map((r) =>
-        r.chatRoomId === room.chatRoomId ? { ...r, unreadCount: 0 } : r,
-      ),
-    );
-    setRoommateUnreadTotal((prev) =>
-      Math.max(0, prev - (room.unreadCount || 0)),
-    );
+    markRoommateChatRoomAsRead(room.chatRoomId);
 
     const isMyRoommate = Boolean(
       room.roommate ||
@@ -379,14 +349,7 @@ export default function OpenChatPage() {
     if (room.joined) {
       void patchNotificationsRead("CHAT", String(room.roomId)).catch(() => {});
 
-      setRooms((prev) =>
-        prev.map((r) =>
-          r.roomId === room.roomId ? { ...r, unreadCount: 0 } : r,
-        ),
-      );
-      setMyOpenChatUnreadTotal((prev) =>
-        Math.max(0, prev - (room.unreadCount || 0)),
-      );
+      markOpenChatRoomAsRead(room.roomId);
 
       const chatRoute = room.roomType === "PERSONAL" ? "personal" : "open";
       navigate(`/chat/${chatRoute}/${room.roomId}`, {
@@ -631,6 +594,7 @@ export default function OpenChatPage() {
                     <RoommateChatCard
                       key={`roommate-${item.chatRoomId}`}
                       room={item}
+                      hasUnreadTotal={roommateUnreadTotal > 0}
                       onClick={() => handleRoommateClick(item)}
                     />
                   );

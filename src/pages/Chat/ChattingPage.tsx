@@ -1361,27 +1361,16 @@ export default function ChattingPage() {
         setIsHistoryLoading(true);
         setIsBlockedByPartner(Boolean(routeRoom?.isBlockedByPartner));
 
-        if (chatType === "open" || chatType === "personal") {
+        if ((chatType === "open" || chatType === "personal") && !openChatRoomName) {
           try {
-            let page = 0;
-            let totalPages = 1;
+            const roomsResponse = await getOpenChatRooms("MY", 0, 50);
+            const currentRoom = roomsResponse.data.content.find(
+              (room) => room.roomId === roomId,
+            );
 
-            while (page < totalPages) {
-              const roomsResponse = await getOpenChatRooms("MY", page);
-              const currentRoom = roomsResponse.data.content.find(
-                (room) => room.roomId === roomId,
-              );
-
-              if (currentRoom) {
-                setOpenChatRoomName(currentRoom.name);
-                setIsBlockedByPartner(
-                  Boolean(currentRoom.isBlockedByPartner),
-                );
-                break;
-              }
-
-              totalPages = roomsResponse.data.totalPages;
-              page += 1;
+            if (currentRoom) {
+              setOpenChatRoomName(currentRoom.name);
+              setIsBlockedByPartner(Boolean(currentRoom.isBlockedByPartner));
             }
           } catch (error) {
             console.error("오픈채팅방 정보 조회 실패:", error);
