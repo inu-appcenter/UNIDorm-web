@@ -3,26 +3,14 @@ import { messaging } from "@/firebase";
 import { getToken, onMessage } from "firebase/messaging";
 import axiosInstance from "../apis/axiosInstance.ts";
 
+import { getMobilePlatform } from "@/utils/getMobilePlatform";
+
 export const useFcmToken = () => {
   useEffect(() => {
-    const isAndroidWebView = () => {
-      const ua = navigator.userAgent;
-      return /wv|Android.*Version\/[\d.]+/i.test(ua);
-    };
+    const platform = getMobilePlatform();
 
-    const isIOSWebView = () => {
-      const ua = navigator.userAgent;
-      return (
-        /iPhone|iPod|iPad/i.test(ua) &&
-        /AppleWebKit/i.test(ua) &&
-        !/Safari/i.test(ua)
-      );
-    };
-
-    const isWebView = () => isAndroidWebView() || isIOSWebView();
-
-    if (isWebView()) {
-      console.warn("WebView 환경에서는 FCM 훅을 실행하지 않습니다.");
+    if (platform === "ios_unidorm_app" || platform === "android_unidorm_app") {
+      console.warn("유니돔 앱 환경에서는 웹 FCM 훅을 실행하지 않습니다.");
       return;
     }
 

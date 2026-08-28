@@ -18,7 +18,7 @@ export const guardLogin = (
 export const guardAppOnly = (): boolean => {
   const platform = getMobilePlatform();
 
-  if (platform == "android_webview" || platform == "ios_webview") {
+  if (platform === "android_unidorm_app" || platform === "ios_unidorm_app") {
     //앱인 경우 통과
     return true;
   }
