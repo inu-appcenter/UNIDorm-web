@@ -96,7 +96,7 @@ export const getOpenChatMessages = async (
     `/open-chat-rooms/${roomId}/messages`,
     {
       params: {
-        lastMessageId,
+        lastMessageId: lastMessageId != null ? lastMessageId : undefined,
         size,
       },
     },
