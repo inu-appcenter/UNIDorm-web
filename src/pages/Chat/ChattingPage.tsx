@@ -369,10 +369,14 @@ export default function ChattingPage() {
   const topSentinelRef = useRef<HTMLDivElement>(null);
   const lastMessageIdRef = useRef<number | null>(null);
   const isInitialLoadedRef = useRef(false);
+  const isInitialScrollReadyRef = useRef(false);
+  const allRoommateMessagesRef = useRef<MessageType[]>([]);
+  const roommateLoadedCountRef = useRef(30);
 
   const [hasNextMessages, setHasNextMessages] = useState(false);
   const [nextCursor, setNextCursor] = useState<number | null>(null);
   const [isFetchingOlderMessages, setIsFetchingOlderMessages] = useState(false);
+  const [isInitialScrollReady, setIsInitialScrollReady] = useState(false);
 
   const roomId = Number(id);
   const userId = userInfo.id;
@@ -512,9 +516,13 @@ export default function ChattingPage() {
   // 방이 바뀌었을 때 초기화
   useEffect(() => {
     isInitialLoadedRef.current = false;
+    isInitialScrollReadyRef.current = false;
+    setIsInitialScrollReady(false);
     lastMessageIdRef.current = null;
     setHasNextMessages(false);
     setNextCursor(null);
+    allRoommateMessagesRef.current = [];
+    roommateLoadedCountRef.current = 30;
   }, [id, chatType]);
 
   // 내부 스크롤 이동
@@ -546,12 +554,19 @@ export default function ChattingPage() {
       latestMessage.id !== lastMessageIdRef.current;
     lastMessageIdRef.current = latestMessage.id;
 
-    // 1. 첫 로딩 시 맨 아래로 이동
+    // 1. 첫 로딩 시 맨 아래로 이동하고 안착된 후에만 무한스크롤 옵저버 활성화
     if (!isInitialLoadedRef.current) {
       isInitialLoadedRef.current = true;
+      if (scrollRef.current) {
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      }
       const timer = setTimeout(() => {
         scrollToBottom();
-      }, 50);
+        requestAnimationFrame(() => {
+          isInitialScrollReadyRef.current = true;
+          setIsInitialScrollReady(true);
+        });
+      }, 100);
       return () => clearTimeout(timer);
     }
 
@@ -567,13 +582,14 @@ export default function ChattingPage() {
     }
   }, [messageList]);
 
-  // 오픈채팅 과거 메시지 페칭 (커서 기반 무한 스크롤)
+  // 오픈채팅 / 1:1 개인 오픈채팅 과거 메시지 페칭 (서버 커서 기반)
   const fetchOlderOpenChatMessages = useCallback(async () => {
     if (
       !hasNextMessages ||
       isFetchingOlderMessages ||
       nextCursor == null ||
-      (chatType !== "open" && chatType !== "personal")
+      (chatType !== "open" && chatType !== "personal") ||
+      !isInitialScrollReadyRef.current
     ) {
       return;
     }
@@ -650,10 +666,63 @@ export default function ChattingPage() {
     userId,
   ]);
 
+  // 룸메이트 1:1 채팅 과거 메시지 페칭 (클라이언트 무한 스크롤)
+  const fetchOlderRoommateMessages = useCallback(() => {
+    if (
+      !hasNextMessages ||
+      isFetchingOlderMessages ||
+      chatType !== "roommate" ||
+      !isInitialScrollReadyRef.current
+    ) {
+      return;
+    }
+
+    const container = scrollRef.current;
+    if (!container) return;
+
+    const prevScrollHeight = container.scrollHeight;
+    const prevScrollTop = container.scrollTop;
+
+    setIsFetchingOlderMessages(true);
+
+    const all = allRoommateMessagesRef.current;
+    const currentCount = roommateLoadedCountRef.current;
+    const nextCount = currentCount + 30;
+    const startIndex = Math.max(0, all.length - nextCount);
+    const endIndex = all.length - currentCount;
+    const olderSlice = all.slice(startIndex, endIndex);
+
+    roommateLoadedCountRef.current = nextCount;
+    if (startIndex <= 0) {
+      setHasNextMessages(false);
+    }
+
+    setMessageList((prev) => [...olderSlice, ...prev]);
+
+    requestAnimationFrame(() => {
+      if (scrollRef.current) {
+        const newScrollHeight = scrollRef.current.scrollHeight;
+        scrollRef.current.scrollTop =
+          newScrollHeight - prevScrollHeight + prevScrollTop;
+      }
+      setIsFetchingOlderMessages(false);
+    });
+  }, [hasNextMessages, isFetchingOlderMessages, chatType]);
+
+  // 통합 과거 메시지 페칭
+  const fetchOlderMessages = useCallback(() => {
+    if (!isInitialScrollReadyRef.current) return;
+    if (chatType === "roommate") {
+      fetchOlderRoommateMessages();
+    } else if (chatType === "open" || chatType === "personal") {
+      fetchOlderOpenChatMessages();
+    }
+  }, [chatType, fetchOlderRoommateMessages, fetchOlderOpenChatMessages]);
+
   // 상단 스크롤 감지 (IntersectionObserver)
   useEffect(() => {
-    if (chatType !== "open" && chatType !== "personal") return;
-    if (!hasNextMessages || isFetchingOlderMessages) return;
+    if (!isInitialScrollReady || !hasNextMessages || isFetchingOlderMessages)
+      return;
 
     const sentinel = topSentinelRef.current;
     const container = scrollRef.current;
@@ -663,10 +732,11 @@ export default function ChattingPage() {
       (entries) => {
         if (
           entries[0].isIntersecting &&
+          isInitialScrollReadyRef.current &&
           hasNextMessages &&
           !isFetchingOlderMessages
         ) {
-          fetchOlderOpenChatMessages();
+          fetchOlderMessages();
         }
       },
       {
@@ -679,10 +749,10 @@ export default function ChattingPage() {
     observer.observe(sentinel);
     return () => observer.disconnect();
   }, [
+    isInitialScrollReady,
     hasNextMessages,
     isFetchingOlderMessages,
-    fetchOlderOpenChatMessages,
-    chatType,
+    fetchOlderMessages,
   ]);
 
   // 로컬 메시지 리스트에 커스텀 메시지를 직접 추가하는 헬퍼 함수
@@ -1260,7 +1330,18 @@ export default function ChattingPage() {
             });
           }
 
-          setMessageList(formattedMessages);
+          allRoommateMessagesRef.current = formattedMessages;
+          roommateLoadedCountRef.current = 30;
+
+          if (formattedMessages.length > 30) {
+            setHasNextMessages(true);
+            setMessageList(
+              formattedMessages.slice(formattedMessages.length - 30),
+            );
+          } else {
+            setHasNextMessages(false);
+            setMessageList(formattedMessages);
+          }
           clearPendingDisclosureRouteState();
         } catch (error) {
           console.error("채팅 내역 불러오기 실패:", error);
@@ -1903,7 +1984,7 @@ export default function ChattingPage() {
           <LoadingSpinner message="채팅 내역을 가져오고 있습니다..." />
         ) : (
           <>
-            {(chatType === "open" || chatType === "personal") && (
+            {isInitialScrollReady && hasNextMessages && (
               <div
                 ref={topSentinelRef}
                 style={{ height: "1px", width: "100%", pointerEvents: "none" }}
