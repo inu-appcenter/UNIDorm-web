@@ -11,6 +11,7 @@ type Props = {
   unreadCount?: number;
   title?: string;
   subtitle?: string;
+  isChatBuli?: boolean;
   onMoveToAIChat?: () => void;
   onAskHere?: () => void;
 };
@@ -20,12 +21,23 @@ const ChatItemBot = ({
   time,
   showTime = true,
   unreadCount,
-  title = "챗불이",
-  subtitle = "기숙사 생활 도우미",
+  title,
+  subtitle,
+  isChatBuli,
   onMoveToAIChat,
   onAskHere,
 }: Props) => {
   const openChat = useAIChatStore((state) => state.openChat);
+
+  // isChatBuli가 명시되지 않은 경우 title을 기반으로 자동 판정
+  const isAIChatBuli =
+    isChatBuli !== undefined ? isChatBuli : title === "챗불이";
+
+  const displayTitle =
+    title || (isAIChatBuli ? "챗불이" : "공지봇");
+  const displaySubtitle =
+    subtitle ||
+    (isAIChatBuli ? "기숙사 생활 도우미" : "인천대 기숙사 채팅도우미");
 
   const handleMoveToAIChat = () => {
     if (onMoveToAIChat) {
@@ -48,33 +60,35 @@ const ChatItemBot = ({
         <CardHeader>
           <GlowBackground />
           <HeaderTextGroup>
-            <HeaderSubtitle>{subtitle}</HeaderSubtitle>
-            <HeaderTitle>{title}</HeaderTitle>
+            <HeaderSubtitle>{displaySubtitle}</HeaderSubtitle>
+            <HeaderTitle>{displayTitle}</HeaderTitle>
           </HeaderTextGroup>
           <LogoWrapper>
-            <BotLogoImage src={ChatBuliLogo} alt={title} />
+            <BotLogoImage src={ChatBuliLogo} alt={displayTitle} />
           </LogoWrapper>
         </CardHeader>
-        <CardBody>
+        <CardBody $hasFooter={isAIChatBuli}>
           <ChatMessageContent content={content} replaceUrlWithShortcut />
         </CardBody>
-        <CardFooter>
-          <PrimaryActionButton type="button" onClick={handleMoveToAIChat}>
-            <ButtonLogo src={ChatBuliLogo} alt="" />
-            챗불이로 이동
-          </PrimaryActionButton>
-          {onAskHere && (
-            <SecondaryActionButton type="button" onClick={onAskHere}>
-              <MessageSquarePlus size={14} />
-              여기서 질문
-            </SecondaryActionButton>
-          )}
-          <DisclaimerText>
-            챗불이는 AI이며, 인천대학교의 공식 답변이 아니에요.
-            <br />
-            실수할 수 있으니, 중요한 정보는 직접 확인하세요.
-          </DisclaimerText>
-        </CardFooter>
+        {isAIChatBuli && (
+          <CardFooter>
+            <PrimaryActionButton type="button" onClick={handleMoveToAIChat}>
+              <ButtonLogo src={ChatBuliLogo} alt="" />
+              챗불이로 이동
+            </PrimaryActionButton>
+            {onAskHere && (
+              <SecondaryActionButton type="button" onClick={onAskHere}>
+                <MessageSquarePlus size={14} />
+                여기서 질문
+              </SecondaryActionButton>
+            )}
+            <DisclaimerText>
+              챗불이는 AI이며, 인천대학교의 공식 답변이 아니에요.
+              <br />
+              실수할 수 있으니, 중요한 정보는 직접 확인하세요.
+            </DisclaimerText>
+          </CardFooter>
+        )}
       </CardContainer>
       {(showTime || unreadLabel) && (
         <TimeArea>
@@ -189,9 +203,9 @@ const BotLogoImage = styled.img`
   pointer-events: none;
 `;
 
-const CardBody = styled.div`
+const CardBody = styled.div<{ $hasFooter?: boolean }>`
   background-color: #ffffff;
-  padding: 12px 16px 12px 16px;
+  padding: 12px 16px 14px 16px;
   font-family: "Pretendard", sans-serif;
   font-size: 14px;
   font-weight: 400;
@@ -199,6 +213,8 @@ const CardBody = styled.div`
   color: #3d3d3d;
   white-space: pre-wrap;
   word-break: break-word;
+  border-bottom-left-radius: ${({ $hasFooter }) => ($hasFooter ? "0" : "16px")};
+  border-bottom-right-radius: ${({ $hasFooter }) => ($hasFooter ? "0" : "16px")};
 `;
 
 const CardFooter = styled.div`

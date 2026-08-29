@@ -90,7 +90,8 @@ export interface OpenChatMessage {
     | "ROOM_LINK"
     | "STUDENT_ID_REQUEST"
     | "BOT";
-  isBot: boolean;
+  isBot?: boolean;
+  bot?: boolean;
   imageUrls?: string[];
   unreadCount: number;
   createdAt: string;
