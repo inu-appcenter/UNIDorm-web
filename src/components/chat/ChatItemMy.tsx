@@ -102,9 +102,12 @@ const ImageGrid = styled.div`
 `;
 
 const ContentArea = styled.div`
-  //flex: 1;
   width: fit-content;
-  max-width: 60%;
+  max-width: 80%;
+
+  @media (min-width: 1024px) {
+    max-width: 520px;
+  }
 
   .title {
     font-style: normal;
