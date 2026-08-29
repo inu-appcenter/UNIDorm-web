@@ -445,6 +445,8 @@ export default function ChattingPage() {
   const isInitialScrollReadyRef = useRef(false);
   const allRoommateMessagesRef = useRef<MessageType[]>([]);
   const roommateLoadedCountRef = useRef(30);
+  const wasNearBottomRef = useRef(true);
+  const lastMessageContentRef = useRef<string | null>(null);
 
   const [hasNextMessages, setHasNextMessages] = useState(false);
   const [nextCursor, setNextCursor] = useState<number | null>(null);
@@ -625,14 +627,16 @@ export default function ChattingPage() {
       } else {
         scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
       }
+      wasNearBottomRef.current = true;
     }
   };
 
-  const isNearBottom = () => {
-    if (!scrollRef.current) return true;
+  const handleScroll = useCallback(() => {
+    if (!scrollRef.current) return;
     const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
-    return scrollHeight - scrollTop - clientHeight < 150;
-  };
+    const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+    wasNearBottomRef.current = distanceFromBottom <= 200;
+  }, []);
 
   // 메시지 리스트 변경 시 스크롤 위치 제어
   useEffect(() => {
@@ -641,11 +645,16 @@ export default function ChattingPage() {
     const latestMessage = messageList[messageList.length - 1];
     const isNewMessageAtBottom =
       latestMessage.id !== lastMessageIdRef.current;
+    const isContentChanged =
+      latestMessage.content !== lastMessageContentRef.current;
+
     lastMessageIdRef.current = latestMessage.id;
+    lastMessageContentRef.current = latestMessage.content;
 
     // 1. 첫 로딩 시 맨 아래로 이동하고 안착된 후에만 무한스크롤 옵저버 활성화
     if (!isInitialLoadedRef.current) {
       isInitialLoadedRef.current = true;
+      wasNearBottomRef.current = true;
       if (scrollRef.current) {
         scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
       }
@@ -659,18 +668,17 @@ export default function ChattingPage() {
       return () => clearTimeout(timer);
     }
 
-    // 2. 새로운 메시지가 하단에 추가되었을 때
-    if (isNewMessageAtBottom) {
-      // 본인이 보낸 메시지이거나 현재 스크롤이 바닥 근처에 있으면 아래로 스크롤
-      // 단, 이미지 뷰어가 열려있는 동안에는 스크롤로 인한 화면 방해를 막기 위해 스킵
+    // 2. 새로운 메시지가 하단에 추가되었거나 최하단 메시지 내용(스트리밍 등)이 갱신되었을 때
+    if (isNewMessageAtBottom || isContentChanged) {
+      // 본인이 보낸 메시지이거나 메시지 수신 직전 스크롤이 바닥 근처에 있었으면 아래로 스크롤
       if (
-        (latestMessage.sender === "me" || isNearBottom()) &&
+        (latestMessage.sender === "me" || wasNearBottomRef.current) &&
         !selectedImageUrl
       ) {
-        const timer = setTimeout(() => {
+        scrollToBottom();
+        requestAnimationFrame(() => {
           scrollToBottom();
-        }, 50);
-        return () => clearTimeout(timer);
+        });
       }
     }
   }, [messageList, selectedImageUrl]);
@@ -2037,6 +2045,9 @@ export default function ChattingPage() {
     }
     setInputValue("");
     if (inputRef.current) inputRef.current.style.height = "auto";
+    wasNearBottomRef.current = true;
+    scrollToBottom();
+    requestAnimationFrame(() => scrollToBottom());
   };
 
   const toMessageType = (message: OpenChatMessage): MessageType => {
@@ -2501,7 +2512,11 @@ export default function ChattingPage() {
       </S.FixedHeaderContainer>
 
       {/* 내부 스크롤 채팅 영역 (Flex Item, grow) */}
-      <S.ChattingWrapper ref={scrollRef} $chatType={chatType}>
+      <S.ChattingWrapper
+        ref={scrollRef}
+        onScroll={handleScroll}
+        $chatType={chatType}
+      >
         {isHistoryLoading ? (
           <LoadingSpinner message="채팅 내역을 가져오고 있습니다..." />
         ) : (
