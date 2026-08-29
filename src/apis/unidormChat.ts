@@ -45,9 +45,14 @@ const createUuid = () => {
 
 const getGuestDeviceId = () => {
   const storedId = localStorage.getItem(GUEST_DEVICE_ID_KEY);
-  if (storedId) return storedId;
+  if (storedId) {
+    if (storedId.startsWith("unidorm-")) return storedId;
+    const migratedId = `unidorm-${storedId}`;
+    localStorage.setItem(GUEST_DEVICE_ID_KEY, migratedId);
+    return migratedId;
+  }
 
-  const newId = createUuid();
+  const newId = `unidorm-${createUuid()}`;
   localStorage.setItem(GUEST_DEVICE_ID_KEY, newId);
   return newId;
 };
