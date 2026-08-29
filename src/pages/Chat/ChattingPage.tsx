@@ -58,6 +58,7 @@ import { getMyRoommateInfo } from "@/apis/roommate";
 import type { StudentIdDisclosureStatus } from "@/apis/studentIdDisclosure";
 import { isAxiosError } from "axios";
 import { blockUser, getBlockedUsers } from "@/apis/block";
+import { getMobilePlatform } from "@/utils/getMobilePlatform";
 
 type MessageType = {
   id: number;
@@ -1875,6 +1876,17 @@ export default function ChattingPage() {
     }
   };
 
+  const isMobileDevice = () => {
+    if (typeof window === "undefined") return false;
+    const platform = getMobilePlatform();
+    if (platform !== "other") return true;
+    return (
+      /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent || "",
+      ) || (navigator.maxTouchPoints > 0 && window.innerWidth <= 768)
+    );
+  };
+
   const handleInputKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Backspace" && inputValue === "" && isChatBuliActive) {
       e.preventDefault();
@@ -1897,6 +1909,12 @@ export default function ChattingPage() {
           return;
         }
       }
+
+      // 모바일 환경(앱 및 모바일 웹)에서는 엔터 입력 시 전송 대신 줄바꿈 실행
+      if (isMobileDevice()) {
+        return;
+      }
+
       e.preventDefault();
       handleSendMessage();
     }
