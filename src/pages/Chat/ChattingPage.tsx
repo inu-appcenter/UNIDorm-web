@@ -1970,7 +1970,17 @@ export default function ChattingPage() {
       setIsChatBuliActive(false);
       setIsSlashMenuOpen(false);
       setInputValue("");
-      if (inputRef.current) inputRef.current.style.height = "auto";
+      if (inputRef.current) {
+        inputRef.current.value = "";
+        inputRef.current.style.height = "auto";
+        inputRef.current.focus();
+      }
+      wasNearBottomRef.current = true;
+      scrollToBottom();
+      requestAnimationFrame(() => {
+        scrollToBottom();
+        setTimeout(() => scrollToBottom(), 80);
+      });
 
       // 소켓으로 질문 전송
       if (chatType === "roommate") {
@@ -2044,10 +2054,17 @@ export default function ChattingPage() {
       sendOpenMessage(trimmedInput);
     }
     setInputValue("");
-    if (inputRef.current) inputRef.current.style.height = "auto";
+    if (inputRef.current) {
+      inputRef.current.value = "";
+      inputRef.current.style.height = "auto";
+      inputRef.current.focus();
+    }
     wasNearBottomRef.current = true;
     scrollToBottom();
-    requestAnimationFrame(() => scrollToBottom());
+    requestAnimationFrame(() => {
+      scrollToBottom();
+      setTimeout(() => scrollToBottom(), 80);
+    });
   };
 
   const toMessageType = (message: OpenChatMessage): MessageType => {
@@ -3316,6 +3333,7 @@ export default function ChattingPage() {
         <S.SendCircleButton
           type="button"
           disabled={isChatBlocked}
+          onMouseDown={(e) => e.preventDefault()}
           onClick={handleSendMessage}
         >
           <ArrowRight size={20} color="white" />
