@@ -58,6 +58,7 @@ import { getMyRoommateInfo } from "@/apis/roommate";
 import type { StudentIdDisclosureStatus } from "@/apis/studentIdDisclosure";
 import { isAxiosError } from "axios";
 import { blockUser, getBlockedUsers } from "@/apis/block";
+import { getMobilePlatform } from "@/utils/getMobilePlatform";
 
 type MessageType = {
   id: number;
@@ -1013,7 +1014,6 @@ export default function ChattingPage() {
     connect: connectRoommate,
     disconnect: disconnectRoommate,
     sendMessage: sendRoommateMessage,
-    isConnected: isRoommateConnected,
   } = useRoommateChat({
     roomId,
     userId,
@@ -1205,7 +1205,6 @@ export default function ChattingPage() {
     disconnect: disconnectOpen,
     sendMessage: sendOpenMessage,
     sendRead: sendOpenRead,
-    isConnected: isOpenConnected,
   } = useOpenChat({
     roomId,
     userId,
@@ -1875,6 +1874,17 @@ export default function ChattingPage() {
     }
   };
 
+  const isMobileDevice = () => {
+    if (typeof window === "undefined") return false;
+    const platform = getMobilePlatform();
+    if (platform !== "other") return true;
+    return (
+      /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent || "",
+      ) || (navigator.maxTouchPoints > 0 && window.innerWidth <= 768)
+    );
+  };
+
   const handleInputKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Backspace" && inputValue === "" && isChatBuliActive) {
       e.preventDefault();
@@ -1897,12 +1907,18 @@ export default function ChattingPage() {
           return;
         }
       }
+
+      // 모바일 환경(앱 및 모바일 웹)에서는 엔터 입력 시 전송 대신 줄바꿈 실행
+      if (isMobileDevice()) {
+        return;
+      }
+
       e.preventDefault();
       handleSendMessage();
     }
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (isChatBlocked) {
       alert(blockedChatMessage);
       return;
@@ -1982,12 +1998,19 @@ export default function ChattingPage() {
         setTimeout(() => scrollToBottom(), 80);
       });
 
-      // 소켓으로 질문 전송
-      if (chatType === "roommate") {
-        sendRoommateMessage(questionPayload);
-      } else if (chatType === "open" || chatType === "personal") {
-        sendOpenMessage(questionPayload);
-      }
+      // 소켓으로 질문 전송 (끊김 시 자동 재연결 시도 후 전송)
+      const sendQuestion = async () => {
+        let success = false;
+        if (chatType === "roommate") {
+          success = await sendRoommateMessage(questionPayload);
+        } else if (chatType === "open" || chatType === "personal") {
+          success = await sendOpenMessage(questionPayload);
+        }
+        if (!success) {
+          console.warn("챗불이 질문 소켓 전송 실패 (재연결 실패)");
+        }
+      };
+      void sendQuestion();
 
       let accumulated = "";
       const sessionId = `${chatType || "chat"}-${roomId}`;
@@ -2008,15 +2031,15 @@ export default function ChattingPage() {
           );
         },
       })
-        .then(() => {
+        .then(async () => {
           // 3. 스트리밍 완료 시 소켓을 통해 방 전체에 완성된 챗불이 답변 전송
           const finalAnswer = accumulated.trim();
           if (finalAnswer) {
             const answerPayload = `[챗불이 답변]\n${finalAnswer}\n[CHATBULI_ANSWER]`;
             if (chatType === "roommate") {
-              sendRoommateMessage(answerPayload);
+              await sendRoommateMessage(answerPayload);
             } else if (chatType === "open" || chatType === "personal") {
-              sendOpenMessage(answerPayload);
+              await sendOpenMessage(answerPayload);
             }
           }
         })
@@ -2039,20 +2062,7 @@ export default function ChattingPage() {
       return;
     }
 
-    if (chatType === "roommate" && !isRoommateConnected) {
-      alert("채팅 연결을 확인해주세요.");
-      return;
-    }
-    if ((chatType === "open" || chatType === "personal") && !isOpenConnected) {
-      alert("채팅 연결을 확인해주세요.");
-      return;
-    }
-
-    if (chatType === "roommate") {
-      sendRoommateMessage(trimmedInput);
-    } else if (chatType === "open" || chatType === "personal") {
-      sendOpenMessage(trimmedInput);
-    }
+    // 일반 메시지 전송
     setInputValue("");
     if (inputRef.current) {
       inputRef.current.value = "";
@@ -2065,6 +2075,22 @@ export default function ChattingPage() {
       scrollToBottom();
       setTimeout(() => scrollToBottom(), 80);
     });
+
+    let sent = false;
+    if (chatType === "roommate") {
+      sent = await sendRoommateMessage(trimmedInput);
+    } else if (chatType === "open" || chatType === "personal") {
+      sent = await sendOpenMessage(trimmedInput);
+    }
+
+    if (!sent) {
+      alert("채팅 서버와 연결이 불안정하여 전송에 실패했습니다. 다시 시도해 주세요.");
+      setInputValue(trimmedInput);
+      if (inputRef.current) {
+        inputRef.current.value = trimmedInput;
+        inputRef.current.focus();
+      }
+    }
   };
 
   const toMessageType = (message: OpenChatMessage): MessageType => {
