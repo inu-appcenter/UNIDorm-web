@@ -183,7 +183,11 @@ const ProfileImg = styled.img<{ $hidden: boolean; $clickable?: boolean }>`
 
 const ContentArea = styled.div`
   width: fit-content;
-  max-width: 60%;
+  max-width: 80%;
+
+  @media (min-width: 1024px) {
+    max-width: 520px;
+  }
   display: flex;
   flex-direction: column;
 
