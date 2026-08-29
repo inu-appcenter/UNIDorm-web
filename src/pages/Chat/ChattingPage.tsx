@@ -1948,7 +1948,7 @@ export default function ChattingPage() {
         return;
       }
 
-      const questionPayload = `[챗불이 질문] ${question}\n[CHATBULI_QUESTION]`;
+      const questionPayload = `[챗불이에게 질문] ${question}\n[CHATBULI_QUESTION]`;
 
       const userMsgId = Date.now();
       const tempBotMsgId = userMsgId + 1;
