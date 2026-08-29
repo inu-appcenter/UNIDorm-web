@@ -9,11 +9,19 @@ export interface UnidormChatMessage {
   content: string;
 }
 
-interface StreamUnidormChatOptions {
+export interface StreamUnidormChatOptions {
   question: string;
   history?: UnidormChatMessage[];
   signal?: AbortSignal;
   onChunk: (chunk: string) => void;
+  userId?: number | string | null;
+  sessionId?: string | null;
+}
+
+export interface SubmitUnidormFeedbackOptions {
+  messageId?: number | string;
+  feedback: 1 | -1;
+  userId?: number | string | null;
 }
 
 const createUuid = () => {
@@ -44,20 +52,35 @@ const getGuestDeviceId = () => {
   return newId;
 };
 
+export const resolveDeviceId = (userId?: number | string | null) => {
+  if (userId !== undefined && userId !== null && String(userId).trim() !== "") {
+    return `unidorm-${userId}`;
+  }
+  return getGuestDeviceId();
+};
+
 export const streamUnidormChat = async ({
   question,
   history = [],
   signal,
   onChunk,
+  userId,
+  sessionId,
 }: StreamUnidormChatOptions) => {
+  const deviceId = resolveDeviceId(userId);
+
   const response = await fetch(`${AI_API_BASE_URL}/unidorm/chat`, {
     method: "POST",
     headers: {
       Accept: "text/plain",
       "Content-Type": "application/json",
-      "X-Guest-Device-Id": getGuestDeviceId(),
+      "X-Guest-Device-Id": deviceId,
     },
-    body: JSON.stringify({ question, history }),
+    body: JSON.stringify({
+      question,
+      history,
+      ...(sessionId ? { sessionId } : {}),
+    }),
     signal,
   });
 
@@ -83,4 +106,30 @@ export const streamUnidormChat = async ({
 
   const finalChunk = decoder.decode();
   if (finalChunk) onChunk(finalChunk);
+};
+
+export const submitUnidormFeedback = async ({
+  messageId,
+  feedback,
+  userId,
+}: SubmitUnidormFeedbackOptions) => {
+  const deviceId = resolveDeviceId(userId);
+
+  const response = await fetch(`${AI_API_BASE_URL}/unidorm/feedback`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Guest-Device-Id": deviceId,
+    },
+    body: JSON.stringify({
+      feedback,
+      ...(messageId !== undefined ? { messageId } : {}),
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`피드백 전송 실패 (${response.status})`);
+  }
+
+  return response.json();
 };

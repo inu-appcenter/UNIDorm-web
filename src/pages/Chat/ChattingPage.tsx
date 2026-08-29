@@ -42,8 +42,11 @@ import {
   ArrowRight,
   CheckCircle2,
   XCircle,
+  X,
 } from "lucide-react";
 import * as S from "./ChattingPage.styles";
+import ChatBuliLogo from "@/assets/ai-chat/챗불이로고.svg";
+import { streamUnidormChat } from "@/apis/unidormChat";
 import {
   getStudentIdDisclosureStatus,
   requestStudentIdDisclosure,
@@ -66,6 +69,7 @@ type MessageType = {
   nickname?: string;
   isSystem?: boolean; // 시스템 메시지 플래그 추가
   isBot?: boolean;
+  isBotQuestion?: boolean;
   senderId?: number | null;
   type?: OpenChatMessage["type"];
   imageUrls?: string[];
@@ -156,6 +160,54 @@ const dedupeStudentIdDisclosureMessages = (messages: MessageType[]) => {
   });
 };
 
+const parseChatBuliPayload = (rawContent: string) => {
+  if (typeof rawContent !== "string") {
+    return {
+      content: rawContent,
+      isBotQuestion: false,
+      isBot: false,
+      nickname: undefined,
+    };
+  }
+
+  // 1. 질문 감지 (오직 시스템 고유 태그 [CHATBULI_QUESTION]가 있을 때만 유효 판정)
+  if (rawContent.includes("[CHATBULI_QUESTION]")) {
+    const content = rawContent
+      .replace(/\n?\[CHATBULI_QUESTION\]$/, "")
+      .replace(/^\[CHATBULI_QUESTION\](\n|\s)?/, "")
+      .replace(/^\[(챗불이에게\s*질문|챗불이\s*질문)\]\s*/, "")
+      .trim();
+    return {
+      content,
+      isBotQuestion: true,
+      isBot: false,
+      nickname: undefined,
+    };
+  }
+
+  // 2. 답변 감지 (오직 시스템 고유 태그 [CHATBULI_ANSWER]가 있을 때만 유효 판정)
+  if (rawContent.includes("[CHATBULI_ANSWER]")) {
+    const content = rawContent
+      .replace(/\n?\[CHATBULI_ANSWER\]$/, "")
+      .replace(/^\[CHATBULI_ANSWER\](\n|\s)?/, "")
+      .replace(/^\[(챗불이에게\s*답변|챗불이\s*답변)\](\n|\s)?/, "")
+      .trim();
+    return {
+      content,
+      isBotQuestion: false,
+      isBot: true,
+      nickname: "챗불이",
+    };
+  }
+
+  return {
+    content: rawContent,
+    isBotQuestion: false,
+    isBot: false,
+    nickname: undefined,
+  };
+};
+
 const mapOpenChatMessageToMessageType = (
   chat: OpenChatMessage,
   userId: number,
@@ -167,17 +219,23 @@ const mapOpenChatMessageToMessageType = (
   const normalizedSenderId =
     studentIdRequestPayload?.requesterId ?? chat.senderId ?? null;
 
+  const rawContent = studentIdRequestPayload ? "학번 공유 요청" : chat.content;
+  const { content, isBot, isBotQuestion, nickname } =
+    parseChatBuliPayload(rawContent);
+
   return {
     id: chat.messageId,
     sender: normalizedSenderId === userId ? "me" : "other",
-    content: studentIdRequestPayload ? "학번 공유 요청" : chat.content,
+    content,
     nickname:
+      nickname ||
       chat.senderNickname ||
       studentIdRequestPayload?.requesterNickname ||
       undefined,
     userImageUrl: null,
     isSystem: normalizedType === "SYSTEM",
-    isBot: chat.isBot || normalizedType === "BOT",
+    isBot: isBot || chat.isBot || normalizedType === "BOT",
+    isBotQuestion,
     senderId: normalizedSenderId,
     type: normalizedType,
     imageUrls: chat.imageUrls ?? [],
@@ -397,6 +455,10 @@ export default function ChattingPage() {
   const userId = userInfo.id;
   const token = tokenInfo.accessToken;
 
+  const [isChatBuliActive, setIsChatBuliActive] = useState(false);
+  const [isSlashMenuOpen, setIsSlashMenuOpen] = useState(false);
+  const slashMenuContainerRef = useRef<HTMLDivElement>(null);
+
   const refreshBlockedPartnerStatus = async (targetUserId?: number | null) => {
     if (!targetUserId || (chatType !== "roommate" && chatType !== "personal")) {
       setIsBlockedPartner(false);
@@ -419,6 +481,8 @@ export default function ChattingPage() {
   useEffect(() => {
     if (isChatBlocked) {
       setMenuOpen(false);
+      setIsSlashMenuOpen(false);
+      setIsChatBuliActive(false);
       setInputValue("");
     }
   }, [isChatBlocked]);
@@ -483,6 +547,12 @@ export default function ChattingPage() {
         !menuContainerRef.current.contains(event.target as Node)
       ) {
         setMenuOpen(false);
+      }
+      if (
+        slashMenuContainerRef.current &&
+        !slashMenuContainerRef.current.contains(event.target as Node)
+      ) {
+        setIsSlashMenuOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -1024,26 +1094,72 @@ export default function ChattingPage() {
         ) {
           return prev;
         }
-        return [
-          ...prev,
-          {
-            id: messageId,
-            sender: isMyMessage ? "me" : "other",
-            senderId: msg.userId,
-            content: msg.content,
-            isSystem: Boolean(msg.system),
-            userImageUrl: msg.userImageUrl,
-            // 실시간 발신 메시지는 상대방의 읽음 이벤트를 받기 전까지 미확인이다.
-            // 서버의 최초 WebSocket 메시지는 read가 누락되거나 발신자 기준 true일 수 있다.
-            isRead: isMyMessage ? false : msg.read,
-            time: new Date(msg.createdDate || now).toLocaleTimeString("ko-KR", {
-              hour: "2-digit",
-              minute: "2-digit",
-              hour12: true,
-            }),
-            createdAt: msg.createdDate || now.toISOString(),
-          },
-        ];
+
+        const { content, isBot, isBotQuestion, nickname } =
+          parseChatBuliPayload(msg.content);
+
+        const nextMessage: MessageType = {
+          id: messageId,
+          sender: isMyMessage ? "me" : "other",
+          senderId: msg.userId,
+          nickname: nickname || undefined,
+          content,
+          isSystem: Boolean(msg.system),
+          isBot: isBot || Boolean(msg.system),
+          isBotQuestion,
+          userImageUrl: msg.userImageUrl,
+          // 실시간 발신 메시지는 상대방의 읽음 이벤트를 받기 전까지 미확인이다.
+          // 서버의 최초 WebSocket 메시지는 read가 누락되거나 발신자 기준 true일 수 있다.
+          isRead: isMyMessage ? false : msg.read,
+          time: new Date(msg.createdDate || now).toLocaleTimeString("ko-KR", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+          }),
+          createdAt: msg.createdDate || now.toISOString(),
+        };
+
+        // 1. 내 질문 메시지가 소켓으로 돌아왔을 때, 이미 로컬에 추가된 질문 메시지를 찾아 in-place로 ID/정보 업데이트 (순서 역전 방지)
+        if (isBotQuestion && isMyMessage) {
+          const localQuestionIdx = prev.findIndex(
+            (m) =>
+              m.sender === "me" &&
+              m.isBotQuestion &&
+              (m.content === content ||
+                m.content === `[챗불이에게 질문] ${content}` ||
+                content === `[챗불이에게 질문] ${m.content}`),
+          );
+          if (localQuestionIdx !== -1) {
+            const copy = [...prev];
+            copy[localQuestionIdx] = {
+              ...copy[localQuestionIdx],
+              id: messageId,
+              isRead: msg.read,
+              createdAt: msg.createdDate || copy[localQuestionIdx].createdAt,
+            };
+            return copy;
+          }
+        }
+
+        // 2. 챗불이 답변 메시지가 소켓으로 돌아왔을 때, 스트리밍 중이던 임시 봇 메시지를 찾아 in-place로 교체 (순서 역전 방지)
+        if (isBot && nickname === "챗불이") {
+          const tempIdx = prev.findIndex(
+            (m) =>
+              m.isBot &&
+              m.nickname === "챗불이" &&
+              (m.content === content ||
+                m.content === "답변을 준비하고 있어요..." ||
+                content.includes(m.content) ||
+                m.content.includes(content)),
+          );
+          if (tempIdx !== -1) {
+            const copy = [...prev];
+            copy[tempIdx] = nextMessage;
+            return copy;
+          }
+        }
+
+        return [...prev, nextMessage];
       });
     },
     onRead: ({ messageIds, lastReadMessageId }) => {
@@ -1130,14 +1246,24 @@ export default function ChattingPage() {
       }
 
       setMessageList((prev) => {
+        const rawContent = studentIdRequestPayload
+          ? "학번 공유 요청"
+          : msg.content;
+        const { content, isBot, isBotQuestion, nickname } =
+          parseChatBuliPayload(rawContent);
+
         const nextMessage: MessageType = {
           id: msg.messageId || Date.now(),
           sender: normalizedSenderId === userId ? "me" : "other",
-          content: studentIdRequestPayload ? "학번 공유 요청" : msg.content,
-          nickname: normalizedNickname || undefined,
+          content,
+          nickname:
+            nickname ||
+            normalizedNickname ||
+            undefined,
           userImageUrl: null,
           isSystem: normalizedType === "SYSTEM",
-          isBot: msg.isBot || normalizedType === "BOT",
+          isBot: isBot || msg.isBot || normalizedType === "BOT",
+          isBotQuestion,
           senderId: normalizedSenderId,
           type: normalizedType,
           imageUrls: msg.imageUrls ?? [],
@@ -1154,6 +1280,47 @@ export default function ChattingPage() {
           }),
           createdAt: msg.createdAt || now.toISOString(),
         };
+
+        // 1. 내 질문 메시지가 소켓으로 돌아왔을 때, 이미 로컬에 추가된 질문 메시지를 찾아 in-place로 ID/정보 업데이트 (순서 역전 방지)
+        if (isBotQuestion && normalizedSenderId === userId) {
+          const localQuestionIdx = prev.findIndex(
+            (m) =>
+              m.sender === "me" &&
+              m.isBotQuestion &&
+              (m.content === content ||
+                m.content === `[챗불이에게 질문] ${content}` ||
+                content === `[챗불이에게 질문] ${m.content}`),
+          );
+          if (localQuestionIdx !== -1) {
+            const copy = [...prev];
+            copy[localQuestionIdx] = {
+              ...copy[localQuestionIdx],
+              id: msg.messageId || copy[localQuestionIdx].id,
+              unreadCount: msg.unreadCount,
+              createdAt: msg.createdAt || copy[localQuestionIdx].createdAt,
+            };
+            return copy;
+          }
+        }
+
+        // 2. 챗불이 답변 메시지가 소켓으로 돌아왔을 때, 스트리밍 중이던 임시 봇 메시지를 찾아 in-place로 교체 (순서 역전 방지)
+        if (isBot && nickname === "챗불이") {
+          const tempIdx = prev.findIndex(
+            (m) =>
+              m.isBot &&
+              m.nickname === "챗불이" &&
+              (m.content === content ||
+                m.content === "답변을 준비하고 있어요..." ||
+                content.includes(m.content) ||
+                m.content.includes(content)),
+          );
+          if (tempIdx !== -1) {
+            const copy = [...prev];
+            copy[tempIdx] = nextMessage;
+            return copy;
+          }
+        }
+
         const isDuplicate = prev.some(
           (message) =>
             message.id === nextMessage.id ||
@@ -1292,20 +1459,28 @@ export default function ChattingPage() {
           // 기존 API 데이터
           const formattedMessages: MessageType[] = chats
             .filter((chat) => !parseStudentIdRequestPayload(chat.content))
-            .map((chat) => ({
-              id: chat.roommateChatId,
-              sender: chat.userId === userId ? "me" : "other",
-              content: chat.content,
-              userImageUrl: chat.userImageUrl, // 프로필 이미지 URL 추가
-              isSystem: Boolean(chat.system),
-              time: new Date(chat.createdDate).toLocaleTimeString("ko-KR", {
-                hour: "2-digit",
-                minute: "2-digit",
-                hour12: true,
-              }),
-              createdAt: chat.createdDate, // API에서 받은 날짜 저장
-              isRead: chat.read,
-            }));
+            .map((chat) => {
+              const { content, isBot, isBotQuestion, nickname } =
+                parseChatBuliPayload(chat.content);
+              return {
+                id: chat.roommateChatId,
+                sender: chat.userId === userId ? "me" : "other",
+                senderId: chat.userId,
+                nickname: nickname || undefined,
+                content,
+                isBotQuestion,
+                isBot: isBot || Boolean(chat.system),
+                userImageUrl: chat.userImageUrl, // 프로필 이미지 URL 추가
+                isSystem: Boolean(chat.system),
+                time: new Date(chat.createdDate).toLocaleTimeString("ko-KR", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  hour12: true,
+                }),
+                createdAt: chat.createdDate, // API에서 받은 날짜 저장
+                isRead: chat.read,
+              };
+            });
 
           const currentStatusRequestId =
             fetchedRoommateDisclosureStatus?.requestId;
@@ -1650,15 +1825,199 @@ export default function ChattingPage() {
     }
   };
 
+  const CHATBULI_PREFIX_REGEX =
+    /^\/(?:ㅊ|채|챗|챗ㅂ|챗부|챗불|챗불ㅇ|챗불이)?(\s|\n)/;
+  const CHATBULI_TYPING_REGEX =
+    /^\/(?:ㅊ|채|챗|챗ㅂ|챗부|챗불|챗불ㅇ|챗불이)?$/;
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value;
+
+    if (!isChatBuliActive) {
+      if (CHATBULI_PREFIX_REGEX.test(val)) {
+        setIsChatBuliActive(true);
+        setIsSlashMenuOpen(false);
+        const remaining = val.replace(CHATBULI_PREFIX_REGEX, "");
+        setInputValue(remaining);
+        if (inputRef.current) {
+          inputRef.current.value = remaining;
+          inputRef.current.style.height = "auto";
+        }
+        return;
+      }
+
+      if (CHATBULI_TYPING_REGEX.test(val)) {
+        setIsSlashMenuOpen(true);
+      } else {
+        setIsSlashMenuOpen(false);
+      }
+    }
+
+    setInputValue(val);
+  };
+
+  const handleSelectCommand = (_cmd?: "챗불이") => {
+    setIsChatBuliActive(true);
+    setIsSlashMenuOpen(false);
+    setInputValue("");
+    if (inputRef.current) {
+      inputRef.current.value = "";
+      inputRef.current.style.height = "auto";
+      inputRef.current.focus();
+    }
+  };
+
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Backspace" && inputValue === "" && isChatBuliActive) {
+      e.preventDefault();
+      setIsChatBuliActive(false);
+      return;
+    }
+    if (e.key === "Escape" && isSlashMenuOpen) {
+      e.preventDefault();
+      setIsSlashMenuOpen(false);
+      return;
+    }
+    if (e.key === "Enter" && !e.shiftKey) {
+      if (e.nativeEvent.isComposing) {
+        return;
+      }
+      if (isSlashMenuOpen && !isChatBuliActive) {
+        if (CHATBULI_TYPING_REGEX.test(inputValue.trim())) {
+          e.preventDefault();
+          handleSelectCommand("챗불이");
+          return;
+        }
+      }
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
   const handleSendMessage = () => {
     if (isChatBlocked) {
       alert(blockedChatMessage);
       return;
     }
-    if (!inputValue.trim()) return;
+    const trimmedInput = inputValue.trim();
+    if (!trimmedInput && !isChatBuliActive) return;
 
-    if (inputValue.trim().startsWith("[STUDENT_ID_SHARE_")) {
+    if (trimmedInput.startsWith("[STUDENT_ID_SHARE_")) {
       alert("올바르지 않은 메시지 형식입니다.");
+      return;
+    }
+
+    // 1. 챗불이 AI 슬래시 명령어 처리
+    const isChatBuliCommand =
+      isChatBuliActive ||
+      trimmedInput === "/챗불이" ||
+      trimmedInput.startsWith("/챗불이");
+
+    if (isChatBuliCommand) {
+      let question = trimmedInput;
+      if (question.startsWith("/챗불이")) {
+        question = question.replace(/^\/챗불이\s*/, "").trim();
+      }
+
+      if (!question) {
+        alert("챗불이에게 물어볼 질문을 입력해주세요.");
+        return;
+      }
+
+      const questionPayload = `[챗불이 질문] ${question}\n[CHATBULI_QUESTION]`;
+
+      const userMsgId = Date.now();
+      const tempBotMsgId = userMsgId + 1;
+      const now = new Date();
+      const nowTime = now.toLocaleTimeString("ko-KR", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      });
+
+      const userQuestionMessage: MessageType = {
+        id: userMsgId,
+        sender: "me",
+        senderId: userId,
+        content: question,
+        isBotQuestion: true,
+        time: nowTime,
+        createdAt: now.toISOString(),
+      };
+
+      const tempBotMessage: MessageType = {
+        id: tempBotMsgId,
+        sender: "other",
+        senderId: null,
+        nickname: "챗불이",
+        content: "답변을 준비하고 있어요...",
+        isBot: true,
+        time: nowTime,
+        createdAt: new Date(now.getTime() + 100).toISOString(),
+      };
+
+      // 질문과 답변을 반드시 [질문, 답변] 순서로 동시에 로컬 상태에 먼저 배치 (순서 역전 방지)
+      setMessageList((prev) => [...prev, userQuestionMessage, tempBotMessage]);
+
+      setIsChatBuliActive(false);
+      setIsSlashMenuOpen(false);
+      setInputValue("");
+      if (inputRef.current) inputRef.current.style.height = "auto";
+
+      // 소켓으로 질문 전송
+      if (chatType === "roommate") {
+        sendRoommateMessage(questionPayload);
+      } else if (chatType === "open" || chatType === "personal") {
+        sendOpenMessage(questionPayload);
+      }
+
+      let accumulated = "";
+      const sessionId = `${chatType || "chat"}-${roomId}`;
+
+      streamUnidormChat({
+        question,
+        history: [],
+        userId: userInfo.id,
+        sessionId,
+        onChunk: (chunk) => {
+          accumulated += chunk;
+          setMessageList((prev) =>
+            prev.map((msg) =>
+              msg.id === tempBotMsgId
+                ? { ...msg, content: accumulated }
+                : msg,
+            ),
+          );
+        },
+      })
+        .then(() => {
+          // 3. 스트리밍 완료 시 소켓을 통해 방 전체에 완성된 챗불이 답변 전송
+          const finalAnswer = accumulated.trim();
+          if (finalAnswer) {
+            const answerPayload = `[챗불이 답변]\n${finalAnswer}\n[CHATBULI_ANSWER]`;
+            if (chatType === "roommate") {
+              sendRoommateMessage(answerPayload);
+            } else if (chatType === "open" || chatType === "personal") {
+              sendOpenMessage(answerPayload);
+            }
+          }
+        })
+        .catch((err) => {
+          console.error("챗불이 스트리밍 응답 오류:", err);
+          setMessageList((prev) =>
+            prev.map((msg) =>
+              msg.id === tempBotMsgId
+                ? {
+                    ...msg,
+                    content:
+                      accumulated ||
+                      "챗불이 답변을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.",
+                  }
+                : msg,
+            ),
+          );
+        });
+
       return;
     }
 
@@ -1672,37 +2031,42 @@ export default function ChattingPage() {
     }
 
     if (chatType === "roommate") {
-      sendRoommateMessage(inputValue.trim());
+      sendRoommateMessage(trimmedInput);
     } else if (chatType === "open" || chatType === "personal") {
-      sendOpenMessage(inputValue.trim());
+      sendOpenMessage(trimmedInput);
     }
     setInputValue("");
     if (inputRef.current) inputRef.current.style.height = "auto";
   };
 
-  const toMessageType = (message: OpenChatMessage): MessageType => ({
-    id: message.messageId,
-    sender: message.senderId === userId ? "me" : "other",
-    senderId: message.senderId,
-    content: message.content,
-    nickname: message.senderNickname ?? undefined,
-    isSystem: message.type === "SYSTEM",
-    isBot: message.isBot || message.type === "BOT",
-    type: message.type,
-    imageUrls: message.imageUrls ?? [],
-    disclosureRequestId: message.disclosureRequestId,
-    linkedRoomId: message.linkedRoomId,
-    linkedRoomName: message.linkedRoomName,
-    linkedRoomDescription: message.linkedRoomDescription,
-    linkedRoomMaxParticipants: message.linkedRoomMaxParticipants,
-    unreadCount: message.unreadCount,
-    time: new Date(message.createdAt).toLocaleTimeString("ko-KR", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    }),
-    createdAt: message.createdAt,
-  });
+  const toMessageType = (message: OpenChatMessage): MessageType => {
+    const { content, isBot, isBotQuestion, nickname } =
+      parseChatBuliPayload(message.content);
+    return {
+      id: message.messageId,
+      sender: message.senderId === userId ? "me" : "other",
+      senderId: message.senderId,
+      content,
+      nickname: nickname || message.senderNickname || undefined,
+      isSystem: message.type === "SYSTEM",
+      isBot: isBot || message.isBot || message.type === "BOT",
+      isBotQuestion,
+      type: message.type,
+      imageUrls: message.imageUrls ?? [],
+      disclosureRequestId: message.disclosureRequestId,
+      linkedRoomId: message.linkedRoomId,
+      linkedRoomName: message.linkedRoomName,
+      linkedRoomDescription: message.linkedRoomDescription,
+      linkedRoomMaxParticipants: message.linkedRoomMaxParticipants,
+      unreadCount: message.unreadCount,
+      time: new Date(message.createdAt).toLocaleTimeString("ko-KR", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      }),
+      createdAt: message.createdAt,
+    };
+  };
 
   const handleSendImages = async (files: File[]) => {
     if (isChatBlocked) {
@@ -2259,6 +2623,8 @@ export default function ChattingPage() {
                       content={msg.content}
                       time={msg.time}
                       showTime={showMessageTime}
+                      title={msg.nickname || "챗불이"}
+                      onAskHere={() => handleSelectCommand("챗불이")}
                       unreadCount={
                         chatType === "open" || chatType === "personal"
                           ? msg.unreadCount
@@ -2767,6 +3133,7 @@ export default function ChattingPage() {
                       time={msg.time}
                       showTime={showMessageTime}
                       imageUrls={msg.imageUrls}
+                      isBotQuestion={msg.isBotQuestion}
                       unreadCount={
                         chatType === "open" || chatType === "personal"
                           ? msg.unreadCount
@@ -2789,6 +3156,7 @@ export default function ChattingPage() {
                           : msg.nickname || partnerName || "상대방"
                       }
                       imageUrls={msg.imageUrls}
+                      isBotQuestion={msg.isBotQuestion}
                       unreadCount={
                         chatType === "open" || chatType === "personal"
                           ? msg.unreadCount
@@ -2865,25 +3233,62 @@ export default function ChattingPage() {
           </S.FloatingMenu>
         )}
 
-        <S.FloatingInput
-          placeholder={
-            isChatBlocked
-              ? blockedChatMessage
-              : "메시지 보내기"
-          }
-          disabled={isChatBlocked}
-          ref={inputRef}
-          onInput={handleInput}
-          rows={1}
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              handleSendMessage();
+        {isSlashMenuOpen && !isChatBuliActive && (
+          <S.SlashMenuContainer ref={slashMenuContainerRef}>
+            <S.SlashMenuHeader>기능 선택</S.SlashMenuHeader>
+            <S.SlashMenuItem
+              type="button"
+              onClick={() => handleSelectCommand("챗불이")}
+            >
+              <S.SlashIconWrapper>
+                <img src={ChatBuliLogo} alt="챗불이" />
+              </S.SlashIconWrapper>
+              <S.SlashMeta>
+                <S.SlashName>/챗불이</S.SlashName>
+                <S.SlashDescription>
+                  기숙사 생활에 대해 챗불이에게 질문하기
+                </S.SlashDescription>
+              </S.SlashMeta>
+            </S.SlashMenuItem>
+          </S.SlashMenuContainer>
+        )}
+
+        <S.InputWrapper>
+          {isChatBuliActive && (
+            <S.InputBadge>
+              <img src={ChatBuliLogo} alt="" />
+              <span>/챗불이</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsChatBuliActive(false);
+                  inputRef.current?.focus();
+                }}
+                aria-label="기능 취소"
+              >
+                <X size={12} />
+              </button>
+            </S.InputBadge>
+          )}
+
+          <S.FloatingInput
+            $hasBadge={isChatBuliActive}
+            placeholder={
+              isChatBlocked
+                ? blockedChatMessage
+                : isChatBuliActive
+                  ? "질문할 내용을 입력하세요"
+                  : "메시지 보내기 (/ 입력 시 기능 선택)"
             }
-          }}
-        />
+            disabled={isChatBlocked}
+            ref={inputRef}
+            onInput={handleInput}
+            rows={1}
+            value={inputValue}
+            onChange={handleInputChange}
+            onKeyDown={handleInputKeyDown}
+          />
+        </S.InputWrapper>
         <S.SendCircleButton
           type="button"
           disabled={isChatBlocked}
