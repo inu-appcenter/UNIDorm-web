@@ -53,7 +53,12 @@ const getGuestDeviceId = () => {
 };
 
 export const resolveDeviceId = (userId?: number | string | null) => {
-  if (userId !== undefined && userId !== null && String(userId).trim() !== "") {
+  if (
+    userId !== undefined &&
+    userId !== null &&
+    String(userId).trim() !== "" &&
+    String(userId) !== "0"
+  ) {
     return `unidorm-${userId}`;
   }
   return getGuestDeviceId();
