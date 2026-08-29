@@ -2,6 +2,7 @@ import styled from "styled-components";
 import profile from "../../assets/profileimg.png";
 import { useLongPress } from "@/hooks/useLongPress";
 import ChatMessageContent from "./ChatMessageContent";
+import ChatBuliLogo from "@/assets/ai-chat/챗불이로고.svg";
 
 type Props = {
   content: string;
@@ -12,6 +13,7 @@ type Props = {
   senderName?: string;
   imageUrls?: string[];
   unreadCount?: number;
+  isBotQuestion?: boolean;
   onMessageClick?: () => void;
   onImageClick?: (url: string) => void;
   onAvatarClick?: () => void;
@@ -26,6 +28,7 @@ const ChatItemOtherPerson = ({
   senderName,
   imageUrls,
   unreadCount,
+  isBotQuestion,
   onMessageClick,
   onImageClick,
   onAvatarClick,
@@ -98,6 +101,17 @@ const ChatItemOtherPerson = ({
               />
             ))}
           </ImageGrid>
+        ) : isBotQuestion ? (
+          <BotQuestionBubble
+            {...(onMessageClick ? longPressHandlers : {})}
+            $clickable={Boolean(onMessageClick)}
+          >
+            <BotQuestionHeader>
+              <img src={ChatBuliLogo} alt="" />
+              <span>챗불이에게 질문</span>
+            </BotQuestionHeader>
+            <ChatMessageContent content={content} />
+          </BotQuestionBubble>
         ) : (
           <MessageBubble
             {...(onMessageClick ? longPressHandlers : {})}
@@ -225,6 +239,48 @@ const MessageBubble = styled.div<{ $clickable?: boolean }>`
       transform: scale(0.97);
       background-color: #e5e5e5;
     `}
+  }
+`;
+
+const BotQuestionBubble = styled.div<{ $clickable?: boolean }>`
+  background: #e6f4ff;
+  border: 1px solid #bae0ff;
+  padding: 8px 12px;
+  border-radius: 16px;
+  border-bottom-left-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  word-break: break-word;
+  cursor: ${({ $clickable }) => ($clickable ? "pointer" : "default")};
+  font-family: "Pretendard", sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #1c1c1e;
+`;
+
+const BotQuestionHeader = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #ffffff;
+  padding: 2px 6px;
+  border-radius: 8px;
+  width: fit-content;
+  border: 1px solid #bae0ff;
+
+  img {
+    width: 13px;
+    height: 13px;
+    object-fit: contain;
+  }
+
+  span {
+    font-family: "Pretendard", sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    color: #0958d9;
   }
 `;
 

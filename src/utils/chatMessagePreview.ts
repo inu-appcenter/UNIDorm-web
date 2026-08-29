@@ -51,6 +51,19 @@ export const formatChatMessagePreview = (message: unknown, fallback = "") => {
     return DISCLOSURE_PREVIEWS.cancel;
   }
 
+  if (rawMessage.includes("[CHATBULI_QUESTION]")) {
+    return rawMessage
+      .replace(/\n?\[CHATBULI_QUESTION\]$/, "")
+      .replace(/^\[CHATBULI_QUESTION\](\n|\s)?/, "")
+      .trim();
+  }
+  if (rawMessage.includes("[CHATBULI_ANSWER]")) {
+    return rawMessage
+      .replace(/\n?\[CHATBULI_ANSWER\]$/, "")
+      .replace(/^\[CHATBULI_ANSWER\](\n|\s)?/, "")
+      .trim();
+  }
+
   if (rawMessage.startsWith("{")) {
     try {
       const payload = JSON.parse(rawMessage) as unknown;

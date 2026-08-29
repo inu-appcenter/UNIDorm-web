@@ -172,7 +172,7 @@ export const FloatingInputArea = styled.div`
   align-items: center;
   padding: 8px 4px 8px 16px;
   box-sizing: border-box;
-  gap: 16px;
+  gap: 8px;
   box-shadow: 0px 2px 5px #dfdfdf;
   z-index: 100;
 `;
@@ -214,7 +214,7 @@ export const FloatingMenu = styled.div`
   border-radius: 16px;
   padding: 8px 16px;
   box-sizing: border-box;
-  width: 160px;
+  width: 170px;
   display: flex;
   flex-direction: column;
   box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.08);
@@ -238,6 +238,9 @@ export const FloatingMenuItem = styled.button`
   color: #3d3d3d;
   width: 100%;
   box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 
   &:not(:last-child) {
     border-bottom: 1px solid #efefef;
@@ -250,8 +253,160 @@ export const FloatingMenuItem = styled.button`
   }
 `;
 
-export const FloatingInput = styled.textarea`
+export const FloatingMenuIcon = styled.img`
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  flex-shrink: 0;
+`;
+
+export const SlashMenuContainer = styled.div`
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 0;
+  background-color: #ffffff;
+  border: 1px solid #dfdfdf;
+  border-radius: 16px;
+  padding: 8px;
+  box-sizing: border-box;
+  width: min(320px, calc(100vw - 40px));
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.12);
+  z-index: 3000;
+  transform-origin: bottom left;
+  animation: ${unfurlBottomToTop} 0.15s ease-out;
+`;
+
+export const SlashMenuHeader = styled.div`
+  font-family: "Pretendard", sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  color: #8b8b8b;
+  padding: 4px 8px 2px 8px;
+  letter-spacing: 0.2px;
+`;
+
+export const SlashMenuItem = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px 10px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: left;
+  transition: background-color 0.15s ease;
+
+  &:hover,
+  &:active {
+    background-color: #f0f7ff;
+  }
+`;
+
+export const SlashIconWrapper = styled.div`
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background-color: #e6f4ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  img {
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+  }
+`;
+
+export const SlashMeta = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
   flex: 1;
+`;
+
+export const SlashName = styled.span`
+  font-family: "Pretendard", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1c1c1e;
+`;
+
+export const SlashDescription = styled.span`
+  font-family: "Pretendard", sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  color: #8b8b8b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+export const InputWrapper = styled.div`
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+`;
+
+export const InputBadge = styled.div`
+  position: absolute;
+  left: 0;
+  top: 5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background-color: #e6f4ff;
+  border: 1px solid #bae0ff;
+  font-family: "Pretendard", sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: #0958d9;
+  user-select: none;
+  z-index: 2;
+  animation: ${unfurlBottomToTop} 0.15s ease-out;
+  height: 24px;
+  box-sizing: border-box;
+
+  img {
+    width: 14px;
+    height: 14px;
+    object-fit: contain;
+  }
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: #0958d9;
+    border-radius: 50%;
+    width: 14px;
+    height: 14px;
+    transition: background-color 0.15s ease;
+
+    &:hover {
+      background-color: rgba(9, 88, 217, 0.15);
+    }
+  }
+`;
+
+export const FloatingInput = styled.textarea<{ $hasBadge?: boolean }>`
+  width: 100%;
   border: none;
   background: transparent;
   font-family: "Pretendard", sans-serif;
@@ -261,9 +416,10 @@ export const FloatingInput = styled.textarea`
   resize: none;
   outline: none;
   padding: 4px 0;
-  box-sizing: border-box; /* box-sizing을 명시하여 패딩이 높이에 포함되도록 설정 */
-  height: 34px; /* 16px * 1.6 (25.6px) + padding 상하 8px = 33.6px. 모바일 포커스 시 위로 쏠리는 버그 방지 */
+  box-sizing: border-box;
+  height: 34px;
   max-height: 80px;
+  text-indent: ${({ $hasBadge }) => ($hasBadge ? "94px" : "0")};
 
   &::placeholder {
     color: #8b8b8b;
