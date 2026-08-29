@@ -2676,6 +2676,8 @@ export default function ChattingPage() {
                   !isSameMessageSender(msg, nextMessage) ||
                   !isSameMinute(msg.createdAt, nextMessage.createdAt);
 
+                const isChatBuli = msg.nickname === "챗불이";
+
                 return (
                   <React.Fragment key={msg.id}>
                     {showDateLine && (
@@ -2685,8 +2687,18 @@ export default function ChattingPage() {
                       content={msg.content}
                       time={msg.time}
                       showTime={showMessageTime}
-                      title={msg.nickname || "챗불이"}
-                      onAskHere={() => handleSelectCommand("챗불이")}
+                      isChatBuli={isChatBuli}
+                      title={isChatBuli ? "챗불이" : (msg.nickname || "공지봇")}
+                      subtitle={
+                        isChatBuli
+                          ? "기숙사 생활 도우미"
+                          : "인천대 기숙사 채팅도우미"
+                      }
+                      onAskHere={
+                        isChatBuli
+                          ? () => handleSelectCommand("챗불이")
+                          : undefined
+                      }
                       unreadCount={
                         chatType === "open" || chatType === "personal"
                           ? msg.unreadCount
