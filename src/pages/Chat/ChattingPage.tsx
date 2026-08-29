@@ -235,7 +235,11 @@ const mapOpenChatMessageToMessageType = (
       undefined,
     userImageUrl: null,
     isSystem: normalizedType === "SYSTEM",
-    isBot: isBot || chat.isBot || normalizedType === "BOT",
+    isBot:
+      isBot ||
+      Boolean(chat.bot) ||
+      Boolean(chat.isBot) ||
+      normalizedType === "BOT",
     isBotQuestion,
     senderId: normalizedSenderId,
     type: normalizedType,
