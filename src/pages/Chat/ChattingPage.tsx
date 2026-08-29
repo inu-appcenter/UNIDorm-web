@@ -2688,7 +2688,7 @@ export default function ChattingPage() {
                       time={msg.time}
                       showTime={showMessageTime}
                       isChatBuli={isChatBuli}
-                      title={isChatBuli ? "챗불이" : (msg.nickname || "공지봇")}
+                      title={isChatBuli ? "챗불이" : "공지봇"}
                       subtitle={
                         isChatBuli
                           ? "기숙사 생활 도우미"
