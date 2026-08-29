@@ -3207,6 +3207,15 @@ export default function ChattingPage() {
             <S.FloatingMenuItem
               onClick={() => {
                 setMenuOpen(false);
+                handleSelectCommand("챗불이");
+              }}
+            >
+              <S.FloatingMenuIcon src={ChatBuliLogo} alt="" />
+              챗불이에게 질문
+            </S.FloatingMenuItem>
+            <S.FloatingMenuItem
+              onClick={() => {
+                setMenuOpen(false);
                 if (chatType === "roommate") {
                   alert("사진 첨부는 현재 오픈채팅에서 사용할 수 있어요.");
                   return;

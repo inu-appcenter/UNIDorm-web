@@ -214,7 +214,7 @@ export const FloatingMenu = styled.div`
   border-radius: 16px;
   padding: 8px 16px;
   box-sizing: border-box;
-  width: 160px;
+  width: 170px;
   display: flex;
   flex-direction: column;
   box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.08);
@@ -238,6 +238,9 @@ export const FloatingMenuItem = styled.button`
   color: #3d3d3d;
   width: 100%;
   box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 
   &:not(:last-child) {
     border-bottom: 1px solid #efefef;
@@ -248,6 +251,13 @@ export const FloatingMenuItem = styled.button`
     color: var(--Main-Main1, #1677ff);
     font-weight: 400;
   }
+`;
+
+export const FloatingMenuIcon = styled.img`
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  flex-shrink: 0;
 `;
 
 export const SlashMenuContainer = styled.div`
