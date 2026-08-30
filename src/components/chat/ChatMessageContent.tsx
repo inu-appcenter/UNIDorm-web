@@ -6,7 +6,7 @@ interface Props {
   replaceUrlWithShortcut?: boolean;
 }
 
-const TRAILING_PUNCTUATION = /[),.!?;:]+$/;
+const TRAILING_PUNCTUATION = /[),.!?;:>}\]]+$/;
 
 export default function ChatMessageContent({
   content,
@@ -89,7 +89,7 @@ function parseInlineMarkdown(
   // 4. Bold: **bold** or __bold__
   // 5. Italic: *italic* or _italic_
   const tokenRegex =
-    /(\[([^\]]+)\]\((https?:\/\/[^\s)]+|www\.[^\s)]+)\)|https?:\/\/[^\s<]+|www\.[^\s<]+|`([^`]+)`|\*\*([^*]+)\*\*|__([^_]+)__|\*([^*]+)\*|_([^_]+)_)/gi;
+    /(\[([^\]]+)\]\((https?:\/\/[^\s)]+|www\.[^\s)]+)\)|https?:\/\/[^\s<>]+|www\.[^\s<>]+|`([^`]+)`|\*\*([^*]+)\*\*|__([^_]+)__|\*([^*]+)\*|_([^_]+)_)/gi;
 
   const nodes: React.ReactNode[] = [];
   let lastIndex = 0;
@@ -110,7 +110,10 @@ function parseInlineMarkdown(
     const italicUnderscore = match[8];
 
     if (linkLabel && linkUrl) {
-      const href = linkUrl.startsWith("www.") ? `https://${linkUrl}` : linkUrl;
+      const cleanLinkUrl = linkUrl.replace(/^<|>$/g, "");
+      const href = cleanLinkUrl.startsWith("www.")
+        ? `https://${cleanLinkUrl}`
+        : cleanLinkUrl;
       const isRawUrlLabel =
         linkLabel.startsWith("http://") ||
         linkLabel.startsWith("https://") ||
