@@ -640,7 +640,7 @@ export default function ChattingPage() {
     if (!scrollRef.current) return;
     const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
     const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
-    wasNearBottomRef.current = distanceFromBottom <= 200;
+    wasNearBottomRef.current = distanceFromBottom <= 120;
   }, []);
 
   // 메시지 리스트 변경 시 스크롤 위치 제어
@@ -673,17 +673,35 @@ export default function ChattingPage() {
       return () => clearTimeout(timer);
     }
 
-    // 2. 새로운 메시지가 하단에 추가되었거나 최하단 메시지 내용(스트리밍 등)이 갱신되었을 때
-    if (isNewMessageAtBottom || isContentChanged) {
-      // 본인이 보낸 메시지이거나 메시지 수신 직전 스크롤이 바닥 근처에 있었으면 아래로 스크롤
+    if (selectedImageUrl) return;
+
+    const container = scrollRef.current;
+    const distanceFromBottom = container
+      ? container.scrollHeight - container.scrollTop - container.clientHeight
+      : 9999;
+
+    // 2. 새로운 메시지 아이템이 하단에 추가되었을 때
+    if (isNewMessageAtBottom) {
+      // 본인이 보낸 메시지이거나 메시지 수신 직전 스크롤이 바닥 근처였으면 아래로 스크롤
       if (
-        (latestMessage.sender === "me" || wasNearBottomRef.current) &&
-        !selectedImageUrl
+        latestMessage.sender === "me" ||
+        wasNearBottomRef.current ||
+        distanceFromBottom <= 150
       ) {
         scrollToBottom();
         requestAnimationFrame(() => {
           scrollToBottom();
         });
+      }
+      return;
+    }
+
+    // 3. 기존 최하단 메시지 내용(챗불이 스트리밍 등)이 갱신되었을 때
+    if (isContentChanged) {
+      // 사용자가 현재 바닥 근처(100px 이내)에 머물러 있는 경우에만 자연스럽게 바닥 유지
+      // 사용자가 스크롤을 위로 올려서 보고 있는 상태라면 스크롤을 아래로 잡아끌지 않음
+      if (distanceFromBottom <= 100 && container) {
+        container.scrollTop = container.scrollHeight;
       }
     }
   }, [messageList, selectedImageUrl]);
