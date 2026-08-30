@@ -2058,10 +2058,27 @@ export default function ChattingPage() {
           const finalAnswer = accumulated.trim();
           if (finalAnswer) {
             const answerPayload = `[챗불이 답변]\n${finalAnswer}\n[CHATBULI_ANSWER]`;
+            let success = false;
             if (chatType === "roommate") {
-              await sendRoommateMessage(answerPayload);
+              success = await sendRoommateMessage(answerPayload);
             } else if (chatType === "open" || chatType === "personal") {
-              await sendOpenMessage(answerPayload);
+              success = await sendOpenMessage(answerPayload);
+            }
+
+            if (!success) {
+              console.error("챗불이 답변 소켓 전송 실패");
+              setMessageList((prev) =>
+                prev.map((msg) =>
+                  msg.id === tempBotMsgId
+                    ? {
+                        ...msg,
+                        content:
+                          accumulated +
+                          "\n\n(⚠️ 네트워크 접속 오류로 채팅방에 답변이 전송되지 않았습니다. 다른 사람에게 보이지 않으며, 다시 접속 시 사라집니다.)",
+                      }
+                    : msg,
+                ),
+              );
             }
           }
         })
