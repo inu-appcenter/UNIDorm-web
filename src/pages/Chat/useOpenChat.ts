@@ -180,15 +180,46 @@ export const useOpenChat = ({
     }
   };
 
-  const sendMessage = (content: string) => {
-    const message: OpenChatMessagePayload = {
-      roomId,
-      content,
-    };
+  const waitForConnection = useCallback((timeoutMs = 3000): Promise<boolean> => {
+    if (connected && wsRef.current?.readyState === WebSocket.OPEN) {
+      return Promise.resolve(true);
+    }
 
-    console.log("📤 [SEND] 오픈채팅 메시지 전송:", message);
-    stompSend("/pub/openchat/socketchat", message);
-  };
+    connect();
+
+    return new Promise((resolve) => {
+      const startTime = Date.now();
+      const interval = setInterval(() => {
+        if (wsRef.current?.readyState === WebSocket.OPEN) {
+          clearInterval(interval);
+          resolve(true);
+        } else if (Date.now() - startTime >= timeoutMs) {
+          clearInterval(interval);
+          resolve(false);
+        }
+      }, 100);
+    });
+  }, [connect, connected]);
+
+  const sendMessage = useCallback(
+    async (content: string): Promise<boolean> => {
+      const isReady = await waitForConnection(3000);
+      if (!isReady || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+        console.warn("❌ OpenChat WebSocket is not connected after retry.");
+        return false;
+      }
+
+      const message: OpenChatMessagePayload = {
+        roomId,
+        content,
+      };
+
+      console.log("📤 [SEND] 오픈채팅 메시지 전송:", message);
+      stompSend("/pub/openchat/socketchat", message);
+      return true;
+    },
+    [roomId, waitForConnection],
+  );
 
   const sendRead = (lastMessageId?: number | null) => {
     const payload = {

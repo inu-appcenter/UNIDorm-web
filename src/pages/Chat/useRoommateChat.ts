@@ -244,12 +244,31 @@ export const useRoommateChat = ({
     client.activate();
   }, [enabled, roomId, token, userId]);
 
+  const waitForConnection = useCallback((timeoutMs = 3000): Promise<boolean> => {
+    if (clientRef.current?.connected) return Promise.resolve(true);
+
+    connect();
+
+    return new Promise((resolve) => {
+      const startTime = Date.now();
+      const interval = setInterval(() => {
+        if (clientRef.current?.connected) {
+          clearInterval(interval);
+          resolve(true);
+        } else if (Date.now() - startTime >= timeoutMs) {
+          clearInterval(interval);
+          resolve(false);
+        }
+      }, 100);
+    });
+  }, [connect]);
+
   const sendMessage = useCallback(
-    (content: string) => {
-      const client = clientRef.current;
-      if (!client?.connected) {
-        console.warn("❌ Roommate WebSocket is not connected.");
-        return;
+    async (content: string): Promise<boolean> => {
+      const isReady = await waitForConnection(3000);
+      if (!isReady || !clientRef.current?.connected) {
+        console.warn("❌ Roommate WebSocket is not connected after retry.");
+        return false;
       }
 
       const message: ChatMessage = {
@@ -257,13 +276,19 @@ export const useRoommateChat = ({
         content,
       };
 
-      client.publish({
-        destination: "/pub/roommate/socketchat",
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-        body: JSON.stringify(message),
-      });
+      try {
+        clientRef.current.publish({
+          destination: "/pub/roommate/socketchat",
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          body: JSON.stringify(message),
+        });
+        return true;
+      } catch (err) {
+        console.error("Roommate message publish error:", err);
+        return false;
+      }
     },
-    [roomId, token],
+    [roomId, token, waitForConnection],
   );
 
   useEffect(() => {

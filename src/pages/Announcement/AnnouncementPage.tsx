@@ -44,6 +44,7 @@ import { mixpanelTrack } from "@/utils/mixpanel";
 import AIOverviewCard from "@/components/announce/AIOverviewCard";
 import searchIcon from "@/assets/roommate/search-normal.svg";
 import useAIChatStore from "@/stores/useAIChatStore";
+import useUserStore from "@/stores/useUserStore";
 import { colors, typography } from "@/styles/tokens";
 import { streamUnidormChat } from "@/apis/unidormChat";
 
@@ -51,6 +52,7 @@ export default function AnnouncementPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { isLoggedIn, isAdmin } = useUserRole();
+  const { userInfo } = useUserStore();
   const { ref, inView } = useInView();
   const openAIChat = useAIChatStore((state) => state.openChat);
 
@@ -241,6 +243,8 @@ export default function AnnouncementPage() {
     streamUnidormChat({
       question: submittedSearch,
       history: [],
+      userId: userInfo?.id,
+      sessionId: "notice-search",
       signal: controller.signal,
       onChunk: (chunk) => {
         accumulatedAnswer += chunk;
@@ -271,7 +275,7 @@ export default function AnnouncementPage() {
       });
 
     return () => controller.abort();
-  }, [submittedSearch, searchRequestId, isAIOverviewVisible]);
+  }, [submittedSearch, searchRequestId, isAIOverviewVisible, userInfo?.id]);
 
   const handleSearchSubmit = () => {
     const trimmedTerm = searchDraft.trim();
