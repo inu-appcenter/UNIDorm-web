@@ -8,7 +8,7 @@ import React from "react";
  */
 const linkify = (content: string) => {
   // URL을 찾기 위한 정규식 (http, https, www)
-  const urlRegex = /(https?:\/\/\S+|www\.\S+)/gi;
+  const urlRegex = /(https?:\/\/[^\s<>]+|www\.[^\s<>]+)/gi;
 
   // 1. 먼저 텍스트를 줄바꿈(\n) 기준으로 나눕니다.
   return content.split("\n").map((line, lineIndex) => (
@@ -22,7 +22,7 @@ const linkify = (content: string) => {
           let trailingChars = ""; // URL 뒤에 붙는 구두점을 저장할 변수
 
           // URL 끝에 올 수 있는 구두점 목록
-          const punctuation = [".", ",", ")", "]", "}", ":", ";", "!"];
+          const punctuation = [".", ",", ")", "]", "}", ":", ";", "!", ">"];
 
           // URL의 마지막 글자가 구두점 목록에 포함되어 있다면, 분리합니다.
           // "...link.)" 와 같이 여러 구두점이 붙어있는 경우를 대비해 while문을 사용합니다.
