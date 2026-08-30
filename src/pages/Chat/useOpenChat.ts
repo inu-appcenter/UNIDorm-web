@@ -203,7 +203,7 @@ export const useOpenChat = ({
 
   const sendMessage = useCallback(
     async (content: string): Promise<boolean> => {
-      const isReady = await waitForConnection(3000);
+      const isReady = await waitForConnection(5000);
       if (!isReady || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
         console.warn("❌ OpenChat WebSocket is not connected after retry.");
         return false;

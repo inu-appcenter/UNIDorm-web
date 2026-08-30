@@ -265,7 +265,7 @@ export const useRoommateChat = ({
 
   const sendMessage = useCallback(
     async (content: string): Promise<boolean> => {
-      const isReady = await waitForConnection(3000);
+      const isReady = await waitForConnection(8000);
       if (!isReady || !clientRef.current?.connected) {
         console.warn("❌ Roommate WebSocket is not connected after retry.");
         return false;
