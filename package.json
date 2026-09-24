@@ -20,6 +20,7 @@
     "axios": "^1.8.4",
     "babel-plugin-transform-remove-console": "^6.9.4",
     "date-fns": "^4.1.0",
+    "dompurify": "^3.4.15",
     "embla-carousel-autoplay": "^8.6.0",
     "embla-carousel-react": "^8.6.0",
     "firebase": "^12.1.0",
@@ -47,6 +48,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
+    "@types/dompurify": "^3.0.5",
     "@types/node": "^22.13.13",
     "@types/react": "^19.0.12",
     "@types/react-dom": "^19.0.4",
