@@ -144,6 +144,7 @@ const AdminMainPage: React.FC = () => {
           "홈 화면 팝업 공지",
           "폼 관리",
           "AI 챗불이 관리",
+          "푸시 알림 전송",
         ].includes(page.label),
       )
     : allAdminPages.filter(
