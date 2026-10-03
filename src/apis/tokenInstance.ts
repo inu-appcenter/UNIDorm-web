@@ -64,7 +64,10 @@ const redirectToLogoutOnce = () => {
 
   isLogoutRedirectPending = true;
   delete tokenInstance.defaults.headers.common["Authorization"];
-  window.location.href = "/logout";
+
+  if (window.location.pathname !== "/logout") {
+    window.location.href = "/logout";
+  }
 };
 
 const refreshAccessToken = async (): Promise<TokenInfo> => {
