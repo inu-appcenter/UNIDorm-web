@@ -64,6 +64,10 @@ export default function HomePage() {
   } = useFreshmanMigrationBanner();
 
   useEffect(() => {
+    mixpanelTrack.homeViewed();
+  }, []);
+
+  useEffect(() => {
     const hasSeenMigrationAlert = sessionStorage.getItem(
       "hasSeenFreshmanMigrationAlert",
     );
