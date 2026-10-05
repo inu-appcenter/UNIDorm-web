@@ -1,6 +1,7 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
+import DOMPurify from "dompurify";
 import { FaRegHeart } from "react-icons/fa";
 import tokenInstance from "../../apis/tokenInstance";
 import { useSwipeable } from "react-swipeable";
@@ -183,7 +184,29 @@ export default function TipDetailPage() {
         : undefined,
   });
 
-  // 텍스트 내 URL 감지 및 링크 변환
+  const isHtmlContent = useMemo(() => {
+    if (!tip?.content) return false;
+    return /<[a-z][\s\S]*>/i.test(tip.content);
+  }, [tip?.content]);
+
+  const sanitizedHtml = useMemo(() => {
+    if (!tip?.content || !isHtmlContent) return "";
+    DOMPurify.addHook("afterSanitizeAttributes", (node) => {
+      if (node.tagName === "A" && node.hasAttribute("href")) {
+        node.setAttribute("target", "_blank");
+        node.setAttribute("rel", "noopener noreferrer");
+      }
+    });
+
+    const clean = DOMPurify.sanitize(tip.content, {
+      ADD_ATTR: ["target", "rel"],
+    });
+
+    DOMPurify.removeHook("afterSanitizeAttributes");
+    return clean;
+  }, [tip?.content, isHtmlContent]);
+
+  // 텍스트 내 URL 감지 및 링크 변환 (일반 텍스트용)
   const renderContentWithLinks = (content: string) => {
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     const parts = content.split(urlRegex);
@@ -249,7 +272,11 @@ export default function TipDetailPage() {
             )}
 
             <Title>{tip.title}</Title>
-            <BodyText>{renderContentWithLinks(tip.content)}</BodyText>
+            {isHtmlContent ? (
+              <HtmlContent dangerouslySetInnerHTML={{ __html: sanitizedHtml }} />
+            ) : (
+              <BodyText>{renderContentWithLinks(tip.content)}</BodyText>
+            )}
             <Divider />
 
             <LikeBox onClick={handleLike} style={{ cursor: "pointer" }}>
@@ -348,6 +375,64 @@ const BodyText = styled.div`
   white-space: pre-wrap;
   word-break: break-all;
   overflow-wrap: break-word;
+`;
+
+const HtmlContent = styled.div`
+  font-size: 15px;
+  line-height: 1.6;
+  color: #222;
+  word-break: break-word;
+  overflow-wrap: break-word;
+
+  p {
+    margin: 0 0 8px 0;
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 16px 0 8px 0;
+    color: #111;
+  }
+
+  h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 14px 0 6px 0;
+    color: #111;
+  }
+
+  ul,
+  ol {
+    padding-left: 20px;
+    margin: 8px 0;
+  }
+
+  li {
+    margin-bottom: 4px;
+  }
+
+  blockquote {
+    border-left: 3px solid #007aff;
+    padding-left: 12px;
+    margin: 12px 0;
+    color: #666;
+    font-style: italic;
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid #eee;
+    margin: 16px 0;
+  }
+
+  a {
+    color: #007bff;
+    text-decoration: underline;
+  }
 `;
 
 const StyledLink = styled.a`
