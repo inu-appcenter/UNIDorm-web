@@ -7,6 +7,10 @@
     -webkit-touch-callout: none;
 }
 
+html {
+    zoom: 0.9;
+}
+
 html, body, #root {
     margin: 0;
     padding: 0;
