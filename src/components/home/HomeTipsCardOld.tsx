@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { mixpanelTrack } from "@/utils/mixpanel";
+import { stripHtmlTags } from "@/utils/text";
 
 interface HomeCardProps {
   index: number;
@@ -25,7 +26,7 @@ const HomeTipsCardOld = ({
   return (
     <HomeCardWrapper onClick={handleClickCard}>
       <span className="title">Tip {index}</span>
-      <span className="content">{content}</span>
+      <span className="content">{stripHtmlTags(content)}</span>
     </HomeCardWrapper>
   );
 };

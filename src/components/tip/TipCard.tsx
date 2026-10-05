@@ -2,6 +2,7 @@
 
 import styled from "styled-components";
 import { FaRegComment, FaRegHeart } from "react-icons/fa";
+import { stripHtmlTags } from "@/utils/text";
 
 interface TipCardProps {
   tip: {
@@ -22,7 +23,7 @@ export default function TipCard({ tip, onClick }: TipCardProps) {
         <Title>{tip.title}</Title>
         <Time>{tip.time}</Time>
       </TopRow>
-      <Content>{tip.content}</Content>
+      <Content>{stripHtmlTags(tip.content)}</Content>
       <BottomRow>
         <FaRegHeart size={14} />
         <IconText>{tip.like}</IconText>

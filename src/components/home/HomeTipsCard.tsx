@@ -2,6 +2,7 @@ import styled from "styled-components";
 import { colors, typography } from "@/styles/tokens";
 import { useNavigate } from "react-router-dom";
 import { mixpanelTrack } from "@/utils/mixpanel";
+import { stripHtmlTags } from "@/utils/text";
 
 interface HomeCardProps {
   index: number;
@@ -19,7 +20,7 @@ const HomeTipsCard = ({ index, id, content }: HomeCardProps) => {
   return (
     <HomeCardWrapper onClick={handleClickCard}>
       <span className="tip-badge">Tip {index}</span>
-      <span className="content">{content}</span>
+      <span className="content">{stripHtmlTags(content)}</span>
     </HomeCardWrapper>
   );
 };
