@@ -19,6 +19,10 @@ export interface OpenChatRoom {
   public?: boolean;
   joined: boolean;
   isBlockedByPartner?: boolean;
+  isJoinable?: boolean;
+  recruitmentStatus?: "OPEN" | "CLOSED";
+  lastStatusChangedAt?: string | null;
+  lastStatusChangedBy?: number | null;
 }
 
 export interface OpenChatRoomPageResponse {
@@ -77,19 +81,47 @@ export interface CreateDerivedOpenChatRoomResponse {
   roomId: number;
 }
 
+export type ReplySourceStatus =
+  | "NORMAL"
+  | "DELETED"
+  | "NOT_FOUND"
+  | "RECRUITING"
+  | "RECRUITMENT_CLOSED";
+
+export type ChatRoomType = "ROOMMATE" | "OPEN" | "DERIVED";
+
+export interface ReplySourceDto {
+  replyToMessageId: number;
+  status: ReplySourceStatus;
+  replyToSenderId?: number | null;
+  replyToSenderNickname?: string | null;
+  contentPreview?: string | null;
+  replyToRoomType: ChatRoomType;
+  replyToRoomId: number;
+  replyToDerivedRoomId?: number | null;
+}
+
+export type OpenChatMessageType =
+  | "TEXT"
+  | "IMAGE"
+  | "SYSTEM"
+  | "ROOM_LINK"
+  | "REOPEN_CARD"
+  | "STUDENT_ID_REQUEST"
+  | "BOT";
+
 export interface OpenChatMessage {
   messageId: number;
   roomId: number;
   senderId: number | null;
   senderNickname: string | null;
   content: string;
-  type:
-    | "TEXT"
-    | "IMAGE"
-    | "SYSTEM"
-    | "ROOM_LINK"
-    | "STUDENT_ID_REQUEST"
-    | "BOT";
+  type: OpenChatMessageType;
+  eventType?: "MESSAGE_CREATED" | "MESSAGE_UPDATED" | "MESSAGE_DELETED" | string;
+  isDeleted?: boolean;
+  isEdited?: boolean;
+  editedAt?: string | null;
+  replySource?: ReplySourceDto | null;
   isBot?: boolean;
   bot?: boolean;
   imageUrls?: string[];
@@ -99,6 +131,8 @@ export interface OpenChatMessage {
   linkedRoomName?: string | null;
   linkedRoomDescription?: string | null;
   linkedRoomMaxParticipants?: number | null;
+  linkedRoomRecruitmentStatus?: "OPEN" | "CLOSED";
+  linkedRoomRecruitmentClosed?: boolean;
   disclosureRequestId?: number | null;
 }
 

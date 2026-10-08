@@ -114,3 +114,15 @@ export const updateOpenChatNotificationMode = async (
   );
   return response;
 };
+
+/** 룸메이트 채팅 메시지 삭제 (모두에게 삭제) */
+export const deleteRoommateChatMessage = async (
+  roomId: number,
+  messageId: number,
+): Promise<AxiosResponse<void>> => {
+  return tokenInstance.delete(
+    `/roommate/chat/${roomId}/messages/${messageId}`,
+  );
+};
+
+

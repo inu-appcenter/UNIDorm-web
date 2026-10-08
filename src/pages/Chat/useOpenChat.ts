@@ -113,6 +113,7 @@ export const useOpenChat = ({
         subscriptions.current = [];
         doSubscribe(`/sub/openchat/${roomId}`);
         doSubscribe(`/sub/openchat/${roomId}/read`);
+        doSubscribe(`/sub/openchat/${roomId}/recruitment-status`);
 
         pendingSubscriptions.current.forEach((dest) => {
           doSubscribe(dest);
@@ -133,6 +134,13 @@ export const useOpenChat = ({
 
           if (destination === `/sub/openchat/${roomId}`) {
             onMessageRef.current?.(parsed as OpenChatMessage);
+          } else if (
+            destination === `/sub/openchat/${roomId}/recruitment-status`
+          ) {
+            onMessageRef.current?.({
+              eventType: "RECRUITMENT_STATUS_UPDATED",
+              ...(parsed as any),
+            } as OpenChatMessage);
           } else if (destination === `/sub/openchat/${roomId}/read`) {
             onReadRef.current?.(parsed as OpenChatReadEvent);
           } else {

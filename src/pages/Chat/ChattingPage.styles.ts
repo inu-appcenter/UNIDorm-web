@@ -697,11 +697,11 @@ export const RoomLinkRow = styled.div`
   justify-content: center;
 `;
 
-export const RoomLinkCard = styled.button`
+export const RoomLinkCard = styled.button<{ $isClosed?: boolean }>`
   width: min(100%, 420px);
   min-height: 112px;
   padding: 18px 20px;
-  border: 1px solid #b7d5ff;
+  border: 1px solid ${({ $isClosed }) => ($isClosed ? "#E4E7EC" : "#b7d5ff")};
   border-radius: 16px;
   background: #ffffff;
   display: flex;
@@ -710,7 +710,8 @@ export const RoomLinkCard = styled.button`
   gap: 16px;
   text-align: left;
   cursor: pointer;
-  box-shadow: 0 6px 20px rgba(22, 119, 255, 0.08);
+  box-shadow: ${({ $isClosed }) =>
+    $isClosed ? "none" : "0 6px 20px rgba(22, 119, 255, 0.08)"};
 
   &:disabled {
     cursor: wait;
@@ -725,8 +726,8 @@ export const RoomLinkTextArea = styled.span`
   gap: 3px;
 `;
 
-export const RoomLinkLabel = styled.span`
-  color: #1677ff;
+export const RoomLinkLabel = styled.span<{ $isClosed?: boolean }>`
+  color: ${({ $isClosed }) => ($isClosed ? "#98A2B3" : "#1677ff")};
   font-family: "Pretendard", sans-serif;
   font-size: 12px;
   font-weight: 600;
@@ -769,3 +770,14 @@ export const RoomLinkAction = styled.span`
   align-items: center;
   gap: 4px;
 `;
+
+export const RoomLinkClosedAction = styled.span`
+  flex-shrink: 0;
+  color: #f04438;
+  font-family: "Pretendard", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+`;
+

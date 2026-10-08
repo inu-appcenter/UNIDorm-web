@@ -1,6 +1,8 @@
+import { useRef } from "react";
 import styled from "styled-components";
 import ChatMessageContent from "./ChatMessageContent";
 import ChatBuliLogo from "@/assets/ai-chat/챗불이로고.svg";
+import { useLongPress } from "@/hooks/useLongPress";
 
 type Props = {
   content: string;
@@ -9,7 +11,9 @@ type Props = {
   imageUrls?: string[];
   unreadCount?: number;
   isBotQuestion?: boolean;
-  onMessageClick?: () => void;
+  isDeleted?: boolean;
+  isEdited?: boolean;
+  onMessageClick?: (rect?: DOMRect) => void;
   onImageClick?: (url: string) => void;
 };
 
@@ -20,9 +24,12 @@ const ChatItemMy = ({
   imageUrls,
   unreadCount,
   isBotQuestion,
+  isDeleted = false,
+  isEdited = false,
   onMessageClick,
   onImageClick,
 }: Props) => {
+  const contentRef = useRef<HTMLDivElement>(null);
   const unreadLabel =
     typeof unreadCount === "number"
       ? unreadCount > 0
@@ -37,13 +44,32 @@ const ChatItemMy = ({
       ? content.split("\n\n")
       : [content, null];
 
+  const isMessageDeleted =
+    Boolean(isDeleted) || content === "삭제된 메시지입니다.";
+
+  const handleTriggerAction = () => {
+    if (isMessageDeleted) return;
+    const rect = contentRef.current?.getBoundingClientRect();
+    if (onMessageClick) onMessageClick(rect);
+  };
+
+  const longPressHandlers = useLongPress({
+    onLongPress: handleTriggerAction,
+    delay: 400,
+  });
+
   return (
-    <ChatItemMyWrapper
-      onClick={onMessageClick}
-      $clickable={Boolean(onMessageClick)}
-    >
-      <ContentArea>
-        {imageUrls?.length ? (
+    <ChatItemMyWrapper>
+      <ContentArea
+        ref={contentRef}
+        {...(!isMessageDeleted && onMessageClick ? longPressHandlers : {})}
+        $clickable={!isMessageDeleted && Boolean(onMessageClick)}
+      >
+        {isMessageDeleted ? (
+          <DeletedMessageBubble>
+            삭제된 메시지입니다.
+          </DeletedMessageBubble>
+        ) : imageUrls?.length ? (
           <ImageGrid>
             {imageUrls.map((url) => (
               <img
@@ -83,7 +109,12 @@ const ChatItemMy = ({
       </ContentArea>
       {(showTime || unreadLabel) && (
         <TimeArea>
-          {showTime && <div className="time">{time}</div>}
+          {showTime && (
+            <div className="time">
+              {isEdited && !isDeleted && <span className="edited-tag">수정됨 </span>}
+              {time}
+            </div>
+          )}
           {unreadLabel && <div className="isRead">{unreadLabel}</div>}
         </TimeArea>
       )}
@@ -93,7 +124,7 @@ const ChatItemMy = ({
 
 export default ChatItemMy;
 
-const ChatItemMyWrapper = styled.div<{ $clickable: boolean }>`
+const ChatItemMyWrapper = styled.div`
   width: 100%;
   height: fit-content;
   display: flex;
@@ -103,7 +134,18 @@ const ChatItemMyWrapper = styled.div<{ $clickable: boolean }>`
   box-sizing: border-box;
 
   gap: 4px;
-  cursor: ${({ $clickable }) => ($clickable ? "pointer" : "default")};
+`;
+
+const DeletedMessageBubble = styled.div`
+  font-family: "Pretendard", sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #98a2b3;
+  background-color: #f2f4f7;
+  padding: 8px 12px;
+  border-radius: 16px;
+  user-select: none;
 `;
 
 const ImageGrid = styled.div`
@@ -125,9 +167,10 @@ const ImageGrid = styled.div`
   }
 `;
 
-const ContentArea = styled.div`
+const ContentArea = styled.div<{ $clickable?: boolean }>`
   width: fit-content;
   max-width: 80%;
+  cursor: ${({ $clickable }) => ($clickable ? "pointer" : "default")};
 
   @media (min-width: 1024px) {
     max-width: 520px;
@@ -241,6 +284,10 @@ const TimeArea = styled.div`
   letter-spacing: 0.38px;
   .time {
     color: #8b8b8b;
+  }
+  .edited-tag {
+    color: #98a2b3;
+    font-size: 10px;
   }
   .isRead {
     color: #0958d9;

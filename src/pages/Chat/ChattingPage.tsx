@@ -12,6 +12,7 @@ import {
   getRoommateChatHistory,
   getRoommateChatRoom,
   patchRoommateChatRead,
+  deleteRoommateChatMessage,
 } from "@/apis/chat";
 import { patchNotificationsRead } from "@/apis/notification";
 import {
@@ -20,6 +21,7 @@ import {
   joinOpenChatRoom,
   createPersonalOpenChatRoom,
   transferOpenChatHost,
+  deleteOpenChatMessage,
 } from "@/apis/openchat";
 import {
   getOpenChatParticipants,
@@ -27,9 +29,17 @@ import {
   sendOpenChatImages,
 } from "@/apis/openchat";
 import { OpenChatReportReason, reportOpenChatMessage } from "@/apis/report";
-import { OpenChatMessage, OpenChatParticipant, OpenChatRoom } from "@/types/openchat";
+import {
+  OpenChatMessage,
+  OpenChatParticipant,
+  OpenChatRoom,
+  ReplySourceDto,
+} from "@/types/openchat";
 import PhotoAttachmentBottomSheet from "@/components/chat/PhotoAttachmentBottomSheet";
 import ChatMessageActionSheet from "@/components/chat/ChatMessageActionSheet";
+import ChatMessageMenuModal from "@/components/chat/ChatMessageMenuModal";
+import MessageDeleteConfirmModal from "@/components/chat/MessageDeleteConfirmModal";
+import RecruitmentClosedModal from "@/components/modal/RecruitmentClosedModal";
 import ChatMemberActionSheet from "@/components/chat/ChatMemberActionSheet";
 import ImageViewerModal from "@/components/chat/ImageViewerModal";
 import TooltipMessage from "@/components/common/TooltipMessage";
@@ -79,8 +89,13 @@ type MessageType = {
   linkedRoomName?: string | null;
   linkedRoomDescription?: string | null;
   linkedRoomMaxParticipants?: number | null;
+  linkedRoomRecruitmentStatus?: "OPEN" | "CLOSED";
+  linkedRoomRecruitmentClosed?: boolean;
   unreadCount?: number;
   isRead?: boolean;
+  isDeleted?: boolean;
+  isEdited?: boolean;
+  replySource?: ReplySourceDto | null;
 };
 
 interface LegacyRoommateShareMessage {
@@ -220,6 +235,11 @@ const mapOpenChatMessageToMessageType = (
   const normalizedSenderId =
     studentIdRequestPayload?.requesterId ?? chat.senderId ?? null;
 
+  const isDeleted =
+    Boolean(chat.isDeleted) ||
+    chat.content === "삭제된 메시지입니다." ||
+    chat.eventType === "MESSAGE_DELETED";
+
   const rawContent = studentIdRequestPayload ? "학번 공유 요청" : chat.content;
   const { content, isBot, isBotQuestion, nickname } =
     parseChatBuliPayload(rawContent);
@@ -227,7 +247,7 @@ const mapOpenChatMessageToMessageType = (
   return {
     id: chat.messageId,
     sender: normalizedSenderId === userId ? "me" : "other",
-    content,
+    content: isDeleted ? "삭제된 메시지입니다." : content,
     nickname:
       nickname ||
       chat.senderNickname ||
@@ -243,7 +263,10 @@ const mapOpenChatMessageToMessageType = (
     isBotQuestion,
     senderId: normalizedSenderId,
     type: normalizedType,
-    imageUrls: chat.imageUrls ?? [],
+    isDeleted,
+    isEdited: Boolean(chat.isEdited),
+    replySource: chat.replySource ?? null,
+    imageUrls: isDeleted ? [] : (chat.imageUrls ?? []),
     disclosureRequestId:
       chat.disclosureRequestId ??
       studentIdRequestPayload?.requestId ??
@@ -252,6 +275,8 @@ const mapOpenChatMessageToMessageType = (
     linkedRoomName: chat.linkedRoomName,
     linkedRoomDescription: chat.linkedRoomDescription,
     linkedRoomMaxParticipants: chat.linkedRoomMaxParticipants,
+    linkedRoomRecruitmentStatus: chat.linkedRoomRecruitmentStatus,
+    linkedRoomRecruitmentClosed: chat.linkedRoomRecruitmentClosed,
     unreadCount: chat.unreadCount,
     time: new Date(chat.createdAt).toLocaleTimeString("ko-KR", {
       hour: "2-digit",
@@ -539,6 +564,19 @@ export default function ChattingPage() {
   const [selectedMessage, setSelectedMessage] = useState<MessageType | null>(
     null,
   );
+  const [messageMenuOpen, setMessageMenuOpen] = useState(false);
+  const [messageMenuAnchorRect, setMessageMenuAnchorRect] = useState<{
+    top: number;
+    bottom: number;
+    left: number;
+    right: number;
+    width: number;
+    height: number;
+  } | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [isDeletingMessage, setIsDeletingMessage] = useState(false);
+  const [recruitmentClosedModalOpen, setRecruitmentClosedModalOpen] =
+    useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
   const [isOpenChatHost, setIsOpenChatHost] = useState(false);
   const [participants, setParticipants] = useState<OpenChatParticipant[]>([]);
@@ -1109,6 +1147,29 @@ export default function ChattingPage() {
         }
       }
 
+      if (
+        msg.isDeleted ||
+        (msg as any).eventType === "MESSAGE_DELETED" ||
+        msg.content === "삭제된 메시지입니다."
+      ) {
+        const deleteTargetId = msg.roommateChatId || msg.messageId;
+        if (deleteTargetId) {
+          setMessageList((prev) =>
+            prev.map((m) =>
+              m.id === deleteTargetId
+                ? {
+                    ...m,
+                    isDeleted: true,
+                    content: "삭제된 메시지입니다.",
+                    imageUrls: [],
+                  }
+                : m,
+            ),
+          );
+        }
+        return;
+      }
+
       setMessageList((prev) => {
         const messageId = msg.roommateChatId || msg.messageId || Date.now();
         const isMyMessage = msg.userId === userId;
@@ -1133,7 +1194,9 @@ export default function ChattingPage() {
           sender: isMyMessage ? "me" : "other",
           senderId: msg.userId,
           nickname: nickname || undefined,
-          content,
+          content: msg.isDeleted ? "삭제된 메시지입니다." : content,
+          isDeleted: Boolean(msg.isDeleted),
+          replySource: msg.replySource ?? null,
           isSystem: Boolean(msg.system),
           isBot: isBot || Boolean(msg.system),
           isBotQuestion,
@@ -1233,6 +1296,85 @@ export default function ChattingPage() {
     token,
     onMessage: (msg) => {
       const now = new Date();
+
+      // 실시간 삭제 이벤트 수신 처리
+      if (
+        msg.eventType === "MESSAGE_DELETED" ||
+        msg.isDeleted ||
+        msg.content === "삭제된 메시지입니다."
+      ) {
+        if (msg.messageId) {
+          setMessageList((prev) =>
+            prev.map((m) =>
+              m.id === msg.messageId
+                ? {
+                    ...m,
+                    isDeleted: true,
+                    content: "삭제된 메시지입니다.",
+                    imageUrls: [],
+                  }
+                : m,
+            ),
+          );
+        }
+        return;
+      }
+
+      // 실시간 메시지 수정 이벤트 수신 처리
+      if (
+        msg.eventType === "MESSAGE_UPDATED" ||
+        (msg.isEdited && !msg.isDeleted && msg.messageId)
+      ) {
+        if (msg.messageId) {
+          setMessageList((prev) =>
+            prev.map((m) =>
+              m.id === msg.messageId
+                ? {
+                    ...m,
+                    content: msg.content,
+                    isEdited: true,
+                  }
+                : m,
+            ),
+          );
+        }
+        return;
+      }
+
+      // 실시간 파생 톡방 모집 상태 변경 이벤트 수신 처리
+      const isRecruitmentEvent =
+        msg.eventType === "RECRUITMENT_STATUS_UPDATED" ||
+        msg.eventType === "RECRUITMENT_STATUS_CHANGED" ||
+        Boolean(msg.eventType?.includes("RECRUITMENT")) ||
+        Boolean((msg as any).recruitmentStatusChanged) ||
+        (msg.linkedRoomRecruitmentStatus !== undefined && !msg.type);
+
+      if (isRecruitmentEvent) {
+        const targetDerivedRoomId =
+          msg.linkedRoomId ??
+          (msg as any).derivedRoomId ??
+          (msg as any).roomId;
+        const newStatus: "OPEN" | "CLOSED" =
+          msg.linkedRoomRecruitmentStatus ??
+          (msg as any).status ??
+          ((msg as any).recruitmentClosed ? "CLOSED" : "OPEN");
+
+        if (targetDerivedRoomId) {
+          setMessageList((prev) =>
+            prev.map((m) =>
+              m.linkedRoomId === targetDerivedRoomId
+                ? {
+                    ...m,
+                    linkedRoomRecruitmentStatus: newStatus,
+                    linkedRoomRecruitmentClosed: newStatus === "CLOSED",
+                  }
+                : m,
+            ),
+          );
+        }
+        return;
+      }
+
       const studentIdRequestPayload = parseStudentIdRequestPayload(msg.content);
       const normalizedType = studentIdRequestPayload
         ? "STUDENT_ID_REQUEST"
@@ -1275,6 +1417,26 @@ export default function ChattingPage() {
       }
 
       setMessageList((prev) => {
+        // 재모집 카드 수신 또는 OPEN 상태인 카드 수신 시, 기존 동일 파생 방 카드의 모집 상태도 OPEN으로 복원
+        if (
+          msg.type === "REOPEN_CARD" ||
+          (msg.type === "ROOM_LINK" &&
+            (msg.linkedRoomRecruitmentStatus === "OPEN" ||
+              msg.linkedRoomRecruitmentClosed === false))
+        ) {
+          if (msg.linkedRoomId) {
+            prev = prev.map((m) =>
+              m.linkedRoomId === msg.linkedRoomId
+                ? {
+                    ...m,
+                    linkedRoomRecruitmentStatus: "OPEN",
+                    linkedRoomRecruitmentClosed: false,
+                  }
+                : m,
+            );
+          }
+        }
+
         const rawContent = studentIdRequestPayload
           ? "학번 공유 요청"
           : msg.content;
@@ -1284,7 +1446,7 @@ export default function ChattingPage() {
         const nextMessage: MessageType = {
           id: msg.messageId || Date.now(),
           sender: normalizedSenderId === userId ? "me" : "other",
-          content,
+          content: msg.isDeleted ? "삭제된 메시지입니다." : content,
           nickname:
             nickname ||
             normalizedNickname ||
@@ -1295,12 +1457,21 @@ export default function ChattingPage() {
           isBotQuestion,
           senderId: normalizedSenderId,
           type: normalizedType,
-          imageUrls: msg.imageUrls ?? [],
+          isDeleted: Boolean(msg.isDeleted),
+          isEdited: Boolean(msg.isEdited),
+          replySource: msg.replySource ?? null,
+          imageUrls: msg.isDeleted ? [] : (msg.imageUrls ?? []),
           disclosureRequestId: normalizedRequestId,
           linkedRoomId: msg.linkedRoomId,
           linkedRoomName: msg.linkedRoomName,
           linkedRoomDescription: msg.linkedRoomDescription,
           linkedRoomMaxParticipants: msg.linkedRoomMaxParticipants,
+          linkedRoomRecruitmentStatus:
+            msg.linkedRoomRecruitmentStatus ??
+            (msg.type === "REOPEN_CARD" ? "OPEN" : undefined),
+          linkedRoomRecruitmentClosed:
+            msg.linkedRoomRecruitmentClosed ??
+            (msg.type === "REOPEN_CARD" ? false : undefined),
           unreadCount: msg.unreadCount,
           time: now.toLocaleTimeString("ko-KR", {
             hour: "2-digit",
@@ -1355,7 +1526,12 @@ export default function ChattingPage() {
             message.id === nextMessage.id ||
             (normalizedType === "STUDENT_ID_REQUEST" &&
               message.type === "STUDENT_ID_REQUEST" &&
-              message.disclosureRequestId === normalizedRequestId),
+              message.disclosureRequestId === normalizedRequestId) ||
+            (normalizedType === "REOPEN_CARD" &&
+              message.type === "REOPEN_CARD" &&
+              message.linkedRoomId === nextMessage.linkedRoomId &&
+              (message.id === nextMessage.id ||
+                message.createdAt === nextMessage.createdAt)),
         );
         if (isDuplicate) return prev;
 
@@ -1489,6 +1665,10 @@ export default function ChattingPage() {
           const formattedMessages: MessageType[] = chats
             .filter((chat) => !parseStudentIdRequestPayload(chat.content))
             .map((chat) => {
+              const isDeleted =
+                Boolean(chat.isDeleted) ||
+                chat.content === "삭제된 메시지입니다." ||
+                (chat as any).eventType === "MESSAGE_DELETED";
               const { content, isBot, isBotQuestion, nickname } =
                 parseChatBuliPayload(chat.content);
               return {
@@ -1496,7 +1676,9 @@ export default function ChattingPage() {
                 sender: chat.userId === userId ? "me" : "other",
                 senderId: chat.userId,
                 nickname: nickname || undefined,
-                content,
+                content: isDeleted ? "삭제된 메시지입니다." : content,
+                isDeleted,
+                replySource: chat.replySource ?? null,
                 isBotQuestion,
                 isBot: isBot || Boolean(chat.system),
                 userImageUrl: chat.userImageUrl, // 프로필 이미지 URL 추가
@@ -2185,11 +2367,53 @@ export default function ChattingPage() {
     }
   };
 
-  const openMessageActions = (message: MessageType) => {
-    if (chatType !== "open" || message.sender !== "other" || message.isSystem)
-      return;
+  const handleOpenMessageMenu = (message: MessageType, rect?: DOMRect) => {
+    if (message.isSystem || message.isDeleted) return;
     setSelectedMessage(message);
-    setMessageSheetOpen(true);
+    if (rect) {
+      setMessageMenuAnchorRect({
+        top: rect.top,
+        bottom: rect.bottom,
+        left: rect.left,
+        right: rect.right,
+        width: rect.width,
+        height: rect.height,
+      });
+    } else {
+      setMessageMenuAnchorRect(null);
+    }
+    setMessageMenuOpen(true);
+  };
+
+  const handleConfirmDeleteMessage = async () => {
+    if (!selectedMessage) return;
+    setIsDeletingMessage(true);
+    try {
+      if (chatType === "roommate") {
+        await deleteRoommateChatMessage(roomId, selectedMessage.id);
+      } else {
+        await deleteOpenChatMessage(roomId, selectedMessage.id);
+      }
+      setMessageList((prev) =>
+        prev.map((m) =>
+          m.id === selectedMessage.id
+            ? {
+                ...m,
+                isDeleted: true,
+                content: "삭제된 메시지입니다.",
+                imageUrls: [],
+              }
+            : m,
+        ),
+      );
+      setDeleteConfirmOpen(false);
+      setMessageMenuOpen(false);
+    } catch (error) {
+      console.error("메시지 삭제 실패:", error);
+      alert("메시지 삭제에 실패했습니다. 다시 시도해 주세요.");
+    } finally {
+      setIsDeletingMessage(false);
+    }
   };
 
   const handleReportMessage = async (reason: OpenChatReportReason) => {
@@ -2487,6 +2711,14 @@ export default function ChattingPage() {
     const linkedRoomId = message.linkedRoomId;
     if (!linkedRoomId || joiningLinkedRoomId) return;
 
+    const isClosed =
+      message.linkedRoomRecruitmentStatus === "CLOSED" ||
+      Boolean(message.linkedRoomRecruitmentClosed);
+    if (isClosed) {
+      setRecruitmentClosedModalOpen(true);
+      return;
+    }
+
     const enterRoom = async () => {
       const response = await joinOpenChatRoom(linkedRoomId);
       const targetRoomId = response.data.roomId ?? linkedRoomId;
@@ -2506,8 +2738,22 @@ export default function ChattingPage() {
       await enterRoom();
     } catch (error) {
       console.error("파생 톡방 입장 실패:", error);
-      if (isAxiosError(error) && error.response?.status === 409) {
-        alert("참여 인원이 가득 찬 단체 톡방입니다.");
+      if (isAxiosError(error)) {
+        const errorMsg = String(error.response?.data?.message || "");
+        if (
+          error.response?.status === 400 ||
+          error.response?.status === 403 ||
+          errorMsg.includes("마감") ||
+          errorMsg.includes("모집")
+        ) {
+          setRecruitmentClosedModalOpen(true);
+          return;
+        }
+        if (error.response?.status === 409) {
+          alert("참여 인원이 가득 찬 단체 톡방입니다.");
+        } else {
+          alert("단체 톡방에 입장하지 못했습니다.");
+        }
       } else {
         alert("단체 톡방에 입장하지 못했습니다.");
       }
@@ -2641,8 +2887,14 @@ export default function ChattingPage() {
                 }
               }
 
-              if (msg.type === "ROOM_LINK" && msg.linkedRoomId) {
+              if (
+                (msg.type === "ROOM_LINK" || msg.type === "REOPEN_CARD") &&
+                msg.linkedRoomId
+              ) {
                 const isJoining = joiningLinkedRoomId === msg.linkedRoomId;
+                const isClosed =
+                  msg.linkedRoomRecruitmentStatus === "CLOSED" ||
+                  Boolean(msg.linkedRoomRecruitmentClosed);
 
                 return (
                   <React.Fragment key={msg.id}>
@@ -2654,11 +2906,22 @@ export default function ChattingPage() {
                     <S.RoomLinkRow>
                       <S.RoomLinkCard
                         type="button"
+                        $isClosed={isClosed}
                         disabled={isJoining}
-                        onClick={() => handleJoinLinkedRoom(msg)}
+                        onClick={() => {
+                          if (isClosed) {
+                            setRecruitmentClosedModalOpen(true);
+                          } else {
+                            handleJoinLinkedRoom(msg);
+                          }
+                        }}
                       >
                         <S.RoomLinkTextArea>
-                          <S.RoomLinkLabel>새 단체 톡방</S.RoomLinkLabel>
+                          <S.RoomLinkLabel $isClosed={isClosed}>
+                            {msg.type === "REOPEN_CARD"
+                              ? "재모집 톡방"
+                              : "새 단체 톡방"}
+                          </S.RoomLinkLabel>
                           <S.RoomLinkName>
                             {msg.linkedRoomName || "단체 톡방"}
                           </S.RoomLinkName>
@@ -2673,10 +2936,16 @@ export default function ChattingPage() {
                             </S.RoomLinkMeta>
                           )}
                         </S.RoomLinkTextArea>
-                        <S.RoomLinkAction>
-                          {isJoining ? "입장 중..." : "참여하기"}
-                          {!isJoining && <ArrowRight size={18} />}
-                        </S.RoomLinkAction>
+                        {isClosed ? (
+                          <S.RoomLinkClosedAction>
+                            모집 마감
+                          </S.RoomLinkClosedAction>
+                        ) : (
+                          <S.RoomLinkAction>
+                            {isJoining ? "입장 중..." : "참여하기"}
+                            {!isJoining && <ArrowRight size={18} />}
+                          </S.RoomLinkAction>
+                        )}
                       </S.RoomLinkCard>
                     </S.RoomLinkRow>
                   </React.Fragment>
@@ -3243,6 +3512,8 @@ export default function ChattingPage() {
                       showTime={showMessageTime}
                       imageUrls={msg.imageUrls}
                       isBotQuestion={msg.isBotQuestion}
+                      isDeleted={msg.isDeleted}
+                      isEdited={msg.isEdited}
                       unreadCount={
                         chatType === "open" || chatType === "personal"
                           ? msg.unreadCount
@@ -3250,6 +3521,7 @@ export default function ChattingPage() {
                             ? 1
                             : undefined
                       }
+                      onMessageClick={(rect) => handleOpenMessageMenu(msg, rect)}
                       onImageClick={(url) => setSelectedImageUrl(url)}
                     />
                   ) : (
@@ -3266,12 +3538,14 @@ export default function ChattingPage() {
                       }
                       imageUrls={msg.imageUrls}
                       isBotQuestion={msg.isBotQuestion}
+                      isDeleted={msg.isDeleted}
+                      isEdited={msg.isEdited}
                       unreadCount={
                         chatType === "open" || chatType === "personal"
                           ? msg.unreadCount
                           : undefined
                       }
-                      onMessageClick={() => openMessageActions(msg)}
+                      onMessageClick={(rect) => handleOpenMessageMenu(msg, rect)}
                       onImageClick={(url) => setSelectedImageUrl(url)}
                       onAvatarClick={() => handleAvatarClick(msg)}
                     />
@@ -3421,6 +3695,41 @@ export default function ChattingPage() {
         open={photoSheetOpen}
         onOpenChange={setPhotoSheetOpen}
         onSend={handleSendImages}
+      />
+
+      <ChatMessageMenuModal
+        open={messageMenuOpen}
+        onClose={() => setMessageMenuOpen(false)}
+        isMyMessage={selectedMessage?.sender === "me"}
+        isImageMessage={Boolean(selectedMessage?.imageUrls?.length)}
+        isDerivedRoomCard={Boolean(selectedMessage?.linkedRoomId)}
+        anchorRect={messageMenuAnchorRect}
+        onReply={() => {
+          // 추후 답장 기능 구현
+        }}
+        onDelete={() => {
+          setMessageMenuOpen(false);
+          setDeleteConfirmOpen(true);
+        }}
+        onEdit={() => {
+          // 추후 메시지 수정 기능 구현
+        }}
+        onReport={() => {
+          setMessageMenuOpen(false);
+          setMessageSheetOpen(true);
+        }}
+      />
+
+      <MessageDeleteConfirmModal
+        open={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        onConfirm={handleConfirmDeleteMessage}
+        isDeleting={isDeletingMessage}
+      />
+
+      <RecruitmentClosedModal
+        open={recruitmentClosedModalOpen}
+        onClose={() => setRecruitmentClosedModalOpen(false)}
       />
 
       <ChatMessageActionSheet
