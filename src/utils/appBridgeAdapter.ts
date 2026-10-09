@@ -55,6 +55,11 @@ function postBridgeMessage(event: string, value?: any): void {
   }
 }
 
+/** 신규 멀티 웹뷰 및 새로운 브릿지 기능 지원 여부를 확인합니다. */
+export function supportsMultiWebView(): boolean {
+  return hasReactNativeWebView();
+}
+
 export const appBridge = {
   /** 앱 화면 업데이트 및 세션 유지 캐시 삭제 요청 */
   requestAppUpdate(): void {
@@ -77,8 +82,36 @@ export const appBridge = {
     postBridgeMessage("routeChange", path);
   },
 
+  /** 멀티 웹뷰 새 서브 페이지 스택 푸시 */
+  navigateTo(pathOrUrl: string): void {
+    const fullUrl = pathOrUrl.startsWith("http")
+      ? pathOrUrl
+      : `${window.location.origin}${pathOrUrl.startsWith("/") ? "" : "/"}${pathOrUrl}`;
+    const path = pathOrUrl.startsWith("http")
+      ? new URL(pathOrUrl).pathname
+      : pathOrUrl;
+
+    postBridgeMessage("navigateTo", { path, url: fullUrl });
+  },
+
+  /** 서브 웹뷰 스택 팝 (뒤로가기) */
+  goBack(): void {
+    postBridgeMessage("goBack");
+  },
+
+  /** 서브 웹뷰 스택을 닫고 메인 탭으로 복귀 */
+  goHome(path: string): void {
+    postBridgeMessage("goHome", { path });
+  },
+
+  /** 뒤로가기 요청 */
+  requestBack(): void {
+    postBridgeMessage("goBack");
+  },
+
   /** 공식 앱 여부 확인 */
   isApp(): boolean {
     return isOfficialApp();
   },
 };
+
