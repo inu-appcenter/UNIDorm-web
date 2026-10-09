@@ -747,8 +747,8 @@ const RoomList = styled.div`
 
 const CreateButton = styled.button`
   position: fixed;
-  right: max(16px, env(safe-area-inset-right));
-  bottom: calc(88px + env(safe-area-inset-bottom));
+  right: max(16px, var(--safe-area-right, 0px));
+  bottom: calc(88px + var(--safe-area-bottom, 0px));
   z-index: 100;
   width: 62px;
   height: 62px;

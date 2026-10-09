@@ -1,7 +1,7 @@
 import styled from "styled-components";
 
 export const AuthFormWrapper = styled.form`
-  padding: 24px 16px 152px;
+  padding: 24px 16px calc(152px + var(--safe-area-bottom, 0px));
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -48,7 +48,7 @@ export const AuthButtonWrapper = styled.div`
   align-items: center;
   gap: 12px;
   padding: 16px;
-  padding-bottom: 30px;
+  padding-bottom: calc(30px + var(--safe-area-bottom, 0px));
   box-sizing: border-box;
   background: linear-gradient(
     180deg,

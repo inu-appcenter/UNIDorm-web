@@ -1099,7 +1099,7 @@ const ChecklistBanner = styled.div`
 
 const WriteButton = styled.button`
   position: fixed;
-  bottom: 90px;
+  bottom: calc(90px + var(--safe-area-bottom, 0px));
   right: 20px;
   background-color: #007bff;
   color: white;

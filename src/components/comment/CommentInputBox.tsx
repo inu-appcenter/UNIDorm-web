@@ -53,7 +53,7 @@ const CommentInput = styled.div`
   left: 0;
   right: 0;
   display: flex;
-  padding: 8px 16px;
+  padding: 8px 16px calc(8px + var(--safe-area-bottom, 0px));
   background: white;
   border-top: 1px solid #eee;
   z-index: 999;

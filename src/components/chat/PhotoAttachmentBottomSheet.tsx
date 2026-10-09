@@ -159,7 +159,7 @@ const Content = styled(Drawer.Content)`
   z-index: 20001;
   max-width: 420px;
   margin: 0 auto;
-  padding: 12px 20px 64px;
+  padding: 12px 20px calc(64px + var(--safe-area-bottom, 0px));
   box-sizing: border-box;
   border-radius: 16px 16px 0 0;
   background: white;

@@ -225,7 +225,7 @@ const Content = styled.main`
   flex-direction: column;
   gap: 16px;
   box-sizing: border-box;
-  padding: 16px 20px 112px;
+  padding: 16px 20px calc(112px + var(--safe-area-bottom, 0px));
 
   @media (min-width: 769px) {
     width: min(100%, 360px);
@@ -351,7 +351,7 @@ const SubmitArea = styled.div`
   bottom: 0;
   left: 0;
   box-sizing: border-box;
-  padding: 16px 20px;
+  padding: 16px 20px calc(16px + var(--safe-area-bottom, 0px));
   border-top: 1px solid #efefef;
   background: #fff;
 

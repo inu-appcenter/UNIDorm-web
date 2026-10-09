@@ -123,7 +123,7 @@ const FixedHeader = styled.div`
 const ScrollContent = styled.div`
   flex: 1;
   overflow-y: auto;
-  padding: 0 20px 40px 20px;
+  padding: 0 20px calc(40px + var(--safe-area-bottom, 0px)) 20px;
 
   scrollbar-width: none;
 

@@ -319,7 +319,7 @@ const DangerActionButton = styled.button`
   }
 
   &:last-child {
-    padding-bottom: 16px;
+    padding-bottom: calc(16px + var(--safe-area-bottom, 0px));
   }
 
   &:disabled {

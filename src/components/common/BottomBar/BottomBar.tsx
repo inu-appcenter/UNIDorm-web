@@ -6,7 +6,6 @@ import useUserStore from "../../../stores/useUserStore.ts";
 import { getMyRoommateInfo } from "@/apis/roommate";
 import { getAllRoommateChatUnreadCount } from "@/apis/chat";
 import { getOpenChatRooms } from "@/apis/openchat";
-import { getMobilePlatform } from "@/utils/getMobilePlatform";
 import TooltipMessage from "@/components/common/TooltipMessage";
 import { useRoommateMatchingStatus } from "@/hooks/useRoommateMatchingStatus";
 import { formatSemesterName } from "@/utils/semester";
@@ -366,8 +365,6 @@ const Badge = styled.div`
   box-sizing: border-box;
 `;
 
-const platform = getMobilePlatform();
-
 const StyledBottomBar = styled.footer`
   position: fixed;
   bottom: 0;
@@ -379,8 +376,7 @@ const StyledBottomBar = styled.footer`
   align-items: center;
 
   width: 100%;
-  padding: 8px 20px 16px 20px;
-  padding-bottom: ${platform === "ios_unidorm_app" ? "24px" : "16px"};
+  padding: 8px 20px calc(16px + var(--safe-area-bottom, 0px)) 20px;
   box-sizing: border-box;
   pointer-events: none;
 `;

@@ -3,8 +3,8 @@ import styled, { keyframes } from "styled-components";
 export const ChatPageWrapper = styled.div`
   width: 100%;
   background: #ffffff;
-  /* 부모 헤더(70px)를 뺀 나머지 화면 전체 고정 높이 */
-  height: calc(100vh - 70px);
+  /* 부모 헤더(70px + safe-area-top)를 뺀 나머지 화면 전체 고정 높이 */
+  height: calc(100vh - 70px - var(--safe-area-top, 0px));
   /* Flex Column 레이아웃 */
   display: flex;
   flex-direction: column;
@@ -29,7 +29,7 @@ export const ChattingWrapper = styled.div<{ $chatType?: string }>`
 
   /* 오픈채팅방일 경우 상단에 플로팅 배너 높이만큼 여백 추가 */
   padding-top: ${({ $chatType }) => ($chatType === "open" ? "72px" : "0")};
-  padding-bottom: 100px; /* 플로팅 입력 바 공간 확보 */
+  padding-bottom: calc(100px + var(--safe-area-bottom, 0px)); /* 플로팅 입력 바 공간 확보 */
   box-sizing: border-box;
   background: transparent;
   position: relative;
@@ -163,7 +163,7 @@ export const NoticeParagraph = styled.p`
 
 export const FloatingInputArea = styled.div`
   position: absolute;
-  bottom: 24px;
+  bottom: calc(24px + var(--safe-area-bottom, 0px));
   left: 20px;
   right: 20px;
   background-color: #ffffff;

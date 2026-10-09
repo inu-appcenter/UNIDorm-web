@@ -160,7 +160,7 @@ const Wrapper = styled.div`
 
 const Content = styled.div`
   flex: 1;
-  padding: 0 16px 100px;
+  padding: 0 16px calc(100px + var(--safe-area-bottom, 0px));
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -172,7 +172,7 @@ const ButtonWrapper = styled.div`
   position: fixed;
   bottom: 0;
   left: 0;
-  padding: 12px 16px;
+  padding: 12px 16px calc(12px + var(--safe-area-bottom, 0px));
   box-sizing: border-box;
 `;
 

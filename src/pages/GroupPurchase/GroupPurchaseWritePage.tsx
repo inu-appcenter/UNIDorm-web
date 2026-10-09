@@ -227,7 +227,7 @@ const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  padding: 0 16px 100px;
+  padding: 0 16px calc(100px + var(--safe-area-bottom, 0px));
   .required {
     color: red;
   }
@@ -281,7 +281,7 @@ const BottomFixed = styled.div`
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 16px;
+  padding: 16px 16px calc(16px + var(--safe-area-bottom, 0px));
   background: rgba(244, 244, 244, 0.6);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);

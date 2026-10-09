@@ -106,7 +106,7 @@ export default function FreshmanMigrationPage() {
 }
 
 const FormWrapper = styled.form`
-  padding: 20px 16px;
+  padding: 20px 16px calc(100px + var(--safe-area-bottom, 0px));
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -145,7 +145,7 @@ const ButtonWrapper = styled.div`
   right: 0;
   display: flex;
   justify-content: center;
-  padding: 16px;
+  padding: 16px 16px calc(16px + var(--safe-area-bottom, 0px));
   background: white;
   border-top: 1px solid #eee;
   z-index: 10;

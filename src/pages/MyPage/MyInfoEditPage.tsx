@@ -362,7 +362,7 @@ export default function MyInfoEditPage() {
   );
 }
 const MyInfoEditPageWrapper = styled.div`
-  padding: 16px 16px 120px;
+  padding: 16px 16px calc(120px + var(--safe-area-bottom, 0px));
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
@@ -392,7 +392,7 @@ const ButtonWrapper = styled.div`
   height: fit-content;
   position: fixed;
 
-  padding: 12px 16px;
+  padding: 12px 16px calc(12px + var(--safe-area-bottom, 0px));
   box-sizing: border-box;
 
   bottom: 0;

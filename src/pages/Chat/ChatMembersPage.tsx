@@ -702,7 +702,7 @@ const Guide = styled.div`
 const Scroll = styled.div`
   flex: 1;
   overflow-y: auto;
-  padding-bottom: 130px;
+  padding-bottom: calc(130px + var(--safe-area-bottom, 0px));
 `;
 const Section = styled.section`
   padding: 16px 20px 0;
@@ -768,7 +768,7 @@ const BottomActions = styled.div`
   left: 0;
   right: 0;
   bottom: 0;
-  padding: 16px 20px 24px;
+  padding: 16px 20px calc(24px + var(--safe-area-bottom, 0px));
   border-top: 1px solid #efefef;
   background: #fff;
   display: flex;
@@ -913,7 +913,7 @@ const DangerActionButton = styled.button`
   }
 
   &:last-child {
-    padding-bottom: 16px;
+    padding-bottom: calc(16px + var(--safe-area-bottom, 0px));
   }
 
   &:disabled {

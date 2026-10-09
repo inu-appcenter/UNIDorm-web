@@ -201,7 +201,7 @@ const Wrapper = styled.div`
   height: 100vh;
   background: #fafafa;
   flex: 1;
-  padding: 0 16px 120px;
+  padding: 0 16px calc(120px + var(--safe-area-bottom, 0px));
 `;
 
 const Content = styled.div`
@@ -239,7 +239,7 @@ const ButtonWrapper = styled.div`
   width: 100%;
   height: fit-content;
   position: fixed;
-  padding: 12px 16px;
+  padding: 12px 16px calc(12px + var(--safe-area-bottom, 0px));
   box-sizing: border-box;
   bottom: 0;
   left: 0;

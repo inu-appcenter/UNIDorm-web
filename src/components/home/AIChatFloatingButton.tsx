@@ -190,7 +190,7 @@ const Backdrop = styled(motion.div)`
 
 const FloatingButton = styled(motion.button)`
   position: fixed;
-  bottom: 85px;
+  bottom: calc(85px + var(--safe-area-bottom, 0px));
   right: 15px;
   width: 75px;
   height: 75px;
@@ -237,8 +237,8 @@ const ModalContainer = styled(motion.div)`
   isolation: isolate;
 
   /* Mobile (Default): Origin centered on the floating button */
-  top: 20px;
-  bottom: 20px;
+  top: calc(20px + var(--safe-area-top, 0px));
+  bottom: calc(20px + var(--safe-area-bottom, 0px));
   left: 12px;
   right: 12px;
   transform-origin: calc(100% - 42px) calc(100% - 104px);
