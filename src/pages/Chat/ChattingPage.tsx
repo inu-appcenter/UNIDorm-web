@@ -14,6 +14,7 @@ import {
   patchRoommateChatRead,
 } from "@/apis/chat";
 import { patchNotificationsRead } from "@/apis/notification";
+import { appBridge } from "@/utils/appBridgeAdapter";
 import {
   getOpenChatMessages,
   getOpenChatRooms,
@@ -515,15 +516,13 @@ export default function ChattingPage() {
         console.error("채팅방 알림 읽음 처리 실패:", err);
       }
 
-      if (window.webkit?.messageHandlers?.enterDetailView) {
-        try {
-          window.webkit.messageHandlers.enterDetailView.postMessage({
-            type: "CHAT",
-            id: id,
-          });
-        } catch (err) {
-          console.error("iOS enterDetailView 브릿지 호출 실패:", err);
-        }
+      try {
+        appBridge.enterDetailView({
+          type: "CHAT",
+          id: id,
+        });
+      } catch (err) {
+        console.error("enterDetailView 브릿지 호출 실패:", err);
       }
     };
 

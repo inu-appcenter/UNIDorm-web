@@ -7,6 +7,7 @@ import tokenInstance from "../apis/tokenInstance";
 import { PATHS } from "@/constants/paths";
 import { getRoommateChatRooms, getGroupOrderChatRooms } from "@/apis/chat";
 import { getOpenChatRooms } from "@/apis/openchat";
+import { appBridge } from "@/utils/appBridgeAdapter";
 
 export const useAppInit = () => {
   const { tokenInfo, setUserInfo, setLoading } = useUserStore();
@@ -155,6 +156,7 @@ export const useAppInit = () => {
     // React 마운트 및 navigateToPath 준비 완료 신호를 비동기로 네이티브(Android & iOS)에 안전하게 전송
     setTimeout(() => {
       try {
+        appBridge.onAppReady();
         if (window.AndroidBridge?.onAppReady) {
           window.AndroidBridge.onAppReady();
         }
