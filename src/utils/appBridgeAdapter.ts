@@ -109,6 +109,16 @@ export const appBridge = {
     postBridgeMessage("goBack");
   },
 
+  /** 로그인 성공 알림 */
+  loginSuccess(): void {
+    postBridgeMessage("loginSuccess");
+  },
+
+  /** 토큰 동기화 */
+  syncTokenInfo(tokenInfo: any): void {
+    postBridgeMessage("syncTokenInfo", tokenInfo);
+  },
+
   /** 공식 앱 여부 확인 */
   isApp(): boolean {
     return isOfficialApp();

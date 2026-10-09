@@ -379,7 +379,8 @@ if (typeof window !== "undefined") {
     const isCurrentInMainTab = isMainTabPath(window.location.pathname);
 
     // 2. 메인 탭 경로 이동:
-    // - 서브 웹뷰(pushed webview)에서 메인 탭으로 복귀하는 경우에만 네이티브로 위임(collapse stack)
+    // - 서브 웹뷰(pushed webview)에서 메인 탭으로 복귀하는 경우 네이티브 스택 닫기 신호(goHome)를 발송하고,
+    // - 루트 웹뷰(로그인, 온보딩 등에서 /home 이동)에서도 SPA 이동이 정상 진행되도록 originalNavigate를 항상 함께 실행
     if (
       supportsMultiWebView() &&
       isMainTabPath(path) &&
@@ -390,7 +391,7 @@ if (typeof window !== "undefined") {
       !isHashOrSearchOnly
     ) {
       appBridge.goHome(path);
-      return Promise.resolve();
+      return (originalNavigate as any).call(router, to, opts);
     }
 
     // 3. 신규 멀티 웹뷰 환경이고 메인 탭이 아니며, 탭 이동 옵션도 없는 경우 -> 새 웹뷰 액티비티로 오픈

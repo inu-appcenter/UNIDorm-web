@@ -1,6 +1,7 @@
 import { TokenInfo, UserInfo } from "@/types/members";
 import { create } from "zustand";
 import { identifyUser } from "@/utils/mixpanel";
+import { appBridge } from "@/utils/appBridgeAdapter";
 
 interface UserState {
   tokenInfo: TokenInfo;
@@ -60,6 +61,12 @@ const useUserStore = create<UserState>((set) => ({
     localStorage.setItem("accessToken", tokenInfo.accessToken);
     localStorage.setItem("refreshToken", tokenInfo.refreshToken);
     localStorage.setItem("role", tokenInfo.role);
+    if (tokenInfo.accessToken) {
+      appBridge.syncTokenInfo(tokenInfo);
+      appBridge.loginSuccess();
+    } else {
+      appBridge.syncTokenInfo(tokenInfo);
+    }
   },
   setUserInfo: (userInfo: UserInfo) => {
     set({ userInfo, isLoading: false });

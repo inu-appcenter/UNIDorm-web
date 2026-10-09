@@ -49,7 +49,7 @@ export default function LoginPage() {
         const response = await login(studentNumber, password);
         setTokenInfo(response.data);
         //mixpanelTrack.loginCompleted("포털 계정");
-        navigate(PATHS.HOME);
+        navigate(PATHS.HOME, { replace: true });
         return;
       } catch (error) {
         portalError = error;
@@ -63,7 +63,7 @@ export default function LoginPage() {
       const freshmanResponse = await loginFreshman(studentNumber, password);
       setTokenInfo(freshmanResponse.data);
       //mixpanelTrack.loginCompleted("신입생 임시 계정");
-      navigate(PATHS.HOME);
+      navigate(PATHS.HOME, { replace: true });
     } catch (error) {
       const status = isAxiosError(error) ? error.response?.status : undefined;
 
