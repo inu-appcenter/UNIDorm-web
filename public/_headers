@@ -5,3 +5,7 @@
 
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
+
+/.well-known/*
+  Content-Type: application/json
+  Access-Control-Allow-Origin: *
