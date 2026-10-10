@@ -166,7 +166,7 @@ export const MobileDormitoryCard: React.FC<MobileDormitoryCardProps> = ({
               <PhotoImg src={photoSrc} alt={`${studentName} 사생 증명사진`} />
             ) : (
               <PlaceholderPhoto>
-                <User size={44} strokeWidth={1.5} color="var(--text-tertiary)" />
+                <User size={40} strokeWidth={1.5} color="var(--text-tertiary)" />
               </PlaceholderPhoto>
             )}
           </PhotoWrapper>
@@ -237,12 +237,12 @@ const CardContainer = styled.article<{ $fullscreen?: boolean }>`
   width: 100%;
   max-width: 420px;
   height: 100%;
-  min-height: ${({ $fullscreen }) => ($fullscreen ? "100%" : "540px")};
+  max-height: 100%;
   flex: 1;
   background-color: var(--bg-base);
   border-radius: var(--radius-xl);
   border: 1px solid var(--border-default);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
   overflow: hidden;
   user-select: none;
   display: flex;
@@ -250,6 +250,7 @@ const CardContainer = styled.article<{ $fullscreen?: boolean }>`
   justify-content: space-between;
   margin: 0 auto;
   box-sizing: border-box;
+  min-height: 0;
 `;
 
 const WatermarkLayer = styled.div`
@@ -279,11 +280,12 @@ const WatermarkRow = styled.div<{ $reverse?: boolean }>`
 const HeaderSection = styled.header`
   position: relative;
   z-index: 2;
-  padding: 18px 22px 16px 22px;
+  padding: clamp(12px, 1.8vh, 18px) clamp(16px, 4vw, 22px);
   display: flex;
   align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid var(--border-default);
+  flex-shrink: 0;
 `;
 
 const HeaderLeft = styled.div`
@@ -299,7 +301,7 @@ const SubHeading = styled.span`
 `;
 
 const MainTitle = styled.h2`
-  font-size: 20px;
+  font-size: clamp(18px, 4.5vw, 20px);
   font-weight: 800;
   color: var(--text-primary);
   margin: 2px 0 0 0;
@@ -307,11 +309,11 @@ const MainTitle = styled.h2`
 `;
 
 const TermBadge = styled.span`
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--text-secondary);
   background-color: var(--bg-muted);
-  padding: 5px 12px;
+  padding: 4px 10px;
   border-radius: var(--radius-full);
   letter-spacing: -0.2px;
 `;
@@ -322,22 +324,24 @@ const CardBody = styled.div<{ $fullscreen?: boolean }>`
   display: flex;
   flex-direction: column;
   flex: 1;
-  justify-content: space-around;
-  padding: 8px 0;
+  min-height: 0;
+  justify-content: space-evenly;
+  padding: 4px 0;
 `;
 
 const ProfileSection = styled.section`
   position: relative;
   z-index: 2;
-  padding: 14px 22px;
+  padding: 8px clamp(16px, 4vw, 22px);
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: clamp(12px, 3.5vw, 18px);
+  flex-shrink: 0;
 `;
 
 const PhotoWrapper = styled.div`
-  width: 116px;
-  height: 152px;
+  width: clamp(96px, 26vw, 114px);
+  height: clamp(126px, 34vw, 148px);
   border-radius: var(--radius-md);
   overflow: hidden;
   border: 1px solid var(--border-default);
@@ -372,11 +376,11 @@ const ProfileInfo = styled.div`
 const NameRow = styled.div`
   display: flex;
   flex-direction: column;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 `;
 
 const StudentName = styled.h1`
-  font-size: 26px;
+  font-size: clamp(22px, 5.5vw, 26px);
   font-weight: 800;
   color: var(--text-primary);
   margin: 0;
@@ -385,31 +389,31 @@ const StudentName = styled.h1`
 `;
 
 const EnglishName = styled.span`
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--text-tertiary);
-  margin-top: 3px;
+  margin-top: 2px;
   letter-spacing: 0.2px;
 `;
 
 const MetaList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 `;
 
 const MetaItem = styled.div`
   display: flex;
   align-items: center;
-  font-size: 15px;
+  font-size: clamp(13px, 3.5vw, 14.5px);
   font-weight: 500;
 `;
 
 const MetaKey = styled.span`
   color: var(--text-tertiary);
-  width: 38px;
+  width: 36px;
   flex-shrink: 0;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
 `;
 
@@ -427,14 +431,15 @@ const MetaVal = styled.span`
 const DetailBox = styled.div<{ $boxBg: string; $boxBorder: string }>`
   position: relative;
   z-index: 2;
-  margin: 0 22px;
-  padding: 18px 20px;
+  margin: 0 clamp(16px, 4vw, 22px);
+  padding: clamp(12px, 2vh, 16px) clamp(16px, 3.5vw, 20px);
   border-radius: var(--radius-lg);
   background-color: ${({ $boxBg }) => $boxBg};
   border: 1px solid ${({ $boxBorder }) => $boxBorder};
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: clamp(8px, 1.4vh, 12px);
+  flex-shrink: 0;
 `;
 
 const DetailHeader = styled.div`
@@ -444,17 +449,17 @@ const DetailHeader = styled.div`
 `;
 
 const DetailLabel = styled.span`
-  font-size: 14px;
+  font-size: 13px;
   color: var(--text-secondary);
   font-weight: 600;
 `;
 
 const DormBadge = styled.span<{ $bg: string; $text: string }>`
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   background-color: ${({ $bg }) => $bg};
   color: ${({ $text }) => $text};
-  padding: 4px 12px;
+  padding: 3px 10px;
   border-radius: var(--radius-sm);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 `;
@@ -463,19 +468,19 @@ const DormNoRow = styled.div`
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  padding-top: 10px;
+  padding-top: 8px;
   border-top: 1px solid var(--border-default);
 `;
 
 const DormNoLabel = styled.span`
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--text-secondary);
 `;
 
 const DormNoValue = styled.span`
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 28px;
+  font-size: clamp(24px, 6vw, 28px);
   font-weight: 900;
   color: var(--text-primary);
   letter-spacing: 0.5px;
@@ -485,7 +490,7 @@ const StatusRow = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 14px;
+  font-size: 13px;
 `;
 
 const StatusLabel = styled.span`
@@ -501,17 +506,18 @@ const StatusValue = styled.span`
 const FooterSection = styled.footer`
   position: relative;
   z-index: 2;
-  padding: 16px 22px;
+  padding: clamp(12px, 1.8vh, 16px) clamp(16px, 4vw, 22px);
   background-color: var(--bg-subtle);
   border-top: 1px solid var(--border-default);
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 `;
 
 const ClockText = styled.time`
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 15px;
+  font-size: clamp(13px, 3.5vw, 15px);
   font-weight: 700;
   color: var(--text-primary);
   letter-spacing: 0.5px;

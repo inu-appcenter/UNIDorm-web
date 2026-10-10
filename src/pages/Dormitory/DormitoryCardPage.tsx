@@ -220,19 +220,21 @@ export default function MobileDormitoryCardPage() {
 const PageContainer = styled.div`
   width: 100%;
   max-width: 440px;
-  height: calc(100dvh - 56px - var(--safe-area-bottom, 0px));
-  min-height: calc(100dvh - 56px - var(--safe-area-bottom, 0px));
+  flex: 1;
+  height: 100%;
+  max-height: calc(100dvh - 70px - var(--safe-area-top, 0px) - var(--safe-area-bottom, 0px));
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  padding: 12px ${MOBILE_PAGE_GUTTER} calc(12px + var(--safe-area-bottom, 0px));
+  padding: 8px ${MOBILE_PAGE_GUTTER} calc(12px + var(--safe-area-bottom, 0px));
   box-sizing: border-box;
   overflow: hidden;
+  min-height: 0;
 
   @media (min-width: 768px) {
-    height: auto;
-    min-height: 640px;
-    padding: 24px 0 calc(24px + var(--safe-area-bottom, 0px));
+    max-height: none;
+    min-height: 600px;
+    padding: 20px 0 calc(20px + var(--safe-area-bottom, 0px));
   }
 `;
 
@@ -245,4 +247,5 @@ const CardWrapper = styled.section`
   align-items: center;
   justify-content: center;
   min-height: 0;
+  overflow: hidden;
 `;
