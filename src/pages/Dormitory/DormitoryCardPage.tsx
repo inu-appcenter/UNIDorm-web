@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import styled from "styled-components";
-import { useNavigate } from "react-router-dom";
-import { ChevronLeft } from "lucide-react";
-import { PATHS } from "@/constants/paths";
+import { useSetHeader } from "@/hooks/useSetHeader";
 import {
   DormitoryStudentInfo,
   parseDormitoryStudentInfo,
@@ -11,6 +9,7 @@ import { secureStorage } from "@/utils/secureStorage";
 import { MobileDormitoryCard } from "@/components/portal/MobileDormitoryCard";
 import { typography } from "@/styles/intipTypography";
 import { MOBILE_PAGE_GUTTER } from "@/styles/intipResponsive";
+import { ShieldCheck, Info } from "lucide-react";
 
 const STORAGE_KEY_DORMITORY_DATA = "portal_dormitory_student_info";
 
@@ -68,7 +67,10 @@ function mapInOutStatus(code?: string): string {
 }
 
 export default function MobileDormitoryCardPage() {
-  const navigate = useNavigate();
+  useSetHeader({
+    title: "모바일 사생증",
+  });
+
   const [dormInfo, setDormInfo] = useState<DormitoryStudentInfo | null>(null);
   const [fallbackAcademic, setFallbackAcademic] = useState<any | null>(null);
 
@@ -121,14 +123,6 @@ export default function MobileDormitoryCardPage() {
       isMounted = false;
     };
   }, []);
-
-  const handleBack = () => {
-    if (window.history.length > 1) {
-      navigate(-1);
-    } else {
-      navigate(PATHS.DORMITORY_INFO);
-    }
-  };
 
   const profile = dormInfo?.profile;
   const rawFields = dormInfo?.rawFields;
@@ -204,17 +198,8 @@ export default function MobileDormitoryCardPage() {
 
   return (
     <PageContainer as="main">
-      <TopBar>
-        <BackButton onClick={handleBack} aria-label="뒤로가기">
-          <ChevronLeft size={24} color="var(--text-primary)" />
-        </BackButton>
-        <BarTitle>모바일 사생증</BarTitle>
-        <TopBarSpacer />
-      </TopBar>
-
-      <CardArea as="section">
+      <CardWrapper as="section">
         <MobileDormitoryCard
-          fullscreen
           studentName={studentName}
           englishName={englishName}
           studentId={studentId}
@@ -228,76 +213,86 @@ export default function MobileDormitoryCardPage() {
           term={term}
           status={status}
         />
-      </CardArea>
+      </CardWrapper>
+
+      <NoticeCard>
+        <NoticeHeader>
+          <ShieldCheck size={16} color="var(--interactive-primary)" />
+          <NoticeTitle>모바일 사생증 안내</NoticeTitle>
+        </NoticeHeader>
+        <NoticeList>
+          <NoticeItem>
+            <Info size={12} color="var(--text-tertiary)" />
+            <span>생활원 출입 및 사생 확인 시 본 모바일 사생증을 제시해 주세요.</span>
+          </NoticeItem>
+          <NoticeItem>
+            <Info size={12} color="var(--text-tertiary)" />
+            <span>하단 실시간 시계와 워터마크를 통해 캡처 방지 및 유효성을 검증합니다.</span>
+          </NoticeItem>
+        </NoticeList>
+      </NoticeCard>
     </PageContainer>
   );
 }
 
 const PageContainer = styled.div`
   width: 100%;
-  height: 100dvh;
+  max-width: 440px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  background-color: var(--bg-subtle);
-  overflow: hidden;
+  padding: 16px ${MOBILE_PAGE_GUTTER} calc(28px + var(--safe-area-bottom, 0px));
   box-sizing: border-box;
-  padding-top: var(--native-safe-area-inset-top, env(safe-area-inset-top, 0px));
-  padding-bottom: var(--native-safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
-
-  @media (min-width: 768px) {
-    max-width: 440px;
-    margin: 0 auto;
-    box-shadow: var(--bottom-sheet-shadow);
-  }
+  gap: var(--space-4);
 `;
 
-const TopBar = styled.header`
-  height: 52px;
-  min-height: 52px;
+const CardWrapper = styled.section`
+  width: 100%;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 16px;
-  background-color: var(--bg-base);
-  border-bottom: 1px solid var(--border-default);
-  z-index: 10;
-`;
-
-const BackButton = styled.button`
-  display: flex;
-  align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
-  border: none;
-  background: transparent;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-
-  &:active {
-    background-color: var(--bg-subtle);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--border-brand);
-  }
 `;
 
-const BarTitle = styled.h1`
-  ${typography.heading2}
+const NoticeCard = styled.div`
+  background-color: var(--bg-base);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+`;
+
+const NoticeHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+`;
+
+const NoticeTitle = styled.h3`
+  ${typography.label2}
   color: var(--text-primary);
   margin: 0;
 `;
 
-const TopBarSpacer = styled.div`
-  width: 38px;
-`;
-
-const CardArea = styled.section`
-  flex: 1;
+const NoticeList = styled.ul`
+  list-style: none;
+  padding: 0;
+  margin: 0;
   display: flex;
   flex-direction: column;
-  padding: 16px ${MOBILE_PAGE_GUTTER} calc(16px + var(--native-safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)));
-  box-sizing: border-box;
-  overflow-y: auto;
+  gap: 6px;
+`;
+
+const NoticeItem = styled.li`
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  ${typography.caption1}
+  color: var(--text-secondary);
+  line-height: 1.45;
+
+  svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
 `;

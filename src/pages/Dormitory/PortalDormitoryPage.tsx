@@ -40,7 +40,6 @@ import {
   CreditCard,
   Zap,
   FileCheck,
-  ChevronRight,
   User,
   Database,
   RefreshCw,
@@ -59,7 +58,7 @@ const STORAGE_KEY_DORMITORY_UPDATED = "portal_dormitory_last_updated";
 type ActiveTab = "address" | "reward" | "inout" | "apply" | "payment" | "utility" | "pledge" | "academic";
 
 /**
- * Base64 이미지를 안전한 Data URL로 변환 (공백 제거 및 포맷 감지)
+ * Base64 이미지를 안전한 Data URL로 변환
  */
 function toImageSrc(base64?: string): string | null {
   if (!base64 || typeof base64 !== "string") return null;
@@ -74,7 +73,6 @@ function toImageSrc(base64?: string): string | null {
 
 /**
  * 생활원 기숙사 구분 코드 매핑
- * 01: 제1기숙사, 02: 제2기숙사(직영), 03: 제2기숙사(BTL), 04: 제3기숙사, 05: 제3기숙사(BTL)
  */
 function mapDormitoryType(code?: string): string {
   if (!code) return "";
@@ -96,7 +94,7 @@ function mapDormitoryType(code?: string): string {
 }
 
 /**
- * 학년 구분 매핑 (예: "4" -> "4학년")
+ * 학년 구분 매핑
  */
 function mapGrade(val?: string): string {
   if (!val) return "";
@@ -107,7 +105,7 @@ function mapGrade(val?: string): string {
 }
 
 /**
- * 성별 코드 매핑 (M -> 남성, F -> 여성)
+ * 성별 코드 매핑
  */
 function mapGender(code?: string): string {
   if (!code) return "";
@@ -118,7 +116,7 @@ function mapGender(code?: string): string {
 }
 
 /**
- * 국적 코드 매핑 (KR -> 대한민국)
+ * 국적 코드 매핑
  */
 function mapNationality(code?: string): string {
   if (!code) return "";
@@ -128,7 +126,7 @@ function mapNationality(code?: string): string {
 }
 
 /**
- * 학기 코드 매핑 (10 -> 1, 20 -> 2, 30 -> 여름, 40 -> 겨울)
+ * 학기 코드 매핑
  */
 function mapSemester(term?: string): string {
   if (!term) return "";
@@ -148,7 +146,7 @@ function mapSemester(term?: string): string {
 }
 
 /**
- * 상벌점 구분 매핑 (01: 상점, 02: 벌점)
+ * 상벌점 구분 매핑
  */
 function mapRewardType(code?: string, score?: string): string {
   const trimmed = code?.trim();
@@ -164,7 +162,7 @@ function mapRewardType(code?: string, score?: string): string {
 }
 
 /**
- * 입퇴사 상태 코드 매핑 (01: 정규입사, 02: 정규퇴사, 03: 중도퇴사)
+ * 입퇴사 상태 코드 매핑
  */
 function mapInOutStatus(code?: string): string {
   if (!code) return "입퇴사";
@@ -182,7 +180,7 @@ function mapInOutStatus(code?: string): string {
 }
 
 /**
- * 기숙사 신청구분 매핑 (01: 정규선발, 02: 추가선발, 03: 방학/계절학기, 04: 잔류신청)
+ * 기숙사 신청구분 매핑
  */
 function mapApplyType(code?: string): string {
   if (!code) return "-";
@@ -202,7 +200,7 @@ function mapApplyType(code?: string): string {
 }
 
 /**
- * 선발 결과 매핑 (01: 접수완료, 02: 1차합격, 03: 불합격, 04: 예비후보, 05: 최종합격, 06: 입사포기)
+ * 선발 결과 매핑
  */
 function mapPassStatus(code?: string): string {
   if (!code) return "";
@@ -226,7 +224,7 @@ function mapPassStatus(code?: string): string {
 }
 
 /**
- * 수납 구분 매핑 (1: 등록, 2: 환불)
+ * 수납 구분 매핑
  */
 function mapPaymentType(code?: string): string {
   if (!code) return "등록/환불";
@@ -244,7 +242,7 @@ function mapPaymentType(code?: string): string {
 }
 
 /**
- * 서약서 동의여부 매핑 (1/Y: 동의완료, 0/N: 미동의)
+ * 서약서 동의여부 매핑
  */
 function mapConsentStatus(status?: string): string {
   if (!status) return "-";
@@ -255,7 +253,7 @@ function mapConsentStatus(status?: string): string {
 }
 
 /**
- * 공공요금 납부상태 매핑 (1/Y: 납부완료, 0/N: 미납)
+ * 공공요금 납부상태 매핑
  */
 function mapPaymentStatus(status?: string): string {
   if (!status) return "-";
@@ -266,7 +264,7 @@ function mapPaymentStatus(status?: string): string {
 }
 
 /**
- * YYYYMMDD 또는 YYYYMMDDHHmmss00 등의 원시 날짜를 'YYYY.MM.DD' 형식으로 정돈
+ * 원시 날짜를 'YYYY.MM.DD' 형식으로 정돈
  */
 function formatPortalDate(raw?: string | null): string {
   if (!raw) return "-";
@@ -286,7 +284,7 @@ function formatPortalDate(raw?: string | null): string {
 }
 
 /**
- * YYYYMMDDHHmmss00 등의 일시 값을 'YYYY.MM.DD HH:mm' (시간이 00:00이면 'YYYY.MM.DD') 형식으로 정돈
+ * 일시 값을 'YYYY.MM.DD HH:mm' 형식으로 정돈
  */
 function formatPortalTimestamp(raw?: string | null): string {
   if (!raw) return "-";
@@ -308,7 +306,7 @@ function formatPortalTimestamp(raw?: string | null): string {
 }
 
 /**
- * YYYYMM 또는 YYYY-MM 등의 사용월을 'YYYY년 M월' 형식으로 정돈
+ * 사용월을 'YYYY년 M월' 형식으로 정돈
  */
 function formatPortalMonth(raw?: string | null): string {
   if (!raw) return "-";
@@ -327,8 +325,37 @@ function formatPortalMonth(raw?: string | null): string {
   return str;
 }
 
-const PortalDormitoryPage = () => {
+interface FallbackAcademicData extends Partial<DormitoryStudentInfo> {
+  name?: string;
+  korNm?: string;
+  englishName?: string;
+  stuno?: string;
+  gender?: string;
+  nationality?: string;
+  department?: string;
+  grade?: string;
+  phoneNumber?: string;
+  email?: string;
+  profNm?: string;
+  mrksAvg?: string;
+  cptnTmNm?: string;
+  entrDt?: string;
+  schregStGbn?: string;
+  grdtExpcYn?: string;
+  rrn?: string;
+  photoBase64?: string;
+  profile?: DormitoryStudentInfo["profile"];
+  rawFields?: Record<string, string>;
+  studentName?: string;
+}
+
+export default function PortalDormitoryPage() {
   const navigate = useNavigate();
+
+  useSetHeader({
+    title: "사생정보조회",
+  });
+
   const [dormInfo, setDormInfo] = useState<DormitoryStudentInfo | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -337,7 +364,7 @@ const PortalDormitoryPage = () => {
   const [activeTab, setActiveTab] = useState<ActiveTab>("address");
   const [showRawFields, setShowRawFields] = useState(false);
 
-  // 진행 진단 로그 상태 및 타임스탬프 관리
+  // 진행 진단 로그 상태
   const [logs, setLogs] = useState<Array<{
     id: string;
     timestamp: string;
@@ -414,34 +441,6 @@ const PortalDormitoryPage = () => {
     }
   }, [logs]);
 
-  useSetHeader({
-    title: "사생정보조회(학생)",
-  });
-
-  interface FallbackAcademicData extends Partial<DormitoryStudentInfo> {
-    name?: string;
-    korNm?: string;
-    englishName?: string;
-    stuno?: string;
-    gender?: string;
-    nationality?: string;
-    department?: string;
-    grade?: string;
-    phoneNumber?: string;
-    email?: string;
-    profNm?: string;
-    mrksAvg?: string;
-    cptnTmNm?: string;
-    entrDt?: string;
-    schregStGbn?: string;
-    grdtExpcYn?: string;
-    rrn?: string;
-    photoBase64?: string;
-    profile?: DormitoryStudentInfo["profile"];
-    rawFields?: Record<string, string>;
-    studentName?: string;
-  }
-
   const [fallbackAcademic, setFallbackAcademic] = useState<FallbackAcademicData | null>(null);
 
   useEffect(() => {
@@ -466,7 +465,6 @@ const PortalDormitoryPage = () => {
         }
         if (cached) {
           const restored = parseDormitoryStudentInfo(cached);
-
           const hasValidRf = restored.rawFields && Object.keys(restored.rawFields).length > 0;
           if ((!restored.studentName || !hasValidRf) && academicParsed) {
             setDormInfo({
@@ -513,7 +511,7 @@ const PortalDormitoryPage = () => {
       setIsLoading(true);
       setLoadingMessage("사생 정보와 탭 데이터를 조회하고 있습니다...");
 
-      addLog("AUTH_CHECK", "기기 보안 저장소 내 포털 계정(학번/비밀번호) 등록 여부 확인 중...", "info");
+      addLog("AUTH_CHECK", "기기 보안 저장소 내 포털 계정 등록 여부 확인 중...", "info");
       const accountStatus = await checkPortalAccountLinked();
       if (!accountStatus.linked) {
         addLog("AUTH_CHECK", "포털 계정이 등록되지 않았습니다. 계정 입력창 호출", "warn");
@@ -521,7 +519,7 @@ const PortalDormitoryPage = () => {
         setIsLoading(false);
         return;
       }
-      addLog("AUTH_CHECK", "포털 계정 연동 확인 완료 (linked: true)", "success");
+      addLog("AUTH_CHECK", "포털 계정 연동 확인 완료", "success");
 
       let myStudentId = accountStatus.studentId || resolveCurrentStudentId();
       if (!myStudentId) {
@@ -539,11 +537,7 @@ const PortalDormitoryPage = () => {
         addLog("ID_RESOLVE", `확인된 본인 학번: ${myStudentId}`, "info");
       }
 
-      addLog(
-        "DISPATCH",
-        `모바일 앱 브릿지로 사생정보 Fast-Path(핵심 7개 묶음) 요청 전송 (학번: ${myStudentId || "세션"}, 타임아웃 50초)`,
-        "info"
-      );
+      addLog("DISPATCH", `사생정보 조회 요청 전송 (학번: ${myStudentId || "세션"})`, "info");
       const res = await fetchDormitoryStudentInfoFromApp({ stuno: myStudentId });
 
       if (res.success && res.data) {
@@ -562,8 +556,7 @@ const PortalDormitoryPage = () => {
         addLog(
           "PARSE_SUCCESS",
           `사생정보 전체 탭 수신 및 파싱 완료 (사생: ${studentNm}, 학번: ${returnedId || "-"}, 원시 필드: ${rawCount}개)`,
-          "success",
-          `사생번호: ${res.data.profile?.studentDormNo || "-"}, 건물: ${res.data.profile?.dormitoryBuilding || "-"}`
+          "success"
         );
 
         let finalDormData = res.data;
@@ -635,12 +628,7 @@ const PortalDormitoryPage = () => {
         }
       } else {
         const errMsg = res.errorMessage || "사생 정보 조회 중 오류가 발생했습니다.";
-        addLog(
-          "FAILED",
-          `조회 실패: ${errMsg}`,
-          "error",
-          `ErrorCode: ${res.errorCode || "UNKNOWN"}`
-        );
+        addLog("FAILED", `조회 실패: ${errMsg}`, "error");
         setShowLogs(true);
         alert(errMsg);
       }
@@ -652,7 +640,7 @@ const PortalDormitoryPage = () => {
     } finally {
       setIsLoading(false);
       setLoadingMessage("");
-      addLog("FINISH", `프로세스 종료 (총 소요시간: ${Date.now() - startTimeRef.current}ms)`, "info");
+      addLog("FINISH", `프로세스 종료 (소요시간: ${Date.now() - startTimeRef.current}ms)`, "info");
     }
   }, [addLog]);
 
@@ -672,14 +660,10 @@ const PortalDormitoryPage = () => {
       setTabLoading(tabType);
       try {
         const myStudentId = resolveCurrentStudentId();
-        addLog(
-          "TAB_DISPATCH",
-          `[${tabName}] 모바일 앱 브릿지로 단건 요청 전송 (학번: ${myStudentId || "세션"}, 타임아웃 45초)`,
-          "info"
-        );
+        addLog("TAB_DISPATCH", `[${tabName}] 상세 요청 전송`, "info");
         const res = await fetchDormitoryTabSpecificFromApp(tabType, { stuno: myStudentId });
         if (res.success && res.data) {
-          addLog("TAB_SUCCESS", `[${tabName}] 데이터 수신 및 파싱 성공`, "success");
+          addLog("TAB_SUCCESS", `[${tabName}] 데이터 수신 완료`, "success");
           setDormInfo((prev) => {
             if (!prev) return res.data as DormitoryStudentInfo;
             const updated: DormitoryStudentInfo = {
@@ -694,28 +678,23 @@ const PortalDormitoryPage = () => {
                 : {}),
             };
             void secureStorage.setItem(STORAGE_KEY_DORMITORY_DATA, updated);
-            addLog("TAB_CACHE", `[${tabName}] 기존 사생정보에 병합 캐싱 완료`, "info");
+            addLog("TAB_CACHE", `[${tabName}] 캐시 병합 완료`, "info");
             return updated;
           });
         } else {
           const errMsg = res.errorMessage || "상세 내역을 불러오는 중 오류가 발생했습니다.";
-          addLog(
-            "TAB_FAILED",
-            `[${tabName}] 조회 실패: ${errMsg}`,
-            "error",
-            `ErrorCode: ${res.errorCode || "UNKNOWN"}`
-          );
+          addLog("TAB_FAILED", `[${tabName}] 실패: ${errMsg}`, "error");
           setShowLogs(true);
           alert(errMsg);
         }
       } catch (e: unknown) {
         const errMsg = e instanceof Error ? e.message : "상세 내역 조회 실패";
-        addLog("TAB_EXCEPTION", `[${tabName}] 예외 발생: ${errMsg}`, "error", String(e));
+        addLog("TAB_EXCEPTION", `[${tabName}] 예외: ${errMsg}`, "error", String(e));
         setShowLogs(true);
         alert(errMsg);
       } finally {
         setTabLoading(null);
-        addLog("TAB_FINISH", `[${tabName}] 조회 종료 (소요시간: ${Date.now() - startTimeRef.current}ms)`, "info");
+        addLog("TAB_FINISH", `[${tabName}] 종료 (소요시간: ${Date.now() - startTimeRef.current}ms)`, "info");
       }
     },
     [addLog]
@@ -898,19 +877,9 @@ const PortalDormitoryPage = () => {
 
   return (
     <Container as="main">
-      <Breadcrumb>
-        <span>부속행정</span>
-        <ChevronRight size={11} />
-        <span>생활원</span>
-        <ChevronRight size={11} />
-        <span>사생관리</span>
-        <ChevronRight size={11} />
-        <span className="current">사생정보조회(학생)</span>
-      </Breadcrumb>
-
       <TitleContentArea
-        title="사생정보조회(학생)"
-        description="포털 종합정보시스템(부속행정 > 생활원 > 사생관리) 사생정보 및 7개 탭 내역을 조회합니다."
+        title="사생정보조회"
+        description="생활원 사생정보 및 상벌점, 입퇴사, 공공요금 등 세부 내역을 조회합니다."
       >
         {!isMobileAppEnvironment() && (
           <WebFallbackCard>
@@ -961,21 +930,21 @@ const PortalDormitoryPage = () => {
         {/* 1. 상단 사생정보 카드 */}
         <SectionBlock as="section">
           <SectionHeader>
-            <span className="title">사생정보</span>
+            <span className="title">기본 사생정보</span>
             {year && term ? (
               <span className="term-badge">{year}년 {mapSemester(term)}학기</span>
             ) : null}
           </SectionHeader>
 
           <CardContainer>
-            {/* 상단 프로필 헤더: 사진 + 핵심 신원 */}
+            {/* 상단 프로필 헤더 */}
             <ProfileTopArea>
               <AvatarWrapper>
                 {profilePhotoSrc ? (
                   <img src={profilePhotoSrc} alt="사생 증명사진" className="avatar-img" />
                 ) : (
                   <div className="avatar-placeholder">
-                    <User size={32} strokeWidth={1.5} />
+                    <User size={30} strokeWidth={1.5} />
                     <span>미등록</span>
                   </div>
                 )}
@@ -995,19 +964,19 @@ const PortalDormitoryPage = () => {
               </IdentityWrapper>
             </ProfileTopArea>
 
-            {/* 상세 항목 리스트 */}
+            {/* 상세 항목 그리드 */}
             <InfoGrid>
               <InfoCell>
-                <span className="label">기숙사구분</span>
+                <span className="label">기숙사 구분</span>
                 <span className="value">{dormitoryType || "-"}</span>
               </InfoCell>
               <InfoCell>
-                <span className="label">건물구분</span>
+                <span className="label">건물 구분</span>
                 <span className="value">{dormitoryBuilding || "-"}</span>
               </InfoCell>
               <InfoCell>
                 <span className="label">사생번호</span>
-                <span className="value">{studentDormNo || "-"}</span>
+                <span className="value font-mono">{studentDormNo || "-"}</span>
               </InfoCell>
               <InfoCell>
                 <span className="label">성별 / 국적</span>
@@ -1033,7 +1002,7 @@ const PortalDormitoryPage = () => {
               </InfoCell>
             </InfoGrid>
 
-            {/* 상벌점 배지 영역 */}
+            {/* 상벌점 요약 바 */}
             <PointBar>
               <PointChip>
                 <span className="title">상점</span>
@@ -1051,10 +1020,10 @@ const PortalDormitoryPage = () => {
           </CardContainer>
         </SectionBlock>
 
-        {/* 2. 하단 7개 탭 네비게이션 */}
+        {/* 2. 하단 탭 네비게이션 */}
         <SectionBlock as="section">
           <TabsWrapper>
-            <TabsScrollContainer role="tablist" aria-label="기숙사 정보 탭">
+            <TabsScrollContainer role="tablist" aria-label="기숙사 정보 탭 목록">
               <TabChip
                 role="tab"
                 aria-selected={activeTab === "address"}
@@ -1141,7 +1110,7 @@ const PortalDormitoryPage = () => {
                       <DetailCard key={idx}>
                         <DetailRow>
                           <span className="k">우편번호</span>
-                          <span className="v">{item.zipCode || "-"}</span>
+                          <span className="v font-mono">{item.zipCode || "-"}</span>
                         </DetailRow>
                         <DetailRow>
                           <span className="k">기본주소</span>
@@ -1153,7 +1122,7 @@ const PortalDormitoryPage = () => {
                         </DetailRow>
                         <DetailRow>
                           <span className="k">보호자 연락처</span>
-                          <span className="v">{item.guardianPhone || "-"}</span>
+                          <span className="v font-mono">{item.guardianPhone || "-"}</span>
                         </DetailRow>
                       </DetailCard>
                     ))}
@@ -1213,7 +1182,7 @@ const PortalDormitoryPage = () => {
                         </DetailCardHeader>
                         <DetailRow>
                           <span className="k">사생번호</span>
-                          <span className="v">{io.studentDormNo || "-"}</span>
+                          <span className="v font-mono">{io.studentDormNo || "-"}</span>
                         </DetailRow>
                         <DetailRow>
                           <span className="k">입사일자</span>
@@ -1289,7 +1258,7 @@ const PortalDormitoryPage = () => {
                         </DetailRow>
                         {pm.dormitoryType ? (
                           <DetailRow>
-                            <span className="k">기숙사구분</span>
+                            <span className="k">기숙사 구분</span>
                             <span className="v">{mapDormitoryType(pm.dormitoryType)}</span>
                           </DetailRow>
                         ) : null}
@@ -1384,7 +1353,7 @@ const PortalDormitoryPage = () => {
                         {ut.virtualAccount ? (
                           <DetailRow>
                             <span className="k">납부 가상계좌</span>
-                            <span className="v">{ut.virtualAccount}</span>
+                            <span className="v font-mono">{ut.virtualAccount}</span>
                           </DetailRow>
                         ) : null}
                       </DetailCard>
@@ -1392,9 +1361,9 @@ const PortalDormitoryPage = () => {
                   </CardsList>
                 ) : (
                   <EmptyActionCard>
-                    <Inbox size={26} color="var(--text-tertiary)" />
+                    <Inbox size={24} color="var(--text-tertiary)" />
                     <span className="empty-title">공공요금 부과 내역이 없습니다</span>
-                    <span className="empty-desc">포털 시스템에서 공공요금 상세 내역을 가져올 수 있어요.</span>
+                    <span className="empty-desc">포털 시스템에서 공공요금 상세 내역을 가져올 수 있습니다.</span>
                     <CapsuleButton
                       variant="brand"
                       disabled={tabLoading === "utility"}
@@ -1435,9 +1404,9 @@ const PortalDormitoryPage = () => {
                   </DetailCard>
                 ) : (
                   <EmptyActionCard>
-                    <Inbox size={26} color="var(--text-tertiary)" />
+                    <Inbox size={24} color="var(--text-tertiary)" />
                     <span className="empty-title">입사서약서 체결 내역이 없습니다</span>
-                    <span className="empty-desc">포털 시스템에서 서약서 상세 체결 정보를 불러올 수 있어요.</span>
+                    <span className="empty-desc">포털 시스템에서 서약서 상세 체결 정보를 불러올 수 있습니다.</span>
                     <CapsuleButton
                       variant="brand"
                       disabled={tabLoading === "pledge"}
@@ -1459,7 +1428,7 @@ const PortalDormitoryPage = () => {
                     <span className="status-pill merit">
                       {academicStatus || "학적정보"}
                     </span>
-                    <span className="sub-text font-bold">
+                    <span className="sub-text font-bold font-mono">
                       {studentId || "-"}
                     </span>
                   </DetailCardHeader>
@@ -1477,7 +1446,7 @@ const PortalDormitoryPage = () => {
                   </DetailRow>
                   <DetailRow>
                     <span className="k">누적 평점평균</span>
-                    <span className="v font-bold">{averageScore || "-"}</span>
+                    <span className="v font-bold font-mono">{averageScore || "-"}</span>
                   </DetailRow>
                   <DetailRow>
                     <span className="k">총 이수학점 / 학기</span>
@@ -1496,7 +1465,7 @@ const PortalDormitoryPage = () => {
                   {maskedRrn ? (
                     <DetailRow>
                       <span className="k">주민등록번호</span>
-                      <span className="v">{maskedRrn}</span>
+                      <span className="v font-mono">{maskedRrn}</span>
                     </DetailRow>
                   ) : null}
                   <DetailRow>
@@ -1670,12 +1639,10 @@ const PortalDormitoryPage = () => {
       />
     </Container>
   );
-};
-
-export default PortalDormitoryPage;
+}
 
 const Container = styled.div`
-  padding: 16px ${MOBILE_PAGE_GUTTER} calc(24px + var(--native-safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)));
+  padding: 16px ${MOBILE_PAGE_GUTTER} calc(28px + var(--safe-area-bottom, 0px));
   max-width: 600px;
   width: 100%;
   margin: 0 auto;
@@ -1688,23 +1655,7 @@ const Container = styled.div`
 
   @media ${DESKTOP_MEDIA} {
     max-width: 1200px;
-    padding: 24px 0 calc(32px + var(--native-safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)));
-  }
-`;
-
-const Breadcrumb = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  ${typography.caption1}
-  color: var(--text-tertiary);
-  padding: 4px 6px;
-  width: 100%;
-  box-sizing: border-box;
-
-  .current {
-    color: var(--text-brand);
-    font-weight: 600;
+    padding: 24px 0 calc(32px + var(--safe-area-bottom, 0px));
   }
 `;
 
@@ -1724,9 +1675,8 @@ const WebFallbackCard = styled.div`
   box-sizing: border-box;
 
   .title {
-    ${typography.heading2}
+    ${typography.label1}
     color: var(--text-primary);
-    text-align: center;
   }
 
   .desc {
@@ -1735,9 +1685,6 @@ const WebFallbackCard = styled.div`
     line-height: 1.5;
     margin-bottom: 4px;
     max-width: 320px;
-    text-align: center;
-    margin-left: auto;
-    margin-right: auto;
   }
 `;
 
@@ -1796,17 +1743,17 @@ const SectionHeader = styled.div`
   box-sizing: border-box;
 
   .title {
-    ${typography.heading2}
+    ${typography.label1}
     color: var(--text-primary);
   }
 
   .term-badge {
     ${typography.caption1}
-    padding: 2px 8px;
+    padding: 3px 8px;
     border-radius: var(--radius-full);
     background-color: var(--bg-muted);
     color: var(--text-secondary);
-    font-weight: 500;
+    font-weight: 600;
   }
 `;
 
@@ -1887,6 +1834,7 @@ const IdentityWrapper = styled.div`
     ${typography.body2}
     color: var(--text-secondary);
     font-weight: 500;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   }
 
   .tags-row {
@@ -1942,6 +1890,10 @@ const InfoCell = styled.div<{ fullWidth?: boolean }>`
     color: var(--text-primary);
     font-weight: 500;
     word-break: break-all;
+
+    &.font-mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
   }
 `;
 
@@ -1973,7 +1925,7 @@ const PointChip = styled.div`
 
   .score {
     ${typography.heading2}
-    font-weight: 700;
+    font-weight: 800;
 
     &.merit { color: var(--text-brand); }
     &.demerit { color: var(--text-error); }
@@ -2119,6 +2071,10 @@ const DetailRow = styled.div`
     &.font-bold {
       font-weight: 600;
     }
+
+    &.font-mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
   }
 `;
 
@@ -2136,7 +2092,7 @@ const EmptyActionCard = styled.div`
   box-sizing: border-box;
 
   .empty-title {
-    ${typography.heading3}
+    ${typography.label1}
     color: var(--text-primary);
   }
 
@@ -2163,7 +2119,7 @@ const PledgeContentBox = styled.div`
 `;
 
 const DebugSection = styled.div`
-  margin-top: 12px;
+  margin-top: 8px;
   border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
   background-color: var(--bg-base);

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import styled, { keyframes } from "styled-components";
-import { User } from "lucide-react";
+import { User, Shield } from "lucide-react";
+import { typography } from "@/styles/intipTypography";
 
 export interface MobileDormitoryCardProps {
   studentName?: string;
@@ -33,15 +34,15 @@ interface DormitoryTheme {
 function resolveDormitoryTheme(dormType?: string, dormBuilding?: string): DormitoryTheme {
   const combined = `${dormType || ""} ${dormBuilding || ""}`.trim();
 
-  // 데이터가 없거나 미배정인 경우 -> 중립 테마
+  // 미배정 또는 데이터 없음
   if (!combined || combined === "-") {
     return {
       name: "-",
-      borderColor: "rgba(148, 163, 184, 0.28)",
-      badgeBg: "#64748b",
-      badgeText: "#ffffff",
-      boxBg: "#f8fafc",
-      boxBorder: "rgba(148, 163, 184, 0.2)",
+      borderColor: "var(--border-default)",
+      badgeBg: "var(--bg-muted)",
+      badgeText: "var(--text-secondary)",
+      boxBg: "var(--bg-subtle)",
+      boxBorder: "var(--border-default)",
     };
   }
 
@@ -49,34 +50,34 @@ function resolveDormitoryTheme(dormType?: string, dormBuilding?: string): Dormit
   if (combined.includes("02") || combined.includes("03") || combined.includes("2기숙사") || combined.includes("제2")) {
     return {
       name: "제2기숙사",
-      borderColor: "rgba(21, 128, 61, 0.28)",
+      borderColor: "var(--border-success)",
       badgeBg: "var(--text-success)",
       badgeText: "var(--text-inverse)",
-      boxBg: "rgb(240, 253, 244)",
-      boxBorder: "rgba(22, 163, 74, 0.2)",
+      boxBg: "var(--bg-subtle)",
+      boxBorder: "var(--border-success)",
     };
   }
 
-  // 제3기숙사 (BTL) -> 인디고 / 네이비
+  // 제3기숙사 (BTL) -> 인디고 / 보라
   if (combined.includes("04") || combined.includes("05") || combined.includes("3기숙사") || combined.includes("제3")) {
     return {
       name: "제3기숙사(BTL)",
-      borderColor: "rgba(67, 56, 202, 0.28)",
-      badgeBg: "rgb(67, 56, 202)",
+      borderColor: "var(--border-brand)",
+      badgeBg: "var(--interactive-primary)",
       badgeText: "var(--text-inverse)",
-      boxBg: "rgb(238, 242, 255)",
-      boxBorder: "rgba(79, 70, 229, 0.2)",
+      boxBg: "var(--bg-brand)",
+      boxBorder: "var(--border-brand)",
     };
   }
 
   // 제1기숙사 -> INU 시그니처 블루
   return {
     name: "제1기숙사",
-    borderColor: "rgba(29, 78, 216, 0.28)",
+    borderColor: "var(--border-brand)",
     badgeBg: "var(--interactive-primary)",
     badgeText: "var(--text-inverse)",
     boxBg: "var(--bg-brand)",
-    boxBorder: "rgba(37, 99, 235, 0.2)",
+    boxBorder: "var(--border-brand)",
   };
 }
 
@@ -108,7 +109,6 @@ export const MobileDormitoryCard: React.FC<MobileDormitoryCardProps> = ({
   status = "-",
   fullscreen = false,
 }) => {
-  // 실시간 시계 (초 단위 갱신, YYYY.MM.DD HH:mm:ss)
   const [clockText, setClockText] = useState<string>("");
 
   useEffect(() => {
@@ -128,7 +128,6 @@ export const MobileDormitoryCard: React.FC<MobileDormitoryCardProps> = ({
     return () => clearInterval(timer);
   }, []);
 
-  // 1, 2, 3 기숙사 테마 색상 결정
   const theme = useMemo(
     () => resolveDormitoryTheme(dormitoryType, dormitoryBuilding),
     [dormitoryType, dormitoryBuilding]
@@ -139,7 +138,7 @@ export const MobileDormitoryCard: React.FC<MobileDormitoryCardProps> = ({
 
   return (
     <CardContainer $borderColor={theme.borderColor} $fullscreen={fullscreen}>
-      {/* 위조 방지: 배경 은은한 한글 워터마크 (영어 없이 순수 한글, 3.5% 투명도) */}
+      {/* 위조 방지: 은은한 한글 워터마크 레이어 */}
       <WatermarkLayer aria-hidden="true">
         <WatermarkRow>
           인천대학교 생활원 • 모바일 사생증 • 인천대학교 생활원 • 모바일 사생증 • 인천대학교 생활원 • 모바일 사생증 •{" "}
@@ -166,7 +165,7 @@ export const MobileDormitoryCard: React.FC<MobileDormitoryCardProps> = ({
         <ProfileSection>
           <PhotoWrapper $fullscreen={fullscreen}>
             {photoSrc ? (
-              <PhotoImg src={photoSrc} alt="사생 증명사진" />
+              <PhotoImg src={photoSrc} alt={`${studentName} 사생 증명사진`} />
             ) : (
               <PlaceholderPhoto>
                 <User size={36} strokeWidth={1.5} color="var(--text-tertiary)" />
@@ -197,7 +196,7 @@ export const MobileDormitoryCard: React.FC<MobileDormitoryCardProps> = ({
           </ProfileInfo>
         </ProfileSection>
 
-        {/* 핵심 사생 정보 박스: 기숙사(테마색상) + 사생번호(대형 강조) */}
+        {/* 핵심 사생 정보 박스: 기숙사 + 사생번호 + 입사 구분 */}
         <DetailBox $boxBg={theme.boxBg} $boxBorder={theme.boxBorder} $fullscreen={fullscreen}>
           <DetailHeader>
             <DetailLabel>기숙사</DetailLabel>
@@ -218,8 +217,11 @@ export const MobileDormitoryCard: React.FC<MobileDormitoryCardProps> = ({
         </DetailBox>
       </CardBody>
 
-      {/* 하단 풋터: 실시간 시계 */}
+      {/* 하단 풋터: 실시간 시계 & 보안 검증 표시 */}
       <FooterSection $fullscreen={fullscreen}>
+        <SecurityIconWrapper>
+          <Shield size={12} color="var(--text-tertiary)" />
+        </SecurityIconWrapper>
         <ClockText $fullscreen={fullscreen}>{clockText || "—"}</ClockText>
       </FooterSection>
     </CardContainer>
@@ -235,16 +237,16 @@ const watermarkFlow = keyframes`
   100% { transform: translateX(-50%); }
 `;
 
-const CardContainer = styled.div<{ $borderColor: string; $fullscreen?: boolean }>`
+const CardContainer = styled.article<{ $borderColor: string; $fullscreen?: boolean }>`
   position: relative;
   width: 100%;
   max-width: ${({ $fullscreen }) => ($fullscreen ? "100%" : "380px")};
   height: ${({ $fullscreen }) => ($fullscreen ? "100%" : "auto")};
   flex: ${({ $fullscreen }) => ($fullscreen ? "1" : "initial")};
   background-color: var(--bg-base);
-  border-radius: 20px;
-  border: 2px solid ${({ $borderColor }) => $borderColor};
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07);
+  border-radius: var(--radius-xl);
+  border: 1.5px solid ${({ $borderColor }) => $borderColor};
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
   overflow: hidden;
   user-select: none;
   display: flex;
@@ -270,22 +272,22 @@ const WatermarkLayer = styled.div`
 const WatermarkRow = styled.div<{ $reverse?: boolean }>`
   display: flex;
   width: 200%;
-  font-size: 13px;
-  font-weight: 900;
+  ${typography.caption1}
+  font-weight: 800;
   white-space: nowrap;
   color: var(--text-primary);
   animation: ${watermarkFlow} 24s linear infinite;
   animation-direction: ${({ $reverse }) => ($reverse ? "reverse" : "normal")};
 `;
 
-const HeaderSection = styled.div`
+const HeaderSection = styled.header`
   position: relative;
   z-index: 2;
-  padding: 18px 20px 12px 20px;
+  padding: 16px 20px 14px 20px;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-default);
 `;
 
 const HeaderLeft = styled.div`
@@ -294,28 +296,24 @@ const HeaderLeft = styled.div`
 `;
 
 const SubHeading = styled.span`
-  font-size: 11px;
-  font-weight: 500;
+  ${typography.caption1}
   color: var(--text-tertiary);
-  letter-spacing: -0.3px;
+  font-weight: 500;
 `;
 
 const MainTitle = styled.h2`
-  font-size: 16px;
-  font-weight: 800;
+  ${typography.label1}
   color: var(--text-primary);
   margin: 2px 0 0 0;
-  letter-spacing: -0.4px;
 `;
 
 const TermBadge = styled.span`
-  font-size: 11px;
+  ${typography.caption1}
   font-weight: 600;
-  color: var(--gray-700);
-  background-color: var(--bg-subtle);
-  padding: 4px 10px;
-  border-radius: 6px;
-  letter-spacing: -0.2px;
+  color: var(--text-secondary);
+  background-color: var(--bg-muted);
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
 `;
 
 const CardBody = styled.div<{ $fullscreen?: boolean }>`
@@ -328,28 +326,28 @@ const CardBody = styled.div<{ $fullscreen?: boolean }>`
     `
     flex: 1;
     justify-content: center;
-    gap: 10px;
+    gap: 12px;
   `}
 `;
 
-const ProfileSection = styled.div`
+const ProfileSection = styled.section`
   position: relative;
   z-index: 2;
-  padding: 16px 20px 12px 20px;
+  padding: 16px 20px 14px 20px;
   display: flex;
   align-items: center;
   gap: 16px;
 `;
 
 const PhotoWrapper = styled.div<{ $fullscreen?: boolean }>`
-  width: ${({ $fullscreen }) => ($fullscreen ? "104px" : "96px")};
-  height: ${({ $fullscreen }) => ($fullscreen ? "138px" : "128px")};
-  border-radius: 12px;
+  width: ${({ $fullscreen }) => ($fullscreen ? "100px" : "92px")};
+  height: ${({ $fullscreen }) => ($fullscreen ? "130px" : "120px")};
+  border-radius: var(--radius-md);
   overflow: hidden;
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--border-default);
   background-color: var(--bg-subtle);
   flex-shrink: 0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 `;
 
 const PhotoImg = styled.img`
@@ -381,42 +379,37 @@ const NameRow = styled.div`
 `;
 
 const StudentName = styled.h1<{ $fullscreen?: boolean }>`
-  font-size: ${({ $fullscreen }) => ($fullscreen ? "22px" : "20px")};
-  font-weight: 800;
+  ${typography.title1}
   color: var(--text-primary);
-  letter-spacing: -0.5px;
   margin: 0;
-  line-height: 1.2;
+  line-height: 1.25;
 `;
 
 const EnglishName = styled.span`
-  font-size: 11px;
-  font-weight: 500;
+  ${typography.caption1}
   color: var(--text-tertiary);
-  margin-top: 1px;
-  letter-spacing: 0.2px;
+  margin-top: 2px;
 `;
 
 const MetaList = styled.div`
   margin-top: 10px;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
 `;
 
 const MetaItem = styled.div`
-  font-size: 12px;
+  ${typography.body2}
   display: flex;
   align-items: center;
-  color: var(--gray-800);
   font-weight: 500;
 `;
 
 const MetaKey = styled.span`
   color: var(--text-tertiary);
-  width: 32px;
+  width: 34px;
   flex-shrink: 0;
-  font-size: 11px;
+  ${typography.caption1}
 `;
 
 const MetaVal = styled.span`
@@ -429,7 +422,7 @@ const DetailBox = styled.div<{ $boxBg: string; $boxBorder: string; $fullscreen?:
   z-index: 2;
   margin: ${({ $fullscreen }) => ($fullscreen ? "0 20px 20px 20px" : "0 20px 16px 20px")};
   padding: ${({ $fullscreen }) => ($fullscreen ? "16px 18px" : "14px 16px")};
-  border-radius: ${({ $fullscreen }) => ($fullscreen ? "16px" : "14px")};
+  border-radius: var(--radius-lg);
   background-color: ${({ $boxBg }) => $boxBg};
   border: 1px solid ${({ $boxBorder }) => $boxBorder};
   display: flex;
@@ -444,20 +437,19 @@ const DetailHeader = styled.div`
 `;
 
 const DetailLabel = styled.span`
-  font-size: 12px;
+  ${typography.caption1}
+  color: var(--text-secondary);
   font-weight: 500;
-  color: var(--gray-600);
 `;
 
 const DormBadge = styled.span<{ $bg: string; $text: string }>`
-  font-size: 12px;
-  font-weight: 800;
+  ${typography.caption1}
+  font-weight: 700;
   background-color: ${({ $bg }) => $bg};
   color: ${({ $text }) => $text};
-  padding: 3px 10px;
-  border-radius: 6px;
-  letter-spacing: -0.3px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 `;
 
 const DormNoRow = styled.div`
@@ -465,19 +457,19 @@ const DormNoRow = styled.div`
   align-items: baseline;
   justify-content: space-between;
   padding-top: 8px;
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  border-top: 1px solid var(--border-subtle);
 `;
 
 const DormNoLabel = styled.span`
-  font-size: 12px;
+  ${typography.caption1}
   font-weight: 600;
-  color: var(--gray-700);
+  color: var(--text-secondary);
 `;
 
 const DormNoValue = styled.span<{ $fullscreen?: boolean }>`
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: ${({ $fullscreen }) => ($fullscreen ? "24px" : "18px")};
-  font-weight: 900;
+  font-size: ${({ $fullscreen }) => ($fullscreen ? "22px" : "18px")};
+  font-weight: 800;
   color: var(--text-primary);
   letter-spacing: 0.5px;
 `;
@@ -486,34 +478,40 @@ const StatusRow = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 11px;
-  color: var(--gray-600);
+  ${typography.caption1}
 `;
 
 const StatusLabel = styled.span`
-  color: var(--gray-600);
+  color: var(--text-secondary);
 `;
 
 const StatusValue = styled.span`
   font-weight: 600;
-  color: var(--gray-800);
+  color: var(--text-primary);
 `;
 
-const FooterSection = styled.div<{ $fullscreen?: boolean }>`
+const FooterSection = styled.footer<{ $fullscreen?: boolean }>`
   position: relative;
   z-index: 2;
-  padding: ${({ $fullscreen }) => ($fullscreen ? "14px 20px" : "10px 20px")};
+  padding: ${({ $fullscreen }) => ($fullscreen ? "12px 20px" : "10px 20px")};
   background-color: var(--bg-subtle);
-  border-top: 1px solid var(--border-subtle);
+  border-top: 1px solid var(--border-default);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+`;
+
+const SecurityIconWrapper = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
 `;
 
-const ClockText = styled.span<{ $fullscreen?: boolean }>`
+const ClockText = styled.time<{ $fullscreen?: boolean }>`
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: ${({ $fullscreen }) => ($fullscreen ? "13px" : "12px")};
+  ${typography.caption1}
   font-weight: 600;
-  color: var(--gray-700);
+  color: var(--text-secondary);
   letter-spacing: 0.3px;
 `;
