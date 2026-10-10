@@ -15,6 +15,7 @@ export const PATHS = {
   NOTI_SETTING: "/notification-setting",
   MY_POSTS: "/myposts",
   MY_LIKES: "/liked",
+  DORMITORY_INFO: "/dormitory/info",
   ROOMMATE: {
     ROOT: "/roommate",
     MY: "/roommate/my",
