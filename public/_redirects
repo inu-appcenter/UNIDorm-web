@@ -1,0 +1,5 @@
+# 딥링크(iOS Universal Links / Android App Links) 도메인 소유 증명 파일
+# Cloudflare Pages가 .well-known 디렉터리를 배포에서 누락시키는 문제를 방지하기 위해
+# 실제 파일은 /app-links/에 두고 200 rewrite로 매핑합니다.
+/.well-known/apple-app-site-association  /app-links/apple-app-site-association  200
+/.well-known/assetlinks.json             /app-links/assetlinks.json             200
