@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import {
@@ -8,6 +9,9 @@ import {
 import { secureStorage } from "@/utils/secureStorage";
 import { MobileDormitoryCard } from "@/components/portal/MobileDormitoryCard";
 import { MOBILE_PAGE_GUTTER } from "@/styles/intipResponsive";
+import { PATHS } from "@/constants/paths";
+import { ChevronRight } from "lucide-react";
+import PortalSyncOnboarding from "@/components/portal/PortalSyncOnboarding";
 
 const STORAGE_KEY_DORMITORY_DATA = "portal_dormitory_student_info";
 
@@ -65,90 +69,90 @@ function mapInOutStatus(code?: string): string {
 }
 
 export default function MobileDormitoryCardPage() {
+  const navigate = useNavigate();
+
   useSetHeader({
     title: "모바일 사생증",
   });
 
+  const [isInitialLoading, setIsInitialLoading] = useState<boolean>(true);
   const [dormInfo, setDormInfo] = useState<DormitoryStudentInfo | null>(null);
   const [fallbackAcademic, setFallbackAcademic] = useState<any | null>(null);
 
-  useEffect(() => {
-    let isMounted = true;
-    const fetchCached = async () => {
-      try {
-        const cached = await secureStorage.getItem<unknown>(STORAGE_KEY_DORMITORY_DATA);
-        const academicCached = await secureStorage.getItem<unknown>("portal_student_info");
-        let academicParsed: any = null;
-        if (academicCached) {
-          try {
-            academicParsed = parseDormitoryStudentInfo(academicCached);
-          } catch (err) {
-            void err;
-          }
+  const fetchCached = useCallback(async () => {
+    setIsInitialLoading(true);
+    try {
+      const cached = await secureStorage.getItem<unknown>(STORAGE_KEY_DORMITORY_DATA);
+      const academicCached = await secureStorage.getItem<unknown>("portal_student_info");
+      let academicParsed: any = null;
+      if (academicCached) {
+        try {
+          academicParsed = parseDormitoryStudentInfo(academicCached);
+        } catch (err) {
+          void err;
         }
+      }
 
-        if (!isMounted) return;
+      if (academicParsed) {
+        setFallbackAcademic(academicParsed);
+      }
 
-        if (academicParsed) {
-          setFallbackAcademic(academicParsed);
-        }
+      if (cached) {
+        const restored = parseDormitoryStudentInfo(cached);
+        const hasValidRf = Boolean(restored.rawFields && Object.keys(restored.rawFields).length > 0);
+        const academicDept =
+          academicParsed?.profile?.department ||
+          academicParsed?.departmentName ||
+          academicParsed?.department ||
+          "";
 
-        if (cached) {
-          const restored = parseDormitoryStudentInfo(cached);
-          const hasValidRf = Boolean(restored.rawFields && Object.keys(restored.rawFields).length > 0);
-          const academicDept =
-            academicParsed?.profile?.department ||
-            academicParsed?.departmentName ||
-            academicParsed?.department ||
-            "";
-
-          if ((!restored.studentName || !hasValidRf) && academicParsed) {
-            const mergedProfile = {
-              ...(academicParsed.profile || {}),
-              ...(restored.profile || {}),
-              department: restored.profile?.department || academicDept,
-            };
+        if ((!restored.studentName || !hasValidRf) && academicParsed) {
+          const mergedProfile = {
+            ...(academicParsed.profile || {}),
+            ...(restored.profile || {}),
+            department: restored.profile?.department || academicDept,
+          };
+          setDormInfo({
+            ...academicParsed,
+            ...restored,
+            studentName: restored.studentName || academicParsed.studentName,
+            studentId: restored.studentId || academicParsed.studentId,
+            department: restored.department || academicDept,
+            departmentName: restored.departmentName || academicDept,
+            profile: mergedProfile,
+            rawFields: hasValidRf ? restored.rawFields : academicParsed.rawFields,
+          });
+        } else {
+          if (academicParsed && (!restored.profile?.department || !restored.department)) {
+            const enrichedProfile = restored.profile
+              ? {
+                  ...restored.profile,
+                  department: restored.profile.department || academicDept,
+                }
+              : restored.profile;
             setDormInfo({
-              ...academicParsed,
               ...restored,
-              studentName: restored.studentName || academicParsed.studentName,
-              studentId: restored.studentId || academicParsed.studentId,
+              profile: enrichedProfile,
               department: restored.department || academicDept,
               departmentName: restored.departmentName || academicDept,
-              profile: mergedProfile,
-              rawFields: hasValidRf ? restored.rawFields : academicParsed.rawFields,
             });
           } else {
-            if (academicParsed && (!restored.profile?.department || !restored.department)) {
-              const enrichedProfile = restored.profile
-                ? {
-                    ...restored.profile,
-                    department: restored.profile.department || academicDept,
-                  }
-                : restored.profile;
-              setDormInfo({
-                ...restored,
-                profile: enrichedProfile,
-                department: restored.department || academicDept,
-                departmentName: restored.departmentName || academicDept,
-              });
-            } else {
-              setDormInfo(restored);
-            }
+            setDormInfo(restored);
           }
-        } else if (academicParsed) {
-          setDormInfo(academicParsed);
         }
-      } catch (e) {
-        console.error("사생정보 로드 실패", e);
+      } else if (academicParsed) {
+        setDormInfo(academicParsed);
       }
-    };
-
-    void fetchCached();
-    return () => {
-      isMounted = false;
-    };
+    } catch (e) {
+      console.error("사생정보 로드 실패", e);
+    } finally {
+      setIsInitialLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    void fetchCached();
+  }, [fetchCached]);
 
   const profile = dormInfo?.profile;
   const rawFields = dormInfo?.rawFields;
@@ -245,6 +249,19 @@ export default function MobileDormitoryCardPage() {
   const rawStatus = dormInfo?.status || dormInfo?.inOutList?.[0]?.status || rawFields?.dormLeavdormGbn || "";
   const status = rawStatus ? mapInOutStatus(rawStatus) : "-";
 
+  const hasValidData = Boolean(
+    (dormInfo && (dormInfo.studentId || dormInfo.studentName || dormInfo.profile?.studentId)) ||
+    (fallbackAcademic && (fallbackAcademic.studentId || fallbackAcademic.studentName || fallbackAcademic.profile?.studentId))
+  );
+
+  if (!isInitialLoading && !hasValidData) {
+    return (
+      <PageContainer as="main" $isScrollable>
+        <PortalSyncOnboarding onSuccess={fetchCached} />
+      </PageContainer>
+    );
+  }
+
   return (
     <PageContainer as="main">
       <CardWrapper as="section">
@@ -266,22 +283,36 @@ export default function MobileDormitoryCardPage() {
           status={status}
         />
       </CardWrapper>
+
+      <BottomButtonWrapper>
+        <DormitoryInfoButton
+          type="button"
+          onClick={() => navigate(PATHS.DORMITORY_INFO)}
+        >
+          <span>사생정보조회(학생)</span>
+          <ChevronRight size={18} color="var(--interactive-primary, #3182F6)" />
+        </DormitoryInfoButton>
+      </BottomButtonWrapper>
     </PageContainer>
   );
 }
 
-const PageContainer = styled.div`
+const PageContainer = styled.div<{ $isScrollable?: boolean }>`
   width: 100%;
   max-width: 440px;
   flex: 1;
   height: 100%;
-  max-height: calc(100dvh - 70px - var(--safe-area-top, 0px) - var(--safe-area-bottom, 0px));
+  max-height: ${(props) =>
+    props.$isScrollable
+      ? "none"
+      : "calc(100dvh - 70px - var(--safe-area-top, 0px) - var(--safe-area-bottom, 0px))"};
   margin: 0 auto;
   display: flex;
   flex-direction: column;
   padding: 8px ${MOBILE_PAGE_GUTTER} calc(12px + var(--safe-area-bottom, 0px));
   box-sizing: border-box;
-  overflow: hidden;
+  overflow-y: ${(props) => (props.$isScrollable ? "auto" : "hidden")};
+  overflow-x: hidden;
   min-height: 0;
 
   @media (min-width: 768px) {
@@ -301,4 +332,37 @@ const CardWrapper = styled.section`
   justify-content: center;
   min-height: 0;
   overflow: hidden;
+`;
+
+const BottomButtonWrapper = styled.div`
+  width: 100%;
+  padding-top: 10px;
+  flex-shrink: 0;
+`;
+
+const DormitoryInfoButton = styled.button`
+  width: 100%;
+  height: 52px;
+  background: #ffffff;
+  border: 1px solid #e5e8eb;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 18px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #191f28;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+
+  &:hover {
+    background: #f9fafb;
+  }
+
+  &:active {
+    transform: scale(0.99);
+    background: #f2f4f6;
+  }
 `;
