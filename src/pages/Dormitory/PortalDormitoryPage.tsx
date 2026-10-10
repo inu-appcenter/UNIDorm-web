@@ -166,7 +166,7 @@ function mapRewardType(code?: string, score?: string): string {
  * 입퇴사 상태 코드 매핑
  */
 function mapInOutStatus(code?: string): string {
-  if (!code) return "입퇴사";
+  if (!code) return "-";
   const trimmed = code.trim();
   switch (trimmed) {
     case "01":
@@ -228,7 +228,7 @@ function mapPassStatus(code?: string): string {
  * 수납 구분 매핑
  */
 function mapPaymentType(code?: string): string {
-  if (!code) return "등록/환불";
+  if (!code) return "-";
   const trimmed = code.trim();
   switch (trimmed) {
     case "1":

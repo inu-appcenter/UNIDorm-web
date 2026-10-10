@@ -1595,7 +1595,7 @@ export function parseDormitoryStudentInfo(
     roomType: legacyRoomType,
     checkInDate: legacyCheckInDt || inOutList[0]?.checkInDate || (mainRows[0]?.["entrDt"] || "").trim(),
     checkOutDate: legacyCheckOutDt || inOutList[0]?.checkOutDate || "",
-    status: inOutList[0]?.status || (profile?.dormitoryBuilding ? "사생" : "거주"),
+    status: inOutList[0]?.status || (mainRows[0]?.["dormLeavdormGbn"] || "").trim(),
     mealType: legacyMealType,
     meritPoints: mPts,
     demeritPoints: dmPts,
