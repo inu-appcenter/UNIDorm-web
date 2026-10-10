@@ -1,14 +1,28 @@
 {
   "applinks": {
-    "apps": [],
     "details": [
       {
-        "appID": "com.inuappcenter.unidorm",
-        "paths": ["*"],
+        "appIDs": ["AANGG4Q668.com.inuappcenter.unidorm"],
         "components": [
-          { "/": "/*" },
-          { "/": "/privacy-policy.html", "exclude": true },
-          { "/": "/terms-of-use.html", "exclude": true }
+          {
+            "/": "/.well-known/*",
+            "exclude": true,
+            "comment": "Domain-verification files themselves always stay on the web."
+          },
+          {
+            "/": "/privacy-policy.html",
+            "exclude": true,
+            "comment": "Static legal page: must open in a browser."
+          },
+          {
+            "/": "/terms-of-use.html",
+            "exclude": true,
+            "comment": "Static legal page: must open in a browser."
+          },
+          {
+            "/": "*",
+            "comment": "Every other portal path opens in the app when installed."
+          }
         ]
       }
     ]
