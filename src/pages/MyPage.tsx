@@ -131,8 +131,32 @@ const MyPage = () => {
             </OverlayMessage>
           )}
         </ProtectedMenuWrapper>
+        {/* 기숙사 생활 섹션 */}
+        <ProtectedMenuWrapper
+          disabled={isProtected}
+          as={motion.div}
+          variants={fadeInUp}
+        >
+          <ProtectedContent disabled={isProtected}>
+            <MenuGroup
+              title={menuGroups[0].title}
+              menus={menuGroups[0].menus}
+            />
+          </ProtectedContent>
+          {isProtected && (
+            <OverlayMessage
+              as={motion.div}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.35 }}
+            >
+              <OverlayChip>{overlayText}</OverlayChip>
+            </OverlayMessage>
+          )}
+        </ProtectedMenuWrapper>
         <Divider as={motion.div} variants={fadeInUp} />
 
+        {/* 커뮤니티 섹션 */}
         <ProtectedMenuWrapper
           disabled={isProtected}
           as={motion.div}
@@ -157,6 +181,7 @@ const MyPage = () => {
         </ProtectedMenuWrapper>
         <Divider as={motion.div} variants={fadeInUp} />
 
+        {/* 고객지원 섹션 */}
         <motion.div variants={fadeInUp}>
           <MenuGroup title={menuGroups[2].title} menus={menuGroups[2].menus} />
         </motion.div>
