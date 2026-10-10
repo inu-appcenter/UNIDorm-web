@@ -1,7 +1,6 @@
-import React from "react";
 import styled from "styled-components";
 import { GraduationCap, ChevronRight } from "lucide-react";
-import { colors, typography } from "@/styles/tokens";
+import { colors } from "@/styles/tokens";
 
 interface HomeDormitoryCardButtonProps {
   onClick: () => void;
@@ -76,11 +75,11 @@ const Title = styled.span`
   font-size: 16px;
   font-weight: 700;
   line-height: 1.3;
-  color: ${colors.text.title};
+  color: ${colors.text.text1};
 `;
 
 const Subtitle = styled.span`
   font-size: 13px;
   font-weight: 500;
-  color: ${colors.text.sub};
+  color: ${colors.text.text2};
 `;

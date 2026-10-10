@@ -4,12 +4,8 @@ import {
   ShieldCheck,
   User,
   Lock,
-  ChevronRight,
-  RotateCcw,
-  Smartphone,
   AlertCircle,
   Loader2,
-  CheckCircle2,
 } from "lucide-react";
 import {
   checkPortalAccountLinked,
@@ -20,7 +16,6 @@ import {
   isMobileAppEnvironment,
 } from "@/apis/mobileAgentBridge";
 import { secureStorage } from "@/utils/secureStorage";
-import { colors } from "@/styles/tokens";
 import { openIntipAppOrStore } from "@/utils/portalAppLauncher";
 
 interface PortalSyncOnboardingProps {
@@ -240,7 +235,7 @@ export default function PortalSyncOnboarding({
           </SecurityTextGroup>
         </SecurityCard>
 
-        <PrimaryButton type="button" onClick={openIntipAppOrStore}>
+        <PrimaryButton type="button" onClick={() => openIntipAppOrStore()}>
           유니돔 앱으로 열기
         </PrimaryButton>
       </Container>

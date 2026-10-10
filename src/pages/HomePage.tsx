@@ -59,7 +59,8 @@ export default function HomePage() {
   const [isPopupLoading, setIsPopupLoading] = useState<boolean>(false);
 
   const navigate = useNavigate();
-  const { isLoggedIn } = useUserStore();
+  const { tokenInfo } = useUserStore();
+  const isLoggedIn = Boolean(tokenInfo?.accessToken);
   const {
     isFreshman,
     bannerVariant,
