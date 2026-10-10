@@ -70,6 +70,7 @@ function mapInOutStatus(code?: string): string {
 export default function MobileDormitoryCardPage() {
   const navigate = useNavigate();
   const [dormInfo, setDormInfo] = useState<DormitoryStudentInfo | null>(null);
+  const [fallbackAcademic, setFallbackAcademic] = useState<any | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -77,7 +78,7 @@ export default function MobileDormitoryCardPage() {
       try {
         const cached = await secureStorage.getItem<unknown>(STORAGE_KEY_DORMITORY_DATA);
         const academicCached = await secureStorage.getItem<unknown>("portal_student_info");
-        let academicParsed: DormitoryStudentInfo | null = null;
+        let academicParsed: any = null;
         if (academicCached) {
           try {
             academicParsed = parseDormitoryStudentInfo(academicCached);
@@ -87,6 +88,10 @@ export default function MobileDormitoryCardPage() {
         }
 
         if (!isMounted) return;
+
+        if (academicParsed) {
+          setFallbackAcademic(academicParsed);
+        }
 
         if (cached) {
           const restored = parseDormitoryStudentInfo(cached);
@@ -133,11 +138,17 @@ export default function MobileDormitoryCardPage() {
     profile?.name ||
     rawFields?.korNm ||
     rawFields?.nm ||
+    fallbackAcademic?.studentName ||
+    fallbackAcademic?.profile?.name ||
+    fallbackAcademic?.rawFields?.korNm ||
+    fallbackAcademic?.rawFields?.nm ||
     "-";
 
   const englishName =
     profile?.englishName ||
     rawFields?.engNm ||
+    fallbackAcademic?.profile?.englishName ||
+    fallbackAcademic?.rawFields?.engNm ||
     "";
 
   const studentId =
@@ -145,21 +156,40 @@ export default function MobileDormitoryCardPage() {
     dormInfo?.studentId ||
     rawFields?.persNo ||
     rawFields?.stuno ||
+    fallbackAcademic?.studentId ||
+    fallbackAcademic?.profile?.studentId ||
+    fallbackAcademic?.rawFields?.persNo ||
+    fallbackAcademic?.rawFields?.stuno ||
     "-";
 
   const department =
     profile?.department ||
     rawFields?.deptNm ||
     rawFields?.hgNm ||
+    fallbackAcademic?.profile?.department ||
+    fallbackAcademic?.departmentName ||
+    fallbackAcademic?.rawFields?.deptNm ||
+    fallbackAcademic?.rawFields?.hgNm ||
     "-";
 
   const rawGrade =
     profile?.grade ||
     rawFields?.hySeqGbn ||
+    fallbackAcademic?.profile?.grade ||
+    fallbackAcademic?.grade ||
+    fallbackAcademic?.rawFields?.hySeqGbn ||
     "";
   const grade = mapGrade(rawGrade) || "-";
 
-  const photoSrc = toImageSrc(dormInfo?.photoBase64 || rawFields?.phtFile);
+  const photoSrc = toImageSrc(
+    dormInfo?.photoBase64 ||
+    rawFields?.phtFile ||
+    fallbackAcademic?.photoBase64 ||
+    fallbackAcademic?.profile?.photoBase64 ||
+    fallbackAcademic?.rawFields?.phtFile2 ||
+    fallbackAcademic?.rawFields?.phtFile1 ||
+    fallbackAcademic?.rawFields?.phtFile
+  );
 
   const rawDormGbn = rawFields?.dormGbn || profile?.dormitoryType || "";
   const mappedDormName = mapDormitoryType(rawDormGbn);

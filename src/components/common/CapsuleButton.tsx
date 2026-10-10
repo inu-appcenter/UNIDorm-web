@@ -128,10 +128,11 @@ const StyledButton = styled.button<{
 
   font-family: inherit;
   text-align: center;
-  font-size: var(--heading-1-font-size);
+  font-size: 15px;
   font-style: normal;
-  font-weight: var(--heading-1-font-weight);
-  line-height: var(--heading-1-line-height);
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
 
   ${({ $variant }) => getVariantStyles($variant)}
 
