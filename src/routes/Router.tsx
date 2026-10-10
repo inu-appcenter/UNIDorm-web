@@ -416,7 +416,8 @@ if (typeof window !== "undefined") {
       !isMainTabPath(path) &&
       !isTabNavigation &&
       !opts?.replace &&
-      !isHashOrSearchOnly
+      !isHashOrSearchOnly &&
+      !isSamePath
     ) {
       const fullPath =
         typeof to === "string"

@@ -92,6 +92,7 @@ export const MAIN_TAB_PATHS = [
   "/chat",
   "/mypage",
   "/complain",
+  "/onboarding",
 ] as const;
 
 export function isMainTabPath(pathname: string): boolean {
