@@ -41,6 +41,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useRoommateMatchingStatus } from "@/hooks/useRoommateMatchingStatus";
 import { formatSemesterName } from "@/utils/semester";
 import { mixpanelTrack } from "@/utils/mixpanel"; // 추가
+import useUserStore from "@/stores/useUserStore";
+import { PATHS } from "@/constants/paths";
+import HomeDormitoryCardButton from "@/components/home/HomeDormitoryCardButton";
 
 export default function HomePage() {
   useSetAIChat({ isVisible: true, shouldAnimate: true });
@@ -56,12 +59,26 @@ export default function HomePage() {
   const [isPopupLoading, setIsPopupLoading] = useState<boolean>(false);
 
   const navigate = useNavigate();
+  const { isLoggedIn } = useUserStore();
   const {
     isFreshman,
     bannerVariant,
     handleMigrationBannerClick,
     shouldShowMigrationBanner,
   } = useFreshmanMigrationBanner();
+
+  const handleDormitoryCardClick = () => {
+    if (!isLoggedIn) {
+      const shouldLogin = window.confirm(
+        "포털 아이디를 통한 로그인이 필요해요. 로그인 페이지로 이동할까요?",
+      );
+      if (shouldLogin) {
+        navigate(PATHS.LOGIN);
+      }
+      return;
+    }
+    navigate(PATHS.DORMITORY_CARD);
+  };
 
   useEffect(() => {
     mixpanelTrack.homeViewed();
@@ -332,6 +349,10 @@ export default function HomePage() {
         </motion.div>
       )}
 
+      <DormitoryCardButtonWrapper>
+        <HomeDormitoryCardButton onClick={handleDormitoryCardClick} />
+      </DormitoryCardButtonWrapper>
+
       <ContentWrapper
         as={motion.div}
         variants={staggerContainer}
@@ -592,6 +613,17 @@ const HomePageWrapper = styled.div`
     @media (min-width: 768px) {
       align-self: center;
     }
+  }
+`;
+
+const DormitoryCardButtonWrapper = styled.div`
+  width: 100%;
+  padding: 10px 16px 2px;
+  box-sizing: border-box;
+
+  @media (min-width: 768px) {
+    max-width: 1200px;
+    padding: 14px 20px 4px;
   }
 `;
 
