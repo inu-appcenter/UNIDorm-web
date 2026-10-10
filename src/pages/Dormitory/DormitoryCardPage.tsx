@@ -54,9 +54,9 @@ function mapInOutStatus(code?: string): string {
   const trimmed = code.trim();
   switch (trimmed) {
     case "01":
-      return "입사";
+      return "정규입사";
     case "02":
-      return "퇴사";
+      return "정규퇴사";
     case "03":
       return "중도퇴사";
     default:
@@ -175,6 +175,7 @@ export default function MobileDormitoryCardPage() {
 
   const photoSrc = toImageSrc(
     dormInfo?.photoBase64 ||
+    profile?.photoBase64 ||
     rawFields?.phtFile ||
     fallbackAcademic?.photoBase64 ||
     fallbackAcademic?.profile?.photoBase64 ||
@@ -183,15 +184,28 @@ export default function MobileDormitoryCardPage() {
     fallbackAcademic?.rawFields?.phtFile
   );
 
-  const rawDormGbn = rawFields?.dormGbn || profile?.dormitoryType || "";
+  const rawDormGbn = profile?.dormitoryType || rawFields?.dormGbn || dormInfo?.inOutList?.[0]?.dormitoryType || "";
   const mappedDormName = mapDormitoryType(rawDormGbn);
-  const dormitoryType = mappedDormName || profile?.dormitoryBuilding || rawFields?.dormBdNm || "-";
-  const dormitoryBuilding = profile?.dormitoryBuilding || rawFields?.dormBdNm || rawFields?.dormBdCd || mappedDormName || "-";
-  const studentDormNo = profile?.studentDormNo || rawFields?.domstuNo || rawFields?.domStuNo || "-";
+  const rawDormBd = profile?.dormitoryBuilding || rawFields?.dormBdNm || rawFields?.dormBdCd || dormInfo?.dormitoryBuilding || "";
 
-  const year = profile?.year || dormInfo?.appliedYear || rawFields?.yy || "";
-  const term = profile?.term || dormInfo?.appliedSemester || rawFields?.tmGbn || "";
-  const rawStatus = dormInfo?.inOutList?.[0]?.status || rawFields?.dormLeavdormGbn || "";
+  // 건물명이 "A동"이고 기숙사 구분이 비어있거나 "02"/"03"인 경우 제2기숙사 매핑 보완
+  const resolvedDormType =
+    mappedDormName ||
+    (rawDormBd.includes("A동") || rawDormBd.includes("B동") ? "제2기숙사" : "") ||
+    "-";
+  const resolvedDormBuilding = rawDormBd || "";
+
+  const studentDormNo =
+    profile?.studentDormNo ||
+    dormInfo?.studentDormNo ||
+    dormInfo?.inOutList?.[0]?.studentDormNo ||
+    rawFields?.domstuNo ||
+    rawFields?.domStuNo ||
+    "-";
+
+  const year = profile?.year || dormInfo?.appliedYear || dormInfo?.inOutList?.[0]?.year || rawFields?.yy || "";
+  const term = profile?.term || dormInfo?.appliedSemester || dormInfo?.inOutList?.[0]?.term || rawFields?.tmGbn || "";
+  const rawStatus = dormInfo?.status || dormInfo?.inOutList?.[0]?.status || rawFields?.dormLeavdormGbn || "";
   const status = rawStatus ? mapInOutStatus(rawStatus) : "-";
 
   return (
@@ -205,8 +219,8 @@ export default function MobileDormitoryCardPage() {
           department={department}
           grade={grade}
           photoSrc={photoSrc}
-          dormitoryType={dormitoryType}
-          dormitoryBuilding={dormitoryBuilding || mappedDormName}
+          dormitoryType={resolvedDormType}
+          dormitoryBuilding={resolvedDormBuilding}
           studentDormNo={studentDormNo}
           year={year}
           term={term}

@@ -64,8 +64,15 @@ function resolveDormitoryTheme(dormType?: string, dormBuilding?: string): Dormit
     };
   }
 
-  // 제2기숙사 (직영 / BTL) -> 그린
-  if (combined.includes("02") || combined.includes("03") || combined.includes("2기숙사") || combined.includes("제2")) {
+  // 제2기숙사 (직영 / BTL / A동 / B동) -> 그린
+  if (
+    combined.includes("02") ||
+    combined.includes("03") ||
+    combined.includes("2기숙사") ||
+    combined.includes("제2") ||
+    combined.includes("A동") ||
+    combined.includes("B동")
+  ) {
     return {
       name: "제2기숙사",
       badgeBg: "var(--text-success)",
@@ -149,6 +156,27 @@ export const MobileDormitoryCard: React.FC<MobileDormitoryCardProps> = ({
     [dormitoryType, dormitoryBuilding]
   );
 
+  const dormitoryDisplayName = useMemo(() => {
+    const rawType = dormitoryType && dormitoryType !== "-" ? dormitoryType : "";
+    const rawBuilding = dormitoryBuilding && dormitoryBuilding !== "-" ? dormitoryBuilding : "";
+
+    // 1) 둘 다 있는 경우: "제2기숙사 A동"
+    if (rawType && rawBuilding) {
+      if (rawType.includes(rawBuilding)) return rawType;
+      return `${rawType} ${rawBuilding}`;
+    }
+    // 2) 건물명만 있는 경우 ("A동" -> "제2기숙사 A동")
+    if (rawBuilding) {
+      if (rawBuilding.includes("A동") || rawBuilding.includes("B동")) {
+        return `제2기숙사 ${rawBuilding}`;
+      }
+      return rawBuilding;
+    }
+    // 3) 기숙사명만 있는 경우
+    if (rawType) return rawType;
+    return theme.name !== "-" ? theme.name : "-";
+  }, [dormitoryType, dormitoryBuilding, theme.name]);
+
   const roomBedInfo = useMemo(
     () => parseDormRoomAndBed(studentDormNo),
     [studentDormNo]
@@ -225,7 +253,7 @@ export const MobileDormitoryCard: React.FC<MobileDormitoryCardProps> = ({
           <DetailHeader>
             <DetailLabel>기숙사</DetailLabel>
             <DormBadge $bg={theme.badgeBg} $text={theme.badgeText}>
-              {dormitoryBuilding || dormitoryType || (theme.name !== "-" ? theme.name : "-")}
+              {dormitoryDisplayName}
             </DormBadge>
           </DetailHeader>
 

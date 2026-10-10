@@ -1158,7 +1158,9 @@ export interface DormitoryStudentInfo {
   // 하위 호환용 레거시 필드
   studentId?: string;
   studentName?: string;
+  dormitoryType?: string;
   dormitoryBuilding?: string;
+  studentDormNo?: string;
   roomNumber?: string;
   bedNumber?: string;
   roomType?: string;
@@ -1221,28 +1223,52 @@ export function parseDormitoryStudentInfo(
     (resolvedObj.rawFields || resolvedObj.studentId || resolvedObj.studentName)
   ) {
     const rf = resolvedObj.rawFields || {};
-    const photo = rf["phtFile2"] || rf["phtFile1"] || rf["phtFile"] || resolvedObj.photoBase64 || "";
+    const photo = rf["phtFile2"] || rf["phtFile1"] || rf["phtFile"] || resolvedObj.photoBase64 || resolvedObj.profile?.photoBase64 || "";
+    const restoredDormType =
+      resolvedObj.profile?.dormitoryType ||
+      rf["dormGbn"] ||
+      resolvedObj.dormitoryType ||
+      "";
+    const restoredDormBuilding =
+      resolvedObj.profile?.dormitoryBuilding ||
+      rf["dormBdNm"] ||
+      rf["dormBdCd"] ||
+      resolvedObj.dormitoryBuilding ||
+      "";
+    const restoredStudentDormNo =
+      resolvedObj.profile?.studentDormNo ||
+      resolvedObj.studentDormNo ||
+      rf["domstuNo"] ||
+      rf["domStuNo"] ||
+      resolvedObj.inOutList?.[0]?.studentDormNo ||
+      "";
+    const restoredStatus =
+      resolvedObj.status ||
+      resolvedObj.inOutList?.[0]?.status ||
+      rf["dormLeavdormGbn"] ||
+      "";
+
     const prof: DormitoryStudentProfile = {
-      name: resolvedObj.studentName || rf["korNm"] || rf["nm"] || "",
-      englishName: rf["engNm"] || "",
-      gender: rf["genGbn"] || "",
-      nationality: rf["natGbn"] || "",
-      department: resolvedObj.departmentName || rf["deptNm"] || "",
-      grade: rf["hySeqGbn"] || "",
-      dormitoryType: resolvedObj.dormitoryBuilding || rf["dormGbn"] || "",
-      dormitoryBuilding: resolvedObj.dormitoryBuilding || rf["dormBdNm"] || "",
-      studentDormNo: rf["domstuNo"] || "",
-      phoneNumber: rf["handpNo"] || "",
-      email: rf["email"] || "",
-      zipCode: rf["zipNo"] || "",
-      address: rf["addr"] || "",
-      detailedAddress: rf["detaAddr"] || "",
-      meritPoints: String(resolvedObj.meritPoints ?? rf["ardScr1"] ?? "0"),
-      demeritPoints: String(resolvedObj.demeritPoints ?? rf["ardScr2"] ?? "0"),
-      nonOffsetDemeritPoints: rf["ardScr3"] || "0",
-      year: resolvedObj.appliedYear || rf["yy"] || "",
-      term: resolvedObj.appliedSemester || rf["tmGbn"] || "",
-      studentId: resolvedObj.studentId || rf["persNo"] || rf["stuno"] || "",
+      name: resolvedObj.studentName || resolvedObj.profile?.name || rf["korNm"] || rf["nm"] || "",
+      englishName: resolvedObj.profile?.englishName || rf["engNm"] || "",
+      gender: resolvedObj.profile?.gender || rf["genGbn"] || "",
+      nationality: resolvedObj.profile?.nationality || rf["natGbn"] || "",
+      department: resolvedObj.departmentName || resolvedObj.profile?.department || rf["deptNm"] || "",
+      grade: resolvedObj.profile?.grade || rf["hySeqGbn"] || "",
+      dormitoryType: restoredDormType,
+      dormitoryBuilding: restoredDormBuilding,
+      studentDormNo: restoredStudentDormNo,
+      phoneNumber: resolvedObj.profile?.phoneNumber || rf["handpNo"] || "",
+      email: resolvedObj.profile?.email || rf["email"] || "",
+      zipCode: resolvedObj.profile?.zipCode || rf["zipNo"] || "",
+      address: resolvedObj.profile?.address || rf["addr"] || "",
+      detailedAddress: resolvedObj.profile?.detailedAddress || rf["detaAddr"] || "",
+      meritPoints: String(resolvedObj.meritPoints ?? resolvedObj.profile?.meritPoints ?? rf["ardScr1"] ?? "0"),
+      demeritPoints: String(resolvedObj.demeritPoints ?? resolvedObj.profile?.demeritPoints ?? rf["ardScr2"] ?? "0"),
+      nonOffsetDemeritPoints: resolvedObj.profile?.nonOffsetDemeritPoints || rf["ardScr3"] || "0",
+      year: resolvedObj.appliedYear || resolvedObj.profile?.year || rf["yy"] || "",
+      term: resolvedObj.appliedSemester || resolvedObj.profile?.term || rf["tmGbn"] || "",
+      studentId: resolvedObj.studentId || resolvedObj.profile?.studentId || rf["persNo"] || rf["stuno"] || "",
       photoBase64: photo || undefined,
       rawFields: rf,
     };
@@ -1265,7 +1291,7 @@ export function parseDormitoryStudentInfo(
       roomType: resolvedObj.roomType || "",
       checkInDate: resolvedObj.checkInDate || "",
       checkOutDate: resolvedObj.checkOutDate || "",
-      status: resolvedObj.status || "",
+      status: restoredStatus,
       mealType: resolvedObj.mealType || "",
       meritPoints: Number(prof.meritPoints) || 0,
       demeritPoints: Number(prof.demeritPoints) || 0,
@@ -1561,7 +1587,9 @@ export function parseDormitoryStudentInfo(
     // 하위 호환 필드
     studentId: profile?.studentId || (mainRows[0]?.["stuno"] || mainRows[0]?.["persNo"] || "").trim(),
     studentName: profile?.name || (mainRows[0]?.["korNm"] || mainRows[0]?.["nm"] || "").trim(),
+    dormitoryType: profile?.dormitoryType || (mainRows[0]?.["dormGbn"] || "").trim(),
     dormitoryBuilding: profile?.dormitoryBuilding || (mainRows[0]?.["dormBdNm"] || mainRows[0]?.["dmtyNm"] || "").trim(),
+    studentDormNo: profile?.studentDormNo || inOutList[0]?.studentDormNo || (mainRows[0]?.["domstuNo"] || mainRows[0]?.["domStuNo"] || "").trim(),
     roomNumber: legacyRoomNo,
     bedNumber: legacyBedNo,
     roomType: legacyRoomType,
