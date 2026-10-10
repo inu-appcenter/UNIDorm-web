@@ -14,6 +14,14 @@ export const createMyPageMenuGroups = (
         label: "사생정보조회(학생)",
         onClick: () => navigate(PATHS.DORMITORY_INFO),
       },
+      {
+        label: "모바일 사생증",
+        onClick: () => navigate(PATHS.DORMITORY_CARD),
+      },
+      {
+        label: "포털 계정 관리",
+        onClick: () => navigate(PATHS.PORTAL_ACCOUNT),
+      },
     ],
   },
   {
