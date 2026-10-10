@@ -26,6 +26,7 @@ import {
   parseDormitoryStudentInfo,
 } from "@/utils/ssvParser";
 import { PortalAccountModal } from "@/components/portal/PortalAccountModal";
+import { parseDormRoomAndBed } from "@/components/portal/MobileDormitoryCard";
 import { formatKoreanDateTime } from "@/utils/portalDateUtils";
 import { secureStorage } from "@/utils/secureStorage";
 import { typography } from "@/styles/intipTypography";
@@ -976,7 +977,12 @@ export default function PortalDormitoryPage() {
               </InfoCell>
               <InfoCell>
                 <span className="label">사생번호</span>
-                <span className="value font-mono">{studentDormNo || "-"}</span>
+                <span className="value font-mono">
+                  {studentDormNo || "-"}
+                  {parseDormRoomAndBed(studentDormNo)
+                    ? ` (${parseDormRoomAndBed(studentDormNo)?.room} · ${parseDormRoomAndBed(studentDormNo)?.bed})`
+                    : ""}
+                </span>
               </InfoCell>
               <InfoCell>
                 <span className="label">성별 / 국적</span>
@@ -1182,7 +1188,12 @@ export default function PortalDormitoryPage() {
                         </DetailCardHeader>
                         <DetailRow>
                           <span className="k">사생번호</span>
-                          <span className="v font-mono">{io.studentDormNo || "-"}</span>
+                          <span className="v font-mono">
+                            {io.studentDormNo || "-"}
+                            {parseDormRoomAndBed(io.studentDormNo)
+                              ? ` (${parseDormRoomAndBed(io.studentDormNo)?.room} · ${parseDormRoomAndBed(io.studentDormNo)?.bed})`
+                              : ""}
+                          </span>
                         </DetailRow>
                         <DetailRow>
                           <span className="k">입사일자</span>

@@ -27,6 +27,27 @@ interface DormitoryTheme {
 }
 
 /**
+ * 사생번호 뒤 4자리(3자리 호수, 1자리 침대번호) 파싱
+ * 예: 24013041 -> room: 304호, bed: 1번 침대
+ */
+export function parseDormRoomAndBed(studentDormNo?: string): { room: string; bed: string } | null {
+  if (!studentDormNo) return null;
+  const clean = studentDormNo.trim();
+  if (clean.length < 4 || clean === "-") return null;
+
+  const last4 = clean.slice(-4);
+  const roomPart = last4.slice(0, 3);
+  const bedPart = last4.slice(3);
+
+  if (!roomPart || !bedPart) return null;
+
+  return {
+    room: `${roomPart}호`,
+    bed: `${bedPart}번 침대`,
+  };
+}
+
+/**
  * 1, 2, 3 기숙사별 고유 색상 테마 계산
  */
 function resolveDormitoryTheme(dormType?: string, dormBuilding?: string): DormitoryTheme {
@@ -128,6 +149,11 @@ export const MobileDormitoryCard: React.FC<MobileDormitoryCardProps> = ({
     [dormitoryType, dormitoryBuilding]
   );
 
+  const roomBedInfo = useMemo(
+    () => parseDormRoomAndBed(studentDormNo),
+    [studentDormNo]
+  );
+
   const formattedTerm = formatSemesterTerm(term);
   const termDisplay = year && formattedTerm ? `${year}학년도 ${formattedTerm}` : (year ? `${year}학년도` : "");
 
@@ -194,7 +220,7 @@ export const MobileDormitoryCard: React.FC<MobileDormitoryCardProps> = ({
           </ProfileInfo>
         </ProfileSection>
 
-        {/* 핵심 사생 정보 박스: 기숙사 + 사생번호 + 입사 구분 */}
+        {/* 핵심 사생 정보 박스: 기숙사 + 사생번호 + 배정 호실/침대 + 입사 구분 */}
         <DetailBox $boxBg={theme.boxBg} $boxBorder={theme.boxBorder}>
           <DetailHeader>
             <DetailLabel>기숙사</DetailLabel>
@@ -207,6 +233,16 @@ export const MobileDormitoryCard: React.FC<MobileDormitoryCardProps> = ({
             <DormNoLabel>사생번호</DormNoLabel>
             <DormNoValue>{studentDormNo}</DormNoValue>
           </DormNoRow>
+
+          {roomBedInfo ? (
+            <RoomBedRow>
+              <RoomBedLabel>배정 호실</RoomBedLabel>
+              <RoomBedValue>
+                <RoomBadge>{roomBedInfo.room}</RoomBadge>
+                <BedBadge>{roomBedInfo.bed}</BedBadge>
+              </RoomBedValue>
+            </RoomBedRow>
+          ) : null}
 
           <StatusRow>
             <StatusLabel>입사 구분</StatusLabel>
@@ -484,6 +520,46 @@ const DormNoValue = styled.span`
   font-weight: 900;
   color: var(--text-primary);
   letter-spacing: 0.5px;
+`;
+
+const RoomBedRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border-default);
+`;
+
+const RoomBedLabel = styled.span`
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+`;
+
+const RoomBedValue = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+`;
+
+const RoomBadge = styled.span`
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-brand);
+  background-color: var(--bg-brand);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-brand-subtle);
+`;
+
+const BedBadge = styled.span`
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  background-color: var(--bg-muted);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-default);
 `;
 
 const StatusRow = styled.div`
