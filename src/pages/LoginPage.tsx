@@ -50,7 +50,12 @@ export default function LoginPage() {
         const response = await login(studentNumber, password);
         setTokenInfo(response.data);
         if (isMobileAppEnvironment()) {
-          savePortalAccount(studentNumber.trim(), password.trim()).catch(() => {});
+          try {
+            await savePortalAccount(studentNumber.trim(), password.trim());
+            localStorage.setItem("portal_student_id", studentNumber.trim());
+          } catch (e) {
+            console.error("포털 계정 자동 연동 실패", e);
+          }
         }
         //mixpanelTrack.loginCompleted("포털 계정");
         navigate(PATHS.HOME, { replace: true });

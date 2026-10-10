@@ -1,3 +1,6 @@
+@import "./styles/portalVariables.css";
+@import "./styles/tokens/tokens.css";
+
 /* src/index.css */
 *, *::before, *::after {
     -webkit-user-select: none;

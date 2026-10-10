@@ -8,6 +8,20 @@ export const createMyPageMenuGroups = (
   navigate: (path: string) => void,
 ): MenuGroup[] => [
   {
+    title: "내 계정",
+    menus: [
+      { label: "내 정보 수정", onClick: () => navigate(PATHS.MYINFO_EDIT) },
+      {
+        label: "사전 체크리스트 등록/수정",
+        onClick: () => navigate(PATHS.ROOMMATE.CHECKLIST),
+      },
+      {
+        label: "포털 계정 관리",
+        onClick: () => navigate(PATHS.PORTAL_ACCOUNT),
+      },
+    ],
+  },
+  {
     title: "기숙사 생활",
     menus: [
       {
@@ -17,10 +31,6 @@ export const createMyPageMenuGroups = (
       {
         label: "모바일 사생증",
         onClick: () => navigate(PATHS.DORMITORY_CARD),
-      },
-      {
-        label: "포털 계정 관리",
-        onClick: () => navigate(PATHS.PORTAL_ACCOUNT),
       },
     ],
   },
