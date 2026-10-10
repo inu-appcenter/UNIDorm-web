@@ -155,13 +155,20 @@ export default function MobileDormitoryCardPage() {
     "-";
 
   const department =
+    dormInfo?.department ||
+    dormInfo?.departmentName ||
     profile?.department ||
     rawFields?.deptNm ||
+    rawFields?.deptKorNm ||
     rawFields?.hgNm ||
-    fallbackAcademic?.profile?.department ||
+    fallbackAcademic?.department ||
     fallbackAcademic?.departmentName ||
+    fallbackAcademic?.profile?.department ||
     fallbackAcademic?.rawFields?.deptNm ||
+    fallbackAcademic?.rawFields?.deptKorNm ||
     fallbackAcademic?.rawFields?.hgNm ||
+    fallbackAcademic?.rawFields?.sustNm ||
+    fallbackAcademic?.rawFields?.dpmjNm ||
     "-";
 
   const rawGrade =

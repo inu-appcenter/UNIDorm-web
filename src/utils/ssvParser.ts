@@ -1158,6 +1158,8 @@ export interface DormitoryStudentInfo {
   // 하위 호환용 레거시 필드
   studentId?: string;
   studentName?: string;
+  department?: string;
+  departmentName?: string;
   dormitoryType?: string;
   dormitoryBuilding?: string;
   studentDormNo?: string;
@@ -1285,7 +1287,11 @@ export function parseDormitoryStudentInfo(
       rawDatasets: {},
       studentId: prof.studentId,
       studentName: prof.name,
+      department: prof.department,
+      departmentName: prof.department,
+      dormitoryType: prof.dormitoryType,
       dormitoryBuilding: prof.dormitoryBuilding,
+      studentDormNo: prof.studentDormNo,
       roomNumber: resolvedObj.roomNumber || "",
       bedNumber: resolvedObj.bedNumber || "",
       roomType: resolvedObj.roomType || "",
@@ -1587,6 +1593,8 @@ export function parseDormitoryStudentInfo(
     // 하위 호환 필드
     studentId: profile?.studentId || (mainRows[0]?.["stuno"] || mainRows[0]?.["persNo"] || "").trim(),
     studentName: profile?.name || (mainRows[0]?.["korNm"] || mainRows[0]?.["nm"] || "").trim(),
+    department: profile?.department || (mainRows[0]?.["deptNm"] || mainRows[0]?.["hgNm"] || "").trim(),
+    departmentName: profile?.department || (mainRows[0]?.["deptNm"] || mainRows[0]?.["hgNm"] || "").trim(),
     dormitoryType: profile?.dormitoryType || (mainRows[0]?.["dormGbn"] || "").trim(),
     dormitoryBuilding: profile?.dormitoryBuilding || (mainRows[0]?.["dormBdNm"] || mainRows[0]?.["dmtyNm"] || "").trim(),
     studentDormNo: profile?.studentDormNo || inOutList[0]?.studentDormNo || (mainRows[0]?.["domstuNo"] || mainRows[0]?.["domStuNo"] || "").trim(),
