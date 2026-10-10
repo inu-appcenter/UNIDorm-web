@@ -7,9 +7,7 @@ import {
 } from "@/utils/ssvParser";
 import { secureStorage } from "@/utils/secureStorage";
 import { MobileDormitoryCard } from "@/components/portal/MobileDormitoryCard";
-import { typography } from "@/styles/intipTypography";
 import { MOBILE_PAGE_GUTTER } from "@/styles/intipResponsive";
-import { ShieldCheck, Info } from "lucide-react";
 
 const STORAGE_KEY_DORMITORY_DATA = "portal_dormitory_student_info";
 
@@ -200,6 +198,7 @@ export default function MobileDormitoryCardPage() {
     <PageContainer as="main">
       <CardWrapper as="section">
         <MobileDormitoryCard
+          fullscreen
           studentName={studentName}
           englishName={englishName}
           studentId={studentId}
@@ -214,23 +213,6 @@ export default function MobileDormitoryCardPage() {
           status={status}
         />
       </CardWrapper>
-
-      <NoticeCard>
-        <NoticeHeader>
-          <ShieldCheck size={16} color="var(--interactive-primary)" />
-          <NoticeTitle>모바일 사생증 안내</NoticeTitle>
-        </NoticeHeader>
-        <NoticeList>
-          <NoticeItem>
-            <Info size={12} color="var(--text-tertiary)" />
-            <span>생활원 출입 및 사생 확인 시 본 모바일 사생증을 제시해 주세요.</span>
-          </NoticeItem>
-          <NoticeItem>
-            <Info size={12} color="var(--text-tertiary)" />
-            <span>하단 실시간 시계와 워터마크를 통해 캡처 방지 및 유효성을 검증합니다.</span>
-          </NoticeItem>
-        </NoticeList>
-      </NoticeCard>
     </PageContainer>
   );
 }
@@ -238,61 +220,29 @@ export default function MobileDormitoryCardPage() {
 const PageContainer = styled.div`
   width: 100%;
   max-width: 440px;
+  height: calc(100dvh - 56px - var(--safe-area-bottom, 0px));
+  min-height: calc(100dvh - 56px - var(--safe-area-bottom, 0px));
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  padding: 16px ${MOBILE_PAGE_GUTTER} calc(28px + var(--safe-area-bottom, 0px));
+  padding: 12px ${MOBILE_PAGE_GUTTER} calc(12px + var(--safe-area-bottom, 0px));
   box-sizing: border-box;
-  gap: var(--space-4);
+  overflow: hidden;
+
+  @media (min-width: 768px) {
+    height: auto;
+    min-height: 640px;
+    padding: 24px 0 calc(24px + var(--safe-area-bottom, 0px));
+  }
 `;
 
 const CardWrapper = styled.section`
   width: 100%;
-  display: flex;
-  justify-content: center;
-`;
-
-const NoticeCard = styled.div`
-  background-color: var(--bg-base);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-lg);
-  padding: 16px 18px;
+  height: 100%;
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
-`;
-
-const NoticeHeader = styled.div`
-  display: flex;
   align-items: center;
-  gap: 6px;
-`;
-
-const NoticeTitle = styled.h3`
-  ${typography.label2}
-  color: var(--text-primary);
-  margin: 0;
-`;
-
-const NoticeList = styled.ul`
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-`;
-
-const NoticeItem = styled.li`
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
-  ${typography.caption1}
-  color: var(--text-secondary);
-  line-height: 1.45;
-
-  svg {
-    flex-shrink: 0;
-    margin-top: 2px;
-  }
+  justify-content: center;
+  min-height: 0;
 `;
