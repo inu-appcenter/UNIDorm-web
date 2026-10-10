@@ -152,6 +152,7 @@ function sendBridgeAction<T = any>(type: string, payload?: any, timeoutMs = 1500
       const isMatch = detail.requestId ? detail.requestId === requestId : detail.type === expectedResultType;
       if (!isMatch) return;
 
+      console.log(`[Bridge Action] Received response for ${type} (reqId: ${requestId}):`, detail);
       clearTimeout(timer);
       window.removeEventListener('intipAgentResult', handler);
       const resolvedData = detail.data?.data !== undefined ? detail.data.data : detail.data;
@@ -168,6 +169,7 @@ function sendBridgeAction<T = any>(type: string, payload?: any, timeoutMs = 1500
     window.addEventListener('intipAgentResult', handler);
 
     timer = setTimeout(() => {
+      console.warn(`[Bridge Action] Request timed out for ${type} (reqId: ${requestId}, ${timeoutMs}ms)`);
       window.removeEventListener('intipAgentResult', handler);
       resolve({
         success: false,
@@ -176,6 +178,7 @@ function sendBridgeAction<T = any>(type: string, payload?: any, timeoutMs = 1500
       });
     }, timeoutMs);
 
+    console.log(`[Bridge Action] Sending ${type} (reqId: ${requestId}) to React Native`);
     window.ReactNativeWebView?.postMessage(
       JSON.stringify({
         type,
