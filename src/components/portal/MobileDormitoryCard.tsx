@@ -272,15 +272,17 @@ export const MobileDormitoryCard: React.FC<MobileDormitoryCardProps> = ({
             <DormNoValue>{studentDormNo}</DormNoValue>
           </DormNoRow>
 
-          {roomBedInfo ? (
-            <RoomBedRow>
-              <RoomBedLabel>배정 호실</RoomBedLabel>
+          <RoomBedRow>
+            <RoomBedLabel>배정 호실</RoomBedLabel>
+            {roomBedInfo ? (
               <RoomBedValue>
                 <RoomBadge>{roomBedInfo.room}</RoomBadge>
                 <BedBadge>{roomBedInfo.bed}</BedBadge>
               </RoomBedValue>
-            </RoomBedRow>
-          ) : null}
+            ) : (
+              <RoomBedEmpty>-</RoomBedEmpty>
+            )}
+          </RoomBedRow>
 
           <StatusRow>
             <StatusLabel>입사 구분</StatusLabel>
@@ -598,6 +600,12 @@ const BedBadge = styled.span`
   padding: 2px 8px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-default);
+`;
+
+const RoomBedEmpty = styled.span`
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-tertiary);
 `;
 
 const StatusRow = styled.div`
