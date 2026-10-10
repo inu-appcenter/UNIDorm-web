@@ -62,7 +62,9 @@ export const useAppInit = () => {
   useEffect(() => {
     localStorage.removeItem("isFirstVisit");
     const firstVisit = localStorage.getItem("isFirstVisit(10.20)");
-    if (firstVisit === null) navigate(PATHS.ONBOARDING);
+    if (firstVisit === null && window.location.pathname !== PATHS.ONBOARDING) {
+      navigate(PATHS.ONBOARDING, { replace: true });
+    }
   }, [navigate]);
 
   // 웹뷰 FCM 토큰 수신 설정
