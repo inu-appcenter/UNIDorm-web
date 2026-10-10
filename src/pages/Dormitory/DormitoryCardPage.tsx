@@ -205,6 +205,8 @@ export default function MobileDormitoryCardPage() {
 
   const year = profile?.year || dormInfo?.appliedYear || dormInfo?.inOutList?.[0]?.year || rawFields?.yy || "";
   const term = profile?.term || dormInfo?.appliedSemester || dormInfo?.inOutList?.[0]?.term || rawFields?.tmGbn || "";
+  const roomNumber = dormInfo?.roomNumber || rawFields?.roomNo || rawFields?.dormRoomNo || "";
+  const bedNumber = dormInfo?.bedNumber || rawFields?.bedNo || rawFields?.dormBedNo || "";
   const rawStatus = dormInfo?.status || dormInfo?.inOutList?.[0]?.status || rawFields?.dormLeavdormGbn || "";
   const status = rawStatus ? mapInOutStatus(rawStatus) : "-";
 
@@ -222,6 +224,8 @@ export default function MobileDormitoryCardPage() {
           dormitoryType={resolvedDormType}
           dormitoryBuilding={resolvedDormBuilding}
           studentDormNo={studentDormNo}
+          roomNumber={roomNumber}
+          bedNumber={bedNumber}
           year={year}
           term={term}
           status={status}

@@ -12,6 +12,8 @@ export interface MobileDormitoryCardProps {
   dormitoryType?: string;
   dormitoryBuilding?: string;
   studentDormNo?: string;
+  roomNumber?: string;
+  bedNumber?: string;
   year?: string;
   term?: string;
   status?: string;
@@ -126,6 +128,8 @@ export const MobileDormitoryCard: React.FC<MobileDormitoryCardProps> = ({
   dormitoryType,
   dormitoryBuilding,
   studentDormNo = "-",
+  roomNumber,
+  bedNumber,
   year,
   term,
   status = "-",
@@ -177,10 +181,16 @@ export const MobileDormitoryCard: React.FC<MobileDormitoryCardProps> = ({
     return theme.name !== "-" ? theme.name : "-";
   }, [dormitoryType, dormitoryBuilding, theme.name]);
 
-  const roomBedInfo = useMemo(
-    () => parseDormRoomAndBed(studentDormNo),
-    [studentDormNo]
-  );
+  const roomBedInfo = useMemo(() => {
+    const parsed = parseDormRoomAndBed(studentDormNo);
+    if (parsed) return parsed;
+    if (roomNumber && bedNumber) {
+      const roomFormatted = roomNumber.endsWith("호") ? roomNumber : `${roomNumber}호`;
+      const bedFormatted = bedNumber.endsWith("번 침대") ? bedNumber : `${bedNumber}번 침대`;
+      return { room: roomFormatted, bed: bedFormatted };
+    }
+    return null;
+  }, [studentDormNo, roomNumber, bedNumber]);
 
   const formattedTerm = formatSemesterTerm(term);
   const termDisplay = year && formattedTerm ? `${year}학년도 ${formattedTerm}` : (year ? `${year}학년도` : "");
