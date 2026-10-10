@@ -1,10 +1,14 @@
 [
   {
-    "relation": ["delegate_permission/common.handle_all_urls"],
+    "relation": [
+      "delegate_permission/common.handle_all_urls",
+      "delegate_permission/common.get_login_creds"
+    ],
     "target": {
       "namespace": "android_app",
       "package_name": "com.hjunieee.inudormitory",
       "sha256_cert_fingerprints": [
+        "CF:87:C0:14:83:5D:80:7E:0B:9B:5D:59:1A:B7:3A:C4:36:9C:19:D2:09:23:17:8E:FF:18:37:23:22:A7:F7:DB",
         "4C:87:35:37:39:ED:B5:32:DE:09:48:33:0A:F8:96:33:36:AB:80:1E:0F:86:2F:D0:E2:0C:B9:1F:F2:C3:78:50"
       ]
     }
