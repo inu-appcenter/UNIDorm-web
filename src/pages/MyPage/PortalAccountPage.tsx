@@ -459,12 +459,12 @@ const PageWrapper = styled.main`
   min-height: 100svh;
   box-sizing: border-box;
   background: var(--bg-subtle);
-  padding: 16px ${MOBILE_PAGE_GUTTER}px calc(32px + var(--safe-area-bottom, 0px));
+  padding: 16px ${MOBILE_PAGE_GUTTER} calc(32px + var(--safe-area-bottom, 0px));
 
   @media ${DESKTOP_MEDIA} {
     max-width: 640px;
     margin: 0 auto;
-    padding: 24px 0 calc(32px + var(--safe-area-bottom, 0px));
+    padding: 24px 20px calc(32px + var(--safe-area-bottom, 0px));
   }
 `;
 
