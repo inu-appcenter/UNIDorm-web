@@ -40,6 +40,8 @@ import MyLikesPage from "@/pages/MyLikesPage";
 import NotificationPage from "@/pages/NotificationPage";
 import CalendarPage from "@/pages/CalendarPage";
 import PortalDormitoryPage from "@/pages/Dormitory/PortalDormitoryPage";
+import DormitoryCardPage from "@/pages/Dormitory/DormitoryCardPage";
+import PortalAccountPage from "@/pages/MyPage/PortalAccountPage";
 
 import MyRoomMatePage from "@/pages/RoomMate/MyRoomMatePage";
 import RoomMateListPage from "@/pages/RoomMate/RoomMateListPage";
@@ -293,9 +295,17 @@ export const router = createBrowserRouter([
             children: [{ index: true, element: <CalendarPage /> }],
           },
           {
+            path: "mypage",
+            element: <SubPage />,
+            children: [{ path: "portal", element: <PortalAccountPage /> }],
+          },
+          {
             path: "dormitory",
             element: <SubPage />,
-            children: [{ path: "info", element: <PortalDormitoryPage /> }],
+            children: [
+              { path: "info", element: <PortalDormitoryPage /> },
+              { path: "card", element: <DormitoryCardPage /> },
+            ],
           },
 
           // 관리자

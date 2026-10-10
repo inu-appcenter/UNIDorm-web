@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import TitleContentArea from "@/components/common/TitleContentArea";
@@ -327,7 +328,7 @@ function formatPortalMonth(raw?: string | null): string {
 }
 
 const PortalDormitoryPage = () => {
-
+  const navigate = useNavigate();
   const [dormInfo, setDormInfo] = useState<DormitoryStudentInfo | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -941,7 +942,7 @@ const PortalDormitoryPage = () => {
             <CapsuleButton
               variant="brand"
               onClick={() => {
-                alert("모바일 사생증 기능은 앱 최신 버전에서 제공됩니다.");
+                navigate(PATHS.DORMITORY_CARD);
               }}
               style={{ flex: 1 }}
             >
