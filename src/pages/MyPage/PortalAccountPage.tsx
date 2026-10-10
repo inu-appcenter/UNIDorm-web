@@ -31,6 +31,8 @@ import {
   ChevronRight,
   AlertCircle,
   Smartphone,
+  Globe,
+  RefreshCw,
 } from "lucide-react";
 
 export default function MobilePortalAccountPage() {
@@ -39,7 +41,11 @@ export default function MobilePortalAccountPage() {
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isLinked, setIsLinked] = useState<boolean>(false);
-  const [studentInfo, setStudentInfo] = useState<StudentInfo | null>(null);
+  const [studentInfo, setStudentInfo] = useState<Partial<StudentInfo> | null>(null);
+
+  // 포털 실제 접속 테스트 상태
+  const [connectionStatus, setConnectionStatus] = useState<"idle" | "testing" | "success" | "error">("idle");
+  const [connectionError, setConnectionError] = useState<string>("");
 
   // 등록/재등록 폼 상태
   const [studentIdInput, setStudentIdInput] = useState<string>("");
@@ -64,37 +70,69 @@ export default function MobilePortalAccountPage() {
   const loadStatus = useCallback(async () => {
     setIsLoading(true);
     try {
-      // 보안 스토리지에 캐시된 학적 정보 확인
+      // 1. 보안 스토리지에 캐시된 학적 정보 확인 (Fast-Path)
       const savedInfo = await secureStorage.getItem<StudentInfo>("portal_student_info");
       if (savedInfo) {
         setStudentInfo(savedInfo);
       }
 
+      // 2. 모바일 앱 환경이면 기기 KeyStore에 계정 등록 여부만 빠르게 확인
       if (isMobileAppEnvironment()) {
-        const res = await checkPortalAccountLinked().catch(() => ({ linked: false }));
-        const isLinkedBool = typeof res === 'boolean' ? res : Boolean(res?.linked);
+        const res = await checkPortalAccountLinked().catch(() => ({ linked: false, studentId: undefined }));
+        const isLinkedBool = Boolean(res?.linked);
         setIsLinked(isLinkedBool);
-        if (isLinkedBool && !savedInfo) {
-          // 연동되어 있으나 로컬 학적 데이터가 없으면 백그라운드 갱신
-          const academicRes = await fetchAcademicInfoFromApp().catch(() => null);
-          if (academicRes?.success && academicRes.data) {
-            const student = adaptAcademicInfoToStudentInfo(academicRes.data);
-            setStudentInfo(student);
-            void secureStorage.setItem("portal_student_info", student);
-            localStorage.setItem("portal_info_last_updated", new Date().toISOString());
-          }
+
+        // 학번이 반환되었고 아직 학번이 없다면 최소 정보 즉시 반영
+        const sid = res?.studentId || localStorage.getItem('portal_student_id');
+        if (isLinkedBool && sid && !savedInfo?.studentId) {
+          setStudentInfo((prev) => ({
+            ...prev,
+            studentId: sid,
+            koreanName: prev?.koreanName || userInfo?.name || "학우",
+            departmentName: prev?.departmentName || "",
+            enrollmentStatusName: prev?.enrollmentStatusName || "",
+          }));
         }
       } else {
         setIsLinked(false);
       }
     } finally {
+      // 포털 전체 스크래핑을 동기 대기하지 않고 즉시 화면 표시 (초고속 진입)
       setIsLoading(false);
     }
-  }, []);
+  }, [userInfo]);
 
   useEffect(() => {
     loadStatus();
   }, [loadStatus]);
+
+  // 포털 실제 접속 여부 테스트 핸들러
+  const handleTestConnection = async () => {
+    setConnectionStatus("testing");
+    setConnectionError("");
+
+    try {
+      const academicRes = await fetchAcademicInfoFromApp(true);
+      if (academicRes.success && academicRes.data) {
+        const student = adaptAcademicInfoToStudentInfo(academicRes.data);
+        setStudentInfo(student);
+        await secureStorage.setItem("portal_student_info", student);
+        localStorage.setItem("portal_info_last_updated", new Date().toISOString());
+        setConnectionStatus("success");
+        showToast("포털 접속 성공: 최신 학적 정보가 확인되었어요.");
+      } else {
+        setConnectionStatus("error");
+        const errMsg = academicRes.errorMessage || "포털 로그인에 실패했어요. 비밀번호를 확인해주세요.";
+        setConnectionError(errMsg);
+        showToast(`포털 접속 실패: ${errMsg}`);
+      }
+    } catch (err: any) {
+      setConnectionStatus("error");
+      const errMsg = err?.message || "네트워크 오류로 포털에 접속하지 못했습니다.";
+      setConnectionError(errMsg);
+      showToast(errMsg);
+    }
+  };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,22 +152,17 @@ export default function MobilePortalAccountPage() {
     try {
       const saveRes = await savePortalAccount(studentIdInput.trim(), passwordInput.trim());
       if (saveRes.success) {
-        // 학적 정보 조회 시도하여 유효성 검증
-        const academicRes = await fetchAcademicInfoFromApp();
-        if (academicRes.success && academicRes.data) {
-          const student = adaptAcademicInfoToStudentInfo(academicRes.data);
-          setStudentInfo(student);
-          await secureStorage.setItem("portal_student_info", student);
-          localStorage.setItem("portal_info_last_updated", new Date().toISOString());
-        }
-
+        localStorage.setItem("portal_student_id", studentIdInput.trim());
         setIsLinked(true);
         setIsRelinkMode(false);
         setStudentIdInput("");
         setPasswordInput("");
-        showToast("포털 계정이 성공적으로 연동되었어요.");
+        showToast("포털 계정이 기기 보안 저장소에 등록되었어요.");
+
+        // 등록 후 바로 연결 상태도 검증 진행
+        handleTestConnection();
       } else {
-        setErrorMessage(saveRes.errorMessage || "계정 연동에 실패했어요.");
+        setErrorMessage(saveRes.errorMessage || "계정 등록에 실패했어요.");
       }
     } catch (err: any) {
       setErrorMessage(err?.message || "오류가 발생했어요.");
@@ -206,7 +239,7 @@ export default function MobilePortalAccountPage() {
             <StatusHeader>
               <StatusBadge>
                 <CheckCircle2 size={16} />
-                <span>정상 연동됨</span>
+                <span>계정 등록됨</span>
               </StatusBadge>
               <SecurityTag>
                 <ShieldCheck size={14} />
@@ -237,6 +270,46 @@ export default function MobilePortalAccountPage() {
                 )}
               </StudentDetailRow>
             </AccountInfoSection>
+
+            {/* 포털 실제 연결 상태 확인 섹션 */}
+            <ConnectionBox $status={connectionStatus}>
+              <ConnectionHeader>
+                <ConnectionTitleRow>
+                  <Globe size={16} color="var(--interactive-primary)" />
+                  <span className="title">포털 실제 연결 확인</span>
+                </ConnectionTitleRow>
+                <ConnectionStatusBadge $status={connectionStatus}>
+                  {connectionStatus === "idle" && <span>연결 미확인</span>}
+                  {connectionStatus === "testing" && <span>접속 테스트 중...</span>}
+                  {connectionStatus === "success" && <span>✓ 포털 정상 연결</span>}
+                  {connectionStatus === "error" && <span>✕ 접속 실패</span>}
+                </ConnectionStatusBadge>
+              </ConnectionHeader>
+
+              <ConnectionDesc>
+                {connectionStatus === "idle" &&
+                  "아이디와 비밀번호가 이 기기에 안전하게 등록되어 있어요. 아래 버튼을 눌러 포털에 실제로 접속되는지 테스트할 수 있어요."}
+                {connectionStatus === "testing" &&
+                  "포털에 접속하여 로그인 및 최신 학적 정보를 확인하고 있어요. 잠시만 기다려주세요..."}
+                {connectionStatus === "success" &&
+                  "포털 시스템 로그인 및 학적 정보 연동이 정상 확인되었어요."}
+                {connectionStatus === "error" &&
+                  (connectionError || "포털 접속에 실패했습니다. 비밀번호를 다시 확인해주세요.")}
+              </ConnectionDesc>
+
+              <ConnectionBtnWrapper>
+                <CapsuleButton
+                  variant={connectionStatus === "success" ? "secondary" : "brand"}
+                  onClick={handleTestConnection}
+                  disabled={connectionStatus === "testing"}
+                  loading={connectionStatus === "testing"}
+                  style={{ width: "100%", padding: "10px 16px", fontSize: "14px" }}
+                >
+                  <RefreshCw size={14} className={connectionStatus === "testing" ? "spin" : ""} style={{ marginRight: 6 }} />
+                  {connectionStatus === "testing" ? "포털 접속 확인 중..." : "포털 실제 접속 확인"}
+                </CapsuleButton>
+              </ConnectionBtnWrapper>
+            </ConnectionBox>
 
             <ActionButtonsRow>
               <SubActionBtn onClick={() => setIsRelinkMode(true)}>
@@ -556,6 +629,73 @@ const DangerActionBtn = styled.button`
     background: var(--bg-error);
     transform: scale(0.98);
   }
+`;
+
+const ConnectionBox = styled.div<{ $status: "idle" | "testing" | "success" | "error" }>`
+  background: ${({ $status }) =>
+    $status === "success"
+      ? "rgb(240, 253, 244)"
+      : $status === "error"
+      ? "rgb(254, 242, 242)"
+      : "var(--bg-subtle)"};
+  border: 1px solid
+    ${({ $status }) =>
+      $status === "success"
+        ? "rgba(34, 197, 94, 0.3)"
+        : $status === "error"
+        ? "rgba(239, 68, 68, 0.3)"
+        : "var(--border-default)"};
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: all 0.2s ease-in-out;
+`;
+
+const ConnectionHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+`;
+
+const ConnectionTitleRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  .title {
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+`;
+
+const ConnectionStatusBadge = styled.div<{ $status: "idle" | "testing" | "success" | "error" }>`
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: ${({ $status }) =>
+    $status === "success"
+      ? "var(--green-500, #22c55e)"
+      : $status === "error"
+      ? "var(--red-500, #ef4444)"
+      : $status === "testing"
+      ? "var(--blue-500, #3b82f6)"
+      : "var(--gray-200)"};
+  color: ${({ $status }) => ($status === "idle" ? "var(--text-secondary)" : "#ffffff")};
+`;
+
+const ConnectionDesc = styled.p`
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-tertiary);
+`;
+
+const ConnectionBtnWrapper = styled.div`
+  margin-top: 4px;
 `;
 
 const SectionTitle = styled.h4`
