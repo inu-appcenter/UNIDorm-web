@@ -22,19 +22,6 @@ export const createMyPageMenuGroups = (
     ],
   },
   {
-    title: "기숙사 생활",
-    menus: [
-      {
-        label: "사생정보조회(학생)",
-        onClick: () => navigate(PATHS.DORMITORY_INFO),
-      },
-      {
-        label: "모바일 사생증",
-        onClick: () => navigate(PATHS.DORMITORY_CARD),
-      },
-    ],
-  },
-  {
     title: "커뮤니티",
     menus: [
       { label: "내 게시글 보기", onClick: () => navigate(PATHS.MY_POSTS) },
