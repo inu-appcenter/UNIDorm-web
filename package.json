@@ -8,6 +8,7 @@
     "build": "npm run build:tokens && tsc -b && vite build --mode production",
     "build:tokens": "node scripts/generate-tokens.js",
     "lint": "eslint .",
+    "test": "vitest run",
     "preview": "vite preview"
   },
   "dependencies": {
