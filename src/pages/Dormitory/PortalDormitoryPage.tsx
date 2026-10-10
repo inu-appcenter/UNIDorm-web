@@ -514,8 +514,8 @@ const PortalDormitoryPage = () => {
       setLoadingMessage("사생 정보와 탭 데이터를 조회하고 있습니다...");
 
       addLog("AUTH_CHECK", "기기 보안 저장소 내 포털 계정(학번/비밀번호) 등록 여부 확인 중...", "info");
-      const isLinked = await checkPortalAccountLinked();
-      if (!isLinked) {
+      const accountStatus = await checkPortalAccountLinked();
+      if (!accountStatus.linked) {
         addLog("AUTH_CHECK", "포털 계정이 등록되지 않았습니다. 계정 입력창 호출", "warn");
         setIsPortalAccountModalOpen(true);
         setIsLoading(false);
@@ -523,7 +523,7 @@ const PortalDormitoryPage = () => {
       }
       addLog("AUTH_CHECK", "포털 계정 연동 확인 완료 (linked: true)", "success");
 
-      let myStudentId = resolveCurrentStudentId();
+      let myStudentId = accountStatus.studentId || resolveCurrentStudentId();
       if (!myStudentId) {
         addLog("ID_RESOLVE", "로컬에 학번 정보가 없어 학적 조회를 통해 본인 학번을 먼저 확인합니다...", "info");
         try {

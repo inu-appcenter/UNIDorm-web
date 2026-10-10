@@ -40,6 +40,10 @@ export function resolveCurrentStudentId(): string {
       if (sid) return String(sid).trim();
     }
   } catch {}
+  try {
+    const portalSid = localStorage.getItem("portal_student_id");
+    if (portalSid && portalSid.trim()) return portalSid.trim();
+  } catch {}
   return "";
 }
 
@@ -192,9 +196,17 @@ function sendBridgeAction<T = any>(type: string, payload?: any, timeoutMs = 1500
 /**
  * 포털 계정(학번/비밀번호) 기기 내 등록 여부 확인
  */
-export async function checkPortalAccountLinked(): Promise<boolean> {
-  const res = await sendBridgeAction<{ linked: boolean }>('checkPortalAccount');
-  return Boolean(res.success && res.data?.linked);
+export async function checkPortalAccountLinked(): Promise<{ linked: boolean; studentId?: string }> {
+  const res = await sendBridgeAction<{ linked: boolean; studentId?: string }>('checkPortalAccount');
+  if (res.success && res.data?.studentId) {
+    try {
+      localStorage.setItem('portal_student_id', res.data.studentId);
+    } catch {}
+  }
+  return {
+    linked: Boolean(res.success && res.data?.linked),
+    studentId: res.data?.studentId,
+  };
 }
 
 /**

@@ -71,9 +71,10 @@ export default function MobilePortalAccountPage() {
       }
 
       if (isMobileAppEnvironment()) {
-        const linked = await checkPortalAccountLinked().catch(() => false);
-        setIsLinked(linked);
-        if (linked && !savedInfo) {
+        const res = await checkPortalAccountLinked().catch(() => ({ linked: false }));
+        const isLinkedBool = typeof res === 'boolean' ? res : Boolean(res?.linked);
+        setIsLinked(isLinkedBool);
+        if (isLinkedBool && !savedInfo) {
           // 연동되어 있으나 로컬 학적 데이터가 없으면 백그라운드 갱신
           const academicRes = await fetchAcademicInfoFromApp().catch(() => null);
           if (academicRes?.success && academicRes.data) {
