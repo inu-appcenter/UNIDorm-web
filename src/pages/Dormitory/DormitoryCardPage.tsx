@@ -95,18 +95,46 @@ export default function MobileDormitoryCardPage() {
 
         if (cached) {
           const restored = parseDormitoryStudentInfo(cached);
-          const hasValidRf = restored.rawFields && Object.keys(restored.rawFields).length > 0;
+          const hasValidRf = Boolean(restored.rawFields && Object.keys(restored.rawFields).length > 0);
+          const academicDept =
+            academicParsed?.profile?.department ||
+            academicParsed?.departmentName ||
+            academicParsed?.department ||
+            "";
+
           if ((!restored.studentName || !hasValidRf) && academicParsed) {
+            const mergedProfile = {
+              ...(academicParsed.profile || {}),
+              ...(restored.profile || {}),
+              department: restored.profile?.department || academicDept,
+            };
             setDormInfo({
               ...academicParsed,
               ...restored,
               studentName: restored.studentName || academicParsed.studentName,
               studentId: restored.studentId || academicParsed.studentId,
-              profile: restored.profile || academicParsed.profile,
+              department: restored.department || academicDept,
+              departmentName: restored.departmentName || academicDept,
+              profile: mergedProfile,
               rawFields: hasValidRf ? restored.rawFields : academicParsed.rawFields,
             });
           } else {
-            setDormInfo(restored);
+            if (academicParsed && (!restored.profile?.department || !restored.department)) {
+              const enrichedProfile = restored.profile
+                ? {
+                    ...restored.profile,
+                    department: restored.profile.department || academicDept,
+                  }
+                : restored.profile;
+              setDormInfo({
+                ...restored,
+                profile: enrichedProfile,
+                department: restored.department || academicDept,
+                departmentName: restored.departmentName || academicDept,
+              });
+            } else {
+              setDormInfo(restored);
+            }
           }
         } else if (academicParsed) {
           setDormInfo(academicParsed);

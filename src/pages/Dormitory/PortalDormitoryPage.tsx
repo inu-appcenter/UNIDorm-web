@@ -598,15 +598,16 @@ export default function PortalDormitoryPage() {
           addLog("CACHE_WARN", "보안 스토리지 캐시 저장 실패", "warn", String(storageErr));
         }
 
-        if (!finalDormData.photoBase64 && !finalDormData.profile?.photoBase64) {
-          addLog("ACADEMIC_SYNC", "학적 증명사진 및 추가 정보를 확인하는 중...", "info");
+        const existingAcademic = await secureStorage.getItem("portal_student_info").catch(() => null);
+        if (!existingAcademic || (!finalDormData.photoBase64 && !finalDormData.profile?.photoBase64)) {
+          addLog("ACADEMIC_SYNC", "학적 및 추가 사생 프로필 정보를 동기화하는 중...", "info");
           fetchAcademicInfoFromApp(false)
             .then((acRes) => {
               if (acRes.success && acRes.data) {
                 const rf = acRes.data.rawFields || {};
                 const photo = (acRes.data as { photoBase64?: string }).photoBase64 || rf.phtFile2 || rf.phtFile1 || rf.phtFile;
                 void secureStorage.setItem("portal_student_info", acRes.data);
-                if (photo) {
+                if (photo && (!finalDormData.photoBase64 && !finalDormData.profile?.photoBase64)) {
                   setDormInfo((prev) => {
                     if (!prev) return prev;
                     const updated = {

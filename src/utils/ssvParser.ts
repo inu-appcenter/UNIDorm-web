@@ -1250,12 +1250,23 @@ export function parseDormitoryStudentInfo(
       rf["dormLeavdormGbn"] ||
       "";
 
+    const restoredDeptCode =
+      firstValue(rf, ["hgCd", "deptCd", "dptCd", "sustCd", "dpmjCd"]);
+    const restoredDeptMapped = restoredDeptCode ? INU_DEPARTMENT_MAP[restoredDeptCode]?.departmentName : undefined;
+    const restoredDepartment =
+      resolvedObj.departmentName ||
+      resolvedObj.department ||
+      resolvedObj.profile?.department ||
+      firstValue(rf, ["deptNm", "deptKorNm", "hgNm", "sustNm", "dpmjNm"]) ||
+      restoredDeptMapped ||
+      "";
+
     const prof: DormitoryStudentProfile = {
       name: resolvedObj.studentName || resolvedObj.profile?.name || rf["korNm"] || rf["nm"] || "",
       englishName: resolvedObj.profile?.englishName || rf["engNm"] || "",
       gender: resolvedObj.profile?.gender || rf["genGbn"] || "",
       nationality: resolvedObj.profile?.nationality || rf["natGbn"] || "",
-      department: resolvedObj.departmentName || resolvedObj.profile?.department || rf["deptNm"] || "",
+      department: restoredDepartment,
       grade: resolvedObj.profile?.grade || rf["hySeqGbn"] || "",
       dormitoryType: restoredDormType,
       dormitoryBuilding: restoredDormBuilding,
@@ -1385,9 +1396,24 @@ export function parseDormitoryStudentInfo(
       datasets["DS_DMTY206"]?.[0]?.["phtFile"] ||
       "";
 
-    // 학적 데이터셋(DS_BASE_SCHREG_INFO)이 함께 수신된 경우 인적사항 보완
-    const schregRows = datasets["DS_BASE_SCHREG_INFO"] || datasets["DS_SCHREG"] || [];
+    // 학적 데이터셋(DS_SREG101, DS_BASE_SCHREG_INFO 등)이 함께 수신된 경우 인적사항 보완
+    const schregRows =
+      datasets["DS_SREG101"] ||
+      datasets["DS_BASE_SCHREG_INFO"] ||
+      datasets["DS_SCHREG"] ||
+      [];
     const schregRow = schregRows[0] || {};
+
+    const deptCode =
+      firstValue(row, ["hgCd", "deptCd", "dptCd", "sustCd", "dpmjCd"]) ||
+      firstValue(schregRow, ["hgCd", "deptCd", "dptCd", "sustCd", "dpmjCd"]);
+    const deptMapped = deptCode ? INU_DEPARTMENT_MAP[deptCode]?.departmentName : undefined;
+    const resolvedDepartment = (
+      firstValue(row, ["deptNm", "deptKorNm", "hgNm", "sustNm", "dpmjNm"]) ||
+      firstValue(schregRow, ["deptNm", "deptKorNm", "hgNm", "sustNm", "dpmjNm"]) ||
+      deptMapped ||
+      ""
+    ).trim();
 
     // 유효한 행인지 확인 (성명, 학번, 또는 건물코드 등이 하나라도 존재하는지)
     if (
@@ -1401,14 +1427,15 @@ export function parseDormitoryStudentInfo(
       row["dmtyNm"] ||
       row["dormBdNm"] ||
       schregRow["korNm"] ||
-      schregRow["stuno"]
+      schregRow["stuno"] ||
+      resolvedDepartment
     ) {
       profile = {
         name: (row["nm"] || row["korNm"] || row["studNm"] || schregRow["korNm"] || "").trim(),
         englishName: (row["engNm"] || schregRow["engNm"] || "").trim(),
         gender: (row["genGbn"] || schregRow["genGbn"] || "").trim(),
         nationality: (row["natGbn"] || schregRow["natGbn"] || "").trim(),
-        department: (row["deptNm"] || row["hgNm"] || schregRow["deptNm"] || schregRow["hgNm"] || "").trim(),
+        department: resolvedDepartment,
         grade: (row["hySeqGbn"] || schregRow["hySeqGbn"] || "").trim(),
         dormitoryType: (row["dormGbn"] || "").trim(),
         dormitoryBuilding: (row["dormBdNm"] || row["dormBdCd"] || row["dmtyNm"] || row["domNm"] || "").trim(),

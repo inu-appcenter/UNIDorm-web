@@ -398,6 +398,29 @@ describe("Academic SSV Parser (Web Centralized)", () => {
       expect(result.pledge).toBeNull();
       expect(result.hasData).toBe(false);
     });
+
+    it("DS_DMTY209에 학과명이 없어도 함께 전달된 DS_SREG101의 학과코드(hgCd) 또는 학과명(hgNm)으로부터 정상 매핑해야 한다", () => {
+      const RECORD_SEP = "\x1e";
+      const UNIT_SEP = "\x1f";
+
+      // 1) DS_DMTY209에는 학과(deptNm)가 없고, DS_SREG101에 학과코드 0000077(컴퓨터공학부)만 있는 경우
+      const mainSsv = [
+        "ErrorCode:int=0",
+        "Dataset:DS_DMTY209",
+        `_RowType_${UNIT_SEP}nm${UNIT_SEP}persNo${UNIT_SEP}dormBdNm${UNIT_SEP}domstuNo`,
+        `N${UNIT_SEP}홍길동${UNIT_SEP}202101234${UNIT_SEP}제2기숙사${UNIT_SEP}20251001`,
+        "Dataset:DS_SREG101",
+        `_RowType_${UNIT_SEP}stuno${UNIT_SEP}korNm${UNIT_SEP}hgCd`,
+        `N${UNIT_SEP}202101234${UNIT_SEP}홍길동${UNIT_SEP}0000077`,
+      ].join(RECORD_SEP);
+
+      const result = parseDormitoryStudentInfo(mainSsv);
+      expect(result.profile?.name).toBe("홍길동");
+      expect(result.profile?.studentId).toBe("202101234");
+      expect(result.profile?.department).toBe("컴퓨터공학부");
+      expect(result.department).toBe("컴퓨터공학부");
+      expect(result.departmentName).toBe("컴퓨터공학부");
+    });
   });
 });
 
