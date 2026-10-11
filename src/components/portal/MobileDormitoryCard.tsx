@@ -291,12 +291,8 @@ export const MobileDormitoryCard: React.FC<MobileDormitoryCardProps> = ({
         </DetailBox>
       </CardBody>
 
-      {/* 하단 풋터: 실시간 라이브 펄스 & 밀리초 시계 */}
+      {/* 하단 풋터: 밀리초 실시간 시계 */}
       <FooterSection>
-        <LiveIndicatorWrapper>
-          <LivePulseDot aria-hidden="true" />
-          <LiveBadgeText>실시간 본인 인증</LiveBadgeText>
-        </LiveIndicatorWrapper>
         <ClockText dateTime={clockText}>{clockText || "—"}</ClockText>
       </FooterSection>
     </CardContainer>
@@ -629,45 +625,16 @@ const StatusValue = styled.span`
   color: var(--text-primary);
 `;
 
-const pulseAnimation = keyframes`
-  0% { transform: scale(0.95); opacity: 0.8; }
-  50% { transform: scale(1.15); opacity: 1; }
-  100% { transform: scale(0.95); opacity: 0.8; }
-`;
-
 const FooterSection = styled.footer`
   position: relative;
   z-index: 2;
-  padding: clamp(10px, 1.6vh, 14px) clamp(16px, 4vw, 22px);
+  padding: clamp(12px, 1.8vh, 16px) clamp(16px, 4vw, 22px);
   background-color: var(--bg-subtle);
   border-top: 1px solid var(--border-default);
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 5px;
   flex-shrink: 0;
-`;
-
-const LiveIndicatorWrapper = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 6px;
-`;
-
-const LivePulseDot = styled.span`
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background-color: var(--text-success, #04b05c);
-  animation: ${pulseAnimation} 1.8s infinite ease-in-out;
-`;
-
-const LiveBadgeText = styled.span`
-  font-size: 11.5px;
-  font-weight: 600;
-  color: var(--text-success, #04b05c);
-  letter-spacing: 0.2px;
 `;
 
 const ClockText = styled.time`
