@@ -1,4 +1,5 @@
 import { hasReactNativeWebView, isOfficialApp } from "./getMobilePlatform";
+import { flushAllBroadcastSync } from "@/stores/middleware/broadcastSync";
 
 /**
  * 단일 브릿지 어댑터.
@@ -22,18 +23,18 @@ function postBridgeMessage(event: string, value?: any): void {
   }
 
   // 2. 구버전 네이티브 안드로이드 브릿지 폴백
-  if (typeof window.AndroidBridge !== "undefined") {
+  if (typeof window !== "undefined" && typeof (window as any).AndroidBridge !== "undefined") {
     try {
-      if (event === "requestAppUpdate" && typeof window.AndroidBridge.requestAppUpdate === "function") {
-        window.AndroidBridge.requestAppUpdate();
+      if (event === "requestAppUpdate" && typeof (window as any).AndroidBridge.requestAppUpdate === "function") {
+        (window as any).AndroidBridge.requestAppUpdate();
         return;
       }
-      if (event === "onAppReady" && typeof window.AndroidBridge.onAppReady === "function") {
-        window.AndroidBridge.onAppReady();
+      if (event === "onAppReady" && typeof (window as any).AndroidBridge.onAppReady === "function") {
+        (window as any).AndroidBridge.onAppReady();
         return;
       }
-      if (event === "routeChange" && typeof window.AndroidBridge.onRouteChange === "function") {
-        window.AndroidBridge.onRouteChange(String(value));
+      if (event === "routeChange" && typeof (window as any).AndroidBridge.onRouteChange === "function") {
+        (window as any).AndroidBridge.onRouteChange(String(value));
         return;
       }
     } catch (e) {
@@ -42,9 +43,9 @@ function postBridgeMessage(event: string, value?: any): void {
   }
 
   // 3. 구버전 iOS WebKit 브릿지 폴백
-  if (typeof window.webkit?.messageHandlers !== "undefined") {
+  if (typeof window !== "undefined" && typeof (window as any).webkit?.messageHandlers !== "undefined") {
     try {
-      const handler = (window.webkit.messageHandlers as any)[event];
+      const handler = ((window as any).webkit.messageHandlers as any)[event];
       if (handler && typeof handler.postMessage === "function") {
         handler.postMessage(value ?? null);
         return;
@@ -84,6 +85,7 @@ export const appBridge = {
 
   /** 멀티 웹뷰 새 서브 페이지 스택 푸시 */
   navigateTo(pathOrUrl: string): void {
+    flushAllBroadcastSync();
     const fullUrl = pathOrUrl.startsWith("http")
       ? pathOrUrl
       : `${window.location.origin}${pathOrUrl.startsWith("/") ? "" : "/"}${pathOrUrl}`;
@@ -96,16 +98,19 @@ export const appBridge = {
 
   /** 서브 웹뷰 스택 팝 (뒤로가기) */
   goBack(): void {
+    flushAllBroadcastSync();
     postBridgeMessage("goBack");
   },
 
   /** 서브 웹뷰 스택을 닫고 메인 탭으로 복귀 */
   goHome(path: string): void {
+    flushAllBroadcastSync();
     postBridgeMessage("goHome", { path });
   },
 
   /** 뒤로가기 요청 */
   requestBack(): void {
+    flushAllBroadcastSync();
     postBridgeMessage("goBack");
   },
 
@@ -117,6 +122,27 @@ export const appBridge = {
   /** 토큰 동기화 */
   syncTokenInfo(tokenInfo: any): void {
     postBridgeMessage("syncTokenInfo", tokenInfo);
+  },
+
+  /** 네이티브에서 전송되는 tokenInfoUpdated (JWT 갱신 브로드캐스트) 리스너 등록 */
+  onTokenInfoUpdated(callback: (tokenInfo: any) => void): () => void {
+    const handler = (e: MessageEvent) => {
+      try {
+        const raw = typeof e.data === "string" ? JSON.parse(e.data) : e.data;
+        if (raw && raw.event === "tokenInfoUpdated" && raw.value) {
+          callback(raw.value);
+        }
+      } catch {}
+    };
+
+    window.addEventListener("message", handler);
+    // Android WebView 일부 환경 대응
+    document.addEventListener("message" as any, handler);
+
+    return () => {
+      window.removeEventListener("message", handler);
+      document.removeEventListener("message" as any, handler);
+    };
   },
 
   /** 공식 앱 여부 확인 */
