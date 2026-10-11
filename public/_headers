@@ -5,3 +5,15 @@
 
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
+
+/.well-known/apple-app-site-association
+  Content-Type: application/json
+  Access-Control-Allow-Origin: *
+
+/.well-known/assetlinks.json
+  Content-Type: application/json
+  Access-Control-Allow-Origin: *
+
+/app-links/*
+  Content-Type: application/json
+  Access-Control-Allow-Origin: *
