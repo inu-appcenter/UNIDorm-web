@@ -348,6 +348,12 @@ export const secureStorage = {
     ];
     portalKeys.forEach((key) => {
       this.removeItem(key);
+      safeLocalStorage.removeItem(key);
+      try {
+        if (typeof window !== "undefined" && window.localStorage) {
+          window.localStorage.removeItem(key);
+        }
+      } catch {}
     });
   },
 };

@@ -4,6 +4,7 @@ import { identifyUser } from "@/utils/mixpanel";
 import { appBridge } from "@/utils/appBridgeAdapter";
 import { broadcastSync } from "@/stores/middleware/broadcastSync";
 import { safeLocalStorage } from "@/utils/safeStorage";
+import { secureStorage } from "@/utils/secureStorage";
 
 interface UserState {
   tokenInfo: TokenInfo;
@@ -63,6 +64,10 @@ const useUserStore = create<UserState>()(
         safeLocalStorage.setItem("accessToken", partial.tokenInfo.accessToken || "");
         safeLocalStorage.setItem("refreshToken", partial.tokenInfo.refreshToken || "");
         safeLocalStorage.setItem("role", partial.tokenInfo.role || "");
+        // 원격 웹뷰에서 로그아웃된 경우에도 사생/학적 캐시 일괄 소거
+        if (!partial.tokenInfo.accessToken) {
+          secureStorage.clearAllPortalCaches();
+        }
       }
       if (partial.userInfo) {
         safeLocalStorage.setItem("userInfo", JSON.stringify(partial.userInfo));
@@ -87,6 +92,11 @@ const useUserStore = create<UserState>()(
       safeLocalStorage.setItem("accessToken", tokenInfo.accessToken);
       safeLocalStorage.setItem("refreshToken", tokenInfo.refreshToken);
       safeLocalStorage.setItem("role", tokenInfo.role);
+
+      // 토큰이 비어있으면 (로그아웃 신호) 사생/학적 온디바이스 캐시 일괄 소거
+      if (!tokenInfo.accessToken) {
+        secureStorage.clearAllPortalCaches();
+      }
 
       // 네이티브에서 수신한 업데이트가 아닐 때만 네이티브 브릿지로 동기화 (무한 루프 방지)
       if (!options?.fromNative) {
