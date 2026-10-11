@@ -12,6 +12,7 @@ import { MOBILE_PAGE_GUTTER } from "@/styles/intipResponsive";
 import { PATHS } from "@/constants/paths";
 import { ChevronRight } from "lucide-react";
 import PortalSyncOnboarding from "@/components/portal/PortalSyncOnboarding";
+import { setScreenCapturePrevented } from "@/apis/mobileAgentBridge";
 
 const STORAGE_KEY_DORMITORY_DATA = "portal_dormitory_student_info";
 
@@ -157,22 +158,29 @@ export default function MobileDormitoryCardPage() {
 
   // 사생증 화면 캡처 및 녹화 방지 브릿지 연동
   useEffect(() => {
-    try {
-      if (typeof window !== "undefined" && window.ReactNativeWebView) {
-        window.ReactNativeWebView.postMessage(
-          JSON.stringify({ type: "setScreenCapturePrevented", payload: { enabled: true } })
-        );
+    setScreenCapturePrevented(true);
+
+    const handleRelease = () => {
+      setScreenCapturePrevented(false);
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        setScreenCapturePrevented(false);
+      } else if (document.visibilityState === "visible") {
+        setScreenCapturePrevented(true);
       }
-    } catch {}
+    };
+
+    window.addEventListener("pagehide", handleRelease);
+    window.addEventListener("beforeunload", handleRelease);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      try {
-        if (typeof window !== "undefined" && window.ReactNativeWebView) {
-          window.ReactNativeWebView.postMessage(
-            JSON.stringify({ type: "setScreenCapturePrevented", payload: { enabled: false } })
-          );
-        }
-      } catch {}
+      handleRelease();
+      window.removeEventListener("pagehide", handleRelease);
+      window.removeEventListener("beforeunload", handleRelease);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
 
