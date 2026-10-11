@@ -1,0 +1,16 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "com.inuappcenter.unidorm",
+        "paths": ["*"],
+        "components": [
+          { "/": "/*" },
+          { "/": "/privacy-policy.html", "exclude": true },
+          { "/": "/terms-of-use.html", "exclude": true }
+        ]
+      }
+    ]
+  }
+}

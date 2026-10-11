@@ -414,7 +414,7 @@ const Wrapper = styled.div`
   flex-direction: column;
   min-height: 100vh;
   background: white;
-  padding: 16px 16px 120px;
+  padding: 16px 16px calc(120px + var(--safe-area-bottom, 0px));
 `;
 
 const Content = styled.div`
@@ -450,7 +450,7 @@ const ButtonWrapper = styled.div`
   right: 0;
   max-width: 768px; /* App 레이아웃과 동일한 너비 적용 */
   margin: 0 auto;
-  padding: 16px 20px 24px;
+  padding: 16px 20px calc(24px + var(--safe-area-bottom, 0px));
   box-sizing: border-box;
   background: white;
   border-top: 1px solid #f0f0f0;

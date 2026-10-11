@@ -181,7 +181,7 @@ const PageWrapper = styled.div`
 `;
 
 const Content = styled.main`
-  padding: 24px 20px 100px 20px;
+  padding: 24px 20px calc(100px + var(--safe-area-bottom, 0px)) 20px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -332,7 +332,7 @@ const SubmitArea = styled.div`
   left: 0;
   right: 0;
   bottom: 0;
-  padding: 16px 20px;
+  padding: 16px 20px calc(16px + var(--safe-area-bottom, 0px));
   background: #ffffff;
   box-sizing: border-box;
 

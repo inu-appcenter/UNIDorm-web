@@ -2,6 +2,11 @@ export {};
 
 declare global {
     interface Window {
+        // ✅ React Native WebView 단일 채널
+        ReactNativeWebView?: {
+            postMessage: (message: string) => void;
+        };
+
         // ✅ 안드로이드 브릿지 정의
         AndroidBridge?: {
             onRouteChange: (path: string) => void;

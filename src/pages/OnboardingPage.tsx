@@ -239,7 +239,7 @@ const TopRight = styled.div`
 const TopSection = styled.div`
   width: 100%;
   padding: 20px;
-  padding-top: 32px;
+  padding-top: calc(32px + var(--safe-area-top, 0px));
   box-sizing: border-box;
 `;
 
@@ -306,7 +306,7 @@ const Image = styled.img`
 
 const Bottom = styled.div`
   width: 100%;
-  padding: 20px;
+  padding: 20px 20px calc(20px + var(--safe-area-bottom, 0px)) 20px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;

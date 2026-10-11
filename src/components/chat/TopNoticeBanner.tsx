@@ -12,7 +12,7 @@ export type TopNoticeBannerProps = {
 // 상단 배치 및 중앙 정렬 컨테이너
 const BannerWrapper = styled.div`
   position: fixed;
-  top: 150px;
+  top: calc(150px + var(--safe-area-top, 0px));
   left: 0;
   right: 0;
   z-index: 1000;

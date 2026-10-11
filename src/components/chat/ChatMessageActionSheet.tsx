@@ -133,7 +133,7 @@ const Body = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 0 20px 16px;
+  padding: 0 20px calc(16px + var(--safe-area-bottom, 0px));
   h2 {
     margin: 0 0 4px;
     color: #3d3d3d;

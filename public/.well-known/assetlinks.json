@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.hjunieee.inudormitory",
+      "sha256_cert_fingerprints": [
+        "4C:87:35:37:39:ED:B5:32:DE:09:48:33:0A:F8:96:33:36:AB:80:1E:0F:86:2F:D0:E2:0C:B9:1F:F2:C3:78:50"
+      ]
+    }
+  }
+]

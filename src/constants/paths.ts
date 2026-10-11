@@ -15,6 +15,9 @@ export const PATHS = {
   NOTI_SETTING: "/notification-setting",
   MY_POSTS: "/myposts",
   MY_LIKES: "/liked",
+  DORMITORY_INFO: "/dormitory/info",
+  DORMITORY_CARD: "/dormitory/card",
+  PORTAL_ACCOUNT: "/mypage/portal",
   ROOMMATE: {
     ROOT: "/roommate",
     MY: "/roommate/my",
@@ -78,3 +81,22 @@ export const PATHS = {
     OPEN_CHAT_BOT: "/admin/open-chat-bot",
   },
 } as const;
+
+export const MAIN_TAB_PATHS = [
+  "/",
+  "/home",
+  "/roommate",
+  "/roommate/my",
+  "/groupPurchase",
+  "/groupPurchase/comingsoon",
+  "/chat",
+  "/mypage",
+  "/complain",
+  "/onboarding",
+] as const;
+
+export function isMainTabPath(pathname: string): boolean {
+  const path = pathname.split("?")[0].split("#")[0];
+  return (MAIN_TAB_PATHS as readonly string[]).includes(path);
+}
+

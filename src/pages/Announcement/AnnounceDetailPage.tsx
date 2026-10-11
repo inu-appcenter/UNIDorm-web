@@ -23,6 +23,7 @@ import CommonBottomSheet from "src/components/modal/CommonBottomSheet.tsx";
 import { getLabelByValue } from "@/utils/announceUtils";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import { mixpanelTrack } from "@/utils/mixpanel";
+import { appBridge } from "@/utils/appBridgeAdapter";
 import DOMPurify from "dompurify";
 
 export default function AnnounceDetailPage() {
@@ -42,15 +43,13 @@ export default function AnnounceDetailPage() {
     if (!boardId) return;
 
     const markReadAndNotifyNative = async () => {
-      if (window.webkit?.messageHandlers?.enterDetailView) {
-        try {
-          window.webkit.messageHandlers.enterDetailView.postMessage({
-            type: "NOTICE",
-            id: boardId,
-          });
-        } catch (err) {
-          console.error("iOS enterDetailView 브릿지 호출 실패:", err);
-        }
+      try {
+        appBridge.enterDetailView({
+          type: "NOTICE",
+          id: boardId,
+        });
+      } catch (err) {
+        console.error("enterDetailView 브릿지 호출 실패:", err);
       }
     };
 

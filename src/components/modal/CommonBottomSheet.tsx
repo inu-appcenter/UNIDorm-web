@@ -178,6 +178,6 @@ const ScrollContent = styled.div`
 const CloseMenus = styled.div`
   width: 100%;
 
-  padding: 16px;
+  padding: 16px 16px calc(16px + var(--safe-area-bottom, 0px));
   box-sizing: border-box;
 `;

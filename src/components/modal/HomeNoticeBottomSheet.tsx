@@ -268,7 +268,7 @@ const FixedFooter = styled.div`
   flex-shrink: 0;
   background-color: white;
   border-top: 1px solid #f3f4f6;
-  padding-bottom: env(safe-area-inset-bottom);
+  padding-bottom: var(--safe-area-bottom, 0px);
 `;
 
 const CloseMenus = styled.div<{ $singleAction?: boolean }>`

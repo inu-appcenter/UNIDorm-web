@@ -144,7 +144,7 @@ const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
   flex: 1;
-  padding: 0 16px 120px;
+  padding: 0 16px calc(120px + var(--safe-area-bottom, 0px));
 `;
 
 const Content = styled.div`
@@ -185,7 +185,7 @@ const ButtonWrapper = styled.div`
   position: fixed;
   bottom: 0;
   left: 0;
-  padding: 20px 16px;
+  padding: 20px 16px calc(20px + var(--safe-area-bottom, 0px));
   box-sizing: border-box;
   background-color: #fafafa;
 `;

@@ -1,8 +1,16 @@
 import { createGlobalStyle } from "styled-components";
 import "../../styles/tokens/tokens.css";
+import "../../styles/portalVariables.css";
 
 const CommonStyles = createGlobalStyle`
   //이 안에 전체 프로젝트에 적용될 css를 작성하면 됩니다~!
+
+  :root {
+    --safe-area-top: max(env(safe-area-inset-top, 0px), var(--native-safe-area-inset-top, 0px));
+    --safe-area-bottom: max(env(safe-area-inset-bottom, 0px), var(--native-safe-area-inset-bottom, 0px));
+    --safe-area-left: max(env(safe-area-inset-left, 0px), var(--native-safe-area-inset-left, 0px));
+    --safe-area-right: max(env(safe-area-inset-right, 0px), var(--native-safe-area-inset-right, 0px));
+  }
 
   @font-face {
     font-family: 'Pretendard';

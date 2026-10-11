@@ -6,6 +6,7 @@ import { PATHS } from "@/constants/paths";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import { useUserRole } from "@/hooks/useUserRole";
 import { createSettingsMenuGroups } from "@/stores/menuGroupsFactory";
+import { appBridge } from "@/utils/appBridgeAdapter";
 
 const APP_VERSION = "1.8.0";
 
@@ -28,13 +29,8 @@ const SettingsPage = () => {
   }, [clickCount, showHiddenMenu]);
 
   const handleAppUpdate = () => {
-    if (window.AndroidBridge?.requestAppUpdate) {
-      window.AndroidBridge.requestAppUpdate();
-      return;
-    }
-
-    if (window.webkit?.messageHandlers?.requestAppUpdate) {
-      window.webkit.messageHandlers.requestAppUpdate.postMessage(null);
+    if (appBridge.isApp()) {
+      appBridge.requestAppUpdate();
       return;
     }
 

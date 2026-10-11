@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { isAxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
 import { login, loginFreshman } from "@/apis/members";
+import { savePortalAccount, isMobileAppEnvironment } from "@/apis/mobileAgentBridge";
 import StyledInput from "@/components/common/StyledInput.tsx";
 import SquareButton from "@/components/common/SquareButton.tsx";
 import LoadingSpinner from "@/components/common/LoadingSpinner.tsx";
@@ -48,8 +49,16 @@ export default function LoginPage() {
       try {
         const response = await login(studentNumber, password);
         setTokenInfo(response.data);
+        if (isMobileAppEnvironment()) {
+          try {
+            await savePortalAccount(studentNumber.trim(), password.trim());
+            localStorage.setItem("portal_student_id", studentNumber.trim());
+          } catch (e) {
+            console.error("포털 계정 자동 연동 실패", e);
+          }
+        }
         //mixpanelTrack.loginCompleted("포털 계정");
-        navigate(PATHS.HOME);
+        navigate(PATHS.HOME, { replace: true });
         return;
       } catch (error) {
         portalError = error;
@@ -63,7 +72,7 @@ export default function LoginPage() {
       const freshmanResponse = await loginFreshman(studentNumber, password);
       setTokenInfo(freshmanResponse.data);
       //mixpanelTrack.loginCompleted("신입생 임시 계정");
-      navigate(PATHS.HOME);
+      navigate(PATHS.HOME, { replace: true });
     } catch (error) {
       const status = isAxiosError(error) ? error.response?.status : undefined;
 

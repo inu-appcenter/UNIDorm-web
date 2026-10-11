@@ -7,7 +7,9 @@ import {
 } from "@/constants/featureFlags";
 
 /* 상수/경로 */
-import { PATHS } from "@/constants/paths";
+import { PATHS, isMainTabPath } from "@/constants/paths";
+import { appBridge, supportsMultiWebView } from "@/utils/appBridgeAdapter";
+
 
 /* 레이아웃 */
 import AppInitializer from "./AppInitializer";
@@ -37,6 +39,9 @@ import MyPostsPage from "@/pages/MyPostsPage";
 import MyLikesPage from "@/pages/MyLikesPage";
 import NotificationPage from "@/pages/NotificationPage";
 import CalendarPage from "@/pages/CalendarPage";
+import PortalDormitoryPage from "@/pages/Dormitory/PortalDormitoryPage";
+import DormitoryCardPage from "@/pages/Dormitory/DormitoryCardPage";
+import PortalAccountPage from "@/pages/MyPage/PortalAccountPage";
 
 import MyRoomMatePage from "@/pages/RoomMate/MyRoomMatePage";
 import RoomMateListPage from "@/pages/RoomMate/RoomMateListPage";
@@ -289,6 +294,19 @@ export const router = createBrowserRouter([
             element: <SubPage />,
             children: [{ index: true, element: <CalendarPage /> }],
           },
+          {
+            path: "mypage",
+            element: <SubPage />,
+            children: [{ path: "portal", element: <PortalAccountPage /> }],
+          },
+          {
+            path: "dormitory",
+            element: <SubPage />,
+            children: [
+              { path: "info", element: <PortalDormitoryPage /> },
+              { path: "card", element: <DormitoryCardPage /> },
+            ],
+          },
 
           // 관리자
           {
@@ -338,3 +356,78 @@ export const router = createBrowserRouter([
     ],
   },
 ]);
+
+function getPathname(to: any): string {
+  if (!to) return "";
+  if (typeof to === "string") {
+    return to.split("?")[0].split("#")[0];
+  }
+  if (typeof to === "object" && to !== null) {
+    return to.pathname || "";
+  }
+  return "";
+}
+
+if (typeof window !== "undefined") {
+  const originalNavigate = router.navigate;
+
+  (router as any).navigate = function (to: any, opts?: any) {
+    // 1. 숫자가 전달된 경우 (뒤로가기)
+    if (typeof to === "number") {
+      if (to === -1 && supportsMultiWebView()) {
+        appBridge.requestBack();
+        return Promise.resolve();
+      }
+      return (originalNavigate as any).call(router, to, opts);
+    }
+
+    const path = getPathname(to);
+    const isTabNavigation = opts?.state?.isTabNavigation === true;
+    const isHomePath = path === PATHS.HOME || path === PATHS.ROOT;
+    const isBootstrapRedirect = window.location.pathname === "/" && isHomePath;
+
+    // 단순 해시(#)나 쿼리(?)만 변경하는 라우팅이거나 빈 이동인지 확인
+    const isHashOrSearchOnly =
+      to === "" ||
+      (typeof to === "string" && (to.startsWith("#") || to.startsWith("?"))) ||
+      (typeof to === "object" && to !== null && !to.pathname);
+    const isSamePath = window.location.pathname === path;
+    const isCurrentInMainTab = isMainTabPath(window.location.pathname);
+
+    // 2. 메인 탭 경로 이동:
+    // - 서브 웹뷰(pushed webview)에서 메인 탭으로 복귀하는 경우 네이티브 스택 닫기 신호(goHome)를 발송하고,
+    // - 루트 웹뷰(로그인, 온보딩 등에서 /home 이동)에서도 SPA 이동이 정상 진행되도록 originalNavigate를 항상 함께 실행
+    if (
+      supportsMultiWebView() &&
+      isMainTabPath(path) &&
+      !isCurrentInMainTab &&
+      !isTabNavigation &&
+      !isBootstrapRedirect &&
+      !isSamePath &&
+      !isHashOrSearchOnly
+    ) {
+      appBridge.goHome(path);
+      return (originalNavigate as any).call(router, to, opts);
+    }
+
+    // 3. 신규 멀티 웹뷰 환경이고 메인 탭이 아니며, 탭 이동 옵션도 없는 경우 -> 새 웹뷰 액티비티로 오픈
+    if (
+      supportsMultiWebView() &&
+      !isMainTabPath(path) &&
+      !isTabNavigation &&
+      !opts?.replace &&
+      !isHashOrSearchOnly &&
+      !isSamePath
+    ) {
+      const fullPath =
+        typeof to === "string"
+          ? to
+          : `${to.pathname || ""}${to.search || ""}${to.hash || ""}`;
+      appBridge.navigateTo(fullPath);
+      return Promise.resolve(); // 현재 웹뷰에서의 SPA 라우팅을 수행하지 않음
+    }
+
+    return (originalNavigate as any).call(router, to, opts);
+  };
+}
+
