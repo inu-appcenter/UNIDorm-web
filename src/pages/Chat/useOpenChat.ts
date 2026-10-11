@@ -4,6 +4,7 @@ import type { OpenChatMessage, OpenChatReadEvent } from "@/types/openchat";
 interface OpenChatMessagePayload {
   roomId: number;
   content: string;
+  replyToMessageId?: number | null;
 }
 
 interface UseOpenChatProps {
@@ -133,6 +134,10 @@ export const useOpenChat = ({
           console.log("📩 [RECEIVED MESSAGE]:", parsed);
 
           if (destination === `/sub/openchat/${roomId}`) {
+            if (parsed.eventType === "MESSAGE_READ") {
+              onReadRef.current?.(parsed as OpenChatReadEvent);
+              return;
+            }
             onMessageRef.current?.(parsed as OpenChatMessage);
           } else if (
             destination === `/sub/openchat/${roomId}/recruitment-status`
@@ -210,9 +215,16 @@ export const useOpenChat = ({
   }, [connect, connected]);
 
   const sendMessage = useCallback(
-    async (content: string): Promise<boolean> => {
+    async (
+      content: string,
+      replyToMessageId?: number | null,
+    ): Promise<boolean> => {
       const isReady = await waitForConnection(5000);
-      if (!isReady || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+      if (
+        !isReady ||
+        !wsRef.current ||
+        wsRef.current.readyState !== WebSocket.OPEN
+      ) {
         console.warn("❌ OpenChat WebSocket is not connected after retry.");
         return false;
       }
@@ -220,6 +232,7 @@ export const useOpenChat = ({
       const message: OpenChatMessagePayload = {
         roomId,
         content,
+        ...(replyToMessageId ? { replyToMessageId } : {}),
       };
 
       console.log("📤 [SEND] 오픈채팅 메시지 전송:", message);

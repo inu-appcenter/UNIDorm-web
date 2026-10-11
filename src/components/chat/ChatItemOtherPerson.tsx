@@ -3,6 +3,8 @@ import styled from "styled-components";
 import profile from "../../assets/profileimg.png";
 import { useLongPress } from "@/hooks/useLongPress";
 import ChatMessageContent from "./ChatMessageContent";
+import ChatReplyQuoteBox from "./ChatReplyQuoteBox";
+import type { ReplySourceDto } from "@/types/openchat";
 import ChatBuliLogo from "@/assets/ai-chat/챗불이로고.svg";
 
 type Props = {
@@ -17,6 +19,8 @@ type Props = {
   isBotQuestion?: boolean;
   isDeleted?: boolean;
   isEdited?: boolean;
+  replySource?: ReplySourceDto | null;
+  onQuoteClick?: (targetMessageId: number) => void;
   onMessageClick?: (rect?: DOMRect) => void;
   onImageClick?: (url: string) => void;
   onAvatarClick?: () => void;
@@ -34,6 +38,8 @@ const ChatItemOtherPerson = ({
   isBotQuestion,
   isDeleted = false,
   isEdited = false,
+  replySource,
+  onQuoteClick,
   onMessageClick,
   onImageClick,
   onAvatarClick,
@@ -100,25 +106,34 @@ const ChatItemOtherPerson = ({
             삭제된 메시지입니다.
           </DeletedMessageBubble>
         ) : imageUrls?.length ? (
-          <ImageGrid
-            ref={bubbleRef}
-            {...(onMessageClick ? longPressHandlers : {})}
-            $clickable={Boolean(onMessageClick)}
-          >
-            {imageUrls.map((url) => (
-              <img
-                key={url}
-                src={url}
-                alt="첨부 사진"
-                onClick={(e) => {
-                  if (onImageClick) {
-                    e.stopPropagation();
-                    onImageClick(url);
-                  }
-                }}
+          <div>
+            {replySource && (
+              <ChatReplyQuoteBox
+                replySource={replySource}
+                isMyMessage={false}
+                onClick={() => onQuoteClick?.(replySource.replyToMessageId)}
               />
-            ))}
-          </ImageGrid>
+            )}
+            <ImageGrid
+              ref={bubbleRef}
+              {...(onMessageClick ? longPressHandlers : {})}
+              $clickable={Boolean(onMessageClick)}
+            >
+              {imageUrls.map((url) => (
+                <img
+                  key={url}
+                  src={url}
+                  alt="첨부 사진"
+                  onClick={(e) => {
+                    if (onImageClick) {
+                      e.stopPropagation();
+                      onImageClick(url);
+                    }
+                  }}
+                />
+              ))}
+            </ImageGrid>
+          </div>
         ) : isBotQuestion ? (
           <BotQuestionBubble
             ref={bubbleRef}
@@ -137,6 +152,13 @@ const ChatItemOtherPerson = ({
             {...(onMessageClick ? longPressHandlers : {})}
             $clickable={Boolean(onMessageClick)}
           >
+            {replySource && (
+              <ChatReplyQuoteBox
+                replySource={replySource}
+                isMyMessage={false}
+                onClick={() => onQuoteClick?.(replySource.replyToMessageId)}
+              />
+            )}
             <ChatMessageContent content={content} />
           </MessageBubble>
         )}

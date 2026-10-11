@@ -1,6 +1,8 @@
 import { useRef } from "react";
 import styled from "styled-components";
 import ChatMessageContent from "./ChatMessageContent";
+import ChatReplyQuoteBox from "./ChatReplyQuoteBox";
+import type { ReplySourceDto } from "@/types/openchat";
 import ChatBuliLogo from "@/assets/ai-chat/챗불이로고.svg";
 import { useLongPress } from "@/hooks/useLongPress";
 
@@ -13,6 +15,8 @@ type Props = {
   isBotQuestion?: boolean;
   isDeleted?: boolean;
   isEdited?: boolean;
+  replySource?: ReplySourceDto | null;
+  onQuoteClick?: (targetMessageId: number) => void;
   onMessageClick?: (rect?: DOMRect) => void;
   onImageClick?: (url: string) => void;
 };
@@ -26,6 +30,8 @@ const ChatItemMy = ({
   isBotQuestion,
   isDeleted = false,
   isEdited = false,
+  replySource,
+  onQuoteClick,
   onMessageClick,
   onImageClick,
 }: Props) => {
@@ -70,21 +76,30 @@ const ChatItemMy = ({
             삭제된 메시지입니다.
           </DeletedMessageBubble>
         ) : imageUrls?.length ? (
-          <ImageGrid>
-            {imageUrls.map((url) => (
-              <img
-                key={url}
-                src={url}
-                alt="첨부 사진"
-                onClick={(e) => {
-                  if (onImageClick) {
-                    e.stopPropagation();
-                    onImageClick(url);
-                  }
-                }}
+          <div>
+            {replySource && (
+              <ChatReplyQuoteBox
+                replySource={replySource}
+                isMyMessage={true}
+                onClick={() => onQuoteClick?.(replySource.replyToMessageId)}
               />
-            ))}
-          </ImageGrid>
+            )}
+            <ImageGrid>
+              {imageUrls.map((url) => (
+                <img
+                  key={url}
+                  src={url}
+                  alt="첨부 사진"
+                  onClick={(e) => {
+                    if (onImageClick) {
+                      e.stopPropagation();
+                      onImageClick(url);
+                    }
+                  }}
+                />
+              ))}
+            </ImageGrid>
+          </div>
         ) : isBotQuestion ? (
           <BotQuestionMessage>
             <BotQuestionHeader>
@@ -103,6 +118,13 @@ const ChatItemMy = ({
           </BotQuestionMessage>
         ) : (
           <div className="message">
+            {replySource && (
+              <ChatReplyQuoteBox
+                replySource={replySource}
+                isMyMessage={true}
+                onClick={() => onQuoteClick?.(replySource.replyToMessageId)}
+              />
+            )}
             <ChatMessageContent content={content} />
           </div>
         )}

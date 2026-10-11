@@ -1,4 +1,4 @@
-import styled, { keyframes } from "styled-components";
+import styled, { css, keyframes } from "styled-components";
 
 export const ChatPageWrapper = styled.div`
   width: 100%;
@@ -161,11 +161,42 @@ export const NoticeParagraph = styled.p`
   word-break: break-word;
 `;
 
-export const FloatingInputArea = styled.div`
+const highlightFlash = keyframes`
+  0% {
+    background-color: rgba(22, 119, 255, 0.2);
+  }
+  60% {
+    background-color: rgba(22, 119, 255, 0.15);
+  }
+  100% {
+    background-color: transparent;
+  }
+`;
+
+export const MessageItemContainer = styled.div<{ $isHighlighted?: boolean }>`
+  width: 100%;
+  border-radius: 12px;
+  transition: background-color 0.3s ease;
+  background-color: ${({ $isHighlighted }) =>
+    $isHighlighted ? "rgba(22, 119, 255, 0.15)" : "transparent"};
+  animation: ${({ $isHighlighted }) =>
+    $isHighlighted ? css`${highlightFlash} 1.5s ease-out` : "none"};
+`;
+
+export const FloatingInputContainer = styled.div`
   position: absolute;
   bottom: 24px;
   left: 20px;
   right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 100;
+`;
+
+export const FloatingInputArea = styled.div`
+  position: relative;
+  width: 100%;
   background-color: #ffffff;
   border-radius: 32px;
   display: flex;
@@ -174,7 +205,6 @@ export const FloatingInputArea = styled.div`
   box-sizing: border-box;
   gap: 8px;
   box-shadow: 0px 2px 5px #dfdfdf;
-  z-index: 100;
 `;
 
 export const PlusButton = styled.button`
@@ -689,12 +719,18 @@ export const ShareTimeArea = styled.div`
   }
 `;
 
-export const RoomLinkRow = styled.div`
+export const RoomLinkRow = styled.div<{ $isHighlighted?: boolean }>`
   width: 100%;
   padding: 12px 20px;
   box-sizing: border-box;
   display: flex;
   justify-content: center;
+  border-radius: 16px;
+  transition: background-color 0.3s ease;
+  background-color: ${({ $isHighlighted }) =>
+    $isHighlighted ? "rgba(22, 119, 255, 0.15)" : "transparent"};
+  animation: ${({ $isHighlighted }) =>
+    $isHighlighted ? css`${highlightFlash} 1.5s ease-out` : "none"};
 `;
 
 export const RoomLinkCard = styled.button<{ $isClosed?: boolean }>`

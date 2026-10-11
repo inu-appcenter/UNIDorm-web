@@ -36,6 +36,10 @@ import {
   ReplySourceDto,
 } from "@/types/openchat";
 import PhotoAttachmentBottomSheet from "@/components/chat/PhotoAttachmentBottomSheet";
+import ChatReplyPreviewBar, {
+  ReplyTargetInfo,
+} from "@/components/chat/ChatReplyPreviewBar";
+import { useLongPress } from "@/hooks/useLongPress";
 import ChatMessageActionSheet from "@/components/chat/ChatMessageActionSheet";
 import ChatMessageMenuModal from "@/components/chat/ChatMessageMenuModal";
 import MessageDeleteConfirmModal from "@/components/chat/MessageDeleteConfirmModal";
@@ -362,6 +366,79 @@ const isPendingDisclosureStatus = (status?: string | null) => {
   );
 };
 
+function DerivedRoomCardItem({
+  msg,
+  isJoining,
+  onJoin,
+  onClosed,
+  onOpenMenu,
+}: {
+  msg: MessageType;
+  isJoining: boolean;
+  onJoin: () => void;
+  onClosed: () => void;
+  onOpenMenu: (rect?: DOMRect) => void;
+}) {
+  const cardRef = useRef<HTMLButtonElement>(null);
+  const isLongPressRef = useRef(false);
+  const isClosed =
+    msg.linkedRoomRecruitmentStatus === "CLOSED" ||
+    Boolean(msg.linkedRoomRecruitmentClosed);
+
+  const longPressHandlers = useLongPress({
+    onLongPress: () => {
+      isLongPressRef.current = true;
+      const rect = cardRef.current?.getBoundingClientRect();
+      onOpenMenu(rect);
+    },
+    delay: 400,
+  });
+
+  return (
+    <S.RoomLinkCard
+      ref={cardRef}
+      type="button"
+      $isClosed={isClosed}
+      disabled={isJoining}
+      {...longPressHandlers}
+      onClick={() => {
+        if (isLongPressRef.current) {
+          isLongPressRef.current = false;
+          return;
+        }
+        if (isClosed) {
+          onClosed();
+        } else {
+          onJoin();
+        }
+      }}
+    >
+      <S.RoomLinkTextArea>
+        <S.RoomLinkLabel $isClosed={isClosed}>
+          {msg.type === "REOPEN_CARD" ? "재모집 톡방" : "새 단체 톡방"}
+        </S.RoomLinkLabel>
+        <S.RoomLinkName>{msg.linkedRoomName || "단체 톡방"}</S.RoomLinkName>
+        {msg.linkedRoomDescription && (
+          <S.RoomLinkDescription>
+            {msg.linkedRoomDescription}
+          </S.RoomLinkDescription>
+        )}
+        {msg.linkedRoomMaxParticipants && (
+          <S.RoomLinkMeta>최대 {msg.linkedRoomMaxParticipants}명</S.RoomLinkMeta>
+        )}
+      </S.RoomLinkTextArea>
+      {isClosed ? (
+        <S.RoomLinkClosedAction>모집 마감</S.RoomLinkClosedAction>
+      ) : (
+        <S.RoomLinkAction>
+          {isJoining ? "입장 중..." : "참여하기"}
+          {!isJoining && <ArrowRight size={18} />}
+        </S.RoomLinkAction>
+      )}
+    </S.RoomLinkCard>
+  );
+}
+
 export default function ChattingPage() {
   const isLeavingRef = useRef(false);
   const { chatType, id } = useParams();
@@ -583,6 +660,60 @@ export default function ChattingPage() {
   const [selectedMember, setSelectedMember] =
     useState<OpenChatParticipant | null>(null);
   const [memberActionSheetOpen, setMemberActionSheetOpen] = useState(false);
+  const [replyTarget, setReplyTarget] = useState<ReplyTargetInfo | null>(null);
+  const [highlightedMessageId, setHighlightedMessageId] = useState<
+    number | null
+  >(null);
+  const pendingReadCountsRef = useRef<Map<number, number>>(new Map());
+
+  const handleScrollToMessage = useCallback((targetMessageId: number) => {
+    const el = document.getElementById(`chat-msg-${targetMessageId}`);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      setHighlightedMessageId(targetMessageId);
+      setTimeout(() => {
+        setHighlightedMessageId((curr) =>
+          curr === targetMessageId ? null : curr,
+        );
+      }, 1500);
+    } else {
+      alert("이전 대화 목록에 없는 메시지입니다.");
+    }
+  }, []);
+
+  const handleStartReply = useCallback(
+    (message: MessageType) => {
+      const isImage = Boolean(message.imageUrls?.length);
+
+      let senderName = message.nickname || "익명";
+      if (message.sender === "me") {
+        senderName = userInfo.name || "나";
+      }
+
+      let thumbnailUrl: string | undefined = undefined;
+      if (isImage && message.imageUrls && message.imageUrls.length > 0) {
+        thumbnailUrl = message.imageUrls[0];
+      }
+
+      setReplyTarget({
+        messageId: message.id,
+        senderName,
+        type: message.type || (isImage ? "IMAGE" : "TEXT"),
+        content: message.content,
+        thumbnailUrl,
+        roomName: message.linkedRoomName || undefined,
+        roomDescription: message.linkedRoomDescription || undefined,
+      });
+
+      setMessageMenuOpen(false);
+
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 50);
+    },
+    [userInfo.name],
+  );
+
   const menuContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -1443,6 +1574,15 @@ export default function ChattingPage() {
         const { content, isBot, isBotQuestion, nickname } =
           parseChatBuliPayload(rawContent);
 
+        let initialUnreadCount = msg.unreadCount;
+        if (msg.messageId && pendingReadCountsRef.current.has(msg.messageId)) {
+          const pendingCount = pendingReadCountsRef.current.get(msg.messageId);
+          if (typeof pendingCount === "number") {
+            initialUnreadCount = pendingCount;
+          }
+          pendingReadCountsRef.current.delete(msg.messageId);
+        }
+
         const nextMessage: MessageType = {
           id: msg.messageId || Date.now(),
           sender: normalizedSenderId === userId ? "me" : "other",
@@ -1472,7 +1612,7 @@ export default function ChattingPage() {
           linkedRoomRecruitmentClosed:
             msg.linkedRoomRecruitmentClosed ??
             (msg.type === "REOPEN_CARD" ? false : undefined),
-          unreadCount: msg.unreadCount,
+          unreadCount: initialUnreadCount,
           time: now.toLocaleTimeString("ko-KR", {
             hour: "2-digit",
             minute: "2-digit",
@@ -1496,7 +1636,7 @@ export default function ChattingPage() {
             copy[localQuestionIdx] = {
               ...copy[localQuestionIdx],
               id: msg.messageId || copy[localQuestionIdx].id,
-              unreadCount: msg.unreadCount,
+              unreadCount: initialUnreadCount,
               createdAt: msg.createdAt || copy[localQuestionIdx].createdAt,
             };
             return copy;
@@ -1539,6 +1679,9 @@ export default function ChattingPage() {
       });
     },
     onRead: ({ messageId, unreadCount }) => {
+      if (messageId) {
+        pendingReadCountsRef.current.set(messageId, unreadCount);
+      }
       setMessageList((current) =>
         current.map((message) => {
           if (
@@ -2297,14 +2440,18 @@ export default function ChattingPage() {
       setTimeout(() => scrollToBottom(), 80);
     });
 
+    const replyMessageId = replyTarget?.messageId;
+
     let sent = false;
     if (chatType === "roommate") {
-      sent = await sendRoommateMessage(trimmedInput);
+      sent = await sendRoommateMessage(trimmedInput, replyMessageId);
     } else if (chatType === "open" || chatType === "personal") {
-      sent = await sendOpenMessage(trimmedInput);
+      sent = await sendOpenMessage(trimmedInput, replyMessageId);
     }
 
-    if (!sent) {
+    if (sent) {
+      setReplyTarget(null);
+    } else {
       alert("채팅 서버와 연결이 불안정하여 전송에 실패했습니다. 다시 시도해 주세요.");
       setInputValue(trimmedInput);
       if (inputRef.current) {
@@ -2334,6 +2481,9 @@ export default function ChattingPage() {
       linkedRoomDescription: message.linkedRoomDescription,
       linkedRoomMaxParticipants: message.linkedRoomMaxParticipants,
       unreadCount: message.unreadCount,
+      isDeleted: Boolean(message.isDeleted),
+      isEdited: Boolean(message.isEdited),
+      replySource: message.replySource ?? null,
       time: new Date(message.createdAt).toLocaleTimeString("ko-KR", {
         hour: "2-digit",
         minute: "2-digit",
@@ -2892,9 +3042,6 @@ export default function ChattingPage() {
                 msg.linkedRoomId
               ) {
                 const isJoining = joiningLinkedRoomId === msg.linkedRoomId;
-                const isClosed =
-                  msg.linkedRoomRecruitmentStatus === "CLOSED" ||
-                  Boolean(msg.linkedRoomRecruitmentClosed);
 
                 return (
                   <React.Fragment key={msg.id}>
@@ -2903,50 +3050,17 @@ export default function ChattingPage() {
                         {formatDateLine(msg.createdAt)}
                       </S.DateDivider>
                     )}
-                    <S.RoomLinkRow>
-                      <S.RoomLinkCard
-                        type="button"
-                        $isClosed={isClosed}
-                        disabled={isJoining}
-                        onClick={() => {
-                          if (isClosed) {
-                            setRecruitmentClosedModalOpen(true);
-                          } else {
-                            handleJoinLinkedRoom(msg);
-                          }
-                        }}
-                      >
-                        <S.RoomLinkTextArea>
-                          <S.RoomLinkLabel $isClosed={isClosed}>
-                            {msg.type === "REOPEN_CARD"
-                              ? "재모집 톡방"
-                              : "새 단체 톡방"}
-                          </S.RoomLinkLabel>
-                          <S.RoomLinkName>
-                            {msg.linkedRoomName || "단체 톡방"}
-                          </S.RoomLinkName>
-                          {msg.linkedRoomDescription && (
-                            <S.RoomLinkDescription>
-                              {msg.linkedRoomDescription}
-                            </S.RoomLinkDescription>
-                          )}
-                          {msg.linkedRoomMaxParticipants && (
-                            <S.RoomLinkMeta>
-                              최대 {msg.linkedRoomMaxParticipants}명
-                            </S.RoomLinkMeta>
-                          )}
-                        </S.RoomLinkTextArea>
-                        {isClosed ? (
-                          <S.RoomLinkClosedAction>
-                            모집 마감
-                          </S.RoomLinkClosedAction>
-                        ) : (
-                          <S.RoomLinkAction>
-                            {isJoining ? "입장 중..." : "참여하기"}
-                            {!isJoining && <ArrowRight size={18} />}
-                          </S.RoomLinkAction>
-                        )}
-                      </S.RoomLinkCard>
+                    <S.RoomLinkRow
+                      id={`chat-msg-${msg.id}`}
+                      $isHighlighted={highlightedMessageId === msg.id}
+                    >
+                      <DerivedRoomCardItem
+                        msg={msg}
+                        isJoining={isJoining}
+                        onJoin={() => handleJoinLinkedRoom(msg)}
+                        onClosed={() => setRecruitmentClosedModalOpen(true)}
+                        onOpenMenu={(rect) => handleOpenMessageMenu(msg, rect)}
+                      />
                     </S.RoomLinkRow>
                   </React.Fragment>
                 );
@@ -3505,51 +3619,60 @@ export default function ChattingPage() {
                       {formatDateLine(msg.createdAt)}
                     </S.DateDivider>
                   )}
-                  {msg.sender === "me" ? (
-                    <ChatItemMy
-                      content={msg.content}
-                      time={msg.time}
-                      showTime={showMessageTime}
-                      imageUrls={msg.imageUrls}
-                      isBotQuestion={msg.isBotQuestion}
-                      isDeleted={msg.isDeleted}
-                      isEdited={msg.isEdited}
-                      unreadCount={
-                        chatType === "open" || chatType === "personal"
-                          ? msg.unreadCount
-                          : chatType === "roommate" && msg.isRead === false
-                            ? 1
+                  <S.MessageItemContainer
+                    id={`chat-msg-${msg.id}`}
+                    $isHighlighted={highlightedMessageId === msg.id}
+                  >
+                    {msg.sender === "me" ? (
+                      <ChatItemMy
+                        content={msg.content}
+                        time={msg.time}
+                        showTime={showMessageTime}
+                        imageUrls={msg.imageUrls}
+                        isBotQuestion={msg.isBotQuestion}
+                        isDeleted={msg.isDeleted}
+                        isEdited={msg.isEdited}
+                        replySource={msg.replySource}
+                        onQuoteClick={handleScrollToMessage}
+                        unreadCount={
+                          chatType === "open" || chatType === "personal"
+                            ? msg.unreadCount
+                            : chatType === "roommate" && msg.isRead === false
+                              ? 1
+                              : undefined
+                        }
+                        onMessageClick={(rect) => handleOpenMessageMenu(msg, rect)}
+                        onImageClick={(url) => setSelectedImageUrl(url)}
+                      />
+                    ) : (
+                      <ChatItemOtherPerson
+                        content={msg.content}
+                        time={msg.time}
+                        showTime={showMessageTime}
+                        showSenderInfo={showSenderInfo}
+                        userImageUrl={msg.userImageUrl}
+                        senderName={
+                          chatType === "open" || chatType === "personal"
+                            ? msg.nickname || "익명 01"
+                            : msg.nickname || partnerName || "상대방"
+                        }
+                        imageUrls={msg.imageUrls}
+                        isBotQuestion={msg.isBotQuestion}
+                        isDeleted={msg.isDeleted}
+                        isEdited={msg.isEdited}
+                        replySource={msg.replySource}
+                        onQuoteClick={handleScrollToMessage}
+                        unreadCount={
+                          chatType === "open" || chatType === "personal"
+                            ? msg.unreadCount
                             : undefined
-                      }
-                      onMessageClick={(rect) => handleOpenMessageMenu(msg, rect)}
-                      onImageClick={(url) => setSelectedImageUrl(url)}
-                    />
-                  ) : (
-                    <ChatItemOtherPerson
-                      content={msg.content}
-                      time={msg.time}
-                      showTime={showMessageTime}
-                      showSenderInfo={showSenderInfo}
-                      userImageUrl={msg.userImageUrl}
-                      senderName={
-                        chatType === "open" || chatType === "personal"
-                          ? msg.nickname || "익명 01"
-                          : msg.nickname || partnerName || "상대방"
-                      }
-                      imageUrls={msg.imageUrls}
-                      isBotQuestion={msg.isBotQuestion}
-                      isDeleted={msg.isDeleted}
-                      isEdited={msg.isEdited}
-                      unreadCount={
-                        chatType === "open" || chatType === "personal"
-                          ? msg.unreadCount
-                          : undefined
-                      }
-                      onMessageClick={(rect) => handleOpenMessageMenu(msg, rect)}
-                      onImageClick={(url) => setSelectedImageUrl(url)}
-                      onAvatarClick={() => handleAvatarClick(msg)}
-                    />
-                  )}
+                        }
+                        onMessageClick={(rect) => handleOpenMessageMenu(msg, rect)}
+                        onImageClick={(url) => setSelectedImageUrl(url)}
+                        onAvatarClick={() => handleAvatarClick(msg)}
+                      />
+                    )}
+                  </S.MessageItemContainer>
                 </React.Fragment>
               );
             })}
@@ -3558,7 +3681,14 @@ export default function ChattingPage() {
       </S.ChattingWrapper>
 
       {/* 하단 플로팅 입력 바 */}
-      <S.FloatingInputArea ref={menuContainerRef}>
+      <S.FloatingInputContainer ref={menuContainerRef}>
+        {replyTarget && (
+          <ChatReplyPreviewBar
+            replyTarget={replyTarget}
+            onCancel={() => setReplyTarget(null)}
+          />
+        )}
+        <S.FloatingInputArea>
         <div style={{ position: "relative", display: "inline-flex" }}>
           {chatType === "roommate" &&
             !isChatBlocked &&
@@ -3690,6 +3820,7 @@ export default function ChattingPage() {
           <ArrowRight size={20} color="white" />
         </S.SendCircleButton>
       </S.FloatingInputArea>
+    </S.FloatingInputContainer>
 
       <PhotoAttachmentBottomSheet
         open={photoSheetOpen}
@@ -3702,10 +3833,16 @@ export default function ChattingPage() {
         onClose={() => setMessageMenuOpen(false)}
         isMyMessage={selectedMessage?.sender === "me"}
         isImageMessage={Boolean(selectedMessage?.imageUrls?.length)}
-        isDerivedRoomCard={Boolean(selectedMessage?.linkedRoomId)}
+        isDerivedRoomCard={
+          selectedMessage?.type === "ROOM_LINK" ||
+          selectedMessage?.type === "REOPEN_CARD" ||
+          Boolean(selectedMessage?.linkedRoomId)
+        }
         anchorRect={messageMenuAnchorRect}
         onReply={() => {
-          // 추후 답장 기능 구현
+          if (selectedMessage) {
+            handleStartReply(selectedMessage);
+          }
         }}
         onDelete={() => {
           setMessageMenuOpen(false);
