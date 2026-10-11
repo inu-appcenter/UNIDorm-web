@@ -14,6 +14,7 @@ import {
   kickOpenChatParticipant,
   leaveOpenChatRoom,
   transferOpenChatHost,
+  updateOpenChatRecruitmentStatus,
 } from "@/apis/openchat";
 import { OpenChatParticipant, OpenChatRoom } from "@/types/openchat";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
@@ -60,6 +61,63 @@ export default function ChatMembersPage() {
   const [selectingNewHost, setSelectingNewHost] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [blockedUserIds, setBlockedUserIds] = useState<Set<number>>(new Set());
+
+  const [recruitmentStatus, setRecruitmentStatus] = useState<"OPEN" | "CLOSED">(
+    routeRoom?.recruitmentStatus ?? "OPEN",
+  );
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [roomType, setRoomType] = useState<string | undefined>(
+    routeRoom?.roomType,
+  );
+
+  useEffect(() => {
+    if (chatType !== "open") return;
+    const fetchRoomInfo = async () => {
+      try {
+        const myRes = await getOpenChatRooms("MY", 0, 100);
+        let found = myRes.data.content.find((r) => r.roomId === roomId);
+        if (!found) {
+          const allRes = await getOpenChatRooms("ALL", 0, 100);
+          found = allRes.data.content.find((r) => r.roomId === roomId);
+        }
+        if (found) {
+          if (found.recruitmentStatus) {
+            setRecruitmentStatus(found.recruitmentStatus);
+          }
+          if (found.roomType) {
+            setRoomType(found.roomType);
+          }
+        }
+      } catch (e) {
+        console.error("채팅방 정보 조회 실패:", e);
+      }
+    };
+    void fetchRoomInfo();
+  }, [chatType, roomId]);
+
+  const isDerivedRoom =
+    roomType === "DERIVED" ||
+    routeRoom?.roomType === "DERIVED" ||
+    Boolean(routeRoom?.recruitmentStatus) ||
+    Boolean((routeRoom as any)?.originRoomId);
+
+  const handleToggleRecruitmentStatus = async (
+    targetStatus: "OPEN" | "CLOSED",
+  ) => {
+    if (isUpdatingStatus || targetStatus === recruitmentStatus) return;
+    const prevStatus = recruitmentStatus;
+    setRecruitmentStatus(targetStatus);
+    setIsUpdatingStatus(true);
+    try {
+      await updateOpenChatRecruitmentStatus(roomId, targetStatus);
+    } catch (error) {
+      console.error("모집 상태 변경 실패:", error);
+      setRecruitmentStatus(prevStatus);
+      alert("모집 상태 변경에 실패했습니다. 다시 시도해주세요.");
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
 
   const fetchParticipants = useCallback(async () => {
     if (!isOpenChatRoom && chatType !== "roommate") return;
@@ -421,6 +479,38 @@ export default function ChatMembersPage() {
           <LoadingSpinner message="참여자를 불러오고 있습니다..." />
         ) : isOpenChatRoom ? (
           <>
+            {isDerivedRoom && (
+              <Section>
+                <SectionTitle>모집 상태</SectionTitle>
+                {me?.isHost ? (
+                  <StatusToggleGroup>
+                    <StatusToggleButton
+                      type="button"
+                      $active={recruitmentStatus === "OPEN"}
+                      disabled={isUpdatingStatus}
+                      onClick={() => handleToggleRecruitmentStatus("OPEN")}
+                    >
+                      모집 중
+                    </StatusToggleButton>
+                    <StatusToggleButton
+                      type="button"
+                      $active={recruitmentStatus === "CLOSED"}
+                      disabled={isUpdatingStatus}
+                      onClick={() => handleToggleRecruitmentStatus("CLOSED")}
+                    >
+                      모집 마감
+                    </StatusToggleButton>
+                  </StatusToggleGroup>
+                ) : (
+                  <ReadOnlyStatusCard>
+                    <StatusLabel>현재 모집 상태</StatusLabel>
+                    <ReadOnlyBadge $status={recruitmentStatus}>
+                      {recruitmentStatus === "OPEN" ? "모집 중" : "모집 마감"}
+                    </ReadOnlyBadge>
+                  </ReadOnlyStatusCard>
+                )}
+              </Section>
+            )}
             {me && (
               <Section>
                 <SectionTitle>나</SectionTitle>
@@ -972,4 +1062,60 @@ const ModalCancel = styled(ModalButton)`
 const ModalConfirm = styled(ModalButton)`
   background: #1677ff;
   color: white;
+`;
+
+const StatusToggleGroup = styled.div`
+  display: flex;
+  gap: 8px;
+  width: 100%;
+`;
+
+const StatusToggleButton = styled.button<{ $active: boolean }>`
+  flex: 1;
+  height: 44px;
+  border: 1px solid ${({ $active }) => ($active ? "#1677ff" : "#dfdfdf")};
+  border-radius: 12px;
+  background-color: ${({ $active }) => ($active ? "#1677ff" : "#ffffff")};
+  color: ${({ $active }) => ($active ? "#ffffff" : "#667085")};
+  font:
+    600 15px/1.5 Pretendard,
+    sans-serif;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+`;
+
+const ReadOnlyStatusCard = styled.div`
+  width: 100%;
+  min-height: 52px;
+  box-sizing: border-box;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid #dfdfdf;
+  border-radius: 16px;
+  background: #ffffff;
+`;
+
+const StatusLabel = styled.span`
+  color: #3d3d3d;
+  font:
+    500 15px/1.5 Pretendard,
+    sans-serif;
+`;
+
+const ReadOnlyBadge = styled.span<{ $status: "OPEN" | "CLOSED" }>`
+  padding: 4px 10px;
+  border-radius: 12px;
+  font:
+    600 13px/1.5 Pretendard,
+    sans-serif;
+  background-color: ${({ $status }) =>
+    $status === "OPEN" ? "#e6f4ff" : "#fee4e2"};
+  color: ${({ $status }) => ($status === "OPEN" ? "#1677ff" : "#f04438")};
 `;

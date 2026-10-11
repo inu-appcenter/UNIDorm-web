@@ -39,6 +39,11 @@ export default function OpenChatRoomCard({ room, tab, onClick }: Props) {
     }
   };
 
+  const isClosed =
+    room.recruitmentStatus === "CLOSED" ||
+    room.isJoinable === false ||
+    (room as any).recruitmentClosed === true;
+
   if (isMyChatRoom) {
     return (
       <Card type="button" onClick={onClick}>
@@ -64,6 +69,15 @@ export default function OpenChatRoomCard({ room, tab, onClick }: Props) {
             <MetaItem>
               <span>{roomTypeLabel(room.roomType)}</span>
             </MetaItem>
+
+            {isClosed && (
+              <>
+                <Divider />
+                <MetaItem>
+                  <span style={{ color: "#f04438" }}>모집 마감</span>
+                </MetaItem>
+              </>
+            )}
           </MetaArea>
         </LeftArea>
 
@@ -105,6 +119,8 @@ export default function OpenChatRoomCard({ room, tab, onClick }: Props) {
 
       {room.joined ? (
         <JoinedButtonText>참여 중</JoinedButtonText>
+      ) : isClosed ? (
+        <ClosedButtonText>모집 마감</ClosedButtonText>
       ) : (
         <JoinButtonText>참여하기</JoinButtonText>
       )}
@@ -248,4 +264,20 @@ const JoinedButtonText = styled(JoinButtonText)`
   background-color: transparent;
   color: #1677ff;
   border: 1px solid #1677ff;
+`;
+
+const ClosedButtonText = styled.span`
+  background-color: #f2f4f7;
+  color: #98a2b3;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 4px 12px;
+  border-radius: 23px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: 12px;
+  align-self: center;
+  cursor: not-allowed;
 `;
