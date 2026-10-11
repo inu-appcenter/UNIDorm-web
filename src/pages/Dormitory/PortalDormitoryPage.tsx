@@ -15,6 +15,8 @@ import {
   resolveCurrentStudentId,
   isMobileAppEnvironment,
 } from "@/apis/mobileAgentBridge";
+import { isLatestUnidormApp } from "@/utils/getMobilePlatform";
+import { guardAppOnly } from "@/utils/guard";
 import {
   DormitoryStudentInfo,
   DormitoryAddressItem,
@@ -51,7 +53,6 @@ import {
   Check,
   AlertTriangle,
 } from "lucide-react";
-import { openIntipAppOrStore } from "@/utils/portalAppLauncher";
 
 const STORAGE_KEY_DORMITORY_DATA = "portal_dormitory_student_info";
 const STORAGE_KEY_DORMITORY_UPDATED = "portal_dormitory_last_updated";
@@ -502,9 +503,8 @@ export default function PortalDormitoryPage() {
     setLogs([]);
     addLog("INIT", "사생정보 조회 프로세스 시작", "info");
 
-    if (!isMobileAppEnvironment()) {
-      addLog("ENV_CHECK", "모바일 앱 환경이 아닙니다. (웹 환경 감지)", "warn");
-      setIsPortalAccountModalOpen(true);
+    if (!guardAppOnly({ navigate })) {
+      addLog("ENV_CHECK", "최신 모바일 앱 환경이 아닙니다. (웹 또는 구버전 앱 감지)", "warn");
       return;
     }
     addLog("ENV_CHECK", "모바일 앱 브릿지 환경 확인 완료 (ReactNativeWebView)", "info");
@@ -645,7 +645,7 @@ export default function PortalDormitoryPage() {
       setLoadingMessage("");
       addLog("FINISH", `프로세스 종료 (소요시간: ${Date.now() - startTimeRef.current}ms)`, "info");
     }
-  }, [addLog]);
+  }, [addLog, navigate]);
 
   const [tabLoading, setTabLoading] = useState<string | null>(null);
   const handleFetchTabSpecific = useCallback(
@@ -654,9 +654,8 @@ export default function PortalDormitoryPage() {
       startTimeRef.current = Date.now();
       addLog("TAB_INIT", `[${tabName}] 단독 상세 탭 조회 시작`, "info");
 
-      if (!isMobileAppEnvironment()) {
-        addLog("ENV_CHECK", "모바일 앱 환경이 아닙니다.", "warn");
-        setIsPortalAccountModalOpen(true);
+      if (!guardAppOnly({ navigate })) {
+        addLog("ENV_CHECK", "최신 모바일 앱 환경이 아닙니다. (웹 또는 구버전 앱 감지)", "warn");
         return;
       }
 
@@ -700,7 +699,7 @@ export default function PortalDormitoryPage() {
         addLog("TAB_FINISH", `[${tabName}] 종료 (소요시간: ${Date.now() - startTimeRef.current}ms)`, "info");
       }
     },
-    [addLog]
+    [addLog, navigate]
   );
 
   const profile = dormInfo?.profile;
@@ -884,7 +883,7 @@ export default function PortalDormitoryPage() {
         title="사생정보조회"
         description="생활원 사생정보 및 상벌점, 입퇴사, 공공요금 등 세부 내역을 조회합니다."
       >
-        {!isMobileAppEnvironment() && (
+        {!isLatestUnidormApp() && (
           <WebFallbackCard>
             <Smartphone size={28} color="var(--interactive-primary)" />
             <div className="title">모바일 앱 전용 기능</div>
@@ -893,9 +892,9 @@ export default function PortalDormitoryPage() {
             </div>
             <CapsuleButton
               variant="brand"
-              onClick={() => openIntipAppOrStore(PATHS.DORMITORY_INFO)}
+              onClick={() => guardAppOnly({ navigate })}
             >
-              앱 열기
+              앱 열기 / 설치
             </CapsuleButton>
           </WebFallbackCard>
         )}
@@ -914,6 +913,7 @@ export default function PortalDormitoryPage() {
             <CapsuleButton
               variant="brand"
               onClick={() => {
+                if (!guardAppOnly({ navigate })) return;
                 navigate(PATHS.DORMITORY_CARD);
               }}
               style={{ flex: 1 }}

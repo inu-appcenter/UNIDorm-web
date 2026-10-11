@@ -10,6 +10,8 @@ import {
   fetchAcademicInfoFromApp,
   isMobileAppEnvironment,
 } from "@/apis/mobileAgentBridge";
+import { isLatestUnidormApp } from "@/utils/getMobilePlatform";
+import { guardAppOnly } from "@/utils/guard";
 import { StudentInfo } from "@/types/portal";
 import { secureStorage } from "@/utils/secureStorage";
 import { adaptAcademicInfoToStudentInfo } from "@/apis/portalAdapter";
@@ -75,8 +77,8 @@ export default function MobilePortalAccountPage() {
         setStudentInfo(savedInfo);
       }
 
-      // 2. 모바일 앱 환경이면 기기 KeyStore에 계정 등록 여부만 빠르게 확인
-      if (isMobileAppEnvironment()) {
+      // 2. 최신 모바일 앱 환경이면 기기 KeyStore에 계정 등록 여부만 빠르게 확인
+      if (isLatestUnidormApp()) {
         const res = await checkPortalAccountLinked().catch(() => ({ linked: false, studentId: undefined }));
         const isLinkedBool = Boolean(res?.linked);
         setIsLinked(isLinkedBool);
@@ -106,6 +108,8 @@ export default function MobilePortalAccountPage() {
 
   // 포털 실제 접속 여부 테스트 핸들러
   const handleTestConnection = async () => {
+    if (!guardAppOnly({ navigate })) return;
+
     setConnectionStatus("testing");
     setConnectionError("");
 
@@ -139,8 +143,8 @@ export default function MobilePortalAccountPage() {
       return;
     }
 
-    if (!isMobileAppEnvironment()) {
-      setErrorMessage("포털 계정 연동은 유니돔 모바일 앱 환경에서만 지원돼요.");
+    if (!guardAppOnly({ navigate })) {
+      setErrorMessage("포털 계정 연동은 최신 유니돔 모바일 앱 환경에서만 지원돼요.");
       return;
     }
 
@@ -199,7 +203,7 @@ export default function MobilePortalAccountPage() {
           <Skeleton width="100%" height="160px" style={{ borderRadius: "16px" }} />
           <Skeleton width="100%" height="220px" style={{ borderRadius: "16px" }} />
         </ContentContainer>
-      ) : !isMobileAppEnvironment() ? (
+      ) : !isLatestUnidormApp() ? (
         /* 0. 모바일 앱 환경 아닐 때 안내 화면 */
         <ContentContainer>
           <NotAppCard>
@@ -217,6 +221,14 @@ export default function MobilePortalAccountPage() {
                 <li>기본 학적 정보 (소속, 학년, 학적 상태) 실시간 확인</li>
               </UsageGuideList>
             </UsageGuideBox>
+
+            <CapsuleButton
+              variant="brand"
+              onClick={() => guardAppOnly({ navigate })}
+              style={{ width: "100%", marginTop: "8px" }}
+            >
+              유니돔 앱 열기 / 설치
+            </CapsuleButton>
 
             <FootnoteText>모바일 기기 보안 영역에서 직접 수행돼요.</FootnoteText>
           </NotAppCard>
