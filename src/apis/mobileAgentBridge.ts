@@ -194,6 +194,23 @@ function sendBridgeAction<T = any>(type: string, payload?: any, timeoutMs = 1500
 }
 
 /**
+ * 모바일 사생증 등 보안 화면 캡처 및 화면 녹화 방지(FLAG_SECURE) 활성화/해제
+ */
+export function setScreenCapturePrevented(enabled: boolean): void {
+  if (!isMobileAppEnvironment()) return;
+  try {
+    window.ReactNativeWebView?.postMessage(
+      JSON.stringify({
+        type: "setScreenCapturePrevented",
+        payload: { enabled },
+      })
+    );
+  } catch (e) {
+    console.warn("[mobileAgentBridge] setScreenCapturePrevented failed:", e);
+  }
+}
+
+/**
  * 포털 계정(학번/비밀번호) 기기 내 등록 여부 확인
  */
 export async function checkPortalAccountLinked(): Promise<{ linked: boolean; studentId?: string }> {
