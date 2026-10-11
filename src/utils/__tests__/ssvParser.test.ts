@@ -421,6 +421,24 @@ describe("Academic SSV Parser (Web Centralized)", () => {
       expect(result.department).toBe("컴퓨터공학부");
       expect(result.departmentName).toBe("컴퓨터공학부");
     });
+
+    it("입퇴사이력(DS_DMTY209_TAB03)에 퇴사(02) 상태가 있으면 inOutList에 정상 반영되어야 한다", () => {
+      const RECORD_SEP = "\x1e";
+      const UNIT_SEP = "\x1f";
+
+      const pastSsv = [
+        "ErrorCode:int=0",
+        "Dataset:DS_DMTY209_TAB03",
+        `_RowType_${UNIT_SEP}yy${UNIT_SEP}tmGbn${UNIT_SEP}dormGbn${UNIT_SEP}domstuNo${UNIT_SEP}joinCoDt${UNIT_SEP}dormLeavdormDt${UNIT_SEP}dormLeavdormGbn`,
+        `N${UNIT_SEP}2024${UNIT_SEP}20${UNIT_SEP}02${UNIT_SEP}24013041${UNIT_SEP}2024-08-25${UNIT_SEP}2024-12-20${UNIT_SEP}02`,
+      ].join(RECORD_SEP);
+
+      const result = parseDormitoryStudentInfo(pastSsv);
+      expect(result.inOutList).toHaveLength(1);
+      expect(result.inOutList[0].year).toBe("2024");
+      expect(result.inOutList[0].term).toBe("20");
+      expect(result.inOutList[0].status).toBe("02"); // 정규퇴사
+    });
   });
 });
 
