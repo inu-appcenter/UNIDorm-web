@@ -1,6 +1,10 @@
-// utils/guard.ts
 import { PATHS } from "@/constants/paths";
-import { getMobilePlatform } from "@/utils/getMobilePlatform";
+import {
+  getMobilePlatform,
+  getStoreUrl,
+  isLatestUnidormApp,
+  isLegacyUnidormApp,
+} from "@/utils/getMobilePlatform";
 
 export const guardLogin = (
   isLoggedIn: boolean,
@@ -14,34 +18,71 @@ export const guardLogin = (
   return true;
 };
 
-// utils/guard.ts
-export const guardAppOnly = (): boolean => {
-  const platform = getMobilePlatform();
+export interface GuardAppOnlyOptions {
+  /** 취소 시 이전 페이지로 이동할지 여부 */
+  onCancelNavigateBack?: boolean;
+  navigate?: (path: any) => void;
+  /** 사용자 정의 알림 메시지 */
+  customMessage?: string;
+}
 
-  if (platform === "android_unidorm_app" || platform === "ios_unidorm_app") {
-    //앱인 경우 통과
+/**
+ * 최신 유니돔 앱 전용 기능 가드.
+ * - 최신 앱(ReactNativeWebView 지원)인 경우 통과
+ * - 구버전 앱(레거시 브릿지)인 경우 confirm을 통해 스토어 업데이트 유도
+ * - 모바일 브라우저 또는 PC 환경인 경우 confirm을 통해 스토어 설치 화면으로 이동
+ */
+export const guardAppOnly = (options?: GuardAppOnlyOptions): boolean => {
+  if (typeof window === "undefined") return false;
+
+  // 1. 최신 앱 환경 (ReactNativeWebView 브릿지 지원)인 경우 통과
+  if (isLatestUnidormApp()) {
     return true;
   }
 
-  if (platform === "ios_browser" || platform === "android_browser") {
-    //모바일 웹브라우저인 경우 스토어로 이동
-    const isConfirm = confirm(
-      "앱 설치 후 사용할 수 있습니다.\n스토어로 이동할까요?",
-    );
-    if (!isConfirm) return false;
+  const storeUrl = getStoreUrl();
 
-    const url =
-      platform === "ios_browser"
-        ? "https://apps.apple.com/kr/app/%EC%9C%A0%EB%8B%88%EB%8F%94/id6751404748"
-        : "https://play.google.com/store/apps/details?id=com.hjunieee.inudormitory";
+  // 2. 이전 버전의 유니돔 앱을 사용 중인 경우 -> 업데이트 안내
+  if (isLegacyUnidormApp()) {
+    const message =
+      options?.customMessage ||
+      "새로운 기능 이용을 위해 유니돔 앱 업데이트가 필요해요.\n스토어로 이동하여 최신 버전으로 업데이트할까요?";
 
-    window.open(url, "_blank");
-    return false;
-  } else {
-    //그 이외(pc인 경우 등)
-    alert(
-      "유니돔 앱 환경에서만 이용 가능해요.\n스마트폰에서 앱 설치 후 이용해주세요.",
-    );
+    const shouldUpdate = window.confirm(message);
+    if (shouldUpdate) {
+      window.open(storeUrl, "_blank");
+    } else if (options?.onCancelNavigateBack && options?.navigate) {
+      options.navigate(-1);
+    }
     return false;
   }
+
+  // 3. 모바일 브라우저(iOS / Android 웹)인 경우 -> 앱 설치 안내
+  const platform = getMobilePlatform();
+  if (platform === "ios_browser" || platform === "android_browser") {
+    const message =
+      options?.customMessage ||
+      "유니돔 앱에서 이용할 수 있는 기능이에요.\n스토어로 이동하여 앱을 설치할까요?";
+
+    const shouldInstall = window.confirm(message);
+    if (shouldInstall) {
+      window.open(storeUrl, "_blank");
+    } else if (options?.onCancelNavigateBack && options?.navigate) {
+      options.navigate(-1);
+    }
+    return false;
+  }
+
+  // 4. PC 및 기타 브라우저 환경인 경우 -> 스토어 페이지 이동 안내
+  const pcMessage =
+    options?.customMessage ||
+    "유니돔 모바일 앱 전용 기능이에요.\n스토어 페이지로 이동하여 앱을 확인하시겠어요?";
+
+  const shouldOpenStore = window.confirm(pcMessage);
+  if (shouldOpenStore) {
+    window.open(storeUrl, "_blank");
+  } else if (options?.onCancelNavigateBack && options?.navigate) {
+    options.navigate(-1);
+  }
+  return false;
 };

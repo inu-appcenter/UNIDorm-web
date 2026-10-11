@@ -14,6 +14,8 @@ import { ChevronRight, Building2 } from "lucide-react";
 import PortalSyncOnboarding from "@/components/portal/PortalSyncOnboarding";
 import { setScreenCapturePrevented } from "@/apis/mobileAgentBridge";
 import CapsuleButton from "@/components/common/CapsuleButton";
+import { guardAppOnly } from "@/utils/guard";
+import { isLatestUnidormApp } from "@/utils/getMobilePlatform";
 
 const STORAGE_KEY_DORMITORY_DATA = "portal_dormitory_student_info";
 
@@ -166,6 +168,16 @@ export default function MobileDormitoryCardPage() {
   useEffect(() => {
     void fetchCached();
   }, [fetchCached]);
+
+  // 우리 앱 환경이 아니거나 구버전 앱인 경우 스토어 설치/업데이트 유도
+  useEffect(() => {
+    if (!isLatestUnidormApp()) {
+      guardAppOnly({
+        onCancelNavigateBack: true,
+        navigate,
+      });
+    }
+  }, [navigate]);
 
   // 사생증 화면 캡처 및 녹화 방지 브릿지 연동
   // 활성 사생증 카드가 표시될 때만 FLAG_SECURE를 켜고, 비사생 안내 화면이거나 화면 이탈 시 즉시 해제
