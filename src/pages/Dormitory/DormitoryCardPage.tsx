@@ -82,7 +82,8 @@ export default function MobileDormitoryCardPage() {
   const fetchCached = useCallback(async () => {
     setIsInitialLoading(true);
     try {
-      const cached = await secureStorage.getItem<unknown>(STORAGE_KEY_DORMITORY_DATA);
+      const cachedResult = await secureStorage.getCacheWithTtl<unknown>(STORAGE_KEY_DORMITORY_DATA);
+      const cached = cachedResult?.data;
       const academicCached = await secureStorage.getItem<unknown>("portal_student_info");
       let academicParsed: any = null;
       if (academicCached) {
@@ -153,6 +154,27 @@ export default function MobileDormitoryCardPage() {
   useEffect(() => {
     void fetchCached();
   }, [fetchCached]);
+
+  // 사생증 화면 캡처 및 녹화 방지 브릿지 연동
+  useEffect(() => {
+    try {
+      if (typeof window !== "undefined" && window.ReactNativeWebView) {
+        window.ReactNativeWebView.postMessage(
+          JSON.stringify({ type: "setScreenCapturePrevented", payload: { enabled: true } })
+        );
+      }
+    } catch {}
+
+    return () => {
+      try {
+        if (typeof window !== "undefined" && window.ReactNativeWebView) {
+          window.ReactNativeWebView.postMessage(
+            JSON.stringify({ type: "setScreenCapturePrevented", payload: { enabled: false } })
+          );
+        }
+      } catch {}
+    };
+  }, []);
 
   const profile = dormInfo?.profile;
   const rawFields = dormInfo?.rawFields;

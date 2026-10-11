@@ -175,8 +175,7 @@ export default function MobilePortalAccountPage() {
       if (isMobileAppEnvironment()) {
         await deletePortalAccount().catch(() => {});
       }
-      secureStorage.removeItem("portal_student_info");
-      localStorage.removeItem("portal_info_last_updated");
+      secureStorage.clearAllPortalCaches();
       setStudentInfo(null);
       setIsLinked(false);
       setIsRelinkMode(false);
@@ -369,6 +368,19 @@ export default function MobilePortalAccountPage() {
               </UsageGuideList>
             </UsageGuideBox>
           </HeroCard>
+
+          {/* 토스 스타일 안심 안내 배너 */}
+          <SecurityNoticeCard>
+            <SecurityNoticeIcon>
+              <ShieldCheck size={20} color="var(--interactive-primary)" />
+            </SecurityNoticeIcon>
+            <SecurityNoticeContent>
+              <strong>유니돔 서버로 전송되지 않아요</strong>
+              <p>
+                입력하신 학번과 비밀번호는 외부 서버를 거치지 않고, 내 스마트폰의 보안 영역(KeyStore)에만 암호화되어 안전하게 보관돼요.
+              </p>
+            </SecurityNoticeContent>
+          </SecurityNoticeCard>
 
           <FormCard onSubmit={handleRegister}>
             <InputGroup>
@@ -934,3 +946,45 @@ const CancelTextBtn = styled.button`
     color: var(--text-secondary);
   }
 `;
+
+const SecurityNoticeCard = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: var(--blue-50);
+  border-radius: 16px;
+  padding: 16px 18px;
+  margin-bottom: 14px;
+`;
+
+const SecurityNoticeIcon = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: rgba(49, 130, 246, 0.12);
+  flex-shrink: 0;
+  margin-top: 1px;
+`;
+
+const SecurityNoticeContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  strong {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--interactive-primary);
+  }
+
+  p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--text-secondary);
+  }
+`;
+

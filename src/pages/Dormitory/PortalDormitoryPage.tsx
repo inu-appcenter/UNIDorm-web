@@ -448,7 +448,8 @@ export default function PortalDormitoryPage() {
     let isMounted = true;
     const restoreDormData = async () => {
       try {
-        const cached = await secureStorage.getItem(STORAGE_KEY_DORMITORY_DATA);
+        const cachedResult = await secureStorage.getCacheWithTtl(STORAGE_KEY_DORMITORY_DATA);
+        const cached = cachedResult?.data;
         const cachedTime = localStorage.getItem(STORAGE_KEY_DORMITORY_UPDATED);
         const academicCached = await secureStorage.getItem("portal_student_info");
         let academicParsed: FallbackAcademicData | null = null;
@@ -590,9 +591,9 @@ export default function PortalDormitoryPage() {
             rawDatasets: {},
             rawFields: undefined,
           };
-          await secureStorage.setItem(STORAGE_KEY_DORMITORY_DATA, sanitizedDormData);
+          await secureStorage.setCacheWithTtl(STORAGE_KEY_DORMITORY_DATA, sanitizedDormData);
           localStorage.setItem(STORAGE_KEY_DORMITORY_UPDATED, nowIso);
-          addLog("CACHE_SAVED", "보안 스토리지에 최신 사생정보 암호화 캐싱 완료", "info");
+          addLog("CACHE_SAVED", "보안 스토리지에 최신 사생정보 암호화 캐싱 완료 (TTL 24h)", "info");
         } catch (storageErr) {
           console.warn("Dormitory cache save error:", storageErr);
           addLog("CACHE_WARN", "보안 스토리지 캐시 저장 실패", "warn", String(storageErr));
@@ -606,7 +607,7 @@ export default function PortalDormitoryPage() {
               if (acRes.success && acRes.data) {
                 const rf = acRes.data.rawFields || {};
                 const photo = (acRes.data as { photoBase64?: string }).photoBase64 || rf.phtFile2 || rf.phtFile1 || rf.phtFile;
-                void secureStorage.setItem("portal_student_info", acRes.data);
+                void secureStorage.setCacheWithTtl("portal_student_info", acRes.data);
                 if (photo && (!finalDormData.photoBase64 && !finalDormData.profile?.photoBase64)) {
                   setDormInfo((prev) => {
                     if (!prev) return prev;
@@ -617,7 +618,7 @@ export default function PortalDormitoryPage() {
                       rawFields: undefined,
                       rawDatasets: {},
                     };
-                    void secureStorage.setItem(STORAGE_KEY_DORMITORY_DATA, updated);
+                    void secureStorage.setCacheWithTtl(STORAGE_KEY_DORMITORY_DATA, updated);
                     return updated;
                   });
                   addLog("ACADEMIC_SYNC", "학적 증명사진 동기화 완료", "success");
@@ -679,7 +680,7 @@ export default function PortalDormitoryPage() {
                 ? { pledge: res.data.pledge }
                 : {}),
             };
-            void secureStorage.setItem(STORAGE_KEY_DORMITORY_DATA, updated);
+            void secureStorage.setCacheWithTtl(STORAGE_KEY_DORMITORY_DATA, updated);
             addLog("TAB_CACHE", `[${tabName}] 캐시 병합 완료`, "info");
             return updated;
           });
