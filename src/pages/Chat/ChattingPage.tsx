@@ -13,6 +13,7 @@ import {
   getRoommateChatRoom,
   patchRoommateChatRead,
   deleteRoommateChatMessage,
+  updateRoommateChatMessage,
 } from "@/apis/chat";
 import { patchNotificationsRead } from "@/apis/notification";
 import { appBridge } from "@/utils/appBridgeAdapter";
@@ -23,6 +24,7 @@ import {
   createPersonalOpenChatRoom,
   transferOpenChatHost,
   deleteOpenChatMessage,
+  updateOpenChatMessage,
 } from "@/apis/openchat";
 import {
   getOpenChatParticipants,
@@ -40,6 +42,8 @@ import PhotoAttachmentBottomSheet from "@/components/chat/PhotoAttachmentBottomS
 import ChatReplyPreviewBar, {
   ReplyTargetInfo,
 } from "@/components/chat/ChatReplyPreviewBar";
+import ChatEditPreviewBar from "@/components/chat/ChatEditPreviewBar";
+
 import { useLongPress } from "@/hooks/useLongPress";
 import ChatMessageActionSheet from "@/components/chat/ChatMessageActionSheet";
 import ChatMessageMenuModal from "@/components/chat/ChatMessageMenuModal";
@@ -660,10 +664,35 @@ export default function ChattingPage() {
     useState<OpenChatParticipant | null>(null);
   const [memberActionSheetOpen, setMemberActionSheetOpen] = useState(false);
   const [replyTarget, setReplyTarget] = useState<ReplyTargetInfo | null>(null);
+  const [editingMessage, setEditingMessage] = useState<MessageType | null>(null);
   const [highlightedMessageId, setHighlightedMessageId] = useState<
     number | null
   >(null);
   const pendingReadCountsRef = useRef<Map<number, number>>(new Map());
+
+  const handleStartEdit = useCallback((message: MessageType) => {
+    setReplyTarget(null);
+    setEditingMessage(message);
+    setInputValue(message.content);
+    setMessageMenuOpen(false);
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.value = message.content;
+        inputRef.current.style.height = "auto";
+        inputRef.current.style.height = `${Math.min(inputRef.current.scrollHeight, 96)}px`;
+        inputRef.current.focus();
+      }
+    }, 50);
+  }, []);
+
+  const handleCancelEdit = useCallback(() => {
+    setEditingMessage(null);
+    setInputValue("");
+    if (inputRef.current) {
+      inputRef.current.value = "";
+      inputRef.current.style.height = "auto";
+    }
+  }, []);
 
   const handleScrollToMessage = useCallback((targetMessageId: number) => {
     const el = document.getElementById(`chat-msg-${targetMessageId}`);
@@ -682,6 +711,7 @@ export default function ChattingPage() {
 
   const handleStartReply = useCallback(
     (message: MessageType) => {
+      setEditingMessage(null);
       const isImage = Boolean(message.imageUrls?.length);
 
       let senderName = message.nickname || "익명";
@@ -2237,10 +2267,22 @@ export default function ChattingPage() {
       setIsChatBuliActive(false);
       return;
     }
-    if (e.key === "Escape" && isSlashMenuOpen) {
-      e.preventDefault();
-      setIsSlashMenuOpen(false);
-      return;
+    if (e.key === "Escape") {
+      if (isSlashMenuOpen) {
+        e.preventDefault();
+        setIsSlashMenuOpen(false);
+        return;
+      }
+      if (editingMessage) {
+        e.preventDefault();
+        handleCancelEdit();
+        return;
+      }
+      if (replyTarget) {
+        e.preventDefault();
+        setReplyTarget(null);
+        return;
+      }
     }
     if (e.key === "Enter" && !e.shiftKey) {
       if (e.nativeEvent.isComposing) {
@@ -2270,6 +2312,47 @@ export default function ChattingPage() {
       return;
     }
     const trimmedInput = inputValue.trim();
+
+    // 0. 메시지 수정 처리
+    if (editingMessage) {
+      if (!trimmedInput) {
+        alert("수정할 메시지를 입력해주세요.");
+        return;
+      }
+
+      if (trimmedInput === editingMessage.content) {
+        handleCancelEdit();
+        return;
+      }
+
+      const targetMsgId = editingMessage.id;
+      try {
+        if (chatType === "roommate") {
+          await updateRoommateChatMessage(roomId, targetMsgId, trimmedInput);
+        } else {
+          await updateOpenChatMessage(roomId, targetMsgId, trimmedInput);
+        }
+
+        setMessageList((prev) =>
+          prev.map((msg) =>
+            msg.id === targetMsgId
+              ? {
+                  ...msg,
+                  content: trimmedInput,
+                  isEdited: true,
+                }
+              : msg,
+          ),
+        );
+      } catch (error) {
+        console.error("메시지 수정 실패:", error);
+        alert("메시지 수정에 실패했습니다. 다시 시도해 주세요.");
+      } finally {
+        handleCancelEdit();
+      }
+      return;
+    }
+
     if (!trimmedInput && !isChatBuliActive) return;
 
     if (trimmedInput.startsWith("[STUDENT_ID_SHARE_")) {
@@ -2555,6 +2638,12 @@ export default function ChattingPage() {
             : m,
         ),
       );
+      if (editingMessage?.id === selectedMessage.id) {
+        handleCancelEdit();
+      }
+      if (replyTarget?.messageId === selectedMessage.id) {
+        setReplyTarget(null);
+      }
       setDeleteConfirmOpen(false);
       setMessageMenuOpen(false);
     } catch (error) {
@@ -3681,12 +3770,17 @@ export default function ChattingPage() {
 
       {/* 하단 플로팅 입력 바 */}
       <S.FloatingInputContainer ref={menuContainerRef}>
-        {replyTarget && (
+        {editingMessage ? (
+          <ChatEditPreviewBar
+            message={editingMessage}
+            onCancel={handleCancelEdit}
+          />
+        ) : replyTarget ? (
           <ChatReplyPreviewBar
             replyTarget={replyTarget}
             onCancel={() => setReplyTarget(null)}
           />
-        )}
+        ) : null}
         <S.FloatingInputArea>
         <div style={{ position: "relative", display: "inline-flex" }}>
           {chatType === "roommate" &&
@@ -3799,7 +3893,9 @@ export default function ChattingPage() {
                 ? blockedChatMessage
                 : isChatBuliActive
                   ? "질문할 내용을 입력하세요"
-                  : "메시지 보내기 (/ 입력 시 기능 선택)"
+                  : editingMessage
+                    ? "수정할 메시지를 입력하세요"
+                    : "메시지 보내기 (/ 입력 시 기능 선택)"
             }
             disabled={isChatBlocked}
             ref={inputRef}
@@ -3848,7 +3944,9 @@ export default function ChattingPage() {
           setDeleteConfirmOpen(true);
         }}
         onEdit={() => {
-          // 추후 메시지 수정 기능 구현
+          if (selectedMessage) {
+            handleStartEdit(selectedMessage);
+          }
         }}
         onReport={() => {
           setMessageMenuOpen(false);

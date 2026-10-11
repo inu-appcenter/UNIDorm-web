@@ -125,4 +125,17 @@ export const deleteRoommateChatMessage = async (
   );
 };
 
+/** 룸메이트 채팅 메시지 수정 */
+export const updateRoommateChatMessage = async (
+  roomId: number,
+  messageId: number,
+  content: string,
+): Promise<AxiosResponse<void>> => {
+  return tokenInstance.patch(
+    `/roommate/chat/${roomId}/messages/${messageId}`,
+    { content },
+  );
+};
+
+
 
