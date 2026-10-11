@@ -82,7 +82,8 @@ export default function MobileDormitoryCardPage() {
   const fetchCached = useCallback(async () => {
     setIsInitialLoading(true);
     try {
-      const cached = await secureStorage.getItem<unknown>(STORAGE_KEY_DORMITORY_DATA);
+      const cachedResult = await secureStorage.getCacheWithTtl<unknown>(STORAGE_KEY_DORMITORY_DATA);
+      const cached = cachedResult?.data;
       const academicCached = await secureStorage.getItem<unknown>("portal_student_info");
       let academicParsed: any = null;
       if (academicCached) {
