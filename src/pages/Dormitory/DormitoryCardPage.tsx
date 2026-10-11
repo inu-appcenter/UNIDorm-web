@@ -155,6 +155,27 @@ export default function MobileDormitoryCardPage() {
     void fetchCached();
   }, [fetchCached]);
 
+  // 사생증 화면 캡처 및 녹화 방지 브릿지 연동
+  useEffect(() => {
+    try {
+      if (typeof window !== "undefined" && window.ReactNativeWebView) {
+        window.ReactNativeWebView.postMessage(
+          JSON.stringify({ type: "setScreenCapturePrevented", payload: { enabled: true } })
+        );
+      }
+    } catch {}
+
+    return () => {
+      try {
+        if (typeof window !== "undefined" && window.ReactNativeWebView) {
+          window.ReactNativeWebView.postMessage(
+            JSON.stringify({ type: "setScreenCapturePrevented", payload: { enabled: false } })
+          );
+        }
+      } catch {}
+    };
+  }, []);
+
   const profile = dormInfo?.profile;
   const rawFields = dormInfo?.rawFields;
 
