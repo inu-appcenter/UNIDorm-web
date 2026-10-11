@@ -1612,6 +1612,24 @@ export default function ChattingPage() {
           pendingReadCountsRef.current.delete(msg.messageId);
         }
 
+        // 백엔드 명세: 생성 이벤트(MESSAGE_CREATED)에는 unreadCount가 없음.
+        // MESSAGE_READ 수신 전이라도 참가자 수 기반으로 즉각 표시하여 깜빡임 및 카운트 누락 방지
+        if (
+          typeof initialUnreadCount !== "number" &&
+          (chatType === "open" || chatType === "personal")
+        ) {
+          if (participants.length > 1) {
+            initialUnreadCount = Math.max(0, participants.length - 1);
+          } else {
+            const lastMsg = [...prev]
+              .reverse()
+              .find((m) => typeof m.unreadCount === "number");
+            if (lastMsg && typeof lastMsg.unreadCount === "number") {
+              initialUnreadCount = lastMsg.unreadCount;
+            }
+          }
+        }
+
         const nextMessage: MessageType = {
           id: msg.messageId || Date.now(),
           sender: normalizedSenderId === userId ? "me" : "other",
@@ -1713,16 +1731,17 @@ export default function ChattingPage() {
       }
       setMessageList((current) =>
         current.map((message) => {
-          if (
-            message.id > messageId ||
-            typeof message.unreadCount !== "number"
-          ) {
+          if (message.id > messageId) {
             return message;
           }
 
           // 최신 메시지를 읽었다면 그보다 앞선 메시지도 읽은 상태다.
-          // 기존 값보다 커지지 않도록 줄어드는 방향으로만 소급 반영한다.
-          const nextUnreadCount = Math.min(message.unreadCount, unreadCount);
+          // 기존 값보다 커지지 않도록 줄어드는 방향으로만 소급 반영하며,
+          // 아직 unreadCount가 설정되지 않은 경우 서버의 unreadCount로 즉시 설정한다.
+          const nextUnreadCount =
+            typeof message.unreadCount === "number"
+              ? Math.min(message.unreadCount, unreadCount)
+              : unreadCount;
 
           return nextUnreadCount === message.unreadCount
             ? message
@@ -2562,7 +2581,12 @@ export default function ChattingPage() {
       linkedRoomName: message.linkedRoomName,
       linkedRoomDescription: message.linkedRoomDescription,
       linkedRoomMaxParticipants: message.linkedRoomMaxParticipants,
-      unreadCount: message.unreadCount,
+      unreadCount:
+        typeof message.unreadCount === "number"
+          ? message.unreadCount
+          : (chatType === "open" || chatType === "personal") && participants.length > 1
+            ? Math.max(0, participants.length - 1)
+            : undefined,
       isDeleted: Boolean(message.isDeleted),
       isEdited: Boolean(message.isEdited),
       replySource: message.replySource ?? null,
