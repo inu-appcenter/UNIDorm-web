@@ -71,4 +71,29 @@ describe("멀티 웹뷰 인증 세션 브로드캐스트 동기화 검증", () =
     expect(safeLocalStorage.getItem("accessToken")).toBe("native_updated_access_token");
     expect(safeLocalStorage.getItem("role")).toBe("ROLE_ADMIN");
   });
+
+  it("로그아웃(빈 토큰) 설정 시 사생/학적 온디바이스 캐시가 일괄 소거되어야 한다", async () => {
+    const { default: useUserStore } = await import("../useUserStore");
+    const { secureStorage } = await import("../../utils/secureStorage");
+
+    // 사생정보 및 학적정보 캐시 사전 저장
+    await secureStorage.setItem("portal_dormitory_student_info", { room: "301" });
+    await secureStorage.setItem("portal_student_info", { name: "홍길동" });
+    safeLocalStorage.setItem("portal_student_id", "202612345");
+
+    expect(await secureStorage.getItem("portal_dormitory_student_info")).not.toBeNull();
+    expect(safeLocalStorage.getItem("portal_student_id")).toBe("202612345");
+
+    // 로그아웃 수행
+    useUserStore.getState().setTokenInfo({
+      accessToken: "",
+      refreshToken: "",
+      role: "",
+    });
+
+    // 모든 포털 캐시가 삭제되었는지 확인
+    expect(await secureStorage.getItem("portal_dormitory_student_info")).toBeNull();
+    expect(await secureStorage.getItem("portal_student_info")).toBeNull();
+    expect(safeLocalStorage.getItem("portal_student_id")).toBeNull();
+  });
 });
