@@ -208,9 +208,17 @@ const dedupeDerivedRoomCards = (messages: MessageType[]): MessageType[] => {
             ? m.linkedRoomRecruitmentClosed
             : newStatus === "CLOSED";
 
-        result[existingIdx] = {
-          ...prevCard,
-          type: isReopen ? "REOPEN_CARD" : prevCard.type,
+        result.splice(existingIdx, 1);
+
+        seenDerivedRooms.forEach((idx, rId) => {
+          if (idx > existingIdx) {
+            seenDerivedRooms.set(rId, idx - 1);
+          }
+        });
+
+        const mergedCard: MessageType = {
+          ...m,
+          type: isReopen ? "REOPEN_CARD" : (m.type || prevCard.type),
           linkedRoomRecruitmentStatus: newStatus,
           linkedRoomRecruitmentClosed: isClosed,
           linkedRoomName: m.linkedRoomName || prevCard.linkedRoomName,
@@ -219,7 +227,9 @@ const dedupeDerivedRoomCards = (messages: MessageType[]): MessageType[] => {
           linkedRoomMaxParticipants:
             m.linkedRoomMaxParticipants ?? prevCard.linkedRoomMaxParticipants,
         };
-        continue;
+
+        seenDerivedRooms.set(m.linkedRoomId, result.length);
+        result.push(mergedCard);
       } else {
         seenDerivedRooms.set(m.linkedRoomId, result.length);
         result.push(m);
@@ -1730,17 +1740,32 @@ export default function ChattingPage() {
           ((msg as any).recruitmentClosed ? "CLOSED" : "OPEN");
 
         if (targetDerivedRoomId) {
-          setMessageList((prev) =>
-            prev.map((m) =>
-              m.linkedRoomId === targetDerivedRoomId
-                ? {
-                    ...m,
-                    linkedRoomRecruitmentStatus: newStatus,
-                    linkedRoomRecruitmentClosed: newStatus === "CLOSED",
-                  }
-                : m,
-            ),
-          );
+          setMessageList((prev) => {
+            const existingCardIdx = prev.findIndex(
+              (m) =>
+                (m.type === "ROOM_LINK" ||
+                  m.type === "REOPEN_CARD" ||
+                  Boolean(m.linkedRoomId)) &&
+                m.linkedRoomId === targetDerivedRoomId,
+            );
+            if (existingCardIdx === -1) return prev;
+
+            const currentCard = prev[existingCardIdx];
+            const filtered = prev.filter((_, idx) => idx !== existingCardIdx);
+            const updatedCard: MessageType = {
+              ...currentCard,
+              id: Date.now(),
+              linkedRoomRecruitmentStatus: newStatus,
+              linkedRoomRecruitmentClosed: newStatus === "CLOSED",
+              time: now.toLocaleTimeString("ko-KR", {
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: true,
+              }),
+              createdAt: now.toISOString(),
+            };
+            return [...filtered, updatedCard];
+          });
         }
         return;
       }
@@ -1902,7 +1927,7 @@ export default function ChattingPage() {
           }
         }
 
-        // 3. 파생 톡방 카드(ROOM_LINK, REOPEN_CARD 등)인 경우 기존 동일 파생 방 카드가 이미 있으면 새 카드를 추가하지 않고 in-place로 갱신
+        // 3. 파생 톡방 카드(ROOM_LINK, REOPEN_CARD 등)인 경우
         const targetLinkedRoomId =
           nextMessage.linkedRoomId ?? (msg as any).derivedRoomId;
         if (
@@ -1920,8 +1945,9 @@ export default function ChattingPage() {
               m.linkedRoomId === targetLinkedRoomId,
           );
           if (existingCardIdx !== -1) {
-            const copy = [...prev];
-            const currentCard = copy[existingCardIdx];
+            const currentCard = prev[existingCardIdx];
+            // 이전 위치의 카드를 제거하고, 최신 상태의 카드를 맨 아래(새 메시지 위치)에 추가
+            const filtered = prev.filter((_, idx) => idx !== existingCardIdx);
             const isReopen = nextMessage.type === "REOPEN_CARD";
             const newStatus: "OPEN" | "CLOSED" = isReopen
               ? "OPEN"
@@ -1933,9 +1959,9 @@ export default function ChattingPage() {
                     : currentCard.linkedRoomRecruitmentStatus ?? "OPEN"));
             const isClosed = newStatus === "CLOSED";
 
-            copy[existingCardIdx] = {
-              ...currentCard,
-              type: isReopen ? "REOPEN_CARD" : currentCard.type,
+            const updatedCard: MessageType = {
+              ...nextMessage,
+              type: isReopen ? "REOPEN_CARD" : (nextMessage.type || currentCard.type),
               linkedRoomRecruitmentStatus: newStatus,
               linkedRoomRecruitmentClosed: isClosed,
               linkedRoomName:
@@ -1947,7 +1973,7 @@ export default function ChattingPage() {
                 nextMessage.linkedRoomMaxParticipants ??
                 currentCard.linkedRoomMaxParticipants,
             };
-            return copy;
+            return [...filtered, updatedCard];
           }
         }
 
