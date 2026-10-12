@@ -199,37 +199,52 @@ const dedupeDerivedRoomCards = (messages: MessageType[]): MessageType[] => {
       const existingIdx = seenDerivedRooms.get(m.linkedRoomId);
       if (existingIdx !== undefined) {
         const prevCard = result[existingIdx];
-        const isReopen =
-          m.type === "REOPEN_CARD" || prevCard.type === "REOPEN_CARD";
-        const newStatus =
-          m.linkedRoomRecruitmentStatus ?? prevCard.linkedRoomRecruitmentStatus;
-        const isClosed =
-          m.linkedRoomRecruitmentClosed !== undefined
-            ? m.linkedRoomRecruitmentClosed
-            : newStatus === "CLOSED";
+        const isReopen = m.type === "REOPEN_CARD";
 
-        result.splice(existingIdx, 1);
+        if (isReopen) {
+          // 재모집: 이전 위치의 카드를 제거하고 최신 위치(현재)에 재모집 카드를 배치
+          result.splice(existingIdx, 1);
 
-        seenDerivedRooms.forEach((idx, rId) => {
-          if (idx > existingIdx) {
-            seenDerivedRooms.set(rId, idx - 1);
-          }
-        });
+          seenDerivedRooms.forEach((idx, rId) => {
+            if (idx > existingIdx) {
+              seenDerivedRooms.set(rId, idx - 1);
+            }
+          });
 
-        const mergedCard: MessageType = {
-          ...m,
-          type: isReopen ? "REOPEN_CARD" : (m.type || prevCard.type),
-          linkedRoomRecruitmentStatus: newStatus,
-          linkedRoomRecruitmentClosed: isClosed,
-          linkedRoomName: m.linkedRoomName || prevCard.linkedRoomName,
-          linkedRoomDescription:
-            m.linkedRoomDescription || prevCard.linkedRoomDescription,
-          linkedRoomMaxParticipants:
-            m.linkedRoomMaxParticipants ?? prevCard.linkedRoomMaxParticipants,
-        };
+          const mergedCard: MessageType = {
+            ...m,
+            type: "REOPEN_CARD",
+            linkedRoomRecruitmentStatus: "OPEN",
+            linkedRoomRecruitmentClosed: false,
+            linkedRoomName: m.linkedRoomName || prevCard.linkedRoomName,
+            linkedRoomDescription:
+              m.linkedRoomDescription || prevCard.linkedRoomDescription,
+            linkedRoomMaxParticipants:
+              m.linkedRoomMaxParticipants ?? prevCard.linkedRoomMaxParticipants,
+          };
 
-        seenDerivedRooms.set(m.linkedRoomId, result.length);
-        result.push(mergedCard);
+          seenDerivedRooms.set(m.linkedRoomId, result.length);
+          result.push(mergedCard);
+        } else {
+          // 모집 마감 또는 일반 상태 갱신: 원래 위치에서 상태만 갱신 (in-place)
+          const newStatus =
+            m.linkedRoomRecruitmentStatus ?? prevCard.linkedRoomRecruitmentStatus;
+          const isClosed =
+            m.linkedRoomRecruitmentClosed !== undefined
+              ? m.linkedRoomRecruitmentClosed
+              : newStatus === "CLOSED";
+
+          result[existingIdx] = {
+            ...prevCard,
+            linkedRoomRecruitmentStatus: newStatus,
+            linkedRoomRecruitmentClosed: isClosed,
+            linkedRoomName: m.linkedRoomName || prevCard.linkedRoomName,
+            linkedRoomDescription:
+              m.linkedRoomDescription || prevCard.linkedRoomDescription,
+            linkedRoomMaxParticipants:
+              m.linkedRoomMaxParticipants ?? prevCard.linkedRoomMaxParticipants,
+          };
+        }
       } else {
         seenDerivedRooms.set(m.linkedRoomId, result.length);
         result.push(m);
@@ -1751,20 +1766,35 @@ export default function ChattingPage() {
             if (existingCardIdx === -1) return prev;
 
             const currentCard = prev[existingCardIdx];
-            const filtered = prev.filter((_, idx) => idx !== existingCardIdx);
-            const updatedCard: MessageType = {
-              ...currentCard,
-              id: Date.now(),
-              linkedRoomRecruitmentStatus: newStatus,
-              linkedRoomRecruitmentClosed: newStatus === "CLOSED",
-              time: now.toLocaleTimeString("ko-KR", {
-                hour: "2-digit",
-                minute: "2-digit",
-                hour12: true,
-              }),
-              createdAt: now.toISOString(),
-            };
-            return [...filtered, updatedCard];
+            const isClosed = newStatus === "CLOSED";
+
+            if (isClosed) {
+              // 모집 마감: 원래 있던 위치에서 상태만 "CLOSED"로 변경 (in-place)
+              const copy = [...prev];
+              copy[existingCardIdx] = {
+                ...currentCard,
+                linkedRoomRecruitmentStatus: "CLOSED",
+                linkedRoomRecruitmentClosed: true,
+              };
+              return copy;
+            } else {
+              // 재모집: 이전 위치의 카드를 제거하고 맨 아래(새 메시지 위치)로 이동
+              const filtered = prev.filter((_, idx) => idx !== existingCardIdx);
+              const updatedCard: MessageType = {
+                ...currentCard,
+                id: Date.now(),
+                type: "REOPEN_CARD",
+                linkedRoomRecruitmentStatus: "OPEN",
+                linkedRoomRecruitmentClosed: false,
+                time: now.toLocaleTimeString("ko-KR", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  hour12: true,
+                }),
+                createdAt: now.toISOString(),
+              };
+              return [...filtered, updatedCard];
+            }
           });
         }
         return;
@@ -1946,34 +1976,55 @@ export default function ChattingPage() {
           );
           if (existingCardIdx !== -1) {
             const currentCard = prev[existingCardIdx];
-            // 이전 위치의 카드를 제거하고, 최신 상태의 카드를 맨 아래(새 메시지 위치)에 추가
-            const filtered = prev.filter((_, idx) => idx !== existingCardIdx);
-            const isReopen = nextMessage.type === "REOPEN_CARD";
+            const isReopen =
+              nextMessage.type === "REOPEN_CARD" ||
+              nextMessage.linkedRoomRecruitmentStatus === "OPEN" ||
+              nextMessage.linkedRoomRecruitmentClosed === false;
+
             const newStatus: "OPEN" | "CLOSED" = isReopen
               ? "OPEN"
               : (nextMessage.linkedRoomRecruitmentStatus ??
                 (nextMessage.linkedRoomRecruitmentClosed === true
                   ? "CLOSED"
-                  : nextMessage.linkedRoomRecruitmentClosed === false
-                    ? "OPEN"
-                    : currentCard.linkedRoomRecruitmentStatus ?? "OPEN"));
+                  : currentCard.linkedRoomRecruitmentStatus ?? "OPEN"));
             const isClosed = newStatus === "CLOSED";
 
-            const updatedCard: MessageType = {
-              ...nextMessage,
-              type: isReopen ? "REOPEN_CARD" : (nextMessage.type || currentCard.type),
-              linkedRoomRecruitmentStatus: newStatus,
-              linkedRoomRecruitmentClosed: isClosed,
-              linkedRoomName:
-                nextMessage.linkedRoomName || currentCard.linkedRoomName,
-              linkedRoomDescription:
-                nextMessage.linkedRoomDescription ||
-                currentCard.linkedRoomDescription,
-              linkedRoomMaxParticipants:
-                nextMessage.linkedRoomMaxParticipants ??
-                currentCard.linkedRoomMaxParticipants,
-            };
-            return [...filtered, updatedCard];
+            if (isClosed) {
+              // 모집 마감: 원래 있던 위치에서 상태만 "CLOSED"로 변경 (in-place)
+              const copy = [...prev];
+              copy[existingCardIdx] = {
+                ...currentCard,
+                linkedRoomRecruitmentStatus: "CLOSED",
+                linkedRoomRecruitmentClosed: true,
+                linkedRoomName:
+                  nextMessage.linkedRoomName || currentCard.linkedRoomName,
+                linkedRoomDescription:
+                  nextMessage.linkedRoomDescription ||
+                  currentCard.linkedRoomDescription,
+                linkedRoomMaxParticipants:
+                  nextMessage.linkedRoomMaxParticipants ??
+                  currentCard.linkedRoomMaxParticipants,
+              };
+              return copy;
+            } else {
+              // 재모집: 이전 위치의 카드를 제거하고 맨 아래(새 메시지 위치)에 추가
+              const filtered = prev.filter((_, idx) => idx !== existingCardIdx);
+              const updatedCard: MessageType = {
+                ...nextMessage,
+                type: "REOPEN_CARD",
+                linkedRoomRecruitmentStatus: "OPEN",
+                linkedRoomRecruitmentClosed: false,
+                linkedRoomName:
+                  nextMessage.linkedRoomName || currentCard.linkedRoomName,
+                linkedRoomDescription:
+                  nextMessage.linkedRoomDescription ||
+                  currentCard.linkedRoomDescription,
+                linkedRoomMaxParticipants:
+                  nextMessage.linkedRoomMaxParticipants ??
+                  currentCard.linkedRoomMaxParticipants,
+              };
+              return [...filtered, updatedCard];
+            }
           }
         }
 
