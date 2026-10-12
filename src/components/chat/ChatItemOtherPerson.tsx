@@ -20,6 +20,7 @@ type Props = {
   isDeleted?: boolean;
   isEdited?: boolean;
   replySource?: ReplySourceDto | null;
+  replyThumbnailUrl?: string | null;
   onQuoteClick?: (targetMessageId: number) => void;
   onMessageClick?: (rect?: DOMRect) => void;
   onImageClick?: (url: string) => void;
@@ -39,6 +40,7 @@ const ChatItemOtherPerson = ({
   isDeleted = false,
   isEdited = false,
   replySource,
+  replyThumbnailUrl,
   onQuoteClick,
   onMessageClick,
   onImageClick,
@@ -111,6 +113,7 @@ const ChatItemOtherPerson = ({
               <ChatReplyQuoteBox
                 replySource={replySource}
                 isMyMessage={false}
+                thumbnailUrl={replyThumbnailUrl}
                 onClick={() => onQuoteClick?.(replySource.replyToMessageId)}
               />
             )}
@@ -156,6 +159,7 @@ const ChatItemOtherPerson = ({
               <ChatReplyQuoteBox
                 replySource={replySource}
                 isMyMessage={false}
+                thumbnailUrl={replyThumbnailUrl}
                 onClick={() => onQuoteClick?.(replySource.replyToMessageId)}
               />
             )}

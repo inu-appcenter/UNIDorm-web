@@ -1,16 +1,18 @@
 import styled from "styled-components";
 import { ReplySourceDto } from "@/types/openchat";
-import { ArrowRight, CornerDownRight, Image as ImageIcon } from "lucide-react";
+import { MessageSquare, Image as ImageIcon } from "lucide-react";
 
 interface ChatReplyQuoteBoxProps {
   replySource: ReplySourceDto;
   isMyMessage?: boolean;
+  thumbnailUrl?: string | null;
   onClick?: () => void;
 }
 
 export default function ChatReplyQuoteBox({
   replySource,
   isMyMessage = false,
+  thumbnailUrl,
   onClick,
 }: ChatReplyQuoteBoxProps) {
   const isDeleted = replySource.status === "DELETED";
@@ -19,22 +21,25 @@ export default function ChatReplyQuoteBox({
     Boolean(replySource.replyToDerivedRoomId) ||
     replySource.status === "RECRUITING" ||
     replySource.status === "RECRUITMENT_CLOSED";
-  const isClosed = replySource.status === "RECRUITMENT_CLOSED";
 
-  let headerText = replySource.replyToSenderNickname || "익명";
+  const senderName = replySource.replyToSenderNickname || "익명";
+
+  let headerTitle = `${senderName}에게 답장`;
   if (isDerivedRoom) {
-    headerText = `[파생 톡방] ${replySource.contentPreview || "파생 톡방"}`;
+    headerTitle = replySource.contentPreview || "파생 톡방";
   }
 
   let bodyText = replySource.contentPreview || "";
-  let isImage = false;
+  let isImage = Boolean(thumbnailUrl);
+
   if (isDeleted) {
     bodyText = "삭제된 메시지입니다.";
   } else if (isNotFound) {
     bodyText = "원본 메시지를 확인할 수 없습니다.";
   } else if (
     bodyText === "사진" ||
-    /\.(jpeg|jpg|gif|png|webp)($|\?)/i.test(bodyText)
+    /\.(jpeg|jpg|gif|png|webp)($|\?)/i.test(bodyText) ||
+    Boolean(thumbnailUrl)
   ) {
     isImage = true;
     bodyText = "사진";
@@ -50,136 +55,126 @@ export default function ChatReplyQuoteBox({
         }
       }}
     >
-      <IndicatorBar $isMyMessage={isMyMessage} />
-      <ContentCol>
-        <HeaderRow>
-          <CornerDownRight
+      <HeaderRow $isMyMessage={isMyMessage}>
+        {isDerivedRoom && (
+          <MessageSquare
             size={12}
-            color={isMyMessage ? "rgba(255,255,255,0.8)" : "#1677ff"}
+            style={{
+              marginRight: 4,
+              flexShrink: 0,
+              display: "inline-block",
+              verticalAlign: "middle",
+            }}
           />
-          <SenderName $isMyMessage={isMyMessage}>{headerText}</SenderName>
-          {isDerivedRoom && (
-            <StatusBadge $isClosed={isClosed} $isMyMessage={isMyMessage}>
-              {isClosed ? "모집 마감" : "참여하기"}
-              {!isClosed && <ArrowRight size={10} style={{ marginLeft: 2 }} />}
-            </StatusBadge>
-          )}
-        </HeaderRow>
-        <BodyText
+        )}
+        <SenderTitle $isMyMessage={isMyMessage}>{headerTitle}</SenderTitle>
+      </HeaderRow>
+
+      <PreviewRow>
+        {thumbnailUrl ? (
+          <ThumbnailImg src={thumbnailUrl} alt="사진" />
+        ) : isImage ? (
+          <ImageIcon
+            size={13}
+            style={{
+              marginRight: 4,
+              flexShrink: 0,
+              opacity: isMyMessage ? 0.9 : 0.7,
+            }}
+          />
+        ) : null}
+        <PreviewText
           $isMyMessage={isMyMessage}
           $isDimmed={isDeleted || isNotFound}
         >
-          {isImage && (
-            <ImageIcon
-              size={12}
-              style={{
-                display: "inline-block",
-                verticalAlign: "middle",
-                marginRight: 4,
-              }}
-            />
-          )}
           {bodyText}
-        </BodyText>
-      </ContentCol>
+        </PreviewText>
+      </PreviewRow>
+
+      <DividerLine $isMyMessage={isMyMessage} />
     </Container>
   );
 }
 
 const Container = styled.div<{ $isMyMessage: boolean }>`
+  width: 100%;
+  box-sizing: border-box;
   display: flex;
-  align-items: stretch;
-  gap: 8px;
-  padding: 6px 10px;
-  margin-bottom: 6px;
-  border-radius: 8px;
-  background-color: ${({ $isMyMessage }) =>
-    $isMyMessage ? "rgba(255, 255, 255, 0.2)" : "rgba(0, 0, 0, 0.05)"};
+  flex-direction: column;
   cursor: pointer;
-  transition: opacity 0.15s ease;
   user-select: none;
+  margin-bottom: 6px;
+  transition: opacity 0.15s ease;
 
   &:hover {
-    opacity: 0.9;
+    opacity: 0.88;
   }
 
   &:active {
-    opacity: 0.75;
+    opacity: 0.72;
   }
 `;
 
-const IndicatorBar = styled.div<{ $isMyMessage: boolean }>`
-  width: 3px;
-  border-radius: 2px;
-  background-color: ${({ $isMyMessage }) =>
-    $isMyMessage ? "#ffffff" : "#1677ff"};
-  flex-shrink: 0;
-`;
-
-const ContentCol = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-  flex: 1;
-`;
-
-const HeaderRow = styled.div`
+const HeaderRow = styled.div<{ $isMyMessage: boolean }>`
   display: flex;
   align-items: center;
-  gap: 4px;
+  min-width: 0;
+  margin-bottom: 2px;
+  color: ${({ $isMyMessage }) =>
+    $isMyMessage ? "rgba(255, 255, 255, 0.75)" : "#8c8c8c"};
 `;
 
-const SenderName = styled.span<{ $isMyMessage: boolean }>`
+const SenderTitle = styled.span<{ $isMyMessage: boolean }>`
   font-family: "Pretendard", sans-serif;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 500;
   color: ${({ $isMyMessage }) =>
-    $isMyMessage ? "#ffffff" : "#1677ff"};
+    $isMyMessage ? "rgba(255, 255, 255, 0.75)" : "#8c8c8c"};
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 `;
 
-const BodyText = styled.span<{
+const PreviewRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+`;
+
+const ThumbnailImg = styled.img`
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background-color: rgba(0, 0, 0, 0.05);
+`;
+
+const PreviewText = styled.span<{
   $isMyMessage: boolean;
   $isDimmed: boolean;
 }>`
   font-family: "Pretendard", sans-serif;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 400;
-  line-height: 1.4;
+  line-height: 1.35;
   color: ${({ $isMyMessage, $isDimmed }) => {
     if ($isMyMessage) {
-      return $isDimmed ? "rgba(255, 255, 255, 0.6)" : "rgba(255, 255, 255, 0.95)";
+      return $isDimmed ? "rgba(255, 255, 255, 0.6)" : "rgba(255, 255, 255, 0.9)";
     }
-    return $isDimmed ? "#98a2b3" : "#475467";
+    return $isDimmed ? "#98a2b3" : "#667085";
   }};
   overflow: hidden;
   text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  word-break: break-all;
+  white-space: nowrap;
+  font-style: ${({ $isDimmed }) => ($isDimmed ? "italic" : "normal")};
 `;
 
-const StatusBadge = styled.span<{
-  $isClosed: boolean;
-  $isMyMessage: boolean;
-}>`
-  margin-left: auto;
-  font-size: 10px;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  padding: 1px 6px;
-  border-radius: 4px;
-  background-color: ${({ $isClosed, $isMyMessage }) => {
-    if ($isMyMessage) return "rgba(255,255,255,0.25)";
-    return $isClosed ? "#fee4e2" : "#e6f4ff";
-  }};
-  color: ${({ $isClosed, $isMyMessage }) => {
-    if ($isMyMessage) return "#ffffff";
-    return $isClosed ? "#f04438" : "#1677ff";
-  }};
+const DividerLine = styled.div<{ $isMyMessage: boolean }>`
+  width: 100%;
+  height: 1px;
+  margin-top: 6px;
+  background-color: ${({ $isMyMessage }) =>
+    $isMyMessage ? "rgba(255, 255, 255, 0.22)" : "rgba(0, 0, 0, 0.08)"};
 `;
