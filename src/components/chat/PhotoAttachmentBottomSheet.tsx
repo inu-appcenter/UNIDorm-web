@@ -9,7 +9,7 @@ interface Props {
   onSend: (files: File[]) => Promise<void>;
 }
 
-const ACCEPTED_IMAGE_TYPES = "image/jpeg,image/png,image/gif,image/webp";
+const ACCEPTED_IMAGE_TYPES = "image/*";
 
 export default function PhotoAttachmentBottomSheet({
   open,
@@ -29,6 +29,26 @@ export default function PhotoAttachmentBottomSheet({
     () => () => previews.forEach((preview) => URL.revokeObjectURL(preview)),
     [previews],
   );
+
+  const requestNativeCameraPermissionIfNeeded = () => {
+    try {
+      if ((window as any).AndroidBridge?.requestCameraPermission) {
+        (window as any).AndroidBridge.requestCameraPermission();
+      } else if (typeof (window as any).__intipRequestCameraPermission === "function") {
+        (window as any).__intipRequestCameraPermission();
+      }
+    } catch {}
+  };
+
+  const triggerCamera = () => {
+    requestNativeCameraPermissionIfNeeded();
+    cameraInputRef.current?.click();
+  };
+
+  const triggerAlbum = () => {
+    requestNativeCameraPermissionIfNeeded();
+    albumInputRef.current?.click();
+  };
 
   const addFiles = (event: ChangeEvent<HTMLInputElement>) => {
     const selected = Array.from(event.target.files ?? []).filter((file) =>
@@ -83,7 +103,7 @@ export default function PhotoAttachmentBottomSheet({
           <PreviewRow>
             <AddPhotoButton
               type="button"
-              onClick={() => albumInputRef.current?.click()}
+              onClick={triggerAlbum}
             >
               <ImageIcon size={24} />
             </AddPhotoButton>
@@ -113,13 +133,13 @@ export default function PhotoAttachmentBottomSheet({
           <SourceMenu>
             <SourceButton
               type="button"
-              onClick={() => cameraInputRef.current?.click()}
+              onClick={triggerCamera}
             >
               <Camera size={18} /> 카메라
             </SourceButton>
             <SourceButton
               type="button"
-              onClick={() => albumInputRef.current?.click()}
+              onClick={triggerAlbum}
             >
               <ImageIcon size={18} /> 앨범
             </SourceButton>
@@ -276,5 +296,9 @@ const SourceButton = styled.button`
   }
 `;
 const HiddenInput = styled.input`
-  display: none;
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
 `;
