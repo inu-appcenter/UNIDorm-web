@@ -41,8 +41,8 @@ const Overlay = styled.div`
 
 const CloseButton = styled.button`
   position: absolute;
-  top: max(16px, calc(env(safe-area-inset-top, 0px) + 12px));
-  right: max(16px, calc(env(safe-area-inset-right, 0px) + 12px));
+  top: max(16px, calc(var(--safe-area-top, 0px) + 12px));
+  right: max(16px, calc(var(--safe-area-right, 0px) + 12px));
   background: rgba(0, 0, 0, 0.65);
   border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: 50%;
@@ -75,14 +75,14 @@ const ImageContainer = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: calc(env(safe-area-inset-top, 0px) + 56px) 16px
-    calc(env(safe-area-inset-bottom, 0px) + 24px);
+  padding: calc(var(--safe-area-top, 0px) + 56px) 16px
+    calc(var(--safe-area-bottom, 0px) + 24px);
   box-sizing: border-box;
 `;
 
 const FullImage = styled.img`
   max-width: 100%;
-  max-height: calc(88vh - env(safe-area-inset-top, 0px));
+  max-height: calc(88vh - var(--safe-area-top, 0px));
   object-fit: contain;
   border-radius: 8px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);

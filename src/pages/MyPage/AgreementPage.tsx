@@ -209,7 +209,7 @@ const ButtonWrapper = styled.div`
   position: fixed;
   bottom: 0;
   left: 0;
-  padding: 16px;
+  padding: 16px 16px calc(16px + var(--safe-area-bottom, 0px));
   box-sizing: border-box;
   background: rgba(244, 244, 244, 0.6);
   backdrop-filter: blur(10px);

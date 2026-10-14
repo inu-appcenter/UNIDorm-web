@@ -1,11 +1,15 @@
 import { TokenInfo, UserInfo } from "@/types/members";
 import { create } from "zustand";
 import { identifyUser } from "@/utils/mixpanel";
+import { appBridge } from "@/utils/appBridgeAdapter";
+import { broadcastSync } from "@/stores/middleware/broadcastSync";
+import { safeLocalStorage } from "@/utils/safeStorage";
+import { secureStorage } from "@/utils/secureStorage";
 
 interface UserState {
   tokenInfo: TokenInfo;
   userInfo: UserInfo;
-  setTokenInfo: (tokenInfo: TokenInfo) => void;
+  setTokenInfo: (tokenInfo: TokenInfo, options?: { fromNative?: boolean }) => void;
   setUserInfo: (userInfo: UserInfo) => void;
   setLoading: (isLoading: boolean) => void;
   isLoading: boolean;
@@ -14,29 +18,25 @@ interface UserState {
 // localStorage에서 tokenInfo 불러오기
 const getTokenInfoFromStorage = (): TokenInfo => {
   return {
-    accessToken: localStorage.getItem("accessToken") || "",
-    refreshToken: localStorage.getItem("refreshToken") || "",
-    role: localStorage.getItem("role") || "",
+    accessToken: safeLocalStorage.getItem("accessToken") || "",
+    refreshToken: safeLocalStorage.getItem("refreshToken") || "",
+    role: safeLocalStorage.getItem("role") || "",
   };
 };
 
 // localStorage에서 userInfo 불러오기
 const getUserInfoFromStorage = (): UserInfo => {
-  const stored = localStorage.getItem("userInfo");
+  const stored = safeLocalStorage.getItem("userInfo");
 
-  // JSON.parse(stored)를 반환하기 전에 UserInfo 타입 단언을 하는 것이 일반적입니다.
-  // 여기서는 'stored'가 있을 경우 파싱된 값이 UserInfo 구조를 따른다고 가정합니다.
   if (stored) {
     try {
       const parsed = JSON.parse(stored);
       return parsed as UserInfo;
     } catch (e) {
       console.error("Error parsing user info from storage:", e);
-      // 파싱 실패 시 기본값 반환
     }
   }
 
-  // localStorage에 없거나 파싱에 실패했을 때, 새로운 UserInfo 인터페이스에 맞춘 기본 객체 반환
   return {
     id: 0,
     name: "",
@@ -45,43 +45,98 @@ const getUserInfoFromStorage = (): UserInfo => {
     college: "",
     reportedCount: 0,
     hasTimeTableImage: false,
-    hasUnreadNotifications: false, // 새로 추가된 필드
-    termsAgreed: false, // 새로 추가된 필드
-    privacyAgreed: false, // 새로 추가된 필드
+    hasUnreadNotifications: false,
+    termsAgreed: false,
+    privacyAgreed: false,
     roommateCheckList: false,
   };
 };
 
-const useUserStore = create<UserState>((set) => ({
-  tokenInfo: getTokenInfoFromStorage(),
-  userInfo: getUserInfoFromStorage(),
-  setTokenInfo: (tokenInfo) => {
-    set(() => ({ tokenInfo, isLoading: true }));
-    localStorage.setItem("accessToken", tokenInfo.accessToken);
-    localStorage.setItem("refreshToken", tokenInfo.refreshToken);
-    localStorage.setItem("role", tokenInfo.role);
-  },
-  setUserInfo: (userInfo: UserInfo) => {
-    set({ userInfo, isLoading: false });
-    localStorage.setItem("userInfo", JSON.stringify(userInfo));
+const useUserStore = create<UserState>()(
+  broadcastSync<UserState>({
+    // 멀티 웹뷰 환경에서 로그인/로그아웃 화면이 별도 서브 웹뷰(mode="sub")로
+    // 열리는 경우, 그 웹뷰에서 인증 상태가 변경되어도 루트 웹뷰의 Zustand 스토어는
+    // In-Memory 상태라 갱신되지 않는 문제를 해결하기 위해 BroadcastChannel을 통해 실시간 동기화합니다.
+    name: "user-store-sync",
+    partialize: (state) => ({ tokenInfo: state.tokenInfo, userInfo: state.userInfo }),
+    onReceive: (partial) => {
+      if (partial.tokenInfo) {
+        safeLocalStorage.setItem("accessToken", partial.tokenInfo.accessToken || "");
+        safeLocalStorage.setItem("refreshToken", partial.tokenInfo.refreshToken || "");
+        safeLocalStorage.setItem("role", partial.tokenInfo.role || "");
+        // 원격 웹뷰에서 로그아웃된 경우에도 사생/학적 캐시 일괄 소거
+        if (!partial.tokenInfo.accessToken) {
+          secureStorage.clearAllPortalCaches();
+        }
+      }
+      if (partial.userInfo) {
+        safeLocalStorage.setItem("userInfo", JSON.stringify(partial.userInfo));
+        if (partial.userInfo.id && partial.userInfo.id !== 0) {
+          identifyUser(String(partial.userInfo.id), {
+            $name: partial.userInfo.name,
+            dormType: partial.userInfo.dormType,
+            college: partial.userInfo.college,
+            reportedCount: partial.userInfo.reportedCount,
+            studentNumber: partial.userInfo.studentNumber,
+            hasTimeTableImage: partial.userInfo.hasTimeTableImage,
+            roommateCheckList: partial.userInfo.roommateCheckList,
+          });
+        }
+      }
+    },
+  })((set) => ({
+    tokenInfo: getTokenInfoFromStorage(),
+    userInfo: getUserInfoFromStorage(),
+    setTokenInfo: (tokenInfo, options) => {
+      set(() => ({ tokenInfo, isLoading: true }));
+      safeLocalStorage.setItem("accessToken", tokenInfo.accessToken);
+      safeLocalStorage.setItem("refreshToken", tokenInfo.refreshToken);
+      safeLocalStorage.setItem("role", tokenInfo.role);
 
-    if (!userInfo.id || userInfo.id === 0) return;
-    const userId = String(userInfo.id);
+      // 토큰이 비어있으면 (로그아웃 신호) 사생/학적 온디바이스 캐시 일괄 소거
+      if (!tokenInfo.accessToken) {
+        secureStorage.clearAllPortalCaches();
+      }
 
-    identifyUser(userId, {
-      $name: userInfo.name,
-      dormType: userInfo.dormType,
-      college: userInfo.college,
-      reportedCount: userInfo.reportedCount,
-      studentNumber: userInfo.studentNumber,
-      hasTimeTableImage: userInfo.hasTimeTableImage,
-      roommateCheckList: userInfo.roommateCheckList,
-    });
-  },
-  setLoading: (isLoading: boolean) => {
-    set({ isLoading });
-  },
-  isLoading: true, // 초기 상태를 true로 설정
-}));
+      // 네이티브에서 수신한 업데이트가 아닐 때만 네이티브 브릿지로 동기화 (무한 루프 방지)
+      if (!options?.fromNative) {
+        if (tokenInfo.accessToken) {
+          appBridge.syncTokenInfo(tokenInfo);
+          appBridge.loginSuccess();
+        } else {
+          appBridge.syncTokenInfo(tokenInfo);
+        }
+      }
+    },
+    setUserInfo: (userInfo: UserInfo) => {
+      set({ userInfo, isLoading: false });
+      safeLocalStorage.setItem("userInfo", JSON.stringify(userInfo));
+
+      if (!userInfo.id || userInfo.id === 0) return;
+      const userId = String(userInfo.id);
+
+      identifyUser(userId, {
+        $name: userInfo.name,
+        dormType: userInfo.dormType,
+        college: userInfo.college,
+        reportedCount: userInfo.reportedCount,
+        studentNumber: userInfo.studentNumber,
+        hasTimeTableImage: userInfo.hasTimeTableImage,
+        roommateCheckList: userInfo.roommateCheckList,
+      });
+    },
+    setLoading: (isLoading: boolean) => {
+      set({ isLoading });
+    },
+    isLoading: true,
+  }))
+);
+
+// 네이티브에서 자체 갱신하거나 릴레이한 JWT를 스토어 및 localStorage에 반영
+if (typeof window !== "undefined") {
+  appBridge.onTokenInfoUpdated((tokenInfo) => {
+    useUserStore.getState().setTokenInfo(tokenInfo, { fromNative: true });
+  });
+}
 
 export default useUserStore;

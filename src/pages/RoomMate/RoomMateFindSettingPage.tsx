@@ -329,7 +329,7 @@ export default function RoomMateFilterPage() {
 }
 
 const Wrapper = styled.div`
-  padding-bottom: 100px;
+  padding-bottom: calc(100px + var(--safe-area-bottom, 0px));
   padding-top: 4px;
   display: flex;
   flex-direction: column;
@@ -342,7 +342,7 @@ const ProgressBarContainer = styled.div`
   height: 4px;
   background-color: #eee;
   position: fixed;
-  top: 70px;
+  top: calc(70px + var(--safe-area-top, 0px));
   left: 0;
   z-index: 1000;
   display: flex;
@@ -402,12 +402,12 @@ const BottomNav = styled.div`
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 80px;
+  height: calc(80px + var(--safe-area-bottom, 0px));
   background: #fff;
   border-top: 1px solid #eee;
   display: flex;
   align-items: center;
-  padding: 0 16px;
+  padding: 0 16px var(--safe-area-bottom, 0px);
   gap: 12px;
   z-index: 10;
   box-sizing: border-box;

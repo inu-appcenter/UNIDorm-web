@@ -282,8 +282,8 @@ export default RoomMateBottomBar;
 const RoomMateBottomBarWrapper = styled.div`
   width: 100%;
   max-width: 480px;
-  height: calc(64px + env(safe-area-inset-bottom, 0px));
-  padding: 8px 16px calc(24px + env(safe-area-inset-bottom, 0px));
+  height: calc(64px + var(--safe-area-bottom, 0px));
+  padding: 8px 16px calc(24px + var(--safe-area-bottom, 0px));
   box-sizing: border-box;
   position: fixed;
   bottom: 0;

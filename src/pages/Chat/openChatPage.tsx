@@ -17,6 +17,7 @@ import ChatAvatar from "@/components/chat/ChatAvatar";
 import OpenChatTab from "@/components/chat/OpenChatTab";
 import OpenChatEmptyState from "@/components/chat/OpenChatEmptyState";
 import OpenChatJoinModal from "@/components/modal/OpenChatJoinModal";
+import RecruitmentClosedModal from "@/components/modal/RecruitmentClosedModal";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { OpenChatRoom, OpenChatTab as OpenChatTabType } from "@/types/openchat";
 import { RoommateChatRoom } from "@/types/chats";
@@ -168,6 +169,8 @@ export default function OpenChatPage() {
   const [selectedRoom, setSelectedRoom] = useState<OpenChatRoom | null>(null);
 
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
+  const [isRecruitmentClosedModalOpen, setIsRecruitmentClosedModalOpen] =
+    useState(false);
   const [isJoining, setIsJoining] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -363,6 +366,16 @@ export default function OpenChatPage() {
       return;
     }
 
+    const isClosed =
+      room.recruitmentStatus === "CLOSED" ||
+      room.isJoinable === false ||
+      (room as any).recruitmentClosed === true;
+
+    if (isClosed) {
+      setIsRecruitmentClosedModalOpen(true);
+      return;
+    }
+
     setSelectedRoom(room);
     setIsJoinModalOpen(true);
   };
@@ -448,9 +461,22 @@ export default function OpenChatPage() {
       includesSearchQuery(room.description) ||
       includesSearchQuery(formatChatMessagePreview(room.lastMessage)),
   );
-  const latestPublicRooms = [...filteredRooms].sort(
-    (firstRoom, secondRoom) => secondRoom.roomId - firstRoom.roomId,
-  );
+  const latestPublicRooms = [...filteredRooms].sort((firstRoom, secondRoom) => {
+    const firstClosed =
+      firstRoom.recruitmentStatus === "CLOSED" ||
+      firstRoom.isJoinable === false ||
+      (firstRoom as any).recruitmentClosed === true;
+    const secondClosed =
+      secondRoom.recruitmentStatus === "CLOSED" ||
+      secondRoom.isJoinable === false ||
+      (secondRoom as any).recruitmentClosed === true;
+
+    if (firstClosed !== secondClosed) {
+      return Number(firstClosed) - Number(secondClosed);
+    }
+
+    return secondRoom.roomId - firstRoom.roomId;
+  });
 
   const categoryFilteredRoommateRooms =
     myChatRoomFilter === "ALL" || myChatRoomFilter === "ROOMMATE"
@@ -483,6 +509,17 @@ export default function OpenChatPage() {
     const pinnedDifference =
       Number(isPinnedRoommate(b)) - Number(isPinnedRoommate(a));
     if (pinnedDifference !== 0) return pinnedDifference;
+
+    const isClosedRoom = (room: typeof a | typeof b): boolean =>
+      room.itemType === "open" &&
+      Boolean(
+        (room as OpenChatRoom).recruitmentStatus === "CLOSED" ||
+          (room as OpenChatRoom).isJoinable === false ||
+          (room as any).recruitmentClosed === true,
+      );
+    const closedDifference =
+      Number(isClosedRoom(a)) - Number(isClosedRoom(b));
+    if (closedDifference !== 0) return closedDifference;
 
     const timeA =
       a.itemType === "roommate"
@@ -647,6 +684,11 @@ export default function OpenChatPage() {
         onJoin={handleJoinRoom}
         isJoining={isJoining}
       />
+
+      <RecruitmentClosedModal
+        open={isRecruitmentClosedModalOpen}
+        onClose={() => setIsRecruitmentClosedModalOpen(false)}
+      />
     </PageContainer>
   );
 }
@@ -747,8 +789,8 @@ const RoomList = styled.div`
 
 const CreateButton = styled.button`
   position: fixed;
-  right: max(16px, env(safe-area-inset-right));
-  bottom: calc(88px + env(safe-area-inset-bottom));
+  right: max(16px, var(--safe-area-right, 0px));
+  bottom: calc(88px + var(--safe-area-bottom, 0px));
   z-index: 100;
   width: 62px;
   height: 62px;

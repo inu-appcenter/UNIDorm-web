@@ -131,35 +131,43 @@ const MyPage = () => {
             </OverlayMessage>
           )}
         </ProtectedMenuWrapper>
-        <Divider as={motion.div} variants={fadeInUp} />
-
-        <ProtectedMenuWrapper
-          disabled={isProtected}
-          as={motion.div}
-          variants={fadeInUp}
-        >
-          <ProtectedContent disabled={isProtected}>
-            <MenuGroup
-              title={menuGroups[1].title}
-              menus={menuGroups[1].menus}
-            />
-          </ProtectedContent>
-          {isProtected && (
-            <OverlayMessage
+        {menuGroups.slice(0, -1).map((group, idx) => (
+          <div key={group.title || idx} style={{ display: "contents" }}>
+            <ProtectedMenuWrapper
+              disabled={isProtected}
               as={motion.div}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.4 }}
+              variants={fadeInUp}
             >
-              <OverlayChip>{overlayText}</OverlayChip>
-            </OverlayMessage>
-          )}
-        </ProtectedMenuWrapper>
-        <Divider as={motion.div} variants={fadeInUp} />
+              <ProtectedContent disabled={isProtected}>
+                <MenuGroup
+                  title={group.title}
+                  menus={group.menus}
+                />
+              </ProtectedContent>
+              {isProtected && (
+                <OverlayMessage
+                  as={motion.div}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.35 + idx * 0.05 }}
+                >
+                  <OverlayChip>{overlayText}</OverlayChip>
+                </OverlayMessage>
+              )}
+            </ProtectedMenuWrapper>
+            <Divider as={motion.div} variants={fadeInUp} />
+          </div>
+        ))}
 
-        <motion.div variants={fadeInUp}>
-          <MenuGroup title={menuGroups[2].title} menus={menuGroups[2].menus} />
-        </motion.div>
+        {/* 고객지원 섹션 */}
+        {menuGroups.length > 0 && (
+          <motion.div variants={fadeInUp}>
+            <MenuGroup
+              title={menuGroups[menuGroups.length - 1].title}
+              menus={menuGroups[menuGroups.length - 1].menus}
+            />
+          </motion.div>
+        )}
       </MenuGroupsWrapper>
       <BottomBar />
     </MyPageWrapper>

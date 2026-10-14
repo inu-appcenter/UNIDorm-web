@@ -66,8 +66,10 @@ const Content = styled(({ overlay, ...props }) => (
   border-top-right-radius: 28px;
   box-shadow: 0 -12px 32px rgba(15, 23, 42, 0.14);
   outline: none;
+  padding-bottom: var(--safe-area-bottom, 0px);
 
   @media (min-width: 768px) {
+    padding-bottom: 0;
     left: 50%;
     right: auto;
     bottom: 50%;

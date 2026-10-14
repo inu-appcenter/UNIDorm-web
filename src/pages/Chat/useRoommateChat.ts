@@ -10,6 +10,7 @@ import type { RoommateChat } from "@/types/chats";
 interface ChatMessage {
   roommateChattingRoomId: number;
   content: string;
+  replyToMessageId?: number | null;
 }
 
 type MessageId = string | number;
@@ -193,8 +194,18 @@ export const useRoommateChat = ({
         messageSubscriptionRef.current = client.subscribe(
           `/sub/roommate/chat/${roomId}`,
           (frame) => {
-            const payload = parseFrameBody(frame);
-            if (payload) onMessageRef.current(payload as RoommateChat);
+            const payload = parseFrameBody(frame) as any;
+            if (!payload) return;
+
+            if (payload.eventType === "MESSAGE_READ") {
+              const ids = payload.messageIds;
+              if (Array.isArray(ids)) {
+                onReadRef.current?.({ messageIds: ids });
+              }
+              return;
+            }
+
+            onMessageRef.current(payload as RoommateChat);
           },
           authorizationHeaders,
         );
@@ -264,7 +275,10 @@ export const useRoommateChat = ({
   }, [connect]);
 
   const sendMessage = useCallback(
-    async (content: string): Promise<boolean> => {
+    async (
+      content: string,
+      replyToMessageId?: number | null,
+    ): Promise<boolean> => {
       const isReady = await waitForConnection(8000);
       if (!isReady || !clientRef.current?.connected) {
         console.warn("❌ Roommate WebSocket is not connected after retry.");
@@ -274,6 +288,7 @@ export const useRoommateChat = ({
       const message: ChatMessage = {
         roommateChattingRoomId: roomId,
         content,
+        ...(replyToMessageId ? { replyToMessageId } : {}),
       };
 
       try {

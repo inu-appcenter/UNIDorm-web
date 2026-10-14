@@ -200,3 +200,30 @@ export const sendOpenChatBotMessage = (
   content: string,
 ): Promise<AxiosResponse<void>> =>
   tokenInstance.post(`/admin/open-chat-rooms/${roomId}/bot`, { content });
+
+/** 오픈채팅 메시지 삭제 (모두에게 삭제) */
+export const deleteOpenChatMessage = (
+  roomId: number,
+  messageId: number,
+): Promise<AxiosResponse<void>> =>
+  tokenInstance.delete(`/open-chat-rooms/${roomId}/messages/${messageId}`);
+
+/** 오픈채팅 메시지 수정 */
+export const updateOpenChatMessage = (
+  roomId: number,
+  messageId: number,
+  content: string,
+): Promise<AxiosResponse<OpenChatMessage>> =>
+  tokenInstance.patch(`/open-chat-rooms/${roomId}/messages/${messageId}`, {
+    content,
+  });
+
+/** 파생 톡방 모집 상태 변경 (OPEN ↔ CLOSED) */
+export const updateOpenChatRecruitmentStatus = (
+  roomId: number,
+  status: "OPEN" | "CLOSED",
+): Promise<AxiosResponse<void>> =>
+  tokenInstance.patch(`/open-chat-rooms/${roomId}/recruitment-status`, {
+    status,
+  });
+
