@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import styled, { keyframes } from "styled-components";
 import { useSetHeader } from "@/hooks/useSetHeader";
+import { mixpanelTrack } from "@/utils/mixpanel";
 import {
   DormitoryStudentInfo,
   DormitoryInOutItem,
@@ -354,6 +355,9 @@ export default function MobileDormitoryCardPage() {
   // 활성 사생증 카드가 표시될 때만 FLAG_SECURE를 켜고, 비사생 안내 화면이거나 화면 이탈 시 즉시 해제
   const {
     isCurrentlyResident,
+    isPastRecord,
+    isExplicitlyTerminated,
+    hasValidDormAssignment,
     year,
     term,
     status,
@@ -367,6 +371,8 @@ export default function MobileDormitoryCardPage() {
 
   const profile = dormInfo?.profile;
   const rawFields = dormInfo?.rawFields;
+
+  const hasTrackedOutcomeRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (isCurrentlyResident) {
@@ -470,6 +476,60 @@ export default function MobileDormitoryCardPage() {
     (fallbackAcademic && (fallbackAcademic.studentId || fallbackAcademic.studentName || fallbackAcademic.profile?.studentId))
   );
 
+  // 1. 페이지 진입 트래킹
+  useEffect(() => {
+    mixpanelTrack.dormitoryCardPageViewed();
+  }, []);
+
+  // 2. 발급 상태 결과 트래킹 (온보딩 노출 / 비사생 차단 / 발급 성공)
+  useEffect(() => {
+    if (isInitialLoading) return;
+
+    if (!hasValidData) {
+      if (hasTrackedOutcomeRef.current !== "onboarding") {
+        hasTrackedOutcomeRef.current = "onboarding";
+        mixpanelTrack.dormitoryCardOnboardingViewed();
+      }
+      return;
+    }
+
+    if (!isCurrentlyResident) {
+      if (hasTrackedOutcomeRef.current !== "non_resident") {
+        hasTrackedOutcomeRef.current = "non_resident";
+        const reason = isPastRecord
+          ? "과거학기"
+          : isExplicitlyTerminated
+          ? "퇴사"
+          : !hasValidDormAssignment
+          ? "미배정"
+          : "기타";
+        mixpanelTrack.dormitoryCardNonResidentBlocked({ reason });
+      }
+      return;
+    }
+
+    if (isCurrentlyResident) {
+      if (hasTrackedOutcomeRef.current !== "success") {
+        hasTrackedOutcomeRef.current = "success";
+        mixpanelTrack.dormitoryCardIssueSuccess({
+          dormitoryType: resolvedDormType,
+          year,
+          term,
+        });
+      }
+    }
+  }, [
+    isInitialLoading,
+    hasValidData,
+    isCurrentlyResident,
+    isPastRecord,
+    isExplicitlyTerminated,
+    hasValidDormAssignment,
+    resolvedDormType,
+    year,
+    term,
+  ]);
+
   if (!isInitialLoading && !hasValidData) {
     return (
       <PageContainer as="main" $isScrollable>
@@ -541,7 +601,10 @@ export default function MobileDormitoryCardPage() {
               <CapsuleButton
                 variant="secondary"
                 fullWidth
-                onClick={() => navigate(PATHS.HOME)}
+                onClick={() => {
+                  mixpanelTrack.dormitoryCardNonResidentHomeClicked();
+                  navigate(PATHS.HOME);
+                }}
               >
                 홈으로 돌아가기
               </CapsuleButton>
@@ -581,7 +644,10 @@ export default function MobileDormitoryCardPage() {
       <BottomButtonWrapper>
         <DormitoryInfoButton
           type="button"
-          onClick={() => navigate(PATHS.DORMITORY_INFO)}
+          onClick={() => {
+            mixpanelTrack.dormitoryCardInfoButtonClicked("사생증화면");
+            navigate(PATHS.DORMITORY_INFO);
+          }}
         >
           <span>사생정보조회(학생)</span>
           <ChevronRight size={18} color="var(--interactive-primary, #3182F6)" />
