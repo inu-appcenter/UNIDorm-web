@@ -4,6 +4,7 @@ import styled from "styled-components";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import {
   DormitoryStudentInfo,
+  DormitoryInOutItem,
   parseDormitoryStudentInfo,
 } from "@/utils/ssvParser";
 import { secureStorage } from "@/utils/secureStorage";
@@ -80,6 +81,140 @@ function formatSemesterTerm(term?: string): string {
   if (trimmed === "30" || trimmed === "3") return "여름학기";
   if (trimmed === "40" || trimmed === "4") return "겨울학기";
   return trimmed.endsWith("학기") ? trimmed : `${trimmed}학기`;
+}
+
+export interface ResidentEvaluationResult {
+  isCurrentlyResident: boolean;
+  isAdmittedStatus: boolean;
+  hasValidDormAssignment: boolean;
+  isPastRecord: boolean;
+  isExplicitlyTerminated: boolean;
+  year: string;
+  term: string;
+  status: string;
+  rawStatus: string;
+  resolvedDormType: string;
+  resolvedDormBuilding: string;
+  studentDormNo: string;
+  roomNumber: string;
+  bedNumber: string;
+  lastHistory: DormitoryInOutItem | null;
+}
+
+export function evaluateDormitoryResidentStatus(
+  dormInfo: DormitoryStudentInfo | null,
+  overrideCurrentYear?: number
+): ResidentEvaluationResult {
+  const profile = dormInfo?.profile;
+  const rawFields = dormInfo?.rawFields;
+
+  const inOutList = Array.isArray(dormInfo?.inOutList) ? dormInfo.inOutList : [];
+
+  const year = profile?.year || dormInfo?.appliedYear || rawFields?.yy || inOutList[0]?.year || "";
+  const term = profile?.term || dormInfo?.appliedSemester || rawFields?.tmGbn || inOutList[0]?.term || "";
+
+  // 기본 사생정보의 당해 학기(year, term)와 정확히 일치하는 입퇴사 레코드 탐색
+  const currentSemesterInOut = inOutList.find(
+    (io) =>
+      io.year &&
+      year &&
+      io.year === year &&
+      io.term &&
+      term &&
+      (io.term === term || io.term.replace(/학기/g, "") === term.replace(/학기/g, ""))
+  );
+
+  const rawStatus =
+    currentSemesterInOut?.status ||
+    dormInfo?.status ||
+    profile?.rawFields?.dormLeavdormGbn ||
+    rawFields?.dormLeavdormGbn ||
+    inOutList[0]?.status ||
+    "";
+  const status = rawStatus ? mapInOutStatus(rawStatus) : "-";
+
+  const rawDormGbn =
+    profile?.dormitoryType ||
+    dormInfo?.dormitoryType ||
+    currentSemesterInOut?.dormitoryType ||
+    rawFields?.dormGbn ||
+    inOutList[0]?.dormitoryType ||
+    "";
+  const mappedDormName = mapDormitoryType(rawDormGbn);
+  const rawDormBd =
+    profile?.dormitoryBuilding ||
+    dormInfo?.dormitoryBuilding ||
+    rawFields?.dormBdNm ||
+    rawFields?.dormBdCd ||
+    "";
+
+  const resolvedDormType =
+    mappedDormName ||
+    (rawDormBd.includes("A동") || rawDormBd.includes("B동") ? "제2기숙사" : "") ||
+    "-";
+  const resolvedDormBuilding = rawDormBd || "";
+
+  const studentDormNo =
+    profile?.studentDormNo ||
+    dormInfo?.studentDormNo ||
+    currentSemesterInOut?.studentDormNo ||
+    rawFields?.domstuNo ||
+    rawFields?.domStuNo ||
+    inOutList[0]?.studentDormNo ||
+    "-";
+
+  const roomNumber = dormInfo?.roomNumber || rawFields?.roomNo || rawFields?.dormRoomNo || "";
+  const bedNumber = dormInfo?.bedNumber || rawFields?.bedNo || rawFields?.dormBedNo || "";
+
+  // 현재 활성 사생(정규입사) 여부 3중 교차 검증
+  // 1. 연도 유효성: 현재 연도 기준 2년 이상 지난 과거 학기 데이터 차단
+  const currentYearNum = overrideCurrentYear ?? new Date().getFullYear();
+  const dataYearNum = parseInt(year, 10);
+  const isPastRecord = Boolean(dataYearNum && dataYearNum < currentYearNum - 1);
+
+  // 2. 당해 학기 기숙사 유효 배정 정보(사생번호, 기숙사 구분) 확인
+  const hasValidDormAssignment = Boolean(
+    resolvedDormType && resolvedDormType !== "-" &&
+    studentDormNo && studentDormNo !== "-"
+  );
+
+  // 3. 입퇴사 상태 검증: 현재 학기에 명시적으로 퇴사(02 정규퇴사, 03 중도퇴사)된 경우 즉시 차단
+  const isExplicitlyTerminated = Boolean(
+    rawStatus === "02" ||
+    rawStatus === "정규퇴사" ||
+    rawStatus === "03" ||
+    rawStatus === "중도퇴사" ||
+    currentSemesterInOut?.status === "02" ||
+    currentSemesterInOut?.status === "03"
+  );
+
+  const isAdmittedStatus =
+    !isExplicitlyTerminated &&
+    (rawStatus === "01" || rawStatus === "정규입사" || hasValidDormAssignment);
+
+  // 최종 활성 사생 여부
+  const isCurrentlyResident = isAdmittedStatus && hasValidDormAssignment && !isPastRecord && !isExplicitlyTerminated;
+
+  // 가장 최근 과거 입퇴사 기록 (비사생 안내 카드 표시용: 정렬된 최신순 [0])
+  const lastHistory = inOutList[0] || null;
+
+  return {
+    isCurrentlyResident,
+    isAdmittedStatus,
+    hasValidDormAssignment,
+    isPastRecord,
+    isExplicitlyTerminated,
+    year,
+    term,
+    status,
+    rawStatus,
+    resolvedDormType,
+    resolvedDormBuilding,
+    studentDormNo,
+    roomNumber,
+    bedNumber,
+    lastHistory,
+  };
 }
 
 export default function MobileDormitoryCardPage() {
@@ -181,58 +316,21 @@ export default function MobileDormitoryCardPage() {
 
   // 사생증 화면 캡처 및 녹화 방지 브릿지 연동
   // 활성 사생증 카드가 표시될 때만 FLAG_SECURE를 켜고, 비사생 안내 화면이거나 화면 이탈 시 즉시 해제
+  const {
+    isCurrentlyResident,
+    year,
+    term,
+    status,
+    resolvedDormType,
+    resolvedDormBuilding,
+    studentDormNo,
+    roomNumber,
+    bedNumber,
+    lastHistory,
+  } = evaluateDormitoryResidentStatus(dormInfo);
+
   const profile = dormInfo?.profile;
   const rawFields = dormInfo?.rawFields;
-
-  const rawStatus =
-    dormInfo?.status ||
-    profile?.rawFields?.dormLeavdormGbn ||
-    rawFields?.dormLeavdormGbn ||
-    dormInfo?.inOutList?.[0]?.status ||
-    "";
-  const status = rawStatus ? mapInOutStatus(rawStatus) : "-";
-
-  const rawDormGbn = profile?.dormitoryType || rawFields?.dormGbn || dormInfo?.inOutList?.[0]?.dormitoryType || "";
-  const mappedDormName = mapDormitoryType(rawDormGbn);
-  const rawDormBd = profile?.dormitoryBuilding || rawFields?.dormBdNm || rawFields?.dormBdCd || dormInfo?.dormitoryBuilding || "";
-
-  const resolvedDormType =
-    mappedDormName ||
-    (rawDormBd.includes("A동") || rawDormBd.includes("B동") ? "제2기숙사" : "") ||
-    "-";
-  const resolvedDormBuilding = rawDormBd || "";
-
-  const studentDormNo =
-    profile?.studentDormNo ||
-    dormInfo?.studentDormNo ||
-    dormInfo?.inOutList?.[0]?.studentDormNo ||
-    rawFields?.domstuNo ||
-    rawFields?.domStuNo ||
-    "-";
-
-  const year = profile?.year || dormInfo?.appliedYear || dormInfo?.inOutList?.[0]?.year || rawFields?.yy || "";
-  const term = profile?.term || dormInfo?.appliedSemester || dormInfo?.inOutList?.[0]?.term || rawFields?.tmGbn || "";
-  const roomNumber = dormInfo?.roomNumber || rawFields?.roomNo || rawFields?.dormRoomNo || "";
-  const bedNumber = dormInfo?.bedNumber || rawFields?.bedNo || rawFields?.dormBedNo || "";
-
-  // 현재 활성 사생(정규입사) 여부 판별
-  // 1. 상태 코드가 명확히 "01" (정규입사)여야 함
-  const isAdmittedStatus = rawStatus === "01" || rawStatus === "정규입사";
-  // 2. 기숙사 배정 정보(사생번호, 기숙사 구분)가 유효해야 함
-  const hasValidDormAssignment = Boolean(
-    resolvedDormType && resolvedDormType !== "-" &&
-    studentDormNo && studentDormNo !== "-"
-  );
-  // 3. 연도 유효성: 현재 연도 기준 2년 이상 지난 과거 학기 데이터 차단
-  const currentYearNum = new Date().getFullYear();
-  const dataYearNum = parseInt(year, 10);
-  const isPastRecord = Boolean(dataYearNum && dataYearNum < currentYearNum - 1);
-
-  // 최종 활성 사생 여부
-  const isCurrentlyResident = isAdmittedStatus && hasValidDormAssignment && !isPastRecord;
-
-  // 가장 최근 과거 입퇴사 기록 (비사생 안내 카드 표시용)
-  const lastHistory = dormInfo?.inOutList?.[0] || null;
 
   useEffect(() => {
     if (isCurrentlyResident) {

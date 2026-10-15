@@ -439,7 +439,91 @@ describe("Academic SSV Parser (Web Centralized)", () => {
       expect(result.inOutList[0].term).toBe("20");
       expect(result.inOutList[0].status).toBe("02"); // 정규퇴사
     });
+
+    it("다학기 사생의 입퇴사 이력이 과거순(오름차순)으로 수신되어도 최신순(내림차순)으로 정렬되고 현재 학기 상태(01)가 status에 반영되어야 한다", () => {
+      const RECORD_SEP = "\x1e";
+      const UNIT_SEP = "\x1f";
+
+      const multiSemesterSsv = [
+        "ErrorCode:int=0",
+        "Dataset:DS_DMTY209",
+        `_RowType_${UNIT_SEP}yy${UNIT_SEP}tmGbn${UNIT_SEP}nm${UNIT_SEP}persNo${UNIT_SEP}dormGbn${UNIT_SEP}dormBdNm${UNIT_SEP}domstuNo`,
+        `N${UNIT_SEP}2026${UNIT_SEP}20${UNIT_SEP}이성빈${UNIT_SEP}202101504${UNIT_SEP}03${UNIT_SEP}B동${UNIT_SEP}03205052`,
+        "Dataset:DS_DMTY209_TAB03",
+        `_RowType_${UNIT_SEP}yy${UNIT_SEP}tmGbn${UNIT_SEP}dormGbn${UNIT_SEP}domstuNo${UNIT_SEP}joinCoDt${UNIT_SEP}dormLeavdormDt${UNIT_SEP}dormLeavdormGbn`,
+        // 1행: 과거 2021년 1학기 (정규퇴사 02)
+        `N${UNIT_SEP}2021${UNIT_SEP}10${UNIT_SEP}03${UNIT_SEP}21011001${UNIT_SEP}2021-02-28${UNIT_SEP}2021-04-27${UNIT_SEP}02`,
+        // 2행: 2024년 2학기 (정규퇴사 02)
+        `N${UNIT_SEP}2024${UNIT_SEP}20${UNIT_SEP}03${UNIT_SEP}24022002${UNIT_SEP}2024-08-25${UNIT_SEP}2024-12-21${UNIT_SEP}02`,
+        // 3행: 현재 2026년 2학기 (정규입사 01)
+        `N${UNIT_SEP}2026${UNIT_SEP}20${UNIT_SEP}03${UNIT_SEP}03205052${UNIT_SEP}2026-08-28${UNIT_SEP}${UNIT_SEP}01`,
+      ].join(RECORD_SEP);
+
+      const result = parseDormitoryStudentInfo(multiSemesterSsv);
+
+      // 1. inOutList는 연도/학기 기준 최신순 내림차순(2026-20 -> 2024-20 -> 2021-10)으로 정렬되어야 함
+      expect(result.inOutList).toHaveLength(3);
+      expect(result.inOutList[0].year).toBe("2026");
+      expect(result.inOutList[0].term).toBe("20");
+      expect(result.inOutList[0].status).toBe("01");
+      expect(result.inOutList[1].year).toBe("2024");
+      expect(result.inOutList[2].year).toBe("2021");
+
+      // 2. 메인 profile 및 최상위 status는 2021년 퇴사(02)가 아니라 현재 학기 정규입사(01)여야 함
+      expect(result.appliedYear).toBe("2026");
+      expect(result.appliedSemester).toBe("20");
+      expect(result.status).toBe("01");
+      expect(result.studentDormNo).toBe("03205052");
+    });
+
+    it("당해 학기 중도퇴사(03)한 경우 현재 학기 상태가 status에 올바르게 반영되어야 한다", () => {
+      const RECORD_SEP = "\x1e";
+      const UNIT_SEP = "\x1f";
+
+      const checkOutSsv = [
+        "ErrorCode:int=0",
+        "Dataset:DS_DMTY209",
+        `_RowType_${UNIT_SEP}yy${UNIT_SEP}tmGbn${UNIT_SEP}nm${UNIT_SEP}persNo${UNIT_SEP}dormGbn${UNIT_SEP}dormBdNm${UNIT_SEP}domstuNo`,
+        `N${UNIT_SEP}2026${UNIT_SEP}20${UNIT_SEP}김퇴사${UNIT_SEP}202201111${UNIT_SEP}02${UNIT_SEP}A동${UNIT_SEP}02201001`,
+        "Dataset:DS_DMTY209_TAB03",
+        `_RowType_${UNIT_SEP}yy${UNIT_SEP}tmGbn${UNIT_SEP}dormGbn${UNIT_SEP}domstuNo${UNIT_SEP}joinCoDt${UNIT_SEP}dormLeavdormDt${UNIT_SEP}dormLeavdormGbn`,
+        `N${UNIT_SEP}2026${UNIT_SEP}20${UNIT_SEP}02${UNIT_SEP}02201001${UNIT_SEP}2026-08-28${UNIT_SEP}2026-10-10${UNIT_SEP}03`,
+      ].join(RECORD_SEP);
+
+      const result = parseDormitoryStudentInfo(checkOutSsv);
+      expect(result.status).toBe("03");
+      expect(result.inOutList[0].status).toBe("03");
+    });
+
+    it("캐시 객체(fallback) 복원 시에도 inOutList가 최신순으로 정렬되고 현재 학기 상태가 복원되어야 한다", () => {
+      const cachedPayload = {
+        studentId: "202101504",
+        studentName: "이성빈",
+        appliedYear: "2026",
+        appliedSemester: "20",
+        profile: {
+          name: "이성빈",
+          studentId: "202101504",
+          year: "2026",
+          term: "20",
+          dormitoryType: "03",
+          dormitoryBuilding: "B동",
+          studentDormNo: "03205052",
+        },
+        inOutList: [
+          { year: "2021", term: "10", status: "02", studentDormNo: "21011001" },
+          { year: "2026", term: "20", status: "01", studentDormNo: "03205052" },
+        ],
+      };
+
+      const restored = parseDormitoryStudentInfo(cachedPayload);
+      expect(restored.inOutList[0].year).toBe("2026");
+      expect(restored.inOutList[0].status).toBe("01");
+      expect(restored.status).toBe("01");
+      expect(restored.studentDormNo).toBe("03205052");
+    });
   });
 });
+
 
 
