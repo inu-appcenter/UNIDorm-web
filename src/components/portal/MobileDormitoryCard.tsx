@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import styled, { keyframes } from "styled-components";
 import { User } from "lucide-react";
+import DormitoryBadge from "@/components/common/DormitoryBadge";
 
 export interface MobileDormitoryCardProps {
   studentName?: string;
@@ -22,8 +23,6 @@ export interface MobileDormitoryCardProps {
 
 interface DormitoryTheme {
   name: string;
-  badgeBg: string;
-  badgeText: string;
   boxBg: string;
   boxBorder: string;
 }
@@ -59,14 +58,12 @@ function resolveDormitoryTheme(dormType?: string, dormBuilding?: string): Dormit
   if (!combined || combined === "-") {
     return {
       name: "-",
-      badgeBg: "var(--bg-muted)",
-      badgeText: "var(--text-secondary)",
       boxBg: "var(--bg-subtle)",
       boxBorder: "var(--border-default)",
     };
   }
 
-  // 제2기숙사 (직영 / BTL / A동 / B동) -> 그린
+  // 제2기숙사 (직영 / BTL / A동 / B동)
   if (
     combined.includes("02") ||
     combined.includes("03") ||
@@ -77,29 +74,23 @@ function resolveDormitoryTheme(dormType?: string, dormBuilding?: string): Dormit
   ) {
     return {
       name: "제2기숙사",
-      badgeBg: "var(--text-success)",
-      badgeText: "var(--text-inverse)",
       boxBg: "var(--bg-subtle)",
       boxBorder: "var(--border-default)",
     };
   }
 
-  // 제3기숙사 (BTL) -> 인디고 / 보라
+  // 제3기숙사 (BTL)
   if (combined.includes("04") || combined.includes("05") || combined.includes("3기숙사") || combined.includes("제3")) {
     return {
       name: "제3기숙사(BTL)",
-      badgeBg: "var(--interactive-primary)",
-      badgeText: "var(--text-inverse)",
       boxBg: "var(--bg-subtle)",
       boxBorder: "var(--border-default)",
     };
   }
 
-  // 제1기숙사 -> INU 시그니처 블루
+  // 제1기숙사
   return {
     name: "제1기숙사",
-    badgeBg: "var(--interactive-primary)",
-    badgeText: "var(--text-inverse)",
     boxBg: "var(--bg-subtle)",
     boxBorder: "var(--border-default)",
   };
@@ -262,9 +253,9 @@ export const MobileDormitoryCard: React.FC<MobileDormitoryCardProps> = ({
         <DetailBox $boxBg={theme.boxBg} $boxBorder={theme.boxBorder}>
           <DetailHeader>
             <DetailLabel>기숙사</DetailLabel>
-            <DormBadge $bg={theme.badgeBg} $text={theme.badgeText}>
+            <DormitoryBadge dormType={dormitoryDisplayName} size="md">
               {dormitoryDisplayName}
-            </DormBadge>
+            </DormitoryBadge>
           </DetailHeader>
 
           <DormNoRow>
@@ -530,15 +521,6 @@ const DetailLabel = styled.span`
   font-weight: 600;
 `;
 
-const DormBadge = styled.span<{ $bg: string; $text: string }>`
-  font-size: 13px;
-  font-weight: 700;
-  background-color: ${({ $bg }) => $bg};
-  color: ${({ $text }) => $text};
-  padding: 3px 10px;
-  border-radius: var(--radius-sm);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
-`;
 
 const DormNoRow = styled.div`
   display: flex;
