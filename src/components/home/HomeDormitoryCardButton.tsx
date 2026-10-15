@@ -15,10 +15,7 @@ export default function HomeDormitoryCardButton({
         <IconWrapper>
           <GraduationCap size={22} color="var(--interactive-primary, #3182F6)" />
         </IconWrapper>
-        <TextGroup>
-          <Title>모바일 사생증</Title>
-          <Subtitle>출입 및 배정 호실 간편 확인</Subtitle>
-        </TextGroup>
+        <Title>모바일 사생증</Title>
       </LeftContent>
       <ChevronRight size={20} color="var(--text-disabled, #8B95A1)" />
     </CardContainer>
@@ -65,21 +62,9 @@ const IconWrapper = styled.div`
   flex-shrink: 0;
 `;
 
-const TextGroup = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-`;
-
 const Title = styled.span`
   font-size: 16px;
   font-weight: 700;
   line-height: 1.3;
   color: ${colors.text.text1};
-`;
-
-const Subtitle = styled.span`
-  font-size: 13px;
-  font-weight: 500;
-  color: ${colors.text.text2};
 `;
