@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import {
   DormitoryStudentInfo,
@@ -11,9 +11,15 @@ import { secureStorage } from "@/utils/secureStorage";
 import { MobileDormitoryCard } from "@/components/portal/MobileDormitoryCard";
 import { MOBILE_PAGE_GUTTER } from "@/styles/intipResponsive";
 import { PATHS } from "@/constants/paths";
-import { ChevronRight, Building2 } from "lucide-react";
+import { ChevronRight, Building2, RotateCw } from "lucide-react";
 import PortalSyncOnboarding from "@/components/portal/PortalSyncOnboarding";
-import { setScreenCapturePrevented } from "@/apis/mobileAgentBridge";
+import {
+  setScreenCapturePrevented,
+  isMobileAppEnvironment,
+  checkPortalAccountLinked,
+  fetchDormitoryStudentInfoFromApp,
+  resolveCurrentStudentId,
+} from "@/apis/mobileAgentBridge";
 import CapsuleButton from "@/components/common/CapsuleButton";
 import { guardAppOnly } from "@/utils/guard";
 import { isLatestUnidormApp } from "@/utils/getMobilePlatform";
@@ -225,6 +231,7 @@ export default function MobileDormitoryCardPage() {
   });
 
   const [isInitialLoading, setIsInitialLoading] = useState<boolean>(true);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [dormInfo, setDormInfo] = useState<DormitoryStudentInfo | null>(null);
   const [fallbackAcademic, setFallbackAcademic] = useState<any | null>(null);
 
@@ -303,6 +310,35 @@ export default function MobileDormitoryCardPage() {
   useEffect(() => {
     void fetchCached();
   }, [fetchCached]);
+
+  const handleRefresh = useCallback(async () => {
+    if (isRefreshing) return;
+    setIsRefreshing(true);
+    try {
+      if (isMobileAppEnvironment()) {
+        const accountStatus = await checkPortalAccountLinked().catch(() => ({
+          linked: false,
+          studentId: undefined,
+        }));
+        if (accountStatus.linked) {
+          const studentId = accountStatus.studentId || resolveCurrentStudentId();
+          const res = await fetchDormitoryStudentInfoFromApp({ stuno: studentId });
+          if (res.success && res.data) {
+            await secureStorage.setCacheWithTtl(
+              STORAGE_KEY_DORMITORY_DATA,
+              res.data,
+              24 * 60 * 60 * 1000
+            );
+          }
+        }
+      }
+      await fetchCached();
+    } catch (e) {
+      console.error("사생증 정보 새로고침 실패", e);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [fetchCached, isRefreshing]);
 
   // 우리 앱 환경이 아니거나 구버전 앱인 경우 스토어 설치/업데이트 유도
   useEffect(() => {
@@ -493,9 +529,13 @@ export default function MobileDormitoryCardPage() {
               <CapsuleButton
                 variant="primary"
                 fullWidth
-                onClick={() => navigate(PATHS.DORMITORY_INFO)}
+                disabled={isRefreshing}
+                onClick={handleRefresh}
               >
-                사생정보 및 입퇴사이력 확인하기
+                <RefreshIconWrapper $isSpinning={isRefreshing}>
+                  <RotateCw size={16} />
+                </RefreshIconWrapper>
+                <span>{isRefreshing ? "기숙사 정보 동기화 중..." : "새로고침"}</span>
               </CapsuleButton>
 
               <CapsuleButton
@@ -509,7 +549,7 @@ export default function MobileDormitoryCardPage() {
           </NonResidentCard>
 
           <FootnoteNotice>
-            포털 생활원 정보가 방금 변경되었다면, 사생정보조회 화면에서 최신 정보 조회를 진행해 주세요.
+            방금 입사 처리가 되었거나 호실 배정이 변경되었다면 [새로고침]을 눌러 최신 정보를 확인해 주세요.
           </FootnoteNotice>
         </NonResidentWrapper>
       </PageContainer>
@@ -740,3 +780,24 @@ const FootnoteNotice = styled.p`
   line-height: 1.5;
   word-break: keep-all;
 `;
+
+const spinAnimation = keyframes`
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+`;
+
+const RefreshIconWrapper = styled.span<{ $isSpinning?: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 6px;
+
+  svg {
+    animation: ${(props) => (props.$isSpinning ? spinAnimation : "none")} 1s linear infinite;
+  }
+`;
+
