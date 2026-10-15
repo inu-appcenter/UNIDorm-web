@@ -69,6 +69,7 @@ export default function HomePage() {
   } = useFreshmanMigrationBanner();
 
   const handleDormitoryCardClick = () => {
+    mixpanelTrack.dormitoryCardEntryClicked("홈");
     if (!isLoggedIn) {
       const shouldLogin = window.confirm(
         "포털 아이디를 통한 로그인이 필요해요. 로그인 페이지로 이동할까요?",

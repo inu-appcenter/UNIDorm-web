@@ -7,6 +7,7 @@ import ActionButton from "@/components/common/ActionButton";
 import EmptyState from "@/components/common/EmptyState";
 import CapsuleButton from "@/components/common/CapsuleButton";
 import { PATHS } from "@/constants/paths";
+import { mixpanelTrack } from "@/utils/mixpanel";
 import {
   checkPortalAccountLinked,
   fetchAcademicInfoFromApp,
@@ -916,6 +917,7 @@ export default function PortalDormitoryPage() {
             <CapsuleButton
               variant="brand"
               onClick={() => {
+                mixpanelTrack.dormitoryCardEntryClicked("사생정보조회");
                 if (!guardAppOnly({ navigate })) return;
                 navigate(PATHS.DORMITORY_CARD);
               }}

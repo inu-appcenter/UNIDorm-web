@@ -338,6 +338,51 @@ export const mixpanelTrack = {
       location: "마이페이지",
     });
   },
+
+  // --- 9. 모바일 사생증 (Mobile Dormitory Card) ---
+  dormitoryCardEntryClicked: (location: "홈" | "사생정보조회" | "마이페이지" | string) => {
+    trackEvent("모바일 사생증 진입 클릭", {
+      location,
+    });
+  },
+
+  dormitoryCardPageViewed: () => {
+    trackPageView("모바일 사생증");
+  },
+
+  dormitoryCardIssueSuccess: (params: {
+    dormitoryType?: string;
+    year?: string;
+    term?: string;
+  }) => {
+    trackEvent("모바일 사생증 발급 성공", {
+      dormitory_type: params.dormitoryType || "기타",
+      year: params.year,
+      term: params.term,
+    });
+  },
+
+  dormitoryCardNonResidentBlocked: (params?: {
+    reason?: "미배정" | "퇴사" | "과거학기" | "기타";
+  }) => {
+    trackEvent("모바일 사생증 비사생 노출", {
+      reason: params?.reason || "기타",
+    });
+  },
+
+  dormitoryCardOnboardingViewed: () => {
+    trackEvent("모바일 사생증 연동 온보딩 노출");
+  },
+
+  dormitoryCardInfoButtonClicked: (location: "사생증화면" | "비사생화면") => {
+    trackEvent("모바일 사생증 사생정보조회 클릭", {
+      location,
+    });
+  },
+
+  dormitoryCardNonResidentHomeClicked: () => {
+    trackEvent("모바일 사생증 홈으로 클릭");
+  },
 };
 
 /**
