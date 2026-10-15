@@ -351,6 +351,9 @@ interface FallbackAcademicData extends Partial<DormitoryStudentInfo> {
   studentName?: string;
 }
 
+// 디버그 패널(진단 로그 및 원시 데이터) 임시 렌더링 제어
+const SHOW_DEBUG_PANEL = false;
+
 export default function PortalDormitoryPage() {
   const navigate = useNavigate();
 
@@ -1491,8 +1494,11 @@ export default function PortalDormitoryPage() {
           </TabBody>
         </SectionBlock>
 
-        {/* 4. 진행 진단 로그 콘솔 */}
-        <DebugSection as="section">
+        {/* 4. 진행 진단 로그 및 5. 원시 파싱 데이터 토글 (임시 렌더링 비활성화) */}
+        {SHOW_DEBUG_PANEL && (
+          <>
+            {/* 4. 진행 진단 로그 콘솔 */}
+            <DebugSection as="section">
           <DebugHeader
             role="button"
             tabIndex={0}
@@ -1640,6 +1646,8 @@ export default function PortalDormitoryPage() {
             </DebugBody>
           )}
         </DebugSection>
+          </>
+        )}
       </TitleContentArea>
 
       <PortalAccountModal

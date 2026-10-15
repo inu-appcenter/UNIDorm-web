@@ -1181,6 +1181,40 @@ export interface DormitoryStudentInfo {
 }
 
 /**
+ * 입퇴사 이력 최신순(연도 내림차순, 학기 내림차순, 퇴사/입사일 내림차순) 정렬 헬퍼
+ */
+export function compareInOutHistoryDesc(a: DormitoryInOutItem, b: DormitoryInOutItem): number {
+  // 1. 연도 비교 (숫자 내림차순: 2026 > 2025 > 2021)
+  const yearA = parseInt(a.year, 10) || 0;
+  const yearB = parseInt(b.year, 10) || 0;
+  if (yearA !== yearB) {
+    return yearB - yearA;
+  }
+
+  // 2. 학기 가중치 비교 (겨울(40) > 2학기(20) > 여름(30) > 1학기(10))
+  const termWeight = (termStr?: string): number => {
+    if (!termStr) return 0;
+    const clean = termStr.trim();
+    if (clean === "40" || clean === "4" || clean.includes("겨울")) return 4;
+    if (clean === "20" || clean === "2" || clean.includes("2학기")) return 3;
+    if (clean === "30" || clean === "3" || clean.includes("여름")) return 2;
+    if (clean === "10" || clean === "1" || clean.includes("1학기")) return 1;
+    return parseInt(clean, 10) || 0;
+  };
+
+  const weightA = termWeight(a.term);
+  const weightB = termWeight(b.term);
+  if (weightA !== weightB) {
+    return weightB - weightA;
+  }
+
+  // 3. 날짜 비교 (checkOutDate or checkInDate 내림차순)
+  const dateA = a.checkOutDate || a.checkInDate || "";
+  const dateB = b.checkOutDate || b.checkInDate || "";
+  return dateB.localeCompare(dateA);
+}
+
+/**
  * 생활원 사생정보조회(학생) SSV 패킷 및 7개 탭 데이터 파서
  * 데이터가 없을 때는 임의의 가짜 값(구라핑)을 채우지 않고 null 또는 빈 배열을 반환합니다.
  */
@@ -1237,17 +1271,35 @@ export function parseDormitoryStudentInfo(
       rf["dormBdCd"] ||
       resolvedObj.dormitoryBuilding ||
       "";
+    const restoredInOutList: DormitoryInOutItem[] = Array.isArray(resolvedObj.inOutList)
+      ? resolvedObj.inOutList.slice().sort(compareInOutHistoryDesc)
+      : [];
+    const restoredYear = (resolvedObj.appliedYear || resolvedObj.profile?.year || rf["yy"] || "").trim();
+    const restoredTerm = (resolvedObj.appliedSemester || resolvedObj.profile?.term || rf["tmGbn"] || "").trim();
+
+    const restoredCurrentSemesterInOut = restoredInOutList.find(
+      (io: DormitoryInOutItem) =>
+        io.year &&
+        restoredYear &&
+        io.year === restoredYear &&
+        io.term &&
+        restoredTerm &&
+        (io.term === restoredTerm || io.term.replace(/학기/g, "") === restoredTerm.replace(/학기/g, ""))
+    );
+
     const restoredStudentDormNo =
       resolvedObj.profile?.studentDormNo ||
       resolvedObj.studentDormNo ||
       rf["domstuNo"] ||
       rf["domStuNo"] ||
-      resolvedObj.inOutList?.[0]?.studentDormNo ||
+      restoredCurrentSemesterInOut?.studentDormNo ||
+      restoredInOutList[0]?.studentDormNo ||
       "";
     const restoredStatus =
-      resolvedObj.status ||
-      resolvedObj.inOutList?.[0]?.status ||
+      restoredCurrentSemesterInOut?.status ||
       rf["dormLeavdormGbn"] ||
+      resolvedObj.status ||
+      restoredInOutList[0]?.status ||
       "";
 
     const restoredDeptCode =
@@ -1289,7 +1341,7 @@ export function parseDormitoryStudentInfo(
       profile: prof,
       addressList: resolvedObj.addressList || [],
       rewardList: resolvedObj.rewardList || [],
-      inOutList: resolvedObj.inOutList || [],
+      inOutList: restoredInOutList,
       applyList: resolvedObj.applyList || [],
       paymentList: resolvedObj.paymentList || [],
       utilityList: resolvedObj.utilityList || [],
@@ -1506,7 +1558,8 @@ export function parseDormitoryStudentInfo(
       checkOutDate: (r["dormLeavdormDt"] || "").trim(),
       status: (r["dormLeavdormGbn"] || "").trim(),
       rawFields: r,
-    }));
+    }))
+    .sort(compareInOutHistoryDesc);
 
   // 5. 탭 4 (신청이력: DS_DMTY209_TAB04)
   const tab04Rows = datasets["DS_DMTY209_TAB04"] || [];
@@ -1605,42 +1658,66 @@ export function parseDormitoryStudentInfo(
     pledge !== null
   );
 
-  return {
-    profile,
-    addressList,
-    rewardList,
-    inOutList,
-    applyList,
-    paymentList,
-    utilityList,
-    pledge,
-    hasData,
-    rawDatasets: datasets,
+    const resolvedCurrentYear = (profile?.year || mainRows[0]?.["yy"] || "").trim();
+    const resolvedCurrentTerm = (profile?.term || mainRows[0]?.["tmGbn"] || "").trim();
 
-    // 하위 호환 필드
-    studentId: profile?.studentId || (mainRows[0]?.["stuno"] || mainRows[0]?.["persNo"] || "").trim(),
-    studentName: profile?.name || (mainRows[0]?.["korNm"] || mainRows[0]?.["nm"] || "").trim(),
-    department: profile?.department || (mainRows[0]?.["deptNm"] || mainRows[0]?.["hgNm"] || "").trim(),
-    departmentName: profile?.department || (mainRows[0]?.["deptNm"] || mainRows[0]?.["hgNm"] || "").trim(),
-    dormitoryType: profile?.dormitoryType || (mainRows[0]?.["dormGbn"] || "").trim(),
-    dormitoryBuilding: profile?.dormitoryBuilding || (mainRows[0]?.["dormBdNm"] || mainRows[0]?.["dmtyNm"] || "").trim(),
-    studentDormNo: profile?.studentDormNo || inOutList[0]?.studentDormNo || (mainRows[0]?.["domstuNo"] || mainRows[0]?.["domStuNo"] || "").trim(),
-    roomNumber: legacyRoomNo,
-    bedNumber: legacyBedNo,
-    roomType: legacyRoomType,
-    checkInDate: legacyCheckInDt || inOutList[0]?.checkInDate || (mainRows[0]?.["entrDt"] || "").trim(),
-    checkOutDate: legacyCheckOutDt || inOutList[0]?.checkOutDate || "",
-    status: inOutList[0]?.status || (mainRows[0]?.["dormLeavdormGbn"] || "").trim(),
-    mealType: legacyMealType,
-    meritPoints: mPts,
-    demeritPoints: dmPts,
-    totalPoints: mPts - dmPts,
-    pointsList,
-    appliedYear: profile?.year || (mainRows[0]?.["yy"] || "").trim(),
-    appliedSemester: profile?.term || (mainRows[0]?.["tmGbn"] || "").trim(),
-    photoBase64: profile?.photoBase64 || (mainRows[0]?.["phtFile2"] || mainRows[0]?.["phtFile"] || undefined),
-    rawFields: profile?.rawFields || mainRows[0] || {},
-  };
+    const currentSemesterInOut = inOutList.find(
+      (io) =>
+        io.year &&
+        resolvedCurrentYear &&
+        io.year === resolvedCurrentYear &&
+        io.term &&
+        resolvedCurrentTerm &&
+        (io.term === resolvedCurrentTerm ||
+          io.term.replace(/학기/g, "") === resolvedCurrentTerm.replace(/학기/g, ""))
+    );
+
+    const resolvedStatus =
+      currentSemesterInOut?.status ||
+      (mainRows[0]?.["dormLeavdormGbn"] || "").trim() ||
+      inOutList[0]?.status ||
+      "";
+
+    return {
+      profile,
+      addressList,
+      rewardList,
+      inOutList,
+      applyList,
+      paymentList,
+      utilityList,
+      pledge,
+      hasData,
+      rawDatasets: datasets,
+
+      // 하위 호환 필드
+      studentId: profile?.studentId || (mainRows[0]?.["stuno"] || mainRows[0]?.["persNo"] || "").trim(),
+      studentName: profile?.name || (mainRows[0]?.["korNm"] || mainRows[0]?.["nm"] || "").trim(),
+      department: profile?.department || (mainRows[0]?.["deptNm"] || mainRows[0]?.["hgNm"] || "").trim(),
+      departmentName: profile?.department || (mainRows[0]?.["deptNm"] || mainRows[0]?.["hgNm"] || "").trim(),
+      dormitoryType: profile?.dormitoryType || (mainRows[0]?.["dormGbn"] || "").trim(),
+      dormitoryBuilding: profile?.dormitoryBuilding || (mainRows[0]?.["dormBdNm"] || mainRows[0]?.["dmtyNm"] || "").trim(),
+      studentDormNo:
+        profile?.studentDormNo ||
+        currentSemesterInOut?.studentDormNo ||
+        inOutList[0]?.studentDormNo ||
+        (mainRows[0]?.["domstuNo"] || mainRows[0]?.["domStuNo"] || "").trim(),
+      roomNumber: legacyRoomNo,
+      bedNumber: legacyBedNo,
+      roomType: legacyRoomType,
+      checkInDate: legacyCheckInDt || currentSemesterInOut?.checkInDate || inOutList[0]?.checkInDate || (mainRows[0]?.["entrDt"] || "").trim(),
+      checkOutDate: legacyCheckOutDt || currentSemesterInOut?.checkOutDate || inOutList[0]?.checkOutDate || "",
+      status: resolvedStatus,
+      mealType: legacyMealType,
+      meritPoints: mPts,
+      demeritPoints: dmPts,
+      totalPoints: mPts - dmPts,
+      pointsList,
+      appliedYear: resolvedCurrentYear,
+      appliedSemester: resolvedCurrentTerm,
+      photoBase64: profile?.photoBase64 || (mainRows[0]?.["phtFile2"] || mainRows[0]?.["phtFile"] || undefined),
+      rawFields: profile?.rawFields || mainRows[0] || {},
+    };
 }
 
 
