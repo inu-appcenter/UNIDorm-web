@@ -521,9 +521,6 @@ function DerivedRoomCardItem({
             {msg.linkedRoomDescription}
           </S.RoomLinkDescription>
         )}
-        {msg.linkedRoomMaxParticipants && (
-          <S.RoomLinkMeta>최대 {msg.linkedRoomMaxParticipants}명</S.RoomLinkMeta>
-        )}
       </S.RoomLinkTextArea>
       {isClosed ? (
         <S.RoomLinkClosedAction>모집 마감</S.RoomLinkClosedAction>
@@ -597,6 +594,13 @@ export default function ChattingPage() {
   const [openChatRoomName, setOpenChatRoomName] = useState<string | undefined>(
     routeRoomName,
   );
+
+  useEffect(() => {
+    if (routeRoomName) {
+      setOpenChatRoomName(routeRoomName);
+    }
+  }, [routeRoomName]);
+
   const [currentRoomRecruitmentStatus, setCurrentRoomRecruitmentStatus] =
     useState<"OPEN" | "CLOSED">(() => {
       if (routeRoom) {
@@ -608,8 +612,16 @@ export default function ChattingPage() {
       }
       return "OPEN";
     });
-  const isRecruitmentClosedRoom =
-    chatType === "open" && currentRoomRecruitmentStatus === "CLOSED";
+
+  useEffect(() => {
+    if (routeRoom) {
+      const isClosed =
+        routeRoom.recruitmentStatus === "CLOSED" ||
+        routeRoom.isJoinable === false ||
+        (routeRoom as any).recruitmentClosed === true;
+      setCurrentRoomRecruitmentStatus(isClosed ? "CLOSED" : "OPEN");
+    }
+  }, [routeRoom]);
   const partnerProfileImageUrl =
     location.state?.partnerProfileImageUrl ?? undefined;
   const pendingDisclosureRequestId = Number(
@@ -699,13 +711,13 @@ export default function ChattingPage() {
   };
 
   useEffect(() => {
-    if (isChatBlocked || isRecruitmentClosedRoom) {
+    if (isChatBlocked) {
       setMenuOpen(false);
       setIsSlashMenuOpen(false);
       setIsChatBuliActive(false);
       setInputValue("");
     }
-  }, [isChatBlocked, isRecruitmentClosedRoom]);
+  }, [isChatBlocked]);
 
   const refreshRoomStatus = useCallback(async () => {
     if (chatType !== "open" || !roomId) return;
@@ -2407,7 +2419,7 @@ export default function ChattingPage() {
         setIsHistoryLoading(true);
         setIsBlockedByPartner(Boolean(routeRoom?.isBlockedByPartner));
 
-        if ((chatType === "open" || chatType === "personal") && !openChatRoomName) {
+        if (chatType === "open" || chatType === "personal") {
           try {
             const roomsResponse = await getOpenChatRooms("MY", 0, 50);
             const currentRoom = roomsResponse.data.content.find(
@@ -2417,6 +2429,13 @@ export default function ChattingPage() {
             if (currentRoom) {
               setOpenChatRoomName(currentRoom.name);
               setIsBlockedByPartner(Boolean(currentRoom.isBlockedByPartner));
+              if (currentRoom.recruitmentStatus) {
+                const isClosed =
+                  currentRoom.recruitmentStatus === "CLOSED" ||
+                  currentRoom.isJoinable === false ||
+                  (currentRoom as any).recruitmentClosed === true;
+                setCurrentRoomRecruitmentStatus(isClosed ? "CLOSED" : "OPEN");
+              }
             }
           } catch (error) {
             console.error("오픈채팅방 정보 조회 실패:", error);
@@ -2770,10 +2789,6 @@ export default function ChattingPage() {
       alert(blockedChatMessage);
       return;
     }
-    if (isRecruitmentClosedRoom) {
-      alert("모집이 마감되어 메시지를 보낼 수 없습니다.");
-      return;
-    }
     const trimmedInput = inputValue.trim();
 
     // 0. 메시지 수정 처리
@@ -3011,10 +3026,6 @@ export default function ChattingPage() {
       alert(blockedChatMessage);
       return;
     }
-    if (isRecruitmentClosedRoom) {
-      alert("모집이 마감되어 사진을 보낼 수 없습니다.");
-      return;
-    }
 
     try {
       const response = await sendOpenChatImages(roomId, files);
@@ -3243,7 +3254,13 @@ export default function ChattingPage() {
           roomId,
           roomName: openChatRoomName,
           roomDescription: routeRoomDescription,
-          room: routeRoom,
+          room: routeRoom
+            ? {
+                ...routeRoom,
+                recruitmentStatus: currentRoomRecruitmentStatus,
+                isJoinable: currentRoomRecruitmentStatus !== "CLOSED",
+              }
+            : undefined,
         },
       });
     },
@@ -3320,12 +3337,8 @@ export default function ChattingPage() {
   const handleRequestShareClick = async () => {
     setMenuOpen(false);
     if (chatType !== "roommate" && chatType !== "personal") return;
-    if (isChatBlocked || isRecruitmentClosedRoom) {
-      alert(
-        isChatBlocked
-          ? blockedChatMessage
-          : "모집이 마감되어 요청할 수 없습니다.",
-      );
+    if (isChatBlocked) {
+      alert(blockedChatMessage);
       return;
     }
 
@@ -4247,13 +4260,11 @@ export default function ChattingPage() {
             )}
           <S.PlusButton
             type="button"
-            disabled={isChatBlocked || isRecruitmentClosedRoom}
+            disabled={isChatBlocked}
             aria-label={
               isChatBlocked
                 ? blockedChatMessage
-                : isRecruitmentClosedRoom
-                  ? "모집이 마감된 채팅방입니다."
-                  : "채팅 추가 기능"
+                : "채팅 추가 기능"
             }
             onClick={() => setMenuOpen((prev) => !prev)}
           >
@@ -4344,15 +4355,13 @@ export default function ChattingPage() {
             placeholder={
               isChatBlocked
                 ? blockedChatMessage
-                : isRecruitmentClosedRoom
-                  ? "모집이 마감된 채팅방입니다."
-                  : isChatBuliActive
-                    ? "질문할 내용을 입력하세요"
-                    : editingMessage
-                      ? "수정할 메시지를 입력하세요"
-                      : "메시지 보내기 (/ 입력 시 기능 선택)"
+                : isChatBuliActive
+                  ? "질문할 내용을 입력하세요"
+                  : editingMessage
+                    ? "수정할 메시지를 입력하세요"
+                    : "메시지 보내기 (/ 입력 시 기능 선택)"
             }
-            disabled={isChatBlocked || isRecruitmentClosedRoom}
+            disabled={isChatBlocked}
             ref={inputRef}
             onInput={handleInput}
             rows={1}
@@ -4363,7 +4372,7 @@ export default function ChattingPage() {
         </S.InputWrapper>
         <S.SendCircleButton
           type="button"
-          disabled={isChatBlocked || isRecruitmentClosedRoom}
+          disabled={isChatBlocked}
           onMouseDown={(e) => e.preventDefault()}
           onClick={handleSendMessage}
         >

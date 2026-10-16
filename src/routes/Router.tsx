@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate } from "react-router-dom";
+import { createBrowserRouter, Navigate, useParams } from "react-router-dom";
 import FeatureFlagGate from "@/components/common/FeatureFlagGate";
 import {
   FRESHMAN_LOGIN_FEATURE_FLAG_KEY,
@@ -95,6 +95,11 @@ import StatisticsPage from "@/pages/Admin/StatisticsPage";
 import OpenChatReportAdminPage from "@/pages/Admin/OpenChatReportAdminPage";
 import OpenChatBotPage from "@/pages/Admin/OpenChatBotPage";
 import OpenChatAdminPage from "@/pages/Admin/OpenChatAdminPage";
+
+function ChattingPageRoute() {
+  const { chatType, id } = useParams();
+  return <ChattingPage key={`${chatType}-${id}`} />;
+}
 
 export const router = createBrowserRouter([
   {
@@ -229,7 +234,7 @@ export const router = createBrowserRouter([
               { path: "open/create", element: <OpenChatCreatePage /> },
               { path: "open/:id/edit", element: <OpenChatEditPage /> },
               { path: "blocked", element: <BlockListPage /> },
-              { path: ":chatType/:id", element: <ChattingPage /> },
+              { path: ":chatType/:id", element: <ChattingPageRoute /> },
               { path: ":chatType/:id/members", element: <ChatMembersPage /> },
               {
                 path: ":chatType/:id/notifications",
