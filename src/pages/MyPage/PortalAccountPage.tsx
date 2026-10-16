@@ -18,6 +18,7 @@ import { adaptAcademicInfoToStudentInfo } from "@/apis/portalAdapter";
 import { PATHS } from "@/constants/paths";
 import { MOBILE_PAGE_GUTTER, DESKTOP_MEDIA } from "@/styles/intipResponsive";
 import CapsuleButton from "@/components/common/CapsuleButton";
+import { mixpanelTrack } from "@/utils/mixpanel";
 import Modal from "@/components/portal/PortalConfirmModal";
 import Skeleton from "@/components/common/Skeleton";
 import {
@@ -344,7 +345,14 @@ export default function MobilePortalAccountPage() {
 
             <ServiceDivider />
 
-            <ServiceItem onClick={() => navigate(PATHS.DORMITORY_CARD)} role="button" tabIndex={0}>
+            <ServiceItem
+              onClick={() => {
+                mixpanelTrack.dormitoryCardEntryClicked("마이페이지");
+                navigate(PATHS.DORMITORY_CARD);
+              }}
+              role="button"
+              tabIndex={0}
+            >
               <ServiceLeft>
                 <ServiceIcon $color="var(--green-500)" $bg="var(--bg-subtle)">
                   <GraduationCap size={18} color="var(--green-500)" />
