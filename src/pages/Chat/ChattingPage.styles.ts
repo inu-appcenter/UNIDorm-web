@@ -20,7 +20,73 @@ export const FixedHeaderContainer = styled.div`
   flex-shrink: 0;
 `;
 
-export const ChattingWrapper = styled.div<{ $chatType?: string }>`
+export const RecruitmentStatusBar = styled.div`
+  width: 100%;
+  padding: 10px 16px;
+  box-sizing: border-box;
+  background-color: #ffffff;
+  border-bottom: 1px solid #f2f4f7;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  position: relative;
+  z-index: 2;
+`;
+
+export const RecruitmentStatusLeft = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+`;
+
+export const RecruitmentStatusBadge = styled.span<{ $isClosed: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  flex-shrink: 0;
+  line-height: 1.2;
+  background-color: ${({ $isClosed }) => ($isClosed ? "#f2f4f7" : "#eff4ff")};
+  color: ${({ $isClosed }) => ($isClosed ? "#667085" : "#2b66f6")};
+`;
+
+export const RecruitmentStatusText = styled.span`
+  font-size: 12px;
+  font-weight: 500;
+  color: #475467;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+export const RecruitmentStatusToggleButton = styled.button<{ $isClosed: boolean }>`
+  flex-shrink: 0;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid ${({ $isClosed }) => ($isClosed ? "#2b66f6" : "#d0d5dd")};
+  background-color: ${({ $isClosed }) => ($isClosed ? "#2b66f6" : "#ffffff")};
+  color: ${({ $isClosed }) => ($isClosed ? "#ffffff" : "#344054")};
+  transition: all 0.15s ease-in-out;
+
+  &:active {
+    opacity: 0.85;
+    transform: scale(0.97);
+  }
+`;
+
+export const ChattingWrapper = styled.div<{
+  $chatType?: string;
+  $hasStatusBar?: boolean;
+}>`
   display: flex;
   flex-direction: column;
   /* 남은 공간을 모두 차지하며 내부 스크롤 활성화 */
@@ -28,7 +94,8 @@ export const ChattingWrapper = styled.div<{ $chatType?: string }>`
   overflow-y: auto;
 
   /* 오픈채팅방일 경우 상단에 플로팅 배너 높이만큼 여백 추가 */
-  padding-top: ${({ $chatType }) => ($chatType === "open" ? "72px" : "0")};
+  padding-top: ${({ $chatType, $hasStatusBar }) =>
+    $chatType === "open" ? ($hasStatusBar ? "124px" : "72px") : "0"};
   padding-bottom: calc(100px + var(--safe-area-bottom, 0px)); /* 플로팅 입력 바 공간 확보 */
   box-sizing: border-box;
   background: transparent;
@@ -82,9 +149,9 @@ export const BackgroundImage = styled.div`
   z-index: 0;
 `;
 
-export const NoticeContainer = styled.div`
+export const NoticeContainer = styled.div<{ $hasStatusBar?: boolean }>`
   position: absolute;
-  top: 12px;
+  top: ${({ $hasStatusBar }) => ($hasStatusBar ? "60px" : "12px")};
   left: 20px;
   right: 20px;
   background-color: #e6f4ff;

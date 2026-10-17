@@ -2,6 +2,7 @@ import { useRef } from "react";
 import styled from "styled-components";
 import profile from "../../assets/profileimg.png";
 import { useLongPress } from "@/hooks/useLongPress";
+import { useSwipeToReply } from "@/hooks/useSwipeToReply";
 import ChatMessageContent from "./ChatMessageContent";
 import ChatReplyQuoteBox from "./ChatReplyQuoteBox";
 import type { ReplySourceDto } from "@/types/openchat";
@@ -25,6 +26,7 @@ type Props = {
   onMessageClick?: (rect?: DOMRect) => void;
   onImageClick?: (url: string) => void;
   onAvatarClick?: () => void;
+  onSwipeReply?: () => void;
 };
 
 const ChatItemOtherPerson = ({
@@ -45,6 +47,7 @@ const ChatItemOtherPerson = ({
   onMessageClick,
   onImageClick,
   onAvatarClick,
+  onSwipeReply,
 }: Props) => {
   const bubbleRef = useRef<HTMLDivElement>(null);
   const unreadLabel =
@@ -70,6 +73,33 @@ const ChatItemOtherPerson = ({
     delay: 400,
   });
 
+  const { swipeHandlers, offsetX, isSwiping } = useSwipeToReply({
+    onReply: onSwipeReply,
+    direction: "right",
+    disabled: isMessageDeleted,
+  });
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!isMessageDeleted && onMessageClick) {
+      longPressHandlers.onTouchStart();
+    }
+    swipeHandlers.onTouchStart(e);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isMessageDeleted && onMessageClick) {
+      longPressHandlers.onTouchMove();
+    }
+    swipeHandlers.onTouchMove(e);
+  };
+
+  const handleTouchEnd = () => {
+    if (!isMessageDeleted && onMessageClick) {
+      longPressHandlers.onTouchEnd();
+    }
+    swipeHandlers.onTouchEnd();
+  };
+
   return (
     <ChatItemOtherPersonWrapper>
       <ProfileImg
@@ -88,7 +118,15 @@ const ChatItemOtherPerson = ({
           }
         }}
       />
-      <ContentArea>
+      <ContentArea
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        style={{
+          transform: offsetX ? `translateX(${offsetX}px)` : undefined,
+          transition: isSwiping ? "none" : "transform 0.2s ease-out",
+        }}
+      >
         {showSenderInfo && senderName && (
           <div
             className="sender-name"
@@ -119,7 +157,9 @@ const ChatItemOtherPerson = ({
             )}
             <ImageGrid
               ref={bubbleRef}
-              {...(onMessageClick ? longPressHandlers : {})}
+              onMouseDown={!isMessageDeleted && onMessageClick ? longPressHandlers.onMouseDown : undefined}
+              onMouseUp={!isMessageDeleted && onMessageClick ? longPressHandlers.onMouseUp : undefined}
+              onMouseLeave={!isMessageDeleted && onMessageClick ? longPressHandlers.onMouseLeave : undefined}
               $clickable={Boolean(onMessageClick)}
             >
               {imageUrls.map((url) => (
@@ -140,7 +180,9 @@ const ChatItemOtherPerson = ({
         ) : isBotQuestion ? (
           <BotQuestionBubble
             ref={bubbleRef}
-            {...(onMessageClick ? longPressHandlers : {})}
+            onMouseDown={!isMessageDeleted && onMessageClick ? longPressHandlers.onMouseDown : undefined}
+            onMouseUp={!isMessageDeleted && onMessageClick ? longPressHandlers.onMouseUp : undefined}
+            onMouseLeave={!isMessageDeleted && onMessageClick ? longPressHandlers.onMouseLeave : undefined}
             $clickable={Boolean(onMessageClick)}
           >
             <BotQuestionHeader>
@@ -152,7 +194,9 @@ const ChatItemOtherPerson = ({
         ) : (
           <MessageBubble
             ref={bubbleRef}
-            {...(onMessageClick ? longPressHandlers : {})}
+            onMouseDown={!isMessageDeleted && onMessageClick ? longPressHandlers.onMouseDown : undefined}
+            onMouseUp={!isMessageDeleted && onMessageClick ? longPressHandlers.onMouseUp : undefined}
+            onMouseLeave={!isMessageDeleted && onMessageClick ? longPressHandlers.onMouseLeave : undefined}
             $clickable={Boolean(onMessageClick)}
           >
             {replySource && (
@@ -164,17 +208,13 @@ const ChatItemOtherPerson = ({
               />
             )}
             <ChatMessageContent content={content} />
+            {isEdited && !isDeleted && <EditedTag $isMy={false}>수정됨</EditedTag>}
           </MessageBubble>
         )}
       </ContentArea>
       {(showTime || unreadLabel) && (
         <TimeArea>
-          {showTime && (
-            <div className="time">
-              {isEdited && !isDeleted && <span className="edited-tag">수정됨 </span>}
-              {time}
-            </div>
-          )}
+          {showTime && <div className="time">{time}</div>}
           {unreadLabel && <div className="isRead">{unreadLabel}</div>}
         </TimeArea>
       )}
@@ -372,3 +412,14 @@ const TimeArea = styled.div`
     font-weight: 600;
   }
 `;
+
+const EditedTag = styled.span<{ $isMy?: boolean }>`
+  font-family: "Pretendard", sans-serif;
+  font-size: 10px;
+  color: ${({ $isMy }) => ($isMy ? "rgba(255, 255, 255, 0.75)" : "#98a2b3")};
+  margin-left: 6px;
+  display: inline-block;
+  vertical-align: bottom;
+  user-select: none;
+`;
+

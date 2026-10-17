@@ -99,6 +99,8 @@ export interface ReplySourceDto {
   replyToRoomType: ChatRoomType;
   replyToRoomId: number;
   replyToDerivedRoomId?: number | null;
+  imageUrl?: string | null;
+  thumbnailUrl?: string | null;
 }
 
 export type OpenChatMessageType =
