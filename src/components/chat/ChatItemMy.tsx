@@ -5,6 +5,7 @@ import ChatReplyQuoteBox from "./ChatReplyQuoteBox";
 import type { ReplySourceDto } from "@/types/openchat";
 import ChatBuliLogo from "@/assets/ai-chat/챗불이로고.svg";
 import { useLongPress } from "@/hooks/useLongPress";
+import { useSwipeToReply } from "@/hooks/useSwipeToReply";
 
 type Props = {
   content: string;
@@ -20,6 +21,7 @@ type Props = {
   onQuoteClick?: (targetMessageId: number) => void;
   onMessageClick?: (rect?: DOMRect) => void;
   onImageClick?: (url: string) => void;
+  onSwipeReply?: () => void;
 };
 
 const ChatItemMy = ({
@@ -36,6 +38,7 @@ const ChatItemMy = ({
   onQuoteClick,
   onMessageClick,
   onImageClick,
+  onSwipeReply,
 }: Props) => {
   const contentRef = useRef<HTMLDivElement>(null);
   const unreadLabel =
@@ -66,12 +69,48 @@ const ChatItemMy = ({
     delay: 400,
   });
 
+  const { swipeHandlers, offsetX, isSwiping } = useSwipeToReply({
+    onReply: onSwipeReply,
+    direction: "left",
+    disabled: isMessageDeleted,
+  });
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!isMessageDeleted && onMessageClick) {
+      longPressHandlers.onTouchStart();
+    }
+    swipeHandlers.onTouchStart(e);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isMessageDeleted && onMessageClick) {
+      longPressHandlers.onTouchMove();
+    }
+    swipeHandlers.onTouchMove(e);
+  };
+
+  const handleTouchEnd = () => {
+    if (!isMessageDeleted && onMessageClick) {
+      longPressHandlers.onTouchEnd();
+    }
+    swipeHandlers.onTouchEnd();
+  };
+
   return (
     <ChatItemMyWrapper>
       <ContentArea
         ref={contentRef}
-        {...(!isMessageDeleted && onMessageClick ? longPressHandlers : {})}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onMouseDown={!isMessageDeleted && onMessageClick ? longPressHandlers.onMouseDown : undefined}
+        onMouseUp={!isMessageDeleted && onMessageClick ? longPressHandlers.onMouseUp : undefined}
+        onMouseLeave={!isMessageDeleted && onMessageClick ? longPressHandlers.onMouseLeave : undefined}
         $clickable={!isMessageDeleted && Boolean(onMessageClick)}
+        style={{
+          transform: offsetX ? `translateX(${offsetX}px)` : undefined,
+          transition: isSwiping ? "none" : "transform 0.2s ease-out",
+        }}
       >
         {isMessageDeleted ? (
           <DeletedMessageBubble>
@@ -130,17 +169,13 @@ const ChatItemMy = ({
               />
             )}
             <ChatMessageContent content={content} />
+            {isEdited && !isDeleted && <EditedTag $isMy={true}>수정됨</EditedTag>}
           </div>
         )}
       </ContentArea>
       {(showTime || unreadLabel) && (
         <TimeArea>
-          {showTime && (
-            <div className="time">
-              {isEdited && !isDeleted && <span className="edited-tag">수정됨 </span>}
-              {time}
-            </div>
-          )}
+          {showTime && <div className="time">{time}</div>}
           {unreadLabel && <div className="isRead">{unreadLabel}</div>}
         </TimeArea>
       )}
@@ -321,3 +356,14 @@ const TimeArea = styled.div`
     font-weight: 600;
   }
 `;
+
+const EditedTag = styled.span<{ $isMy?: boolean }>`
+  font-family: "Pretendard", sans-serif;
+  font-size: 10px;
+  color: ${({ $isMy }) => ($isMy ? "rgba(255, 255, 255, 0.75)" : "#98a2b3")};
+  margin-left: 6px;
+  display: inline-block;
+  vertical-align: bottom;
+  user-select: none;
+`;
+

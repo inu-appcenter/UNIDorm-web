@@ -71,9 +71,9 @@ export default function ChatReplyQuoteBox({
       </HeaderRow>
 
       <PreviewRow>
-        {thumbnailUrl ? (
+        {!isDeleted && !isNotFound && thumbnailUrl ? (
           <ThumbnailImg src={thumbnailUrl} alt="사진" />
-        ) : isImage ? (
+        ) : isImage && !isDeleted && !isNotFound ? (
           <ImageIcon
             size={13}
             style={{

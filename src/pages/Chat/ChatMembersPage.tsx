@@ -21,6 +21,7 @@ import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { blockUser, getBlockedUsers } from "@/apis/block";
 import { requestStudentIdDisclosure } from "@/apis/studentIdDisclosure";
 import { isAxiosError } from "axios";
+import RecruitmentReopenModal from "@/components/modal/RecruitmentReopenModal";
 
 type Sheet = "profile" | "create" | null;
 
@@ -101,10 +102,24 @@ export default function ChatMembersPage() {
     Boolean(routeRoom?.recruitmentStatus) ||
     Boolean((routeRoom as any)?.originRoomId);
 
+  const [reopenConfirmModalOpen, setReopenConfirmModalOpen] = useState(false);
+
   const handleToggleRecruitmentStatus = async (
     targetStatus: "OPEN" | "CLOSED",
   ) => {
     if (isUpdatingStatus || targetStatus === recruitmentStatus) return;
+
+    if (targetStatus === "OPEN") {
+      setReopenConfirmModalOpen(true);
+      return;
+    }
+
+    await executeRecruitmentStatusChange("CLOSED");
+  };
+
+  const executeRecruitmentStatusChange = async (
+    targetStatus: "OPEN" | "CLOSED",
+  ) => {
     const prevStatus = recruitmentStatus;
     setRecruitmentStatus(targetStatus);
     setIsUpdatingStatus(true);
@@ -769,6 +784,15 @@ export default function ChatMembersPage() {
           </Modal>
         </ModalOverlay>
       )}
+
+      <RecruitmentReopenModal
+        open={reopenConfirmModalOpen}
+        onCancel={() => setReopenConfirmModalOpen(false)}
+        onConfirm={async () => {
+          setReopenConfirmModalOpen(false);
+          await executeRecruitmentStatusChange("OPEN");
+        }}
+      />
     </Page>
   );
 }

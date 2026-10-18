@@ -510,17 +510,6 @@ export default function OpenChatPage() {
       Number(isPinnedRoommate(b)) - Number(isPinnedRoommate(a));
     if (pinnedDifference !== 0) return pinnedDifference;
 
-    const isClosedRoom = (room: typeof a | typeof b): boolean =>
-      room.itemType === "open" &&
-      Boolean(
-        (room as OpenChatRoom).recruitmentStatus === "CLOSED" ||
-          (room as OpenChatRoom).isJoinable === false ||
-          (room as any).recruitmentClosed === true,
-      );
-    const closedDifference =
-      Number(isClosedRoom(a)) - Number(isClosedRoom(b));
-    if (closedDifference !== 0) return closedDifference;
-
     const timeA =
       a.itemType === "roommate"
         ? (a as RoommateChatRoom).lastMessageTime
