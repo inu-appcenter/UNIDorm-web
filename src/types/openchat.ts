@@ -19,6 +19,7 @@ export interface OpenChatRoom {
   public?: boolean;
   joined: boolean;
   isBlockedByPartner?: boolean;
+  isMyRoommate?: boolean;
   isJoinable?: boolean;
   recruitmentStatus?: "OPEN" | "CLOSED";
   lastStatusChangedAt?: string | null;
@@ -99,6 +100,8 @@ export interface ReplySourceDto {
   replyToRoomType: ChatRoomType;
   replyToRoomId: number;
   replyToDerivedRoomId?: number | null;
+  imageUrl?: string | null;
+  thumbnailUrl?: string | null;
 }
 
 export type OpenChatMessageType =

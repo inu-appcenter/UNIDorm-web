@@ -45,6 +45,8 @@ export interface RoommateChat {
   system?: boolean;
   isDeleted?: boolean;
   replySource?: ReplySourceDto | null;
+  imageUrls?: string[];
+  type?: "TALK" | "IMAGE" | "SYSTEM" | string;
 }
 
 export interface RoommateChatDeleteEvent {

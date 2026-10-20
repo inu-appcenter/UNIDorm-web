@@ -137,5 +137,17 @@ export const updateRoommateChatMessage = async (
   );
 };
 
+/** 룸메이트 채팅 이미지 전송 */
+export const sendRoommateChatImages = async (
+  roomId: number,
+  images: File[],
+): Promise<AxiosResponse<RoommateChat[]>> => {
+  const formData = new FormData();
+  images.forEach((image) => formData.append("images", image));
 
-
+  return tokenInstance.post(
+    `/roommate/chat/${roomId}/messages/image`,
+    formData,
+    { headers: { "Content-Type": "multipart/form-data" } },
+  );
+};
