@@ -23,6 +23,11 @@ interface ChatListState {
   markOpenChatRoomAsRead: (roomId: number) => void;
   markRoommateChatRoomAsRead: (chatRoomId: number) => void;
   resetChatList: () => void;
+  appendChatListData: (data: {
+    tab: OpenChatTab;
+    rooms: OpenChatRoom[];
+    roommateRooms?: RoommateChatRoom[];
+  }) => void;
 }
 
 export const useChatListStore = create<ChatListState>((set) => ({
@@ -73,6 +78,31 @@ export const useChatListStore = create<ChatListState>((set) => ({
           : state.myOpenChatUnreadTotal,
       isInitialized: true,
     })),
+  appendChatListData: ({ tab, rooms, roommateRooms }) =>
+    set((state) => {
+      const currentTabRooms = state.roomsByTab[tab] || [];
+      const existingRoomIds = new Set(currentTabRooms.map((r) => r.roomId));
+      const filteredNewRooms = rooms.filter(
+        (r) => !existingRoomIds.has(r.roomId),
+      );
+      const updatedTabRooms = [...currentTabRooms, ...filteredNewRooms];
+
+      let updatedRoommates = state.roommateRooms;
+      if (roommateRooms && roommateRooms.length > 0) {
+        const existingRoommateIds = new Set(
+          state.roommateRooms.map((r) => r.chatRoomId),
+        );
+        const filteredNewRoommates = roommateRooms.filter(
+          (r) => !existingRoommateIds.has(r.chatRoomId),
+        );
+        updatedRoommates = [...state.roommateRooms, ...filteredNewRoommates];
+      }
+
+      return {
+        roomsByTab: { ...state.roomsByTab, [tab]: updatedTabRooms },
+        roommateRooms: updatedRoommates,
+      };
+    }),
 
   markOpenChatRoomAsRead: (roomId) =>
     set((state) => {
@@ -110,7 +140,19 @@ export const useChatListStore = create<ChatListState>((set) => ({
         return room;
       });
 
+      const updatedRoomsByTab = { ...state.roomsByTab };
+      if (updatedRoomsByTab.MY) {
+        updatedRoomsByTab.MY = updatedRoomsByTab.MY.map((room) => {
+          if (room.chatCategory === "ROOMMATE" && room.roomId === chatRoomId) {
+            if (readCount === 0) readCount = room.unreadCount || 0;
+            return { ...room, unreadCount: 0 };
+          }
+          return room;
+        });
+      }
+
       return {
+        roomsByTab: updatedRoomsByTab,
         roommateRooms: updatedRoommates,
         roommateUnreadTotal: Math.max(0, state.roommateUnreadTotal - readCount),
       };
@@ -125,3 +167,4 @@ export const useChatListStore = create<ChatListState>((set) => ({
       isInitialized: false,
     }),
 }));
+
