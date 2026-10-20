@@ -140,7 +140,19 @@ export const useChatListStore = create<ChatListState>((set) => ({
         return room;
       });
 
+      const updatedRoomsByTab = { ...state.roomsByTab };
+      if (updatedRoomsByTab.MY) {
+        updatedRoomsByTab.MY = updatedRoomsByTab.MY.map((room) => {
+          if (room.chatCategory === "ROOMMATE" && room.roomId === chatRoomId) {
+            if (readCount === 0) readCount = room.unreadCount || 0;
+            return { ...room, unreadCount: 0 };
+          }
+          return room;
+        });
+      }
+
       return {
+        roomsByTab: updatedRoomsByTab,
         roommateRooms: updatedRoommates,
         roommateUnreadTotal: Math.max(0, state.roommateUnreadTotal - readCount),
       };
