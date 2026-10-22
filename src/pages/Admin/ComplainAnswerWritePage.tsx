@@ -154,8 +154,7 @@ export default function ComplainAnswerWritePage() {
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  background: #fff;
+  height: 100vh;
 `;
 
 const Content = styled.div`

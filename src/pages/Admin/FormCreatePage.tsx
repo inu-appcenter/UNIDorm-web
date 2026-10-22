@@ -350,8 +350,7 @@ const PageWrapper = styled.div`
   flex-direction: column;
   gap: 32px;
   box-sizing: border-box;
-  overflow-y: auto;
-  background-color: white;
+  overflow-y: auto;
   flex: 1;
   align-items: center;
 

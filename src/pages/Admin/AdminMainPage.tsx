@@ -259,8 +259,7 @@ const AdminMainPage: React.FC = () => {
 
 export default AdminMainPage;
 
-const Wrapper = styled.div`
-  background-color: #f8fafc;
+const Wrapper = styled.div`
   min-height: 100vh;
   width: 100%;
   display: flex;

@@ -198,8 +198,7 @@ export default function AnnounceWritePage() {
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  background: #fafafa;
+  height: 100vh;
   flex: 1;
   padding: 0 16px calc(120px + var(--safe-area-bottom, 0px));
 `;
