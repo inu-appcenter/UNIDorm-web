@@ -1,10 +1,9 @@
-import styled, { keyframes } from "styled-components";
+import styled, { css, keyframes } from "styled-components";
 
 export const ChatPageWrapper = styled.div`
-  width: 100%;
-  background: #ffffff;
-  /* 부모 헤더(70px)를 뺀 나머지 화면 전체 고정 높이 */
-  height: calc(100vh - 70px);
+  width: 100%;
+  /* 부모 헤더(70px + safe-area-top)를 뺀 나머지 화면 전체 고정 높이 */
+  height: calc(100vh - 70px - var(--safe-area-top, 0px));
   /* Flex Column 레이아웃 */
   display: flex;
   flex-direction: column;
@@ -20,7 +19,73 @@ export const FixedHeaderContainer = styled.div`
   flex-shrink: 0;
 `;
 
-export const ChattingWrapper = styled.div<{ $chatType?: string }>`
+export const RecruitmentStatusBar = styled.div`
+  width: 100%;
+  padding: 10px 16px;
+  box-sizing: border-box;
+  background-color: #ffffff;
+  border-bottom: 1px solid #f2f4f7;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  position: relative;
+  z-index: 2;
+`;
+
+export const RecruitmentStatusLeft = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+`;
+
+export const RecruitmentStatusBadge = styled.span<{ $isClosed: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  flex-shrink: 0;
+  line-height: 1.2;
+  background-color: ${({ $isClosed }) => ($isClosed ? "#f2f4f7" : "#eff4ff")};
+  color: ${({ $isClosed }) => ($isClosed ? "#667085" : "#2b66f6")};
+`;
+
+export const RecruitmentStatusText = styled.span`
+  font-size: 12px;
+  font-weight: 500;
+  color: #475467;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+export const RecruitmentStatusToggleButton = styled.button<{ $isClosed: boolean }>`
+  flex-shrink: 0;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid ${({ $isClosed }) => ($isClosed ? "#2b66f6" : "#d0d5dd")};
+  background-color: ${({ $isClosed }) => ($isClosed ? "#2b66f6" : "#ffffff")};
+  color: ${({ $isClosed }) => ($isClosed ? "#ffffff" : "#344054")};
+  transition: all 0.15s ease-in-out;
+
+  &:active {
+    opacity: 0.85;
+    transform: scale(0.97);
+  }
+`;
+
+export const ChattingWrapper = styled.div<{
+  $chatType?: string;
+  $hasStatusBar?: boolean;
+}>`
   display: flex;
   flex-direction: column;
   /* 남은 공간을 모두 차지하며 내부 스크롤 활성화 */
@@ -28,8 +93,9 @@ export const ChattingWrapper = styled.div<{ $chatType?: string }>`
   overflow-y: auto;
 
   /* 오픈채팅방일 경우 상단에 플로팅 배너 높이만큼 여백 추가 */
-  padding-top: ${({ $chatType }) => ($chatType === "open" ? "72px" : "0")};
-  padding-bottom: 100px; /* 플로팅 입력 바 공간 확보 */
+  padding-top: ${({ $chatType, $hasStatusBar }) =>
+    $chatType === "open" ? ($hasStatusBar ? "124px" : "72px") : "0"};
+  padding-bottom: calc(100px + var(--safe-area-bottom, 0px)); /* 플로팅 입력 바 공간 확보 */
   box-sizing: border-box;
   background: transparent;
   position: relative;
@@ -82,9 +148,9 @@ export const BackgroundImage = styled.div`
   z-index: 0;
 `;
 
-export const NoticeContainer = styled.div`
+export const NoticeContainer = styled.div<{ $hasStatusBar?: boolean }>`
   position: absolute;
-  top: 12px;
+  top: ${({ $hasStatusBar }) => ($hasStatusBar ? "60px" : "12px")};
   left: 20px;
   right: 20px;
   background-color: #e6f4ff;
@@ -161,11 +227,42 @@ export const NoticeParagraph = styled.p`
   word-break: break-word;
 `;
 
-export const FloatingInputArea = styled.div`
+const highlightFlash = keyframes`
+  0% {
+    background-color: rgba(22, 119, 255, 0.2);
+  }
+  60% {
+    background-color: rgba(22, 119, 255, 0.15);
+  }
+  100% {
+    background-color: transparent;
+  }
+`;
+
+export const MessageItemContainer = styled.div<{ $isHighlighted?: boolean }>`
+  width: 100%;
+  border-radius: 12px;
+  transition: background-color 0.3s ease;
+  background-color: ${({ $isHighlighted }) =>
+    $isHighlighted ? "rgba(22, 119, 255, 0.15)" : "transparent"};
+  animation: ${({ $isHighlighted }) =>
+    $isHighlighted ? css`${highlightFlash} 1.5s ease-out` : "none"};
+`;
+
+export const FloatingInputContainer = styled.div`
   position: absolute;
-  bottom: 24px;
+  bottom: calc(24px + var(--safe-area-bottom, 0px));
   left: 20px;
   right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 100;
+`;
+
+export const FloatingInputArea = styled.div`
+  position: relative;
+  width: 100%;
   background-color: #ffffff;
   border-radius: 32px;
   display: flex;
@@ -174,7 +271,6 @@ export const FloatingInputArea = styled.div`
   box-sizing: border-box;
   gap: 8px;
   box-shadow: 0px 2px 5px #dfdfdf;
-  z-index: 100;
 `;
 
 export const PlusButton = styled.button`
@@ -689,19 +785,25 @@ export const ShareTimeArea = styled.div`
   }
 `;
 
-export const RoomLinkRow = styled.div`
+export const RoomLinkRow = styled.div<{ $isHighlighted?: boolean }>`
   width: 100%;
   padding: 12px 20px;
   box-sizing: border-box;
   display: flex;
   justify-content: center;
+  border-radius: 16px;
+  transition: background-color 0.3s ease;
+  background-color: ${({ $isHighlighted }) =>
+    $isHighlighted ? "rgba(22, 119, 255, 0.15)" : "transparent"};
+  animation: ${({ $isHighlighted }) =>
+    $isHighlighted ? css`${highlightFlash} 1.5s ease-out` : "none"};
 `;
 
-export const RoomLinkCard = styled.button`
+export const RoomLinkCard = styled.button<{ $isClosed?: boolean }>`
   width: min(100%, 420px);
   min-height: 112px;
   padding: 18px 20px;
-  border: 1px solid #b7d5ff;
+  border: 1px solid ${({ $isClosed }) => ($isClosed ? "#E4E7EC" : "#b7d5ff")};
   border-radius: 16px;
   background: #ffffff;
   display: flex;
@@ -710,7 +812,8 @@ export const RoomLinkCard = styled.button`
   gap: 16px;
   text-align: left;
   cursor: pointer;
-  box-shadow: 0 6px 20px rgba(22, 119, 255, 0.08);
+  box-shadow: ${({ $isClosed }) =>
+    $isClosed ? "none" : "0 6px 20px rgba(22, 119, 255, 0.08)"};
 
   &:disabled {
     cursor: wait;
@@ -725,8 +828,8 @@ export const RoomLinkTextArea = styled.span`
   gap: 3px;
 `;
 
-export const RoomLinkLabel = styled.span`
-  color: #1677ff;
+export const RoomLinkLabel = styled.span<{ $isClosed?: boolean }>`
+  color: ${({ $isClosed }) => ($isClosed ? "#98A2B3" : "#1677ff")};
   font-family: "Pretendard", sans-serif;
   font-size: 12px;
   font-weight: 600;
@@ -769,3 +872,14 @@ export const RoomLinkAction = styled.span`
   align-items: center;
   gap: 4px;
 `;
+
+export const RoomLinkClosedAction = styled.span`
+  flex-shrink: 0;
+  color: #f04438;
+  font-family: "Pretendard", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+`;
+

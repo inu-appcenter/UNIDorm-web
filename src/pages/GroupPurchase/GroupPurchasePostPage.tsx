@@ -442,7 +442,7 @@ export default function GroupPurchasePostPage() {
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
-  padding: 0 16px 100px;
+  padding: 0 16px calc(100px + var(--safe-area-bottom, 0px));
   min-height: 100vh;
   box-sizing: border-box;
 
@@ -475,7 +475,7 @@ const ImageSection = styled.div`
   @media (min-width: 1024px) {
     flex: 1.2;
     position: sticky; // 스크롤 시 이미지 영역 고정
-    top: 100px;
+    top: calc(100px + var(--safe-area-top, 0px));
   }
 `;
 

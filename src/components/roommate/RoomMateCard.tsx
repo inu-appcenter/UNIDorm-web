@@ -4,6 +4,7 @@ import styled from "styled-components";
 import { RoomMateCardProps } from "@/types/roommates";
 import 매칭완료 from "../../assets/roommate/매칭완료2.svg";
 import { mixpanelTrack } from "@/utils/mixpanel";
+import DormitoryBadge from "@/components/common/DormitoryBadge";
 
 const RoomMateCard = ({
   boardId,
@@ -43,7 +44,7 @@ const RoomMateCard = ({
           <span>{percentage}%</span>
         </LeftCircle>
       )}
-      <TopRightBadge dormType={dormType}>{dormType}</TopRightBadge>
+      <CardDormBadge dormType={dormType}>{dormType}</CardDormBadge>
       {matched && <RightBottomBadge src={매칭완료} />}
 
       <ContentContainer>
@@ -100,49 +101,14 @@ const DisabledOverlay = styled.div`
   z-index: 1;
 `;
 
-// TopRightBadge (기숙사 타입)
-const TopRightBadge = styled.div.withConfig({
-  shouldForwardProp: (prop) => prop !== "dormType",
-})<{ dormType: string }>`
+// CardDormBadge (기숙사 타입)
+const CardDormBadge = styled(DormitoryBadge)`
   position: absolute;
   top: 12px;
   right: 12px;
-  padding: 4px 8px;
-  border-radius: 12px;
   z-index: 0;
-  text-align: center;
-
-  font-family: Pretendard;
-  font-size: 12px;
-  font-style: normal;
-  font-weight: 400;
-  line-height: 150%; /* 18px */
-
-  ${({ dormType }) => {
-    switch (dormType) {
-      case "1기숙사":
-        return `
-          border: 1px solid #8e8e93;
-          color: #8e8e93;
-        `;
-      case "2기숙사":
-        return `
-          border: 1px solid var(--Main-Main1, #1677FF);
-          color: var(--Main-Main2, #0958D9);
-        `;
-      case "3기숙사":
-        return `
-          border: 1px solid #ff6b6b;
-          color: #ff6b6b;
-        `;
-      default:
-        return `
-          border: 1px solid var(--Main-Main1, #1677FF);
-          color: var(--Main-Main2, #0958D9);
-        `;
-    }
-  }}
 `;
+
 
 const RightBottomBadge = styled.img.attrs({
   className: "matched-stamp",

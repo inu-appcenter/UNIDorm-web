@@ -51,7 +51,7 @@ export default function FreshmanLoginPage() {
           ? "신입생 임시 계정으로 로그인했어요.\n\n홈 화면 배너에서 포털 계정 통합을 진행해 주세요."
           : "신입생 임시 계정으로 로그인했어요.",
       );
-      navigate(PATHS.HOME);
+      navigate(PATHS.HOME, { replace: true });
     } catch (error) {
       const status = isAxiosError(error) ? error.response?.status : undefined;
 

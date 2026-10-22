@@ -303,8 +303,7 @@ const ComplainListPageWrapper = styled.div`
   gap: 32px;
   box-sizing: border-box;
 
-  overflow-y: auto;
-  background-color: white;
+  overflow-y: auto;
   flex: 1;
   align-items: center; // 🖥️ PC 레이아웃을 위해 중앙 정렬 추가
 
@@ -444,7 +443,7 @@ const Wrapper2 = styled.div`
 
 const WriteButton = styled.button`
   position: fixed;
-  bottom: 96px;
+  bottom: calc(96px + var(--safe-area-bottom, 0px));
   right: 20px;
   background-color: #007bff;
   color: #f4f4f4;

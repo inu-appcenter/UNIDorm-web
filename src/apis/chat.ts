@@ -114,3 +114,40 @@ export const updateOpenChatNotificationMode = async (
   );
   return response;
 };
+
+/** 룸메이트 채팅 메시지 삭제 (모두에게 삭제) */
+export const deleteRoommateChatMessage = async (
+  roomId: number,
+  messageId: number,
+): Promise<AxiosResponse<void>> => {
+  return tokenInstance.delete(
+    `/roommate/chat/${roomId}/messages/${messageId}`,
+  );
+};
+
+/** 룸메이트 채팅 메시지 수정 */
+export const updateRoommateChatMessage = async (
+  roomId: number,
+  messageId: number,
+  content: string,
+): Promise<AxiosResponse<void>> => {
+  return tokenInstance.patch(
+    `/roommate/chat/${roomId}/messages/${messageId}`,
+    { content },
+  );
+};
+
+/** 룸메이트 채팅 이미지 전송 */
+export const sendRoommateChatImages = async (
+  roomId: number,
+  images: File[],
+): Promise<AxiosResponse<RoommateChat[]>> => {
+  const formData = new FormData();
+  images.forEach((image) => formData.append("images", image));
+
+  return tokenInstance.post(
+    `/roommate/chat/${roomId}/messages/image`,
+    formData,
+    { headers: { "Content-Type": "multipart/form-data" } },
+  );
+};

@@ -1,7 +1,6 @@
 import mixpanel from "mixpanel-browser";
 import { getSessionId } from "@/utils/session";
 import { APP_VERSION, getOsHeaderValue } from "@/utils/deviceInfo";
-import { HOME_AB_EXPERIMENT_KEY } from "@/constants/experiment";
 
 const MIXPANEL_TOKEN = import.meta.env.VITE_MIXPANEL_TOKEN;
 
@@ -67,20 +66,18 @@ export const mixpanelTrack = {
   //   trackEvent("로그인 완료", { method });
   // },
 
-  // --- 0. 홈 A/B 실험 (Home A/B Experiment) ---
-  // 서버 GET /features/ab/{key} 응답(experimentId/userId/userType/timestamp) +
-  // 클라이언트가 아는 정보(session_id/app_version/os)를 합쳐서 전송한다.
-  homeAbTestAssigned: (params: {
-    variant: "A" | "B";
-    experimentId?: string;
+  // --- 0. A/B 실험 및 홈 트래킹 ---
+  abTestAssigned: (params: {
+    experimentId: string;
+    variant: string;
     userId?: string;
     userType?: "existing" | "new";
     timestamp?: string;
-    previousVariant?: "A" | "B" | null;
+    previousVariant?: string | null;
     entrySource?: string;
   }) => {
     trackEvent("AB_TEST_ASSIGNED", {
-      experiment_id: params.experimentId ?? HOME_AB_EXPERIMENT_KEY,
+      experiment_id: params.experimentId,
       variant: params.variant,
       user_id: params.userId,
       user_type: params.userType,
@@ -95,11 +92,8 @@ export const mixpanelTrack = {
       entry_source: params.entrySource,
     });
   },
-  homeViewed: (variant: "A" | "B") => {
-    trackEvent("홈 진입", {
-      experiment_id: HOME_AB_EXPERIMENT_KEY,
-      variant,
-    });
+  homeViewed: () => {
+    trackEvent("홈 진입");
   },
   homeLoadComplete: (loadTimeMs: number) => {
     trackEvent("홈 로드 완료", { load_time_ms: loadTimeMs });
@@ -343,6 +337,51 @@ export const mixpanelTrack = {
     trackEvent("내 룸메이트 없음", {
       location: "마이페이지",
     });
+  },
+
+  // --- 9. 모바일 사생증 (Mobile Dormitory Card) ---
+  dormitoryCardEntryClicked: (location: "홈" | "사생정보조회" | "마이페이지" | string) => {
+    trackEvent("모바일 사생증 진입 클릭", {
+      location,
+    });
+  },
+
+  dormitoryCardPageViewed: () => {
+    trackPageView("모바일 사생증");
+  },
+
+  dormitoryCardIssueSuccess: (params: {
+    dormitoryType?: string;
+    year?: string;
+    term?: string;
+  }) => {
+    trackEvent("모바일 사생증 발급 성공", {
+      dormitory_type: params.dormitoryType || "기타",
+      year: params.year,
+      term: params.term,
+    });
+  },
+
+  dormitoryCardNonResidentBlocked: (params?: {
+    reason?: "미배정" | "퇴사" | "과거학기" | "기타";
+  }) => {
+    trackEvent("모바일 사생증 비사생 노출", {
+      reason: params?.reason || "기타",
+    });
+  },
+
+  dormitoryCardOnboardingViewed: () => {
+    trackEvent("모바일 사생증 연동 온보딩 노출");
+  },
+
+  dormitoryCardInfoButtonClicked: (location: "사생증화면" | "비사생화면") => {
+    trackEvent("모바일 사생증 사생정보조회 클릭", {
+      location,
+    });
+  },
+
+  dormitoryCardNonResidentHomeClicked: () => {
+    trackEvent("모바일 사생증 홈으로 클릭");
   },
 };
 

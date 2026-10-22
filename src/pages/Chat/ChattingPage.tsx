@@ -1,5 +1,5 @@
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import React from "react";
 import ChatInfo from "../../components/chat/ChatInfo.tsx";
 import ChatItemOtherPerson from "../../components/chat/ChatItemOtherPerson.tsx";
@@ -12,14 +12,21 @@ import {
   getRoommateChatHistory,
   getRoommateChatRoom,
   patchRoommateChatRead,
+  deleteRoommateChatMessage,
+  updateRoommateChatMessage,
+  sendRoommateChatImages,
 } from "@/apis/chat";
 import { patchNotificationsRead } from "@/apis/notification";
+import { appBridge } from "@/utils/appBridgeAdapter";
 import {
   getOpenChatMessages,
   getOpenChatRooms,
   joinOpenChatRoom,
   createPersonalOpenChatRoom,
   transferOpenChatHost,
+  deleteOpenChatMessage,
+  updateOpenChatMessage,
+  updateOpenChatRecruitmentStatus,
 } from "@/apis/openchat";
 import {
   getOpenChatParticipants,
@@ -27,9 +34,25 @@ import {
   sendOpenChatImages,
 } from "@/apis/openchat";
 import { OpenChatReportReason, reportOpenChatMessage } from "@/apis/report";
-import { OpenChatMessage, OpenChatParticipant, OpenChatRoom } from "@/types/openchat";
+import {
+  OpenChatMessage,
+  OpenChatParticipant,
+  OpenChatRoom,
+  ReplySourceDto,
+} from "@/types/openchat";
 import PhotoAttachmentBottomSheet from "@/components/chat/PhotoAttachmentBottomSheet";
+import ChatReplyPreviewBar, {
+  ReplyTargetInfo,
+} from "@/components/chat/ChatReplyPreviewBar";
+import ChatEditPreviewBar from "@/components/chat/ChatEditPreviewBar";
+import { useChatListStore } from "@/stores/useChatListStore";
+
+import { useLongPress } from "@/hooks/useLongPress";
 import ChatMessageActionSheet from "@/components/chat/ChatMessageActionSheet";
+import ChatMessageMenuModal from "@/components/chat/ChatMessageMenuModal";
+import MessageDeleteConfirmModal from "@/components/chat/MessageDeleteConfirmModal";
+import RecruitmentClosedModal from "@/components/modal/RecruitmentClosedModal";
+import RecruitmentReopenModal from "@/components/modal/RecruitmentReopenModal";
 import ChatMemberActionSheet from "@/components/chat/ChatMemberActionSheet";
 import ImageViewerModal from "@/components/chat/ImageViewerModal";
 import TooltipMessage from "@/components/common/TooltipMessage";
@@ -72,15 +95,20 @@ type MessageType = {
   isBot?: boolean;
   isBotQuestion?: boolean;
   senderId?: number | null;
-  type?: OpenChatMessage["type"];
+  type?: OpenChatMessage["type"] | string;
   imageUrls?: string[];
   disclosureRequestId?: number | null;
   linkedRoomId?: number | null;
   linkedRoomName?: string | null;
   linkedRoomDescription?: string | null;
   linkedRoomMaxParticipants?: number | null;
+  linkedRoomRecruitmentStatus?: "OPEN" | "CLOSED";
+  linkedRoomRecruitmentClosed?: boolean;
   unreadCount?: number;
   isRead?: boolean;
+  isDeleted?: boolean;
+  isEdited?: boolean;
+  replySource?: ReplySourceDto | null;
 };
 
 interface LegacyRoommateShareMessage {
@@ -161,6 +189,89 @@ const dedupeStudentIdDisclosureMessages = (messages: MessageType[]) => {
   });
 };
 
+const dedupeDerivedRoomCards = (messages: MessageType[]): MessageType[] => {
+  const seenDerivedRooms = new Map<number, number>();
+  const result: MessageType[] = [];
+
+  for (const m of messages) {
+    const rawId = m.linkedRoomId;
+    if (
+      (m.type === "ROOM_LINK" ||
+        m.type === "REOPEN_CARD" ||
+        rawId != null) &&
+      rawId != null
+    ) {
+      const numId = Number(rawId);
+      const existingIdx = seenDerivedRooms.get(numId);
+      if (existingIdx !== undefined) {
+        const prevCard = result[existingIdx];
+        const isReopen = m.type === "REOPEN_CARD";
+
+        if (isReopen) {
+          // 재모집: 이전 위치의 카드를 제거하고 최신 위치(현재)에 재모집 카드를 배치
+          result.splice(existingIdx, 1);
+
+          seenDerivedRooms.forEach((idx, rId) => {
+            if (idx > existingIdx) {
+              seenDerivedRooms.set(rId, idx - 1);
+            }
+          });
+
+          const isClosed =
+            m.linkedRoomRecruitmentStatus === "CLOSED" ||
+            m.linkedRoomRecruitmentClosed === true;
+
+          const mergedCard: MessageType = {
+            ...m,
+            linkedRoomId: numId,
+            type: "REOPEN_CARD",
+            linkedRoomRecruitmentStatus: isClosed ? "CLOSED" : "OPEN",
+            linkedRoomRecruitmentClosed: isClosed,
+            linkedRoomName: m.linkedRoomName || prevCard.linkedRoomName,
+            linkedRoomDescription:
+              m.linkedRoomDescription || prevCard.linkedRoomDescription,
+            linkedRoomMaxParticipants:
+              m.linkedRoomMaxParticipants ?? prevCard.linkedRoomMaxParticipants,
+          };
+
+          seenDerivedRooms.set(numId, result.length);
+          result.push(mergedCard);
+        } else {
+          // 모집 마감 또는 일반 상태 갱신: 원래 위치에서 상태만 갱신 (in-place)
+          const isClosed =
+            m.linkedRoomRecruitmentStatus === "CLOSED" ||
+            m.linkedRoomRecruitmentClosed === true ||
+            (Boolean(prevCard.linkedRoomRecruitmentClosed) &&
+              m.linkedRoomRecruitmentStatus !== "OPEN");
+          const newStatus: "OPEN" | "CLOSED" = isClosed ? "CLOSED" : "OPEN";
+
+          result[existingIdx] = {
+            ...prevCard,
+            linkedRoomId: numId,
+            linkedRoomRecruitmentStatus: newStatus,
+            linkedRoomRecruitmentClosed: isClosed,
+            linkedRoomName: m.linkedRoomName || prevCard.linkedRoomName,
+            linkedRoomDescription:
+              m.linkedRoomDescription || prevCard.linkedRoomDescription,
+            linkedRoomMaxParticipants:
+              m.linkedRoomMaxParticipants ?? prevCard.linkedRoomMaxParticipants,
+          };
+        }
+      } else {
+        seenDerivedRooms.set(numId, result.length);
+        result.push({
+          ...m,
+          linkedRoomId: numId,
+        });
+      }
+    } else {
+      result.push(m);
+    }
+  }
+
+  return result;
+};
+
 const parseChatBuliPayload = (rawContent: string) => {
   if (typeof rawContent !== "string") {
     return {
@@ -220,6 +331,11 @@ const mapOpenChatMessageToMessageType = (
   const normalizedSenderId =
     studentIdRequestPayload?.requesterId ?? chat.senderId ?? null;
 
+  const isDeleted =
+    Boolean(chat.isDeleted) ||
+    chat.content === "삭제된 메시지입니다." ||
+    chat.eventType === "MESSAGE_DELETED";
+
   const rawContent = studentIdRequestPayload ? "학번 공유 요청" : chat.content;
   const { content, isBot, isBotQuestion, nickname } =
     parseChatBuliPayload(rawContent);
@@ -227,7 +343,7 @@ const mapOpenChatMessageToMessageType = (
   return {
     id: chat.messageId,
     sender: normalizedSenderId === userId ? "me" : "other",
-    content,
+    content: isDeleted ? "삭제된 메시지입니다." : content,
     nickname:
       nickname ||
       chat.senderNickname ||
@@ -243,7 +359,10 @@ const mapOpenChatMessageToMessageType = (
     isBotQuestion,
     senderId: normalizedSenderId,
     type: normalizedType,
-    imageUrls: chat.imageUrls ?? [],
+    isDeleted,
+    isEdited: Boolean(chat.isEdited),
+    replySource: chat.replySource ?? null,
+    imageUrls: isDeleted ? [] : (chat.imageUrls ?? []),
     disclosureRequestId:
       chat.disclosureRequestId ??
       studentIdRequestPayload?.requestId ??
@@ -252,6 +371,18 @@ const mapOpenChatMessageToMessageType = (
     linkedRoomName: chat.linkedRoomName,
     linkedRoomDescription: chat.linkedRoomDescription,
     linkedRoomMaxParticipants: chat.linkedRoomMaxParticipants,
+    linkedRoomRecruitmentStatus:
+      chat.linkedRoomRecruitmentStatus ??
+      (chat as any).recruitmentStatus ??
+      (chat as any).status,
+    linkedRoomRecruitmentClosed:
+      chat.linkedRoomRecruitmentClosed !== undefined
+        ? chat.linkedRoomRecruitmentClosed
+        : (chat as any).recruitmentClosed !== undefined
+          ? (chat as any).recruitmentClosed
+          : chat.linkedRoomRecruitmentStatus === "CLOSED" ||
+            (chat as any).recruitmentStatus === "CLOSED" ||
+            (chat as any).status === "CLOSED",
     unreadCount: chat.unreadCount,
     time: new Date(chat.createdAt).toLocaleTimeString("ko-KR", {
       hour: "2-digit",
@@ -337,6 +468,76 @@ const isPendingDisclosureStatus = (status?: string | null) => {
   );
 };
 
+function DerivedRoomCardItem({
+  msg,
+  isJoining,
+  onJoin,
+  onClosed,
+  onOpenMenu,
+}: {
+  msg: MessageType;
+  isJoining: boolean;
+  onJoin: () => void;
+  onClosed: () => void;
+  onOpenMenu: (rect?: DOMRect) => void;
+}) {
+  const cardRef = useRef<HTMLButtonElement>(null);
+  const isLongPressRef = useRef(false);
+  const isClosed =
+    msg.linkedRoomRecruitmentStatus === "CLOSED" ||
+    Boolean(msg.linkedRoomRecruitmentClosed);
+
+  const longPressHandlers = useLongPress({
+    onLongPress: () => {
+      isLongPressRef.current = true;
+      const rect = cardRef.current?.getBoundingClientRect();
+      onOpenMenu(rect);
+    },
+    delay: 400,
+  });
+
+  return (
+    <S.RoomLinkCard
+      ref={cardRef}
+      type="button"
+      $isClosed={isClosed}
+      disabled={isJoining}
+      {...longPressHandlers}
+      onClick={() => {
+        if (isLongPressRef.current) {
+          isLongPressRef.current = false;
+          return;
+        }
+        if (isClosed) {
+          onClosed();
+        } else {
+          onJoin();
+        }
+      }}
+    >
+      <S.RoomLinkTextArea>
+        <S.RoomLinkLabel $isClosed={isClosed}>
+          {msg.type === "REOPEN_CARD" ? "재모집 톡방" : "새 단체 톡방"}
+        </S.RoomLinkLabel>
+        <S.RoomLinkName>{msg.linkedRoomName || "단체 톡방"}</S.RoomLinkName>
+        {msg.linkedRoomDescription && (
+          <S.RoomLinkDescription>
+            {msg.linkedRoomDescription}
+          </S.RoomLinkDescription>
+        )}
+      </S.RoomLinkTextArea>
+      {isClosed ? (
+        <S.RoomLinkClosedAction>모집 마감</S.RoomLinkClosedAction>
+      ) : (
+        <S.RoomLinkAction>
+          {isJoining ? "입장 중..." : "참여하기"}
+          {!isJoining && <ArrowRight size={18} />}
+        </S.RoomLinkAction>
+      )}
+    </S.RoomLinkCard>
+  );
+}
+
 export default function ChattingPage() {
   const isLeavingRef = useRef(false);
   const { chatType, id } = useParams();
@@ -397,6 +598,48 @@ export default function ChattingPage() {
   const [openChatRoomName, setOpenChatRoomName] = useState<string | undefined>(
     routeRoomName,
   );
+
+  useEffect(() => {
+    if (routeRoomName) {
+      setOpenChatRoomName(routeRoomName);
+    }
+  }, [routeRoomName]);
+
+  const [currentRoomRecruitmentStatus, setCurrentRoomRecruitmentStatus] =
+    useState<"OPEN" | "CLOSED">(() => {
+      if (routeRoom) {
+        const isClosed =
+          routeRoom.recruitmentStatus === "CLOSED" ||
+          routeRoom.isJoinable === false ||
+          (routeRoom as any).recruitmentClosed === true;
+        return isClosed ? "CLOSED" : "OPEN";
+      }
+      return "OPEN";
+    });
+
+  const [isDerivedRoom, setIsDerivedRoom] = useState<boolean>(() => {
+    return (
+      routeRoom?.roomType === "DERIVED" ||
+      Boolean((routeRoom as any)?.originRoomId) ||
+      Boolean(location.state?.isDerived)
+    );
+  });
+
+  useEffect(() => {
+    if (routeRoom) {
+      const isClosed =
+        routeRoom.recruitmentStatus === "CLOSED" ||
+        routeRoom.isJoinable === false ||
+        (routeRoom as any).recruitmentClosed === true;
+      setCurrentRoomRecruitmentStatus(isClosed ? "CLOSED" : "OPEN");
+      if (
+        routeRoom.roomType === "DERIVED" ||
+        Boolean((routeRoom as any)?.originRoomId)
+      ) {
+        setIsDerivedRoom(true);
+      }
+    }
+  }, [routeRoom]);
   const partnerProfileImageUrl =
     location.state?.partnerProfileImageUrl ?? undefined;
   const pendingDisclosureRequestId = Number(
@@ -494,6 +737,38 @@ export default function ChattingPage() {
     }
   }, [isChatBlocked]);
 
+  const refreshRoomStatus = useCallback(async () => {
+    if (chatType !== "open" || !roomId) return;
+    try {
+      const roomsResponse = await getOpenChatRooms("MY", 0, 50);
+      const currentRoom = roomsResponse.data.content.find(
+        (room) => room.roomId === roomId,
+      );
+      if (currentRoom) {
+        if (
+          currentRoom.roomType === "DERIVED" ||
+          Boolean((currentRoom as any).originRoomId)
+        ) {
+          setIsDerivedRoom(true);
+        }
+        const isClosed =
+          currentRoom.recruitmentStatus === "CLOSED" ||
+          currentRoom.isJoinable === false ||
+          (currentRoom as any).recruitmentClosed === true;
+        setCurrentRoomRecruitmentStatus(isClosed ? "CLOSED" : "OPEN");
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, [chatType, roomId]);
+
+  useEffect(() => {
+    window.addEventListener("focus", refreshRoomStatus);
+    return () => {
+      window.removeEventListener("focus", refreshRoomStatus);
+    };
+  }, [refreshRoomStatus]);
+
   const clearPendingDisclosureRouteState = () => {
     if (!pendingDisclosureRequestId) return;
 
@@ -515,15 +790,13 @@ export default function ChattingPage() {
         console.error("채팅방 알림 읽음 처리 실패:", err);
       }
 
-      if (window.webkit?.messageHandlers?.enterDetailView) {
-        try {
-          window.webkit.messageHandlers.enterDetailView.postMessage({
-            type: "CHAT",
-            id: id,
-          });
-        } catch (err) {
-          console.error("iOS enterDetailView 브릿지 호출 실패:", err);
-        }
+      try {
+        appBridge.enterDetailView({
+          type: "CHAT",
+          id: id,
+        });
+      } catch (err) {
+        console.error("enterDetailView 브릿지 호출 실패:", err);
       }
     };
 
@@ -539,12 +812,342 @@ export default function ChattingPage() {
   const [selectedMessage, setSelectedMessage] = useState<MessageType | null>(
     null,
   );
+  const [messageMenuOpen, setMessageMenuOpen] = useState(false);
+  const [messageMenuAnchorRect, setMessageMenuAnchorRect] = useState<{
+    top: number;
+    bottom: number;
+    left: number;
+    right: number;
+    width: number;
+    height: number;
+  } | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [isDeletingMessage, setIsDeletingMessage] = useState(false);
+  const [recruitmentClosedModalOpen, setRecruitmentClosedModalOpen] =
+    useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
+  const selectedImageMessageIdRef = useRef<number | null>(null);
+  const [reopenConfirmModalOpen, setReopenConfirmModalOpen] = useState(false);
+  const [isUpdatingRecruitmentStatus, setIsUpdatingRecruitmentStatus] =
+    useState(false);
+
+  const handleToggleRecruitmentStatus = async (
+    targetStatus: "OPEN" | "CLOSED",
+  ) => {
+    if (
+      isUpdatingRecruitmentStatus ||
+      targetStatus === currentRoomRecruitmentStatus
+    )
+      return;
+
+    if (targetStatus === "OPEN") {
+      setReopenConfirmModalOpen(true);
+      return;
+    }
+
+    await executeRecruitmentStatusChange("CLOSED");
+  };
+
+  const executeRecruitmentStatusChange = async (
+    targetStatus: "OPEN" | "CLOSED",
+  ) => {
+    const prevStatus = currentRoomRecruitmentStatus;
+    setCurrentRoomRecruitmentStatus(targetStatus);
+    setIsUpdatingRecruitmentStatus(true);
+    try {
+      await updateOpenChatRecruitmentStatus(roomId, targetStatus);
+    } catch (error) {
+      console.error("모집 상태 변경 실패:", error);
+      setCurrentRoomRecruitmentStatus(prevStatus);
+      alert("모집 상태 변경에 실패했습니다. 다시 시도해 주세요.");
+    } finally {
+      setIsUpdatingRecruitmentStatus(false);
+    }
+  };
+
   const [isOpenChatHost, setIsOpenChatHost] = useState(false);
   const [participants, setParticipants] = useState<OpenChatParticipant[]>([]);
   const [selectedMember, setSelectedMember] =
     useState<OpenChatParticipant | null>(null);
   const [memberActionSheetOpen, setMemberActionSheetOpen] = useState(false);
+  const [replyTarget, setReplyTarget] = useState<ReplyTargetInfo | null>(null);
+  const [editingMessage, setEditingMessage] = useState<MessageType | null>(null);
+  const [highlightedMessageId, setHighlightedMessageId] = useState<
+    number | null
+  >(null);
+  const pendingReadCountsRef = useRef<Map<number, number>>(new Map());
+  const thumbnailCacheRef = useRef<Map<number, string>>(new Map());
+  const isNavigatingToMessageRef = useRef(false);
+
+  const messageThumbnailMap = useMemo(() => {
+    const map = new Map<number, string>();
+    thumbnailCacheRef.current.forEach((val, key) => map.set(key, val));
+    messageList.forEach((m) => {
+      if (m.imageUrls && m.imageUrls.length > 0) {
+        map.set(m.id, m.imageUrls[0]);
+      } else if (
+        m.type === "IMAGE" &&
+        m.content &&
+        (m.content.startsWith("http") ||
+          /\.(jpeg|jpg|gif|png|webp)($|\?)/i.test(m.content))
+      ) {
+        map.set(m.id, m.content);
+      }
+    });
+    return map;
+  }, [messageList]);
+
+  const toMessageType = useCallback(
+    (message: OpenChatMessage): MessageType => {
+      const { content, isBot, isBotQuestion, nickname } =
+        parseChatBuliPayload(message.content);
+
+      const imageUrls = message.imageUrls ?? [];
+      if (imageUrls.length > 0 && message.messageId) {
+        thumbnailCacheRef.current.set(message.messageId, imageUrls[0]);
+      }
+      const replyThumbnail =
+        message.replySource?.imageUrl || message.replySource?.thumbnailUrl;
+      if (replyThumbnail && message.replySource?.replyToMessageId) {
+        thumbnailCacheRef.current.set(
+          message.replySource.replyToMessageId,
+          replyThumbnail,
+        );
+      }
+
+      return {
+        id: message.messageId,
+        sender: message.senderId === userId ? "me" : "other",
+        senderId: message.senderId,
+        content,
+        nickname: nickname || message.senderNickname || undefined,
+        isSystem: message.type === "SYSTEM",
+        isBot: isBot || message.isBot || message.type === "BOT",
+        isBotQuestion,
+        type: message.type,
+        imageUrls,
+        disclosureRequestId: message.disclosureRequestId,
+        linkedRoomId: message.linkedRoomId,
+        linkedRoomName: message.linkedRoomName,
+        linkedRoomDescription: message.linkedRoomDescription,
+        linkedRoomMaxParticipants: message.linkedRoomMaxParticipants,
+        unreadCount:
+          typeof message.unreadCount === "number"
+            ? message.unreadCount
+            : (chatType === "open" || chatType === "personal") && participants.length > 1
+              ? Math.max(0, participants.length - 1)
+              : undefined,
+        isDeleted: Boolean(message.isDeleted),
+        isEdited: Boolean(message.isEdited),
+        replySource: message.replySource ?? null,
+        time: new Date(message.createdAt).toLocaleTimeString("ko-KR", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        }),
+        createdAt: message.createdAt,
+      };
+    },
+    [userId, chatType, participants.length],
+  );
+
+  const handleStartEdit = useCallback((message: MessageType) => {
+    setReplyTarget(null);
+    setEditingMessage(message);
+    setInputValue(message.content);
+    setMessageMenuOpen(false);
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.value = message.content;
+        inputRef.current.style.height = "auto";
+        inputRef.current.style.height = `${Math.min(inputRef.current.scrollHeight, 96)}px`;
+        inputRef.current.focus();
+      }
+    }, 50);
+  }, []);
+
+  const handleCancelEdit = useCallback(() => {
+    setEditingMessage(null);
+    setInputValue("");
+    if (inputRef.current) {
+      inputRef.current.value = "";
+      inputRef.current.style.height = "auto";
+    }
+  }, []);
+
+  const handleScrollToMessage = useCallback(
+    async (targetMessageId: number) => {
+      // 0. 이미 삭제된 메시지인지 메모리에서 확인
+      const inMemoryMsg = messageList.find((m) => m.id === targetMessageId);
+      if (
+        inMemoryMsg &&
+        (inMemoryMsg.isDeleted ||
+          inMemoryMsg.content === "삭제된 메시지입니다.")
+      ) {
+        alert("원본 메시지가 삭제되어 확인할 수 없습니다.");
+        return;
+      }
+
+      // 1. 이미 화면에 메시지 DOM 요소가 존재하는 경우 즉시 스크롤
+      const existingEl = document.getElementById(`chat-msg-${targetMessageId}`);
+      if (existingEl) {
+        if (
+          inMemoryMsg &&
+          (inMemoryMsg.isDeleted ||
+            inMemoryMsg.content === "삭제된 메시지입니다.")
+        ) {
+          alert("원본 메시지가 삭제되어 확인할 수 없습니다.");
+          return;
+        }
+        existingEl.scrollIntoView({ behavior: "smooth", block: "center" });
+        setHighlightedMessageId(targetMessageId);
+        setTimeout(() => {
+          setHighlightedMessageId((curr) =>
+            curr === targetMessageId ? null : curr,
+          );
+        }, 1500);
+        return;
+      }
+
+      if (isNavigatingToMessageRef.current) return;
+
+      // 2. 과거 메시지 페칭이 불가능한 경우 (더 가져올 메시지가 없거나 룸메 채팅 등)
+      if (
+        (chatType !== "open" && chatType !== "personal") ||
+        !hasNextMessages ||
+        nextCursor == null
+      ) {
+        alert("원본 메시지가 삭제되어 확인할 수 없습니다.");
+        return;
+      }
+
+      isNavigatingToMessageRef.current = true;
+      try {
+        let currentCursor: number | null = nextCursor;
+        let found = false;
+        let iterations = 0;
+        const MAX_ITERATIONS = 10; // 최대 300개 과거 메시지까지 자동 탐색
+
+        while (currentCursor != null && !found && iterations < MAX_ITERATIONS) {
+          iterations++;
+          const response = await getOpenChatMessages(roomId, currentCursor, 30);
+          const { messages: olderChats, hasNext, nextCursor: newCursor } =
+            response.data;
+
+          if (olderChats.length === 0) break;
+
+          currentCursor = newCursor;
+          setHasNextMessages(hasNext);
+          setNextCursor(newCursor);
+
+          const visibleOlderChats = olderChats.filter(
+            (m) =>
+              !(
+                chatType === "open" &&
+                (m.type === "STUDENT_ID_REQUEST" ||
+                  (m.type === "SYSTEM" && isOpenChatLeaveMessage(m.content)))
+              ),
+          );
+
+          setMessageList((prev) => {
+            const existingIds = new Set(prev.map((m) => m.id));
+            const newToAdd = visibleOlderChats
+              .filter((m) => !existingIds.has(m.messageId))
+              .map(toMessageType);
+            return dedupeDerivedRoomCards([...newToAdd, ...prev]);
+          });
+
+          const matchedOlder = visibleOlderChats.find(
+            (m) => m.messageId === targetMessageId,
+          );
+          if (matchedOlder) {
+            if (
+              matchedOlder.isDeleted ||
+              matchedOlder.content === "삭제된 메시지입니다."
+            ) {
+              alert("원본 메시지가 삭제되어 확인할 수 없습니다.");
+              return;
+            }
+            found = true;
+            break;
+          }
+
+          if (!hasNext || newCursor == null) break;
+        }
+
+        if (found) {
+          setTimeout(() => {
+            const el = document.getElementById(`chat-msg-${targetMessageId}`);
+            if (el) {
+              el.scrollIntoView({ behavior: "smooth", block: "center" });
+              setHighlightedMessageId(targetMessageId);
+              setTimeout(() => {
+                setHighlightedMessageId((curr) =>
+                  curr === targetMessageId ? null : curr,
+                );
+              }, 1500);
+            }
+          }, 150);
+        } else {
+          alert("원본 메시지가 삭제되어 확인할 수 없습니다.");
+        }
+      } catch (err) {
+        console.error("과거 메시지 탐색 실패:", err);
+        alert("이전 대화 목록을 불러오지 못했습니다.");
+      } finally {
+        isNavigatingToMessageRef.current = false;
+      }
+    },
+    [chatType, hasNextMessages, messageList, nextCursor, roomId, toMessageType],
+  );
+
+  const handleStartReply = useCallback(
+    (message: MessageType) => {
+      setEditingMessage(null);
+      const isImage =
+        Boolean(message.imageUrls?.length) ||
+        message.type === "IMAGE" ||
+        /\.(jpeg|jpg|gif|png|webp)($|\?)/i.test(message.content);
+
+      let senderName = message.nickname || "익명";
+      if (message.sender === "me") {
+        senderName = userInfo.name || "나";
+      }
+
+      let thumbnailUrl: string | undefined = undefined;
+      if (message.imageUrls && message.imageUrls.length > 0) {
+        thumbnailUrl = message.imageUrls[0];
+      } else if (
+        message.content &&
+        (message.content.startsWith("http") ||
+          /\.(jpeg|jpg|gif|png|webp)($|\?)/i.test(message.content))
+      ) {
+        thumbnailUrl = message.content;
+      }
+
+      if (thumbnailUrl && message.id) {
+        thumbnailCacheRef.current.set(message.id, thumbnailUrl);
+      }
+
+      setReplyTarget({
+        messageId: message.id,
+        senderName,
+        type: message.type || (isImage ? "IMAGE" : "TEXT"),
+        content: message.content,
+        thumbnailUrl,
+        roomName: message.linkedRoomName || undefined,
+        roomDescription: message.linkedRoomDescription || undefined,
+      });
+
+      setMessageMenuOpen(false);
+
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 50);
+    },
+    [userInfo.name],
+  );
+
   const menuContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -761,9 +1364,11 @@ export default function ChattingPage() {
           : sortedOlderChats;
 
       const formattedOlderMessages: MessageType[] =
-        dedupeStudentIdDisclosureMessages(
-          visibleChats.map((chat) =>
-            mapOpenChatMessageToMessageType(chat, userId),
+        dedupeDerivedRoomCards(
+          dedupeStudentIdDisclosureMessages(
+            visibleChats.map((chat) =>
+              mapOpenChatMessageToMessageType(chat, userId),
+            ),
           ),
         );
 
@@ -773,7 +1378,7 @@ export default function ChattingPage() {
           (m) => !existingIds.has(m.id),
         );
         if (uniqueOlder.length === 0) return prev;
-        return [...uniqueOlder, ...prev];
+        return dedupeDerivedRoomCards([...uniqueOlder, ...prev]);
       });
 
       // 스크롤 위치 복원 (사용자가 보고 있던 위치 유지)
@@ -1109,6 +1714,34 @@ export default function ChattingPage() {
         }
       }
 
+      if (
+        msg.isDeleted ||
+        (msg as any).eventType === "MESSAGE_DELETED" ||
+        msg.content === "삭제된 메시지입니다."
+      ) {
+        const deleteTargetId = msg.roommateChatId || msg.messageId;
+        if (deleteTargetId) {
+          if (selectedImageMessageIdRef.current === deleteTargetId) {
+            setSelectedImageUrl(null);
+            selectedImageMessageIdRef.current = null;
+            alert("삭제된 사진입니다.");
+          }
+          setMessageList((prev) =>
+            prev.map((m) =>
+              m.id === deleteTargetId
+                ? {
+                    ...m,
+                    isDeleted: true,
+                    content: "삭제된 메시지입니다.",
+                    imageUrls: [],
+                  }
+                : m,
+            ),
+          );
+        }
+        return;
+      }
+
       setMessageList((prev) => {
         const messageId = msg.roommateChatId || msg.messageId || Date.now();
         const isMyMessage = msg.userId === userId;
@@ -1128,12 +1761,31 @@ export default function ChattingPage() {
         const { content, isBot, isBotQuestion, nickname } =
           parseChatBuliPayload(msg.content);
 
+        const imageUrls = (msg as any).imageUrls ?? (
+          (msg as any).type === "IMAGE" && msg.content?.startsWith("http")
+            ? [msg.content]
+            : []
+        );
+        if (imageUrls.length > 0) {
+          thumbnailCacheRef.current.set(messageId, imageUrls[0]);
+        }
+        const replyThumbnail =
+          msg.replySource?.imageUrl || msg.replySource?.thumbnailUrl;
+        if (replyThumbnail && msg.replySource?.replyToMessageId) {
+          thumbnailCacheRef.current.set(
+            msg.replySource.replyToMessageId,
+            replyThumbnail,
+          );
+        }
+
         const nextMessage: MessageType = {
           id: messageId,
           sender: isMyMessage ? "me" : "other",
           senderId: msg.userId,
           nickname: nickname || undefined,
-          content,
+          content: msg.isDeleted ? "삭제된 메시지입니다." : content,
+          isDeleted: Boolean(msg.isDeleted),
+          replySource: msg.replySource ?? null,
           isSystem: Boolean(msg.system),
           isBot: isBot || Boolean(msg.system),
           isBotQuestion,
@@ -1147,6 +1799,8 @@ export default function ChattingPage() {
             hour12: true,
           }),
           createdAt: msg.createdDate || now.toISOString(),
+          imageUrls,
+          type: (msg as any).type,
         };
 
         // 1. 내 질문 메시지가 소켓으로 돌아왔을 때, 이미 로컬에 추가된 질문 메시지를 찾아 in-place로 ID/정보 업데이트 (순서 역전 방지)
@@ -1233,6 +1887,153 @@ export default function ChattingPage() {
     token,
     onMessage: (msg) => {
       const now = new Date();
+
+      // 실시간 삭제 이벤트 수신 처리
+      if (
+        msg.eventType === "MESSAGE_DELETED" ||
+        msg.isDeleted ||
+        msg.content === "삭제된 메시지입니다."
+      ) {
+        if (msg.messageId) {
+          if (selectedImageMessageIdRef.current === msg.messageId) {
+            setSelectedImageUrl(null);
+            selectedImageMessageIdRef.current = null;
+            alert("삭제된 사진입니다.");
+          }
+          setMessageList((prev) =>
+            prev.map((m) =>
+              m.id === msg.messageId
+                ? {
+                    ...m,
+                    isDeleted: true,
+                    content: "삭제된 메시지입니다.",
+                    imageUrls: [],
+                  }
+                : m,
+            ),
+          );
+        }
+        return;
+      }
+
+      // 실시간 메시지 수정 이벤트 수신 처리
+      if (
+        msg.eventType === "MESSAGE_UPDATED" ||
+        (msg.isEdited && !msg.isDeleted && msg.messageId)
+      ) {
+        if (msg.messageId) {
+          setMessageList((prev) =>
+            prev.map((m) =>
+              m.id === msg.messageId
+                ? {
+                    ...m,
+                    content: msg.content,
+                    isEdited: true,
+                  }
+                : m,
+            ),
+          );
+        }
+        return;
+      }
+
+      // 실시간 파생 톡방 모집 상태 변경 이벤트 수신 처리
+      const isRecruitmentEvent =
+        msg.eventType === "RECRUITMENT_STATUS_UPDATED" ||
+        msg.eventType === "RECRUITMENT_STATUS_CHANGED" ||
+        Boolean(msg.eventType?.includes("RECRUITMENT")) ||
+        Boolean((msg as any).recruitmentStatusChanged) ||
+        (msg.type as string) === "RECRUITMENT_CLOSED" ||
+        msg.type === "REOPEN_CARD" ||
+        (msg.linkedRoomRecruitmentStatus !== undefined && !msg.type);
+
+      if (isRecruitmentEvent) {
+        const rawTargetId =
+          msg.linkedRoomId ??
+          (msg as any).derivedRoomId ??
+          (msg as any).roomId;
+        const targetDerivedRoomId =
+          rawTargetId != null ? Number(rawTargetId) : null;
+
+        const isClosed =
+          msg.linkedRoomRecruitmentStatus === "CLOSED" ||
+          (msg as any).recruitmentStatus === "CLOSED" ||
+          (msg as any).status === "CLOSED" ||
+          msg.linkedRoomRecruitmentClosed === true ||
+          (msg as any).recruitmentClosed === true ||
+          (msg.type as string) === "RECRUITMENT_CLOSED" ||
+          msg.eventType === "RECRUITMENT_CLOSED";
+
+        if (targetDerivedRoomId === roomId || rawTargetId == null) {
+          setCurrentRoomRecruitmentStatus(isClosed ? "CLOSED" : "OPEN");
+        }
+
+        if (targetDerivedRoomId != null) {
+          setMessageList((prev) => {
+            const hasMatchingCard = prev.some(
+              (m) =>
+                (m.type === "ROOM_LINK" ||
+                  m.type === "REOPEN_CARD" ||
+                  m.linkedRoomId != null) &&
+                Number(m.linkedRoomId) === targetDerivedRoomId,
+            );
+            if (!hasMatchingCard) return prev;
+
+            if (isClosed) {
+              // 모집 마감: 원래 있던 위치에서 상태만 "CLOSED"로 변경 (in-place)
+              return prev.map((m) =>
+                (m.type === "ROOM_LINK" ||
+                  m.type === "REOPEN_CARD" ||
+                  m.linkedRoomId != null) &&
+                Number(m.linkedRoomId) === targetDerivedRoomId
+                  ? {
+                      ...m,
+                      linkedRoomRecruitmentStatus: "CLOSED",
+                      linkedRoomRecruitmentClosed: true,
+                    }
+                  : m,
+              );
+            } else {
+              // 재모집: 이전 위치의 카드를 제거하고 맨 아래(새 메시지 위치)로 이동
+              const currentCard = prev.find(
+                (m) =>
+                  (m.type === "ROOM_LINK" ||
+                    m.type === "REOPEN_CARD" ||
+                    m.linkedRoomId != null) &&
+                  Number(m.linkedRoomId) === targetDerivedRoomId,
+              );
+              if (!currentCard) return prev;
+
+              const filtered = prev.filter(
+                (m) =>
+                  !(
+                    (m.type === "ROOM_LINK" ||
+                      m.type === "REOPEN_CARD" ||
+                      m.linkedRoomId != null) &&
+                    Number(m.linkedRoomId) === targetDerivedRoomId
+                  ),
+              );
+              const updatedCard: MessageType = {
+                ...currentCard,
+                id: Date.now(),
+                linkedRoomId: targetDerivedRoomId,
+                type: "REOPEN_CARD",
+                linkedRoomRecruitmentStatus: "OPEN",
+                linkedRoomRecruitmentClosed: false,
+                time: now.toLocaleTimeString("ko-KR", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  hour12: true,
+                }),
+                createdAt: now.toISOString(),
+              };
+              return [...filtered, updatedCard];
+            }
+          });
+        }
+        return;
+      }
+
       const studentIdRequestPayload = parseStudentIdRequestPayload(msg.content);
       const normalizedType = studentIdRequestPayload
         ? "STUDENT_ID_REQUEST"
@@ -1281,10 +2082,37 @@ export default function ChattingPage() {
         const { content, isBot, isBotQuestion, nickname } =
           parseChatBuliPayload(rawContent);
 
+        let initialUnreadCount = msg.unreadCount;
+        if (msg.messageId && pendingReadCountsRef.current.has(msg.messageId)) {
+          const pendingCount = pendingReadCountsRef.current.get(msg.messageId);
+          if (typeof pendingCount === "number") {
+            initialUnreadCount = pendingCount;
+          }
+          pendingReadCountsRef.current.delete(msg.messageId);
+        }
+
+        // 백엔드 명세: 생성 이벤트(MESSAGE_CREATED)에는 unreadCount가 없음.
+        // MESSAGE_READ 수신 전이라도 참가자 수 기반으로 즉각 표시하여 깜빡임 및 카운트 누락 방지
+        if (
+          typeof initialUnreadCount !== "number" &&
+          (chatType === "open" || chatType === "personal")
+        ) {
+          if (participants.length > 1) {
+            initialUnreadCount = Math.max(0, participants.length - 1);
+          } else {
+            const lastMsg = [...prev]
+              .reverse()
+              .find((m) => typeof m.unreadCount === "number");
+            if (lastMsg && typeof lastMsg.unreadCount === "number") {
+              initialUnreadCount = lastMsg.unreadCount;
+            }
+          }
+        }
+
         const nextMessage: MessageType = {
           id: msg.messageId || Date.now(),
           sender: normalizedSenderId === userId ? "me" : "other",
-          content,
+          content: msg.isDeleted ? "삭제된 메시지입니다." : content,
           nickname:
             nickname ||
             normalizedNickname ||
@@ -1295,13 +2123,22 @@ export default function ChattingPage() {
           isBotQuestion,
           senderId: normalizedSenderId,
           type: normalizedType,
-          imageUrls: msg.imageUrls ?? [],
+          isDeleted: Boolean(msg.isDeleted),
+          isEdited: Boolean(msg.isEdited),
+          replySource: msg.replySource ?? null,
+          imageUrls: msg.isDeleted ? [] : (msg.imageUrls ?? []),
           disclosureRequestId: normalizedRequestId,
           linkedRoomId: msg.linkedRoomId,
           linkedRoomName: msg.linkedRoomName,
           linkedRoomDescription: msg.linkedRoomDescription,
           linkedRoomMaxParticipants: msg.linkedRoomMaxParticipants,
-          unreadCount: msg.unreadCount,
+          linkedRoomRecruitmentStatus:
+            msg.linkedRoomRecruitmentStatus ??
+            (msg.type === "REOPEN_CARD" ? "OPEN" : undefined),
+          linkedRoomRecruitmentClosed:
+            msg.linkedRoomRecruitmentClosed ??
+            (msg.type === "REOPEN_CARD" ? false : undefined),
+          unreadCount: initialUnreadCount,
           time: now.toLocaleTimeString("ko-KR", {
             hour: "2-digit",
             minute: "2-digit",
@@ -1309,6 +2146,10 @@ export default function ChattingPage() {
           }),
           createdAt: msg.createdAt || now.toISOString(),
         };
+
+        if (nextMessage.imageUrls && nextMessage.imageUrls.length > 0 && nextMessage.id) {
+          thumbnailCacheRef.current.set(nextMessage.id, nextMessage.imageUrls[0]);
+        }
 
         // 1. 내 질문 메시지가 소켓으로 돌아왔을 때, 이미 로컬에 추가된 질문 메시지를 찾아 in-place로 ID/정보 업데이트 (순서 역전 방지)
         if (isBotQuestion && normalizedSenderId === userId) {
@@ -1325,7 +2166,7 @@ export default function ChattingPage() {
             copy[localQuestionIdx] = {
               ...copy[localQuestionIdx],
               id: msg.messageId || copy[localQuestionIdx].id,
-              unreadCount: msg.unreadCount,
+              unreadCount: initialUnreadCount,
               createdAt: msg.createdAt || copy[localQuestionIdx].createdAt,
             };
             return copy;
@@ -1350,12 +2191,113 @@ export default function ChattingPage() {
           }
         }
 
+        // 3. 파생 톡방 카드(ROOM_LINK, REOPEN_CARD 등)인 경우
+        const rawLinkedId =
+          nextMessage.linkedRoomId ??
+          (msg as any).derivedRoomId ??
+          (msg as any).roomId;
+        const targetLinkedRoomId =
+          rawLinkedId != null ? Number(rawLinkedId) : null;
+        if (
+          targetLinkedRoomId != null &&
+          (nextMessage.type === "REOPEN_CARD" ||
+            nextMessage.type === "ROOM_LINK" ||
+            Boolean(nextMessage.linkedRoomRecruitmentStatus) ||
+            nextMessage.linkedRoomRecruitmentClosed !== undefined ||
+            (msg as any).recruitmentStatus !== undefined)
+        ) {
+          const hasMatchingCard = prev.some(
+            (m) =>
+              (m.type === "ROOM_LINK" ||
+                m.type === "REOPEN_CARD" ||
+                m.linkedRoomId != null) &&
+              Number(m.linkedRoomId) === targetLinkedRoomId,
+          );
+          if (hasMatchingCard) {
+            const isMsgClosed =
+              nextMessage.linkedRoomRecruitmentStatus === "CLOSED" ||
+              (msg as any).recruitmentStatus === "CLOSED" ||
+              (msg as any).status === "CLOSED" ||
+              nextMessage.linkedRoomRecruitmentClosed === true ||
+              (msg as any).recruitmentClosed === true ||
+              (nextMessage.type as string) === "RECRUITMENT_CLOSED";
+
+            if (targetLinkedRoomId === roomId) {
+              setCurrentRoomRecruitmentStatus(isMsgClosed ? "CLOSED" : "OPEN");
+            }
+
+            if (isMsgClosed) {
+              // 모집 마감: 원래 있던 위치에서 상태만 "CLOSED"로 변경 (in-place)
+              return prev.map((m) =>
+                (m.type === "ROOM_LINK" ||
+                  m.type === "REOPEN_CARD" ||
+                  m.linkedRoomId != null) &&
+                Number(m.linkedRoomId) === targetLinkedRoomId
+                  ? {
+                      ...m,
+                      linkedRoomRecruitmentStatus: "CLOSED",
+                      linkedRoomRecruitmentClosed: true,
+                      linkedRoomName:
+                        nextMessage.linkedRoomName || m.linkedRoomName,
+                      linkedRoomDescription:
+                        nextMessage.linkedRoomDescription ||
+                        m.linkedRoomDescription,
+                      linkedRoomMaxParticipants:
+                        nextMessage.linkedRoomMaxParticipants ??
+                        m.linkedRoomMaxParticipants,
+                    }
+                  : m,
+              );
+            } else {
+              // 재모집: 이전 위치의 카드를 제거하고 맨 아래(새 메시지 위치)에 추가
+              const currentCard = prev.find(
+                (m) =>
+                  (m.type === "ROOM_LINK" ||
+                    m.type === "REOPEN_CARD" ||
+                    m.linkedRoomId != null) &&
+                  Number(m.linkedRoomId) === targetLinkedRoomId,
+              );
+              const filtered = prev.filter(
+                (m) =>
+                  !(
+                    (m.type === "ROOM_LINK" ||
+                      m.type === "REOPEN_CARD" ||
+                      m.linkedRoomId != null) &&
+                    Number(m.linkedRoomId) === targetLinkedRoomId
+                  ),
+              );
+              const updatedCard: MessageType = {
+                ...nextMessage,
+                id: nextMessage.id || Date.now(),
+                type: "REOPEN_CARD",
+                linkedRoomId: targetLinkedRoomId,
+                linkedRoomRecruitmentStatus: "OPEN",
+                linkedRoomRecruitmentClosed: false,
+                linkedRoomName:
+                  nextMessage.linkedRoomName || currentCard?.linkedRoomName,
+                linkedRoomDescription:
+                  nextMessage.linkedRoomDescription ||
+                  currentCard?.linkedRoomDescription,
+                linkedRoomMaxParticipants:
+                  nextMessage.linkedRoomMaxParticipants ??
+                  currentCard?.linkedRoomMaxParticipants,
+              };
+              return [...filtered, updatedCard];
+            }
+          }
+        }
+
         const isDuplicate = prev.some(
           (message) =>
             message.id === nextMessage.id ||
             (normalizedType === "STUDENT_ID_REQUEST" &&
               message.type === "STUDENT_ID_REQUEST" &&
-              message.disclosureRequestId === normalizedRequestId),
+              message.disclosureRequestId === normalizedRequestId) ||
+            (normalizedType === "REOPEN_CARD" &&
+              message.type === "REOPEN_CARD" &&
+              message.linkedRoomId === nextMessage.linkedRoomId &&
+              (message.id === nextMessage.id ||
+                message.createdAt === nextMessage.createdAt)),
         );
         if (isDuplicate) return prev;
 
@@ -1363,18 +2305,22 @@ export default function ChattingPage() {
       });
     },
     onRead: ({ messageId, unreadCount }) => {
+      if (messageId) {
+        pendingReadCountsRef.current.set(messageId, unreadCount);
+      }
       setMessageList((current) =>
         current.map((message) => {
-          if (
-            message.id > messageId ||
-            typeof message.unreadCount !== "number"
-          ) {
+          if (message.id > messageId) {
             return message;
           }
 
           // 최신 메시지를 읽었다면 그보다 앞선 메시지도 읽은 상태다.
-          // 기존 값보다 커지지 않도록 줄어드는 방향으로만 소급 반영한다.
-          const nextUnreadCount = Math.min(message.unreadCount, unreadCount);
+          // 기존 값보다 커지지 않도록 줄어드는 방향으로만 소급 반영하며,
+          // 아직 unreadCount가 설정되지 않은 경우 서버의 unreadCount로 즉시 설정한다.
+          const nextUnreadCount =
+            typeof message.unreadCount === "number"
+              ? Math.min(message.unreadCount, unreadCount)
+              : unreadCount;
 
           return nextUnreadCount === message.unreadCount
             ? message
@@ -1489,14 +2435,37 @@ export default function ChattingPage() {
           const formattedMessages: MessageType[] = chats
             .filter((chat) => !parseStudentIdRequestPayload(chat.content))
             .map((chat) => {
+              const isDeleted =
+                Boolean(chat.isDeleted) ||
+                chat.content === "삭제된 메시지입니다." ||
+                (chat as any).eventType === "MESSAGE_DELETED";
               const { content, isBot, isBotQuestion, nickname } =
                 parseChatBuliPayload(chat.content);
+              const imageUrls =
+                chat.imageUrls ??
+                (chat.type === "IMAGE" && chat.content?.startsWith("http")
+                  ? [chat.content]
+                  : []);
+              if (imageUrls.length > 0) {
+                thumbnailCacheRef.current.set(chat.roommateChatId, imageUrls[0]);
+              }
+              const replyThumbnail =
+                chat.replySource?.imageUrl || chat.replySource?.thumbnailUrl;
+              if (replyThumbnail && chat.replySource?.replyToMessageId) {
+                thumbnailCacheRef.current.set(
+                  chat.replySource.replyToMessageId,
+                  replyThumbnail,
+                );
+              }
+
               return {
                 id: chat.roommateChatId,
                 sender: chat.userId === userId ? "me" : "other",
                 senderId: chat.userId,
                 nickname: nickname || undefined,
-                content,
+                content: isDeleted ? "삭제된 메시지입니다." : content,
+                isDeleted,
+                replySource: chat.replySource ?? null,
                 isBotQuestion,
                 isBot: isBot || Boolean(chat.system),
                 userImageUrl: chat.userImageUrl, // 프로필 이미지 URL 추가
@@ -1508,6 +2477,8 @@ export default function ChattingPage() {
                 }),
                 createdAt: chat.createdDate, // API에서 받은 날짜 저장
                 isRead: chat.read,
+                imageUrls,
+                type: chat.type,
               };
             });
 
@@ -1596,7 +2567,7 @@ export default function ChattingPage() {
         setIsHistoryLoading(true);
         setIsBlockedByPartner(Boolean(routeRoom?.isBlockedByPartner));
 
-        if ((chatType === "open" || chatType === "personal") && !openChatRoomName) {
+        if (chatType === "open" || chatType === "personal") {
           try {
             const roomsResponse = await getOpenChatRooms("MY", 0, 50);
             const currentRoom = roomsResponse.data.content.find(
@@ -1606,6 +2577,19 @@ export default function ChattingPage() {
             if (currentRoom) {
               setOpenChatRoomName(currentRoom.name);
               setIsBlockedByPartner(Boolean(currentRoom.isBlockedByPartner));
+              if (
+                currentRoom.roomType === "DERIVED" ||
+                Boolean((currentRoom as any).originRoomId)
+              ) {
+                setIsDerivedRoom(true);
+              }
+              if (currentRoom.recruitmentStatus) {
+                const isClosed =
+                  currentRoom.recruitmentStatus === "CLOSED" ||
+                  currentRoom.isJoinable === false ||
+                  (currentRoom as any).recruitmentClosed === true;
+                setCurrentRoomRecruitmentStatus(isClosed ? "CLOSED" : "OPEN");
+              }
             }
           } catch (error) {
             console.error("오픈채팅방 정보 조회 실패:", error);
@@ -1695,9 +2679,11 @@ export default function ChattingPage() {
           }
 
           const formattedMessages: MessageType[] =
-            dedupeStudentIdDisclosureMessages(
-              visibleChats.map((chat) =>
-                mapOpenChatMessageToMessageType(chat, userId),
+            dedupeDerivedRoomCards(
+              dedupeStudentIdDisclosureMessages(
+                visibleChats.map((chat) =>
+                  mapOpenChatMessageToMessageType(chat, userId),
+                ),
               ),
             );
 
@@ -1770,7 +2756,7 @@ export default function ChattingPage() {
             });
           }
 
-          setMessageList(formattedMessages);
+          setMessageList(dedupeDerivedRoomCards(formattedMessages));
           clearPendingDisclosureRouteState();
         } catch (error) {
           console.error("오픈채팅방 메시지 조회 실패:", error);
@@ -1913,10 +2899,22 @@ export default function ChattingPage() {
       setIsChatBuliActive(false);
       return;
     }
-    if (e.key === "Escape" && isSlashMenuOpen) {
-      e.preventDefault();
-      setIsSlashMenuOpen(false);
-      return;
+    if (e.key === "Escape") {
+      if (isSlashMenuOpen) {
+        e.preventDefault();
+        setIsSlashMenuOpen(false);
+        return;
+      }
+      if (editingMessage) {
+        e.preventDefault();
+        handleCancelEdit();
+        return;
+      }
+      if (replyTarget) {
+        e.preventDefault();
+        setReplyTarget(null);
+        return;
+      }
     }
     if (e.key === "Enter" && !e.shiftKey) {
       if (e.nativeEvent.isComposing) {
@@ -1946,6 +2944,47 @@ export default function ChattingPage() {
       return;
     }
     const trimmedInput = inputValue.trim();
+
+    // 0. 메시지 수정 처리
+    if (editingMessage) {
+      if (!trimmedInput) {
+        alert("수정할 메시지를 입력해주세요.");
+        return;
+      }
+
+      if (trimmedInput === editingMessage.content) {
+        handleCancelEdit();
+        return;
+      }
+
+      const targetMsgId = editingMessage.id;
+      try {
+        if (chatType === "roommate") {
+          await updateRoommateChatMessage(roomId, targetMsgId, trimmedInput);
+        } else {
+          await updateOpenChatMessage(roomId, targetMsgId, trimmedInput);
+        }
+
+        setMessageList((prev) =>
+          prev.map((msg) =>
+            msg.id === targetMsgId
+              ? {
+                  ...msg,
+                  content: trimmedInput,
+                  isEdited: true,
+                }
+              : msg,
+          ),
+        );
+      } catch (error) {
+        console.error("메시지 수정 실패:", error);
+        alert("메시지 수정에 실패했습니다. 다시 시도해 주세요.");
+      } finally {
+        handleCancelEdit();
+      }
+      return;
+    }
+
     if (!trimmedInput && !isChatBuliActive) return;
 
     if (trimmedInput.startsWith("[STUDENT_ID_SHARE_")) {
@@ -2115,14 +3154,18 @@ export default function ChattingPage() {
       setTimeout(() => scrollToBottom(), 80);
     });
 
+    const replyMessageId = replyTarget?.messageId;
+
     let sent = false;
     if (chatType === "roommate") {
-      sent = await sendRoommateMessage(trimmedInput);
+      sent = await sendRoommateMessage(trimmedInput, replyMessageId);
     } else if (chatType === "open" || chatType === "personal") {
-      sent = await sendOpenMessage(trimmedInput);
+      sent = await sendOpenMessage(trimmedInput, replyMessageId);
     }
 
-    if (!sent) {
+    if (sent) {
+      setReplyTarget(null);
+    } else {
       alert("채팅 서버와 연결이 불안정하여 전송에 실패했습니다. 다시 시도해 주세요.");
       setInputValue(trimmedInput);
       if (inputRef.current) {
@@ -2132,35 +3175,6 @@ export default function ChattingPage() {
     }
   };
 
-  const toMessageType = (message: OpenChatMessage): MessageType => {
-    const { content, isBot, isBotQuestion, nickname } =
-      parseChatBuliPayload(message.content);
-    return {
-      id: message.messageId,
-      sender: message.senderId === userId ? "me" : "other",
-      senderId: message.senderId,
-      content,
-      nickname: nickname || message.senderNickname || undefined,
-      isSystem: message.type === "SYSTEM",
-      isBot: isBot || message.isBot || message.type === "BOT",
-      isBotQuestion,
-      type: message.type,
-      imageUrls: message.imageUrls ?? [],
-      disclosureRequestId: message.disclosureRequestId,
-      linkedRoomId: message.linkedRoomId,
-      linkedRoomName: message.linkedRoomName,
-      linkedRoomDescription: message.linkedRoomDescription,
-      linkedRoomMaxParticipants: message.linkedRoomMaxParticipants,
-      unreadCount: message.unreadCount,
-      time: new Date(message.createdAt).toLocaleTimeString("ko-KR", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      }),
-      createdAt: message.createdAt,
-    };
-  };
-
   const handleSendImages = async (files: File[]) => {
     if (isChatBlocked) {
       alert(blockedChatMessage);
@@ -2168,14 +3182,61 @@ export default function ChattingPage() {
     }
 
     try {
-      const response = await sendOpenChatImages(roomId, files);
-      setMessageList((current) => {
-        const currentIds = new Set(current.map((message) => message.id));
-        const newMessages = response.data
-          .map(toMessageType)
-          .filter((message) => !currentIds.has(message.id));
-        return [...current, ...newMessages];
-      });
+      if (chatType === "roommate") {
+        const response = await sendRoommateChatImages(roomId, files);
+        if (response.data && Array.isArray(response.data)) {
+          setMessageList((current) => {
+            const currentIds = new Set(current.map((message) => message.id));
+            const newMessages = response.data
+              .map((chat) => {
+                const messageId =
+                  chat.roommateChatId ||
+                  (chat as any).messageId ||
+                  Date.now();
+                const imageUrls =
+                  chat.imageUrls ??
+                  (chat.type === "IMAGE" && chat.content?.startsWith("http")
+                    ? [chat.content]
+                    : []);
+                if (imageUrls.length > 0) {
+                  thumbnailCacheRef.current.set(messageId, imageUrls[0]);
+                }
+                return {
+                  id: messageId,
+                  sender: chat.userId === userId ? ("me" as const) : ("other" as const),
+                  senderId: chat.userId,
+                  nickname: chat.userId === userId ? undefined : partnerName,
+                  content: chat.content || "사진",
+                  isDeleted: false,
+                  replySource: chat.replySource ?? null,
+                  userImageUrl: chat.userImageUrl,
+                  time: new Date(chat.createdDate || Date.now()).toLocaleTimeString(
+                    "ko-KR",
+                    {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: true,
+                    },
+                  ),
+                  createdAt: chat.createdDate || new Date().toISOString(),
+                  imageUrls,
+                  type: chat.type,
+                } as MessageType;
+              })
+              .filter((message) => !currentIds.has(message.id));
+            return [...current, ...newMessages];
+          });
+        }
+      } else {
+        const response = await sendOpenChatImages(roomId, files);
+        setMessageList((current) => {
+          const currentIds = new Set(current.map((message) => message.id));
+          const newMessages = response.data
+            .map(toMessageType)
+            .filter((message) => !currentIds.has(message.id));
+          return [...current, ...newMessages];
+        });
+      }
     } catch (error) {
       console.error("사진 전송 실패:", error);
       alert(
@@ -2185,11 +3246,63 @@ export default function ChattingPage() {
     }
   };
 
-  const openMessageActions = (message: MessageType) => {
-    if (chatType !== "open" || message.sender !== "other" || message.isSystem)
-      return;
+  const handleOpenMessageMenu = (message: MessageType, rect?: DOMRect) => {
+    if (message.isSystem || message.isDeleted) return;
     setSelectedMessage(message);
-    setMessageSheetOpen(true);
+    if (rect) {
+      setMessageMenuAnchorRect({
+        top: rect.top,
+        bottom: rect.bottom,
+        left: rect.left,
+        right: rect.right,
+        width: rect.width,
+        height: rect.height,
+      });
+    } else {
+      setMessageMenuAnchorRect(null);
+    }
+    setMessageMenuOpen(true);
+  };
+
+  const handleConfirmDeleteMessage = async () => {
+    if (!selectedMessage) return;
+    setIsDeletingMessage(true);
+    try {
+      if (chatType === "roommate") {
+        await deleteRoommateChatMessage(roomId, selectedMessage.id);
+      } else {
+        await deleteOpenChatMessage(roomId, selectedMessage.id);
+      }
+      setMessageList((prev) =>
+        prev.map((m) =>
+          m.id === selectedMessage.id
+            ? {
+                ...m,
+                isDeleted: true,
+                content: "삭제된 메시지입니다.",
+                imageUrls: [],
+              }
+            : m,
+        ),
+      );
+      if (editingMessage?.id === selectedMessage.id) {
+        handleCancelEdit();
+      }
+      if (replyTarget?.messageId === selectedMessage.id) {
+        setReplyTarget(null);
+      }
+      if (selectedImageMessageIdRef.current === selectedMessage.id) {
+        setSelectedImageUrl(null);
+        selectedImageMessageIdRef.current = null;
+      }
+      setDeleteConfirmOpen(false);
+      setMessageMenuOpen(false);
+    } catch (error) {
+      console.error("메시지 삭제 실패:", error);
+      alert("메시지 삭제에 실패했습니다. 다시 시도해 주세요.");
+    } finally {
+      setIsDeletingMessage(false);
+    }
   };
 
   const handleReportMessage = async (reason: OpenChatReportReason) => {
@@ -2346,7 +3459,13 @@ export default function ChattingPage() {
           roomId,
           roomName: openChatRoomName,
           roomDescription: routeRoomDescription,
-          room: routeRoom,
+          room: routeRoom
+            ? {
+                ...routeRoom,
+                recruitmentStatus: currentRoomRecruitmentStatus,
+                isJoinable: currentRoomRecruitmentStatus !== "CLOSED",
+              }
+            : undefined,
         },
       });
     },
@@ -2487,15 +3606,28 @@ export default function ChattingPage() {
     const linkedRoomId = message.linkedRoomId;
     if (!linkedRoomId || joiningLinkedRoomId) return;
 
+    const myRooms = useChatListStore.getState().roomsByTab.MY ?? [];
+    const isAlreadyJoined = myRooms.some((r) => r.roomId === linkedRoomId);
+    const targetRoomName = message.linkedRoomName ?? "단체 톡방";
+
+    if (isAlreadyJoined) {
+      navigate(`/chat/open/${linkedRoomId}`, {
+        state: {
+          roomName: targetRoomName,
+          roomDescription: message.linkedRoomDescription,
+        },
+      });
+      return;
+    }
+
     const enterRoom = async () => {
       const response = await joinOpenChatRoom(linkedRoomId);
       const targetRoomId = response.data.roomId ?? linkedRoomId;
-      const targetRoomName =
-        response.data.name ?? message.linkedRoomName ?? "단체 톡방";
+      const resolvedName = response.data.name ?? targetRoomName;
 
       navigate(`/chat/open/${targetRoomId}`, {
         state: {
-          roomName: targetRoomName,
+          roomName: resolvedName,
           roomDescription: message.linkedRoomDescription,
         },
       });
@@ -2506,8 +3638,24 @@ export default function ChattingPage() {
       await enterRoom();
     } catch (error) {
       console.error("파생 톡방 입장 실패:", error);
-      if (isAxiosError(error) && error.response?.status === 409) {
-        alert("참여 인원이 가득 찬 단체 톡방입니다.");
+      if (isAxiosError(error)) {
+        const errorMsg = String(error.response?.data?.message || "");
+        if (
+          error.response?.status === 400 ||
+          error.response?.status === 403 ||
+          errorMsg.includes("마감") ||
+          errorMsg.includes("모집") ||
+          message.linkedRoomRecruitmentStatus === "CLOSED" ||
+          Boolean(message.linkedRoomRecruitmentClosed)
+        ) {
+          setRecruitmentClosedModalOpen(true);
+          return;
+        }
+        if (error.response?.status === 409) {
+          alert("참여 인원이 가득 찬 단체 톡방입니다.");
+        } else {
+          alert("단체 톡방에 입장하지 못했습니다.");
+        }
       } else {
         alert("단체 톡방에 입장하지 못했습니다.");
       }
@@ -2556,8 +3704,45 @@ export default function ChattingPage() {
             isBlocked={isChatBlocked}
           />
         )}
+        {chatType === "open" && isDerivedRoom && (
+          <S.RecruitmentStatusBar>
+            <S.RecruitmentStatusLeft>
+              <S.RecruitmentStatusBadge
+                $isClosed={currentRoomRecruitmentStatus === "CLOSED"}
+              >
+                {currentRoomRecruitmentStatus === "CLOSED"
+                  ? "모집 마감"
+                  : "모집 중"}
+              </S.RecruitmentStatusBadge>
+              <S.RecruitmentStatusText>
+                {currentRoomRecruitmentStatus === "CLOSED"
+                  ? "현재 새로운 참여자를 모집하지 않습니다."
+                  : "현재 새로운 참여자를 모집 중입니다."}
+              </S.RecruitmentStatusText>
+            </S.RecruitmentStatusLeft>
+            {isOpenChatHost && (
+              <S.RecruitmentStatusToggleButton
+                type="button"
+                $isClosed={currentRoomRecruitmentStatus === "CLOSED"}
+                disabled={isUpdatingRecruitmentStatus}
+                onClick={() =>
+                  handleToggleRecruitmentStatus(
+                    currentRoomRecruitmentStatus === "OPEN" ? "CLOSED" : "OPEN",
+                  )
+                }
+              >
+                {currentRoomRecruitmentStatus === "OPEN"
+                  ? "마감하기"
+                  : "모집 재개"}
+              </S.RecruitmentStatusToggleButton>
+            )}
+          </S.RecruitmentStatusBar>
+        )}
         {chatType === "open" && (
-          <S.NoticeContainer ref={noticeRef}>
+          <S.NoticeContainer
+            ref={noticeRef}
+            $hasStatusBar={isDerivedRoom}
+          >
             <S.NoticeHeader
               onClick={() => setIsNoticeExpanded((prev) => !prev)}
             >
@@ -2598,6 +3783,7 @@ export default function ChattingPage() {
         ref={scrollRef}
         onScroll={handleScroll}
         $chatType={chatType}
+        $hasStatusBar={chatType === "open" && isDerivedRoom}
       >
         {isHistoryLoading ? (
           <LoadingSpinner message="채팅 내역을 가져오고 있습니다..." />
@@ -2641,7 +3827,10 @@ export default function ChattingPage() {
                 }
               }
 
-              if (msg.type === "ROOM_LINK" && msg.linkedRoomId) {
+              if (
+                (msg.type === "ROOM_LINK" || msg.type === "REOPEN_CARD") &&
+                msg.linkedRoomId
+              ) {
                 const isJoining = joiningLinkedRoomId === msg.linkedRoomId;
 
                 return (
@@ -2651,33 +3840,17 @@ export default function ChattingPage() {
                         {formatDateLine(msg.createdAt)}
                       </S.DateDivider>
                     )}
-                    <S.RoomLinkRow>
-                      <S.RoomLinkCard
-                        type="button"
-                        disabled={isJoining}
-                        onClick={() => handleJoinLinkedRoom(msg)}
-                      >
-                        <S.RoomLinkTextArea>
-                          <S.RoomLinkLabel>새 단체 톡방</S.RoomLinkLabel>
-                          <S.RoomLinkName>
-                            {msg.linkedRoomName || "단체 톡방"}
-                          </S.RoomLinkName>
-                          {msg.linkedRoomDescription && (
-                            <S.RoomLinkDescription>
-                              {msg.linkedRoomDescription}
-                            </S.RoomLinkDescription>
-                          )}
-                          {msg.linkedRoomMaxParticipants && (
-                            <S.RoomLinkMeta>
-                              최대 {msg.linkedRoomMaxParticipants}명
-                            </S.RoomLinkMeta>
-                          )}
-                        </S.RoomLinkTextArea>
-                        <S.RoomLinkAction>
-                          {isJoining ? "입장 중..." : "참여하기"}
-                          {!isJoining && <ArrowRight size={18} />}
-                        </S.RoomLinkAction>
-                      </S.RoomLinkCard>
+                    <S.RoomLinkRow
+                      id={`chat-msg-${msg.id}`}
+                      $isHighlighted={highlightedMessageId === msg.id}
+                    >
+                      <DerivedRoomCardItem
+                        msg={msg}
+                        isJoining={isJoining}
+                        onJoin={() => handleJoinLinkedRoom(msg)}
+                        onClosed={() => setRecruitmentClosedModalOpen(true)}
+                        onOpenMenu={(rect) => handleOpenMessageMenu(msg, rect)}
+                      />
                     </S.RoomLinkRow>
                   </React.Fragment>
                 );
@@ -3229,6 +4402,18 @@ export default function ChattingPage() {
                 !isSameMessageSender(previousMessage, msg) ||
                 !isSameMinute(previousMessage.createdAt, msg.createdAt);
 
+              const replyThumbnailUrl = msg.replySource
+                ? msg.replySource.imageUrl ??
+                  msg.replySource.thumbnailUrl ??
+                  messageThumbnailMap.get(msg.replySource.replyToMessageId) ??
+                  thumbnailCacheRef.current.get(
+                    msg.replySource.replyToMessageId,
+                  ) ??
+                  (msg.replySource.contentPreview?.startsWith("http")
+                    ? msg.replySource.contentPreview
+                    : undefined)
+                : undefined;
+
               return (
                 <React.Fragment key={msg.id}>
                   {showDateLine && (
@@ -3236,46 +4421,70 @@ export default function ChattingPage() {
                       {formatDateLine(msg.createdAt)}
                     </S.DateDivider>
                   )}
-                  {msg.sender === "me" ? (
-                    <ChatItemMy
-                      content={msg.content}
-                      time={msg.time}
-                      showTime={showMessageTime}
-                      imageUrls={msg.imageUrls}
-                      isBotQuestion={msg.isBotQuestion}
-                      unreadCount={
-                        chatType === "open" || chatType === "personal"
-                          ? msg.unreadCount
-                          : chatType === "roommate" && msg.isRead === false
-                            ? 1
+                  <S.MessageItemContainer
+                    id={`chat-msg-${msg.id}`}
+                    $isHighlighted={highlightedMessageId === msg.id}
+                  >
+                    {msg.sender === "me" ? (
+                      <ChatItemMy
+                        content={msg.content}
+                        time={msg.time}
+                        showTime={showMessageTime}
+                        imageUrls={msg.imageUrls}
+                        isBotQuestion={msg.isBotQuestion}
+                        isDeleted={msg.isDeleted}
+                        isEdited={msg.isEdited}
+                        replySource={msg.replySource}
+                        replyThumbnailUrl={replyThumbnailUrl}
+                        onQuoteClick={handleScrollToMessage}
+                        unreadCount={
+                          chatType === "open" || chatType === "personal"
+                            ? msg.unreadCount
+                            : chatType === "roommate" && msg.isRead === false
+                              ? 1
+                              : undefined
+                        }
+                        onMessageClick={(rect) => handleOpenMessageMenu(msg, rect)}
+                        onImageClick={(url) => {
+                          selectedImageMessageIdRef.current = msg.id;
+                          setSelectedImageUrl(url);
+                        }}
+                        onSwipeReply={() => handleStartReply(msg)}
+                      />
+                    ) : (
+                      <ChatItemOtherPerson
+                        content={msg.content}
+                        time={msg.time}
+                        showTime={showMessageTime}
+                        showSenderInfo={showSenderInfo}
+                        userImageUrl={msg.userImageUrl}
+                        senderName={
+                          chatType === "open" || chatType === "personal"
+                            ? msg.nickname || "익명 01"
+                            : msg.nickname || partnerName || "상대방"
+                        }
+                        imageUrls={msg.imageUrls}
+                        isBotQuestion={msg.isBotQuestion}
+                        isDeleted={msg.isDeleted}
+                        isEdited={msg.isEdited}
+                        replySource={msg.replySource}
+                        replyThumbnailUrl={replyThumbnailUrl}
+                        onQuoteClick={handleScrollToMessage}
+                        unreadCount={
+                          chatType === "open" || chatType === "personal"
+                            ? msg.unreadCount
                             : undefined
-                      }
-                      onImageClick={(url) => setSelectedImageUrl(url)}
-                    />
-                  ) : (
-                    <ChatItemOtherPerson
-                      content={msg.content}
-                      time={msg.time}
-                      showTime={showMessageTime}
-                      showSenderInfo={showSenderInfo}
-                      userImageUrl={msg.userImageUrl}
-                      senderName={
-                        chatType === "open" || chatType === "personal"
-                          ? msg.nickname || "익명 01"
-                          : msg.nickname || partnerName || "상대방"
-                      }
-                      imageUrls={msg.imageUrls}
-                      isBotQuestion={msg.isBotQuestion}
-                      unreadCount={
-                        chatType === "open" || chatType === "personal"
-                          ? msg.unreadCount
-                          : undefined
-                      }
-                      onMessageClick={() => openMessageActions(msg)}
-                      onImageClick={(url) => setSelectedImageUrl(url)}
-                      onAvatarClick={() => handleAvatarClick(msg)}
-                    />
-                  )}
+                        }
+                        onMessageClick={(rect) => handleOpenMessageMenu(msg, rect)}
+                        onImageClick={(url) => {
+                          selectedImageMessageIdRef.current = msg.id;
+                          setSelectedImageUrl(url);
+                        }}
+                        onAvatarClick={() => handleAvatarClick(msg)}
+                        onSwipeReply={() => handleStartReply(msg)}
+                      />
+                    )}
+                  </S.MessageItemContainer>
                 </React.Fragment>
               );
             })}
@@ -3284,7 +4493,19 @@ export default function ChattingPage() {
       </S.ChattingWrapper>
 
       {/* 하단 플로팅 입력 바 */}
-      <S.FloatingInputArea ref={menuContainerRef}>
+      <S.FloatingInputContainer ref={menuContainerRef}>
+        {editingMessage ? (
+          <ChatEditPreviewBar
+            message={editingMessage}
+            onCancel={handleCancelEdit}
+          />
+        ) : replyTarget ? (
+          <ChatReplyPreviewBar
+            replyTarget={replyTarget}
+            onCancel={() => setReplyTarget(null)}
+          />
+        ) : null}
+        <S.FloatingInputArea>
         <div style={{ position: "relative", display: "inline-flex" }}>
           {chatType === "roommate" &&
             !isChatBlocked &&
@@ -3325,10 +4546,6 @@ export default function ChattingPage() {
             <S.FloatingMenuItem
               onClick={() => {
                 setMenuOpen(false);
-                if (chatType === "roommate") {
-                  alert("사진 첨부는 현재 오픈채팅에서 사용할 수 있어요.");
-                  return;
-                }
                 setPhotoSheetOpen(true);
               }}
             >
@@ -3396,7 +4613,9 @@ export default function ChattingPage() {
                 ? blockedChatMessage
                 : isChatBuliActive
                   ? "질문할 내용을 입력하세요"
-                  : "메시지 보내기 (/ 입력 시 기능 선택)"
+                  : editingMessage
+                    ? "수정할 메시지를 입력하세요"
+                    : "메시지 보내기 (/ 입력 시 기능 선택)"
             }
             disabled={isChatBlocked}
             ref={inputRef}
@@ -3416,11 +4635,55 @@ export default function ChattingPage() {
           <ArrowRight size={20} color="white" />
         </S.SendCircleButton>
       </S.FloatingInputArea>
+    </S.FloatingInputContainer>
 
       <PhotoAttachmentBottomSheet
         open={photoSheetOpen}
         onOpenChange={setPhotoSheetOpen}
         onSend={handleSendImages}
+      />
+
+      <ChatMessageMenuModal
+        open={messageMenuOpen}
+        onClose={() => setMessageMenuOpen(false)}
+        isMyMessage={selectedMessage?.sender === "me"}
+        isImageMessage={Boolean(selectedMessage?.imageUrls?.length)}
+        isDerivedRoomCard={
+          selectedMessage?.type === "ROOM_LINK" ||
+          selectedMessage?.type === "REOPEN_CARD" ||
+          Boolean(selectedMessage?.linkedRoomId)
+        }
+        anchorRect={messageMenuAnchorRect}
+        onReply={() => {
+          if (selectedMessage) {
+            handleStartReply(selectedMessage);
+          }
+        }}
+        onDelete={() => {
+          setMessageMenuOpen(false);
+          setDeleteConfirmOpen(true);
+        }}
+        onEdit={() => {
+          if (selectedMessage) {
+            handleStartEdit(selectedMessage);
+          }
+        }}
+        onReport={() => {
+          setMessageMenuOpen(false);
+          setMessageSheetOpen(true);
+        }}
+      />
+
+      <MessageDeleteConfirmModal
+        open={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        onConfirm={handleConfirmDeleteMessage}
+        isDeleting={isDeletingMessage}
+      />
+
+      <RecruitmentClosedModal
+        open={recruitmentClosedModalOpen}
+        onClose={() => setRecruitmentClosedModalOpen(false)}
       />
 
       <ChatMessageActionSheet
@@ -3449,7 +4712,19 @@ export default function ChattingPage() {
 
       <ImageViewerModal
         imageUrl={selectedImageUrl}
-        onClose={() => setSelectedImageUrl(null)}
+        onClose={() => {
+          setSelectedImageUrl(null);
+          selectedImageMessageIdRef.current = null;
+        }}
+      />
+
+      <RecruitmentReopenModal
+        open={reopenConfirmModalOpen}
+        onCancel={() => setReopenConfirmModalOpen(false)}
+        onConfirm={async () => {
+          setReopenConfirmModalOpen(false);
+          await executeRecruitmentStatusChange("OPEN");
+        }}
       />
     </S.ChatPageWrapper>
   );

@@ -31,6 +31,8 @@ export interface RoommateChatRoom {
 }
 
 
+import type { ReplySourceDto } from "./openchat";
+
 export interface RoommateChat {
   createdDate: string;
   roommateChattingRoomId: number;
@@ -41,4 +43,15 @@ export interface RoommateChat {
   read: boolean;
   userImageUrl: string | null;
   system?: boolean;
+  isDeleted?: boolean;
+  replySource?: ReplySourceDto | null;
+  imageUrls?: string[];
+  type?: "TALK" | "IMAGE" | "SYSTEM" | string;
 }
+
+export interface RoommateChatDeleteEvent {
+  messageId: number;
+  roommateChattingRoomId?: number;
+  isDeleted?: boolean;
+}
+

@@ -1,6 +1,11 @@
+import { useRef } from "react";
 import styled from "styled-components";
 import ChatMessageContent from "./ChatMessageContent";
+import ChatReplyQuoteBox from "./ChatReplyQuoteBox";
+import type { ReplySourceDto } from "@/types/openchat";
 import ChatBuliLogo from "@/assets/ai-chat/챗불이로고.svg";
+import { useLongPress } from "@/hooks/useLongPress";
+import { useSwipeToReply } from "@/hooks/useSwipeToReply";
 
 type Props = {
   content: string;
@@ -9,8 +14,14 @@ type Props = {
   imageUrls?: string[];
   unreadCount?: number;
   isBotQuestion?: boolean;
-  onMessageClick?: () => void;
+  isDeleted?: boolean;
+  isEdited?: boolean;
+  replySource?: ReplySourceDto | null;
+  replyThumbnailUrl?: string | null;
+  onQuoteClick?: (targetMessageId: number) => void;
+  onMessageClick?: (rect?: DOMRect) => void;
   onImageClick?: (url: string) => void;
+  onSwipeReply?: () => void;
 };
 
 const ChatItemMy = ({
@@ -20,9 +31,16 @@ const ChatItemMy = ({
   imageUrls,
   unreadCount,
   isBotQuestion,
+  isDeleted = false,
+  isEdited = false,
+  replySource,
+  replyThumbnailUrl,
+  onQuoteClick,
   onMessageClick,
   onImageClick,
+  onSwipeReply,
 }: Props) => {
+  const contentRef = useRef<HTMLDivElement>(null);
   const unreadLabel =
     typeof unreadCount === "number"
       ? unreadCount > 0
@@ -37,28 +55,93 @@ const ChatItemMy = ({
       ? content.split("\n\n")
       : [content, null];
 
+  const isMessageDeleted =
+    Boolean(isDeleted) || content === "삭제된 메시지입니다.";
+
+  const handleTriggerAction = () => {
+    if (isMessageDeleted) return;
+    const rect = contentRef.current?.getBoundingClientRect();
+    if (onMessageClick) onMessageClick(rect);
+  };
+
+  const longPressHandlers = useLongPress({
+    onLongPress: handleTriggerAction,
+    delay: 400,
+  });
+
+  const { swipeHandlers, offsetX, isSwiping } = useSwipeToReply({
+    onReply: onSwipeReply,
+    direction: "left",
+    disabled: isMessageDeleted,
+  });
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!isMessageDeleted && onMessageClick) {
+      longPressHandlers.onTouchStart();
+    }
+    swipeHandlers.onTouchStart(e);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isMessageDeleted && onMessageClick) {
+      longPressHandlers.onTouchMove();
+    }
+    swipeHandlers.onTouchMove(e);
+  };
+
+  const handleTouchEnd = () => {
+    if (!isMessageDeleted && onMessageClick) {
+      longPressHandlers.onTouchEnd();
+    }
+    swipeHandlers.onTouchEnd();
+  };
+
   return (
-    <ChatItemMyWrapper
-      onClick={onMessageClick}
-      $clickable={Boolean(onMessageClick)}
-    >
-      <ContentArea>
-        {imageUrls?.length ? (
-          <ImageGrid>
-            {imageUrls.map((url) => (
-              <img
-                key={url}
-                src={url}
-                alt="첨부 사진"
-                onClick={(e) => {
-                  if (onImageClick) {
-                    e.stopPropagation();
-                    onImageClick(url);
-                  }
-                }}
+    <ChatItemMyWrapper>
+      <ContentArea
+        ref={contentRef}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onMouseDown={!isMessageDeleted && onMessageClick ? longPressHandlers.onMouseDown : undefined}
+        onMouseUp={!isMessageDeleted && onMessageClick ? longPressHandlers.onMouseUp : undefined}
+        onMouseLeave={!isMessageDeleted && onMessageClick ? longPressHandlers.onMouseLeave : undefined}
+        $clickable={!isMessageDeleted && Boolean(onMessageClick)}
+        style={{
+          transform: offsetX ? `translateX(${offsetX}px)` : undefined,
+          transition: isSwiping ? "none" : "transform 0.2s ease-out",
+        }}
+      >
+        {isMessageDeleted ? (
+          <DeletedMessageBubble>
+            삭제된 메시지입니다.
+          </DeletedMessageBubble>
+        ) : imageUrls?.length ? (
+          <div>
+            {replySource && (
+              <ChatReplyQuoteBox
+                replySource={replySource}
+                isMyMessage={true}
+                thumbnailUrl={replyThumbnailUrl}
+                onClick={() => onQuoteClick?.(replySource.replyToMessageId)}
               />
-            ))}
-          </ImageGrid>
+            )}
+            <ImageGrid>
+              {imageUrls.map((url) => (
+                <img
+                  key={url}
+                  src={url}
+                  alt="첨부 사진"
+                  onClick={(e) => {
+                    if (onImageClick) {
+                      e.stopPropagation();
+                      onImageClick(url);
+                    }
+                  }}
+                />
+              ))}
+            </ImageGrid>
+          </div>
         ) : isBotQuestion ? (
           <BotQuestionMessage>
             <BotQuestionHeader>
@@ -77,7 +160,16 @@ const ChatItemMy = ({
           </BotQuestionMessage>
         ) : (
           <div className="message">
+            {replySource && (
+              <ChatReplyQuoteBox
+                replySource={replySource}
+                isMyMessage={true}
+                thumbnailUrl={replyThumbnailUrl}
+                onClick={() => onQuoteClick?.(replySource.replyToMessageId)}
+              />
+            )}
             <ChatMessageContent content={content} />
+            {isEdited && !isDeleted && <EditedTag $isMy={true}>수정됨</EditedTag>}
           </div>
         )}
       </ContentArea>
@@ -93,7 +185,7 @@ const ChatItemMy = ({
 
 export default ChatItemMy;
 
-const ChatItemMyWrapper = styled.div<{ $clickable: boolean }>`
+const ChatItemMyWrapper = styled.div`
   width: 100%;
   height: fit-content;
   display: flex;
@@ -103,7 +195,18 @@ const ChatItemMyWrapper = styled.div<{ $clickable: boolean }>`
   box-sizing: border-box;
 
   gap: 4px;
-  cursor: ${({ $clickable }) => ($clickable ? "pointer" : "default")};
+`;
+
+const DeletedMessageBubble = styled.div`
+  font-family: "Pretendard", sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #98a2b3;
+  background-color: #f2f4f7;
+  padding: 8px 12px;
+  border-radius: 16px;
+  user-select: none;
 `;
 
 const ImageGrid = styled.div`
@@ -125,9 +228,10 @@ const ImageGrid = styled.div`
   }
 `;
 
-const ContentArea = styled.div`
+const ContentArea = styled.div<{ $clickable?: boolean }>`
   width: fit-content;
   max-width: 80%;
+  cursor: ${({ $clickable }) => ($clickable ? "pointer" : "default")};
 
   @media (min-width: 1024px) {
     max-width: 520px;
@@ -242,9 +346,24 @@ const TimeArea = styled.div`
   .time {
     color: #8b8b8b;
   }
+  .edited-tag {
+    color: #98a2b3;
+    font-size: 10px;
+  }
   .isRead {
     color: #0958d9;
     font-size: 11px;
     font-weight: 600;
   }
 `;
+
+const EditedTag = styled.span<{ $isMy?: boolean }>`
+  font-family: "Pretendard", sans-serif;
+  font-size: 10px;
+  color: ${({ $isMy }) => ($isMy ? "rgba(255, 255, 255, 0.75)" : "#98a2b3")};
+  margin-left: 6px;
+  display: inline-block;
+  vertical-align: bottom;
+  user-select: none;
+`;
+

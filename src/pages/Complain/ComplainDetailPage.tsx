@@ -295,8 +295,7 @@ const ComplainListPageWrapper = styled.div`
   gap: 16px;
   box-sizing: border-box;
 
-  overflow-y: auto;
-  background: #fafafa;
+  overflow-y: auto;
 `;
 
 const ComplainCardsContainer = styled.div`
@@ -427,7 +426,7 @@ const ButtonGroupWrapper = styled.div`
 
 const WriteButton = styled.button`
   position: fixed;
-  bottom: 40px;
+  bottom: calc(40px + var(--safe-area-bottom, 0px));
   right: 20px;
   background-color: #007bff;
   color: #f4f4f4;

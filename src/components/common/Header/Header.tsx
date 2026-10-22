@@ -142,7 +142,8 @@ export default function Header({ hasBack = false, backPath }: HeaderProps) {
 }
 
 const StyledHeader = styled.header<{ $isHome: boolean }>`
-  min-height: 70px;
+  min-height: calc(70px + var(--safe-area-top, 0px));
+  padding-top: var(--safe-area-top, 0px);
   position: fixed;
   top: 0;
   left: 0;
@@ -151,14 +152,15 @@ const StyledHeader = styled.header<{ $isHome: boolean }>`
   box-sizing: border-box;
   background: color-mix(
     in srgb,
-    var(--page-bg, var(--Bg-Bg2, #f7f7f7)) 80%,
+    var(--page-bg, var(--layout-bg, var(--color-bg-bg2, var(--Bg-Bg2, #f9fafb)))) 80%,
     transparent
   );
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 
   @media (min-width: 1024px) {
-    padding: 0 10vw;
+    padding-left: 10vw;
+    padding-right: 10vw;
   }
 
   img {

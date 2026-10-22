@@ -1,7 +1,11 @@
+import { useRef } from "react";
 import styled from "styled-components";
 import profile from "../../assets/profileimg.png";
 import { useLongPress } from "@/hooks/useLongPress";
+import { useSwipeToReply } from "@/hooks/useSwipeToReply";
 import ChatMessageContent from "./ChatMessageContent";
+import ChatReplyQuoteBox from "./ChatReplyQuoteBox";
+import type { ReplySourceDto } from "@/types/openchat";
 import ChatBuliLogo from "@/assets/ai-chat/챗불이로고.svg";
 
 type Props = {
@@ -14,9 +18,15 @@ type Props = {
   imageUrls?: string[];
   unreadCount?: number;
   isBotQuestion?: boolean;
-  onMessageClick?: () => void;
+  isDeleted?: boolean;
+  isEdited?: boolean;
+  replySource?: ReplySourceDto | null;
+  replyThumbnailUrl?: string | null;
+  onQuoteClick?: (targetMessageId: number) => void;
+  onMessageClick?: (rect?: DOMRect) => void;
   onImageClick?: (url: string) => void;
   onAvatarClick?: () => void;
+  onSwipeReply?: () => void;
 };
 
 const ChatItemOtherPerson = ({
@@ -29,10 +39,17 @@ const ChatItemOtherPerson = ({
   imageUrls,
   unreadCount,
   isBotQuestion,
+  isDeleted = false,
+  isEdited = false,
+  replySource,
+  replyThumbnailUrl,
+  onQuoteClick,
   onMessageClick,
   onImageClick,
   onAvatarClick,
+  onSwipeReply,
 }: Props) => {
+  const bubbleRef = useRef<HTMLDivElement>(null);
   const unreadLabel =
     typeof unreadCount === "number"
       ? unreadCount > 0
@@ -42,12 +59,46 @@ const ChatItemOtherPerson = ({
         : null
       : null;
 
+  const isMessageDeleted =
+    Boolean(isDeleted) || content === "삭제된 메시지입니다.";
+
+  const handleTriggerAction = () => {
+    if (isMessageDeleted) return;
+    const rect = bubbleRef.current?.getBoundingClientRect();
+    if (onMessageClick) onMessageClick(rect);
+  };
+
   const longPressHandlers = useLongPress({
-    onLongPress: () => {
-      if (onMessageClick) onMessageClick();
-    },
-    delay: 500,
+    onLongPress: handleTriggerAction,
+    delay: 400,
   });
+
+  const { swipeHandlers, offsetX, isSwiping } = useSwipeToReply({
+    onReply: onSwipeReply,
+    direction: "right",
+    disabled: isMessageDeleted,
+  });
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!isMessageDeleted && onMessageClick) {
+      longPressHandlers.onTouchStart();
+    }
+    swipeHandlers.onTouchStart(e);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isMessageDeleted && onMessageClick) {
+      longPressHandlers.onTouchMove();
+    }
+    swipeHandlers.onTouchMove(e);
+  };
+
+  const handleTouchEnd = () => {
+    if (!isMessageDeleted && onMessageClick) {
+      longPressHandlers.onTouchEnd();
+    }
+    swipeHandlers.onTouchEnd();
+  };
 
   return (
     <ChatItemOtherPersonWrapper>
@@ -67,7 +118,15 @@ const ChatItemOtherPerson = ({
           }
         }}
       />
-      <ContentArea>
+      <ContentArea
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        style={{
+          transform: offsetX ? `translateX(${offsetX}px)` : undefined,
+          transition: isSwiping ? "none" : "transform 0.2s ease-out",
+        }}
+      >
         {showSenderInfo && senderName && (
           <div
             className="sender-name"
@@ -82,28 +141,48 @@ const ChatItemOtherPerson = ({
             {senderName}
           </div>
         )}
-        {imageUrls?.length ? (
-          <ImageGrid
-            {...(onMessageClick ? longPressHandlers : {})}
-            $clickable={Boolean(onMessageClick)}
-          >
-            {imageUrls.map((url) => (
-              <img
-                key={url}
-                src={url}
-                alt="첨부 사진"
-                onClick={(e) => {
-                  if (onImageClick) {
-                    e.stopPropagation();
-                    onImageClick(url);
-                  }
-                }}
+        {isMessageDeleted ? (
+          <DeletedMessageBubble ref={bubbleRef}>
+            삭제된 메시지입니다.
+          </DeletedMessageBubble>
+        ) : imageUrls?.length ? (
+          <div>
+            {replySource && (
+              <ChatReplyQuoteBox
+                replySource={replySource}
+                isMyMessage={false}
+                thumbnailUrl={replyThumbnailUrl}
+                onClick={() => onQuoteClick?.(replySource.replyToMessageId)}
               />
-            ))}
-          </ImageGrid>
+            )}
+            <ImageGrid
+              ref={bubbleRef}
+              onMouseDown={!isMessageDeleted && onMessageClick ? longPressHandlers.onMouseDown : undefined}
+              onMouseUp={!isMessageDeleted && onMessageClick ? longPressHandlers.onMouseUp : undefined}
+              onMouseLeave={!isMessageDeleted && onMessageClick ? longPressHandlers.onMouseLeave : undefined}
+              $clickable={Boolean(onMessageClick)}
+            >
+              {imageUrls.map((url) => (
+                <img
+                  key={url}
+                  src={url}
+                  alt="첨부 사진"
+                  onClick={(e) => {
+                    if (onImageClick) {
+                      e.stopPropagation();
+                      onImageClick(url);
+                    }
+                  }}
+                />
+              ))}
+            </ImageGrid>
+          </div>
         ) : isBotQuestion ? (
           <BotQuestionBubble
-            {...(onMessageClick ? longPressHandlers : {})}
+            ref={bubbleRef}
+            onMouseDown={!isMessageDeleted && onMessageClick ? longPressHandlers.onMouseDown : undefined}
+            onMouseUp={!isMessageDeleted && onMessageClick ? longPressHandlers.onMouseUp : undefined}
+            onMouseLeave={!isMessageDeleted && onMessageClick ? longPressHandlers.onMouseLeave : undefined}
             $clickable={Boolean(onMessageClick)}
           >
             <BotQuestionHeader>
@@ -114,10 +193,22 @@ const ChatItemOtherPerson = ({
           </BotQuestionBubble>
         ) : (
           <MessageBubble
-            {...(onMessageClick ? longPressHandlers : {})}
+            ref={bubbleRef}
+            onMouseDown={!isMessageDeleted && onMessageClick ? longPressHandlers.onMouseDown : undefined}
+            onMouseUp={!isMessageDeleted && onMessageClick ? longPressHandlers.onMouseUp : undefined}
+            onMouseLeave={!isMessageDeleted && onMessageClick ? longPressHandlers.onMouseLeave : undefined}
             $clickable={Boolean(onMessageClick)}
           >
+            {replySource && (
+              <ChatReplyQuoteBox
+                replySource={replySource}
+                isMyMessage={false}
+                thumbnailUrl={replyThumbnailUrl}
+                onClick={() => onQuoteClick?.(replySource.replyToMessageId)}
+              />
+            )}
             <ChatMessageContent content={content} />
+            {isEdited && !isDeleted && <EditedTag $isMy={false}>수정됨</EditedTag>}
           </MessageBubble>
         )}
       </ContentArea>
@@ -215,6 +306,18 @@ const ContentArea = styled.div`
   }
 `;
 
+const DeletedMessageBubble = styled.div`
+  font-family: "Pretendard", sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #98a2b3;
+  background-color: #f2f4f7;
+  padding: 8px 12px;
+  border-radius: 16px;
+  user-select: none;
+`;
+
 const MessageBubble = styled.div<{ $clickable?: boolean }>`
   font-family: "Pretendard", sans-serif;
   font-style: normal;
@@ -299,9 +402,24 @@ const TimeArea = styled.div`
 
     color: #8b8b8b;
   }
+  .edited-tag {
+    color: #98a2b3;
+    font-size: 10px;
+  }
   .isRead {
     color: #0958d9;
     font-size: 11px;
     font-weight: 600;
   }
 `;
+
+const EditedTag = styled.span<{ $isMy?: boolean }>`
+  font-family: "Pretendard", sans-serif;
+  font-size: 10px;
+  color: ${({ $isMy }) => ($isMy ? "rgba(255, 255, 255, 0.75)" : "#98a2b3")};
+  margin-left: 6px;
+  display: inline-block;
+  vertical-align: bottom;
+  user-select: none;
+`;
+

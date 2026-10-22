@@ -1,0 +1,226 @@
+import React, { ReactNode } from "react";
+import * as Dialog from "@radix-ui/react-dialog";
+import styled, { keyframes } from "styled-components";
+import CapsuleButton, { CapsuleButtonVariant } from "@/components/common/CapsuleButton";
+import { effects } from "@/styles/intipEffects";
+
+export interface ModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  description?: ReactNode | string;
+  children?: ReactNode;
+  primaryButton?: {
+    text: string;
+    onClick: () => void;
+    variant?: CapsuleButtonVariant; // "brand" | "danger" | "primary" | "secondary"
+    disabled?: boolean;
+    loading?: boolean;
+    // variant 팔레트로 표현 안 되는 화면별 강조색이 필요할 때만 사용 (예: 진한 빨강 파괴적 확정 버튼)
+    style?: React.CSSProperties;
+  };
+  secondaryButton?: {
+    text: string;
+    onClick: () => void;
+    variant?: CapsuleButtonVariant;
+    disabled?: boolean;
+    style?: React.CSSProperties;
+  };
+  closeOnOverlayClick?: boolean;
+  closeOnBack?: boolean;
+}
+
+export default function Modal({
+  isOpen,
+  onClose,
+  title,
+  description,
+  children,
+  primaryButton,
+  secondaryButton,
+  closeOnOverlayClick = true,
+}: ModalProps) {
+
+  return (
+    <Dialog.Root
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <Dialog.Portal>
+        <ModalOverlay />
+        <ModalContainer
+          onPointerDownOutside={(e) => {
+            if (!closeOnOverlayClick) {
+              e.preventDefault();
+            }
+          }}
+        >
+          {title ? (
+            <HeaderContainer>
+              <Dialog.Title asChild>
+                <ModalTitle>{title}</ModalTitle>
+              </Dialog.Title>
+              {description && (
+                <Dialog.Description asChild>
+                  <ModalDescription>{description}</ModalDescription>
+                </Dialog.Description>
+              )}
+            </HeaderContainer>
+          ) : (
+            <Dialog.Title style={{ display: "none" }}>{title || "Modal"}</Dialog.Title>
+          )}
+
+          {children && <ModalSlot>{children}</ModalSlot>}
+
+          {(primaryButton || secondaryButton) && (
+            <ButtonContainer>
+              {secondaryButton && (
+                <ModalButton
+                  variant={secondaryButton.variant || "secondary"}
+                  onClick={secondaryButton.onClick}
+                  disabled={secondaryButton.disabled}
+                  fullWidth={!primaryButton}
+                  style={secondaryButton.style}
+                >
+                  {secondaryButton.text}
+                </ModalButton>
+              )}
+              {primaryButton && (
+                <ModalButton
+                  variant={primaryButton.variant || "brand"}
+                  onClick={primaryButton.onClick}
+                  disabled={primaryButton.disabled}
+                  loading={primaryButton.loading}
+                  fullWidth={!secondaryButton}
+                  style={primaryButton.style}
+                >
+                  {primaryButton.text}
+                </ModalButton>
+              )}
+            </ButtonContainer>
+          )}
+        </ModalContainer>
+      </Dialog.Portal>
+    </Dialog.Root>
+  );
+}
+
+const fadeIn = keyframes`
+  from { opacity: 0; }
+  to { opacity: 1; }
+`;
+
+const scaleUp = keyframes`
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+`;
+
+const ModalOverlay = styled(Dialog.Overlay)`
+  position: fixed;
+  inset: 0;
+  background-color: var(--bg-dim);
+  ${effects.dim}
+  z-index: 19999;
+  animation: ${fadeIn} 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+`;
+
+const ModalContainer = styled(Dialog.Content)`
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: var(--bg-base);
+  border-radius: var(--radius-2xl);
+  width: calc(100% - 32px);
+  max-width: 328px;
+  max-height: calc(100dvh - 40px);
+  padding: 20px 16px 16px 16px;
+  box-sizing: border-box;
+  box-shadow: var(--elevation-1-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  z-index: 20000;
+  outline: none;
+  animation: ${scaleUp} 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  overflow: hidden;
+`;
+
+const HeaderContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  align-items: center;
+  flex-shrink: 0;
+`;
+
+const ModalTitle = styled.h2`
+  margin: 0;
+  font-size: var(--heading-1-font-size);
+  font-style: normal;
+  font-weight: var(--heading-1-font-weight);
+  line-height: var(--heading-1-line-height);
+  letter-spacing: var(--heading-1-letter-spacing);
+  color: var(--text-secondary);
+  text-align: center;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  width: 100%;
+`;
+
+const ModalDescription = styled.div`
+  font-size: var(--body-2-font-size);
+  font-style: normal;
+  font-weight: var(--body-2-font-weight);
+  line-height: var(--body-2-line-height);
+  color: var(--text-tertiary);
+  text-align: center;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+  width: 100%;
+`;
+
+const ModalSlot = styled.div`
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  box-sizing: border-box;
+  gap: 12px;
+  max-height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+`;
+
+const ButtonContainer = styled.div`
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
+  align-items: center;
+  flex-shrink: 0;
+`;
+
+const ModalButton = styled(CapsuleButton)`
+  flex: 1;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  line-height: 24px !important;
+  letter-spacing: -0.2px !important;
+  padding: 12px 24px !important;
+`;

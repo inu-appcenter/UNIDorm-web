@@ -118,8 +118,7 @@ export default function ChatNotificationSettingsPage() {
 /* Styled Components */
 const PageContainer = styled.div`
   width: 100%;
-  height: calc(100vh - 70px);
-  background-color: #ffffff;
+  height: calc(100vh - 70px);
   box-sizing: border-box;
   display: flex;
   flex-direction: column;

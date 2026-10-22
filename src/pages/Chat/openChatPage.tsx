@@ -17,6 +17,7 @@ import ChatAvatar from "@/components/chat/ChatAvatar";
 import OpenChatTab from "@/components/chat/OpenChatTab";
 import OpenChatEmptyState from "@/components/chat/OpenChatEmptyState";
 import OpenChatJoinModal from "@/components/modal/OpenChatJoinModal";
+import RecruitmentClosedModal from "@/components/modal/RecruitmentClosedModal";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { OpenChatRoom, OpenChatTab as OpenChatTabType } from "@/types/openchat";
 import { RoommateChatRoom } from "@/types/chats";
@@ -154,7 +155,6 @@ export default function OpenChatPage() {
 
   const {
     roomsByTab,
-    roommateRooms,
     roommateUnreadTotal,
     myOpenChatUnreadTotal,
     isInitialized,
@@ -162,14 +162,22 @@ export default function OpenChatPage() {
     markOpenChatRoomAsRead,
     markRoommateChatRoomAsRead,
     resetChatList,
+    appendChatListData,
   } = useChatListStore();
 
   const rooms = roomsByTab[selectedTab] || [];
   const [selectedRoom, setSelectedRoom] = useState<OpenChatRoom | null>(null);
 
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
+  const [isRecruitmentClosedModalOpen, setIsRecruitmentClosedModalOpen] =
+    useState(false);
   const [isJoining, setIsJoining] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isFetchingNextPage, setIsFetchingNextPage] = useState(false);
+  const [hasNextPage, setHasNextPage] = useState(false);
+  const pageRef = useRef(0);
+  const hasNextPageRef = useRef(false);
+  const observerTargetRef = useRef<HTMLDivElement>(null);
 
   const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -206,6 +214,7 @@ export default function OpenChatPage() {
       const shouldShowSpinner = !isInitialized && !silent;
       try {
         if (shouldShowSpinner) setIsLoading(true);
+        pageRef.current = 0;
         if (selectedTab === "MY") {
           const [openChatRes, roommateChatRes, unreadRes] = await Promise.all([
             getOpenChatRooms("MY", 0, 20, searchQuery || undefined),
@@ -249,6 +258,10 @@ export default function OpenChatPage() {
             roommateUnreadTotal: unreadRes.data,
             myOpenChatUnreadTotal: openChatRes.data.totalUnreadCount ?? 0,
           });
+          const hasNextMy =
+            openChatRes.data.pageNumber < openChatRes.data.totalPages - 1;
+          hasNextPageRef.current = hasNextMy;
+          setHasNextPage(hasNextMy);
         } else {
           const [openChatRes, myOpenChatRes, unreadRes] = await Promise.all([
             getOpenChatRooms(
@@ -270,6 +283,10 @@ export default function OpenChatPage() {
             roommateUnreadTotal: unreadRes.data,
             myOpenChatUnreadTotal: myOpenChatRes.data.totalUnreadCount ?? 0,
           });
+          const hasNextOther =
+            openChatRes.data.pageNumber < openChatRes.data.totalPages - 1;
+          hasNextPageRef.current = hasNextOther;
+          setHasNextPage(hasNextOther);
         }
       } catch (error) {
         console.error("채팅방 목록 조회 실패", error);
@@ -287,6 +304,74 @@ export default function OpenChatPage() {
     ],
   );
 
+
+  const fetchNextPage = useCallback(async () => {
+    if (
+      !isLoggedIn ||
+      isLoading ||
+      isFetchingNextPage ||
+      !hasNextPageRef.current
+    ) {
+      return;
+    }
+
+    const nextPage = pageRef.current + 1;
+    setIsFetchingNextPage(true);
+
+    try {
+      const openChatRes = await getOpenChatRooms(
+        selectedTab,
+        nextPage,
+        20,
+        searchQuery || undefined,
+        selectedTab === "MY" ? undefined : "createdAt,desc",
+      );
+
+      appendChatListData({
+        tab: selectedTab,
+        rooms: openChatRes.data.content,
+      });
+
+      pageRef.current = nextPage;
+      const hasNext =
+        openChatRes.data.pageNumber < openChatRes.data.totalPages - 1;
+      hasNextPageRef.current = hasNext;
+      setHasNextPage(hasNext);
+    } catch (error) {
+      console.error("다음 페이지 채팅방 목록 조회 실패", error);
+    } finally {
+      setIsFetchingNextPage(false);
+    }
+  }, [
+    appendChatListData,
+    isFetchingNextPage,
+    isLoading,
+    isLoggedIn,
+    searchQuery,
+    selectedTab,
+  ]);
+
+  useEffect(() => {
+    const target = observerTargetRef.current;
+    if (!target || !hasNextPage || isLoading || isFetchingNextPage) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (
+          entries[0].isIntersecting &&
+          !isFetchingNextPage &&
+          hasNextPageRef.current
+        ) {
+          void fetchNextPage();
+        }
+      },
+      { rootMargin: "200px 0px" },
+    );
+
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage, isLoading]);
+
   useEffect(() => {
     void fetchChatRooms();
   }, [currentDormType, fetchChatRooms]);
@@ -295,7 +380,9 @@ export default function OpenChatPage() {
     if (!isLoggedIn || selectedTab !== "MY") return;
 
     const refreshSilently = () => {
-      void fetchChatRooms({ silent: true });
+      if (pageRef.current === 0) {
+        void fetchChatRooms({ silent: true });
+      }
     };
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") refreshSilently();
@@ -331,7 +418,7 @@ export default function OpenChatPage() {
         room.isRoommate,
     );
 
-    const opponentBoardTitle = room.opponentBoardTitle?.trim();
+    const opponentBoardTitle = (room as any).opponentBoardTitle?.trim();
 
     navigate(`/chat/roommate/${room.chatRoomId}`, {
       state: {
@@ -360,6 +447,16 @@ export default function OpenChatPage() {
           room: { ...room, unreadCount: 0 },
         },
       });
+      return;
+    }
+
+    const isClosed =
+      room.recruitmentStatus === "CLOSED" ||
+      room.isJoinable === false ||
+      (room as any).recruitmentClosed === true;
+
+    if (isClosed) {
+      setIsRecruitmentClosedModalOpen(true);
       return;
     }
 
@@ -436,70 +533,22 @@ export default function OpenChatPage() {
       .toLocaleLowerCase("ko-KR")
       .includes(normalizedSearchQuery);
 
-  const filteredRoommateRooms = roommateRooms.filter(
-    (room) =>
-      includesSearchQuery(room.partnerName || room.opponentNickname) ||
-      includesSearchQuery(formatChatMessagePreview(room.lastMessage)),
-  );
-
   const filteredRooms = rooms.filter(
     (room) =>
       includesSearchQuery(room.name) ||
       includesSearchQuery(room.description) ||
       includesSearchQuery(formatChatMessagePreview(room.lastMessage)),
   );
-  const latestPublicRooms = [...filteredRooms].sort(
-    (firstRoom, secondRoom) => secondRoom.roomId - firstRoom.roomId,
-  );
 
-  const categoryFilteredRoommateRooms =
-    myChatRoomFilter === "ALL" || myChatRoomFilter === "ROOMMATE"
-      ? filteredRoommateRooms
-      : [];
-  const categoryFilteredRooms =
-    myChatRoomFilter === "ALL" || myChatRoomFilter === "OPEN_CHAT"
-      ? filteredRooms
-      : [];
-
-  const mergedMyRooms = [
-    ...categoryFilteredRoommateRooms.map((room) => ({
-      ...room,
-      itemType: "roommate" as const,
-    })),
-    ...categoryFilteredRooms.map((room) => ({
-      ...room,
-      itemType: "open" as const,
-    })),
-  ].sort((a, b) => {
-    const isPinnedRoommate = (room: typeof a | typeof b): boolean =>
-      room.itemType === "roommate" &&
-      Boolean(
-        (room as RoommateChatRoom).isMyRoommate ||
-          (room as RoommateChatRoom).roommate ||
-          (room as RoommateChatRoom).myRoommate ||
-          (room as RoommateChatRoom).matched ||
-          (room as RoommateChatRoom).isRoommate,
-      );
-    const pinnedDifference =
-      Number(isPinnedRoommate(b)) - Number(isPinnedRoommate(a));
-    if (pinnedDifference !== 0) return pinnedDifference;
-
-    const timeA =
-      a.itemType === "roommate"
-        ? (a as RoommateChatRoom).lastMessageTime
-        : (a as OpenChatRoom).lastMessageAt;
-    const timeB =
-      b.itemType === "roommate"
-        ? (b as RoommateChatRoom).lastMessageTime
-        : (b as OpenChatRoom).lastMessageAt;
-
-    const timestampA = timeA ? Date.parse(timeA) : 0;
-    const timestampB = timeB ? Date.parse(timeB) : 0;
-    const safeTimestampA = Number.isFinite(timestampA) ? timestampA : 0;
-    const safeTimestampB = Number.isFinite(timestampB) ? timestampB : 0;
-
-    return safeTimestampB - safeTimestampA;
+  // 내 채팅 탭: 서버가 정렬한 순서를 그대로 유지하며 카테고리 필터만 적용
+  const displayMyRooms = filteredRooms.filter((room) => {
+    if (myChatRoomFilter === "OPEN_CHAT") return room.chatCategory === "OPEN_CHAT";
+    if (myChatRoomFilter === "ROOMMATE") return room.chatCategory === "ROOMMATE";
+    return true;
   });
+
+  // 공개 탭: 서버가 정렬한 순서 그대로 유지
+  const displayPublicRooms = filteredRooms;
 
   useSetHeader({
     title: "채팅",
@@ -573,7 +622,7 @@ export default function OpenChatPage() {
         ) : isLoading ? (
           <LoadingSpinner message="채팅방을 불러오는 중입니다." />
         ) : selectedTab === "MY" ? (
-          mergedMyRooms.length === 0 ? (
+          displayMyRooms.length === 0 ? (
             searchQuery.trim() || myChatRoomFilter !== "ALL" ? (
               <FilteredEmptyMessage>
                 {searchQuery.trim()
@@ -588,37 +637,56 @@ export default function OpenChatPage() {
             )
           ) : (
             <RoomList>
-              {mergedMyRooms.map((item) => {
-                if (item.itemType === "roommate") {
+              {displayMyRooms.map((room) => {
+                if (room.chatCategory === "ROOMMATE") {
+                  const roommateRoom: RoommateChatRoom = {
+                    chatRoomId: room.roomId,
+                    partnerName: room.name,
+                    opponentNickname: room.name,
+                    lastMessage: room.lastMessage,
+                    lastMessageTime: room.lastMessageAt,
+                    partnerId: 0,
+                    partnerProfileImageUrl: "",
+                    unreadCount: room.unreadCount,
+                    isBlockedByPartner: room.isBlockedByPartner ?? false,
+                    isMyRoommate: room.isMyRoommate,
+                    isRoommate: room.isMyRoommate,
+                  };
                   return (
                     <RoommateChatCard
-                      key={`roommate-${item.chatRoomId}`}
-                      room={item}
+                      key={`roommate-${room.roomId}`}
+                      room={roommateRoom}
                       hasUnreadTotal={roommateUnreadTotal > 0}
-                      onClick={() => handleRoommateClick(item)}
+                      onClick={() => handleRoommateClick(roommateRoom)}
                     />
                   );
                 } else {
                   return (
                     <OpenChatRoomCard
-                      key={`open-${item.roomId}`}
-                      room={item}
+                      key={`open-${room.roomId}`}
+                      room={room}
                       tab={selectedTab}
-                      onClick={() => handleClickRoom(item)}
+                      onClick={() => handleClickRoom(room)}
                     />
                   );
                 }
               })}
+              <div ref={observerTargetRef} style={{ height: "1px" }} />
+              {isFetchingNextPage && (
+                <MoreLoadingWrapper>
+                  <LoadingSpinner message="다음 목록을 불러오는 중입니다..." />
+                </MoreLoadingWrapper>
+              )}
             </RoomList>
           )
-        ) : latestPublicRooms.length === 0 ? (
+        ) : displayPublicRooms.length === 0 ? (
           <OpenChatEmptyState
             tab={selectedTab}
             onClickMoveDormitory={() => handleTabChange("DORMITORY")}
           />
         ) : (
           <RoomList>
-            {latestPublicRooms.map((room) => (
+            {displayPublicRooms.map((room) => (
               <OpenChatRoomCard
                 key={room.roomId}
                 room={room}
@@ -626,6 +694,12 @@ export default function OpenChatPage() {
                 onClick={() => handleClickRoom(room)}
               />
             ))}
+            <div ref={observerTargetRef} style={{ height: "1px" }} />
+            {isFetchingNextPage && (
+              <MoreLoadingWrapper>
+                <LoadingSpinner message="다음 목록을 불러오는 중입니다..." />
+              </MoreLoadingWrapper>
+            )}
           </RoomList>
         )}
       </Content>
@@ -646,6 +720,11 @@ export default function OpenChatPage() {
         onClose={handleCloseModal}
         onJoin={handleJoinRoom}
         isJoining={isJoining}
+      />
+
+      <RecruitmentClosedModal
+        open={isRecruitmentClosedModalOpen}
+        onClose={() => setIsRecruitmentClosedModalOpen(false)}
       />
     </PageContainer>
   );
@@ -747,8 +826,8 @@ const RoomList = styled.div`
 
 const CreateButton = styled.button`
   position: fixed;
-  right: max(16px, env(safe-area-inset-right));
-  bottom: calc(88px + env(safe-area-inset-bottom));
+  right: max(16px, var(--safe-area-right, 0px));
+  bottom: calc(88px + var(--safe-area-bottom, 0px));
   z-index: 100;
   width: 62px;
   height: 62px;
@@ -943,4 +1022,12 @@ const UnreadBadge = styled.span`
   justify-content: center;
   box-sizing: border-box;
   width: fit-content;
+`;
+
+const MoreLoadingWrapper = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px 0;
+  width: 100%;
 `;

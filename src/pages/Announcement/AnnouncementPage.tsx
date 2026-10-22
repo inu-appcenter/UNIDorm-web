@@ -550,8 +550,7 @@ const NoticePageWrapper = styled.div`
   flex-direction: column;
   gap: 16px;
   box-sizing: border-box;
-  overflow-y: auto;
-  background: #fafafa;
+  overflow-y: auto;
   flex: 1;
 `;
 
@@ -631,7 +630,7 @@ const ResultHeader = styled.div`
 
 const FloatingAlertButton = styled.button`
   position: fixed;
-  bottom: 24px;
+  bottom: calc(24px + var(--safe-area-bottom, 0px));
   left: 50%;
   transform: translateX(-50%);
   background-color: #212121;
@@ -734,7 +733,7 @@ const NoticeBottom = styled.div`
 
 const WriteButton = styled.button`
   position: fixed;
-  bottom: 90px;
+  bottom: calc(90px + var(--safe-area-bottom, 0px));
   right: 20px;
   background-color: #007bff;
   color: white;

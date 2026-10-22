@@ -1,51 +1,86 @@
 // src/pages/LogoutPage.tsx
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import useUserStore from "../stores/useUserStore.ts";
 import { TokenInfo } from "@/types/members";
 import { mixpanelTrack } from "@/utils/mixpanel";
+import { deletePortalAccount, isMobileAppEnvironment } from "@/apis/mobileAgentBridge";
+import { secureStorage } from "@/utils/secureStorage";
+import { safeLocalStorage } from "@/utils/safeStorage";
 
 const LogoutPage = () => {
   const navigate = useNavigate();
   const { setTokenInfo, setUserInfo } = useUserStore();
+  const executedRef = useRef(false);
 
   useEffect(() => {
-    // 로그아웃 처리
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("role");
-    localStorage.removeItem("userInfo");
+    if (executedRef.current) return;
+    executedRef.current = true;
 
-    const emptyTokenInfo: TokenInfo = {
-      accessToken: "",
-      refreshToken: "",
-      role: "",
-    };
-    setTokenInfo(emptyTokenInfo);
-    const emptyUserInfo = {
-      id: 0,
-      name: "",
-      studentNumber: "",
-      dormType: "",
-      college: "",
-      reportedCount: 0,
-      hasTimeTableImage: false,
-      // 새로 추가된 필드들
-      hasUnreadNotifications: false,
-      termsAgreed: false,
-      privacyAgreed: false,
-      // 기존 필드
-      roommateCheckList: false,
-      // isAdmin: false, // 삭제됨
-    };
-    setUserInfo(emptyUserInfo);
-    mixpanelTrack.logout();
+    const performLogout = async () => {
+      // 1. 모바일 앱 환경인 경우 OS KeyStore/SecureStore에 저장된 포털 계정(학번/비밀번호) 연동 해제
+      if (isMobileAppEnvironment()) {
+        try {
+          await deletePortalAccount();
+        } catch (e) {
+          console.error("[Logout] 포털 계정 연동 해제 실패:", e);
+        }
+      }
 
-    console.log("로그아웃 성공");
-    alert("로그아웃되었습니다.");
-    // 처리 완료 즉시 이동
-    navigate("/home");
-  }, [navigate, setTokenInfo]);
+      // 2. 포털 사생정보, 학적정보, 연동 학번 등 온디바이스 암호화 캐시 및 로컬스토리지 일괄 소거
+      secureStorage.clearAllPortalCaches();
+
+      // 3. 일반 인증 토큰 및 유저 정보 로컬스토리지 삭제
+      const authKeys = [
+        "accessToken",
+        "refreshToken",
+        "role",
+        "userInfo",
+        "portal_student_id",
+      ];
+      authKeys.forEach((key) => {
+        safeLocalStorage.removeItem(key);
+        try {
+          if (typeof window !== "undefined" && window.localStorage) {
+            window.localStorage.removeItem(key);
+          }
+        } catch {}
+      });
+
+      // 4. Zustand 스토어 초기화 (동시에 브로드캐스트 미들웨어 및 네이티브 브릿지로 빈 토큰 전파)
+      const emptyTokenInfo: TokenInfo = {
+        accessToken: "",
+        refreshToken: "",
+        role: "",
+      };
+      setTokenInfo(emptyTokenInfo);
+
+      const emptyUserInfo = {
+        id: 0,
+        name: "",
+        studentNumber: "",
+        dormType: "",
+        college: "",
+        reportedCount: 0,
+        hasTimeTableImage: false,
+        hasUnreadNotifications: false,
+        termsAgreed: false,
+        privacyAgreed: false,
+        roommateCheckList: false,
+      };
+      setUserInfo(emptyUserInfo);
+
+      mixpanelTrack.logout();
+
+      console.log("로그아웃 성공: 모든 계정 및 캐시가 초기화되었습니다.");
+      alert("로그아웃되었습니다.");
+
+      // 5. 홈으로 이동
+      navigate("/home", { replace: true });
+    };
+
+    void performLogout();
+  }, [navigate, setTokenInfo, setUserInfo]);
 
   return (
     <div className="flex justify-center items-center h-screen">

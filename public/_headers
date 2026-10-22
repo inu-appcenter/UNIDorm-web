@@ -1,7 +1,54 @@
-/*
-  Cache-Control: no-cache, no-store, must-revalidate
+
+
+# 루트 및 HTML 문서는 항상 최신 검증
+/
+  Cache-Control: no-cache, must-revalidate
   Pragma: no-cache
   Expires: 0
 
+/*.html
+  Cache-Control: no-cache, must-revalidate
+  Pragma: no-cache
+  Expires: 0
+
+# `/sw.js`는 남은 서비스워커 등록을 회수하기 위한 묘비 워커다(내용은 public/sw.js).
+# 이 파일을 못 받으면 옛 워커가 그대로 남으므로, 업데이트 확인이 브라우저 HTTP 캐시를
+# 거치지 않게 한다.
+/sw.js
+  Cache-Control: no-cache, no-store, must-revalidate
+
+# 해시가 포함된 빌드 자원(JS, CSS, 폰트, 이미지 등)은 장기 불변 캐시 적용
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
+  Access-Control-Allow-Origin: *
+
+# public 폴더 내 정적 에셋 캐싱
+/images/*
+  Cache-Control: public, max-age=86400
+  Access-Control-Allow-Origin: *
+
+/og/*
+  Cache-Control: public, max-age=86400
+  Access-Control-Allow-Origin: *
+
+/pointers/*
+  Cache-Control: public, max-age=86400
+  Access-Control-Allow-Origin: *
+
+# 딥링크 도메인 소유 증명 파일(`public/app-links/`, `_redirects`로 `/.well-known/`에 매핑).
+# AASA는 확장자가 없어 Pages가 타입을 못 정하고 text/html로 나가는데, Apple은
+# application/json이 아니면 도메인 연결을 인정하지 않는다. 요청 경로 기준으로
+# 매칭되므로 rewrite 이전 경로와 실제 파일 경로 둘 다 적어 준다.
+#
+# Cache-Control은 일부러 적지 않는다. Pages는 여러 규칙이 걸리면 같은 헤더를
+# 덮어쓰지 않고 값을 이어 붙이므로(프리뷰 배포에서 확인:
+# `no-cache, no-store, must-revalidate, public, max-age=3600`), 위 `/*` 규칙과
+# 모순되는 한 줄이 나갈 뿐이다. 증명 파일은 항상 최신이면 되니 `/*`의 no-store로 둔다.
+/.well-known/apple-app-site-association
+  Content-Type: application/json
+
+/.well-known/assetlinks.json
+  Content-Type: application/json
+
+/app-links/*
+  Content-Type: application/json

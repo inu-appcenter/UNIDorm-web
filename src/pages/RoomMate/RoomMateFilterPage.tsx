@@ -423,14 +423,13 @@ export default function RoomMateFilterPage() {
 }
 
 const RoomMateChecklistPageWrapper = styled.div`
-  padding: 0 16px 120px;
+  padding: 0 16px calc(120px + var(--safe-area-bottom, 0px));
   display: flex;
   flex-direction: column;
   gap: 16px;
   box-sizing: border-box;
 
-  overflow-y: auto;
-  background: #fafafa;
+  overflow-y: auto;
 `;
 
 const ButtonWrapper = styled.div`
@@ -439,7 +438,7 @@ const ButtonWrapper = styled.div`
   position: fixed;
   bottom: 0;
   left: 0;
-  padding: 16px;
+  padding: 16px 16px calc(16px + var(--safe-area-bottom, 0px));
   box-sizing: border-box;
   background: rgba(244, 244, 244, 0.6);
   backdrop-filter: blur(10px);

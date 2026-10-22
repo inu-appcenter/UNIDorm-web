@@ -226,7 +226,7 @@ const Footer = styled.div`
   align-items: center;
   border-top: 1px solid #f3f4f6;
   padding: 12px 20px;
-  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  padding-bottom: calc(12px + var(--safe-area-bottom, 0px));
 
   button {
     background: none;
