@@ -338,8 +338,7 @@ const Wrapper = styled.div`
   gap: 16px;
   box-sizing: border-box;
 
-  overflow-y: auto;
-  background-color: #f4f4f4;
+  overflow-y: auto;
   flex: 1;
 `;
 

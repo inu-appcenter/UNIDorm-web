@@ -150,9 +150,7 @@ const Container = styled.div`
 
   width: 100%;
   height: 100%;
-  overflow-y: auto;
-
-  background: #f4f4f4;
+  overflow-y: auto;
 
   .description {
     font-size: 14px;

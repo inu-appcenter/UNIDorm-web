@@ -370,8 +370,7 @@ const Wrapper = styled.div`
   padding-bottom: calc(100px + var(--safe-area-bottom, 0px));
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  background: #fafafa;
+  min-height: 100vh;
   box-sizing: border-box;
 `;
 

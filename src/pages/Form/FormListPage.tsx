@@ -126,8 +126,7 @@ const PageWrapper = styled.div`
   gap: 32px;
   box-sizing: border-box;
 
-  overflow-y: auto;
-  background-color: white;
+  overflow-y: auto;
   flex: 1;
   align-items: center; // 🖥️ PC 레이아웃을 위해 중앙 정렬 추가
 

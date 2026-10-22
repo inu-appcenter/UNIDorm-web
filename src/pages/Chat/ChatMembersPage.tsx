@@ -800,8 +800,7 @@ export default function ChatMembersPage() {
 const Page = styled.div`
   height: calc(100vh - 70px);
   display: flex;
-  flex-direction: column;
-  background: #fff;
+  flex-direction: column;
   overflow: hidden;
   position: relative;
 `;

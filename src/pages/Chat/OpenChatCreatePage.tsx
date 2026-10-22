@@ -175,8 +175,7 @@ export default function OpenChatCreatePage() {
 
 const PageWrapper = styled.div`
   width: 100%;
-  min-height: 100vh;
-  background: #ffffff;
+  min-height: 100vh;
   box-sizing: border-box;
 `;
 

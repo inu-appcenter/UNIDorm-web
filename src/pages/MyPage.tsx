@@ -183,8 +183,7 @@ const MyPageWrapper = styled.div`
   box-sizing: border-box;
   width: 100%;
   flex: 1;
-  overflow-y: auto;
-  background: #fafafa;
+  overflow-y: auto;
 
   @media (min-width: 1024px) {
     max-width: 1200px;

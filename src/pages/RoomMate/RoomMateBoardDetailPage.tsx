@@ -333,8 +333,7 @@ const RoomMateDetailPageWrapper = styled.div`
   min-height: calc(100vh - 70px);
   padding-bottom: 104px;
   box-sizing: border-box;
-  overflow-y: auto;
-  background: ${colors.bg.bg2};
+  overflow-y: auto;
 `;
 
 const DetailContent = styled.div`

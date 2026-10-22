@@ -111,8 +111,8 @@ export const router = createBrowserRouter([
         element: <OutPage />,
         children: [
           { index: true, element: <Navigate to="/home" replace /> },
-          { path: "logout", element: <LogoutPage /> },
-          { path: "onboarding", element: <OnboardingPage /> },
+          { path: "logout", element: <LogoutPage />, handle: { bg: "white" } },
+          { path: "onboarding", element: <OnboardingPage />, handle: { bg: "white" } },
         ],
       },
 
@@ -120,13 +120,13 @@ export const router = createBrowserRouter([
       {
         element: <RootPage />,
         children: [
-          { path: "home", element: <HomePage /> },
-          { path: "roommate", element: <RoomMatePage /> },
-          { path: "roommate/my", element: <MyRoomMatePage /> },
-          { path: "groupPurchase", element: <GroupPurchaseMainPage /> },
-          { path: "chat", element: <OpenChatPage /> },
-          { path: "complain", element: <ComplainListPage /> },
-          { path: "mypage", element: <MyPage /> },
+          { path: "home", element: <HomePage />, handle: { bg: "gray" } },
+          { path: "roommate", element: <RoomMatePage />, handle: { bg: "gray" } },
+          { path: "roommate/my", element: <MyRoomMatePage />, handle: { bg: "gray" } },
+          { path: "groupPurchase", element: <GroupPurchaseMainPage />, handle: { bg: "gray" } },
+          { path: "chat", element: <OpenChatPage />, handle: { bg: "white" } },
+          { path: "complain", element: <ComplainListPage />, handle: { bg: "gray" } },
+          { path: "mypage", element: <MyPage />, handle: { bg: "gray" } },
         ],
       },
 
@@ -137,7 +137,7 @@ export const router = createBrowserRouter([
           {
             path: "login",
             children: [
-              { path: "", element: <LoginPage /> }, // 기본 /login 경로
+              { path: "", element: <LoginPage />, handle: { bg: "white" } }, // 기본 /login 경로
               {
                 path: "freshman",
                 element: (
@@ -145,6 +145,7 @@ export const router = createBrowserRouter([
                     <FreshmanLoginPage />
                   </FeatureFlagGate>
                 ),
+                handle: { bg: "white" },
               },
               {
                 path: "freshman/signup",
@@ -156,12 +157,14 @@ export const router = createBrowserRouter([
                     <FreshmanSignupPage />
                   </FeatureFlagGate>
                 ),
+                handle: { bg: "white" },
               },
             ],
           },
           {
             path: "agreement",
             element: <AgreementPage />,
+            handle: { bg: "gray" },
           },
         ],
       },
@@ -173,7 +176,7 @@ export const router = createBrowserRouter([
             path: "myinfoedit",
             element: <SubPage />,
             children: [
-              { index: true, element: <MyInfoEditPage /> },
+              { index: true, element: <MyInfoEditPage />, handle: { bg: "gray" } },
               {
                 path: "freshman-migration",
                 element: (
@@ -184,6 +187,7 @@ export const router = createBrowserRouter([
                     <FreshmanMigrationPage />
                   </FeatureFlagGate>
                 ),
+                handle: { bg: "white" },
               },
             ],
           },
@@ -191,24 +195,24 @@ export const router = createBrowserRouter([
           {
             path: "notification-setting",
             element: <SubPage />,
-            children: [{ index: true, element: <NotificationSettingPage /> }],
+            children: [{ index: true, element: <NotificationSettingPage />, handle: { bg: "gray" } }],
           },
           {
             path: "myposts",
             element: <SubPage />,
-            children: [{ index: true, element: <MyPostsPage /> }],
+            children: [{ index: true, element: <MyPostsPage />, handle: { bg: "gray" } }],
           },
           {
             path: "liked",
             element: <SubPage />,
-            children: [{ index: true, element: <MyLikesPage /> }],
+            children: [{ index: true, element: <MyLikesPage />, handle: { bg: "gray" } }],
           },
           {
             path: "settings",
             element: <SubPage />,
             children: [
-              { index: true, element: <SettingsPage /> },
-              { path: "logs", element: <DebugLogPage /> },
+              { index: true, element: <SettingsPage />, handle: { bg: "gray" } },
+              { path: "logs", element: <DebugLogPage />, handle: { bg: "gray" } },
             ],
           },
 
@@ -217,12 +221,12 @@ export const router = createBrowserRouter([
             path: "roommate",
             element: <SubPage />,
             children: [
-              { path: "list", element: <RoomMateListPage /> },
-              { path: "list/:boardId", element: <RoomMateBoardDetailPage /> },
-              { path: "filter", element: <RoomMateFilterPage /> },
-              { path: "checklist", element: <RoomMateChecklistPage /> },
-              { path: "add", element: <RoomMateAddPage /> },
-              { path: "find/settings", element: <RoomMateFindSettingPage /> },
+              { path: "list", element: <RoomMateListPage />, handle: { bg: "gray" } },
+              { path: "list/:boardId", element: <RoomMateBoardDetailPage />, handle: { bg: "gray" } },
+              { path: "filter", element: <RoomMateFilterPage />, handle: { bg: "gray" } },
+              { path: "checklist", element: <RoomMateChecklistPage />, handle: { bg: "gray" } },
+              { path: "add", element: <RoomMateAddPage />, handle: { bg: "gray" } },
+              { path: "find/settings", element: <RoomMateFindSettingPage />, handle: { bg: "gray" } },
             ],
           },
 
@@ -231,14 +235,15 @@ export const router = createBrowserRouter([
             path: "chat",
             element: <SubPage />,
             children: [
-              { path: "open/create", element: <OpenChatCreatePage /> },
-              { path: "open/:id/edit", element: <OpenChatEditPage /> },
-              { path: "blocked", element: <BlockListPage /> },
-              { path: ":chatType/:id", element: <ChattingPageRoute /> },
-              { path: ":chatType/:id/members", element: <ChatMembersPage /> },
+              { path: "open/create", element: <OpenChatCreatePage />, handle: { bg: "white" } },
+              { path: "open/:id/edit", element: <OpenChatEditPage />, handle: { bg: "white" } },
+              { path: "blocked", element: <BlockListPage />, handle: { bg: "white" } },
+              { path: ":chatType/:id", element: <ChattingPageRoute />, handle: { bg: "white" } },
+              { path: ":chatType/:id/members", element: <ChatMembersPage />, handle: { bg: "white" } },
               {
                 path: ":chatType/:id/notifications",
                 element: <ChatNotificationSettingsPage />,
+                handle: { bg: "white" },
               },
             ],
           },
@@ -248,9 +253,9 @@ export const router = createBrowserRouter([
             path: "groupPurchase",
             element: <SubPage />,
             children: [
-              { path: ":boardId", element: <GroupPurchasePostPage /> },
-              { path: "write", element: <GroupPurchaseWritePage /> },
-              { path: "keywordSetting", element: <KeywordAlertSettingPage /> },
+              { path: ":boardId", element: <GroupPurchasePostPage />, handle: { bg: "white" } },
+              { path: "write", element: <GroupPurchaseWritePage />, handle: { bg: "white" } },
+              { path: "keywordSetting", element: <KeywordAlertSettingPage />, handle: { bg: "gray" } },
             ],
           },
 
@@ -259,57 +264,57 @@ export const router = createBrowserRouter([
             path: "announcements",
             element: <SubPage />,
             children: [
-              { index: true, element: <NotificationBoardPage /> },
-              { path: ":boardId", element: <AnnounceDetailPage /> },
-              { path: "write", element: <AnnounceWritePage /> },
+              { index: true, element: <NotificationBoardPage />, handle: { bg: "gray" } },
+              { path: ":boardId", element: <AnnounceDetailPage />, handle: { bg: "white" } },
+              { path: "write", element: <AnnounceWritePage />, handle: { bg: "gray" } },
             ],
           },
           {
             path: "tips",
             element: <SubPage />,
             children: [
-              { index: true, element: <TipListPage /> },
-              { path: "write", element: <TipWritePage /> },
-              { path: ":boardId", element: <TipDetailPage /> },
+              { index: true, element: <TipListPage />, handle: { bg: "gray" } },
+              { path: "write", element: <TipWritePage />, handle: { bg: "white" } },
+              { path: ":boardId", element: <TipDetailPage />, handle: { bg: "white" } },
             ],
           },
           {
             path: "complain",
             element: <SubPage />,
             children: [
-              { path: ":complainId", element: <ComplainDetailPage /> },
-              { path: "write", element: <ComplainWritePage /> },
+              { path: ":complainId", element: <ComplainDetailPage />, handle: { bg: "gray" } },
+              { path: "write", element: <ComplainWritePage />, handle: { bg: "gray" } },
             ],
           },
           {
             path: "form",
             element: <SubPage />,
             children: [
-              { index: true, element: <FormListPage /> },
-              { path: ":formId", element: <FormDetailPage /> },
+              { index: true, element: <FormListPage />, handle: { bg: "white" } },
+              { path: ":formId", element: <FormDetailPage />, handle: { bg: "white" } },
             ],
           },
           {
             path: "notification",
             element: <SubPage />,
-            children: [{ index: true, element: <NotificationPage /> }],
+            children: [{ index: true, element: <NotificationPage />, handle: { bg: "gray" } }],
           },
           {
             path: "calendar",
             element: <SubPage />,
-            children: [{ index: true, element: <CalendarPage /> }],
+            children: [{ index: true, element: <CalendarPage />, handle: { bg: "gray" } }],
           },
           {
             path: "mypage",
             element: <SubPage />,
-            children: [{ path: "portal", element: <PortalAccountPage /> }],
+            children: [{ path: "portal", element: <PortalAccountPage />, handle: { bg: "gray" } }],
           },
           {
             path: "dormitory",
             element: <SubPage />,
             children: [
-              { path: "info", element: <PortalDormitoryPage /> },
-              { path: "card", element: <DormitoryCardPage /> },
+              { path: "info", element: <PortalDormitoryPage />, handle: { bg: "gray" } },
+              { path: "card", element: <DormitoryCardPage />, handle: { bg: "gray" } },
             ],
           },
 
@@ -318,37 +323,42 @@ export const router = createBrowserRouter([
             path: "admin",
             element: <SubPage />,
             children: [
-              { index: true, element: <AdminMainPage /> },
-              { path: "calendar", element: <CalendarAdminPage /> },
-              { path: "complain", element: <ComplainAdminPage /> },
+              { index: true, element: <AdminMainPage />, handle: { bg: "gray" } },
+              { path: "calendar", element: <CalendarAdminPage />, handle: { bg: "white" } },
+              { path: "complain", element: <ComplainAdminPage />, handle: { bg: "gray" } },
               {
                 path: "complain/answer/:complainId",
                 element: <ComplainAnswerWritePage />,
+                handle: { bg: "white" },
               },
-              { path: "popup-notifications", element: <PopupNotiListPage /> },
+              { path: "popup-notifications", element: <PopupNotiListPage />, handle: { bg: "gray" } },
               {
                 path: "popup-notifications/create",
                 element: <PopupNotiCreatePage />,
+                handle: { bg: "white" },
               },
               {
                 path: "popup-notifications/edit/:popupNotificationId",
                 element: <PopupNotiCreatePage />,
+                handle: { bg: "white" },
               },
               {
                 path: "notification/create",
                 element: <CreateNotificationPage />,
+                handle: { bg: "gray" },
               },
-              { path: "form/create", element: <FormCreatePage /> },
-              { path: "form/:formId/result", element: <FormResultPage /> },
-              { path: "fcm", element: <FCMPage /> },
-              { path: "feature-flag", element: <FeatureFlagManagePage /> },
-              { path: "statistics", element: <StatisticsPage /> },
+              { path: "form/create", element: <FormCreatePage />, handle: { bg: "white" } },
+              { path: "form/:formId/result", element: <FormResultPage />, handle: { bg: "white" } },
+              { path: "fcm", element: <FCMPage />, handle: { bg: "gray" } },
+              { path: "feature-flag", element: <FeatureFlagManagePage />, handle: { bg: "white" } },
+              { path: "statistics", element: <StatisticsPage />, handle: { bg: "gray" } },
               {
                 path: "open-chat-reports",
                 element: <OpenChatReportAdminPage />,
+                handle: { bg: "gray" },
               },
-              { path: "open-chat-bot", element: <OpenChatBotPage /> },
-              { path: "open-chat-rooms", element: <OpenChatAdminPage /> },
+              { path: "open-chat-bot", element: <OpenChatBotPage />, handle: { bg: "gray" } },
+              { path: "open-chat-rooms", element: <OpenChatAdminPage />, handle: { bg: "gray" } },
             ],
           },
         ],
