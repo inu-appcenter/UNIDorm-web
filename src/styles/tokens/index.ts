@@ -9,7 +9,7 @@ export const colors = {
     "main4": "#ffc53d"
   },
   "bg": {
-    "bg2": "#f7f7f7",
+    "bg2": "#f9fafb",
     "bg3": "#efefef",
     "bg1": "#ffffff"
   },
@@ -25,7 +25,7 @@ export const colors = {
     "gray300": "#c1c1c1",
     "gray200": "#dfdfdf",
     "gray100": "#efefef",
-    "gray50": "#f7f7f7",
+    "gray50": "#f9fafb",
     "gray0": "#ffffff"
   },
   "blue": {
@@ -57,7 +57,7 @@ export const colors = {
     "text2": "#6f6f6f",
     "text3": "#a5a5a5",
     "text4": "#dfdfdf",
-    "text5": "#f7f7f7"
+    "text5": "#f9fafb"
   },
   "cta": {
     "default": "#0958d9",

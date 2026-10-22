@@ -152,7 +152,7 @@ const StyledHeader = styled.header<{ $isHome: boolean }>`
   box-sizing: border-box;
   background: color-mix(
     in srgb,
-    var(--page-bg, var(--layout-bg, var(--Bg-Bg2, #f7f7f7))) 80%,
+    var(--page-bg, var(--layout-bg, var(--color-bg-bg2, var(--Bg-Bg2, #f9fafb)))) 80%,
     transparent
   );
   backdrop-filter: blur(10px);
