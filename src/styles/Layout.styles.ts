@@ -1,10 +1,13 @@
 import styled from "styled-components";
+import { PageBgType } from "@/types/layout";
 
 // 전체 페이지 래퍼
-export const PageWrapper = styled.div`
+export const PageWrapper = styled.div<{ $bgType?: PageBgType }>`
   width: 100%;
   min-height: 100vh;
-  background: var(--Bg-Bg2, #f7f7f7);
+  --layout-bg: ${({ $bgType }) =>
+    $bgType === "white" ? "var(--Bg-Bg1, #ffffff)" : "var(--Bg-Bg2, #f7f7f7)"};
+  background: var(--page-bg, var(--layout-bg));
 
   display: flex;
   flex-direction: column;
