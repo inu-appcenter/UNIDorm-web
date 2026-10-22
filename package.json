@@ -9,7 +9,8 @@
     "build:tokens": "node scripts/generate-tokens.js",
     "lint": "eslint .",
     "test": "vitest run",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "verify:bg": "node scripts/verify-page-backgrounds.js"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.9",
