@@ -251,6 +251,5 @@ const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  overflow-y: auto;
-  background: #fafafa;
+  overflow-y: auto;
 `;

@@ -412,8 +412,7 @@ export default function ComplainWritePage() {
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  background: white;
+  min-height: 100vh;
   padding: 16px 16px calc(120px + var(--safe-area-bottom, 0px));
 `;
 
