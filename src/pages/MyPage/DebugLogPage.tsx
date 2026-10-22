@@ -127,8 +127,7 @@ const PageWrapper = styled.div`
   height: 100%;
   padding: 24px 16px 100px;
   box-sizing: border-box;
-  overflow-y: auto;
-  background: #fafafa;
+  overflow-y: auto;
 `;
 
 const TopSection = styled.div`

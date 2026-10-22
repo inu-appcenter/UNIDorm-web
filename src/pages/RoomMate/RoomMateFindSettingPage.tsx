@@ -333,8 +333,7 @@ const Wrapper = styled.div`
   padding-top: 4px;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  background: #fafafa;
+  min-height: 100vh;
 `;
 
 const ProgressBarContainer = styled.div`

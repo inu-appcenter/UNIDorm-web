@@ -216,8 +216,7 @@ export default function OpenChatEditPage() {
 
 const Page = styled.div`
   min-height: 100vh;
-  box-sizing: border-box;
-  background: #fff;
+  box-sizing: border-box;
 `;
 
 const Content = styled.main`

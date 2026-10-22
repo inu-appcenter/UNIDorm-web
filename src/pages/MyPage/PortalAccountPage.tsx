@@ -489,8 +489,7 @@ export default function MobilePortalAccountPage() {
 const PageWrapper = styled.main`
   width: 100%;
   min-height: 100svh;
-  box-sizing: border-box;
-  background: var(--bg-subtle);
+  box-sizing: border-box;
   padding: 16px ${MOBILE_PAGE_GUTTER} calc(32px + var(--safe-area-bottom, 0px));
 
   @media ${DESKTOP_MEDIA} {

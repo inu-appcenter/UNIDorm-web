@@ -550,8 +550,7 @@ const NoticePageWrapper = styled.div`
   flex-direction: column;
   gap: 16px;
   box-sizing: border-box;
-  overflow-y: auto;
-  background: #fafafa;
+  overflow-y: auto;
   flex: 1;
 `;
 

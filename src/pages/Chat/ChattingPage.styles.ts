@@ -1,8 +1,7 @@
 import styled, { css, keyframes } from "styled-components";
 
 export const ChatPageWrapper = styled.div`
-  width: 100%;
-  background: #ffffff;
+  width: 100%;
   /* 부모 헤더(70px + safe-area-top)를 뺀 나머지 화면 전체 고정 높이 */
   height: calc(100vh - 70px - var(--safe-area-top, 0px));
   /* Flex Column 레이아웃 */

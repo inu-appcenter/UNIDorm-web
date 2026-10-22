@@ -8,6 +8,7 @@ import { useFileHandler } from "@/hooks/useFileHandler";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import { mixpanelTrack } from "@/utils/mixpanel";
+import RichTextEditor from "../../components/common/Editor/RichTextEditor.tsx";
 
 export default function TipWritePage() {
   const navigate = useNavigate();
@@ -108,10 +109,11 @@ export default function TipWritePage() {
           onChange={(e) => setTitle(e.target.value)}
         />
         <Label>내용</Label>
-        <Textarea
+        <RichTextEditor
+          content={content}
+          onChange={(html) => setContent(html)}
           placeholder="내용을 입력해주세요"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
+          minHeight="220px"
         />
         <Label>이미지 ({files.length}/10)</Label>
         {isEditMode && (
@@ -171,14 +173,6 @@ const Input = styled.input`
   background: #fff;
 `;
 
-const Textarea = styled.textarea`
-  min-height: 200px;
-  padding: 12px;
-  border-radius: 8px;
-  border: 1px solid #ddd;
-  background: #fff;
-  resize: none;
-`;
 
 const ButtonWrapper = styled.div`
   width: 100%;

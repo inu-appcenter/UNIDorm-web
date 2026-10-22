@@ -13,7 +13,8 @@ import {
   updateAnnouncementWithFiles,
 } from "@/apis/announcements";
 import { useFileHandler } from "@/hooks/useFileHandler";
-import { Input, Textarea } from "@/styles/common";
+import { Input } from "@/styles/common";
+import RichTextEditor from "../../components/common/Editor/RichTextEditor.tsx";
 import {
   ANNOUNCE_CATEGORY_LIST,
   ANNOUNCE_SUB_CATEGORY_LIST,
@@ -152,10 +153,11 @@ export default function AnnounceWritePage() {
         </FormField>
 
         <FormField label="내용">
-          <Textarea
+          <RichTextEditor
+            content={content}
+            onChange={(html) => setContent(html)}
             placeholder="내용을 입력해주세요"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
+            minHeight="220px"
           />
         </FormField>
 
@@ -199,7 +201,6 @@ const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background: #fafafa;
   flex: 1;
   padding: 0 16px calc(120px + var(--safe-area-bottom, 0px));
 `;
