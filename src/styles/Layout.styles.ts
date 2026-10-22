@@ -6,7 +6,9 @@ export const PageWrapper = styled.div<{ $bgType?: PageBgType }>`
   width: 100%;
   min-height: 100vh;
   --layout-bg: ${({ $bgType }) =>
-    $bgType === "white" ? "var(--Bg-Bg1, #ffffff)" : "var(--Bg-Bg2, #f7f7f7)"};
+    $bgType === "white"
+      ? "var(--color-bg-bg1, var(--Bg-Bg1, #ffffff))"
+      : "var(--color-bg-bg2, var(--Bg-Bg2, #f9fafb))"};
   background: var(--page-bg, var(--layout-bg));
 
   display: flex;
