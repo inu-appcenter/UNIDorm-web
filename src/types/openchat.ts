@@ -20,6 +20,8 @@ export interface OpenChatRoom {
   joined: boolean;
   isBlockedByPartner?: boolean;
   isMyRoommate?: boolean;
+  recruitmentClosed?: boolean;
+  joinable?: boolean;
   isJoinable?: boolean;
   recruitmentStatus?: "OPEN" | "CLOSED";
   lastStatusChangedAt?: string | null;
