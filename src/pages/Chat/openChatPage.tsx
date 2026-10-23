@@ -6,7 +6,6 @@ import {
   joinOpenChatRoom,
 } from "@/apis/openchat";
 import {
-  getRoommateChatRooms,
   patchRoommateChatRead,
   getRoommateChatUnreadCount,
   getAllRoommateChatUnreadCount,
@@ -27,6 +26,7 @@ import useUserStore from "@/stores/useUserStore";
 import { useChatListStore } from "@/stores/useChatListStore";
 import { Search, Plus, MapPin, User } from "lucide-react";
 import { formatChatMessagePreview } from "@/utils/chatMessagePreview";
+import { isOpenChatRoomClosed } from "@/utils/openChat";
 
 const formatTime = (isoString: string) => {
   if (!isoString) return "";
@@ -216,45 +216,14 @@ export default function OpenChatPage() {
         if (shouldShowSpinner) setIsLoading(true);
         pageRef.current = 0;
         if (selectedTab === "MY") {
-          const [openChatRes, roommateChatRes, unreadRes] = await Promise.all([
+          const [openChatRes, unreadRes] = await Promise.all([
             getOpenChatRooms("MY", 0, 20, searchQuery || undefined),
-            getRoommateChatRooms(),
             getAllRoommateChatUnreadCount(),
           ]);
-          const openChatRooms = openChatRes.data.content.filter(
-            (room) => room.chatCategory === "OPEN_CHAT",
-          );
-
-          const dedicatedRoommateRooms = roommateChatRes.data;
-          const dedicatedRoommateRoomIds = new Set(
-            dedicatedRoommateRooms.map((room) => room.chatRoomId),
-          );
-          const restoredRoommateRooms: RoommateChatRoom[] =
-            openChatRes.data.content
-              .filter(
-                (room) =>
-                  room.chatCategory === "ROOMMATE" &&
-                  !dedicatedRoommateRoomIds.has(room.roomId),
-              )
-              .map((room) => ({
-                chatRoomId: room.roomId,
-                opponentNickname: room.name,
-                lastMessage: room.lastMessage,
-                lastMessageTime: room.lastMessageAt,
-                partnerId: 0,
-                partnerName: room.name,
-                partnerProfileImageUrl: "",
-                unreadCount: room.unreadCount,
-                isBlockedByPartner: room.isBlockedByPartner ?? false,
-              }));
 
           setChatListData({
             tab: "MY",
-            rooms: openChatRooms,
-            roommateRooms: [
-              ...dedicatedRoommateRooms,
-              ...restoredRoommateRooms,
-            ],
+            rooms: openChatRes.data.content,
             roommateUnreadTotal: unreadRes.data,
             myOpenChatUnreadTotal: openChatRes.data.totalUnreadCount ?? 0,
           });
@@ -277,9 +246,7 @@ export default function OpenChatPage() {
 
           setChatListData({
             tab: selectedTab,
-            rooms: openChatRes.data.content.filter(
-              (room) => room.chatCategory === "OPEN_CHAT",
-            ),
+            rooms: openChatRes.data.content,
             roommateUnreadTotal: unreadRes.data,
             myOpenChatUnreadTotal: myOpenChatRes.data.totalUnreadCount ?? 0,
           });
@@ -418,7 +385,7 @@ export default function OpenChatPage() {
         room.isRoommate,
     );
 
-    const opponentBoardTitle = (room as any).opponentBoardTitle?.trim();
+    const opponentBoardTitle = room.opponentBoardTitle?.trim();
 
     navigate(`/chat/roommate/${room.chatRoomId}`, {
       state: {
@@ -450,10 +417,7 @@ export default function OpenChatPage() {
       return;
     }
 
-    const isClosed =
-      room.recruitmentStatus === "CLOSED" ||
-      room.isJoinable === false ||
-      (room as any).recruitmentClosed === true;
+    const isClosed = isOpenChatRoomClosed(room);
 
     if (isClosed) {
       setIsRecruitmentClosedModalOpen(true);

@@ -2,6 +2,7 @@ import styled from "styled-components";
 import { OpenChatRoom, OpenChatTab } from "@/types/openchat";
 import { User } from "lucide-react";
 import { formatChatMessagePreview } from "@/utils/chatMessagePreview";
+import { isOpenChatRoomClosed } from "@/utils/openChat";
 import ChatAvatar from "./ChatAvatar";
 
 interface Props {
@@ -39,10 +40,7 @@ export default function OpenChatRoomCard({ room, tab, onClick }: Props) {
     }
   };
 
-  const isClosed =
-    room.recruitmentStatus === "CLOSED" ||
-    room.isJoinable === false ||
-    (room as any).recruitmentClosed === true;
+  const isClosed = isOpenChatRoomClosed(room);
 
   if (isMyChatRoom) {
     return (
