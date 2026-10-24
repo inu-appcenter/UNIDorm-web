@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import styled from "styled-components";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useGroupPurchaseDetail } from "@/queries/groupPurchases";
@@ -28,14 +28,21 @@ export default function GroupPurchaseWritePage() {
   const { post: statePost, curImages: stateImages } = location.state || {};
   const [post, setPost] = useState<any>(statePost ?? null);
 
-  // 이미지 상태 및 핸들러 커스텀 훅
-  const { files, addFiles, deleteFile, isFileLoading } = useFileHandler({
-    initialFiles: stateImages,
-  });
-
   const { data: detailData, isLoading: isDetailLoading } = useGroupPurchaseDetail(
     !statePost && editId ? editId : undefined,
   );
+
+  const initialImages = useMemo(() => {
+    if (stateImages && stateImages.length > 0) return stateImages;
+    if (detailData?.images && detailData.images.length > 0) return detailData.images;
+    return [];
+  }, [stateImages, detailData?.images]);
+
+  // 이미지 상태 및 핸들러 커스텀 훅
+  const { files, addFiles, deleteFile, isFileLoading } = useFileHandler({
+    initialFiles: initialImages,
+    mode: "image",
+  });
 
   useInitFromQuery(
     detailData,
@@ -43,9 +50,6 @@ export default function GroupPurchaseWritePage() {
       if (!statePost && fetched) {
         const item = fetched.groupOrder || fetched;
         setPost(item);
-        if (fetched.images && fetched.images.length > 0) {
-          addFiles(fetched.images);
-        }
       }
     },
     editId,

@@ -3,7 +3,7 @@ import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useComplaintDetail } from "@/queries/complaints";
 import { useInitFromQuery } from "@/hooks/useInitFromQuery";
 import type { ComplaintDetail } from "@/types/complain";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import SquareButton from "../../components/common/SquareButton.tsx";
 import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
 import {
@@ -55,9 +55,20 @@ export default function ComplainWritePage() {
   );
 
   // 이미지 상태 및 핸들러 커스텀 훅
-  const initialImages = stateImages ?? detailData?.images?.map((url) => ({ imageUrl: url, imageName: "complain.jpg" }));
+  const initialImages = useMemo(() => {
+    if (stateImages && stateImages.length > 0) return stateImages;
+    if (detailData?.images && detailData.images.length > 0) {
+      return detailData.images.map((url, idx) => ({
+        imageUrl: url,
+        imageName: `complain_${idx + 1}.jpg`,
+      }));
+    }
+    return [];
+  }, [stateImages, detailData?.images]);
+
   const { files, addFiles, deleteFile, isFileLoading } = useFileHandler({
     initialFiles: initialImages,
+    mode: "image",
   });
 
   useInitFromQuery(
@@ -449,7 +460,7 @@ export default function ComplainWritePage() {
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  min-height: 100vh;
   padding: 16px 16px calc(120px + var(--safe-area-bottom, 0px));
 `;
 

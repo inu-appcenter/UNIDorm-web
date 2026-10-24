@@ -3,7 +3,7 @@ import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useAnnouncementDetail } from "@/queries/announcements";
 import { useInitFromQuery } from "@/hooks/useInitFromQuery";
 import type { AnnouncementDetail } from "@/types/announcements";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import SquareButton from "../../components/common/SquareButton.tsx";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import FileUploader from "../../components/common/FileUploader.tsx";
@@ -11,7 +11,6 @@ import FormField from "../../components/complain/FormField.tsx";
 import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
 import {
   createAnnouncement,
-  updateAnnouncement,
   updateAnnouncementWithFiles,
 } from "@/apis/announcements";
 import { useFileHandler } from "@/hooks/useFileHandler";
@@ -66,8 +65,15 @@ export default function AnnounceWritePage() {
     !stateAnnounce && editId ? editId : undefined,
   );
 
+  const initialFiles = useMemo(() => {
+    if (stateFiles && stateFiles.length > 0) return stateFiles;
+    if (detailData?.images && detailData.images.length > 0) return detailData.images;
+    if (detailData?.attachments && detailData.attachments.length > 0) return detailData.attachments;
+    return [];
+  }, [stateFiles, detailData?.images, detailData?.attachments]);
+
   const { files, addFiles, deleteFile, isFileLoading } = useFileHandler({
-    initialFiles: stateFiles ?? detailData?.images,
+    initialFiles,
     mode: "file",
   });
 
@@ -120,11 +126,8 @@ export default function AnnounceWritePage() {
       setIsLoading(true);
 
       if (announce) {
-        if (files.length > 0) {
-          await updateAnnouncementWithFiles(announce.id, data, files);
-        } else {
-          await updateAnnouncement(announce.id, data);
-        }
+        // 기존 파일이 있었거나 변경/삭제된 경우 항상 with-files로 동기화
+        await updateAnnouncementWithFiles(announce.id, data, files);
         alert("공지사항이 성공적으로 수정되었습니다.");
       } else {
         await createAnnouncement(data, files);

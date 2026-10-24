@@ -2,7 +2,7 @@ import styled from "styled-components";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useTipDetail } from "@/queries/tips";
 import { useInitFromQuery } from "@/hooks/useInitFromQuery";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import SquareButton from "../../components/common/SquareButton.tsx";
 import { createTip, updateTip } from "@/apis/tips";
 import FileUploader from "../../components/common/FileUploader.tsx";
@@ -29,11 +29,6 @@ export default function TipWritePage() {
 
   const [isLoading, setIsLoading] = useState(false);
 
-  // 이미지 상태 및 핸들러 커스텀 훅
-  const { files, addFiles, deleteFile, isFileLoading } = useFileHandler({
-    initialFiles: stateImages,
-  });
-
   // 초기 렌더링 시 스크롤 상단 이동
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -42,6 +37,18 @@ export default function TipWritePage() {
   const { data: detailData, isLoading: isDetailLoading } = useTipDetail(
     !stateTip && editId ? editId : undefined,
   );
+
+  const initialImages = useMemo(() => {
+    if (stateImages && stateImages.length > 0) return stateImages;
+    if (detailData?.images && detailData.images.length > 0) return detailData.images;
+    return [];
+  }, [stateImages, detailData?.images]);
+
+  // 이미지 상태 및 핸들러 커스텀 훅
+  const { files, addFiles, deleteFile, isFileLoading } = useFileHandler({
+    initialFiles: initialImages,
+    mode: "image",
+  });
 
   useInitFromQuery(
     detailData,
@@ -53,9 +60,6 @@ export default function TipWritePage() {
         setTitle(item.title);
         setContent(item.content);
         setIsEditMode(true);
-        if (fetched.images && fetched.images.length > 0) {
-          addFiles(fetched.images);
-        }
       }
     },
     editId,
