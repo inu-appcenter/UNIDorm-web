@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import SquareButton from "../../components/common/SquareButton.tsx";
 import { ComplaintReplyDto } from "@/types/complain";
 import { useComplaintDetail } from "@/queries/complaints";
@@ -31,10 +31,6 @@ export default function ComplainAnswerWritePage() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
 
-  const { files, addFiles, deleteFile, isFileLoading } = useFileHandler({
-    initialFiles: stateImages,
-  });
-
   const [isLoading, setIsLoading] = useState(false);
 
   const { data: detailData, isLoading: isDetailLoading } = useComplaintDetail(
@@ -42,15 +38,25 @@ export default function ComplainAnswerWritePage() {
     { asAdmin: true },
   );
 
+  const initialImages = useMemo(() => {
+    if (stateImages && stateImages.length > 0) return stateImages;
+    if (detailData?.reply?.attachmentUrl && detailData.reply.attachmentUrl.length > 0) {
+      return detailData.reply.attachmentUrl;
+    }
+    return [];
+  }, [stateImages, detailData?.reply?.attachmentUrl]);
+
+  const { files, addFiles, deleteFile, isFileLoading } = useFileHandler({
+    initialFiles: initialImages,
+    mode: "image",
+  });
+
   useInitFromQuery(
     detailData,
     (fetched: any) => {
       if (!stateComplain && fetched) {
         setComplain(fetched);
         if (fetched.officer) setManager(fetched.officer);
-        if (fetched.reply?.attachmentUrl && fetched.reply.attachmentUrl.length > 0) {
-          addFiles(fetched.reply.attachmentUrl);
-        }
       }
     },
     complainId,
@@ -186,7 +192,7 @@ export default function ComplainAnswerWritePage() {
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100vh;
 `;
 
 const Content = styled.div`
