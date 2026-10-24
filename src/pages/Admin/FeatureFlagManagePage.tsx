@@ -1,5 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
 import styled from "styled-components";
 import {
   PlusCircle,
@@ -12,11 +11,10 @@ import {
 import {
   createFeatureFlag,
   FeatureFlag,
-  getFeatureFlags,
   updateFeatureFlag,
 } from "@/apis/featureFlag";
 import AdminBottomSheet from "@/components/modal/AdminBottomSheet";
-import { FEATURE_FLAGS_QUERY_KEY } from "@/hooks/useFeatureFlags";
+import { useAdminFeatureFlags } from "@/queries/admin";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import {
   AdminActionRow,
@@ -51,31 +49,16 @@ import {
 const EMPTY_NEW_FLAG: FeatureFlag = { key: "", flag: false };
 
 const FeatureFlagManagePage = () => {
-  const queryClient = useQueryClient();
-  const [flags, setFlags] = useState<FeatureFlag[]>([]);
+  const { data: rawFlags = [], isLoading: loading } = useAdminFeatureFlags();
+  const flags = useMemo(
+    () => [...rawFlags].sort((a, b) => a.key.localeCompare(b.key)),
+    [rawFlags],
+  );
   const [newFlag, setNewFlag] = useState<FeatureFlag>(EMPTY_NEW_FLAG);
   const [searchValue, setSearchValue] = useState("");
-  const [loading, setLoading] = useState(true);
   const [pendingKey, setPendingKey] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [isCreatorOpen, setIsCreatorOpen] = useState(false);
-
-  const fetchFlags = async () => {
-    try {
-      setLoading(true);
-      const { data } = await getFeatureFlags();
-      setFlags([...data].sort((a, b) => a.key.localeCompare(b.key)));
-    } catch (error) {
-      console.error(error);
-      alert("Feature Flag 목록을 불러오지 못했습니다.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    void fetchFlags();
-  }, []);
 
   const filteredFlags = useMemo(() => {
     const keyword = searchValue.trim().toLowerCase();
@@ -113,8 +96,6 @@ const FeatureFlagManagePage = () => {
       setPendingKey(item.key);
       const updated = { ...item, flag: !item.flag };
       await updateFeatureFlag(updated);
-      setFlags((prev) => prev.map((f) => (f.key === item.key ? updated : f)));
-      await queryClient.invalidateQueries({ queryKey: FEATURE_FLAGS_QUERY_KEY });
     } catch (error) {
       alert("Feature Flag 상태를 변경하지 못했습니다.");
     } finally {
@@ -144,8 +125,6 @@ const FeatureFlagManagePage = () => {
     try {
       setIsCreating(true);
       await createFeatureFlag({ ...newFlag, key: normalizedKey });
-      await fetchFlags();
-      await queryClient.invalidateQueries({ queryKey: FEATURE_FLAGS_QUERY_KEY });
       alert("Feature Flag를 등록했습니다.");
       closeCreator();
     } catch (error) {

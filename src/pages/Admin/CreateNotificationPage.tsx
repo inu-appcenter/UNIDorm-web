@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 import { AxiosError } from "axios";
 import { RefreshCcw, Send } from "lucide-react";
@@ -9,12 +9,13 @@ import {
   NotificationPayload,
   NotificationType,
 } from "@/types/notifications";
-import { FcmStatsResponse, SendAllFcmPayload } from "@/types/fcm";
+import { SendAllFcmPayload } from "@/types/fcm";
 import {
   createNotification,
   createNotificationByStudentNumber,
 } from "@/apis/notification";
-import { getFcmStats, sendFcmToAllUsers } from "@/apis/fcm";
+import { sendFcmToAllUsers } from "@/apis/fcm";
+import { useFcmStatsQuery } from "@/queries/admin";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import { NOTIFICATION_TYPE_OPTIONS } from "@/utils/notificationType";
 import {
@@ -99,12 +100,15 @@ const CreateNotificationPage = () => {
     DEFAULT_NOTIFICATION_TYPE,
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [fcmStats, setFcmStats] = useState<FcmStatsResponse | null>(null);
-  const [isStatsLoading, setIsStatsLoading] = useState(false);
-  const [statsError, setStatsError] = useState<string | null>(null);
-  const [lastStatsFetchedAt, setLastStatsFetchedAt] = useState<string | null>(
-    null,
-  );
+  const {
+    data: fcmStats,
+    isLoading: isStatsLoading,
+    isError: isStatsError,
+    dataUpdatedAt,
+    refetch: refetchFcmStats,
+  } = useFcmStatsQuery();
+  const lastStatsFetchedAt = dataUpdatedAt ? new Date(dataUpdatedAt).toISOString() : null;
+  const statsError = isStatsError ? "FCM 발송 통계를 불러오지 못했습니다." : null;
 
   const currentDeliveryOption =
     DELIVERY_OPTIONS.find((option) => option.value === deliveryMode) ??
@@ -141,25 +145,7 @@ const CreateNotificationPage = () => {
 
   useSetHeader({ title: "푸시 알림 전송" });
 
-  const loadFcmStats = useCallback(async () => {
-    try {
-      setIsStatsLoading(true);
-      setStatsError(null);
 
-      const response = await getFcmStats();
-      setFcmStats(response.data);
-      setLastStatsFetchedAt(new Date().toISOString());
-    } catch (error) {
-      console.error("FCM 통계 조회 실패:", error);
-      setStatsError("FCM 발송 통계를 불러오지 못했습니다.");
-    } finally {
-      setIsStatsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void loadFcmStats();
-  }, [loadFcmStats]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -209,7 +195,7 @@ const CreateNotificationPage = () => {
         await createNotification(payload);
       }
 
-      await loadFcmStats();
+      await refetchFcmStats();
       alert(
         "푸시 알림을 전송했습니다. 하단 FCM 통계가 최신 값으로 갱신되었습니다.",
       );
@@ -365,7 +351,7 @@ const CreateNotificationPage = () => {
                 <AdminButton
                   type="button"
                   $tone="secondary"
-                  onClick={() => void loadFcmStats()}
+                  onClick={() => void refetchFcmStats()}
                   disabled={isStatsLoading}
                 >
                   <RefreshCcw size={16} />

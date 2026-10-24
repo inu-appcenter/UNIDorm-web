@@ -17,10 +17,10 @@ import { isAxiosError } from "axios";
 import {
   createDormOfficialRoom,
   deleteDormOfficialRoom,
-  getAdminOpenChatRooms,
   sendOpenChatBotMessage,
   updateDormOfficialRoom,
 } from "@/apis/openchat";
+import { useAdminOpenChatRooms } from "@/queries/admin";
 import AdminModal from "@/components/modal/AdminModal";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { useSetHeader } from "@/hooks/useSetHeader";
@@ -81,8 +81,11 @@ const OpenChatAdminPage: React.FC = () => {
   const { isMainAdmin } = useUserRole();
   const { isLoading: isUserLoading } = useUserStore();
 
-  const [rooms, setRooms] = useState<AdminOpenChatRoom[]>([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    data: rooms = [],
+    isLoading: loading,
+    refetch: fetchRooms,
+  } = useAdminOpenChatRooms({ enabled: isMainAdmin });
   const [searchKeyword, setSearchKeyword] = useState("");
 
   // Create Modal State
@@ -121,24 +124,7 @@ const OpenChatAdminPage: React.FC = () => {
     }
   }, [isMainAdmin, isUserLoading, navigate]);
 
-  const fetchRooms = async () => {
-    setLoading(true);
-    try {
-      const response = await getAdminOpenChatRooms();
-      setRooms(response.data);
-    } catch (error) {
-      console.error("오픈채팅방 목록 조회 실패:", error);
-      alert("오픈채팅방 목록을 불러오지 못했습니다.");
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  useEffect(() => {
-    if (isMainAdmin) {
-      void fetchRooms();
-    }
-  }, [isMainAdmin]);
 
   const filteredRooms = useMemo(() => {
     const keyword = searchKeyword.trim().toLowerCase();
