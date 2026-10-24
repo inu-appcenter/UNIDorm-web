@@ -1,3 +1,6 @@
+import { hasReactNativeWebView } from "@unidorm/bridge/web";
+import { hasUnidormAppUserAgent } from "./nativeFeatures";
+
 export type MobilePlatform =
   | "ios_unidorm_app"
   | "ios_browser"
@@ -19,7 +22,7 @@ export function getMobilePlatform(): MobilePlatform {
   if (isIOS) {
     // 유니돔 iOS 앱 판별 (신규 ReactNativeWebView 또는 주입된 브릿지 / UserAgent 확인)
     const isUnidormIOSApp =
-      userAgent.includes("UNIDormApp") ||
+      hasUnidormAppUserAgent() ||
       Boolean(window.ReactNativeWebView) ||
       Boolean(window.webkit?.messageHandlers?.onAppReady) ||
       Boolean(window.webkit?.messageHandlers?.routeChange) ||
@@ -35,7 +38,7 @@ export function getMobilePlatform(): MobilePlatform {
     const isUnidormAndroidApp =
       Boolean((window as any).AndroidBridge) ||
       Boolean(window.ReactNativeWebView) ||
-      userAgent.includes("UNIDormApp");
+      hasUnidormAppUserAgent();
 
     return isUnidormAndroidApp ? "android_unidorm_app" : "android_browser";
   }
@@ -45,9 +48,7 @@ export function getMobilePlatform(): MobilePlatform {
 }
 
 /** React Native WebView 단일 채널이 존재하는지 확인합니다. */
-export function hasReactNativeWebView(): boolean {
-  return typeof window !== "undefined" && typeof window.ReactNativeWebView?.postMessage === "function";
-}
+export { hasReactNativeWebView };
 
 /** 공식 유니돔 앱(구버전 포함) 환경인지 확인합니다. */
 export function isOfficialApp(): boolean {

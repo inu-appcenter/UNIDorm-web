@@ -1,6 +1,6 @@
 import { css } from "styled-components";
 
-// Figma 텍스트 스타일(INTIP 디자인 시스템)을 styled-components에서 쓰는 css 조각.
+// Figma 텍스트 스타일(유니돔 디자인 시스템)을 styled-components에서 쓰는 css 조각.
 //
 // 값은 tokens/(Figma Tokens Studio export) → `npm run build:tokens` → variables.css의 CSS 변수
 // (--title-2-font-size 등)에서 온다. 여기서 숫자를 다시 적지 않는다 - 스타일을 바꾸려면

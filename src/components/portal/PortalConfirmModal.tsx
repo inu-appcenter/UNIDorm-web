@@ -2,7 +2,7 @@ import React, { ReactNode } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import styled, { keyframes } from "styled-components";
 import CapsuleButton, { CapsuleButtonVariant } from "@/components/common/CapsuleButton";
-import { effects } from "@/styles/intipEffects";
+import { effects } from "@/styles/unidormEffects";
 
 export interface ModalProps {
   isOpen: boolean;

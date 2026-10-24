@@ -2,7 +2,9 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@unidorm/bridge": ["packages/unidorm-bridge/src/index.ts"],
+      "@unidorm/bridge/web": ["packages/unidorm-bridge/src/adapters/web.ts"]
     },
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "target": "ES2020",

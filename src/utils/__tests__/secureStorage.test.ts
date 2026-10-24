@@ -7,29 +7,29 @@ describe("secureStorage", () => {
     safeLocalStorage.clear();
   });
 
-  it("데이터를 안전하게 암호화(v2)하여 저장하고 복호화한다", async () => {
+  it("데이터를 안전하게 암호화(v3)하여 저장하고 복호화한다", async () => {
     const testData = { studentId: "202612345", name: "홍길동", room: "301호" };
     await secureStorage.setItem("test_key", testData);
 
     const rawStored = safeLocalStorage.getItem("test_key");
     expect(rawStored).toBeTruthy();
-    expect(rawStored?.startsWith("enc:v2:")).toBe(true);
+    expect(rawStored?.startsWith("enc:v3:")).toBe(true);
 
     const restored = await secureStorage.getItem("test_key");
     expect(restored).toEqual(testData);
   });
 
-  it("평문 레거시 데이터가 있을 경우 정상 복호화하고 v2로 자동 마이그레이션한다", async () => {
+  it("평문 레거시 데이터가 있을 경우 정상 복호화하고 v3로 자동 마이그레이션한다", async () => {
     const legacyPlain = { studentId: "202611111", legacy: true };
     safeLocalStorage.setItem("legacy_key", JSON.stringify(legacyPlain));
 
     const restored = await secureStorage.getItem("legacy_key");
     expect(restored).toEqual(legacyPlain);
 
-    // 마이그레이션 확인 (비동기 처리 후 enc:v2:로 재암호화됨)
+    // 마이그레이션 확인 (비동기 처리 후 enc:v3:로 재암호화됨)
     await new Promise((r) => setTimeout(r, 50));
     const rawAfter = safeLocalStorage.getItem("legacy_key");
-    expect(rawAfter?.startsWith("enc:v2:")).toBe(true);
+    expect(rawAfter?.startsWith("enc:v3:")).toBe(true);
   });
 
   it("TTL 메타데이터가 포함된 캐시를 저장하고 만료 여부를 판별한다", async () => {
@@ -64,28 +64,13 @@ describe("secureStorage", () => {
     expect(await secureStorage.getItem("other_key")).not.toBeNull();
   });
 
-  it("v1 레거시 암호문(enc:v1:)이 저장되어 있을 때 정상 복호화하고 v2로 자동 마이그레이션한다", async () => {
-    // v1 암호문 생성 (시드: intip_local_secure_vault_v1)
-    const encoder = new TextEncoder();
-    const keyData = await crypto.subtle.digest("SHA-256", encoder.encode("intip_local_secure_vault_v1"));
-    const v1Key = await crypto.subtle.importKey("raw", keyData, { name: "AES-GCM" }, false, ["encrypt"]);
-    const iv = new Uint8Array(12).fill(7);
-    const plainText = JSON.stringify({ studentId: "202699999", name: "레거시학우" });
-    const cipherBuffer = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, v1Key, encoder.encode(plainText));
-    
-    const bufferToHex = (buf: ArrayBuffer) =>
-      Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
-    const v1Payload = `enc:v1:${bufferToHex(iv.buffer)}:${bufferToHex(cipherBuffer)}`;
+  it("이전 키로 만든 암호문(enc:v1:, enc:v2:)은 지우고 캐시 미스로 처리한다", async () => {
+    safeLocalStorage.setItem("stale_v1", "enc:v1:000000000000000000000000:abcd");
+    safeLocalStorage.setItem("stale_v2", "enc:v2:000000000000000000000000:abcd");
 
-    safeLocalStorage.setItem("legacy_v1_key", v1Payload);
-
-    // getItem으로 읽기
-    const restored = await secureStorage.getItem("legacy_v1_key");
-    expect(restored).toEqual({ studentId: "202699999", name: "레거시학우" });
-
-    // 비동기 마이그레이션 후 v2로 바뀌었는지 확인
-    await new Promise((r) => setTimeout(r, 50));
-    const rawAfter = safeLocalStorage.getItem("legacy_v1_key");
-    expect(rawAfter?.startsWith("enc:v2:")).toBe(true);
+    expect(await secureStorage.getItem("stale_v1")).toBeNull();
+    expect(await secureStorage.getItem("stale_v2")).toBeNull();
+    expect(safeLocalStorage.getItem("stale_v1")).toBeNull();
+    expect(safeLocalStorage.getItem("stale_v2")).toBeNull();
   });
 });

@@ -1,11 +1,11 @@
 /**
- * INTIP 앱 열기(딥링크) 및 스토어 이동 유틸리티
+ * 유니돔 앱 열기(딥링크) 및 스토어 이동 유틸리티
  */
 
 const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.hjunieee.inudormitory";
 const APP_STORE_URL = "https://apps.apple.com/kr/app/%EC%9C%A0%EB%8B%88%EB%8F%94/id6751404748";
 
-export function openIntipAppOrStore(targetPath?: string) {
+export function openUnidormAppOrStore(targetPath?: string) {
   const isAndroid = /android/i.test(navigator.userAgent);
   const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
 

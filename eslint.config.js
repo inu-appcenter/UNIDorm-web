@@ -5,7 +5,8 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 
 export default tseslint.config(
-  { ignores: ['dist'] },
+  // packages/unidorm-bridge 는 unidorm-app 의 브릿지 계약을 그대로 복사한 것이라 린트하지 않는다.
+  { ignores: ['dist', 'packages/unidorm-bridge'] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ['**/*.{ts,tsx}'],

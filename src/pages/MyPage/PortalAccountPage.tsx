@@ -16,7 +16,7 @@ import { StudentInfo } from "@/types/portal";
 import { secureStorage } from "@/utils/secureStorage";
 import { adaptAcademicInfoToStudentInfo } from "@/apis/portalAdapter";
 import { PATHS } from "@/constants/paths";
-import { MOBILE_PAGE_GUTTER, DESKTOP_MEDIA } from "@/styles/intipResponsive";
+import { MOBILE_PAGE_GUTTER, DESKTOP_MEDIA } from "@/styles/unidormResponsive";
 import CapsuleButton from "@/components/common/CapsuleButton";
 import { mixpanelTrack } from "@/utils/mixpanel";
 import Modal from "@/components/portal/PortalConfirmModal";
@@ -489,7 +489,7 @@ export default function MobilePortalAccountPage() {
 const PageWrapper = styled.main`
   width: 100%;
   min-height: 100svh;
-  box-sizing: border-box;
+  box-sizing: border-box;
   padding: 16px ${MOBILE_PAGE_GUTTER} calc(32px + var(--safe-area-bottom, 0px));
 
   @media ${DESKTOP_MEDIA} {
