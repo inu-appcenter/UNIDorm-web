@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import useUserStore from "../../stores/useUserStore.ts";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { usePageFocus } from "@/hooks/usePageFocus";
 import { getMemberImage } from "@/apis/members";
 import profile from "../../assets/profileimg.png";
 
@@ -13,13 +14,17 @@ const MyInfoArea = () => {
   const userInfo = useUserStore((state) => state.userInfo);
   const [userProfileImg, setUserProfileImg] = useState<string>("");
 
+  const getUserProfileImg = useCallback(async () => {
+    const result = await getMemberImage();
+    setUserProfileImg(result.data.imageUrl);
+  }, []);
+
   useEffect(() => {
-    const getUserProfileImg = async () => {
-      const result = await getMemberImage();
-      setUserProfileImg(result.data.imageUrl);
-    };
     getUserProfileImg();
-  }, [userInfo]);
+  }, [userInfo, getUserProfileImg]);
+
+  // 내 정보 수정(별도 웹뷰)에서 프로필 사진을 바꾸고 돌아오면 재조회
+  usePageFocus(() => void getUserProfileImg().catch(() => {}));
 
   const handleMyInfoClick = () => {
     mixpanelTrack.featureClicked("내 정보 수정 진입", "마이페이지 프로필");

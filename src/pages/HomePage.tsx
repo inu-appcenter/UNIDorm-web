@@ -4,7 +4,7 @@ import TitleContentArea from "../components/common/TitleContentArea.tsx";
 import HomeNoticeCard from "../components/home/HomeNoticeCard.tsx";
 import HomeFormCard from "../components/home/HomeFormCard.tsx";
 import HomeTipsCard from "../components/home/HomeTipsCard.tsx";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { fetchDailyRandomTips } from "@/apis/tips";
 import { Tip } from "@/types/tips";
 import 앱센터로고가로 from "../assets/앱센터로고가로.webp";
@@ -30,6 +30,7 @@ import TopPopupNotification from "../components/common/TopPopupNotification.tsx"
 import useNetworkStore from "../stores/useNetworkStore.ts";
 import Calendar from "../components/calendar/Calendar.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
+import { usePageFocus } from "@/hooks/usePageFocus";
 import RoomMateCard from "@/components/roommate/RoomMateCard.tsx";
 import { useQuery } from "@tanstack/react-query";
 import { getRoomMateScrollList } from "@/apis/roommate.ts";
@@ -124,6 +125,86 @@ export default function HomePage() {
 
   const CHANNEL_ID = "UCrpqEmMWCOg6P8FSk6mN5Hw"; //인천대학교 생활원 유튜브 채널 id
 
+  // 공동구매·공지·설문 카드 목록 조회
+  // silent: 화면 복귀 시 재조회 — 로딩 스피너·로드 추적 없이 데이터만 교체
+  const fetchHomeLists = useCallback(
+    async ({ silent = false }: { silent?: boolean } = {}) => {
+      const fetchGroupOrders = async () => {
+        if (!silent) setIsGroupOrdersLoading(true);
+        try {
+          const params: GetGroupPurchaseListParams = {
+            sort: "마감임박순",
+            type: "전체",
+          };
+          const data = await getGroupPurchaseList(params);
+          console.log("공동구매 게시글 불러오기 성공 : ", data);
+          setGroupOrders(data);
+        } catch (error) {
+          console.error("게시글 목록 불러오기 실패:", error);
+        } finally {
+          if (!silent) setIsGroupOrdersLoading(false);
+        }
+      };
+
+      async function fetchAnnouncements() {
+        if (!silent) setIsAnnounceLoading(true);
+        try {
+          const response = await getAnnouncementScrollList(
+            "ALL",
+            "ALL",
+            "",
+            undefined,
+          );
+          console.log("공지사항 불러오기 성공:", response);
+          setNotices(response);
+          if (!silent) {
+            mixpanelTrack.homeLoadComplete(
+              Math.round(performance.now() - homeLoadStartTime.current),
+            );
+          }
+        } catch (error) {
+          console.error("공지사항 불러오기 실패", error);
+          if (!silent) mixpanelTrack.homeLoadFail("api_error", "announcements");
+        } finally {
+          if (!silent) setIsAnnounceLoading(false);
+        }
+      }
+
+      async function fetchSurveys() {
+        if (!silent) setIsSurveysLoading(true);
+        try {
+          const response = await getAllSurveys();
+          console.log("폼 목록 불러오기 성공:", response);
+          const sorted = [...response.data].sort((a, b) => {
+            const isAProgress = statusText(a.status) === "진행 중";
+            const isBProgress = statusText(b.status) === "진행 중";
+
+            // 1. 현재 신청 받는 이벤트(진행 중)가 우선
+            if (isAProgress && !isBProgress) return -1;
+            if (!isAProgress && isBProgress) return 1;
+
+            // 2. 같은 상태 내에서는 최신 생성순
+            const timeA = new Date(a.createdDate).getTime();
+            const timeB = new Date(b.createdDate).getTime();
+            return timeB - timeA;
+          });
+          setSurveys(sorted);
+        } catch (error) {
+          console.error("폼 목록 불러오기 실패:", error);
+        } finally {
+          if (!silent) setIsSurveysLoading(false);
+        }
+      }
+
+      await Promise.all([
+        fetchGroupOrders(),
+        fetchAnnouncements(),
+        fetchSurveys(),
+      ]);
+    },
+    [],
+  );
+
   useEffect(() => {
     const fetchPopupNotices = async () => {
       setIsPopupLoading(true);
@@ -167,78 +248,14 @@ export default function HomePage() {
       }
     };
 
-    const fetchGroupOrders = async (searchTerm?: string) => {
-      setIsGroupOrdersLoading(true);
-      try {
-        const params: GetGroupPurchaseListParams = {
-          sort: "마감임박순",
-          type: "전체",
-          search: searchTerm || undefined,
-        };
-        const data = await getGroupPurchaseList(params);
-        console.log("공동구매 게시글 불러오기 성공 : ", data);
-        setGroupOrders(data);
-      } catch (error) {
-        console.error("게시글 목록 불러오기 실패:", error);
-      } finally {
-        setIsGroupOrdersLoading(false);
-      }
-    };
-
-    async function fetchAnnouncements() {
-      setIsAnnounceLoading(true);
-      try {
-        const response = await getAnnouncementScrollList(
-          "ALL",
-          "ALL",
-          "",
-          undefined,
-        );
-        console.log("공지사항 불러오기 성공:", response);
-        setNotices(response);
-        mixpanelTrack.homeLoadComplete(
-          Math.round(performance.now() - homeLoadStartTime.current),
-        );
-      } catch (error) {
-        console.error("공지사항 불러오기 실패", error);
-        mixpanelTrack.homeLoadFail("api_error", "announcements");
-      } finally {
-        setIsAnnounceLoading(false);
-      }
-    }
-
-    async function fetchSurveys() {
-      setIsSurveysLoading(true);
-      try {
-        const response = await getAllSurveys();
-        console.log("폼 목록 불러오기 성공:", response);
-        const sorted = [...response.data].sort((a, b) => {
-          const isAProgress = statusText(a.status) === "진행 중";
-          const isBProgress = statusText(b.status) === "진행 중";
-
-          // 1. 현재 신청 받는 이벤트(진행 중)가 우선
-          if (isAProgress && !isBProgress) return -1;
-          if (!isAProgress && isBProgress) return 1;
-
-          // 2. 같은 상태 내에서는 최신 생성순
-          const timeA = new Date(a.createdDate).getTime();
-          const timeB = new Date(b.createdDate).getTime();
-          return timeB - timeA;
-        });
-        setSurveys(sorted);
-      } catch (error) {
-        console.error("폼 목록 불러오기 실패:", error);
-      } finally {
-        setIsSurveysLoading(false);
-      }
-    }
-
     fetchPopupNotices();
     getTips();
-    fetchGroupOrders();
-    fetchAnnouncements();
-    fetchSurveys();
-  }, []);
+    void fetchHomeLists();
+  }, [fetchHomeLists]);
+
+  // 다른 화면(별도 웹뷰)에서 글을 작성·삭제하고 돌아오면 목록 카드만 재조회.
+  // 팝업 공지(다시 열림)와 오늘의 꿀팁(무작위라 내용이 바뀜)은 제외.
+  usePageFocus(() => void fetchHomeLists({ silent: true }));
 
   // 룸메이트 데이터 단일 페이지 조회
   const { data: roommates, isLoading: isRoommateLoading } = useQuery({

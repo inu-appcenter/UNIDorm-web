@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import {
   deleteAnnouncement,
@@ -24,6 +24,8 @@ import { getLabelByValue } from "@/utils/announceUtils";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import { mixpanelTrack } from "@/utils/mixpanel";
 import { appBridge } from "@/utils/appBridgeAdapter";
+import { usePageFocus } from "@/hooks/usePageFocus";
+import { notifyDataChanged } from "@/utils/pageFocus";
 import DOMPurify from "dompurify";
 
 export default function AnnounceDetailPage() {
@@ -56,14 +58,11 @@ export default function AnnounceDetailPage() {
     markReadAndNotifyNative();
   }, [boardId]);
 
-  useEffect(() => {
-    if (!boardId) {
-      setIsLoading(false);
-      return;
-    }
-
-    const fetchData = async () => {
-      setIsLoading(true);
+  // silent: 화면 복귀 시 재조회 — 스피너·스크롤 초기화·조회 추적 없이 데이터만 교체
+  const fetchData = useCallback(
+    async ({ silent = false }: { silent?: boolean } = {}) => {
+      if (!boardId) return;
+      if (!silent) setIsLoading(true);
       try {
         const [detailResponse, filesResponse] = await Promise.all([
           getAnnouncementDetail(Number(boardId)),
@@ -74,11 +73,13 @@ export default function AnnounceDetailPage() {
 
         setAnnounce(detailResponse.data);
         // 상세 조회 추적 추가
-        mixpanelTrack.postViewed(
-          "공지사항",
-          detailResponse.data.id,
-          detailResponse.data.title,
-        );
+        if (!silent) {
+          mixpanelTrack.postViewed(
+            "공지사항",
+            detailResponse.data.id,
+            detailResponse.data.title,
+          );
+        }
 
         const allFiles = filesResponse.data;
         const imageExtensions = [
@@ -98,16 +99,29 @@ export default function AnnounceDetailPage() {
         setimages(imageFiles);
         setAttachments(allFiles);
       } catch (err) {
+        if (silent) return; // 조용한 재조회 실패 시 기존 화면 유지
         alert("공지사항을 불러오는 데 실패했습니다.");
         setAnnounce(null);
       } finally {
-        setIsLoading(false);
+        if (!silent) setIsLoading(false);
       }
-    };
+    },
+    [boardId],
+  );
 
+  useEffect(() => {
+    if (!boardId) {
+      setIsLoading(false);
+      return;
+    }
     fetchData();
     window.scrollTo(0, 0);
-  }, [boardId]);
+  }, [boardId, fetchData]);
+
+  // 수정 화면(별도 웹뷰)에서 저장하고 돌아온 경우에만 재조회 (조회 시 조회수가 오름)
+  usePageFocus(() => fetchData({ silent: true }), {
+    onlyIfChanged: "announcement",
+  });
 
   const handleDelete = async () => {
     if (!boardId) return;
@@ -115,6 +129,7 @@ export default function AnnounceDetailPage() {
 
     try {
       await deleteAnnouncement(Number(boardId));
+      notifyDataChanged("announcement");
       alert("삭제되었습니다.");
       navigate(-1);
     } catch (err) {

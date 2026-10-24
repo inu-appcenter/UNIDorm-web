@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { usePageFocus } from "@/hooks/usePageFocus";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import styled from "styled-components";
@@ -32,24 +33,33 @@ const MyPage = () => {
     mixpanelTrack.myPageViewed(isLoggedIn);
   }, [isLoggedIn]);
 
-  useEffect(() => {
-    const fetchRoommateInfo = async () => {
+  // silent: 화면 복귀 시 재조회 — 조회 추적 없이 데이터만 교체
+  const fetchRoommateInfo = useCallback(
+    async ({ silent = false }: { silent?: boolean } = {}) => {
       if (!isLoggedIn) return;
 
       try {
         const res = await getMyRoommateInfo();
         setRoommateInfo(res.data);
-        mixpanelTrack.myRoommateInfoLoaded(); // 룸메이트 정보 조회
+        setNotFound(false);
+        if (!silent) mixpanelTrack.myRoommateInfoLoaded(); // 룸메이트 정보 조회
       } catch (err: any) {
         if (err.response?.status === 404) {
+          setRoommateInfo(null);
           setNotFound(true);
-          mixpanelTrack.myRoommateInfoNotFound(); // 룸메이트 정보 없을 때
+          if (!silent) mixpanelTrack.myRoommateInfoNotFound(); // 룸메이트 정보 없을 때
         }
       }
-    };
+    },
+    [isLoggedIn],
+  );
 
+  useEffect(() => {
     fetchRoommateInfo();
-  }, [isLoggedIn]);
+  }, [fetchRoommateInfo]);
+
+  // 매칭 수락·해제, 내 정보 수정(별도 웹뷰) 후 돌아오면 재조회
+  usePageFocus(() => fetchRoommateInfo({ silent: true }));
 
   const isProtected = !isLoggedIn;
 
@@ -183,7 +193,7 @@ const MyPageWrapper = styled.div`
   box-sizing: border-box;
   width: 100%;
   flex: 1;
-  overflow-y: auto;
+  overflow-y: auto;
 
   @media (min-width: 1024px) {
     max-width: 1200px;

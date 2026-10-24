@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import {
@@ -14,6 +14,7 @@ import {
 } from "@/apis/popup-notification";
 import HomeNoticeBottomSheet from "@/components/modal/HomeNoticeBottomSheet";
 import { useSetHeader } from "@/hooks/useSetHeader";
+import { usePageFocus } from "@/hooks/usePageFocus";
 import {
   AdminBadge,
   AdminButton,
@@ -63,20 +64,23 @@ const PopupNotiListPage = () => {
   const navigate = useNavigate();
   const today = getLocalDateInputValue();
 
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
-        const response = await getAllPopupNotifications();
-        setNotifications(response.data);
-      } catch (error) {
-        console.error("팝업 공지 목록 조회 실패:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    void fetchNotifications();
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const response = await getAllPopupNotifications();
+      setNotifications(response.data);
+    } catch (error) {
+      console.error("팝업 공지 목록 조회 실패:", error);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    void fetchNotifications();
+  }, [fetchNotifications]);
+
+  // 등록·수정 화면(별도 웹뷰)에서 저장하고 돌아오면 재조회
+  usePageFocus(() => void fetchNotifications());
 
   const handleCreateClick = () => {
     navigate("create");

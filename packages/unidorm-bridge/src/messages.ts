@@ -274,6 +274,11 @@ const nativeToWebSchema = z.discriminatedUnion("event", [
   def("shareResult", ShareResultPayload),
   // 네이티브 기능 광고. `bridgeReady` 수신 직후 회신.
   def("bridgeCapabilities", BridgeCapabilitiesPayload),
+  // 이 웹뷰가 다시 화면 맨 위로 올라왔다(위에 쌓였던 웹뷰가 닫혔거나 goHome 으로
+  // 스택이 접혔다). 스택 아래의 웹뷰는 마운트된 채 남아 있고 브라우저의
+  // focus/visibilitychange 도 발생하지 않으므로, 다른 웹뷰에서 일어난 변경을
+  // 반영하려면 웹이 이 신호를 받아 화면 데이터를 다시 조회해야 한다.
+  voidDef("pageFocus"),
 ]);
 
 // ---------------------------------------------------------------------------
@@ -316,7 +321,8 @@ export type NativeToWeb =
   | ({ event: "notificationOpened"; value: NotificationOpenedPayload } & Meta)
   | ({ event: "checkBack"; value?: undefined } & Meta)
   | ({ event: "shareResult"; value: ShareResultPayload } & Meta)
-  | ({ event: "bridgeCapabilities"; value: BridgeCapabilitiesPayload } & Meta);
+  | ({ event: "bridgeCapabilities"; value: BridgeCapabilitiesPayload } & Meta)
+  | ({ event: "pageFocus"; value?: undefined } & Meta);
 export type NativeToWebEvent = NativeToWeb["event"];
 
 // ---------------------------------------------------------------------------

@@ -17,6 +17,7 @@ import SelectableChipGroup from "../../components/roommate/checklist/SelectableC
 import ComplainFilter from "../../components/complain/ComplainFilter.tsx";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
+import { usePageFocus } from "@/hooks/usePageFocus";
 
 const ComplainAdminPage = () => {
   const { tokenInfo } = useUserStore();
@@ -74,6 +75,20 @@ const ComplainAdminPage = () => {
       fetchAllComplaints();
     }
   }, [isLoggedIn]);
+
+  // 민원 상세(별도 웹뷰)에서 답변·상태 변경 후 돌아오면 조용히 재조회.
+  // 적용 중인 필터가 있으면 같은 조건으로 다시 검색.
+  usePageFocus(async () => {
+    if (!isLoggedIn) return;
+    try {
+      const response = appliedFilters
+        ? await searchComplaints(appliedFilters)
+        : await getAllComplaints();
+      setComplaints(response.data);
+    } catch (error) {
+      console.error("민원 목록 재조회 실패:", error);
+    }
+  });
 
   // 외부 클릭 시 필터 닫기
   useEffect(() => {
@@ -269,7 +284,7 @@ const ComplainListPageWrapper = styled.div`
   flex-direction: column;
   gap: 32px;
   box-sizing: border-box;
-  overflow-y: auto;
+  overflow-y: auto;
   flex: 1;
 `;
 

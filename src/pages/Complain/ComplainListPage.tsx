@@ -6,7 +6,7 @@ import ComplainCard from "../../components/complain/ComplainCard.tsx";
 import { useNavigate } from "react-router-dom";
 import ComplainListTable from "../../components/complain/ComplainListTable.tsx";
 import useUserStore from "../../stores/useUserStore.ts";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ComplaintDetail, MyComplaint } from "@/types/complain";
 import { getComplaintDetail, getMyComplaints } from "@/apis/complain";
 import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
@@ -14,6 +14,7 @@ import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import TopPopupNotification from "../../components/common/TopPopupNotification.tsx";
 import { getMobilePlatform } from "@/utils/getMobilePlatform";
 import { useSetHeader } from "@/hooks/useSetHeader";
+import { usePageFocus } from "@/hooks/usePageFocus";
 import useAIChatStore from "@/stores/useAIChatStore";
 import ChatBulButtonImg from "@/assets/ai-chat/챗불이버튼.webp";
 import { mixpanelTrack } from "@/utils/mixpanel";
@@ -36,48 +37,51 @@ const ComplainListPage = () => {
   const filter = ["최근 3개월", "2025"];
   const [selectedFilterIndex, setSelectedFilterIndex] = useState(0);
 
-  // 1. 민원 목록 불러오기
-  useEffect(() => {
-    const fetchComplaints = async () => {
-      setIsListLoading(true);
+  // 민원 목록 + 가장 최근 민원 상세 불러오기
+  // silent: 화면 복귀 시 재조회 — 로딩 스피너 없이 데이터만 교체
+  const fetchComplaints = useCallback(
+    async ({ silent = false }: { silent?: boolean } = {}) => {
+      if (!silent) setIsListLoading(true);
+      let list: MyComplaint[];
       try {
         const response = await getMyComplaints();
         console.log("민원 목록 불러오기 성공", response);
-        setComplaints(response.data);
+        list = response.data;
+        setComplaints(list);
       } catch (error) {
         console.error("민원 목록 불러오기 실패:", error);
+        return;
       } finally {
-        setIsListLoading(false);
+        if (!silent) setIsListLoading(false);
       }
-    };
 
-    if (isLoggedIn) {
-      fetchComplaints();
-    }
-  }, [isLoggedIn]);
-
-  // 2. 가장 최근 민원 상세 불러오기
-  useEffect(() => {
-    const fetchRecentComplain = async () => {
-      if (complaints.length === 0) {
+      if (list.length === 0) {
         setRecentComplain(null);
         return;
       }
 
-      setIsRecentLoading(true);
+      if (!silent) setIsRecentLoading(true);
       try {
-        const response = await getComplaintDetail(complaints[0].id);
+        const response = await getComplaintDetail(list[0].id);
         setRecentComplain(response.data);
       } catch (error) {
         console.error("민원 상세 불러오기 실패:", error);
-        setRecentComplain(null);
+        if (!silent) setRecentComplain(null);
       } finally {
-        setIsRecentLoading(false);
+        if (!silent) setIsRecentLoading(false);
       }
-    };
+    },
+    [],
+  );
 
-    fetchRecentComplain();
-  }, [complaints]);
+  useEffect(() => {
+    if (isLoggedIn) fetchComplaints();
+  }, [isLoggedIn, fetchComplaints]);
+
+  // 작성·삭제·답변(별도 웹뷰) 후 돌아오면 재조회
+  usePageFocus(() => {
+    if (isLoggedIn) fetchComplaints({ silent: true });
+  });
 
   const filteredComplaints = useMemo(() => {
     let list = complaints;
@@ -303,7 +307,8 @@ const ComplainListPageWrapper = styled.div`
   gap: 32px;
   box-sizing: border-box;
 
-  overflow-y: auto;
+  overflow-y: auto;
+
   flex: 1;
   align-items: center; // 🖥️ PC 레이아웃을 위해 중앙 정렬 추가
 
