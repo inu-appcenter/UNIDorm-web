@@ -66,7 +66,10 @@ const redirectToLogoutOnce = () => {
 
   isLogoutRedirectPending = true;
   delete tokenInstance.defaults.headers.common["Authorization"];
-  window.location.href = "/logout";
+
+  if (window.location.pathname !== "/logout") {
+    window.location.href = "/logout";
+  }
 };
 
 // 서버는 재발급할 때마다 refreshToken을 교체(rotation)한다. 알림으로 앱이 콜드 스타트되면
