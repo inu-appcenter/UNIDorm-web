@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { useComplaintDetail } from "@/queries/complaints";
+import { useQueryClient } from "@tanstack/react-query";
+import { complaintKeys, useComplaintDetail } from "@/queries/complaints";
 import { useInitFromQuery } from "@/hooks/useInitFromQuery";
 import type { ComplaintDetail } from "@/types/complain";
 import { useEffect, useMemo, useState } from "react";
@@ -33,6 +34,7 @@ const generateOptions = (min: number, max: number, suffix: string) => {
 export default function ComplainWritePage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const queryId = searchParams.get("id");
   const editId = queryId ? Number(queryId) : undefined;
@@ -253,15 +255,18 @@ export default function ComplainWritePage() {
       let res;
       if (isEditMode && complain?.id) {
         res = await updateComplaint(complain.id, dto, files);
+        await queryClient.invalidateQueries({ queryKey: complaintKeys.all });
         alert("민원이 성공적으로 수정되었습니다!");
+        navigate(-1);
       } else {
         res = await createComplaint(dto, files);
+        await queryClient.invalidateQueries({ queryKey: complaintKeys.all });
         mixpanelTrack.complainSubmitted(dto.type, files.length > 0);
         alert("민원이 성공적으로 등록되었습니다!");
+        navigate(PATHS.COMPLAIN.ROOT, { replace: true });
       }
 
       console.log("API 응답:", res.data);
-      navigate(PATHS.COMPLAIN.ROOT, { replace: true });
     } catch (err: any) {
       console.error("API 요청 실패:", err);
       const errorMessage =
