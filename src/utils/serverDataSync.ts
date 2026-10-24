@@ -81,6 +81,15 @@ export function trackServerWrites(instance: AxiosInstance): void {
 
 let installed = false;
 
+/** 테스트용 상태 초기화 함수 */
+export function _resetServerDataSyncForTest(): void {
+  installed = false;
+  queryClientRef = null;
+  channel = null;
+  changedElsewhere = false;
+  flushQueued = false;
+}
+
 /** 앱 시작 시 한 번 호출합니다. */
 export function installServerDataSync(queryClient: QueryClient): void {
   if (installed) return;

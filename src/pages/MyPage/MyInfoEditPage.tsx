@@ -17,7 +17,7 @@ import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import ToggleGroup from "../../components/roommate/checklist/ToggleGroup.tsx";
 import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
 import { colleges, dormitory } from "@/constants/constants";
-import axios from "axios";
+import { isAxiosError } from "axios";
 import profile from "../../assets/profileimg.png";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import MigrationBanner from "@/components/common/MigrationBanner";
@@ -177,7 +177,7 @@ export default function MyInfoEditPage() {
         alert("회원정보 수정 중 오류가 발생하였습니다.");
       }
     } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
+      if (isAxiosError(error) && error.response) {
         if (error.response.status === 409) {
           alert(
             "이미 사용 중인 닉네임입니다. 다른 닉네임을 입력해주세요." + error,

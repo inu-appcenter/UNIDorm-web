@@ -8,7 +8,7 @@ import ChatItemBot from "@/components/chat/ChatItemBot";
 import { useRoommateChat } from "./useRoommateChat.ts";
 import { useOpenChat } from "./useOpenChat";
 import useUserStore from "../../stores/useUserStore.ts";
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports -- 웹소켓 동기화 및 메시지 히스토리 가상화 로직 유지
+// eslint-disable-next-line no-restricted-imports -- 웹소켓 동기화 및 메시지 히스토리 가상화 로직 유지
 import {
   getRoommateChatHistory,
   getRoommateChatRoom,

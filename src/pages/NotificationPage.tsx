@@ -8,7 +8,7 @@ import {
   acceptRoommateMatching,
   rejectRoommateMatching,
 } from "@/apis/roommate";
-import axios from "axios";
+import { isAxiosError } from "axios";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import Modal from "@/components/modal/Modal";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
@@ -98,7 +98,7 @@ const NotificationPage = () => {
 
   // 에러 처리 핸들러
   const handleError = (e: any) => {
-    if (axios.isAxiosError(e) && e.response?.status === 409) {
+    if (isAxiosError(e) && e.response?.status === 409) {
       alert("이미 처리된 매칭 요청입니다.");
       refetch();
       return;
