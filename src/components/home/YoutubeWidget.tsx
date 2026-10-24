@@ -96,6 +96,7 @@ const YoutubeListWidget = () => {
     queryFn: () => fetchYoutubeVideos(sort),
     staleTime: 1000 * 60 * 60,
     retry: 1, // 에러 시 1회 재시도
+    meta: { sync: "none" }, // 앱 안에서 바뀌지 않는 외부 데이터
   });
 
   const formatViewCount = (count: string) => {

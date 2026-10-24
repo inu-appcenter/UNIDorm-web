@@ -8,8 +8,6 @@ import {
   createGroupOrderComment,
   deleteGroupOrderComment,
   deleteGroupPurchase,
-  getGroupPurchaseDetail,
-  getGroupPurchaseImages,
   likeGroupPurchase,
   unlikeGroupPurchase,
 } from "@/apis/groupPurchase";
@@ -32,11 +30,11 @@ import { Dday, DividerBar, MetaInfo, People } from "@/styles/groupPurchase";
 import useMediaQuery from "../../hooks/useMediaQuery.ts";
 import ToolTipMessage from "../../components/common/TooltipMessage.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
+import { useGroupPurchaseDetail } from "@/queries/groupPurchases";
 
 export default function GroupPurchasePostPage() {
   const { tokenInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
-  const [isneedupdate, setisneedupdate] = useState(false);
   const isDesktop = useMediaQuery("(min-width: 1024px)");
 
   const { boardId } = useParams<{ boardId: string }>();
@@ -46,7 +44,6 @@ export default function GroupPurchasePostPage() {
   const [post, setPost] = useState<GroupOrderDetail | null>(null);
   const [images, setImages] = useState<GroupOrderImage[]>([]);
   const [liked, setLiked] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState(true);
 
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -55,36 +52,27 @@ export default function GroupPurchasePostPage() {
 
   const [showToolTip, setShowToolTip] = useState(false);
 
+  // 상세 조회는 조회수를 올리므로 이 화면의 쓰기로는 자동 재조회되지 않습니다
+  // (`sync: "otherWebViews"`). 댓글처럼 서버 값이 필요한 경우 `refetch()` 를 호출합니다.
+  const { data, isLoading, refetch } = useGroupPurchaseDetail(groupOrderId);
+
+  // 좋아요·모집 완료는 화면에 바로 반영하고, 다시 조회되면 서버 값으로 맞춥니다.
   useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        const [postData, imageData] = await Promise.all([
-          getGroupPurchaseDetail(groupOrderId),
-          getGroupPurchaseImages(groupOrderId),
-        ]);
-        console.log("공동구매 게시글 조회 성공", postData);
-        console.log("공동구매 게시글 이미지 조회 성공", imageData);
+    if (!data) return;
+    setPost(data.post);
+    setLiked(data.post.checkLikeCurrentUser);
+    setImages(data.images);
+    if (data.post.openChatLink === "") setShowToolTip(true);
+  }, [data]);
 
-        setPost(postData);
-        setLiked(postData.checkLikeCurrentUser);
-        setImages(imageData);
-
-        if (postData?.openChatLink === "") {
-          // alert("오픈채팅 링크 없음");
-          setShowToolTip(true);
-        }
-      } catch (error) {
-        console.error("게시글 조회 실패:", error);
-        setPost(null);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
+  useEffect(() => {
     window.scrollTo(0, 0);
-  }, [groupOrderId, isneedupdate]);
+  }, [groupOrderId]);
+
+  const handleDeleteComment = async (groupOrderCommentId: number) => {
+    await deleteGroupOrderComment(groupOrderCommentId);
+    void refetch();
+  };
 
   const handleLikeClick = async () => {
     if (!post) return;
@@ -152,7 +140,7 @@ export default function GroupPurchasePostPage() {
         reply: commentInput,
       });
       setCommentInput("");
-      setisneedupdate((prev) => !prev);
+      void refetch();
     } catch (err) {
       alert("댓글 등록 실패");
     }
@@ -174,7 +162,7 @@ export default function GroupPurchasePostPage() {
       });
       setReplyInputs((prev) => ({ ...prev, [parentCommentId]: "" }));
       setReplyInputOpen((prev) => ({ ...prev, [parentCommentId]: false }));
-      setisneedupdate((prev) => !prev);
+      void refetch();
     } catch (err) {
       alert("대댓글 등록 실패");
     }
@@ -192,7 +180,7 @@ export default function GroupPurchasePostPage() {
     {
       label: "수정하기",
       onClick: () =>
-        navigate("/groupPurchase/write", {
+        navigate(`/groupPurchase/write?id=${boardId}`, {
           state: { post, curImages: images },
         }),
     },
@@ -392,9 +380,8 @@ export default function GroupPurchasePostPage() {
                 <Divider />
                 <CommentSection
                   CommentDtoList={post.groupOrderCommentDtoList}
-                  setisneedupdate={setisneedupdate}
                   handleReplySubmit={handleReplySubmit}
-                  handleDeleteComment={deleteGroupOrderComment}
+                  handleDeleteComment={handleDeleteComment}
                 />
               </InfoSection>
             </TopContentContainer>

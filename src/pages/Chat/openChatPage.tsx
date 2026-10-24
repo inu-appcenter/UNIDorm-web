@@ -1,16 +1,17 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styled from "styled-components";
 import { isAxiosError } from "axios";
 import {
-  getOpenChatRooms,
   joinOpenChatRoom,
 } from "@/apis/openchat";
 import {
-  getRoommateChatRooms,
   patchRoommateChatRead,
   getRoommateChatUnreadCount,
-  getAllRoommateChatUnreadCount,
 } from "@/apis/chat";
+import {
+  useAllRoommateChatUnreadCount,
+  useOpenChatRoomsInfinite,
+} from "@/queries/chat";
 import { patchNotificationsRead } from "@/apis/notification";
 import OpenChatRoomCard from "@/components/chat/OpenChatRoomCard";
 import ChatAvatar from "@/components/chat/ChatAvatar";
@@ -27,6 +28,8 @@ import useUserStore from "@/stores/useUserStore";
 import { useChatListStore } from "@/stores/useChatListStore";
 import { Search, Plus, MapPin, User } from "lucide-react";
 import { formatChatMessagePreview } from "@/utils/chatMessagePreview";
+
+import { isOpenChatRoomClosed } from "@/utils/openChat";
 
 const formatTime = (isoString: string) => {
   if (!isoString) return "";
@@ -139,9 +142,8 @@ const MY_CHAT_ROOM_FILTERS: {
 export default function OpenChatPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { tokenInfo, userInfo } = useUserStore();
+  const { tokenInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo?.accessToken);
-  const currentDormType = userInfo.dormType;
 
   const tabParam = searchParams.get("tab") as OpenChatTabType | null;
   const selectedTab: OpenChatTabType =
@@ -154,29 +156,15 @@ export default function OpenChatPage() {
       : "ALL";
 
   const {
-    roomsByTab,
-    roommateUnreadTotal,
-    myOpenChatUnreadTotal,
-    isInitialized,
-    setChatListData,
     markOpenChatRoomAsRead,
     markRoommateChatRoomAsRead,
-    resetChatList,
-    appendChatListData,
   } = useChatListStore();
 
-  const rooms = roomsByTab[selectedTab] || [];
   const [selectedRoom, setSelectedRoom] = useState<OpenChatRoom | null>(null);
-
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
   const [isRecruitmentClosedModalOpen, setIsRecruitmentClosedModalOpen] =
     useState(false);
   const [isJoining, setIsJoining] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isFetchingNextPage, setIsFetchingNextPage] = useState(false);
-  const [hasNextPage, setHasNextPage] = useState(false);
-  const pageRef = useRef(0);
-  const hasNextPageRef = useRef(false);
   const observerTargetRef = useRef<HTMLDivElement>(null);
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -204,152 +192,30 @@ export default function OpenChatPage() {
     [searchParams, setSearchParams],
   );
 
-  const fetchChatRooms = useCallback(
-    async ({ silent = false }: { silent?: boolean } = {}) => {
-      if (!isLoggedIn) {
-        resetChatList();
-        return;
-      }
-
-      const shouldShowSpinner = !isInitialized && !silent;
-      try {
-        if (shouldShowSpinner) setIsLoading(true);
-        pageRef.current = 0;
-        if (selectedTab === "MY") {
-          const [openChatRes, roommateChatRes, unreadRes] = await Promise.all([
-            getOpenChatRooms("MY", 0, 20, searchQuery || undefined),
-            getRoommateChatRooms(),
-            getAllRoommateChatUnreadCount(),
-          ]);
-          const openChatRooms = openChatRes.data.content.filter(
-            (room) => room.chatCategory === "OPEN_CHAT",
-          );
-
-          const dedicatedRoommateRooms = roommateChatRes.data;
-          const dedicatedRoommateRoomIds = new Set(
-            dedicatedRoommateRooms.map((room) => room.chatRoomId),
-          );
-          const restoredRoommateRooms: RoommateChatRoom[] =
-            openChatRes.data.content
-              .filter(
-                (room) =>
-                  room.chatCategory === "ROOMMATE" &&
-                  !dedicatedRoommateRoomIds.has(room.roomId),
-              )
-              .map((room) => ({
-                chatRoomId: room.roomId,
-                opponentNickname: room.name,
-                lastMessage: room.lastMessage,
-                lastMessageTime: room.lastMessageAt,
-                partnerId: 0,
-                partnerName: room.name,
-                partnerProfileImageUrl: "",
-                unreadCount: room.unreadCount,
-                isBlockedByPartner: room.isBlockedByPartner ?? false,
-              }));
-
-          setChatListData({
-            tab: "MY",
-            rooms: openChatRooms,
-            roommateRooms: [
-              ...dedicatedRoommateRooms,
-              ...restoredRoommateRooms,
-            ],
-            roommateUnreadTotal: unreadRes.data,
-            myOpenChatUnreadTotal: openChatRes.data.totalUnreadCount ?? 0,
-          });
-          const hasNextMy =
-            openChatRes.data.pageNumber < openChatRes.data.totalPages - 1;
-          hasNextPageRef.current = hasNextMy;
-          setHasNextPage(hasNextMy);
-        } else {
-          const [openChatRes, myOpenChatRes, unreadRes] = await Promise.all([
-            getOpenChatRooms(
-              selectedTab,
-              0,
-              20,
-              searchQuery || undefined,
-              "createdAt,desc",
-            ),
-            getOpenChatRooms("MY", 0, 1),
-            getAllRoommateChatUnreadCount(),
-          ]);
-
-          setChatListData({
-            tab: selectedTab,
-            rooms: openChatRes.data.content.filter(
-              (room) => room.chatCategory === "OPEN_CHAT",
-            ),
-            roommateUnreadTotal: unreadRes.data,
-            myOpenChatUnreadTotal: myOpenChatRes.data.totalUnreadCount ?? 0,
-          });
-          const hasNextOther =
-            openChatRes.data.pageNumber < openChatRes.data.totalPages - 1;
-          hasNextPageRef.current = hasNextOther;
-          setHasNextPage(hasNextOther);
-        }
-      } catch (error) {
-        console.error("채팅방 목록 조회 실패", error);
-      } finally {
-        if (shouldShowSpinner) setIsLoading(false);
-      }
-    },
-    [
-      isInitialized,
-      isLoggedIn,
-      resetChatList,
-      searchQuery,
-      selectedTab,
-      setChatListData,
-    ],
-  );
-
-
-  const fetchNextPage = useCallback(async () => {
-    if (
-      !isLoggedIn ||
-      isLoading ||
-      isFetchingNextPage ||
-      !hasNextPageRef.current
-    ) {
-      return;
-    }
-
-    const nextPage = pageRef.current + 1;
-    setIsFetchingNextPage(true);
-
-    try {
-      const openChatRes = await getOpenChatRooms(
-        selectedTab,
-        nextPage,
-        20,
-        searchQuery || undefined,
-        selectedTab === "MY" ? undefined : "createdAt,desc",
-      );
-
-      appendChatListData({
-        tab: selectedTab,
-        rooms: openChatRes.data.content,
-      });
-
-      pageRef.current = nextPage;
-      const hasNext =
-        openChatRes.data.pageNumber < openChatRes.data.totalPages - 1;
-      hasNextPageRef.current = hasNext;
-      setHasNextPage(hasNext);
-    } catch (error) {
-      console.error("다음 페이지 채팅방 목록 조회 실패", error);
-    } finally {
-      setIsFetchingNextPage(false);
-    }
-  }, [
-    appendChatListData,
+  const {
+    data: chatPageData,
+    fetchNextPage,
+    hasNextPage,
     isFetchingNextPage,
     isLoading,
-    isLoggedIn,
-    searchQuery,
+  } = useOpenChatRoomsInfinite(
     selectedTab,
-  ]);
+    searchQuery || undefined,
+    selectedTab === "MY" ? undefined : "createdAt,desc",
+    {
+      enabled: isLoggedIn,
+      refetchInterval: selectedTab === "MY" ? 10_000 : false,
+    },
+  );
+
+  const rooms: OpenChatRoom[] = useMemo(() => {
+    return chatPageData?.pages.flatMap((page) => page.content) || [];
+  }, [chatPageData]);
+
+  const { data: roommateUnreadTotal = 0 } = useAllRoommateChatUnreadCount({
+    enabled: isLoggedIn,
+  });
+  const myOpenChatUnreadTotal = chatPageData?.pages[0]?.totalUnreadCount ?? 0;
 
   useEffect(() => {
     const target = observerTargetRef.current;
@@ -357,11 +223,7 @@ export default function OpenChatPage() {
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (
-          entries[0].isIntersecting &&
-          !isFetchingNextPage &&
-          hasNextPageRef.current
-        ) {
+        if (entries[0].isIntersecting && !isFetchingNextPage && hasNextPage) {
           void fetchNextPage();
         }
       },
@@ -371,33 +233,6 @@ export default function OpenChatPage() {
     observer.observe(target);
     return () => observer.disconnect();
   }, [fetchNextPage, hasNextPage, isFetchingNextPage, isLoading]);
-
-  useEffect(() => {
-    void fetchChatRooms();
-  }, [currentDormType, fetchChatRooms]);
-
-  useEffect(() => {
-    if (!isLoggedIn || selectedTab !== "MY") return;
-
-    const refreshSilently = () => {
-      if (pageRef.current === 0) {
-        void fetchChatRooms({ silent: true });
-      }
-    };
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") refreshSilently();
-    };
-
-    window.addEventListener("focus", refreshSilently);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    const refreshTimer = window.setInterval(refreshSilently, 10_000);
-
-    return () => {
-      window.removeEventListener("focus", refreshSilently);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      window.clearInterval(refreshTimer);
-    };
-  }, [fetchChatRooms, isLoggedIn, selectedTab]);
 
   const handleRoommateClick = async (room: RoommateChatRoom) => {
     try {
@@ -418,7 +253,7 @@ export default function OpenChatPage() {
         room.isRoommate,
     );
 
-    const opponentBoardTitle = (room as any).opponentBoardTitle?.trim();
+    const opponentBoardTitle = room.opponentBoardTitle?.trim();
 
     navigate(`/chat/roommate/${room.chatRoomId}`, {
       state: {
@@ -450,10 +285,7 @@ export default function OpenChatPage() {
       return;
     }
 
-    const isClosed =
-      room.recruitmentStatus === "CLOSED" ||
-      room.isJoinable === false ||
-      (room as any).recruitmentClosed === true;
+    const isClosed = isOpenChatRoomClosed(room);
 
     if (isClosed) {
       setIsRecruitmentClosedModalOpen(true);

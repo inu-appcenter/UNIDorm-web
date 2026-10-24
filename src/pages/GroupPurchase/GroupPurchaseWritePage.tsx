@@ -1,6 +1,9 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import styled from "styled-components";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import { groupPurchaseKeys, useGroupPurchaseDetail } from "@/queries/groupPurchases";
+import { useInitFromQuery } from "@/hooks/useInitFromQuery";
 import CommonBottomSheet from "src/components/modal/CommonBottomSheet";
 import useUserStore from "../../stores/useUserStore";
 import { createGroupPurchase, updateGroupPurchase } from "@/apis/groupPurchase";
@@ -19,11 +22,41 @@ import { useSetHeader } from "@/hooks/useSetHeader";
 export default function GroupPurchaseWritePage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { post, curImages } = location.state || {};
+  const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
+  const queryId = searchParams.get("id");
+  const editId = queryId ? Number(queryId) : undefined;
+
+  const { post: statePost, curImages: stateImages } = location.state || {};
+  const [post, setPost] = useState<any>(statePost ?? null);
+
+  const { data: detailData, isLoading: isDetailLoading } = useGroupPurchaseDetail(
+    !statePost && editId ? editId : undefined,
+  );
+
+  const initialImages = useMemo(() => {
+    if (stateImages && stateImages.length > 0) return stateImages;
+    if (detailData?.images && detailData.images.length > 0) return detailData.images;
+    return [];
+  }, [stateImages, detailData?.images]);
+
   // 이미지 상태 및 핸들러 커스텀 훅
   const { files, addFiles, deleteFile, isFileLoading } = useFileHandler({
-    initialFiles: curImages,
+    initialFiles: initialImages,
+    mode: "image",
   });
+
+  useInitFromQuery(
+    detailData,
+    (fetched: any) => {
+      if (!statePost && fetched) {
+        const item = fetched.groupOrder || fetched;
+        setPost(item);
+      }
+    },
+    editId,
+  );
+
   const {
     isEditMode,
     formData,
@@ -82,9 +115,11 @@ export default function GroupPurchaseWritePage() {
       setIsLoading(true);
       if (isEditMode && post?.id) {
         await updateGroupPurchase(post.id, requestDto, files);
+        await queryClient.invalidateQueries({ queryKey: groupPurchaseKeys.all });
         alert("게시글이 수정되었습니다.");
       } else {
         await createGroupPurchase(requestDto, files);
+        await queryClient.invalidateQueries({ queryKey: groupPurchaseKeys.all });
         alert("게시글이 등록되었습니다.");
       }
       navigate(-1);
@@ -107,7 +142,14 @@ export default function GroupPurchaseWritePage() {
 
   return (
     <Wrapper>
-      {isLoading && <LoadingSpinner overlay message="글 쓰는 중..." />}
+      {(isLoading || isDetailLoading) && (
+        <LoadingSpinner
+          overlay
+          message={
+            isDetailLoading ? "공동구매 불러오는 중..." : "글 쓰는 중..."
+          }
+        />
+      )}
       {/*거래 전 확인하세요 모달*/}
       {/*<CommonBottomSheet*/}
       {/*  id={"checkbefore"}*/}

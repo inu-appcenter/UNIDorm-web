@@ -9,12 +9,13 @@ import Step4Personality from "../../components/roommate/checklist/steps/Step4Per
 import { CheckListForm, INITIAL_FORM_STATE } from "@/types/roommates";
 import {
   createRoommatePost,
-  getMyChecklist,
   putRoommatePost,
 } from "@/apis/roommate";
+import { useMyChecklist } from "@/queries/roommates";
+import { useInitFromQuery } from "@/hooks/useInitFromQuery";
 import { getMemberInfo } from "@/apis/members";
 import useUserStore from "../../stores/useUserStore";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
   bedtime,
   colleges,
@@ -34,21 +35,26 @@ import {
   toothgrinding,
 } from "@/constants/constants";
 import { useSetHeader } from "@/hooks/useSetHeader";
-import { useQueryClient } from "@tanstack/react-query";
+
 
 export default function RoomMateChecklistPage() {
   const { setUserInfo, userInfo } = useUserStore();
   const navigate = useNavigate();
   const location = useLocation();
-  const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const TOTAL_STEPS = 4;
 
   const [formData, setFormData] = useState<CheckListForm>(INITIAL_FORM_STATE);
   const [randomTitles, setRandomTitles] = useState<string[]>([]);
-  const isEditMode = location.state?.mode === "edit";
-  const editingBoardId = location.state?.boardId;
+  const isEditMode =
+    location.state?.mode === "edit" || searchParams.get("mode") === "edit";
+  const editingBoardId =
+    location.state?.boardId ??
+    (searchParams.get("boardId")
+      ? Number(searchParams.get("boardId"))
+      : undefined);
 
   // State 변경 핸들러
   const handleFormChange = (key: keyof CheckListForm, value: any) => {
@@ -72,80 +78,10 @@ export default function RoomMateChecklistPage() {
     setRandomTitles([...TITLES].sort(() => 0.5 - Math.random()).slice(0, 6));
   }, []);
 
-  // 사용자 정보 및 기존 데이터 로드
+  const { data: myChecklistData } = useMyChecklist({ enabled: isEditMode });
+
   useEffect(() => {
-    const fetchMyChecklistData = async () => {
-      if (isEditMode) {
-        try {
-          const { data } = await getMyChecklist();
-          if (data) {
-            const mbtiIndices =
-              data.mbti && data.mbti.length === 4
-                ? [
-                    mbti1.indexOf(data.mbti[0]),
-                    mbti2.indexOf(data.mbti[1]),
-                    mbti3.indexOf(data.mbti[2]),
-                    mbti4.indexOf(data.mbti[3]),
-                  ]
-                : [null, null, null, null];
-
-            const findIndexOrNull = (arr: readonly string[], val?: string) => {
-              if (!val) return null;
-              const idx = arr.indexOf(val);
-              return idx !== -1 ? idx : null;
-            };
-
-            const dormIndex = dormitory.findIndex(
-              (d) =>
-                d.replace(/제|\s/g, "") ===
-                (data.dormType || "").replace(/제|\s/g, ""),
-            );
-
-            const collegeIndex = colleges.indexOf(data.college);
-
-            setFormData({
-              title: data.title || "",
-              comment: data.comment || "",
-              dormType:
-                dormIndex !== -1
-                  ? dormIndex
-                  : dormitory.indexOf(userInfo.dormType) !== -1
-                    ? dormitory.indexOf(userInfo.dormType)
-                    : null,
-              college:
-                collegeIndex !== -1
-                  ? collegeIndex
-                  : colleges.indexOf(userInfo.college) !== -1
-                    ? colleges.indexOf(userInfo.college)
-                    : null,
-              dormPeriod: Array.isArray(data.dormPeriod)
-                ? data.dormPeriod
-                    .map((d: string) =>
-                      days.indexOf(d.replace("요일", "").trim()),
-                    )
-                    .filter((i: number) => i !== -1)
-                : [],
-              smoking: findIndexOrNull(smoking, data.smoking),
-              snoring: findIndexOrNull(snoring, data.snoring),
-              toothGrind: findIndexOrNull(toothgrinding, data.toothGrind),
-              arrangement: findIndexOrNull(organizationLevel, data.arrangement),
-              religion: findIndexOrNull(religion, data.religion),
-              sleeper: findIndexOrNull(isLightSleeper, data.sleeper),
-              showerHour: findIndexOrNull(showertime, data.showerHour),
-              showerTime: findIndexOrNull(showerDuration, data.showerTime),
-              bedTime: findIndexOrNull(bedtime, data.bedTime),
-              mbti: mbtiIndices.map((i) =>
-                i !== undefined && i !== -1 ? i : null,
-              ),
-            });
-            return;
-          }
-        } catch (error) {
-          console.log("기존 체크리스트 데이터 로드 시도", error);
-        }
-      }
-
-      // 기존 체크리스트 데이터가 없거나 로드 실패 시 유저 기본정보 설정
+    if (!isEditMode) {
       setFormData((prev) => ({
         ...prev,
         dormType:
@@ -157,10 +93,72 @@ export default function RoomMateChecklistPage() {
             ? colleges.indexOf(userInfo.college)
             : null,
       }));
+    }
+  }, [isEditMode, userInfo.college, userInfo.dormType]);
+
+  useInitFromQuery(myChecklistData, (data) => {
+    if (!data) return;
+
+    const mbtiIndices =
+      data.mbti && data.mbti.length === 4
+        ? [
+            mbti1.indexOf(data.mbti[0]),
+            mbti2.indexOf(data.mbti[1]),
+            mbti3.indexOf(data.mbti[2]),
+            mbti4.indexOf(data.mbti[3]),
+          ]
+        : [null, null, null, null];
+
+    const findIndexOrNull = (arr: readonly string[], val?: string) => {
+      if (!val) return null;
+      const idx = arr.indexOf(val);
+      return idx !== -1 ? idx : null;
     };
 
-    fetchMyChecklistData();
-  }, [isEditMode, userInfo.college, userInfo.dormType]);
+    const dormIndex = dormitory.findIndex(
+      (d) =>
+        d.replace(/제|\s/g, "") ===
+        (data.dormType || "").replace(/제|\s/g, ""),
+    );
+
+    const collegeIndex = colleges.indexOf(data.college);
+
+    setFormData({
+      title: data.title || "",
+      comment: data.comment || "",
+      dormType:
+        dormIndex !== -1
+          ? dormIndex
+          : dormitory.indexOf(userInfo.dormType) !== -1
+            ? dormitory.indexOf(userInfo.dormType)
+            : null,
+      college:
+        collegeIndex !== -1
+          ? collegeIndex
+          : colleges.indexOf(userInfo.college) !== -1
+            ? colleges.indexOf(userInfo.college)
+            : null,
+      dormPeriod: Array.isArray(data.dormPeriod)
+        ? data.dormPeriod
+            .map((d: string) =>
+              days.indexOf(d.replace("요일", "").trim()),
+            )
+            .filter((i: number) => i !== -1)
+        : [],
+      smoking: findIndexOrNull(smoking, data.smoking),
+      snoring: findIndexOrNull(snoring, data.snoring),
+      toothGrind: findIndexOrNull(toothgrinding, data.toothGrind),
+      arrangement: findIndexOrNull(organizationLevel, data.arrangement),
+      religion: findIndexOrNull(religion, data.religion),
+      sleeper: findIndexOrNull(isLightSleeper, data.sleeper),
+      showerHour: findIndexOrNull(showertime, data.showerHour),
+      showerTime: findIndexOrNull(showerDuration, data.showerTime),
+      bedTime: findIndexOrNull(bedtime, data.bedTime),
+      mbti: mbtiIndices.map((i) =>
+        i !== undefined && i !== -1 ? i : null,
+      ),
+    });
+  });
 
   // 유효성 검사
   const validateStep = (step: number) => {
@@ -264,13 +262,6 @@ export default function RoomMateChecklistPage() {
 
       const { data } = await getMemberInfo();
       setUserInfo(data);
-
-      await queryClient.invalidateQueries({
-        queryKey: ["roommates", "scroll"],
-      });
-      await queryClient.invalidateQueries({
-        queryKey: ["roommates"],
-      });
 
       alert(`체크리스트 ${isEditMode ? "수정" : "등록"} 완료!`);
       navigate("/roommate");

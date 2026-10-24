@@ -158,6 +158,8 @@ export const useAppInit = () => {
     // React 마운트 및 navigateToPath 준비 완료 신호를 비동기로 네이티브(Android & iOS)에 안전하게 전송
     setTimeout(() => {
       try {
+        // 이 시점엔 모듈 로드 시 설치되는 네이티브 → 웹 구독이 모두 끝나 있다.
+        appBridge.bridgeReady();
         appBridge.onAppReady();
         if (window.AndroidBridge?.onAppReady) {
           window.AndroidBridge.onAppReady();

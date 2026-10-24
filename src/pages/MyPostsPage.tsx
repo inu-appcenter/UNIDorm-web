@@ -1,27 +1,12 @@
 // src/pages/Tip/TipListPage.tsx
 
 import styled from "styled-components";
-import { useEffect, useState } from "react";
 import TitleContentArea from "../components/common/TitleContentArea.tsx";
 import MyPostLikeCard from "../components/mypage/MyPostLikeCard.tsx";
-import { MyPost } from "@/types/members";
-import { getMemberPosts } from "@/apis/members";
+import { useMemberPosts } from "@/queries/members";
 
 export default function MyPostsPage() {
-  const [posts, setPosts] = useState<MyPost[]>([]);
-
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const response = await getMemberPosts();
-        setPosts(response.data);
-      } catch (error) {
-        console.error("게시글을 불러오는 데 실패했습니다.", error);
-      }
-    };
-
-    fetchPosts();
-  }, []);
+  const { data: posts = [] } = useMemberPosts();
 
   return (
     <MyPostsPageWrapper>
@@ -51,7 +36,7 @@ const MyPostsPageWrapper = styled.div`
   box-sizing: border-box;
   width: 100%;
   height: 100%;
-  overflow-y: auto;
+  overflow-y: auto;
 `;
 
 const CardList = styled.div`

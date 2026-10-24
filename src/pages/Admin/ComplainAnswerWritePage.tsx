@@ -1,8 +1,11 @@
 import styled from "styled-components";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import SquareButton from "../../components/common/SquareButton.tsx";
 import { ComplaintReplyDto } from "@/types/complain";
+import { useQueryClient } from "@tanstack/react-query";
+import { complaintKeys, useComplaintDetail } from "@/queries/complaints";
+import { useInitFromQuery } from "@/hooks/useInitFromQuery";
 import {
   createComplaintReply,
   updateComplaintReply,
@@ -18,18 +21,48 @@ export default function ComplainAnswerWritePage() {
   const { complainId } = useParams<{ complainId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const { complain, manager, Images } = location.state || {};
+  const queryClient = useQueryClient();
+  const { complain: stateComplain, manager: stateManager, Images: stateImages } =
+    location.state || {};
+
+  const [complain, setComplain] = useState<any>(stateComplain ?? null);
+  const [manager, setManager] = useState(stateManager ?? "");
 
   const [isEditMode, setIsEditMode] = useState(false);
   const [isRejected, setIsRejected] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
 
+  const [isLoading, setIsLoading] = useState(false);
+
+  const { data: detailData, isLoading: isDetailLoading } = useComplaintDetail(
+    !stateComplain && complainId ? Number(complainId) : undefined,
+    { asAdmin: true },
+  );
+
+  const initialImages = useMemo(() => {
+    if (stateImages && stateImages.length > 0) return stateImages;
+    if (detailData?.reply?.attachmentUrl && detailData.reply.attachmentUrl.length > 0) {
+      return detailData.reply.attachmentUrl;
+    }
+    return [];
+  }, [stateImages, detailData?.reply?.attachmentUrl]);
+
   const { files, addFiles, deleteFile, isFileLoading } = useFileHandler({
-    initialFiles: Images,
+    initialFiles: initialImages,
+    mode: "image",
   });
 
-  const [isLoading, setIsLoading] = useState(false);
+  useInitFromQuery(
+    detailData,
+    (fetched: any) => {
+      if (!stateComplain && fetched) {
+        setComplain(fetched);
+        if (fetched.officer) setManager(fetched.officer);
+      }
+    },
+    complainId,
+  );
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -78,6 +111,7 @@ export default function ComplainAnswerWritePage() {
         await updateComplaintStatus(Number(complainId), "처리완료");
       }
 
+      await queryClient.invalidateQueries({ queryKey: complaintKeys.all });
       alert(`답변이 ${isEditMode ? "수정" : "등록"}되었습니다!`);
       navigate(-1);
     } catch (err: any) {
@@ -96,7 +130,14 @@ export default function ComplainAnswerWritePage() {
 
   return (
     <Wrapper>
-      {isLoading && <LoadingSpinner overlay message="글 쓰는 중..." />}
+      {(isLoading || isDetailLoading) && (
+        <LoadingSpinner
+          overlay
+          message={
+            isDetailLoading ? "민원 정보 불러오는 중..." : "글 쓰는 중..."
+          }
+        />
+      )}
 
       <Content>
         <LabeledField label="반려 여부">
@@ -154,7 +195,7 @@ export default function ComplainAnswerWritePage() {
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100vh;
 `;
 
 const Content = styled.div`

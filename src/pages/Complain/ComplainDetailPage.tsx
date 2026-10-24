@@ -2,13 +2,12 @@ import styled from "styled-components";
 import StepFlow from "../../components/complain/StepFlow.tsx";
 import ComplainCard from "../../components/complain/ComplainCard.tsx";
 import ComplainAnswerCard from "../../components/complain/ComplainAnswerCard.tsx";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { deleteComplaint, getComplaintDetail } from "@/apis/complain";
-import { ComplaintDetail } from "@/types/complain";
+import { deleteComplaint } from "@/apis/complain";
+import { useComplaintDetail } from "@/queries/complaints";
 import {
   assignComplaintOfficer,
-  getAdminComplaintDetail,
   updateComplaintStatus,
 } from "@/apis/complainAdmin";
 import RoundSquareWhiteButton from "../../components/button/RoundSquareWhiteButton.tsx";
@@ -25,53 +24,35 @@ const ComplainDetailPage = () => {
   const { isAdmin } = useUserRole();
 
   const { complainId } = useParams<{ complainId: string }>();
-  const [complaint, setComplaint] = useState<ComplaintDetail | null>(null);
   const [selectedManager, setSelectedManager] = useState("생활원");
-  const [isNeedUpdate, setIsNeedUpdate] = useState(false);
   const navigate = useNavigate();
-  const [complainImages, setComplainImages] = useState<TipImage[]>([]);
 
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: complaintData, isLoading } = useComplaintDetail(
+    complainId ? Number(complainId) : undefined,
+    { asAdmin: isAdmin },
+  );
+  const complaint = complaintData ?? null;
+  const complainImages = useMemo(
+    () =>
+      (complaint?.images ?? []).map(
+        (url: string, index): TipImage => ({
+          contentType: "",
+          imageUrl: url,
+          fileSize: 0,
+          imageName: `이미지 ${index + 1}`,
+        }),
+      ),
+    [complaint],
+  );
   const [showModal, setShowModal] = useState(false);
 
+  // 민원 상세 조회 추적 (민원당 한 번)
+  const trackedIdRef = useRef<number | null>(null);
   useEffect(() => {
-    const fetchComplaint = async () => {
-      if (!complainId) return;
-
-      setIsLoading(true);
-      try {
-        let response;
-        if (isAdmin) {
-          response = await getAdminComplaintDetail(Number(complainId));
-          console.log("관리자용 민원 상세 가져오기 성공:", response);
-        } else {
-          response = await getComplaintDetail(Number(complainId));
-          console.log("일반 유저용 민원 상세 가져오기 성공:", response);
-        }
-        setComplainImages(
-          response.data.images.map(
-            (url: string, index): TipImage => ({
-              contentType: "",
-              imageUrl: url,
-              fileSize: 0,
-              imageName: `이미지 ${index + 1}`,
-            }),
-          ),
-        );
-        console.log(response);
-        setComplaint(response.data);
-        // 민원 상세 조회 추적
-        mixpanelTrack.postViewed("민원", response.data.id, response.data.title);
-      } catch (error) {
-        console.error("민원 상세 불러오기 실패:", error);
-        setComplaint(null);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchComplaint();
-  }, [complainId, isNeedUpdate]);
+    if (!complaint || trackedIdRef.current === complaint.id) return;
+    trackedIdRef.current = complaint.id;
+    mixpanelTrack.postViewed("민원", complaint.id, complaint.title);
+  }, [complaint]);
 
   const handleStatus = async (status: string) => {
     try {
@@ -95,7 +76,6 @@ const ComplainDetailPage = () => {
         );
         console.log(response);
       }
-      setIsNeedUpdate((prev) => !prev);
     } catch (error) {
       console.error("민원 처리상태 변경 실패:", error);
     }
@@ -113,7 +93,6 @@ const ComplainDetailPage = () => {
       await assignComplaintOfficer(Number(complainId), selectedManager);
 
       setShowModal(false);
-      setIsNeedUpdate((prev) => !prev);
     } catch (err) {
       console.error("담당자 배정 실패:", err);
     }
@@ -146,7 +125,7 @@ const ComplainDetailPage = () => {
               {
                 label: "수정하기",
                 onClick: () => {
-                  navigate(PATHS.COMPLAIN.WRITE, {
+                  navigate(`${PATHS.COMPLAIN.WRITE}?id=${complainId}`, {
                     state: {
                       complain: complaint,
                       complainImages: complainImages,
@@ -295,7 +274,8 @@ const ComplainListPageWrapper = styled.div`
   gap: 16px;
   box-sizing: border-box;
 
-  overflow-y: auto;
+  overflow-y: auto;
+
 `;
 
 const ComplainCardsContainer = styled.div`

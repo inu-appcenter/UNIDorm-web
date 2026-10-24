@@ -3,9 +3,10 @@ import MenuGroup from "../../components/mypage/MenuGroup.tsx";
 import {
   addNotificationPreferences,
   deleteNotificationPreferences,
-  getUserNotificationPreferences,
 } from "@/apis/notification";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useNotificationPreferences } from "@/queries/members";
+import { useInitFromQuery } from "@/hooks/useInitFromQuery";
 import { NotificationPreferences } from "@/types/notifications";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
@@ -58,71 +59,40 @@ const adminNotificationSettingMenus = [
 
 const NotificationSettingPage = () => {
   const { isMainAdmin, isDormAdmin } = useUserRole();
+  const { data: preferences, isLoading } = useNotificationPreferences();
 
   // 알림 상태 관리
   const [notificationStatus, setNotificationStatus] = useState<
     Record<string, boolean>
   >({});
 
-  // 로딩 상태
-  const [isLoading, setIsLoading] = useState(true);
+  useInitFromQuery(preferences, (apiData) => {
+    const allMenus = [
+      ...notificationSettingMenus,
+      ...adminNotificationSettingMenus,
+    ];
 
-  // 초기 설정 불러오기
-  const fetchInitialPreferences = async () => {
-    try {
-      const response = await getUserNotificationPreferences();
-      const apiData = response.data;
-      console.log(apiData);
+    const newStatus = allMenus.reduce(
+      (acc, menu) => {
+        const status = apiData[menu.apiKey];
+        acc[menu.type] = status ?? false;
+        return acc;
+      },
+      {} as Record<string, boolean>,
+    );
 
-      // 일반 메뉴와 관리자 메뉴 통합 처리
-      const allMenus = [
-        ...notificationSettingMenus,
-        ...adminNotificationSettingMenus,
-      ];
+    const isUnidormEnabled = newStatus["유니돔"];
+    const hasOtherEnabled = notificationSettingMenus.some(
+      (menu) => menu.type !== "유니돔" && newStatus[menu.type],
+    );
 
-      // API 응답 객체를 로컬 상태 객체 형식으로 변환
-      const newStatus = allMenus.reduce(
-        (acc, menu) => {
-          const status = apiData[menu.apiKey];
-          acc[menu.type] = status ?? false;
-          return acc;
-        },
-        {} as Record<string, boolean>,
-      );
-
-      // 유니돔 앱 알림 의존성 체크 및 동기화
-      const isUnidormEnabled = newStatus["유니돔"];
-      const hasOtherEnabled = notificationSettingMenus.some(
-        (menu) => menu.type !== "유니돔" && newStatus[menu.type],
-      );
-
-      if (!isUnidormEnabled && hasOtherEnabled) {
-        newStatus["유니돔"] = true;
-        addSingleNotificationPreference("유니돔");
-      }
-
-      setNotificationStatus(newStatus);
-    } catch (error) {
-      console.error("초기 알림 설정을 불러오는 데 실패했습니다.", error);
-
-      const allMenus = [
-        ...notificationSettingMenus,
-        ...adminNotificationSettingMenus,
-      ];
-      setNotificationStatus(
-        allMenus.reduce(
-          (acc, menu) => ({ ...acc, [menu.type]: false }),
-          {} as Record<string, boolean>,
-        ),
-      );
-    } finally {
-      setIsLoading(false);
+    if (!isUnidormEnabled && hasOtherEnabled) {
+      newStatus["유니돔"] = true;
+      addSingleNotificationPreference("유니돔");
     }
-  };
 
-  useEffect(() => {
-    fetchInitialPreferences();
-  }, []);
+    setNotificationStatus(newStatus);
+  });
 
   // 알림 활성화
   const addSingleNotificationPreference = async (type: string) => {

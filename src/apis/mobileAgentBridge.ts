@@ -138,7 +138,7 @@ function sendBridgeAction<T = any>(type: string, payload?: any, timeoutMs = 1500
       resolve({
         success: false,
         errorCode: 'NOT_IN_MOBILE_APP',
-        errorMessage: '모바일 앱(INTIP 앱) 환경에서만 학교 시스템 직접 연동이 가능합니다.',
+        errorMessage: '모바일 앱(유니돔 앱) 환경에서만 학교 시스템 직접 연동이 가능합니다.',
       });
       return;
     }
@@ -158,7 +158,7 @@ function sendBridgeAction<T = any>(type: string, payload?: any, timeoutMs = 1500
 
       console.log(`[Bridge Action] Received response for ${type} (reqId: ${requestId}):`, detail);
       clearTimeout(timer);
-      window.removeEventListener('intipAgentResult', handler);
+      removeListeners();
       const resolvedData = detail.data?.data !== undefined ? detail.data.data : detail.data;
       const resolvedErrorCode = detail.errorCode || detail.data?.errorCode;
       const resolvedErrorMessage = detail.errorMessage || detail.data?.errorMessage;
@@ -170,11 +170,19 @@ function sendBridgeAction<T = any>(type: string, payload?: any, timeoutMs = 1500
       });
     };
 
+    // 이미 설치된 구버전 앱은 intipAgentResult로만 보낸다. 새 앱은 두 이름으로 모두
+    // 보내지만 첫 수신에서 리스너를 모두 떼므로 한 번만 처리된다.
+    // 사용자 기기의 앱이 모두 새 버전(OTA 포함)으로 바뀐 뒤 intip 쪽을 지운다.
+    const removeListeners = () => {
+      window.removeEventListener('unidormAgentResult', handler);
+      window.removeEventListener('intipAgentResult', handler);
+    };
+    window.addEventListener('unidormAgentResult', handler);
     window.addEventListener('intipAgentResult', handler);
 
     timer = setTimeout(() => {
       console.warn(`[Bridge Action] Request timed out for ${type} (reqId: ${requestId}, ${timeoutMs}ms)`);
-      window.removeEventListener('intipAgentResult', handler);
+      removeListeners();
       resolve({
         success: false,
         errorCode: 'TIMEOUT',

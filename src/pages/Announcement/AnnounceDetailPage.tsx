@@ -1,12 +1,8 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import styled from "styled-components";
-import {
-  deleteAnnouncement,
-  getAnnouncementDetail,
-  getAnnouncementFiles,
-} from "@/apis/announcements";
-import { AnnouncementDetail, AnnouncementFile } from "@/types/announcements";
+import { deleteAnnouncement } from "@/apis/announcements";
+import { useAnnouncementDetail } from "@/queries/announcements";
 import AnnounceAttachment from "../../components/announce/AnnounceAttachment.tsx";
 import GrayDivider from "../../components/common/GrayDivider.tsx";
 import { useSwipeable } from "react-swipeable";
@@ -28,12 +24,15 @@ import DOMPurify from "dompurify";
 
 export default function AnnounceDetailPage() {
   const { boardId } = useParams<{ boardId: string }>();
-  const [announce, setAnnounce] = useState<AnnouncementDetail | null>(null);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [attachments, setAttachments] = useState<AnnouncementFile[]>([]);
-  const [images, setimages] = useState<AnnouncementFile[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+
+  const { data, isLoading, isError } = useAnnouncementDetail(
+    boardId ? Number(boardId) : undefined,
+  );
+  const announce = data?.announce ?? null;
+  const attachments = data?.attachments ?? [];
+  const images = data?.images ?? [];
 
   const navigate = useNavigate();
   const { isAdmin } = useUserRole();
@@ -57,57 +56,20 @@ export default function AnnounceDetailPage() {
   }, [boardId]);
 
   useEffect(() => {
-    if (!boardId) {
-      setIsLoading(false);
-      return;
-    }
-
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        const [detailResponse, filesResponse] = await Promise.all([
-          getAnnouncementDetail(Number(boardId)),
-          getAnnouncementFiles(Number(boardId)),
-        ]);
-        console.log("공지사항 불러오기 성공", detailResponse);
-        console.log("공지사항 이미지 불러오기 성공", filesResponse);
-
-        setAnnounce(detailResponse.data);
-        // 상세 조회 추적 추가
-        mixpanelTrack.postViewed(
-          "공지사항",
-          detailResponse.data.id,
-          detailResponse.data.title,
-        );
-
-        const allFiles = filesResponse.data;
-        const imageExtensions = [
-          "jpg",
-          "jpeg",
-          "png",
-          "gif",
-          "bmp",
-          "webp",
-          "svg",
-        ];
-        const imageFiles = allFiles.filter((file) => {
-          const ext = file.fileName.split(".").pop()?.toLowerCase();
-          return ext && imageExtensions.includes(ext);
-        });
-
-        setimages(imageFiles);
-        setAttachments(allFiles);
-      } catch (err) {
-        alert("공지사항을 불러오는 데 실패했습니다.");
-        setAnnounce(null);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
     window.scrollTo(0, 0);
   }, [boardId]);
+
+  useEffect(() => {
+    if (isError) alert("공지사항을 불러오는 데 실패했습니다.");
+  }, [isError]);
+
+  // 상세 조회 추적 (공지당 한 번)
+  const trackedIdRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (!announce || trackedIdRef.current === announce.id) return;
+    trackedIdRef.current = announce.id;
+    mixpanelTrack.postViewed("공지사항", announce.id, announce.title);
+  }, [announce]);
 
   const handleDelete = async () => {
     if (!boardId) return;
@@ -128,7 +90,7 @@ export default function AnnounceDetailPage() {
       {
         label: "수정하기",
         onClick: () => {
-          navigate("/announcements/write", {
+          navigate(`/announcements/write?id=${boardId}`, {
             state: { announce, announceFiles: images },
           });
         },

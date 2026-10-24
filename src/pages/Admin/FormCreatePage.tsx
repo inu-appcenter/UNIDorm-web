@@ -4,7 +4,10 @@ import { useEffect, useState } from "react";
 import arrowright from "../../assets/arrow-right.svg";
 import { Input, Textarea } from "@/styles/common";
 import AddNewFormField from "../../components/form/AddNewFormField.tsx";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useSurveyDetail } from "@/queries/surveys";
+import { useInitFromQuery } from "@/hooks/useInitFromQuery";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 
 // [수정] 1. 요청하신 임포트 구문으로 변경 (updateSurvey 추가)
 import {
@@ -61,9 +64,27 @@ const FormCreatePage = () => {
   ]);
 
   const location = useLocation();
-  // [수정] 3. 수정할 폼 데이터(form) 및 수정 모드(isEditMode) 확인
-  const { form } = location.state || {};
-  const isEditMode = !!form; // form 객체가 있으면 true (수정 모드)
+  const [searchParams] = useSearchParams();
+  const queryId = searchParams.get("id");
+  const editId = queryId ? Number(queryId) : undefined;
+
+  const { form: stateForm } = location.state || {};
+  const [form, setForm] = useState<any>(stateForm ?? null);
+  const isEditMode = !!form;
+
+  const { data: detailData, isLoading: isDetailLoading } = useSurveyDetail(
+    !stateForm && editId ? editId : undefined,
+  );
+
+  useInitFromQuery(
+    detailData,
+    (fetched: any) => {
+      if (!stateForm && fetched) {
+        setForm(fetched);
+      }
+    },
+    editId,
+  );
 
   // [수정] 4. useEffect 의존성 배열 변경 (기존 []도 문제는 없으나 명시적으로 form 추가)
   // (기존 코드와 동일하게 두어도 무방합니다.)
@@ -265,6 +286,9 @@ const FormCreatePage = () => {
 
   return (
     <PageWrapper>
+      {isDetailLoading && (
+        <LoadingSpinner overlay message="설문 정보를 불러오는 중입니다..." />
+      )}
       {/* [수정] 9. 헤더 타이틀 동적 변경 */}
 
       <FormBoxBlue>

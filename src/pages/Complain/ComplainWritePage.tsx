@@ -1,6 +1,10 @@
 import styled from "styled-components";
-import { useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import { complaintKeys, useComplaintDetail } from "@/queries/complaints";
+import { useInitFromQuery } from "@/hooks/useInitFromQuery";
+import type { ComplaintDetail } from "@/types/complain";
+import { useEffect, useMemo, useState } from "react";
 import SquareButton from "../../components/common/SquareButton.tsx";
 import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
 import {
@@ -30,19 +34,54 @@ const generateOptions = (min: number, max: number, suffix: string) => {
 export default function ComplainWritePage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { complain, complainImages } = location.state || {}; // 수정할 민원 데이터
+  const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
+  const queryId = searchParams.get("id");
+  const editId = queryId ? Number(queryId) : undefined;
 
-  const [isEditMode, setIsEditMode] = useState(false);
+  const { complain: stateComplain, complainImages: stateImages } =
+    location.state || {}; // 수정할 민원 데이터
+  const [complain, setComplain] = useState<ComplaintDetail | null>(
+    stateComplain ?? null,
+  );
+
+  const [isEditMode, setIsEditMode] = useState(Boolean(stateComplain));
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [privacyAgreed, setPrivacyAgreed] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
 
+  const { data: detailData, isLoading: isDetailLoading } = useComplaintDetail(
+    !stateComplain && editId ? editId : undefined,
+  );
+
   // 이미지 상태 및 핸들러 커스텀 훅
+  const initialImages = useMemo(() => {
+    if (stateImages && stateImages.length > 0) return stateImages;
+    if (detailData?.images && detailData.images.length > 0) {
+      return detailData.images.map((url, idx) => ({
+        imageUrl: url,
+        imageName: `complain_${idx + 1}.jpg`,
+      }));
+    }
+    return [];
+  }, [stateImages, detailData?.images]);
+
   const { files, addFiles, deleteFile, isFileLoading } = useFileHandler({
-    initialFiles: complainImages,
+    initialFiles: initialImages,
+    mode: "image",
   });
+
+  useInitFromQuery(
+    detailData,
+    (fetched) => {
+      if (!stateComplain && fetched) {
+        setComplain(fetched);
+      }
+    },
+    editId,
+  );
 
   // 선택 값 관련 상태
   const [selectedComplainTypeIndex, setSelectedComplainTypeIndex] = useState<
@@ -216,15 +255,18 @@ export default function ComplainWritePage() {
       let res;
       if (isEditMode && complain?.id) {
         res = await updateComplaint(complain.id, dto, files);
+        await queryClient.invalidateQueries({ queryKey: complaintKeys.all });
         alert("민원이 성공적으로 수정되었습니다!");
+        navigate(-1);
       } else {
         res = await createComplaint(dto, files);
+        await queryClient.invalidateQueries({ queryKey: complaintKeys.all });
         mixpanelTrack.complainSubmitted(dto.type, files.length > 0);
         alert("민원이 성공적으로 등록되었습니다!");
+        navigate(PATHS.COMPLAIN.ROOT, { replace: true });
       }
 
       console.log("API 응답:", res.data);
-      navigate(PATHS.COMPLAIN.ROOT, { replace: true });
     } catch (err: any) {
       console.error("API 요청 실패:", err);
       const errorMessage =
@@ -239,7 +281,18 @@ export default function ComplainWritePage() {
 
   return (
     <Wrapper>
-      {isLoading && <LoadingSpinner overlay message="글 쓰는 중..." />}
+      {(isLoading || isDetailLoading) && (
+        <LoadingSpinner
+          overlay
+          message={
+            isDetailLoading
+              ? "민원을 불러오는 중입니다..."
+              : isEditMode
+              ? "민원을 수정 중입니다..."
+              : "민원을 등록 중입니다..."
+          }
+        />
+      )}
 
       <Content>
         <FormField label="유형" required>
@@ -412,7 +465,7 @@ export default function ComplainWritePage() {
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  min-height: 100vh;
   padding: 16px 16px calc(120px + var(--safe-area-bottom, 0px));
 `;
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import {
@@ -8,10 +8,8 @@ import {
   PlusCircle,
   Trash2,
 } from "lucide-react";
-import {
-  deletePopupNotification,
-  getAllPopupNotifications,
-} from "@/apis/popup-notification";
+import { deletePopupNotification } from "@/apis/popup-notification";
+import { useAdminPopupNotifications } from "@/queries/popupNotifications";
 import HomeNoticeBottomSheet from "@/components/modal/HomeNoticeBottomSheet";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import {
@@ -55,28 +53,14 @@ const getPopupStatus = (notification: PopupNotification, today: string) => {
 };
 
 const PopupNotiListPage = () => {
-  const [notifications, setNotifications] = useState<PopupNotification[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: notifications = [], isLoading: loading } =
+    useAdminPopupNotifications();
   const [selectedNotification, setSelectedNotification] =
     useState<PopupNotification | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const navigate = useNavigate();
   const today = getLocalDateInputValue();
 
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
-        const response = await getAllPopupNotifications();
-        setNotifications(response.data);
-      } catch (error) {
-        console.error("팝업 공지 목록 조회 실패:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    void fetchNotifications();
-  }, []);
 
   const handleCreateClick = () => {
     navigate("create");
@@ -100,7 +84,6 @@ const PopupNotiListPage = () => {
     try {
       await deletePopupNotification(id);
       alert("팝업 공지를 삭제했습니다.");
-      setNotifications((prev) => prev.filter((noti) => noti.id !== id));
       setSelectedNotification((prev) => (prev?.id === id ? null : prev));
       setIsDetailOpen(false);
     } catch (error) {

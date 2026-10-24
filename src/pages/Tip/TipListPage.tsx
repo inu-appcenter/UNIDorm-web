@@ -2,9 +2,7 @@ import styled from "styled-components";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import TipCard from "../../components/tip/TipCard";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { Tip } from "@/types/tips";
-import { fetchTips } from "@/apis/tips";
+import { useTips } from "@/queries/tips";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../../constants/EmptyMessage.tsx";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -15,25 +13,7 @@ export default function TipListPage() {
   const navigate = useNavigate();
   const { isAdmin } = useUserRole();
 
-  const [tips, setTips] = useState<Tip[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-
-  const loadTips = async () => {
-    setIsLoading(true);
-    try {
-      const data = await fetchTips();
-      console.log("팁 리스트 불러오기 성공", data);
-      setTips(data);
-    } catch (error) {
-      console.error("팁 리스트 불러오기 실패:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadTips();
-  }, []);
+  const { data: tips = [], isLoading } = useTips();
 
   useSetHeader({ title: "기숙사 꿀팁" });
 
@@ -116,7 +96,8 @@ const TipPageWrapper = styled.div`
   gap: 16px;
   box-sizing: border-box;
 
-  overflow-y: auto;
+  overflow-y: auto;
+
 `;
 
 const CardList = styled.div`

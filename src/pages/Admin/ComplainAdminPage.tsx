@@ -6,10 +6,8 @@ import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import ComplainListTable from "../../components/complain/ComplainListTable.tsx";
 import useUserStore from "../../stores/useUserStore.ts";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AdminComplaint, ComplaintSearchDto } from "@/types/complain";
+import { ComplaintSearchDto } from "@/types/complain";
 import {
-  getAllComplaints,
-  searchComplaints,
   downloadComplaintsCSV,
   downloadFilteredComplaintsCSV,
 } from "@/apis/complainAdmin";
@@ -17,18 +15,17 @@ import SelectableChipGroup from "../../components/roommate/checklist/SelectableC
 import ComplainFilter from "../../components/complain/ComplainFilter.tsx";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
+import { useAdminComplaints } from "@/queries/complaints";
 
 const ComplainAdminPage = () => {
   const { tokenInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
 
-  const [complaints, setComplaints] = useState<AdminComplaint[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const filterGroupRef = useRef<HTMLDivElement>(null);
 
   // 검색어 및 로딩 상태
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   // 서버 필터링 적용 상태 (CSV 다운로드 시 사용)
   const [appliedFilters, setAppliedFilters] =
@@ -55,25 +52,14 @@ const ComplainAdminPage = () => {
   const [selectedRoom, setSelectedRoom] = useState("");
   const [selectedBed, setSelectedBed] = useState("");
 
-  // 초기 민원 목록 로드
-  const fetchAllComplaints = async () => {
-    setIsLoading(true);
-    try {
-      const response = await getAllComplaints();
-      setComplaints(response.data);
-      setAppliedFilters(null); // 초기화 시 적용 필터도 없음
-    } catch (error) {
-      console.error("민원 목록 불러오기 실패:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (isLoggedIn) {
-      fetchAllComplaints();
-    }
-  }, [isLoggedIn]);
+  // 적용된 필터가 없으면 전체 민원, 있으면 필터 검색 결과
+  const {
+    data: complaints = [],
+    isLoading: isInitialLoading,
+    isPlaceholderData,
+  } = useAdminComplaints(appliedFilters, isLoggedIn);
+  // 필터를 바꿔 새로 검색하는 동안에만 스피너 (자동 재조회 때는 기존 목록 유지)
+  const isLoading = isInitialLoading || isPlaceholderData;
 
   // 외부 클릭 시 필터 닫기
   useEffect(() => {
@@ -98,18 +84,9 @@ const ComplainAdminPage = () => {
   };
 
   // 필터 적용 핸들러 (서버 필터링 API 호출)
-  const handleApplyFilters = async (filters: ComplaintSearchDto) => {
-    setIsLoading(true);
-    try {
-      const response = await searchComplaints(filters);
-      setComplaints(response.data);
-      setAppliedFilters(filters); // 현재 적용된 필터 상태 저장
-      setIsFilterOpen(false);
-    } catch (error) {
-      console.error("민원 검색 실패:", error);
-    } finally {
-      setIsLoading(false);
-    }
+  const handleApplyFilters = (filters: ComplaintSearchDto) => {
+    setAppliedFilters(filters); // 현재 적용된 필터 상태 저장
+    setIsFilterOpen(false);
   };
 
   // 필터 초기화 핸들러
@@ -122,8 +99,7 @@ const ComplainAdminPage = () => {
     setSelectedFloor("");
     setSelectedRoom("");
     setSelectedBed("");
-    setAppliedFilters(null);
-    fetchAllComplaints(); // 필터 초기화 후 전체 목록 재조회
+    setAppliedFilters(null); // 필터 초기화 후 전체 목록 조회
   };
 
   // CSV 다운로드 통합 핸들러
@@ -269,7 +245,7 @@ const ComplainListPageWrapper = styled.div`
   flex-direction: column;
   gap: 32px;
   box-sizing: border-box;
-  overflow-y: auto;
+  overflow-y: auto;
   flex: 1;
 `;
 

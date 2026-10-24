@@ -1,16 +1,16 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { GroupOrderChatRoom, RoommateChatRoom } from "@/types/chats";
-import {
-  getGroupOrderChatRooms,
-  getRoommateChatRooms,
-  patchRoommateChatRead, // API 임포트
-} from "@/apis/chat";
+import { RoommateChatRoom } from "@/types/chats";
+import { patchRoommateChatRead } from "@/apis/chat";
 import ChatListItem from "../../components/chat/ChatListItem.tsx";
 import useUserStore from "../../stores/useUserStore.ts";
 import BottomBar from "../../components/common/BottomBar/BottomBar.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
+import {
+  useGroupOrderChatRooms,
+  useRoommateChatRooms,
+} from "@/queries/chat";
 import { motion, AnimatePresence } from "framer-motion";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { formatChatMessagePreview } from "@/utils/chatMessagePreview";
@@ -20,40 +20,23 @@ export default function ChatListPage() {
   const { tokenInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo?.accessToken ?? "");
 
-  const [selectedTab] = useState("룸메이트"); // 탭 로직 유지
+  const [selectedTab] = useState("룸메이트");
 
-  const [groupOrderChatRooms, setGroupOrderChatRooms] = useState<
-    GroupOrderChatRoom[]
-  >([]);
-  const [roommateChatRooms, setRoommateChatRooms] = useState<
-    RoommateChatRoom[]
-  >([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const {
+    data: groupOrderChatRooms = [],
+    isLoading: isGroupLoading,
+  } = useGroupOrderChatRooms({
+    enabled: isLoggedIn && selectedTab === "공동구매",
+  });
 
-  useEffect(() => {
-    if (!isLoggedIn) return;
+  const {
+    data: roommateChatRooms = [],
+    isLoading: isRoommateLoading,
+  } = useRoommateChatRooms({
+    enabled: isLoggedIn && selectedTab === "룸메이트",
+  });
 
-    setIsLoading(true);
-    if (selectedTab === "공동구매") {
-      getGroupOrderChatRooms()
-        .then((res) => {
-          setGroupOrderChatRooms(res.data);
-        })
-        .catch((err) => {
-          console.error("공동구매 채팅방 목록 조회 실패", err);
-        })
-        .finally(() => setIsLoading(false));
-    } else if (selectedTab === "룸메이트") {
-      getRoommateChatRooms()
-        .then((res) => {
-          setRoommateChatRooms(res.data);
-        })
-        .catch((err) => {
-          console.error("룸메이트 채팅방 목록 조회 실패", err);
-        })
-        .finally(() => setIsLoading(false));
-    }
-  }, [selectedTab, isLoggedIn]);
+  const isLoading = selectedTab === "공동구매" ? isGroupLoading : isRoommateLoading;
 
   const handleChatClick = async (room: RoommateChatRoom) => {
     if (selectedTab === "룸메이트") {

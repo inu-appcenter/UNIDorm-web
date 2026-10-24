@@ -31,13 +31,12 @@ import SelectableChipGroup from "../../components/roommate/checklist/SelectableC
 import { useSetHeader } from "@/hooks/useSetHeader";
 
 import { useInView } from "react-intersection-observer";
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 
-import { getAnnouncementScrollList } from "@/apis/announcements";
+import { useAnnouncementScroll } from "@/queries/announcements";
+import { useActivePopupNotifications } from "@/queries/popupNotifications";
 import type { AnnouncementPost } from "@/types/announcements";
 import HomeNoticeListBottomSheet from "@/components/modal/HomeNoticeListBottomSheet";
 import HomeNoticeBottomSheet from "@/components/modal/HomeNoticeBottomSheet";
-import { getPopupNotifications } from "@/apis/popup-notification";
 import { PopupNotification } from "@/types/popup-notifications";
 import { guardAppOnly, guardLogin } from "@/utils/guard";
 import { mixpanelTrack } from "@/utils/mixpanel";
@@ -62,13 +61,7 @@ export default function AnnouncementPage() {
   const [selectedHomeNoti, setSelectedHomeNoti] =
     useState<PopupNotification | null>(null);
 
-  const { data: homeNotis = [] } = useQuery({
-    queryKey: ["home-notifications"],
-    queryFn: async () => {
-      const res = await getPopupNotifications();
-      return res.data;
-    },
-  });
+  const { data: homeNotis = [] } = useActivePopupNotifications();
 
   // 스크롤 컨테이너 ref
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -197,29 +190,12 @@ export default function AnnouncementPage() {
     isFetchingNextPage,
     isLoading,
     isError,
-  } = useInfiniteQuery({
-    queryKey: [
-      "announcements",
-      "scroll",
-      selectedCategory,
-      subCategoryValue,
-      submittedSearch,
-      searchRequestId,
-    ],
-    queryFn: ({ pageParam }) =>
-      getAnnouncementScrollList(
-        selectedCategory,
-        subCategoryValue,
-        submittedSearch,
-        pageParam as number | undefined,
-        pageSize,
-      ),
-    initialPageParam: undefined as number | undefined,
-    getNextPageParam: (lastPage: AnnouncementPost[]) => {
-      if (!lastPage || lastPage.length < pageSize) return undefined;
-      return lastPage[lastPage.length - 1].id;
-    },
-    staleTime: 1000 * 60 * 5,
+  } = useAnnouncementScroll({
+    type: selectedCategory,
+    category: subCategoryValue,
+    search: submittedSearch,
+    size: pageSize,
+    requestId: searchRequestId,
   });
 
   useEffect(() => {

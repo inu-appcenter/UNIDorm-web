@@ -12,11 +12,7 @@ import {
   BarChart,
   Bar,
 } from "recharts";
-import {
-  getStatistics,
-  getStatisticsTotal,
-  StatisticResponse,
-} from "@/apis/admin/statistics";
+import { useStatisticsQuery, useStatisticsTotalQuery } from "@/queries/admin";
 import { useSetHeader } from "@/hooks/useSetHeader";
 
 // --- Global Styles & Constants ---
@@ -323,11 +319,37 @@ const StatisticsPage: React.FC = () => {
     apiPath: "",
   });
 
-  const [statistics, setStatistics] = useState<StatisticResponse[]>([]);
-  const [totalCountForPath, setTotalCountForPath] = useState<number | null>(
-    null,
+  const [submittedParams, setSubmittedParams] = useState<{
+    date?: string;
+    from?: string;
+    to?: string;
+    apiPath?: string;
+  } | null>(null);
+
+  const { data: rawStats = [], isLoading: statsLoading } = useStatisticsQuery(
+    submittedParams ?? {},
+    { enabled: Boolean(submittedParams) },
   );
-  const [loading, setLoading] = useState<boolean>(false);
+
+  const { data: totalCountForPath = null, isLoading: totalLoading } =
+    useStatisticsTotalQuery(
+      {
+        apiPath: submittedParams?.apiPath,
+        from: submittedParams?.from,
+        to: submittedParams?.to,
+      },
+      { enabled: Boolean(submittedParams?.apiPath) },
+    );
+
+  const statistics = useMemo(
+    () =>
+      [...rawStats].sort(
+        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+      ),
+    [rawStats],
+  );
+
+  const loading = statsLoading || totalLoading;
 
   // 현재 로드된 통계 데이터에서 고유한 API 경로 추출 (Select Box용)
   const uniqueApiPaths = useMemo(() => {
@@ -342,53 +364,14 @@ const StatisticsPage: React.FC = () => {
     setSearchParams((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSearch = useCallback(async () => {
-    setLoading(true);
-    try {
-      const { date, from, to, apiPath } = searchParams;
-
-      // 모드에 따라 파라미터 분기 처리
-      let requestDate: string | undefined = undefined;
-      let requestFrom: string | undefined = undefined;
-      let requestTo: string | undefined = undefined;
-
-      if (mode === "date") {
-        requestDate = date;
-      } else {
-        requestFrom = from;
-        requestTo = to;
-      }
-
-      // 1. 목록 조회
-      const listResponse = await getStatistics(
-        requestDate,
-        requestFrom,
-        requestTo,
-        apiPath,
-      );
-
-      const sortedData = listResponse.data.sort(
-        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
-      );
-      setStatistics(sortedData);
-
-      // 2. API 경로 지정 시 총계 조회
-      if (apiPath) {
-        const totalResponse = await getStatisticsTotal(
-          apiPath,
-          requestFrom,
-          requestTo,
-        ); // Note: total API might need 'date' param support if strictly following single day, usually range works for single day if from=to=date
-        setTotalCountForPath(totalResponse.data);
-      } else {
-        setTotalCountForPath(null);
-      }
-    } catch (error) {
-      console.error(error);
-      alert("데이터 조회 중 오류가 발생했습니다.");
-    } finally {
-      setLoading(false);
-    }
+  const handleSearch = useCallback(() => {
+    const { date, from, to, apiPath } = searchParams;
+    setSubmittedParams({
+      date: mode === "date" ? date : undefined,
+      from: mode === "range" ? from : undefined,
+      to: mode === "range" ? to : undefined,
+      apiPath: apiPath || undefined,
+    });
   }, [searchParams, mode]);
 
   // 차트용 데이터 가공

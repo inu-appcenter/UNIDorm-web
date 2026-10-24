@@ -1,7 +1,6 @@
 import styled from "styled-components";
 import useUserStore from "../../stores/useUserStore.ts";
-import { useEffect, useState } from "react";
-import { getMemberImage } from "@/apis/members";
+import { useMemberImage } from "@/queries/members";
 import profile from "../../assets/profileimg.png";
 
 import { useNavigate } from "react-router-dom";
@@ -11,15 +10,8 @@ import { mixpanelTrack } from "@/utils/mixpanel";
 const MyInfoArea = () => {
   const navigate = useNavigate();
   const userInfo = useUserStore((state) => state.userInfo);
-  const [userProfileImg, setUserProfileImg] = useState<string>("");
-
-  useEffect(() => {
-    const getUserProfileImg = async () => {
-      const result = await getMemberImage();
-      setUserProfileImg(result.data.imageUrl);
-    };
-    getUserProfileImg();
-  }, [userInfo]);
+  const { data: imageResult } = useMemberImage();
+  const userProfileImg = imageResult?.imageUrl ?? "";
 
   const handleMyInfoClick = () => {
     mixpanelTrack.featureClicked("내 정보 수정 진입", "마이페이지 프로필");

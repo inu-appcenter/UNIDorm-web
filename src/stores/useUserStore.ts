@@ -135,7 +135,12 @@ const useUserStore = create<UserState>()(
 // 네이티브에서 자체 갱신하거나 릴레이한 JWT를 스토어 및 localStorage에 반영
 if (typeof window !== "undefined") {
   appBridge.onTokenInfoUpdated((tokenInfo) => {
-    useUserStore.getState().setTokenInfo(tokenInfo, { fromNative: true });
+    // 네이티브 브릿지 스키마에는 role이 없어 비어서 올 수 있으므로 기존 값을 유지한다.
+    const current = useUserStore.getState().tokenInfo;
+    useUserStore.getState().setTokenInfo(
+      { ...tokenInfo, role: tokenInfo.role || (tokenInfo.accessToken ? current.role : "") },
+      { fromNative: true },
+    );
   });
 }
 

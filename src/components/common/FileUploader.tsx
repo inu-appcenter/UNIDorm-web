@@ -58,7 +58,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
       {images.length > 0 && (
         <PreviewContainer>
           {images.map((image, index) =>
-            isImageMode && image.preview ? (
+            image.preview ? (
               <ImageWrapper key={index}>
                 <PreviewImage
                   src={image.preview}

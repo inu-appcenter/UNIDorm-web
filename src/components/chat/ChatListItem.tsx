@@ -1,7 +1,6 @@
 import styled from "styled-components";
-import { useEffect, useState } from "react";
 import GroupPurchaseInfo from "./GroupPurchaseInfo.tsx";
-import { getRoommateChatUnreadCount } from "@/apis/chat";
+import { useRoommateChatUnreadCount } from "@/queries/chat";
 import ChatAvatar from "./ChatAvatar";
 import { MapPin } from "lucide-react";
 
@@ -34,20 +33,10 @@ const ChatListItem = ({
   isRoommate,
   boardTitle,
 }: ChatItemProps) => {
-  const [unreadCount, setUnreadCount] = useState<number>(0);
-
-  // 안 읽은 메시지 카운트 조회 (룸메이트 탭일 경우에만)
-  useEffect(() => {
-    if (selectedTab === "룸메이트" && chatRoomId) {
-      getRoommateChatUnreadCount(chatRoomId)
-        .then((res) => {
-          setUnreadCount(res.data);
-        })
-        .catch((err) => {
-          console.error("안 읽은 메시지 수 조회 실패", err);
-        });
-    }
-  }, [chatRoomId, selectedTab]);
+  const { data: serverUnreadCount } = useRoommateChatUnreadCount(
+    selectedTab === "룸메이트" ? chatRoomId : undefined,
+  );
+  const unreadCount = serverUnreadCount ?? 0;
 
   const formatTime = (isoString: string) => {
     const date = new Date(isoString);

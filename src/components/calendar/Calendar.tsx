@@ -15,8 +15,10 @@ import {
   subDays,
   subMonths,
 } from "date-fns";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useQueries, useQueryClient } from "@tanstack/react-query";
 import { getCalendarByMonth, getCalendarDetail } from "@/apis/calendar";
+import { calendarKeys } from "@/queries/calendar";
 import { CalendarItem } from "@/types/calendar";
 import { mixpanelTrack } from "@/utils/mixpanel";
 import CalendarEventBottomSheet from "@/components/modal/CalendarEventBottomsheet";
@@ -67,10 +69,10 @@ const ChevronRight = () => (
 
 export default function Calendar({ mode = "month", location }: CalendarProps) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const today = new Date();
 
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [events, setEvents] = useState<CalendarItem[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedEvents, setSelectedEvents] = useState<CalendarItem[]>([]);
   const [isCalendarSheetOpen, setIsCalendarSheetOpen] = useState(false);
@@ -104,8 +106,46 @@ export default function Calendar({ mode = "month", location }: CalendarProps) {
     return { dates, weeks };
   }, [currentDate, mode]);
 
-  const [eventsByWeek, setEventsByWeek] = useState<
-    {
+  const monthKeys = useMemo(() => {
+    const months = new Set<string>();
+    dates.forEach((date) => {
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1;
+      months.add(`${year}-${month}`);
+    });
+    return Array.from(months).map((ym) => {
+      const [year, month] = ym.split("-").map(Number);
+      return { year, month };
+    });
+  }, [dates]);
+
+  const monthQueries = useQueries({
+    queries: monthKeys.map(({ year, month }) => ({
+      queryKey: calendarKeys.month(year, month),
+      queryFn: async () => {
+        const res = await getCalendarByMonth(year, month);
+        return res.data;
+      },
+      staleTime: 1000 * 60 * 5,
+    })),
+  });
+
+  const events = useMemo(() => {
+    const eventMap = new Map<number, CalendarItem>();
+    monthQueries.forEach((q) => {
+      if (q.data) {
+        q.data.forEach((item) => {
+          if (!eventMap.has(item.id)) {
+            eventMap.set(item.id, item);
+          }
+        });
+      }
+    });
+    return Array.from(eventMap.values());
+  }, [monthQueries]);
+
+  const eventsByWeek = useMemo(() => {
+    const parsedEvents: {
       id: number;
       weekIndex: number;
       start: number;
@@ -114,40 +154,59 @@ export default function Calendar({ mode = "month", location }: CalendarProps) {
       row: number;
       color: string;
       isAiGenerated: boolean;
-    }[]
-  >([]);
+    }[] = [];
 
-  useEffect(() => {
-    const fetchEvents = async () => {
-      const months = new Set<string>();
+    weeks.forEach((week, weekIndex) => {
+      const weekStartDate = week[0];
+      const weekEndDate = week[6];
 
-      dates.forEach((date) => {
-        const year = date.getFullYear();
-        const month = date.getMonth() + 1;
-        months.add(`${year}-${month}`);
+      const eventsInWeek: {
+        id: number;
+        start: number;
+        end: number;
+        title: string;
+        color: string;
+        isAiGenerated: boolean;
+      }[] = [];
+
+      events.forEach((event) => {
+        const start = parseISO(event.startDate);
+        const end = parseISO(event.endDate);
+
+        const isEventInWeek =
+          (isBefore(start, addDays(weekEndDate, 1)) ||
+            isSameDay(start, weekEndDate)) &&
+          (isAfter(end, addDays(weekStartDate, -1)) ||
+            isSameDay(end, weekStartDate));
+
+        if (!isEventInWeek) return;
+
+        const visibleStart = isBefore(start, weekStartDate)
+          ? weekStartDate
+          : start;
+
+        const visibleEnd = isAfter(end, weekEndDate) ? weekEndDate : end;
+
+        const startIdx = week.findIndex((date) =>
+          isSameDay(date, visibleStart),
+        );
+
+        const endIdx = week.findIndex((date) => isSameDay(date, visibleEnd));
+
+        if (startIdx === -1 || endIdx === -1) return;
+
+        eventsInWeek.push({
+          id: event.id,
+          start: startIdx,
+          end: endIdx,
+          title: event.title,
+          color: getCalendarColor(event.id),
+          isAiGenerated: typeof event.sourceAnnouncementId === "number",
+        });
       });
 
-      const eventMap = new Map<number, CalendarItem>();
-
-      await Promise.all(
-        Array.from(months).map(async (ym) => {
-          const [year, month] = ym.split("-").map(Number);
-          const res = await getCalendarByMonth(year, month);
-
-          res.data.forEach((item) => {
-            if (!eventMap.has(item.id)) {
-              eventMap.set(item.id, item);
-            }
-          });
-        }),
-      );
-
-      const fetchedEvents = Array.from(eventMap.values());
-      setEvents(fetchedEvents);
-
-      const parsedEvents: {
+      const placedEvents: {
         id: number;
-        weekIndex: number;
         start: number;
         end: number;
         title: string;
@@ -156,104 +215,42 @@ export default function Calendar({ mode = "month", location }: CalendarProps) {
         isAiGenerated: boolean;
       }[] = [];
 
-      weeks.forEach((week, weekIndex) => {
-        const weekStartDate = week[0];
-        const weekEndDate = week[6];
+      eventsInWeek.forEach((currentEvent) => {
+        let row = 0;
 
-        const eventsInWeek: {
-          id: number;
-          start: number;
-          end: number;
-          title: string;
-          color: string;
-          isAiGenerated: boolean;
-        }[] = [];
+        while (
+          placedEvents.some(
+            (placed) =>
+              placed.row === row &&
+              currentEvent.start <= placed.end &&
+              currentEvent.end >= placed.start,
+          )
+        ) {
+          row += 1;
+        }
 
-        fetchedEvents.forEach((event) => {
-          const start = parseISO(event.startDate);
-          const end = parseISO(event.endDate);
-
-          const isEventInWeek =
-            (isBefore(start, addDays(weekEndDate, 1)) ||
-              isSameDay(start, weekEndDate)) &&
-            (isAfter(end, addDays(weekStartDate, -1)) ||
-              isSameDay(end, weekStartDate));
-
-          if (!isEventInWeek) return;
-
-          const visibleStart = isBefore(start, weekStartDate)
-            ? weekStartDate
-            : start;
-
-          const visibleEnd = isAfter(end, weekEndDate) ? weekEndDate : end;
-
-          const startIdx = week.findIndex((date) =>
-            isSameDay(date, visibleStart),
-          );
-
-          const endIdx = week.findIndex((date) => isSameDay(date, visibleEnd));
-
-          if (startIdx === -1 || endIdx === -1) return;
-
-          eventsInWeek.push({
-            id: event.id,
-            start: startIdx,
-            end: endIdx,
-            title: event.title,
-            color: getCalendarColor(event.id),
-            isAiGenerated: typeof event.sourceAnnouncementId === "number",
-          });
-        });
-
-        const placedEvents: {
-          id: number;
-          start: number;
-          end: number;
-          title: string;
-          row: number;
-          color: string;
-          isAiGenerated: boolean;
-        }[] = [];
-
-        eventsInWeek.forEach((currentEvent) => {
-          let row = 0;
-
-          while (
-            placedEvents.some(
-              (placed) =>
-                placed.row === row &&
-                currentEvent.start <= placed.end &&
-                currentEvent.end >= placed.start,
-            )
-          ) {
-            row += 1;
-          }
-
-          placedEvents.push({
-            ...currentEvent,
-            row,
-          });
-        });
-
-        placedEvents.forEach((event) => {
-          parsedEvents.push({
-            id: event.id,
-            weekIndex,
-            start: event.start,
-            end: event.end,
-            title: event.title,
-            row: event.row,
-            color: event.color,
-            isAiGenerated: event.isAiGenerated,
-          });
+        placedEvents.push({
+          ...currentEvent,
+          row,
         });
       });
 
-      setEventsByWeek(parsedEvents);
-    };
+      placedEvents.forEach((event) => {
+        parsedEvents.push({
+          id: event.id,
+          weekIndex,
+          start: event.start,
+          end: event.end,
+          title: event.title,
+          row: event.row,
+          color: event.color,
+          isAiGenerated: event.isAiGenerated,
+        });
+      });
+    });
 
-    fetchEvents();
-  }, [dates, weeks]);
+    return parsedEvents;
+  }, [events, weeks]);
 
   const maxRowsByWeek = weeks.map((_, weekIdx) => {
     const rows = eventsByWeek
@@ -286,15 +283,20 @@ export default function Calendar({ mode = "month", location }: CalendarProps) {
     if (clickedEvents.length === 0) return;
 
     try {
-      const detailResponses = await Promise.all(
-        clickedEvents.map((event) => getCalendarDetail(event.id)),
+      const detailedEvents = await Promise.all(
+        clickedEvents.map(async (event) => {
+          const detail = await queryClient.fetchQuery({
+            queryKey: calendarKeys.detail(event.id),
+            queryFn: async () => (await getCalendarDetail(event.id)).data,
+            staleTime: 1000 * 60 * 5,
+          });
+          return {
+            ...event,
+            ...detail,
+            description: detail.description ?? event.description,
+          };
+        }),
       );
-
-      const detailedEvents = detailResponses.map((res, index) => ({
-        ...clickedEvents[index],
-        ...res.data,
-        description: res.data.description ?? clickedEvents[index].description,
-      }));
 
       setSelectedEvents(detailedEvents);
     } catch (error) {

@@ -1,8 +1,11 @@
 import styled from "styled-components";
-import { useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import { tipKeys, useTipDetail } from "@/queries/tips";
+import { useInitFromQuery } from "@/hooks/useInitFromQuery";
+import { useEffect, useMemo, useState } from "react";
 import SquareButton from "../../components/common/SquareButton.tsx";
-import tokenInstance from "../../apis/tokenInstance.ts";
+import { createTip, updateTip } from "@/apis/tips";
 import FileUploader from "../../components/common/FileUploader.tsx";
 import { useFileHandler } from "@/hooks/useFileHandler";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
@@ -13,26 +16,58 @@ import RichTextEditor from "../../components/common/Editor/RichTextEditor.tsx";
 export default function TipWritePage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { tip, tipImages } = location.state || {};
+  const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
+  const queryId = searchParams.get("id");
+  const editId = queryId ? Number(queryId) : undefined;
 
-  const [tipid, setTipid] = useState("");
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [isEditMode, setIsEditMode] = useState(false);
+  const { tip: stateTip, tipImages: stateImages } = location.state || {};
+  const [tip, setTip] = useState<any>(stateTip ?? null);
+
+  const [tipid, setTipid] = useState(stateTip?.id || "");
+  const [title, setTitle] = useState(stateTip?.title || "");
+  const [content, setContent] = useState(stateTip?.content || "");
+  const [isEditMode, setIsEditMode] = useState(Boolean(stateTip));
 
   const [isLoading, setIsLoading] = useState(false);
-
-  // 이미지 상태 및 핸들러 커스텀 훅
-  const { files, addFiles, deleteFile, isFileLoading } = useFileHandler({
-    initialFiles: tipImages,
-  });
 
   // 초기 렌더링 시 스크롤 상단 이동
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  // 수정 모드 데이터 설정
+  const { data: detailData, isLoading: isDetailLoading } = useTipDetail(
+    !stateTip && editId ? editId : undefined,
+  );
+
+  const initialImages = useMemo(() => {
+    if (stateImages && stateImages.length > 0) return stateImages;
+    if (detailData?.images && detailData.images.length > 0) return detailData.images;
+    return [];
+  }, [stateImages, detailData?.images]);
+
+  // 이미지 상태 및 핸들러 커스텀 훅
+  const { files, addFiles, deleteFile, isFileLoading } = useFileHandler({
+    initialFiles: initialImages,
+    mode: "image",
+  });
+
+  useInitFromQuery(
+    detailData,
+    (fetched: any) => {
+      if (!stateTip && fetched) {
+        const item = fetched.tip || fetched;
+        setTip(item);
+        setTipid(item.id);
+        setTitle(item.title);
+        setContent(item.content);
+        setIsEditMode(true);
+      }
+    },
+    editId,
+  );
+
+  // 수정 모드 데이터 설정 (state로 넘어온 경우)
   useEffect(() => {
     if (tip) {
       setTipid(tip.id);
@@ -73,14 +108,12 @@ export default function TipWritePage() {
     try {
       setIsLoading(true);
       if (isEditMode) {
-        await tokenInstance.put(`/tips/${tipid}`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        await updateTip(Number(tipid), formData);
+        await queryClient.invalidateQueries({ queryKey: tipKeys.all });
         alert("팁이 수정되었습니다!");
       } else {
-        await tokenInstance.post("/tips", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        await createTip(formData);
+        await queryClient.invalidateQueries({ queryKey: tipKeys.all });
         mixpanelTrack.postCreated("꿀팁", "꿀팁작성페이지");
         alert("팁이 등록되었습니다!");
       }
@@ -99,7 +132,14 @@ export default function TipWritePage() {
 
   return (
     <Wrapper>
-      {isLoading && <LoadingSpinner message="글 쓰는 중..." overlay={true} />}
+      {(isLoading || isDetailLoading) && (
+        <LoadingSpinner
+          message={
+            isDetailLoading ? "꿀팁 불러오는 중..." : "글 쓰는 중..."
+          }
+          overlay={true}
+        />
+      )}
 
       <Content>
         <Label>제목</Label>

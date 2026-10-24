@@ -101,6 +101,7 @@ export const useAbTest = (
     initialDataUpdatedAt: cached?.cachedAt,
     staleTime: ONE_DAY_MS,
     gcTime: ONE_DAY_MS * 7,
+    meta: { sync: "none" }, // 실험 그룹은 화면 이동으로 바뀌지 않음
   });
 
   const rawGroup = data?.group ?? "OFF";

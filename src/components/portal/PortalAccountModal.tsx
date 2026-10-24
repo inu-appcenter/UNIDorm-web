@@ -40,7 +40,7 @@ export const PortalAccountModal: React.FC<Props> = ({
     }
 
     if (!isMobileAppEnvironment()) {
-      setErrorMessage("포털 계정 연동은 INTIP 모바일 앱 환경에서만 지원됩니다.");
+      setErrorMessage("포털 계정 연동은 유니돔 모바일 앱 환경에서만 지원됩니다.");
       return;
     }
 

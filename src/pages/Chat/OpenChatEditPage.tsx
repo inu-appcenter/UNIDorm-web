@@ -2,9 +2,11 @@ import { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import styled from "styled-components";
 import { isAxiosError } from "axios";
-import { getOpenChatRooms, updateOpenChatRoom } from "@/apis/openchat";
+import { updateOpenChatRoom } from "@/apis/openchat";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { useSetHeader } from "@/hooks/useSetHeader";
+import { useOpenChatRoomsInfinite } from "@/queries/chat";
+import { useInitFromQuery } from "@/hooks/useInitFromQuery";
 import {
   OpenChatRoom,
   OpenChatScope,
@@ -54,47 +56,21 @@ export default function OpenChatEditPage() {
       setIsLoading(false);
       return;
     }
-
-    let cancelled = false;
-
-    const fetchRoom = async () => {
-      setIsLoading(true);
-      try {
-        let page = 0;
-        let totalPages = 1;
-        let foundRoom: OpenChatRoom | undefined;
-
-        while (!foundRoom && page < totalPages) {
-          const response = await getOpenChatRooms("MY", page, 100);
-          foundRoom = response.data.content.find(
-            (candidate) => candidate.roomId === roomId,
-          );
-          totalPages = Math.max(response.data.totalPages ?? 0, 1);
-          page += 1;
-        }
-
-        if (!foundRoom) {
-          throw new Error("채팅방 정보를 찾을 수 없습니다.");
-        }
-
-        if (!cancelled) applyRoom(foundRoom);
-      } catch (error) {
-        console.error("채팅방 정보 조회 실패:", error);
-        if (!cancelled) {
-          alert("채팅방 정보를 불러오지 못했습니다.");
-          navigate(`/chat/open/${roomId}`, { replace: true });
-        }
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
-    };
-
-    void fetchRoom();
-
-    return () => {
-      cancelled = true;
-    };
   }, [applyRoom, navigate, roomId, routeState?.room]);
+
+  const { data: myRoomsData } = useOpenChatRoomsInfinite("MY", undefined, undefined, {
+    enabled: !routeState?.room,
+  });
+
+  useInitFromQuery(myRoomsData, (data) => {
+    if (routeState?.room?.roomId === roomId) return;
+    const allRooms = data.pages.flatMap((page) => page.content);
+    const foundRoom = allRooms.find((candidate) => candidate.roomId === roomId);
+    if (foundRoom) {
+      applyRoom(foundRoom);
+      setIsLoading(false);
+    }
+  }, roomId);
 
   const isValid = Boolean(name.trim()) && description.trim().length <= 100;
 

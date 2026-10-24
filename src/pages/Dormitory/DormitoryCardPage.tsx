@@ -10,7 +10,7 @@ import {
 } from "@/utils/ssvParser";
 import { secureStorage } from "@/utils/secureStorage";
 import { MobileDormitoryCard } from "@/components/portal/MobileDormitoryCard";
-import { MOBILE_PAGE_GUTTER } from "@/styles/intipResponsive";
+import { MOBILE_PAGE_GUTTER } from "@/styles/unidormResponsive";
 import { PATHS } from "@/constants/paths";
 import { ChevronRight, Building2, RotateCw } from "lucide-react";
 import PortalSyncOnboarding from "@/components/portal/PortalSyncOnboarding";

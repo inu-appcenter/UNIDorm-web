@@ -1,17 +1,16 @@
 import styled from "styled-components";
 import NotiItem from "../components/notification/NotiItem.tsx";
 import { useEffect, useRef, useState } from "react";
-import { getNotificationsScroll } from "@/apis/notification";
+import { useNotificationScroll } from "@/queries/notifications";
 import useUserStore from "../stores/useUserStore.ts";
 import { Link, useNavigate } from "react-router-dom";
 import {
   acceptRoommateMatching,
   rejectRoommateMatching,
 } from "@/apis/roommate";
-import axios from "axios";
+import { isAxiosError } from "axios";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import Modal from "@/components/modal/Modal";
-import { useInfiniteQuery } from "@tanstack/react-query";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { PATHS } from "@/constants/paths";
 
@@ -31,19 +30,7 @@ const NotificationPage = () => {
 
   // 알림 데이터 무한스크롤 조회
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, refetch, isLoading } =
-    useInfiniteQuery({
-      queryKey: ["notifications", "scroll"],
-      queryFn: ({ pageParam }) =>
-        getNotificationsScroll(pageParam as number | null, PAGE_SIZE),
-      initialPageParam: null as number | null,
-      getNextPageParam: (lastPage) => {
-        const lastItems = lastPage.data;
-        if (!lastItems || lastItems.length < PAGE_SIZE) return undefined;
-        return lastItems[lastItems.length - 1].id;
-      },
-      enabled: isLoggedIn,
-      staleTime: 1000 * 60,
-    });
+    useNotificationScroll(PAGE_SIZE, { enabled: isLoggedIn });
 
   // 데이터 평탄화 처리
   const notifications = data?.pages.flatMap((page) => page.data) || [];
@@ -111,7 +98,7 @@ const NotificationPage = () => {
 
   // 에러 처리 핸들러
   const handleError = (e: any) => {
-    if (axios.isAxiosError(e) && e.response?.status === 409) {
+    if (isAxiosError(e) && e.response?.status === 409) {
       alert("이미 처리된 매칭 요청입니다.");
       refetch();
       return;

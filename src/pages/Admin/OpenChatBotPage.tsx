@@ -2,24 +2,34 @@ import { useEffect, useState } from "react";
 import { Bot, CheckCircle2, Send } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { isAxiosError } from "axios";
-import { getAdminOpenChatRooms, sendOpenChatBotMessage } from "@/apis/openchat";
+import { sendOpenChatBotMessage } from "@/apis/openchat";
+import { useAdminOpenChatRooms } from "@/queries/admin";
+import { useInitFromQuery } from "@/hooks/useInitFromQuery";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import { useUserRole } from "@/hooks/useUserRole";
 import useUserStore from "@/stores/useUserStore";
-import type { AdminOpenChatRoom } from "@/types/openchat";
 import * as S from "./adminPageStyles";
 
 const OpenChatBotPage = () => {
   const navigate = useNavigate();
   const { isMainAdmin } = useUserRole();
   const { isLoading } = useUserStore();
-  const [rooms, setRooms] = useState<AdminOpenChatRoom[]>([]);
+  const {
+    data: rooms = [],
+    isLoading: isLoadingRooms,
+    isError: isRoomsError,
+  } = useAdminOpenChatRooms({ enabled: isMainAdmin });
   const [roomId, setRoomId] = useState<number | null>(null);
   const [content, setContent] = useState("");
-  const [isLoadingRooms, setIsLoadingRooms] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [sentMessage, setSentMessage] = useState("");
+
+  useInitFromQuery(rooms, (data) => {
+    if (data.length > 0) {
+      setRoomId(data[0].roomId);
+    }
+  });
 
   useSetHeader({ title: "챗봇" });
 
@@ -28,15 +38,10 @@ const OpenChatBotPage = () => {
   }, [isLoading, isMainAdmin, navigate]);
 
   useEffect(() => {
-    if (!isMainAdmin) return;
-    getAdminOpenChatRooms()
-      .then((response) => {
-        setRooms(response.data);
-        setRoomId(response.data[0]?.roomId ?? null);
-      })
-      .catch(() => setError("오픈채팅방 목록을 불러오지 못했습니다."))
-      .finally(() => setIsLoadingRooms(false));
-  }, [isMainAdmin]);
+    if (isRoomsError) {
+      setError("오픈채팅방 목록을 불러오지 못했습니다.");
+    }
+  }, [isRoomsError]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();

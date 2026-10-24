@@ -7,7 +7,9 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@unidorm/bridge": ["packages/unidorm-bridge/src/index.ts"],
+      "@unidorm/bridge/web": ["packages/unidorm-bridge/src/adapters/web.ts"]
     }
   }
 }

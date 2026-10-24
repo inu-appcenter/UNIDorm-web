@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import styled from "styled-components";
 import {
   CalendarDays,
@@ -11,9 +11,9 @@ import {
 import {
   createCalendar,
   deleteCalendar,
-  getAllCalendars,
   updateCalendar,
 } from "@/apis/calendar";
+import { useAllCalendars } from "@/queries/calendar";
 import AdminBottomSheet from "@/components/modal/AdminBottomSheet";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import {
@@ -70,30 +70,19 @@ const getCalendarStatus = (item: CalendarItem, today: string) => {
 };
 
 const CalendarAdminPage: React.FC = () => {
-  const [calendarList, setCalendarList] = useState<CalendarItem[]>([]);
+  const { data: rawCalendarList = [] } = useAllCalendars();
   const [selectedItem, setSelectedItem] = useState<CalendarItem | null>(null);
   const [formData, setFormData] = useState<CreateCalendarDto>(EMPTY_FORM);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const today = getLocalDateInputValue();
 
-  useEffect(() => {
-    void fetchCalendar();
-  }, []);
-
-  const fetchCalendar = async () => {
-    try {
-      const res = await getAllCalendars();
-      setCalendarList(
-        [...res.data].sort(
-          (a, b) =>
-            a.startDate.localeCompare(b.startDate) ||
-            a.endDate.localeCompare(b.endDate),
-        ),
-      );
-    } catch (err) {
-      console.error("캘린더 일정 조회 실패", err);
-    }
-  };
+  const calendarList = useMemo(() => {
+    return [...rawCalendarList].sort(
+      (a, b) =>
+        a.startDate.localeCompare(b.startDate) ||
+        a.endDate.localeCompare(b.endDate),
+    );
+  }, [rawCalendarList]);
 
   const summary = useMemo(() => {
     let active = 0;
@@ -165,7 +154,6 @@ const CalendarAdminPage: React.FC = () => {
       }
 
       closeEditor();
-      await fetchCalendar();
     } catch (err) {
       console.error("캘린더 일정 저장 실패", err);
       alert("일정을 저장하지 못했습니다. 잠시 뒤 다시 시도해 주세요.");
@@ -185,7 +173,6 @@ const CalendarAdminPage: React.FC = () => {
       await deleteCalendar(selectedItem.id);
       alert("일정을 삭제했습니다.");
       closeEditor();
-      await fetchCalendar();
     } catch (err) {
       console.error("캘린더 일정 삭제 실패", err);
       alert("일정을 삭제하지 못했습니다. 잠시 뒤 다시 시도해 주세요.");

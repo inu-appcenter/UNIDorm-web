@@ -31,11 +31,18 @@ export default function PhotoAttachmentBottomSheet({
   );
 
   const requestNativeCameraPermissionIfNeeded = () => {
+    const cameraWindow = window as Window & {
+      __unidormRequestCameraPermission?: () => void;
+      __intipRequestCameraPermission?: () => void;
+    };
     try {
       if ((window as any).AndroidBridge?.requestCameraPermission) {
         (window as any).AndroidBridge.requestCameraPermission();
-      } else if (typeof (window as any).__intipRequestCameraPermission === "function") {
-        (window as any).__intipRequestCameraPermission();
+      } else if (typeof cameraWindow.__unidormRequestCameraPermission === "function") {
+        cameraWindow.__unidormRequestCameraPermission();
+      } else if (typeof cameraWindow.__intipRequestCameraPermission === "function") {
+        // 이미 설치된 구버전 앱. 사용자 기기의 앱이 모두 새 버전으로 바뀐 뒤 지운다.
+        cameraWindow.__intipRequestCameraPermission();
       }
     } catch {}
   };

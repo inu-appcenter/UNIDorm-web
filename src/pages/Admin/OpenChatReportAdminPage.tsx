@@ -1,13 +1,13 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { Check, X } from "lucide-react";
 import {
   approveOpenChatReport,
   cancelOpenChatReport,
-  getOpenChatReports,
   OpenChatReport,
   OpenChatReportStatus,
 } from "@/apis/report";
+import { useOpenChatReports } from "@/queries/admin";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -36,12 +36,20 @@ export default function OpenChatReportAdminPage() {
   const { isMainAdmin } = useUserRole();
   const { isLoading: isUserLoading } = useUserStore();
   const [status, setStatus] = useState<OpenChatReportStatus>("PENDING");
-  const [reports, setReports] = useState<OpenChatReport[]>([]);
   const [page, setPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const [totalElements, setTotalElements] = useState(0);
-  const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<number | null>(null);
+
+  const {
+    data: reportsData,
+    isLoading: loading,
+    refetch: fetchReports,
+  } = useOpenChatReports(status, page, {
+    enabled: !isUserLoading && isMainAdmin,
+  });
+
+  const reports = reportsData?.content ?? [];
+  const totalPages = reportsData?.totalPages ?? 0;
+  const totalElements = reportsData?.totalElements ?? 0;
 
   useSetHeader({ title: "채팅 신고 관리" });
 
@@ -50,26 +58,6 @@ export default function OpenChatReportAdminPage() {
       navigate("/admin", { replace: true });
     }
   }, [isMainAdmin, isUserLoading, navigate]);
-
-  const fetchReports = useCallback(async () => {
-    if (isUserLoading || !isMainAdmin) return;
-    setLoading(true);
-    try {
-      const response = await getOpenChatReports(status, page);
-      setReports(response.data.content ?? []);
-      setTotalPages(response.data.totalPages ?? 0);
-      setTotalElements(response.data.totalElements ?? 0);
-    } catch (error) {
-      console.error("채팅 신고 목록 조회 실패:", error);
-      alert("채팅 신고 목록을 불러오지 못했습니다.");
-    } finally {
-      setLoading(false);
-    }
-  }, [isMainAdmin, isUserLoading, page, status]);
-
-  useEffect(() => {
-    void fetchReports();
-  }, [fetchReports]);
 
   const changeStatus = (nextStatus: OpenChatReportStatus) => {
     setStatus(nextStatus);

@@ -1,9 +1,11 @@
 import axios, { AxiosError } from "axios";
 import { refresh } from "@/apis/members";
+import { appBridge } from "@/utils/appBridgeAdapter";
 import { TokenInfo } from "@/types/members";
 import { appendDebugLog } from "@/utils/debugLog";
 import useNetworkStore from "../stores/useNetworkStore";
 import useUserStore from "../stores/useUserStore";
+import { trackServerWrites } from "@/utils/serverDataSync";
 
 const BASE_URL = `https://${import.meta.env.VITE_API_SUBDOMAIN}.inuappcenter.kr/`;
 
@@ -64,16 +66,121 @@ const redirectToLogoutOnce = () => {
 
   isLogoutRedirectPending = true;
   delete tokenInstance.defaults.headers.common["Authorization"];
-  window.location.href = "/logout";
+
+  if (window.location.pathname !== "/logout") {
+    window.location.href = "/logout";
+  }
+};
+
+// 서버는 재발급할 때마다 refreshToken을 교체(rotation)한다. 알림으로 앱이 콜드 스타트되면
+// 루트 웹뷰와 서브 웹뷰가 같은 refreshToken으로 동시에 재발급을 요청하고, 늦은 쪽은 이미
+// 폐기된 토큰을 보낸 셈이라 실패한다. 이때 먼저 성공한 웹뷰가 localStorage에 새 토큰을 쓸 때까지
+// 잠시 기다렸다가 그 토큰을 채택한다.
+const ROTATED_TOKEN_WAIT_MS = 3000;
+const ROTATED_TOKEN_POLL_MS = 100;
+
+const waitForRotatedTokenInfo = async (
+  usedRefreshToken: string,
+): Promise<TokenInfo | null> => {
+  const deadline = Date.now() + ROTATED_TOKEN_WAIT_MS;
+
+  for (;;) {
+    const refreshToken = localStorage.getItem("refreshToken") ?? "";
+    const accessToken = getStoredAccessToken();
+
+    if (refreshToken && accessToken && refreshToken !== usedRefreshToken) {
+      return {
+        accessToken,
+        refreshToken,
+        role: localStorage.getItem("role") ?? "",
+      };
+    }
+
+    if (Date.now() >= deadline) {
+      return null;
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, ROTATED_TOKEN_POLL_MS));
+  }
+};
+
+// 앱 웹뷰에서는 재발급을 네이티브에 맡긴다. 네이티브는 웹뷰가 몇 개든 같은
+// refreshToken으로 서버를 한 번만 호출하므로, 알림 진입처럼 웹뷰 여러 개가
+// 동시에 401을 받아도 재발급 경쟁이 생기지 않는다. 브라우저·구버전 앱이거나
+// 네이티브가 응답하지 못하면 직접 재발급한다.
+const requestNewTokenInfo = async (): Promise<{
+  tokenInfo: TokenInfo;
+  fromNative: boolean;
+}> => {
+  const refreshToken = localStorage.getItem("refreshToken") ?? "";
+
+  if (refreshToken && appBridge.supportsNativeTokenRefresh()) {
+    const result = await appBridge.requestTokenRefresh(refreshToken);
+
+    if (result?.status === "ok" && result.accessToken) {
+      return {
+        tokenInfo: {
+          accessToken: result.accessToken,
+          refreshToken: result.refreshToken || refreshToken,
+          role: result.role ?? "",
+        },
+        fromNative: true,
+      };
+    }
+
+    if (result?.status === "rejected") {
+      throw new Error("네이티브 토큰 재발급이 거절되었습니다.");
+    }
+
+    appendDebugLog({
+      category: "token-refresh",
+      action: "네이티브 재발급 실패로 직접 재발급",
+      details: { status: result?.status ?? "timeout" },
+    });
+  }
+
+  return { tokenInfo: await refresh(), fromNative: false };
 };
 
 const refreshAccessToken = async (): Promise<TokenInfo> => {
   if (!refreshPromise) {
     refreshPromise = (async () => {
-      const tokenInfo = await refresh();
+      const usedRefreshToken = localStorage.getItem("refreshToken") ?? "";
+
+      let tokenInfo: TokenInfo;
+      let fromNative: boolean;
+      try {
+        ({ tokenInfo, fromNative } = await requestNewTokenInfo());
+      } catch (refreshError) {
+        const rotatedTokenInfo = usedRefreshToken
+          ? await waitForRotatedTokenInfo(usedRefreshToken)
+          : null;
+
+        if (!rotatedTokenInfo) {
+          throw refreshError;
+        }
+
+        const mergedTokenInfo = mergeTokenInfo(rotatedTokenInfo);
+
+        // 다른 웹뷰가 이미 네이티브와 동기화한 토큰이므로 다시 보내지 않는다.
+        useUserStore
+          .getState()
+          .setTokenInfo(mergedTokenInfo, { fromNative: true });
+        tokenInstance.defaults.headers.common["Authorization"] =
+          `Bearer ${mergedTokenInfo.accessToken}`;
+
+        appendDebugLog({
+          category: "token-refresh",
+          action: "다른 웹뷰가 갱신한 토큰 채택",
+        });
+
+        return mergedTokenInfo;
+      }
+
       const mergedTokenInfo = mergeTokenInfo(tokenInfo);
 
-      useUserStore.getState().setTokenInfo(mergedTokenInfo);
+      // 네이티브가 재발급했다면 이미 저장·전파까지 마쳤으므로 되돌려 보내지 않는다.
+      useUserStore.getState().setTokenInfo(mergedTokenInfo, { fromNative });
       tokenInstance.defaults.headers.common["Authorization"] =
         `Bearer ${mergedTokenInfo.accessToken}`;
 
@@ -236,5 +343,8 @@ tokenInstance.interceptors.response.use(
     return Promise.reject(error);
   },
 );
+
+// 쓰기 성공 시 이 웹뷰·다른 웹뷰의 화면 데이터를 자동으로 다시 조회
+trackServerWrites(tokenInstance);
 
 export default tokenInstance;

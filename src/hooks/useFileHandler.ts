@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { urlToFile } from "@/utils/fileUtils";
 
 // 서버에서 받아오는 초기 파일 데이터 타입 (모드별 DTO 형태 반영)
@@ -24,6 +24,14 @@ interface UseFileHandlerProps {
   maxSizeMB?: number;
 }
 
+const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp"];
+
+export const isImageFile = (file: File): boolean => {
+  if (file.type && file.type.startsWith("image/")) return true;
+  const ext = file.name.split(".").pop()?.toLowerCase();
+  return ext ? IMAGE_EXTENSIONS.includes(ext) : false;
+};
+
 /**
  * 이미지 및 일반 파일을 관리하는 범용 커스텀 훅
  * @param mode - 'image' 또는 'file' 모드를 지정합니다. 기본값은 'image'입니다.
@@ -39,11 +47,15 @@ export const useFileHandler = ({
 }: UseFileHandlerProps = {}) => {
   const [files, setFiles] = useState<ManagedFile[]>([]);
   const [isFileLoading, setIsFileLoading] = useState(false);
+  const isInitializedRef = useRef(false);
+  const hasUserModifiedRef = useRef(false);
+  const filesRef = useRef<ManagedFile[]>([]);
+  filesRef.current = files;
 
   // 1. 컴포넌트 언마운트 시 메모리 정리
   useEffect(() => {
     return () => {
-      files.forEach((managedFile) => {
+      filesRef.current.forEach((managedFile) => {
         if (managedFile.preview) {
           URL.revokeObjectURL(managedFile.preview);
         }
@@ -51,22 +63,37 @@ export const useFileHandler = ({
     };
   }, []);
 
-  // 2. 수정 모드일 때 초기 데이터(URL)로부터 File 객체 생성 (DTO 분기 처리)
+  // 2. 수정 모드일 때 초기 데이터(URL)로부터 File 객체 생성 (1회만 안전하게 로드)
+  const initialFilesKey = (initialFiles || [])
+    .map((f) => f.imageUrl || f.filePath || "")
+    .filter(Boolean)
+    .join(",");
+
   useEffect(() => {
+    // 이미 사용자가 파일을 조작(추가/삭제)했거나 이미 초기화 완료되었으면 재로드하지 않음
+    if (hasUserModifiedRef.current || isInitializedRef.current) {
+      return;
+    }
+
+    if (!initialFiles || initialFiles.length === 0) {
+      return;
+    }
+
+    let isCancelled = false;
+
     const setInitialData = async () => {
-      if (initialFiles && initialFiles.length > 0) {
-        setIsFileLoading(true);
+      setIsFileLoading(true);
 
+      try {
         const filePromises = initialFiles.map((initialFile) => {
-          console.log("이미지 업로더 모드:", mode);
-          // mode에 따라 사용할 URL과 파일명을 결정
-          const url =
-            mode === "image" ? initialFile.imageUrl : initialFile.filePath;
+          const url = initialFile.imageUrl || initialFile.filePath;
           const name =
-            mode === "image" ? initialFile.imageName : initialFile.fileName;
+            initialFile.imageName ||
+            initialFile.fileName ||
+            url?.split("/").pop() ||
+            "file";
 
-          // 필수값이 없으면 해당 파일은 건너뜀
-          if (!url || !name) {
+          if (!url) {
             console.warn(
               "Initial file data is missing required properties:",
               initialFile,
@@ -78,29 +105,43 @@ export const useFileHandler = ({
             url,
             name,
             initialFile.contentType ? initialFile.contentType : "",
-          );
+          ).catch((err) => {
+            console.error("파일 로드 실패:", url, err);
+            return null;
+          });
         });
 
-        // null이 아닌 결과만 필터링
         const loadedFiles = (await Promise.all(filePromises)).filter(
           Boolean,
         ) as File[];
 
+        if (isCancelled || hasUserModifiedRef.current) return;
+
         const initialManagedFiles: ManagedFile[] = loadedFiles.map((file) => ({
-          file: file,
-          ...(mode === "image" && { preview: URL.createObjectURL(file) }),
+          file,
+          ...(isImageFile(file) && { preview: URL.createObjectURL(file) }),
         }));
 
         setFiles(initialManagedFiles);
-        setIsFileLoading(false);
+        isInitializedRef.current = true;
+      } finally {
+        if (!isCancelled) {
+          setIsFileLoading(false);
+        }
       }
     };
-    setInitialData();
-  }, [initialFiles, mode]);
 
-  // 3. 파일 추가 로직 (이전과 동일)
+    setInitialData();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [initialFilesKey]);
+
+  // 3. 파일 추가 로직
   const addFiles = useCallback(
     (newFiles: FileList) => {
+      hasUserModifiedRef.current = true;
       const filesArray = Array.from(newFiles);
       const maxSizeInBytes = maxSizeMB * 1024 * 1024;
 
@@ -110,9 +151,7 @@ export const useFileHandler = ({
       }
 
       if (mode === "image") {
-        const nonImageFiles = filesArray.filter(
-          (file) => !file.type.startsWith("image/"),
-        );
+        const nonImageFiles = filesArray.filter((file) => !isImageFile(file));
         if (nonImageFiles.length > 0) {
           alert("이미지 파일만 업로드할 수 있습니다.");
           return;
@@ -137,8 +176,8 @@ export const useFileHandler = ({
       );
 
       const newManagedFiles: ManagedFile[] = uniqueNewFiles.map((file) => ({
-        file: file,
-        ...(mode === "image" && { preview: URL.createObjectURL(file) }),
+        file,
+        ...(isImageFile(file) && { preview: URL.createObjectURL(file) }),
       }));
 
       setFiles((prev) => [...prev, ...newManagedFiles]);
@@ -146,9 +185,10 @@ export const useFileHandler = ({
     [files, maxCount, maxSizeMB, mode],
   );
 
-  // 4. 파일 삭제 로직 (이전과 동일)
+  // 4. 파일 삭제 로직
   const deleteFile = useCallback(
     (indexToDelete: number) => {
+      hasUserModifiedRef.current = true;
       const fileToDelete = files[indexToDelete];
       if (fileToDelete?.preview) {
         URL.revokeObjectURL(fileToDelete.preview);

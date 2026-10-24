@@ -5,11 +5,10 @@ import { useEffect, useMemo } from "react";
 import { RoommatePost } from "@/types/roommates"; // 타입 임포트
 import { useLocation, useNavigate } from "react-router-dom";
 import FilterButton from "../../components/button/FilterButton.tsx";
-import { getRoomMateScrollList } from "@/apis/roommate";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import { useInView } from "react-intersection-observer";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useRoommateScroll } from "@/queries/roommates";
 import { useRoommateMatchingStatus } from "@/hooks/useRoommateMatchingStatus";
 import { formatSemesterName } from "@/utils/semester";
 
@@ -85,19 +84,7 @@ export default function RoomMateListPage() {
     isFetchingNextPage,
     isLoading,
     isError,
-  } = useInfiniteQuery({
-    queryKey: ["roommates", "scroll"],
-    // queryFn 결과값이 RoommatePost[] 배열임
-    queryFn: ({ pageParam }) => getRoomMateScrollList(pageParam, 10),
-    initialPageParam: undefined as number | undefined,
-    getNextPageParam: (lastPage) => {
-      // lastPage가 배열이므로 length 접근 가능
-      if (lastPage.length < 10) return undefined;
-      // 마지막 요소의 boardId 추출
-      return lastPage[lastPage.length - 1].boardId;
-    },
-    staleTime: 1000 * 60 * 5,
-  });
+  } = useRoommateScroll(10);
 
   useEffect(() => {
     if (inView && hasNextPage && !isFetchingNextPage) {

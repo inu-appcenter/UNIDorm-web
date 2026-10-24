@@ -8,6 +8,7 @@ import ChatItemBot from "@/components/chat/ChatItemBot";
 import { useRoommateChat } from "./useRoommateChat.ts";
 import { useOpenChat } from "./useOpenChat";
 import useUserStore from "../../stores/useUserStore.ts";
+// eslint-disable-next-line no-restricted-imports -- 웹소켓 동기화 및 메시지 히스토리 가상화 로직 유지
 import {
   getRoommateChatHistory,
   getRoommateChatRoom,
@@ -18,6 +19,7 @@ import {
 } from "@/apis/chat";
 import { patchNotificationsRead } from "@/apis/notification";
 import { appBridge } from "@/utils/appBridgeAdapter";
+// eslint-disable-next-line @typescript-eslint/no-restricted-imports -- 웹소켓 동기화 및 메시지 히스토리 가상화 로직 유지
 import {
   getOpenChatMessages,
   getOpenChatRooms,
@@ -27,8 +29,6 @@ import {
   deleteOpenChatMessage,
   updateOpenChatMessage,
   updateOpenChatRecruitmentStatus,
-} from "@/apis/openchat";
-import {
   getOpenChatParticipants,
   kickOpenChatParticipant,
   sendOpenChatImages,

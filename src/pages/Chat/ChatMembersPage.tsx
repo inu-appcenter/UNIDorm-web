@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import styled from "styled-components";
 import { Ban, ChevronRight, User } from "lucide-react";
@@ -6,7 +6,6 @@ import { Drawer } from "vaul";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import useUserStore from "@/stores/useUserStore";
 import { deleteRoommateChatRoom } from "@/apis/roommate";
-import { getRoommateChatRooms } from "@/apis/chat";
 import {
   createPersonalOpenChatRoom,
   getOpenChatParticipants,
@@ -18,7 +17,8 @@ import {
 } from "@/apis/openchat";
 import { OpenChatParticipant, OpenChatRoom } from "@/types/openchat";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
-import { blockUser, getBlockedUsers } from "@/apis/block";
+import { blockUser } from "@/apis/block";
+import { useBlockedUsers, useOpenChatParticipants, useRoommateChatRooms } from "@/queries/chat";
 import { requestStudentIdDisclosure } from "@/apis/studentIdDisclosure";
 import { isAxiosError } from "axios";
 import RecruitmentReopenModal from "@/components/modal/RecruitmentReopenModal";
@@ -51,9 +51,7 @@ export default function ChatMembersPage() {
           }
         : null,
     );
-  const [loading, setLoading] = useState(
-    isOpenChatRoom || chatType === "roommate",
-  );
+
   const [activeSheet, setActiveSheet] = useState<Sheet>(null);
   const [selectedUser, setSelectedUser] = useState<OpenChatParticipant | null>(
     null,
@@ -134,57 +132,48 @@ export default function ChatMembersPage() {
     }
   };
 
-  const fetchParticipants = useCallback(async () => {
-    if (!isOpenChatRoom && chatType !== "roommate") return;
-    setLoading(true);
-    try {
-      if (chatType === "roommate") {
-        const response = await getRoommateChatRooms();
-        const currentRoom = response.data.find(
-          (room) => room.chatRoomId === roomId,
-        );
+  const { data: openChatParticipantsData, isLoading: isOpenChatLoading } =
+    useOpenChatParticipants(isOpenChatRoom ? roomId : undefined);
+  const { data: roommateRoomsData, isLoading: isRoommateLoading } =
+    useRoommateChatRooms({
+      enabled: chatType === "roommate",
+    });
+  const { data: blockedUsersData } = useBlockedUsers();
+  const loading = chatType === "roommate" ? isRoommateLoading : isOpenChatLoading;
 
-        if (currentRoom) {
-          setDirectChatPartner({
-            userId: currentRoom.partnerId,
-            nickname:
-              currentRoom.partnerName ||
-              currentRoom.opponentNickname ||
-              partnerName,
-            joinedAt: "",
-            isHost: false,
-            isAdmin: false,
-          });
-        }
-      } else {
-        const response = await getOpenChatParticipants(roomId);
-        setParticipants(response.data.participants);
-      }
-    } catch (error) {
-      console.error("참여자 목록 조회 실패:", error);
-      if (chatType !== "roommate" || !routePartnerId) {
-        alert("참여자 목록을 불러오지 못했습니다.");
-      }
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (openChatParticipantsData) {
+      setParticipants(openChatParticipantsData.participants);
     }
-  }, [chatType, isOpenChatRoom, partnerName, routePartnerId, roomId]);
+  }, [openChatParticipantsData]);
 
   useEffect(() => {
-    fetchParticipants();
-  }, [fetchParticipants]);
+    if (roommateRoomsData && chatType === "roommate") {
+      const currentRoom = roommateRoomsData.find(
+        (room) => room.chatRoomId === roomId,
+      );
+      if (currentRoom) {
+        setDirectChatPartner({
+          userId: currentRoom.partnerId,
+          nickname:
+            currentRoom.partnerName ||
+            currentRoom.opponentNickname ||
+            partnerName,
+          joinedAt: "",
+          isHost: false,
+          isAdmin: false,
+        });
+      }
+    }
+  }, [roommateRoomsData, chatType, roomId, partnerName]);
 
   useEffect(() => {
-    getBlockedUsers()
-      .then((response) => {
-        setBlockedUserIds(
-          new Set(response.data.map((user) => user.blockedUserId)),
-        );
-      })
-      .catch((error) => {
-        console.error("차단 목록 조회 실패:", error);
-      });
-  }, []);
+    if (blockedUsersData) {
+      setBlockedUserIds(
+        new Set(blockedUsersData.map((user) => user.blockedUserId)),
+      );
+    }
+  }, [blockedUsersData]);
 
   const me = useMemo(
     () =>
@@ -418,7 +407,6 @@ export default function ChatMembersPage() {
     try {
       await transferOpenChatHost(roomId, selectedUser.userId);
       setActiveSheet(null);
-      await fetchParticipants();
     } catch (error) {
       console.error("방장 위임 실패:", error);
       alert("방장 위임에 실패했습니다.");
@@ -441,7 +429,6 @@ export default function ChatMembersPage() {
       await kickOpenChatParticipant(roomId, selectedUser.userId, "OTHER");
       setActiveSheet(null);
       setSelectedUser(null);
-      await fetchParticipants();
       alert("참여자를 강퇴했습니다.");
     } catch (error) {
       console.error("참여자 강퇴 실패:", error);

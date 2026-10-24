@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import styled from "styled-components";
-import { getMyRoommateInfo } from "@/apis/roommate";
+import { useMyRoommateInfo } from "@/queries/roommates";
 import TitleContentArea from "../components/common/TitleContentArea.tsx";
 import BottomBar from "../components/common/BottomBar/BottomBar.tsx";
 import MenuGroup from "../components/mypage/MenuGroup.tsx";
@@ -12,7 +12,6 @@ import { PATHS } from "@/constants/paths";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import useUserStore from "../stores/useUserStore.ts";
 import { createMyPageMenuGroups } from "@/stores/menuGroupsFactory";
-import { MyRoommateInfoResponse } from "@/types/roommates";
 import { mixpanelTrack } from "@/utils/mixpanel";
 
 const overlayText = "로그인 후 사용 가능해요.";
@@ -21,9 +20,11 @@ const MyPage = () => {
   const { tokenInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo?.accessToken ?? "");
   const navigate = useNavigate();
-  const [roommateInfo, setRoommateInfo] =
-    useState<MyRoommateInfoResponse | null>(null);
-  const [notFound, setNotFound] = useState(false);
+  const { data: roommateInfo = null, isSuccess } = useMyRoommateInfo({
+    enabled: isLoggedIn,
+  });
+  const notFound = Boolean(isLoggedIn && isSuccess && !roommateInfo);
+  const hasTrackedRoommate = useRef(false);
 
   const menuGroups = createMyPageMenuGroups(isLoggedIn, navigate);
 
@@ -33,23 +34,16 @@ const MyPage = () => {
   }, [isLoggedIn]);
 
   useEffect(() => {
-    const fetchRoommateInfo = async () => {
-      if (!isLoggedIn) return;
-
-      try {
-        const res = await getMyRoommateInfo();
-        setRoommateInfo(res.data);
-        mixpanelTrack.myRoommateInfoLoaded(); // 룸메이트 정보 조회
-      } catch (err: any) {
-        if (err.response?.status === 404) {
-          setNotFound(true);
-          mixpanelTrack.myRoommateInfoNotFound(); // 룸메이트 정보 없을 때
-        }
+    if (!isLoggedIn || hasTrackedRoommate.current) return;
+    if (isSuccess) {
+      hasTrackedRoommate.current = true;
+      if (roommateInfo) {
+        mixpanelTrack.myRoommateInfoLoaded();
+      } else {
+        mixpanelTrack.myRoommateInfoNotFound();
       }
-    };
-
-    fetchRoommateInfo();
-  }, [isLoggedIn]);
+    }
+  }, [isLoggedIn, isSuccess, roommateInfo]);
 
   const isProtected = !isLoggedIn;
 
@@ -183,7 +177,7 @@ const MyPageWrapper = styled.div`
   box-sizing: border-box;
   width: 100%;
   flex: 1;
-  overflow-y: auto;
+  overflow-y: auto;
 
   @media (min-width: 1024px) {
     max-width: 1200px;

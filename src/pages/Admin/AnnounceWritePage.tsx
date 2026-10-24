@@ -1,7 +1,10 @@
 import styled from "styled-components";
-import { useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
+import { announcementKeys, useAnnouncementDetail } from "@/queries/announcements";
+import { useInitFromQuery } from "@/hooks/useInitFromQuery";
+import type { AnnouncementDetail } from "@/types/announcements";
+import { useEffect, useMemo, useState } from "react";
 import SquareButton from "../../components/common/SquareButton.tsx";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import FileUploader from "../../components/common/FileUploader.tsx";
@@ -9,7 +12,6 @@ import FormField from "../../components/complain/FormField.tsx";
 import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
 import {
   createAnnouncement,
-  updateAnnouncement,
   updateAnnouncementWithFiles,
 } from "@/apis/announcements";
 import { useFileHandler } from "@/hooks/useFileHandler";
@@ -25,24 +27,29 @@ import { RequestAnnouncementDto } from "@/types/announcements";
 
 export default function AnnounceWritePage() {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const location = useLocation();
-  const { announce, announceFiles } = location.state || {};
+  const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
+  const queryId = searchParams.get("id");
+  const editId = queryId ? Number(queryId) : undefined;
+
+  const { announce: stateAnnounce, announceFiles: stateFiles } = location.state || {};
+  const [announce, setAnnounce] = useState<AnnouncementDetail | null>(stateAnnounce ?? null);
 
   const announceCategoryOptions = ANNOUNCE_CATEGORY_LIST.slice(1);
   const announceSubCategoryOptions = ANNOUNCE_SUB_CATEGORY_LIST.slice(1);
   const { isDormAdmin, isSupporters } = useUserRole();
 
-  const [title, setTitle] = useState(announce?.title || "");
-  const [content, setContent] = useState(announce?.content || "");
-  const [isEmergency, setIsEmergency] = useState(announce?.emergency ?? false);
+  const [title, setTitle] = useState(stateAnnounce?.title || "");
+  const [content, setContent] = useState(stateAnnounce?.content || "");
+  const [isEmergency, setIsEmergency] = useState(stateAnnounce?.emergency ?? false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const writerIndex = announce
+  const writerIndex = stateAnnounce
     ? announceCategoryOptions.findIndex(
         (item) =>
-          item.value === announce.announcementType ||
-          item.label.ko === announce.announcementType,
+          item.value === stateAnnounce.announcementType ||
+          item.label.ko === stateAnnounce.announcementType,
       )
     : -1;
 
@@ -56,10 +63,40 @@ export default function AnnounceWritePage() {
     setSelectedAnnounceSubCategoryIndex,
   ] = useState<number>(0);
 
+  const { data: detailData, isLoading: isDetailLoading } = useAnnouncementDetail(
+    !stateAnnounce && editId ? editId : undefined,
+  );
+
+  const initialFiles = useMemo(() => {
+    if (stateFiles && stateFiles.length > 0) return stateFiles;
+    if (detailData?.images && detailData.images.length > 0) return detailData.images;
+    if (detailData?.attachments && detailData.attachments.length > 0) return detailData.attachments;
+    return [];
+  }, [stateFiles, detailData?.images, detailData?.attachments]);
+
   const { files, addFiles, deleteFile, isFileLoading } = useFileHandler({
-    initialFiles: announceFiles,
+    initialFiles,
     mode: "file",
   });
+
+  useInitFromQuery(
+    detailData,
+    (fetched) => {
+      if (!stateAnnounce && fetched?.announce) {
+        setAnnounce(fetched.announce);
+        setTitle(fetched.announce.title);
+        setContent(fetched.announce.content);
+        setIsEmergency(fetched.announce.emergency ?? false);
+        const wIdx = announceCategoryOptions.findIndex(
+          (item) =>
+            item.value === fetched.announce.announcementType ||
+            (item.label.ko as string) === fetched.announce.announcementType,
+        );
+        if (wIdx !== -1) setSelectedAnnounceCategoryIndex(wIdx);
+      }
+    },
+    editId,
+  );
 
   const selectedAnnounceCategory =
     announceCategoryOptions[selectedAnnounceCategoryIndex];
@@ -91,20 +128,15 @@ export default function AnnounceWritePage() {
       setIsLoading(true);
 
       if (announce) {
-        if (files.length > 0) {
-          await updateAnnouncementWithFiles(announce.id, data, files);
-        } else {
-          await updateAnnouncement(announce.id, data);
-        }
+        // 기존 파일이 있었거나 변경/삭제된 경우 항상 with-files로 동기화
+        await updateAnnouncementWithFiles(announce.id, data, files);
+        await queryClient.invalidateQueries({ queryKey: announcementKeys.all });
         alert("공지사항이 성공적으로 수정되었습니다.");
       } else {
         await createAnnouncement(data, files);
+        await queryClient.invalidateQueries({ queryKey: announcementKeys.all });
         alert("공지사항이 성공적으로 등록되었습니다.");
       }
-
-      await queryClient.invalidateQueries({
-        queryKey: ["announcements", "scroll"],
-      });
 
       navigate(-1);
     } catch (error) {
@@ -119,7 +151,16 @@ export default function AnnounceWritePage() {
 
   return (
     <Wrapper>
-      {isLoading && <LoadingSpinner overlay message="글 올리는 중..." />}
+      {(isLoading || isDetailLoading) && (
+        <LoadingSpinner
+          overlay
+          message={
+            isDetailLoading
+              ? "공지사항 불러오는 중..."
+              : "글 올리는 중..."
+          }
+        />
+      )}
 
       <Content>
         <FormField

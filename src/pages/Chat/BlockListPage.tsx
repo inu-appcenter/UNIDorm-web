@@ -1,30 +1,19 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import styled from "styled-components";
 import { User } from "lucide-react";
 import { useSetHeader } from "@/hooks/useSetHeader";
-import { getBlockedUsers, unblockUser, BlockedUser } from "@/apis/block";
+import { unblockUser, BlockedUser } from "@/apis/block";
+import { useBlockedUsers } from "@/queries/chat";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { motion } from "framer-motion";
 
 export default function BlockListPage() {
+  const { data: serverBlockedUsers = [], isLoading } = useBlockedUsers();
   const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const fetchBlockedUsers = async () => {
-    setIsLoading(true);
-    try {
-      const res = await getBlockedUsers();
-      setBlockedUsers(res.data);
-    } catch (err) {
-      console.error("차단 목록 조회 실패", err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   useEffect(() => {
-    fetchBlockedUsers();
-  }, []);
+    setBlockedUsers(serverBlockedUsers);
+  }, [serverBlockedUsers]);
 
   const handleUnblock = async (blockedUserId: number) => {
     try {

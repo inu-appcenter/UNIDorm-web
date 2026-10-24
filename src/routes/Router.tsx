@@ -409,6 +409,26 @@ if (typeof window !== "undefined") {
     const isSamePath = window.location.pathname === path;
     const isCurrentInMainTab = isMainTabPath(window.location.pathname);
 
+    // 개발 모드 안전장치: state에 데이터가 전달되었으나 URL 쿼리 파라미터가 없는 경우 경고 안내
+    // 앱 멀티 웹뷰 환경에서는 새 웹뷰가 뜰 때 location.state가 유실되므로 식별자는 URL 쿼리 파라미터를 권장
+    if (import.meta.env.DEV && opts?.state && typeof opts.state === 'object') {
+      const stateKeys = Object.keys(opts.state).filter(
+        (key) => key !== 'isTabNavigation' && key !== 'usr' && key !== 'key'
+      );
+      const fullPath =
+        typeof to === 'string'
+          ? to
+          : `${to.pathname || ''}${to.search || ''}${to.hash || ''}`;
+      const hasQuery = fullPath.includes('?');
+
+      if (stateKeys.length > 0 && !hasQuery && !isMainTabPath(path)) {
+        console.warn(
+          `[Router Navigation Warning] 경로 "${path}" 이동 시 state(${stateKeys.join(', ')})가 전달되었지만 URL 쿼리 파라미터가 없습니다.\n` +
+            `앱 멀티 웹뷰 환경에서는 새 웹뷰가 열릴 때 location.state가 유실될 수 있으므로 식별자(ID 등)는 '?id=...'와 같이 쿼리 파라미터로 함께 전달해주세요.`
+        );
+      }
+    }
+
     // 2. 메인 탭 경로 이동:
     // - 서브 웹뷰(pushed webview)에서 메인 탭으로 복귀하는 경우 네이티브 스택 닫기 신호(goHome)를 발송하고,
     // - 루트 웹뷰(로그인, 온보딩 등에서 /home 이동)에서도 SPA 이동이 정상 진행되도록 originalNavigate를 항상 함께 실행
