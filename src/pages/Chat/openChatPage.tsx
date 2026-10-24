@@ -26,6 +26,7 @@ import useUserStore from "@/stores/useUserStore";
 import { useChatListStore } from "@/stores/useChatListStore";
 import { Search, Plus, MapPin, User } from "lucide-react";
 import { formatChatMessagePreview } from "@/utils/chatMessagePreview";
+import { usePageFocus } from "@/hooks/usePageFocus";
 import { isOpenChatRoomClosed } from "@/utils/openChat";
 
 const formatTime = (isoString: string) => {
@@ -342,6 +343,12 @@ export default function OpenChatPage() {
   useEffect(() => {
     void fetchChatRooms();
   }, [currentDormType, fetchChatRooms]);
+
+  // 채팅방 생성·수정·나가기(별도 웹뷰) 후 돌아오면 재조회. 첫 페이지만 보고 있을
+  // 때만 — 재조회는 0페이지부터 다시 받으므로 스크롤해 둔 목록이 잘린다.
+  usePageFocus(() => {
+    if (pageRef.current === 0) void fetchChatRooms({ silent: true });
+  });
 
   useEffect(() => {
     if (!isLoggedIn || selectedTab !== "MY") return;

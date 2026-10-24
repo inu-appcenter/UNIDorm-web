@@ -2,7 +2,7 @@ import styled from "styled-components";
 import StepFlow from "../../components/complain/StepFlow.tsx";
 import ComplainCard from "../../components/complain/ComplainCard.tsx";
 import ComplainAnswerCard from "../../components/complain/ComplainAnswerCard.tsx";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { deleteComplaint, getComplaintDetail } from "@/apis/complain";
 import { ComplaintDetail } from "@/types/complain";
@@ -18,6 +18,7 @@ import EmptyMessage from "../../constants/EmptyMessage.tsx";
 import { useUserRole } from "@/hooks/useUserRole";
 import { TipImage } from "@/types/tips";
 import { useSetHeader } from "@/hooks/useSetHeader";
+import { usePageFocus } from "@/hooks/usePageFocus";
 import { PATHS } from "@/constants/paths";
 import { mixpanelTrack } from "@/utils/mixpanel";
 
@@ -34,11 +35,12 @@ const ComplainDetailPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
 
-  useEffect(() => {
-    const fetchComplaint = async () => {
+  // silent: 화면 복귀 시 재조회 — 스피너·조회 추적 없이 데이터만 교체
+  const fetchComplaint = useCallback(
+    async ({ silent = false }: { silent?: boolean } = {}) => {
       if (!complainId) return;
 
-      setIsLoading(true);
+      if (!silent) setIsLoading(true);
       try {
         let response;
         if (isAdmin) {
@@ -61,17 +63,25 @@ const ComplainDetailPage = () => {
         console.log(response);
         setComplaint(response.data);
         // 민원 상세 조회 추적
-        mixpanelTrack.postViewed("민원", response.data.id, response.data.title);
+        if (!silent) {
+          mixpanelTrack.postViewed("민원", response.data.id, response.data.title);
+        }
       } catch (error) {
         console.error("민원 상세 불러오기 실패:", error);
-        setComplaint(null);
+        if (!silent) setComplaint(null); // 조용한 재조회 실패 시 기존 화면 유지
       } finally {
-        setIsLoading(false);
+        if (!silent) setIsLoading(false);
       }
-    };
+    },
+    [complainId, isAdmin],
+  );
 
+  useEffect(() => {
     fetchComplaint();
-  }, [complainId, isNeedUpdate]);
+  }, [fetchComplaint, isNeedUpdate]);
+
+  // 수정·답변 작성(별도 웹뷰) 후 돌아오면 재조회
+  usePageFocus(() => fetchComplaint({ silent: true }));
 
   const handleStatus = async (status: string) => {
     try {
@@ -295,7 +305,8 @@ const ComplainListPageWrapper = styled.div`
   gap: 16px;
   box-sizing: border-box;
 
-  overflow-y: auto;
+  overflow-y: auto;
+
 `;
 
 const ComplainCardsContainer = styled.div`

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import styled from "styled-components";
 import GroupPurchaseList from "../../components/GroupPurchase/GroupPurchaseList";
 import { useNavigate } from "react-router-dom";
@@ -24,6 +24,7 @@ import {
 } from "@/styles/common";
 import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
+import { usePageFocus } from "@/hooks/usePageFocus";
 
 /**
  * 로컬 스토리지에 저장될 알림 상태
@@ -139,8 +140,16 @@ export default function GroupPurchaseMainPage() {
     setSelectedCategory(category);
   };
 
-  const fetchGroupOrders = async (searchTerm?: string) => {
-    setLoading(true);
+  // 마지막 검색어 — 화면 복귀 재조회가 검색 결과를 전체 목록으로 바꾸지 않도록
+  const lastSearchTermRef = useRef<string | undefined>(undefined);
+
+  // silent: 화면 복귀 시 재조회 — 로딩 스피너 없이 데이터만 교체
+  const fetchGroupOrders = async (
+    searchTerm?: string,
+    { silent = false }: { silent?: boolean } = {},
+  ) => {
+    lastSearchTermRef.current = searchTerm;
+    if (!silent) setLoading(true);
     try {
       const params: GetGroupPurchaseListParams = {
         sort: SORT_OPTIONS[selectedSortOptionIndex],
@@ -152,11 +161,16 @@ export default function GroupPurchaseMainPage() {
       setGroupOrders(data);
     } catch (error) {
       console.error("게시글 목록 불러오기 실패:", error);
-      setGroupOrders([]); // 에러 발생 시 목록을 비웁니다.
+      if (!silent) setGroupOrders([]); // 에러 발생 시 목록을 비웁니다.
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
+
+  // 글 작성·수정·삭제(별도 웹뷰) 후 돌아오면 재조회
+  usePageFocus(() =>
+    fetchGroupOrders(lastSearchTermRef.current, { silent: true }),
+  );
 
   // 최근 검색어 불러오기
   useEffect(() => {

@@ -208,6 +208,28 @@ export const appBridge = {
     return getChannel()?.on("tokenInfoUpdated", callback) ?? (() => {});
   },
 
+  /**
+   * 이 웹뷰가 다시 화면 맨 위로 올라왔을 때(위의 서브 웹뷰가 닫힘) 호출됩니다.
+   * 스택 아래 웹뷰는 브라우저 focus/visibilitychange를 받지 못하므로 이 신호로
+   * 다른 웹뷰에서 바뀐 데이터를 다시 조회합니다.
+   */
+  onPageFocus(callback: () => void): () => void {
+    return getChannel()?.on("pageFocus", callback) ?? (() => {});
+  },
+
+  /** 다른 모든 웹뷰로 상태 동기화 메시지를 중계 요청합니다 (발신 웹뷰 제외). */
+  relayBroadcastSync(channelName: string, payload: unknown): void {
+    if (!getChannel()) return;
+    postBridgeMessage("relayBroadcastSync", { channel: channelName, payload });
+  },
+
+  /** 네이티브가 중계한 다른 웹뷰의 상태 동기화 메시지 리스너 등록 */
+  onBroadcastSyncMessage(
+    callback: (message: { channel: string; payload: unknown }) => void,
+  ): () => void {
+    return getChannel()?.on("broadcastSyncMessage", callback) ?? (() => {});
+  },
+
   /** 공식 앱 여부 확인 */
   isApp(): boolean {
     return isOfficialApp();

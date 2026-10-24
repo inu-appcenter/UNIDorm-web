@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { GroupOrderChatRoom, RoommateChatRoom } from "@/types/chats";
@@ -11,6 +11,7 @@ import ChatListItem from "../../components/chat/ChatListItem.tsx";
 import useUserStore from "../../stores/useUserStore.ts";
 import BottomBar from "../../components/common/BottomBar/BottomBar.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
+import { usePageFocus } from "@/hooks/usePageFocus";
 import { motion, AnimatePresence } from "framer-motion";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { formatChatMessagePreview } from "@/utils/chatMessagePreview";
@@ -30,30 +31,45 @@ export default function ChatListPage() {
   >([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    if (!isLoggedIn) return;
+  // silent: 화면 복귀 시 재조회 — 로딩 스피너 없이 데이터만 교체
+  const fetchChatRooms = useCallback(
+    ({ silent = false }: { silent?: boolean } = {}) => {
+      if (!isLoggedIn) return;
 
-    setIsLoading(true);
-    if (selectedTab === "공동구매") {
-      getGroupOrderChatRooms()
-        .then((res) => {
-          setGroupOrderChatRooms(res.data);
-        })
-        .catch((err) => {
-          console.error("공동구매 채팅방 목록 조회 실패", err);
-        })
-        .finally(() => setIsLoading(false));
-    } else if (selectedTab === "룸메이트") {
-      getRoommateChatRooms()
-        .then((res) => {
-          setRoommateChatRooms(res.data);
-        })
-        .catch((err) => {
-          console.error("룸메이트 채팅방 목록 조회 실패", err);
-        })
-        .finally(() => setIsLoading(false));
-    }
-  }, [selectedTab, isLoggedIn]);
+      const done = () => {
+        if (!silent) setIsLoading(false);
+      };
+      if (selectedTab === "공동구매") {
+        if (!silent) setIsLoading(true);
+        getGroupOrderChatRooms()
+          .then((res) => {
+            setGroupOrderChatRooms(res.data);
+          })
+          .catch((err) => {
+            console.error("공동구매 채팅방 목록 조회 실패", err);
+          })
+          .finally(done);
+      } else if (selectedTab === "룸메이트") {
+        if (!silent) setIsLoading(true);
+        getRoommateChatRooms()
+          .then((res) => {
+            setRoommateChatRooms(res.data);
+          })
+          .catch((err) => {
+            console.error("룸메이트 채팅방 목록 조회 실패", err);
+          })
+          .finally(done);
+      }
+    },
+    [selectedTab, isLoggedIn],
+  );
+
+  useEffect(() => {
+    fetchChatRooms();
+  }, [fetchChatRooms]);
+
+  // 채팅방(별도 웹뷰)에서 나가기·메시지 읽음 후 돌아오면 재조회
+  usePageFocus(() => fetchChatRooms({ silent: true }));
 
   const handleChatClick = async (room: RoommateChatRoom) => {
     if (selectedTab === "룸메이트") {

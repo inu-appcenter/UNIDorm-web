@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import DOMPurify from "dompurify";
 import { FaRegHeart } from "react-icons/fa";
@@ -16,6 +16,7 @@ import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../../constants/EmptyMessage.tsx";
 import CommonBottomSheet from "src/components/modal/CommonBottomSheet.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
+import { usePageFocus } from "@/hooks/usePageFocus";
 import { useUserRole } from "src/hooks/useUserRole";
 import { mixpanelTrack } from "@/utils/mixpanel";
 
@@ -40,16 +41,15 @@ export default function TipDetailPage() {
 
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-
-    const fetchAllData = async () => {
+  // silent: 화면 복귀 시 재조회 — 스피너·조회 추적 없이 데이터만 교체
+  const fetchAllData = useCallback(
+    async ({ silent = false }: { silent?: boolean } = {}) => {
       if (!boardId) {
         setIsLoading(false);
         return;
       }
 
-      setIsLoading(true);
+      if (!silent) setIsLoading(true);
       try {
         const [tipResponse, imagesResponse] = await Promise.all([
           tokenInstance.get(`/tips/${boardId}`),
@@ -62,20 +62,29 @@ export default function TipDetailPage() {
 
         setImages(imagesResponse.data);
         // 상세 조회 추적 추가
-        mixpanelTrack.postViewed(
-          "꿀팁",
-          tipResponse.data.boardId,
-          tipResponse.data.title,
-        );
+        if (!silent) {
+          mixpanelTrack.postViewed(
+            "꿀팁",
+            tipResponse.data.boardId,
+            tipResponse.data.title,
+          );
+        }
       } catch (err) {
         console.error("게시글 또는 이미지 불러오기 실패", err);
       } finally {
-        setIsLoading(false);
+        if (!silent) setIsLoading(false);
       }
-    };
+    },
+    [boardId],
+  );
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
     fetchAllData();
-  }, [boardId, isneedupdate]);
+  }, [fetchAllData, isneedupdate]);
+
+  // 수정 화면(별도 웹뷰)에서 저장하고 돌아오면 재조회
+  usePageFocus(() => fetchAllData({ silent: true }));
 
   const handleDelete = async () => {
     if (!boardId) return;

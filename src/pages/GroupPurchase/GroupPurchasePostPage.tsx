@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import { FaRegHeart } from "react-icons/fa";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { GroupOrderDetail, GroupOrderImage } from "@/types/grouporder";
 import {
   cancelGroupPurchaseCompletion,
@@ -32,6 +32,8 @@ import { Dday, DividerBar, MetaInfo, People } from "@/styles/groupPurchase";
 import useMediaQuery from "../../hooks/useMediaQuery.ts";
 import ToolTipMessage from "../../components/common/TooltipMessage.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
+import { usePageFocus } from "@/hooks/usePageFocus";
+import { notifyDataChanged } from "@/utils/pageFocus";
 
 export default function GroupPurchasePostPage() {
   const { tokenInfo } = useUserStore();
@@ -55,9 +57,10 @@ export default function GroupPurchasePostPage() {
 
   const [showToolTip, setShowToolTip] = useState(false);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
+  // silent: 화면 복귀 시 재조회 — 스피너·스크롤 초기화 없이 데이터만 교체
+  const fetchData = useCallback(
+    async ({ silent = false }: { silent?: boolean } = {}) => {
+      if (!silent) setIsLoading(true);
       try {
         const [postData, imageData] = await Promise.all([
           getGroupPurchaseDetail(groupOrderId),
@@ -76,15 +79,23 @@ export default function GroupPurchasePostPage() {
         }
       } catch (error) {
         console.error("게시글 조회 실패:", error);
-        setPost(null);
+        if (!silent) setPost(null); // 조용한 재조회 실패 시 기존 화면 유지
       } finally {
-        setIsLoading(false);
+        if (!silent) setIsLoading(false);
       }
-    };
+    },
+    [groupOrderId],
+  );
 
+  useEffect(() => {
     fetchData();
     window.scrollTo(0, 0);
-  }, [groupOrderId, isneedupdate]);
+  }, [fetchData, isneedupdate]);
+
+  // 수정 화면(별도 웹뷰)에서 저장하고 돌아온 경우에만 재조회 (조회 시 조회수가 오름)
+  usePageFocus(() => fetchData({ silent: true }), {
+    onlyIfChanged: "groupPurchase",
+  });
 
   const handleLikeClick = async () => {
     if (!post) return;
@@ -107,6 +118,7 @@ export default function GroupPurchasePostPage() {
     if (!post || !window.confirm("정말 삭제할까요?")) return;
     try {
       await deleteGroupPurchase(post.id);
+      notifyDataChanged("groupPurchase");
       alert("삭제되었습니다.");
       navigate("/groupPurchase", { replace: true });
     } catch (error) {

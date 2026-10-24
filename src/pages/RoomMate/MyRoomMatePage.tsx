@@ -23,6 +23,7 @@ import RoundSquareWhiteButton from "../../components/button/RoundSquareWhiteButt
 import { useNavigate } from "react-router-dom";
 import BottomBar from "../../components/common/BottomBar/BottomBar.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
+import { usePageFocus } from "@/hooks/usePageFocus";
 import CommonBottomSheet from "../../components/modal/CommonBottomSheet.tsx";
 
 export default function MyRoomMatePage() {
@@ -116,23 +117,36 @@ export default function MyRoomMatePage() {
     },
   ];
 
-  useEffect(() => {
-    const fetchRoommateInfo = async () => {
+  // silent: 화면 복귀 시 재조회 — 룸메이트가 없을 때 안내 alert 를 다시 띄우지 않음
+  const fetchRoommateInfo = useCallback(
+    async ({ silent = false }: { silent?: boolean } = {}) => {
       try {
         const res = await getMyRoommateInfo();
         console.log(res);
         setRoommateInfo(res.data);
+        setNotFound(false);
       } catch (err: any) {
         if (err.response?.status === 404) {
-          alert(
-            "등록된 내 룸메이트가 없어요!\n룸메이트 탭에서 룸메이트를 찾아보거나, 이미 같이 하기로 한 친구가 있다면 등록해주세요.",
-          );
+          if (!silent) {
+            alert(
+              "등록된 내 룸메이트가 없어요!\n룸메이트 탭에서 룸메이트를 찾아보거나, 이미 같이 하기로 한 친구가 있다면 등록해주세요.",
+            );
+          }
+          setRoommateInfo(null);
           setNotFound(true);
         } else {
           console.log("룸메이트 정보를 불러오는 데 실패했습니다." + err);
         }
       }
-    };
+    },
+    [],
+  );
+
+  // 매칭 수락·해제(알림 등 별도 웹뷰) 후 돌아오면 룸메이트 정보만 재조회.
+  // 방 규칙은 이 화면에서 편집 중일 수 있어 덮어쓰지 않음.
+  usePageFocus(() => fetchRoommateInfo({ silent: true }));
+
+  useEffect(() => {
 
     const fetchRules = async () => {
       try {
@@ -172,7 +186,7 @@ export default function MyRoomMatePage() {
     fetchRoommateInfo();
     fetchRoommateTimetable();
     fetchUserTimetable();
-  }, [isNeedReload]);
+  }, [isNeedReload, fetchRoommateInfo]);
 
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -483,7 +497,7 @@ const MyRoomMatePageWrapper = styled.div`
   width: 100%;
   height: 100%;
 
-  overflow-y: auto;
+  overflow-y: auto;
 `;
 
 const DisabledWrapper = styled.div<{ disabled: boolean }>`

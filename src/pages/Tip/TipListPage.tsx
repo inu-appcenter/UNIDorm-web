@@ -9,6 +9,7 @@ import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../../constants/EmptyMessage.tsx";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useSetHeader } from "@/hooks/useSetHeader";
+import { usePageFocus } from "@/hooks/usePageFocus";
 import { mixpanelTrack } from "@/utils/mixpanel";
 
 export default function TipListPage() {
@@ -18,8 +19,9 @@ export default function TipListPage() {
   const [tips, setTips] = useState<Tip[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const loadTips = async () => {
-    setIsLoading(true);
+  // silent: 화면 복귀 시 재조회 — 로딩 스피너 없이 데이터만 교체
+  const loadTips = async ({ silent = false }: { silent?: boolean } = {}) => {
+    if (!silent) setIsLoading(true);
     try {
       const data = await fetchTips();
       console.log("팁 리스트 불러오기 성공", data);
@@ -27,13 +29,16 @@ export default function TipListPage() {
     } catch (error) {
       console.error("팁 리스트 불러오기 실패:", error);
     } finally {
-      setIsLoading(false);
+      if (!silent) setIsLoading(false);
     }
   };
 
   useEffect(() => {
     loadTips();
   }, []);
+
+  // 글 작성·수정·삭제(별도 웹뷰) 후 돌아오면 재조회
+  usePageFocus(() => loadTips({ silent: true }));
 
   useSetHeader({ title: "기숙사 꿀팁" });
 
@@ -116,7 +121,8 @@ const TipPageWrapper = styled.div`
   gap: 16px;
   box-sizing: border-box;
 
-  overflow-y: auto;
+  overflow-y: auto;
+
 `;
 
 const CardList = styled.div`

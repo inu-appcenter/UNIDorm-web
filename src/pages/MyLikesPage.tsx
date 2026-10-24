@@ -1,26 +1,30 @@
 import styled from "styled-components";
 import TitleContentArea from "../components/common/TitleContentArea.tsx";
 import MyPostLikeCard from "../components/mypage/MyPostLikeCard.tsx";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { usePageFocus } from "@/hooks/usePageFocus";
 import { MyPost } from "@/types/members";
 import { getMemberLikePosts } from "@/apis/members";
 
 export default function MyLikesPage() {
   const [posts, setPosts] = useState<MyPost[]>([]);
 
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const response = await getMemberLikePosts();
-        console.log("내가 좋아요한 글 불러오기 성공", response);
-        setPosts(response.data);
-      } catch (error) {
-        console.error("내가 좋아요한 글 불러오기 실패", error);
-      }
-    };
-
-    fetchPosts();
+  const fetchPosts = useCallback(async () => {
+    try {
+      const response = await getMemberLikePosts();
+      console.log("내가 좋아요한 글 불러오기 성공", response);
+      setPosts(response.data);
+    } catch (error) {
+      console.error("내가 좋아요한 글 불러오기 실패", error);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchPosts();
+  }, [fetchPosts]);
+
+  // 글 상세(별도 웹뷰)에서 좋아요 취소 후 돌아오면 재조회
+  usePageFocus(() => fetchPosts());
 
   return (
     <MyScrapPageWrapper>
@@ -50,7 +54,7 @@ const MyScrapPageWrapper = styled.div`
   box-sizing: border-box;
   width: 100%;
   height: 100%;
-  overflow-y: auto;
+  overflow-y: auto;
 `;
 
 const CardList = styled.div`
