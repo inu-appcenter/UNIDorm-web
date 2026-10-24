@@ -4,24 +4,15 @@ import TitleContentArea from "../components/common/TitleContentArea.tsx";
 import HomeNoticeCard from "../components/home/HomeNoticeCard.tsx";
 import HomeFormCard from "../components/home/HomeFormCard.tsx";
 import HomeTipsCard from "../components/home/HomeTipsCard.tsx";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { fetchDailyRandomTips } from "@/apis/tips";
-import { Tip } from "@/types/tips";
+import { useEffect, useMemo, useRef, useState } from "react";
 import 앱센터로고가로 from "../assets/앱센터로고가로.webp";
 import { useNavigate } from "react-router-dom";
 import GroupPurchaseList from "../components/GroupPurchase/GroupPurchaseList.tsx";
-import { GetGroupPurchaseListParams, GroupOrder } from "@/types/grouporder";
-import { getGroupPurchaseList } from "@/apis/groupPurchase";
 import HomeNoticeBottomSheet from "src/components/modal/HomeNoticeBottomSheet.tsx";
 import HomeBanner from "../components/home/HomeBanner.tsx";
 import LoadingSpinner from "../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../constants/EmptyMessage.tsx";
-import { getAnnouncementScrollList } from "@/apis/announcements";
-import { Announcement } from "@/types/announcements";
-import { getAllSurveys } from "@/apis/formApis";
-import { SurveySummary } from "@/types/formTypes";
 import { statusText } from "@/utils/formUtils";
-import { getPopupNotifications } from "@/apis/popup-notification";
 import { PopupNotification } from "@/types/popup-notifications";
 import { getMobilePlatform } from "@/utils/getMobilePlatform";
 import ModalContent_AppInstall from "../components/common/ModalContent_AppInstall.tsx";
@@ -30,7 +21,12 @@ import TopPopupNotification from "../components/common/TopPopupNotification.tsx"
 import useNetworkStore from "../stores/useNetworkStore.ts";
 import Calendar from "../components/calendar/Calendar.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
-import { usePageFocus } from "@/hooks/usePageFocus";
+import { useLatestAnnouncements } from "@/queries/announcements";
+import { useGroupPurchaseList } from "@/queries/groupPurchases";
+import { useSurveys } from "@/queries/surveys";
+import { useDailyRandomTips } from "@/queries/tips";
+import { useActivePopupNotifications } from "@/queries/popupNotifications";
+import { useInitFromQuery } from "@/hooks/useInitFromQuery";
 import RoomMateCard from "@/components/roommate/RoomMateCard.tsx";
 import { useQuery } from "@tanstack/react-query";
 import { getRoomMateScrollList } from "@/apis/roommate.ts";
@@ -52,12 +48,34 @@ export default function HomePage() {
     useRoommateMatchingStatus();
   const homeLoadStartTime = useRef(performance.now());
 
-  const [dailyTips, setDailyTips] = useState<Tip[]>([]);
-  const [groupOrders, setGroupOrders] = useState<GroupOrder[]>([]);
-  const [notices, setNotices] = useState<Announcement[]>([]);
-  const [surveys, setSurveys] = useState<SurveySummary[]>([]);
-  const [popupNotices, setPopupNotices] = useState<PopupNotification[]>([]);
-  const [isPopupLoading, setIsPopupLoading] = useState<boolean>(false);
+  const {
+    data: notices = [],
+    isLoading: isAnnounceLoading,
+    isError: isAnnounceError,
+  } = useLatestAnnouncements();
+
+  const { data: rawGroupOrders = [], isLoading: isGroupOrdersLoading } =
+    useGroupPurchaseList({ sort: "마감임박순", type: "전체" });
+  const groupOrders = rawGroupOrders;
+
+  const { data: rawSurveys = [], isLoading: isSurveysLoading } = useSurveys();
+  const surveys = useMemo(() => {
+    return [...rawSurveys].sort((a, b) => {
+      const isAProgress = statusText(a.status) === "진행 중";
+      const isBProgress = statusText(b.status) === "진행 중";
+
+      if (isAProgress && !isBProgress) return -1;
+      if (!isAProgress && isBProgress) return 1;
+
+      const timeA = new Date(a.createdDate).getTime();
+      const timeB = new Date(b.createdDate).getTime();
+      return timeB - timeA;
+    });
+  }, [rawSurveys]);
+
+  const { data: dailyTips = [], isLoading: isTipsLoading } = useDailyRandomTips();
+  const { data: popupNotices = [], isLoading: isPopupLoading } =
+    useActivePopupNotifications();
 
   const navigate = useNavigate();
   const { tokenInfo } = useUserStore();
@@ -103,12 +121,6 @@ export default function HomePage() {
     }
   }, [isFreshman, navigate]);
 
-  const [isTipsLoading, setIsTipsLoading] = useState<boolean>(false);
-  const [isAnnounceLoading, setIsAnnounceLoading] = useState<boolean>(false);
-  const [isSurveysLoading, setIsSurveysLoading] = useState<boolean>(false);
-  const [isGroupOrdersLoading, setIsGroupOrdersLoading] =
-    useState<boolean>(false);
-
   const [modalOpenStates, setModalOpenStates] = useState<
     Record<number, boolean>
   >({});
@@ -117,6 +129,41 @@ export default function HomePage() {
     setModalOpenStates((prev) => ({ ...prev, [id]: open }));
   };
 
+  const hasTrackedPopups = useRef(false);
+  useInitFromQuery(popupNotices, (data) => {
+    const initialState = data.reduce(
+      (acc, noti) => {
+        if (noti.id !== undefined && noti.id !== null) {
+          acc[noti.id] = true;
+        }
+        return acc;
+      },
+      {} as Record<number, boolean>,
+    );
+    setModalOpenStates(initialState);
+
+    if (!hasTrackedPopups.current) {
+      hasTrackedPopups.current = true;
+      data.forEach((popup: PopupNotification) => {
+        mixpanelTrack.popupViewed(popup.title);
+      });
+    }
+  });
+
+  const hasTrackedHomeLoad = useRef(false);
+  useEffect(() => {
+    if (!isAnnounceLoading && !hasTrackedHomeLoad.current) {
+      hasTrackedHomeLoad.current = true;
+      if (isAnnounceError) {
+        mixpanelTrack.homeLoadFail("api_error", "announcements");
+      } else {
+        mixpanelTrack.homeLoadComplete(
+          Math.round(performance.now() - homeLoadStartTime.current),
+        );
+      }
+    }
+  }, [isAnnounceLoading, isAnnounceError]);
+
   const platform = getMobilePlatform();
   const [isAppInstallOpen, setIsAppInstallOpen] = useState(
     (platform === "ios_browser" || platform === "android_browser") &&
@@ -124,138 +171,6 @@ export default function HomePage() {
   );
 
   const CHANNEL_ID = "UCrpqEmMWCOg6P8FSk6mN5Hw"; //인천대학교 생활원 유튜브 채널 id
-
-  // 공동구매·공지·설문 카드 목록 조회
-  // silent: 화면 복귀 시 재조회 — 로딩 스피너·로드 추적 없이 데이터만 교체
-  const fetchHomeLists = useCallback(
-    async ({ silent = false }: { silent?: boolean } = {}) => {
-      const fetchGroupOrders = async () => {
-        if (!silent) setIsGroupOrdersLoading(true);
-        try {
-          const params: GetGroupPurchaseListParams = {
-            sort: "마감임박순",
-            type: "전체",
-          };
-          const data = await getGroupPurchaseList(params);
-          console.log("공동구매 게시글 불러오기 성공 : ", data);
-          setGroupOrders(data);
-        } catch (error) {
-          console.error("게시글 목록 불러오기 실패:", error);
-        } finally {
-          if (!silent) setIsGroupOrdersLoading(false);
-        }
-      };
-
-      async function fetchAnnouncements() {
-        if (!silent) setIsAnnounceLoading(true);
-        try {
-          const response = await getAnnouncementScrollList(
-            "ALL",
-            "ALL",
-            "",
-            undefined,
-          );
-          console.log("공지사항 불러오기 성공:", response);
-          setNotices(response);
-          if (!silent) {
-            mixpanelTrack.homeLoadComplete(
-              Math.round(performance.now() - homeLoadStartTime.current),
-            );
-          }
-        } catch (error) {
-          console.error("공지사항 불러오기 실패", error);
-          if (!silent) mixpanelTrack.homeLoadFail("api_error", "announcements");
-        } finally {
-          if (!silent) setIsAnnounceLoading(false);
-        }
-      }
-
-      async function fetchSurveys() {
-        if (!silent) setIsSurveysLoading(true);
-        try {
-          const response = await getAllSurveys();
-          console.log("폼 목록 불러오기 성공:", response);
-          const sorted = [...response.data].sort((a, b) => {
-            const isAProgress = statusText(a.status) === "진행 중";
-            const isBProgress = statusText(b.status) === "진행 중";
-
-            // 1. 현재 신청 받는 이벤트(진행 중)가 우선
-            if (isAProgress && !isBProgress) return -1;
-            if (!isAProgress && isBProgress) return 1;
-
-            // 2. 같은 상태 내에서는 최신 생성순
-            const timeA = new Date(a.createdDate).getTime();
-            const timeB = new Date(b.createdDate).getTime();
-            return timeB - timeA;
-          });
-          setSurveys(sorted);
-        } catch (error) {
-          console.error("폼 목록 불러오기 실패:", error);
-        } finally {
-          if (!silent) setIsSurveysLoading(false);
-        }
-      }
-
-      await Promise.all([
-        fetchGroupOrders(),
-        fetchAnnouncements(),
-        fetchSurveys(),
-      ]);
-    },
-    [],
-  );
-
-  useEffect(() => {
-    const fetchPopupNotices = async () => {
-      setIsPopupLoading(true);
-      try {
-        const response = await getPopupNotifications();
-        console.log("팝업 공지 불러오기 성공", response);
-        setPopupNotices(response.data);
-
-        // 팝업 노출 추적 추가
-        response.data.forEach((popup: PopupNotification) => {
-          mixpanelTrack.popupViewed(popup.title);
-        });
-
-        const initialState = response.data.reduce(
-          (acc, noti) => {
-            if (noti.id !== undefined && noti.id !== null) {
-              acc[noti.id] = true;
-            }
-            return acc;
-          },
-          {} as Record<number, boolean>,
-        );
-        setModalOpenStates(initialState);
-      } catch (error) {
-        console.error("팝업 공지 불러오기 실패:", error);
-      } finally {
-        setIsPopupLoading(false);
-      }
-    };
-    const getTips = async () => {
-      setIsTipsLoading(true);
-      try {
-        const data = await fetchDailyRandomTips();
-        setDailyTips(data);
-      } catch (err: any) {
-        if (err.response?.status === 204) {
-          setDailyTips([]);
-        }
-      } finally {
-        setIsTipsLoading(false);
-      }
-    };
-
-    fetchPopupNotices();
-    getTips();
-    void fetchHomeLists();
-  }, [fetchHomeLists]);
-
-  // 다른 화면(별도 웹뷰)에서 글을 작성·삭제하고 돌아오면 목록 카드만 재조회.
-  // 팝업 공지(다시 열림)와 오늘의 꿀팁(무작위라 내용이 바뀜)은 제외.
-  usePageFocus(() => void fetchHomeLists({ silent: true }));
 
   // 룸메이트 데이터 단일 페이지 조회
   const { data: roommates, isLoading: isRoommateLoading } = useQuery({
