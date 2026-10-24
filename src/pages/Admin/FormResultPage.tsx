@@ -1,7 +1,6 @@
 import styled from "styled-components";
-import { useEffect, useState } from "react";
-import { SurveyResults } from "@/types/formTypes"; // OptionResult 임포트 제거 (차트 컴포넌트로 이동)
-import { getSurveyResultExcel, getSurveyResults } from "@/apis/formApis";
+import { getSurveyResultExcel } from "@/apis/formApis";
+import { useSurveyResults } from "@/queries/surveys";
 import { useParams } from "react-router-dom";
 import { FormBoxBlue, FormBoxGray } from "@/styles/form";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
@@ -24,27 +23,9 @@ import { useSetHeader } from "@/hooks/useSetHeader";
 const FormResultPage = () => {
   const { formId } = useParams<{ formId: string }>();
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [formResultData, setFormResultData] = useState<SurveyResults | null>(
-    null,
+  const { data: formResultData = null, isLoading } = useSurveyResults(
+    formId ? Number(formId) : undefined,
   );
-
-  useEffect(() => {
-    const getResultData = async () => {
-      try {
-        setIsLoading(true);
-        const res = await getSurveyResults(Number(formId));
-        console.log("폼 결과 데이터 불러오기 성공", res);
-        setFormResultData(res.data);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    getResultData();
-  }, [formId]); // formId가 변경될 때마다 다시 불러오도록 수정
 
   const menuItems = [
     {

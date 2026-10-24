@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import GroupPurchaseList from "../../components/GroupPurchase/GroupPurchaseList";
 import { useNavigate } from "react-router-dom";
 import { FaSearch } from "react-icons/fa";
-import { GetGroupPurchaseListParams, GroupOrder } from "@/types/grouporder";
-import { getGroupPurchaseList } from "@/apis/groupPurchase";
+import { useGroupPurchaseList } from "@/queries/groupPurchases";
+import type { GetGroupPurchaseListParams } from "@/types/grouporder";
 import useUserStore from "../../stores/useUserStore.ts";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../../constants/EmptyMessage.tsx";
@@ -24,7 +24,6 @@ import {
 } from "@/styles/common";
 import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
-import { usePageFocus } from "@/hooks/usePageFocus";
 
 /**
  * 로컬 스토리지에 저장될 알림 상태
@@ -131,8 +130,8 @@ export default function GroupPurchaseMainPage() {
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [selectedSortOptionIndex, setSelectedSortOptionIndex] = useState(0);
   // 게시글 상태
-  const [groupOrders, setGroupOrders] = useState<GroupOrder[]>([]);
-  const [loading, setLoading] = useState(false);
+  // 검색창에서 제출한 검색어 (정렬·카테고리를 바꾸면 초기화)
+  const [submittedSearch, setSubmittedSearch] = useState<string>();
 
   const [isSearchFocused, setIsSearchFocused] = useState(false);
 
@@ -140,37 +139,11 @@ export default function GroupPurchaseMainPage() {
     setSelectedCategory(category);
   };
 
-  // 마지막 검색어 — 화면 복귀 재조회가 검색 결과를 전체 목록으로 바꾸지 않도록
-  const lastSearchTermRef = useRef<string | undefined>(undefined);
-
-  // silent: 화면 복귀 시 재조회 — 로딩 스피너 없이 데이터만 교체
-  const fetchGroupOrders = async (
-    searchTerm?: string,
-    { silent = false }: { silent?: boolean } = {},
-  ) => {
-    lastSearchTermRef.current = searchTerm;
-    if (!silent) setLoading(true);
-    try {
-      const params: GetGroupPurchaseListParams = {
-        sort: SORT_OPTIONS[selectedSortOptionIndex],
-        type: selectedCategory,
-        search: searchTerm || undefined,
-      };
-      const data = await getGroupPurchaseList(params);
-      console.log("공동구매 게시글 불러오기 성공 : ", data);
-      setGroupOrders(data);
-    } catch (error) {
-      console.error("게시글 목록 불러오기 실패:", error);
-      if (!silent) setGroupOrders([]); // 에러 발생 시 목록을 비웁니다.
-    } finally {
-      if (!silent) setLoading(false);
-    }
-  };
-
-  // 글 작성·수정·삭제(별도 웹뷰) 후 돌아오면 재조회
-  usePageFocus(() =>
-    fetchGroupOrders(lastSearchTermRef.current, { silent: true }),
-  );
+  const { data: groupOrders = [], isLoading: loading } = useGroupPurchaseList({
+    sort: SORT_OPTIONS[selectedSortOptionIndex],
+    type: selectedCategory,
+    search: submittedSearch || undefined,
+  });
 
   // 최근 검색어 불러오기
   useEffect(() => {
@@ -184,7 +157,7 @@ export default function GroupPurchaseMainPage() {
     const rawTerm = search;
     const trimmedTerm = search.trim();
 
-    fetchGroupOrders(trimmedTerm);
+    setSubmittedSearch(trimmedTerm);
 
     if (rawTerm.trim() === "") return;
 
@@ -205,9 +178,9 @@ export default function GroupPurchaseMainPage() {
     localStorage.setItem("recentSearches", JSON.stringify(updatedSearches));
   };
 
-  // 게시글 목록 불러오기
+  // 정렬·카테고리를 바꾸면 검색어 없이 다시 조회
   useEffect(() => {
-    fetchGroupOrders();
+    setSubmittedSearch(undefined);
   }, [selectedCategory, selectedSortOptionIndex]);
 
   const handleKeywordSettingButton = () => {

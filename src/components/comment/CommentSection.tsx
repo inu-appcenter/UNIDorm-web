@@ -11,7 +11,6 @@ import { formatTimeAgo } from "@/utils/dateUtils";
 
 interface CommentSectionProps {
   CommentDtoList: TipComment[] | GroupOrderComment[];
-  setisneedupdate: React.Dispatch<React.SetStateAction<boolean>>;
   handleReplySubmit: (props: ReplyProps) => void;
   handleDeleteComment: (commentId: number) => Promise<void>;
 }
@@ -51,7 +50,6 @@ const getChildComments = (comment: TipComment | GroupOrderComment) => {
 
 export default function CommentSection({
   CommentDtoList,
-  setisneedupdate,
   handleReplySubmit,
   handleDeleteComment,
 }: CommentSectionProps) {
@@ -85,7 +83,6 @@ export default function CommentSection({
         if (!window.confirm("정말 삭제할까요?")) return;
         try {
           await handleDeleteComment(getCommentId(comment));
-          setisneedupdate((prev: boolean) => !prev);
           alert("삭제되었습니다.");
         } catch (err) {
           alert("삭제에 실패했습니다.");

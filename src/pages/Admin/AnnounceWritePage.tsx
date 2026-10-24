@@ -1,8 +1,6 @@
 import styled from "styled-components";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { notifyDataChanged } from "@/utils/pageFocus";
 import SquareButton from "../../components/common/SquareButton.tsx";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import FileUploader from "../../components/common/FileUploader.tsx";
@@ -26,7 +24,6 @@ import { RequestAnnouncementDto } from "@/types/announcements";
 
 export default function AnnounceWritePage() {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const location = useLocation();
   const { announce, announceFiles } = location.state || {};
 
@@ -102,12 +99,6 @@ export default function AnnounceWritePage() {
         await createAnnouncement(data, files);
         alert("공지사항이 성공적으로 등록되었습니다.");
       }
-
-      await queryClient.invalidateQueries({
-        queryKey: ["announcements", "scroll"],
-      });
-      // 다른 웹뷰(목록·상세)에 변경 알림 — 이 웹뷰의 캐시만으로는 반영되지 않음
-      notifyDataChanged("announcement");
 
       navigate(-1);
     } catch (error) {

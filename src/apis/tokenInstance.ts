@@ -5,6 +5,7 @@ import { TokenInfo } from "@/types/members";
 import { appendDebugLog } from "@/utils/debugLog";
 import useNetworkStore from "../stores/useNetworkStore";
 import useUserStore from "../stores/useUserStore";
+import { trackServerWrites } from "@/utils/serverDataSync";
 
 const BASE_URL = `https://${import.meta.env.VITE_API_SUBDOMAIN}.inuappcenter.kr/`;
 
@@ -339,5 +340,8 @@ tokenInstance.interceptors.response.use(
     return Promise.reject(error);
   },
 );
+
+// 쓰기 성공 시 이 웹뷰·다른 웹뷰의 화면 데이터를 자동으로 다시 조회
+trackServerWrites(tokenInstance);
 
 export default tokenInstance;

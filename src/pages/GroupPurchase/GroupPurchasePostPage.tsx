@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import { FaRegHeart } from "react-icons/fa";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { GroupOrderDetail, GroupOrderImage } from "@/types/grouporder";
 import {
   cancelGroupPurchaseCompletion,
@@ -8,8 +8,6 @@ import {
   createGroupOrderComment,
   deleteGroupOrderComment,
   deleteGroupPurchase,
-  getGroupPurchaseDetail,
-  getGroupPurchaseImages,
   likeGroupPurchase,
   unlikeGroupPurchase,
 } from "@/apis/groupPurchase";
@@ -32,13 +30,11 @@ import { Dday, DividerBar, MetaInfo, People } from "@/styles/groupPurchase";
 import useMediaQuery from "../../hooks/useMediaQuery.ts";
 import ToolTipMessage from "../../components/common/TooltipMessage.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
-import { usePageFocus } from "@/hooks/usePageFocus";
-import { notifyDataChanged } from "@/utils/pageFocus";
+import { useGroupPurchaseDetail } from "@/queries/groupPurchases";
 
 export default function GroupPurchasePostPage() {
   const { tokenInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
-  const [isneedupdate, setisneedupdate] = useState(false);
   const isDesktop = useMediaQuery("(min-width: 1024px)");
 
   const { boardId } = useParams<{ boardId: string }>();
@@ -48,7 +44,6 @@ export default function GroupPurchasePostPage() {
   const [post, setPost] = useState<GroupOrderDetail | null>(null);
   const [images, setImages] = useState<GroupOrderImage[]>([]);
   const [liked, setLiked] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState(true);
 
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -57,45 +52,27 @@ export default function GroupPurchasePostPage() {
 
   const [showToolTip, setShowToolTip] = useState(false);
 
-  // silent: 화면 복귀 시 재조회 — 스피너·스크롤 초기화 없이 데이터만 교체
-  const fetchData = useCallback(
-    async ({ silent = false }: { silent?: boolean } = {}) => {
-      if (!silent) setIsLoading(true);
-      try {
-        const [postData, imageData] = await Promise.all([
-          getGroupPurchaseDetail(groupOrderId),
-          getGroupPurchaseImages(groupOrderId),
-        ]);
-        console.log("공동구매 게시글 조회 성공", postData);
-        console.log("공동구매 게시글 이미지 조회 성공", imageData);
+  // 상세 조회는 조회수를 올리므로 이 화면의 쓰기로는 자동 재조회되지 않습니다
+  // (`sync: "otherWebViews"`). 댓글처럼 서버 값이 필요한 경우 `refetch()` 를 호출합니다.
+  const { data, isLoading, refetch } = useGroupPurchaseDetail(groupOrderId);
 
-        setPost(postData);
-        setLiked(postData.checkLikeCurrentUser);
-        setImages(imageData);
-
-        if (postData?.openChatLink === "") {
-          // alert("오픈채팅 링크 없음");
-          setShowToolTip(true);
-        }
-      } catch (error) {
-        console.error("게시글 조회 실패:", error);
-        if (!silent) setPost(null); // 조용한 재조회 실패 시 기존 화면 유지
-      } finally {
-        if (!silent) setIsLoading(false);
-      }
-    },
-    [groupOrderId],
-  );
+  // 좋아요·모집 완료는 화면에 바로 반영하고, 다시 조회되면 서버 값으로 맞춥니다.
+  useEffect(() => {
+    if (!data) return;
+    setPost(data.post);
+    setLiked(data.post.checkLikeCurrentUser);
+    setImages(data.images);
+    if (data.post.openChatLink === "") setShowToolTip(true);
+  }, [data]);
 
   useEffect(() => {
-    fetchData();
     window.scrollTo(0, 0);
-  }, [fetchData, isneedupdate]);
+  }, [groupOrderId]);
 
-  // 수정 화면(별도 웹뷰)에서 저장하고 돌아온 경우에만 재조회 (조회 시 조회수가 오름)
-  usePageFocus(() => fetchData({ silent: true }), {
-    onlyIfChanged: "groupPurchase",
-  });
+  const handleDeleteComment = async (groupOrderCommentId: number) => {
+    await deleteGroupOrderComment(groupOrderCommentId);
+    void refetch();
+  };
 
   const handleLikeClick = async () => {
     if (!post) return;
@@ -118,7 +95,6 @@ export default function GroupPurchasePostPage() {
     if (!post || !window.confirm("정말 삭제할까요?")) return;
     try {
       await deleteGroupPurchase(post.id);
-      notifyDataChanged("groupPurchase");
       alert("삭제되었습니다.");
       navigate("/groupPurchase", { replace: true });
     } catch (error) {
@@ -164,7 +140,7 @@ export default function GroupPurchasePostPage() {
         reply: commentInput,
       });
       setCommentInput("");
-      setisneedupdate((prev) => !prev);
+      void refetch();
     } catch (err) {
       alert("댓글 등록 실패");
     }
@@ -186,7 +162,7 @@ export default function GroupPurchasePostPage() {
       });
       setReplyInputs((prev) => ({ ...prev, [parentCommentId]: "" }));
       setReplyInputOpen((prev) => ({ ...prev, [parentCommentId]: false }));
-      setisneedupdate((prev) => !prev);
+      void refetch();
     } catch (err) {
       alert("대댓글 등록 실패");
     }
@@ -404,9 +380,8 @@ export default function GroupPurchasePostPage() {
                 <Divider />
                 <CommentSection
                   CommentDtoList={post.groupOrderCommentDtoList}
-                  setisneedupdate={setisneedupdate}
                   handleReplySubmit={handleReplySubmit}
-                  handleDeleteComment={deleteGroupOrderComment}
+                  handleDeleteComment={handleDeleteComment}
                 />
               </InfoSection>
             </TopContentContainer>

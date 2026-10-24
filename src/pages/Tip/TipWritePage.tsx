@@ -2,7 +2,7 @@ import styled from "styled-components";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import SquareButton from "../../components/common/SquareButton.tsx";
-import tokenInstance from "../../apis/tokenInstance.ts";
+import { createTip, updateTip } from "@/apis/tips";
 import FileUploader from "../../components/common/FileUploader.tsx";
 import { useFileHandler } from "@/hooks/useFileHandler";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
@@ -73,14 +73,10 @@ export default function TipWritePage() {
     try {
       setIsLoading(true);
       if (isEditMode) {
-        await tokenInstance.put(`/tips/${tipid}`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        await updateTip(Number(tipid), formData);
         alert("팁이 수정되었습니다!");
       } else {
-        await tokenInstance.post("/tips", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        await createTip(formData);
         mixpanelTrack.postCreated("꿀팁", "꿀팁작성페이지");
         alert("팁이 등록되었습니다!");
       }

@@ -3,12 +3,13 @@ import styled from "styled-components";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   createPopupNotification,
-  getPopupNotificationById,
   updatePopupNotification,
 } from "@/apis/popup-notification";
 import FileUploader from "@/components/common/FileUploader";
 import HomeNoticeBottomSheet from "@/components/modal/HomeNoticeBottomSheet";
 import { useSetHeader } from "@/hooks/useSetHeader";
+import { useInitFromQuery } from "@/hooks/useInitFromQuery";
+import { usePopupNotification } from "@/queries/popupNotifications";
 import { type InitialFile, useFileHandler } from "@/hooks/useFileHandler";
 import {
   AdminActionRow,
@@ -96,48 +97,30 @@ const PopupNotiFormPage = () => {
     .map((image) => image.preview)
     .filter((preview): preview is string => Boolean(preview));
 
+  const { data: notification, isError } = usePopupNotification(
+    isEditMode ? Number(popupNotificationId) : undefined,
+  );
+
   useEffect(() => {
-    if (!isEditMode) {
-      return;
-    }
+    if (!isError) return;
+    alert("팝업 공지 정보를 불러오지 못했습니다.");
+    navigate(-1);
+  }, [isError, navigate]);
 
-    const fetchNotification = async () => {
-      try {
-        const response = await getPopupNotificationById(
-          Number(popupNotificationId),
-        );
-        const {
-          title,
-          content,
-          notificationType,
-          startDate,
-          deadline,
-          imagePath,
-        } = response.data;
-
-        setFormData({
-          title,
-          content,
-          notificationType,
-          startDate,
-          deadline,
-        });
-        setInitialImageFiles(
-          (imagePath ?? []).map((imageUrl, index) => ({
-            imageUrl,
-            imageName: getImageNameFromUrl(imageUrl, index),
-          })),
-        );
-        setImagesChanged(false);
-      } catch (error) {
-        console.error("팝업 공지 조회 실패:", error);
-        alert("팝업 공지 정보를 불러오지 못했습니다.");
-        navigate(-1);
-      }
-    };
-
-    void fetchNotification();
-  }, [isEditMode, navigate, popupNotificationId]);
+  useInitFromQuery(
+    notification,
+    ({ title, content, notificationType, startDate, deadline, imagePath }) => {
+      setFormData({ title, content, notificationType, startDate, deadline });
+      setInitialImageFiles(
+        (imagePath ?? []).map((imageUrl, index) => ({
+          imageUrl,
+          imageName: getImageNameFromUrl(imageUrl, index),
+        })),
+      );
+      setImagesChanged(false);
+    },
+    popupNotificationId,
+  );
 
   const handleChange = (
     e: React.ChangeEvent<

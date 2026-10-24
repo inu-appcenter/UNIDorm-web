@@ -2,14 +2,13 @@ import styled from "styled-components";
 import FormContent from "../../components/form/FormContent.tsx";
 import FormField from "../../components/complain/FormField.tsx";
 import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import arrowright from "../../assets/arrow-right.svg";
 import { formatDeadlineDate } from "@/utils/dateUtils";
 import { SurveyDetail } from "@/types/formTypes";
 import {
   closeSurvey,
   deleteSurvey,
-  getSurveyDetail,
   submitSurveyResponse,
 } from "@/apis/formApis";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
@@ -17,6 +16,8 @@ import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import { Input } from "@/styles/common";
 import { FormBoxGray } from "@/styles/form";
 import { useSetHeader } from "@/hooks/useSetHeader";
+import { useInitFromQuery } from "@/hooks/useInitFromQuery";
+import { useSurveyDetail } from "@/queries/surveys";
 import { useUserRole } from "@/hooks/useUserRole";
 
 const FormDetailPage = () => {
@@ -26,8 +27,10 @@ const FormDetailPage = () => {
   const { hasSubmitted } = location.state || {}; // 수정할 민원 데이터
 
   const { formId } = useParams<{ formId: string }>();
-  const [form, setForm] = useState<SurveyDetail | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const { data: formData, isLoading } = useSurveyDetail(
+    formId ? Number(formId) : undefined,
+  );
+  const form: SurveyDetail | null = formData ?? null;
   const [isSubmitLoading, setIsSubmitLoading] = useState(false);
 
   // 답변 상태 (문항 순서대로 관리)
@@ -65,25 +68,16 @@ const FormDetailPage = () => {
     });
   };
 
-  useEffect(() => {
-    const getFormList = async () => {
-      if (!formId) return;
-      try {
-        setIsLoading(true);
-        const res = await getSurveyDetail(Number(formId));
-        setForm(res.data);
-
-        if (res.data && res.data.questions) {
-          setAnswers(new Array(res.data.questions.length).fill(null));
-        }
-      } catch (e) {
-        console.error("폼 상세정보 불러오기 실패", e);
-      } finally {
-        setIsLoading(false);
+  // 질문 수만큼 빈 응답을 준비 (처음 한 번 — 다시 조회돼도 입력 중인 응답을 지우지 않도록)
+  useInitFromQuery(
+    formData,
+    (survey) => {
+      if (survey.questions) {
+        setAnswers(new Array(survey.questions.length).fill(null));
       }
-    };
-    getFormList();
-  }, [formId]);
+    },
+    formId,
+  );
 
   const handleSubmit = async () => {
     if (!form || !form.questions) return;

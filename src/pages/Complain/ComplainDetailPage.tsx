@@ -2,13 +2,12 @@ import styled from "styled-components";
 import StepFlow from "../../components/complain/StepFlow.tsx";
 import ComplainCard from "../../components/complain/ComplainCard.tsx";
 import ComplainAnswerCard from "../../components/complain/ComplainAnswerCard.tsx";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { deleteComplaint, getComplaintDetail } from "@/apis/complain";
-import { ComplaintDetail } from "@/types/complain";
+import { deleteComplaint } from "@/apis/complain";
+import { useComplaintDetail } from "@/queries/complaints";
 import {
   assignComplaintOfficer,
-  getAdminComplaintDetail,
   updateComplaintStatus,
 } from "@/apis/complainAdmin";
 import RoundSquareWhiteButton from "../../components/button/RoundSquareWhiteButton.tsx";
@@ -18,7 +17,6 @@ import EmptyMessage from "../../constants/EmptyMessage.tsx";
 import { useUserRole } from "@/hooks/useUserRole";
 import { TipImage } from "@/types/tips";
 import { useSetHeader } from "@/hooks/useSetHeader";
-import { usePageFocus } from "@/hooks/usePageFocus";
 import { PATHS } from "@/constants/paths";
 import { mixpanelTrack } from "@/utils/mixpanel";
 
@@ -26,62 +24,35 @@ const ComplainDetailPage = () => {
   const { isAdmin } = useUserRole();
 
   const { complainId } = useParams<{ complainId: string }>();
-  const [complaint, setComplaint] = useState<ComplaintDetail | null>(null);
   const [selectedManager, setSelectedManager] = useState("생활원");
-  const [isNeedUpdate, setIsNeedUpdate] = useState(false);
   const navigate = useNavigate();
-  const [complainImages, setComplainImages] = useState<TipImage[]>([]);
 
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: complaintData, isLoading } = useComplaintDetail(
+    complainId ? Number(complainId) : undefined,
+    { asAdmin: isAdmin },
+  );
+  const complaint = complaintData ?? null;
+  const complainImages = useMemo(
+    () =>
+      (complaint?.images ?? []).map(
+        (url: string, index): TipImage => ({
+          contentType: "",
+          imageUrl: url,
+          fileSize: 0,
+          imageName: `이미지 ${index + 1}`,
+        }),
+      ),
+    [complaint],
+  );
   const [showModal, setShowModal] = useState(false);
 
-  // silent: 화면 복귀 시 재조회 — 스피너·조회 추적 없이 데이터만 교체
-  const fetchComplaint = useCallback(
-    async ({ silent = false }: { silent?: boolean } = {}) => {
-      if (!complainId) return;
-
-      if (!silent) setIsLoading(true);
-      try {
-        let response;
-        if (isAdmin) {
-          response = await getAdminComplaintDetail(Number(complainId));
-          console.log("관리자용 민원 상세 가져오기 성공:", response);
-        } else {
-          response = await getComplaintDetail(Number(complainId));
-          console.log("일반 유저용 민원 상세 가져오기 성공:", response);
-        }
-        setComplainImages(
-          response.data.images.map(
-            (url: string, index): TipImage => ({
-              contentType: "",
-              imageUrl: url,
-              fileSize: 0,
-              imageName: `이미지 ${index + 1}`,
-            }),
-          ),
-        );
-        console.log(response);
-        setComplaint(response.data);
-        // 민원 상세 조회 추적
-        if (!silent) {
-          mixpanelTrack.postViewed("민원", response.data.id, response.data.title);
-        }
-      } catch (error) {
-        console.error("민원 상세 불러오기 실패:", error);
-        if (!silent) setComplaint(null); // 조용한 재조회 실패 시 기존 화면 유지
-      } finally {
-        if (!silent) setIsLoading(false);
-      }
-    },
-    [complainId, isAdmin],
-  );
-
+  // 민원 상세 조회 추적 (민원당 한 번)
+  const trackedIdRef = useRef<number | null>(null);
   useEffect(() => {
-    fetchComplaint();
-  }, [fetchComplaint, isNeedUpdate]);
-
-  // 수정·답변 작성(별도 웹뷰) 후 돌아오면 재조회
-  usePageFocus(() => fetchComplaint({ silent: true }));
+    if (!complaint || trackedIdRef.current === complaint.id) return;
+    trackedIdRef.current = complaint.id;
+    mixpanelTrack.postViewed("민원", complaint.id, complaint.title);
+  }, [complaint]);
 
   const handleStatus = async (status: string) => {
     try {
@@ -105,7 +76,6 @@ const ComplainDetailPage = () => {
         );
         console.log(response);
       }
-      setIsNeedUpdate((prev) => !prev);
     } catch (error) {
       console.error("민원 처리상태 변경 실패:", error);
     }
@@ -123,7 +93,6 @@ const ComplainDetailPage = () => {
       await assignComplaintOfficer(Number(complainId), selectedManager);
 
       setShowModal(false);
-      setIsNeedUpdate((prev) => !prev);
     } catch (err) {
       console.error("담당자 배정 실패:", err);
     }

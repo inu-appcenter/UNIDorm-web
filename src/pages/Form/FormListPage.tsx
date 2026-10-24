@@ -3,46 +3,19 @@ import SearchInput from "../../components/complain/SearchInput.tsx";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import { useNavigate } from "react-router-dom";
 // 1. useMemo 임포트 추가
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
 import FormCard from "../../components/form/FormCard.tsx";
-import { SurveySummary } from "@/types/formTypes";
-import { getAllSurveys } from "@/apis/formApis";
+import { useSurveys } from "@/queries/surveys";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useSetHeader } from "@/hooks/useSetHeader";
-import { usePageFocus } from "@/hooks/usePageFocus";
 
 const FormListPage = () => {
   const navigate = useNavigate();
   const { isAdmin } = useUserRole();
 
-  const [forms, setForms] = useState<SurveySummary[]>([]);
-  const [isListLoading, setIsListLoading] = useState(false);
-
-  // silent: 화면 복귀 시 재조회 — 로딩 스피너 없이 데이터만 교체
-  const getFormList = useCallback(
-    async ({ silent = false }: { silent?: boolean } = {}) => {
-      try {
-        if (!silent) setIsListLoading(true);
-        const res = await getAllSurveys();
-        console.log("폼 전체 리스트 불러오기 성공", res);
-        setForms(res.data);
-      } catch (e) {
-        console.error("폼 전체 리스트 불러오기 실패", e);
-      } finally {
-        if (!silent) setIsListLoading(false);
-      }
-    },
-    [],
-  );
-
-  useEffect(() => {
-    getFormList();
-  }, [getFormList]);
-
-  // 설문 생성·마감·삭제·응답(별도 웹뷰) 후 돌아오면 재조회
-  usePageFocus(() => getFormList({ silent: true }));
+  const { data: forms = [], isLoading: isListLoading } = useSurveys();
 
   const [searchTerm, setSearchTerm] = useState<string>("");
 

@@ -15,7 +15,6 @@ import FileUploader from "../../components/common/FileUploader.tsx";
 import Modal from "../../components/modal/Modal.tsx";
 import { CheckBeforeDeal2 } from "@/constants/CheckBeforeDeal2";
 import { useSetHeader } from "@/hooks/useSetHeader";
-import { notifyDataChanged } from "@/utils/pageFocus";
 
 export default function GroupPurchaseWritePage() {
   const navigate = useNavigate();
@@ -88,8 +87,6 @@ export default function GroupPurchaseWritePage() {
         await createGroupPurchase(requestDto, files);
         alert("게시글이 등록되었습니다.");
       }
-      // 다른 웹뷰(목록·상세)에 변경 알림
-      notifyDataChanged("groupPurchase");
       navigate(-1);
     } catch (error) {
       const err = error as any;

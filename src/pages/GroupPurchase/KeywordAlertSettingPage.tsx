@@ -12,10 +12,13 @@ import {
   addGroupOrderKeywordNotification,
   deleteGroupOrderCategoryNotification,
   deleteGroupOrderKeywordNotification,
-  getGroupOrderCategoryNotifications,
-  getGroupOrderKeywordNotifications,
 } from "@/apis/groupPurchaseKeywordSetting";
 import { RecentSearchWrapper, Tag, TagList } from "@/styles/common";
+import { useInitFromQuery } from "@/hooks/useInitFromQuery";
+import {
+  useGroupPurchaseCategoryAlerts,
+  useGroupPurchaseKeywordAlerts,
+} from "@/queries/groupPurchases";
 
 // --- ✅ 상수 정의 ---
 // ✅ API와 통신할 실제 카테고리 목록
@@ -33,9 +36,9 @@ const KeywordAlertSettingPage = () => {
   const [keyword, setKeyword] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
-  const [keywords, setKeywords] = useState<string[]>([]);
+  const { data: keywords = [] } = useGroupPurchaseKeywordAlerts();
+  const { data: savedCategories } = useGroupPurchaseCategoryAlerts();
   const [isOpen, setIsOpen] = useState(true);
-  const [isneedReload, setIsneedReload] = useState(false);
 
   // ✅ UI에서 선택된 인덱스 상태 (DISPLAY_CATEGORY_LIST 기준)
   const [categoryIndices, setCategoryIndices] = useState<number[]>([]);
@@ -44,46 +47,25 @@ const KeywordAlertSettingPage = () => {
     [],
   );
 
-  // 최초 데이터 로드 및 상태 새로고침
-  useEffect(() => {
-    const getKeywordData = async () => {
-      const res = await getGroupOrderKeywordNotifications();
-      console.log("키워드 알림 목록 불러오기 성공", res);
-      setKeywords(res);
-    };
+  // 저장된 카테고리 알림을 선택 상태로 (처음 한 번 — 편집 중인 선택을 덮어쓰지 않도록)
+  useInitFromQuery(savedCategories, (res) => {
+    // ✅ API_CATEGORY_LIST 기준으로 인덱스 찾기
+    const apiIndices = res
+      .map((category) => API_CATEGORY_LIST.indexOf(category as CategoryType))
+      .filter((index) => index !== -1);
 
-    const getCategoryData = async () => {
-      try {
-        const res = await getGroupOrderCategoryNotifications(); // ["배달", "식자재"]
-        console.log("카테고리 알림 설정 목록 불러오기 성공", res);
+    // ✅ DISPLAY_CATEGORY_LIST 기준으로 인덱스 변환 (1씩 더함)
+    const displayIndices = apiIndices.map((index) => index + 1);
 
-        // ✅ API_CATEGORY_LIST 기준으로 인덱스 찾기
-        const apiIndices = res
-          .map((category) =>
-            API_CATEGORY_LIST.indexOf(category as CategoryType),
-          )
-          .filter((index) => index !== -1);
+    // ✅ 만약 모든 API 카테고리가 선택되었다면 "전체" (인덱스 0)도 추가
+    const finalIndices =
+      displayIndices.length === API_CATEGORY_LIST.length
+        ? [0, ...displayIndices]
+        : displayIndices;
 
-        // ✅ DISPLAY_CATEGORY_LIST 기준으로 인덱스 변환 (1씩 더함)
-        const displayIndices = apiIndices.map((index) => index + 1);
-
-        let finalIndices = displayIndices;
-
-        // ✅ 만약 모든 API 카테고리가 선택되었다면 "전체" (인덱스 0)도 추가
-        if (displayIndices.length === API_CATEGORY_LIST.length) {
-          finalIndices = [0, ...displayIndices];
-        }
-
-        setCategoryIndices(finalIndices);
-        setSavedCategoryIndices(finalIndices);
-      } catch (error) {
-        console.error("카테고리 알림 설정 목록 불러오기 실패:", error);
-      }
-    };
-
-    getKeywordData();
-    getCategoryData();
-  }, [isneedReload]);
+    setCategoryIndices(finalIndices);
+    setSavedCategoryIndices(finalIndices);
+  });
 
   // 최근 검색어 불러오기
   useEffect(() => {
@@ -212,7 +194,6 @@ const KeywordAlertSettingPage = () => {
       ].slice(0, 10);
       setRecentSearches(updatedSearches);
       localStorage.setItem("recentSearches", JSON.stringify(updatedSearches));
-      setIsneedReload((prev) => !prev);
     } catch (error) {
       const err = error as any;
 
@@ -241,7 +222,6 @@ const KeywordAlertSettingPage = () => {
 
     try {
       await deleteGroupOrderKeywordNotification(keywordToDelete);
-      setIsneedReload((prev) => !prev);
       alert("삭제되었습니다.");
     } catch (error) {
       console.error("키워드 삭제 실패:", error);

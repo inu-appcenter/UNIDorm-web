@@ -1,4 +1,5 @@
 import axios from "axios";
+import { trackServerWrites } from "@/utils/serverDataSync";
 
 const BASE_URL = `https://${import.meta.env.VITE_API_SUBDOMAIN}.inuappcenter.kr/`;
 
@@ -23,5 +24,8 @@ axiosInstance.interceptors.request.use((config) => {
   // }
   return config;
 });
+
+// 쓰기 성공 시 이 웹뷰·다른 웹뷰의 화면 데이터를 자동으로 다시 조회
+trackServerWrites(axiosInstance);
 
 export default axiosInstance;

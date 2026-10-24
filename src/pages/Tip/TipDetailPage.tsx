@@ -1,35 +1,36 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import styled from "styled-components";
 import DOMPurify from "dompurify";
 import { FaRegHeart } from "react-icons/fa";
-import tokenInstance from "../../apis/tokenInstance";
 import { useSwipeable } from "react-swipeable";
 import useUserStore from "../../stores/useUserStore.ts";
 import UserInfo from "../../components/common/UserInfo.tsx";
 import CommentSection from "../../components/comment/CommentSection.tsx";
 import CommentInputBox from "../../components/comment/CommentInputBox.tsx";
 import { ReplyProps } from "@/types/comment";
-import { deleteTipComment } from "@/apis/tips";
-import { TipDetail, TipImage } from "@/types/tips";
+import {
+  createTipComment,
+  deleteTip,
+  deleteTipComment,
+  setTipLiked,
+} from "@/apis/tips";
+import { useTipDetail } from "@/queries/tips";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../../constants/EmptyMessage.tsx";
 import CommonBottomSheet from "src/components/modal/CommonBottomSheet.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
-import { usePageFocus } from "@/hooks/usePageFocus";
 import { useUserRole } from "src/hooks/useUserRole";
 import { mixpanelTrack } from "@/utils/mixpanel";
 
 export default function TipDetailPage() {
   const { boardId } = useParams<{ boardId: string }>();
-  const [tip, setTip] = useState<TipDetail | null>(null);
   const navigate = useNavigate();
 
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [commentInput, setCommentInput] = useState("");
   const { tokenInfo } = useUserStore();
-  const [images, setImages] = useState<TipImage[]>([]);
   const isLoggedIn = Boolean(tokenInfo.accessToken);
 
   // 관리자 권한 확인
@@ -37,60 +38,35 @@ export default function TipDetailPage() {
 
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
-  const [isneedupdate, setisneedupdate] = useState(false);
 
-  const [isLoading, setIsLoading] = useState(true);
-
-  // silent: 화면 복귀 시 재조회 — 스피너·조회 추적 없이 데이터만 교체
-  const fetchAllData = useCallback(
-    async ({ silent = false }: { silent?: boolean } = {}) => {
-      if (!boardId) {
-        setIsLoading(false);
-        return;
-      }
-
-      if (!silent) setIsLoading(true);
-      try {
-        const [tipResponse, imagesResponse] = await Promise.all([
-          tokenInstance.get(`/tips/${boardId}`),
-          tokenInstance.get(`/tips/${boardId}/image`),
-        ]);
-
-        setTip(tipResponse.data);
-        setLikeCount(tipResponse.data.tipLikeCount);
-        setLiked(tipResponse.data.checkLikeCurrentUser ?? false);
-
-        setImages(imagesResponse.data);
-        // 상세 조회 추적 추가
-        if (!silent) {
-          mixpanelTrack.postViewed(
-            "꿀팁",
-            tipResponse.data.boardId,
-            tipResponse.data.title,
-          );
-        }
-      } catch (err) {
-        console.error("게시글 또는 이미지 불러오기 실패", err);
-      } finally {
-        if (!silent) setIsLoading(false);
-      }
-    },
-    [boardId],
-  );
+  const { data, isLoading } = useTipDetail(boardId ? Number(boardId) : undefined);
+  const tip = data?.tip ?? null;
+  const images = data?.images ?? [];
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    fetchAllData();
-  }, [fetchAllData, isneedupdate]);
+  }, [boardId]);
 
-  // 수정 화면(별도 웹뷰)에서 저장하고 돌아오면 재조회
-  usePageFocus(() => fetchAllData({ silent: true }));
+  // 좋아요는 누르는 즉시 반영하고, 다시 조회된 서버 값으로 맞춥니다.
+  useEffect(() => {
+    if (!tip) return;
+    setLikeCount(tip.tipLikeCount);
+    setLiked(tip.checkLikeCurrentUser ?? false);
+  }, [tip]);
+
+  // 상세 조회 추적 (글당 한 번)
+  const trackedIdRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (!tip || trackedIdRef.current === tip.boardId) return;
+    trackedIdRef.current = tip.boardId;
+    mixpanelTrack.postViewed("꿀팁", tip.boardId, tip.title);
+  }, [tip]);
 
   const handleDelete = async () => {
     if (!boardId) return;
     if (!window.confirm("정말 삭제하시겠습니까?")) return;
     try {
-      await tokenInstance.delete(`/tips/${boardId}`);
+      await deleteTip(Number(boardId));
       alert("삭제되었습니다.");
       navigate(-1);
     } catch (err) {
@@ -105,10 +81,7 @@ export default function TipDetailPage() {
       return;
     }
     try {
-      const endpoint = liked
-        ? `/tips/${boardId}/unlike`
-        : `/tips/${boardId}/like`;
-      await tokenInstance.patch(endpoint);
+      await setTipLiked(Number(boardId), !liked);
 
       if (!liked) {
         mixpanelTrack.likeClicked("꿀팁", boardId, "꿀팁상세");
@@ -128,14 +101,13 @@ export default function TipDetailPage() {
       return;
     }
     try {
-      await tokenInstance.post("/tip-comments", {
+      await createTipComment({
         parentCommentId: null,
         tipId: Number(boardId),
         reply: commentInput,
       });
       mixpanelTrack.commentCreated("꿀팁", "꿀팁상세");
       setCommentInput("");
-      setisneedupdate(!isneedupdate);
     } catch (err) {
       alert("댓글 등록 실패");
     }
@@ -150,7 +122,7 @@ export default function TipDetailPage() {
     const replyInput = replyInputs[parentCommentId];
     if (!replyInput?.trim()) return;
     try {
-      await tokenInstance.post("/tip-comments", {
+      await createTipComment({
         parentCommentId: parentCommentId,
         tipId: Number(boardId),
         reply: replyInput,
@@ -158,7 +130,6 @@ export default function TipDetailPage() {
       mixpanelTrack.commentCreated("꿀팁_답글", "꿀팁상세");
       setReplyInputs((prev) => ({ ...prev, [parentCommentId]: "" }));
       setReplyInputOpen((prev) => ({ ...prev, [parentCommentId]: false }));
-      setisneedupdate(!isneedupdate);
     } catch (err) {
       alert("대댓글 등록 실패");
     }
@@ -298,7 +269,6 @@ export default function TipDetailPage() {
             <Divider />
             <CommentSection
               CommentDtoList={tip.tipCommentDtoList}
-              setisneedupdate={setisneedupdate}
               handleReplySubmit={handleReplySubmit}
               handleDeleteComment={deleteTipComment}
             />
