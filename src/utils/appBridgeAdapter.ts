@@ -1,29 +1,48 @@
-import { hasReactNativeWebView, isOfficialApp } from "./getMobilePlatform";
+import {
+  createWebChannel,
+  type WebChannel,
+} from "@unidorm/bridge/web";
+import type {
+  TokenInfoPayload,
+  TokenRefreshResultPayload,
+  WebToNative,
+} from "@unidorm/bridge";
+import { isOfficialApp } from "./getMobilePlatform";
+import { hasNativeFeature, recordBridgeCapabilities } from "./nativeFeatures";
 import { flushAllBroadcastSync } from "@/stores/middleware/broadcastSync";
 import { withTokenExpiry } from "./jwtExpiry";
 
 /**
  * 단일 브릿지 어댑터.
  *
- * 신버전 Expo/React Native 셸 환경에서는 `window.ReactNativeWebView.postMessage`
- * 단일 채널을 통해 전달되고, 구버전 네이티브 앱 환경에서는 기존
+ * 신버전 Expo/React Native 셸 환경에서는 공유 브릿지 계약(`@unidorm/bridge`)의
+ * `PlatformChannel` 로 주고받고, 구버전 네이티브 앱 환경에서는 기존
  * `window.AndroidBridge.*` / `window.webkit.messageHandlers.*` 프로토콜로 폴백합니다.
  */
 
-function postBridgeMessage(event: string, value?: any): void {
-  // 1. React Native WebView 단일 채널 우선
-  if (hasReactNativeWebView()) {
-    try {
-      window.ReactNativeWebView!.postMessage(
-        JSON.stringify({ event, value, v: 1 })
-      );
-      return;
-    } catch (e) {
-      console.error("[Bridge] postMessage error:", e);
-    }
-  }
+let channel: WebChannel | null | undefined;
 
-  // 2. 구버전 네이티브 안드로이드 브릿지 폴백
+/** 웹 채널을 지연 생성합니다. ReactNativeWebView가 없으면(브라우저·구버전 앱) null. */
+function getChannel(): WebChannel | null {
+  if (channel === undefined) {
+    channel = createWebChannel({
+      onError: (error, raw) => {
+        // 다른 출처의 message 이벤트는 조용히 무시하고, 브릿지 봉투인데 검증에
+        // 실패한 경우만 알린다. 스키마 불일치가 소리 없이 묻히지 않도록.
+        if (raw.includes('"event"')) console.warn("[Bridge] invalid message:", error, raw);
+      },
+    });
+    channel?.on("bridgeCapabilities", recordBridgeCapabilities);
+  }
+  return channel;
+}
+
+type BridgeEvent = WebToNative["event"];
+type ValueOf<E extends BridgeEvent> = Extract<WebToNative, { event: E }>["value"];
+
+/** 구버전 네이티브 셸(AndroidBridge / webkit.messageHandlers)로 보냅니다. */
+function postLegacyMessage(event: BridgeEvent, value?: unknown): void {
+  // 1. 구버전 네이티브 안드로이드 브릿지 폴백
   if (typeof window !== "undefined" && typeof (window as any).AndroidBridge !== "undefined") {
     try {
       if (event === "requestAppUpdate" && typeof (window as any).AndroidBridge.requestAppUpdate === "function") {
@@ -43,7 +62,7 @@ function postBridgeMessage(event: string, value?: any): void {
     }
   }
 
-  // 3. 구버전 iOS WebKit 브릿지 폴백
+  // 2. 구버전 iOS WebKit 브릿지 폴백
   if (typeof window !== "undefined" && typeof (window as any).webkit?.messageHandlers !== "undefined") {
     try {
       const handler = ((window as any).webkit.messageHandlers as any)[event];
@@ -57,30 +76,44 @@ function postBridgeMessage(event: string, value?: any): void {
   }
 }
 
-export interface TokenRefreshResult {
-  status: "ok" | "rejected" | "error";
-  accessToken?: string;
-  refreshToken?: string;
-  role?: string;
+function postBridgeMessage<E extends BridgeEvent>(event: E, value?: ValueOf<E>): void {
+  const ch = getChannel();
+  if (!ch) {
+    postLegacyMessage(event, value);
+    return;
+  }
+  try {
+    // 채널이 계약 스키마로 검증한다. 실패하면 네이티브가 버릴 메시지이므로 크게 알린다.
+    (ch.send as (event: E, value?: ValueOf<E>) => void)(event, value);
+  } catch (e) {
+    console.error("[Bridge] send error:", e);
+  }
 }
+
+export type TokenRefreshResult = TokenRefreshResultPayload;
 
 const TOKEN_REFRESH_TIMEOUT_MS = 10_000;
 
-/** 네이티브 셸이 페이지 로드 전에 광고한 기능을 지원하는지 확인합니다. */
-function hasNativeFeature(feature: string): boolean {
-  return (
-    hasReactNativeWebView() &&
-    Array.isArray(window.__unidormNativeFeatures) &&
-    window.__unidormNativeFeatures.includes(feature)
-  );
-}
+let bridgeReadySent = false;
 
 /** 신규 멀티 웹뷰 및 새로운 브릿지 기능 지원 여부를 확인합니다. */
 export function supportsMultiWebView(): boolean {
-  return hasReactNativeWebView();
+  return getChannel() !== null;
 }
 
 export const appBridge = {
+  /**
+   * 네이티브 → 웹 구독이 설치되었음을 알립니다. 네이티브는 이 신호를 받은 뒤에야
+   * `notificationOpened` 같은 일회성 이벤트를 보내고 `bridgeCapabilities` 로 응답합니다.
+   * 페이지 로드당 한 번만 보냅니다.
+   */
+  bridgeReady(): void {
+    const ch = getChannel();
+    if (!ch || bridgeReadySent) return;
+    bridgeReadySent = true;
+    postBridgeMessage("bridgeReady");
+  },
+
   /** 앱 화면 업데이트 및 세션 유지 캐시 삭제 요청 */
   requestAppUpdate(): void {
     postBridgeMessage("requestAppUpdate");
@@ -152,66 +185,27 @@ export const appBridge = {
    * 토큰 재발급을 네이티브에 맡깁니다. 네이티브는 웹뷰가 여러 개여도 같은
    * refreshToken에 대해 서버를 한 번만 호출합니다. 응답이 없으면 null.
    */
-  requestTokenRefresh(refreshToken: string): Promise<TokenRefreshResult | null> {
-    return new Promise((resolve) => {
-      const id = `token-refresh-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
-
-      const handler = (e: MessageEvent) => {
-        try {
-          const raw = typeof e.data === "string" ? JSON.parse(e.data) : e.data;
-          if (raw && raw.event === "tokenRefreshResult" && raw.id === id && raw.value) {
-            cleanup();
-            resolve(raw.value as TokenRefreshResult);
-          }
-        } catch {
-          // 다른 출처의 message 이벤트는 무시한다.
-        }
-      };
-      const timer = setTimeout(() => {
-        cleanup();
-        resolve(null);
-      }, TOKEN_REFRESH_TIMEOUT_MS);
-      const cleanup = () => {
-        clearTimeout(timer);
-        window.removeEventListener("message", handler);
-        document.removeEventListener("message", handler as EventListener);
-      };
-
-      window.addEventListener("message", handler);
-      // Android WebView 일부 환경 대응
-      document.addEventListener("message", handler as EventListener);
-
-      try {
-        window.ReactNativeWebView!.postMessage(
-          JSON.stringify({ event: "requestTokenRefresh", value: { refreshToken }, v: 1, id })
-        );
-      } catch (e) {
-        console.error("[Bridge] postMessage error:", e);
-        cleanup();
-        resolve(null);
-      }
-    });
+  async requestTokenRefresh(refreshToken: string): Promise<TokenRefreshResult | null> {
+    const ch = getChannel();
+    if (!ch) return null;
+    try {
+      const reply = await ch.requestWithOptions(
+        "requestTokenRefresh",
+        { timeoutMs: TOKEN_REFRESH_TIMEOUT_MS },
+        { refreshToken },
+      );
+      return reply.event === "tokenRefreshResult" ? reply.value : null;
+    } catch (e) {
+      console.warn("[Bridge] requestTokenRefresh failed:", e);
+      return null;
+    }
   },
 
   /** 네이티브에서 전송되는 tokenInfoUpdated (JWT 갱신 브로드캐스트) 리스너 등록 */
-  onTokenInfoUpdated(callback: (tokenInfo: any) => void): () => void {
-    const handler = (e: MessageEvent) => {
-      try {
-        const raw = typeof e.data === "string" ? JSON.parse(e.data) : e.data;
-        if (raw && raw.event === "tokenInfoUpdated" && raw.value) {
-          callback(raw.value);
-        }
-      } catch {}
-    };
-
-    window.addEventListener("message", handler);
-    // Android WebView 일부 환경 대응
-    document.addEventListener("message" as any, handler);
-
-    return () => {
-      window.removeEventListener("message", handler);
-      document.removeEventListener("message" as any, handler);
-    };
+  onTokenInfoUpdated(
+    callback: (tokenInfo: TokenInfoPayload & { role?: string }) => void,
+  ): () => void {
+    return getChannel()?.on("tokenInfoUpdated", callback) ?? (() => {});
   },
 
   /** 공식 앱 여부 확인 */
@@ -219,4 +213,3 @@ export const appBridge = {
     return isOfficialApp();
   },
 };
-
