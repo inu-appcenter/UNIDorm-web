@@ -16,7 +16,7 @@ import {
   isMobileAppEnvironment,
 } from "@/apis/mobileAgentBridge";
 import { secureStorage } from "@/utils/secureStorage";
-import { openIntipAppOrStore } from "@/utils/portalAppLauncher";
+import { openUnidormAppOrStore } from "@/utils/portalAppLauncher";
 
 interface PortalSyncOnboardingProps {
   onSuccess: () => void;
@@ -235,7 +235,7 @@ export default function PortalSyncOnboarding({
           </SecurityTextGroup>
         </SecurityCard>
 
-        <PrimaryButton type="button" onClick={() => openIntipAppOrStore()}>
+        <PrimaryButton type="button" onClick={() => openUnidormAppOrStore()}>
           유니돔 앱으로 열기
         </PrimaryButton>
       </Container>

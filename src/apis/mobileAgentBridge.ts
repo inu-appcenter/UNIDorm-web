@@ -138,7 +138,7 @@ function sendBridgeAction<T = any>(type: string, payload?: any, timeoutMs = 1500
       resolve({
         success: false,
         errorCode: 'NOT_IN_MOBILE_APP',
-        errorMessage: '모바일 앱(INTIP 앱) 환경에서만 학교 시스템 직접 연동이 가능합니다.',
+        errorMessage: '모바일 앱(유니돔 앱) 환경에서만 학교 시스템 직접 연동이 가능합니다.',
       });
       return;
     }
