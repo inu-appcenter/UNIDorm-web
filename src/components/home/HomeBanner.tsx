@@ -5,9 +5,6 @@ import styled from "styled-components";
 
 import 배너1 from "../../assets/banner/포스터1.webp";
 import 배너3 from "../../assets/banner/포스터3.webp";
-import 인입런배너 from "@/assets/banner/인입런 배너.webp";
-import 학과공지알리미배너 from "@/assets/banner/학과 공지 알리미 배너.webp";
-import { getMobilePlatform } from "@/utils/getMobilePlatform.ts";
 import { mixpanelTrack } from "@/utils/mixpanel";
 
 type BannerItem = {
@@ -18,40 +15,14 @@ type BannerItem = {
 };
 
 export default function HomeBanner() {
-  const platform = getMobilePlatform();
   const [selectedIndex, setSelectedIndex] = useState(0);
-
-  const handleIntipBannerClick = () => {
-    if (platform === "ios_unidorm_app") {
-      window.open("https://apps.apple.com/kr/app/intip/id6740070975", "_blank");
-    } else if (platform === "android_unidorm_app") {
-      window.open(
-        "https://play.google.com/store/apps/details?id=inu.appcenter.intip_android",
-        "_blank",
-      );
-    } else {
-      window.open("https://intip.inuappcenter.kr", "_blank");
-    }
-  };
 
   const banners: BannerItem[] = useMemo(
     () => [
-      {
-        id: "department-notice",
-        src: 학과공지알리미배너,
-        alt: "학과 공지 알리미",
-        click: handleIntipBannerClick,
-      },
-      {
-        id: "intip",
-        src: 인입런배너,
-        alt: "인입런",
-        click: handleIntipBannerClick,
-      },
       { id: "poster-3", src: 배너3, alt: "생활원 안내 3" },
       { id: "poster-1", src: 배너1, alt: "생활원 안내 1" },
     ],
-    [platform],
+    [],
   );
 
   const autoplay = useMemo(

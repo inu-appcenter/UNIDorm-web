@@ -1,10 +1,11 @@
 import { safeLocalStorage } from "./safeStorage";
 
-const V2_PREFIX = "enc:v2:";
-const LEGACY_PREFIX = "enc:v1:";
+const V3_PREFIX = "enc:v3:";
+// v1·v2 암호문은 이전 키로 만들어져 더 이상 풀 수 없다. 내용이 모두 포털에서 다시
+// 받아올 수 있는 캐시라서, 만나면 지우고 캐시 미스로 처리한다.
+const STALE_PREFIXES = ["enc:v1:", "enc:v2:"];
 const ALGORITHM = "AES-GCM";
-const LEGACY_KEY_SEED = "intip_local_secure_vault_v1";
-const DEVICE_SALT_STORAGE_KEY = "intip_device_entropy_salt_v2";
+const DEVICE_SALT_STORAGE_KEY = "unidorm_device_entropy_salt";
 
 export const DEFAULT_PORTAL_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24시간
 
@@ -17,8 +18,10 @@ export interface CacheEnvelope<T = any> {
   meta?: Record<string, any>;
 }
 
-let cachedV2KeyPromise: Promise<CryptoKey> | null = null;
-let cachedLegacyKeyPromise: Promise<CryptoKey> | null = null;
+let cachedKeyPromise: Promise<CryptoKey> | null = null;
+
+const isEncrypted = (stored: string) =>
+  stored.startsWith(V3_PREFIX) || STALE_PREFIXES.some((prefix) => stored.startsWith(prefix));
 
 function getCryptoSubtle(): SubtleCrypto | null {
   if (typeof window !== "undefined" && window.crypto?.subtle) {
@@ -75,18 +78,18 @@ function getOrCreateDeviceSalt(): string {
 }
 
 /**
- * 기기 고유 솔트 기반 v2 암호화 키 파생
+ * 기기 고유 솔트 기반 암호화 키 파생
  */
 async function getDeviceEncryptionKey(): Promise<CryptoKey | null> {
   const subtle = getCryptoSubtle();
   if (!subtle) return null;
 
-  if (cachedV2KeyPromise) return cachedV2KeyPromise;
+  if (cachedKeyPromise) return cachedKeyPromise;
 
-  cachedV2KeyPromise = (async () => {
+  cachedKeyPromise = (async () => {
     const salt = getOrCreateDeviceSalt();
     const encoder = new TextEncoder();
-    const rawKeyMaterial = `intip_vault_${salt}_isolated_key_material`;
+    const rawKeyMaterial = `unidorm_vault_${salt}_isolated_key_material`;
     const keyData = await subtle.digest("SHA-256", encoder.encode(rawKeyMaterial));
     return subtle.importKey(
       "raw",
@@ -97,31 +100,7 @@ async function getDeviceEncryptionKey(): Promise<CryptoKey | null> {
     );
   })();
 
-  return cachedV2KeyPromise;
-}
-
-/**
- * 레거시(v1) 데이터 복호화를 위한 이전 고정 시드 키
- */
-async function getLegacyEncryptionKey(): Promise<CryptoKey | null> {
-  const subtle = getCryptoSubtle();
-  if (!subtle) return null;
-
-  if (cachedLegacyKeyPromise) return cachedLegacyKeyPromise;
-
-  cachedLegacyKeyPromise = (async () => {
-    const encoder = new TextEncoder();
-    const keyData = await subtle.digest("SHA-256", encoder.encode(LEGACY_KEY_SEED));
-    return subtle.importKey(
-      "raw",
-      keyData,
-      { name: ALGORITHM },
-      false,
-      ["decrypt"]
-    );
-  })();
-
-  return cachedLegacyKeyPromise;
+  return cachedKeyPromise;
 }
 
 const memoryCache = new Map<string, any>();
@@ -129,7 +108,7 @@ const memoryCache = new Map<string, any>();
 /**
  * Web Crypto API (AES-GCM-256) 기반 온디바이스 보안 저장소.
  * - 기기별 고유 엔트로피 솔트를 활용한 암호화 키 파생 (하드코딩 키 제거)
- * - 구버전(enc:v1:) 및 평문 레거시 데이터 투명 복호화 및 v2 자동 마이그레이션
+ * - 평문 레거시 데이터는 읽을 때 암호화해 다시 저장, 이전 키의 암호문(v1·v2)은 캐시 미스로 정리
  * - 캐시 유효기간(TTL) 관리 및 포털 캐시 일괄 소거 기능 제공
  */
 export const secureStorage = {
@@ -139,7 +118,7 @@ export const secureStorage = {
     }
     const stored = safeLocalStorage.getItem(key);
     if (!stored) return null;
-    if (!stored.startsWith(V2_PREFIX) && !stored.startsWith(LEGACY_PREFIX)) {
+    if (!isEncrypted(stored)) {
       try {
         const parsed = JSON.parse(stored) as T;
         memoryCache.set(key, parsed);
@@ -177,7 +156,7 @@ export const secureStorage = {
         encoded
       );
 
-      const encryptedPayload = `${V2_PREFIX}${bufferToHex(iv.buffer)}:${bufferToHex(cipherBuffer)}`;
+      const encryptedPayload = `${V3_PREFIX}${bufferToHex(iv.buffer)}:${bufferToHex(cipherBuffer)}`;
       safeLocalStorage.setItem(key, encryptedPayload);
     } catch (e) {
       console.warn(`[secureStorage] Failed to encrypt item "${key}":`, e);
@@ -194,7 +173,7 @@ export const secureStorage = {
       }
 
       // 1. 평문 레거시 데이터 마이그레이션
-      if (!stored.startsWith(V2_PREFIX) && !stored.startsWith(LEGACY_PREFIX)) {
+      if (!isEncrypted(stored)) {
         try {
           const parsed = JSON.parse(stored) as T;
           memoryCache.set(key, parsed);
@@ -205,70 +184,41 @@ export const secureStorage = {
         }
       }
 
+      // 2. 이전 키의 암호문은 풀 수 없으므로 지우고 캐시 미스로 처리
+      if (!stored.startsWith(V3_PREFIX)) {
+        this.removeItem(key);
+        return null;
+      }
+
       const subtle = getCryptoSubtle();
       if (!subtle) return null;
 
-      // 2. v2 (기기 고유키) 암호문 복호화
-      if (stored.startsWith(V2_PREFIX)) {
-        const parts = stored.slice(V2_PREFIX.length).split(":");
-        if (parts.length !== 2) return null;
+      // 3. 기기 고유키 암호문 복호화
+      const parts = stored.slice(V3_PREFIX.length).split(":");
+      if (parts.length !== 2) return null;
 
-        const [ivHex, cipherHex] = parts;
-        const iv = hexToBuffer(ivHex);
-        const cipherBytes = hexToBuffer(cipherHex);
-        const keyObj = await getDeviceEncryptionKey();
-        if (!keyObj) return null;
+      const [ivHex, cipherHex] = parts;
+      const iv = hexToBuffer(ivHex);
+      const cipherBytes = hexToBuffer(cipherHex);
+      const keyObj = await getDeviceEncryptionKey();
+      if (!keyObj) return null;
 
-        const decryptedBuffer = await subtle.decrypt(
-          { name: ALGORITHM, iv: iv as unknown as BufferSource },
-          keyObj,
-          cipherBytes as unknown as BufferSource
-        );
+      const decryptedBuffer = await subtle.decrypt(
+        { name: ALGORITHM, iv: iv as unknown as BufferSource },
+        keyObj,
+        cipherBytes as unknown as BufferSource
+      );
 
-        const decryptedText = new TextDecoder().decode(decryptedBuffer);
-        try {
-          const parsed = JSON.parse(decryptedText) as T;
-          memoryCache.set(key, parsed);
-          return parsed;
-        } catch {
-          const str = decryptedText as unknown as T;
-          memoryCache.set(key, str);
-          return str;
-        }
+      const decryptedText = new TextDecoder().decode(decryptedBuffer);
+      try {
+        const parsed = JSON.parse(decryptedText) as T;
+        memoryCache.set(key, parsed);
+        return parsed;
+      } catch {
+        const str = decryptedText as unknown as T;
+        memoryCache.set(key, str);
+        return str;
       }
-
-      // 3. v1 (레거시 키) 복호화 후 v2로 자동 마이그레이션
-      if (stored.startsWith(LEGACY_PREFIX)) {
-        const parts = stored.slice(LEGACY_PREFIX.length).split(":");
-        if (parts.length !== 2) return null;
-
-        const [ivHex, cipherHex] = parts;
-        const iv = hexToBuffer(ivHex);
-        const cipherBytes = hexToBuffer(cipherHex);
-        const legacyKeyObj = await getLegacyEncryptionKey();
-        if (!legacyKeyObj) return null;
-
-        const decryptedBuffer = await subtle.decrypt(
-          { name: ALGORITHM, iv: iv as unknown as BufferSource },
-          legacyKeyObj,
-          cipherBytes as unknown as BufferSource
-        );
-
-        const decryptedText = new TextDecoder().decode(decryptedBuffer);
-        let parsedVal: T;
-        try {
-          parsedVal = JSON.parse(decryptedText) as T;
-        } catch {
-          parsedVal = decryptedText as unknown as T;
-        }
-
-        memoryCache.set(key, parsedVal);
-        // v2로 재암호화 저장 (자동 마이그레이션)
-        void this.setItem(key, parsedVal);
-        return parsedVal;
-      }
-
-      return null;
     } catch (e) {
       console.warn(`[secureStorage] Failed to decrypt item "${key}":`, e);
       return null;
