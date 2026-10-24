@@ -7,6 +7,9 @@ declare global {
             postMessage: (message: string) => void;
         };
 
+        // ✅ 네이티브 셸이 페이지 로드 전에 주입하는 지원 기능 목록 (예: "tokenRefresh")
+        __unidormNativeFeatures?: string[];
+
         // ✅ 안드로이드 브릿지 정의
         AndroidBridge?: {
             onRouteChange: (path: string) => void;
