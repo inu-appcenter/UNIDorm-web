@@ -180,7 +180,7 @@ export default function GroupPurchasePostPage() {
     {
       label: "수정하기",
       onClick: () =>
-        navigate("/groupPurchase/write", {
+        navigate(`/groupPurchase/write?id=${boardId}`, {
           state: { post, curImages: images },
         }),
     },

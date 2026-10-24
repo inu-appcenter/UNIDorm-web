@@ -1,5 +1,8 @@
 import styled from "styled-components";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useComplaintDetail } from "@/queries/complaints";
+import { useInitFromQuery } from "@/hooks/useInitFromQuery";
+import type { ComplaintDetail } from "@/types/complain";
 import { useEffect, useState } from "react";
 import SquareButton from "../../components/common/SquareButton.tsx";
 import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
@@ -30,19 +33,42 @@ const generateOptions = (min: number, max: number, suffix: string) => {
 export default function ComplainWritePage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { complain, complainImages } = location.state || {}; // 수정할 민원 데이터
+  const [searchParams] = useSearchParams();
+  const queryId = searchParams.get("id");
+  const editId = queryId ? Number(queryId) : undefined;
 
-  const [isEditMode, setIsEditMode] = useState(false);
+  const { complain: stateComplain, complainImages: stateImages } =
+    location.state || {}; // 수정할 민원 데이터
+  const [complain, setComplain] = useState<ComplaintDetail | null>(
+    stateComplain ?? null,
+  );
+
+  const [isEditMode, setIsEditMode] = useState(Boolean(stateComplain));
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [privacyAgreed, setPrivacyAgreed] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
 
+  const { data: detailData, isLoading: isDetailLoading } = useComplaintDetail(
+    !stateComplain && editId ? editId : undefined,
+  );
+
   // 이미지 상태 및 핸들러 커스텀 훅
+  const initialImages = stateImages ?? detailData?.images?.map((url) => ({ imageUrl: url, imageName: "complain.jpg" }));
   const { files, addFiles, deleteFile, isFileLoading } = useFileHandler({
-    initialFiles: complainImages,
+    initialFiles: initialImages,
   });
+
+  useInitFromQuery(
+    detailData,
+    (fetched) => {
+      if (!stateComplain && fetched) {
+        setComplain(fetched);
+      }
+    },
+    editId,
+  );
 
   // 선택 값 관련 상태
   const [selectedComplainTypeIndex, setSelectedComplainTypeIndex] = useState<
@@ -239,7 +265,18 @@ export default function ComplainWritePage() {
 
   return (
     <Wrapper>
-      {isLoading && <LoadingSpinner overlay message="글 쓰는 중..." />}
+      {(isLoading || isDetailLoading) && (
+        <LoadingSpinner
+          overlay
+          message={
+            isDetailLoading
+              ? "민원을 불러오는 중입니다..."
+              : isEditMode
+              ? "민원을 수정 중입니다..."
+              : "민원을 등록 중입니다..."
+          }
+        />
+      )}
 
       <Content>
         <FormField label="유형" required>

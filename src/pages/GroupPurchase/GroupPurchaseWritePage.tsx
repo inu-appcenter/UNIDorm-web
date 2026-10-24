@@ -1,6 +1,8 @@
 import { useState } from "react";
 import styled from "styled-components";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useGroupPurchaseDetail } from "@/queries/groupPurchases";
+import { useInitFromQuery } from "@/hooks/useInitFromQuery";
 import CommonBottomSheet from "src/components/modal/CommonBottomSheet";
 import useUserStore from "../../stores/useUserStore";
 import { createGroupPurchase, updateGroupPurchase } from "@/apis/groupPurchase";
@@ -19,11 +21,36 @@ import { useSetHeader } from "@/hooks/useSetHeader";
 export default function GroupPurchaseWritePage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { post, curImages } = location.state || {};
+  const [searchParams] = useSearchParams();
+  const queryId = searchParams.get("id");
+  const editId = queryId ? Number(queryId) : undefined;
+
+  const { post: statePost, curImages: stateImages } = location.state || {};
+  const [post, setPost] = useState<any>(statePost ?? null);
+
   // 이미지 상태 및 핸들러 커스텀 훅
   const { files, addFiles, deleteFile, isFileLoading } = useFileHandler({
-    initialFiles: curImages,
+    initialFiles: stateImages,
   });
+
+  const { data: detailData, isLoading: isDetailLoading } = useGroupPurchaseDetail(
+    !statePost && editId ? editId : undefined,
+  );
+
+  useInitFromQuery(
+    detailData,
+    (fetched: any) => {
+      if (!statePost && fetched) {
+        const item = fetched.groupOrder || fetched;
+        setPost(item);
+        if (fetched.images && fetched.images.length > 0) {
+          addFiles(fetched.images);
+        }
+      }
+    },
+    editId,
+  );
+
   const {
     isEditMode,
     formData,
@@ -107,7 +134,14 @@ export default function GroupPurchaseWritePage() {
 
   return (
     <Wrapper>
-      {isLoading && <LoadingSpinner overlay message="글 쓰는 중..." />}
+      {(isLoading || isDetailLoading) && (
+        <LoadingSpinner
+          overlay
+          message={
+            isDetailLoading ? "공동구매 불러오는 중..." : "글 쓰는 중..."
+          }
+        />
+      )}
       {/*거래 전 확인하세요 모달*/}
       {/*<CommonBottomSheet*/}
       {/*  id={"checkbefore"}*/}

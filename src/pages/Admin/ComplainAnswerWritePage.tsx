@@ -3,6 +3,8 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import SquareButton from "../../components/common/SquareButton.tsx";
 import { ComplaintReplyDto } from "@/types/complain";
+import { useComplaintDetail } from "@/queries/complaints";
+import { useInitFromQuery } from "@/hooks/useInitFromQuery";
 import {
   createComplaintReply,
   updateComplaintReply,
@@ -18,7 +20,11 @@ export default function ComplainAnswerWritePage() {
   const { complainId } = useParams<{ complainId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const { complain, manager, Images } = location.state || {};
+  const { complain: stateComplain, manager: stateManager, Images: stateImages } =
+    location.state || {};
+
+  const [complain, setComplain] = useState<any>(stateComplain ?? null);
+  const [manager, setManager] = useState(stateManager ?? "");
 
   const [isEditMode, setIsEditMode] = useState(false);
   const [isRejected, setIsRejected] = useState(false);
@@ -26,10 +32,29 @@ export default function ComplainAnswerWritePage() {
   const [content, setContent] = useState("");
 
   const { files, addFiles, deleteFile, isFileLoading } = useFileHandler({
-    initialFiles: Images,
+    initialFiles: stateImages,
   });
 
   const [isLoading, setIsLoading] = useState(false);
+
+  const { data: detailData, isLoading: isDetailLoading } = useComplaintDetail(
+    !stateComplain && complainId ? Number(complainId) : undefined,
+    { asAdmin: true },
+  );
+
+  useInitFromQuery(
+    detailData,
+    (fetched: any) => {
+      if (!stateComplain && fetched) {
+        setComplain(fetched);
+        if (fetched.officer) setManager(fetched.officer);
+        if (fetched.reply?.attachmentUrl && fetched.reply.attachmentUrl.length > 0) {
+          addFiles(fetched.reply.attachmentUrl);
+        }
+      }
+    },
+    complainId,
+  );
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -96,7 +121,14 @@ export default function ComplainAnswerWritePage() {
 
   return (
     <Wrapper>
-      {isLoading && <LoadingSpinner overlay message="글 쓰는 중..." />}
+      {(isLoading || isDetailLoading) && (
+        <LoadingSpinner
+          overlay
+          message={
+            isDetailLoading ? "민원 정보 불러오는 중..." : "글 쓰는 중..."
+          }
+        />
+      )}
 
       <Content>
         <LabeledField label="반려 여부">

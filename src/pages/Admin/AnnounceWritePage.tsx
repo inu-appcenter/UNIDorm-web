@@ -1,5 +1,8 @@
 import styled from "styled-components";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useAnnouncementDetail } from "@/queries/announcements";
+import { useInitFromQuery } from "@/hooks/useInitFromQuery";
+import type { AnnouncementDetail } from "@/types/announcements";
 import { useEffect, useState } from "react";
 import SquareButton from "../../components/common/SquareButton.tsx";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
@@ -25,22 +28,27 @@ import { RequestAnnouncementDto } from "@/types/announcements";
 export default function AnnounceWritePage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { announce, announceFiles } = location.state || {};
+  const [searchParams] = useSearchParams();
+  const queryId = searchParams.get("id");
+  const editId = queryId ? Number(queryId) : undefined;
+
+  const { announce: stateAnnounce, announceFiles: stateFiles } = location.state || {};
+  const [announce, setAnnounce] = useState<AnnouncementDetail | null>(stateAnnounce ?? null);
 
   const announceCategoryOptions = ANNOUNCE_CATEGORY_LIST.slice(1);
   const announceSubCategoryOptions = ANNOUNCE_SUB_CATEGORY_LIST.slice(1);
   const { isDormAdmin, isSupporters } = useUserRole();
 
-  const [title, setTitle] = useState(announce?.title || "");
-  const [content, setContent] = useState(announce?.content || "");
-  const [isEmergency, setIsEmergency] = useState(announce?.emergency ?? false);
+  const [title, setTitle] = useState(stateAnnounce?.title || "");
+  const [content, setContent] = useState(stateAnnounce?.content || "");
+  const [isEmergency, setIsEmergency] = useState(stateAnnounce?.emergency ?? false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const writerIndex = announce
+  const writerIndex = stateAnnounce
     ? announceCategoryOptions.findIndex(
         (item) =>
-          item.value === announce.announcementType ||
-          item.label.ko === announce.announcementType,
+          item.value === stateAnnounce.announcementType ||
+          item.label.ko === stateAnnounce.announcementType,
       )
     : -1;
 
@@ -54,10 +62,33 @@ export default function AnnounceWritePage() {
     setSelectedAnnounceSubCategoryIndex,
   ] = useState<number>(0);
 
+  const { data: detailData, isLoading: isDetailLoading } = useAnnouncementDetail(
+    !stateAnnounce && editId ? editId : undefined,
+  );
+
   const { files, addFiles, deleteFile, isFileLoading } = useFileHandler({
-    initialFiles: announceFiles,
+    initialFiles: stateFiles ?? detailData?.images,
     mode: "file",
   });
+
+  useInitFromQuery(
+    detailData,
+    (fetched) => {
+      if (!stateAnnounce && fetched?.announce) {
+        setAnnounce(fetched.announce);
+        setTitle(fetched.announce.title);
+        setContent(fetched.announce.content);
+        setIsEmergency(fetched.announce.emergency ?? false);
+        const wIdx = announceCategoryOptions.findIndex(
+          (item) =>
+            item.value === fetched.announce.announcementType ||
+            (item.label.ko as string) === fetched.announce.announcementType,
+        );
+        if (wIdx !== -1) setSelectedAnnounceCategoryIndex(wIdx);
+      }
+    },
+    editId,
+  );
 
   const selectedAnnounceCategory =
     announceCategoryOptions[selectedAnnounceCategoryIndex];
@@ -113,7 +144,16 @@ export default function AnnounceWritePage() {
 
   return (
     <Wrapper>
-      {isLoading && <LoadingSpinner overlay message="글 올리는 중..." />}
+      {(isLoading || isDetailLoading) && (
+        <LoadingSpinner
+          overlay
+          message={
+            isDetailLoading
+              ? "공지사항 불러오는 중..."
+              : "글 올리는 중..."
+          }
+        />
+      )}
 
       <Content>
         <FormField

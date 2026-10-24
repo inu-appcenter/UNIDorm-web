@@ -15,7 +15,7 @@ import { useMyChecklist } from "@/queries/roommates";
 import { useInitFromQuery } from "@/hooks/useInitFromQuery";
 import { getMemberInfo } from "@/apis/members";
 import useUserStore from "../../stores/useUserStore";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
   bedtime,
   colleges,
@@ -41,14 +41,20 @@ export default function RoomMateChecklistPage() {
   const { setUserInfo, userInfo } = useUserStore();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const TOTAL_STEPS = 4;
 
   const [formData, setFormData] = useState<CheckListForm>(INITIAL_FORM_STATE);
   const [randomTitles, setRandomTitles] = useState<string[]>([]);
-  const isEditMode = location.state?.mode === "edit";
-  const editingBoardId = location.state?.boardId;
+  const isEditMode =
+    location.state?.mode === "edit" || searchParams.get("mode") === "edit";
+  const editingBoardId =
+    location.state?.boardId ??
+    (searchParams.get("boardId")
+      ? Number(searchParams.get("boardId"))
+      : undefined);
 
   // State 변경 핸들러
   const handleFormChange = (key: keyof CheckListForm, value: any) => {

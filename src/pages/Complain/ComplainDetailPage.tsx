@@ -125,7 +125,7 @@ const ComplainDetailPage = () => {
               {
                 label: "수정하기",
                 onClick: () => {
-                  navigate(PATHS.COMPLAIN.WRITE, {
+                  navigate(`${PATHS.COMPLAIN.WRITE}?id=${complainId}`, {
                     state: {
                       complain: complaint,
                       complainImages: complainImages,

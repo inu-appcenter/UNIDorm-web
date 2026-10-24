@@ -152,7 +152,7 @@ export default function TipDetailPage() {
             {
               label: "수정하기",
               onClick: () =>
-                navigate("/tips/write", {
+                navigate(`/tips/write?id=${boardId}`, {
                   state: { tip: tip, tipImages: images },
                 }),
             },

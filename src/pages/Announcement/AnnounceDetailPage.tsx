@@ -90,7 +90,7 @@ export default function AnnounceDetailPage() {
       {
         label: "수정하기",
         onClick: () => {
-          navigate("/announcements/write", {
+          navigate(`/announcements/write?id=${boardId}`, {
             state: { announce, announceFiles: images },
           });
         },

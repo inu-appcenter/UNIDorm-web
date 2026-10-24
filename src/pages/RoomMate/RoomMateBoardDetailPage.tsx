@@ -114,7 +114,10 @@ export default function RoomMateBoardDetailPage() {
   };
 
   const handleEdit = () => {
-    navigate(PATHS.ROOMMATE.CHECKLIST, {
+    const editUrl = boardData?.boardId
+      ? `${PATHS.ROOMMATE.CHECKLIST}?mode=edit&boardId=${boardData.boardId}`
+      : `${PATHS.ROOMMATE.CHECKLIST}?mode=edit`;
+    navigate(editUrl, {
       state: { mode: "edit", boardId: boardData?.boardId },
     });
   };

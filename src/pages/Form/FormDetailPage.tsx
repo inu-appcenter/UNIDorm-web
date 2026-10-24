@@ -249,7 +249,7 @@ const FormDetailPage = () => {
             {
               label: "폼 수정하기",
               onClick: () => {
-                navigate("/admin/form/create", { state: { form } });
+                navigate(`/admin/form/create?id=${formId}`, { state: { form } });
               },
             },
             {
