@@ -6,44 +6,61 @@ import RoomMateInfoArea from "../../components/roommate/RoomMateInfoArea.tsx";
 import {
   cancelRoommateMatching,
   deleteMyRoommateRules,
-  getMyRoommateInfo,
-  getMyRoommateRules,
   sendQuickMessage,
   updateMyRoommateRules,
 } from "@/apis/roommate";
 import RoundSquareButton from "../../components/button/RoundSquareButton.tsx";
 import QuickMessageModal from "../../components/roommate/QuickMessageModal.tsx";
-import { MyRoommateInfoResponse } from "@/types/roommates";
-import {
-  getMyRoommateTimeTableImage,
-  getUserTimetableImage,
-  putUserTimetableImage,
-} from "@/apis/members";
+import { putUserTimetableImage } from "@/apis/members";
 import RoundSquareWhiteButton from "../../components/button/RoundSquareWhiteButton.tsx";
 import { useNavigate } from "react-router-dom";
 import BottomBar from "../../components/common/BottomBar/BottomBar.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
-import { usePageFocus } from "@/hooks/usePageFocus";
 import CommonBottomSheet from "../../components/modal/CommonBottomSheet.tsx";
+import {
+  useMyRoommateInfo,
+  useMyRoommateRules,
+  useMyRoommateTimetableImage,
+  useUserTimetableImage,
+} from "@/queries/roommates";
+import { useInitFromQuery } from "@/hooks/useInitFromQuery";
 
 export default function MyRoomMatePage() {
-  const [roommateInfo, setRoommateInfo] =
-    useState<MyRoommateInfoResponse | null>(null);
-  const [notFound, setNotFound] = useState(false);
-  const [text, setText] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [isEditing, setIsEditing] = useState(false);
   const navigate = useNavigate();
+  const { data: roommateInfo = null, isSuccess: isRoommateSuccess } =
+    useMyRoommateInfo();
+  const notFound = Boolean(isRoommateSuccess && !roommateInfo);
+  const hasAlerted404 = useRef(false);
 
-  const [isNeedReload, setIsNeedReload] = useState(false);
+  useEffect(() => {
+    if (notFound && !hasAlerted404.current) {
+      hasAlerted404.current = true;
+      alert(
+        "등록된 내 룸메이트가 없어요!\n룸메이트 탭에서 룸메이트를 찾아보거나, 이미 같이 하기로 한 친구가 있다면 등록해주세요.",
+      );
+    }
+  }, [notFound]);
+
+  const { data: rulesData, isLoading: isRulesLoading } = useMyRoommateRules();
+  const [text, setText] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+
+  useInitFromQuery(rulesData, (data) => {
+    const initialRules = data.rules ?? [];
+    setText(initialRules.join("\n"));
+  });
+
+  const { data: myTimetable } = useUserTimetableImage();
+  const { data: roommateTimetable } = useMyRoommateTimetableImage({
+    enabled: !notFound,
+  });
+
+  const myTimetableImageUrl = myTimetable?.imageUrl;
+  const roommateTimetableImageUrl = roommateTimetable?.imageUrl;
+  const loading = isRulesLoading;
 
   const [showQuickModal, setShowQuickModal] = useState(false);
-
   const [showImgConfirmModal, setShowImgConfirmModal] = useState(false);
-  const [myTimetableImageUrl, setMyTimetableImageUrl] = useState<string>();
-  const [roommateTimetableImageUrl, setRoommateTimetableImageUrl] =
-    useState<string>();
-
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string>("");
 
@@ -117,76 +134,7 @@ export default function MyRoomMatePage() {
     },
   ];
 
-  // silent: 화면 복귀 시 재조회 — 룸메이트가 없을 때 안내 alert 를 다시 띄우지 않음
-  const fetchRoommateInfo = useCallback(
-    async ({ silent = false }: { silent?: boolean } = {}) => {
-      try {
-        const res = await getMyRoommateInfo();
-        console.log(res);
-        setRoommateInfo(res.data);
-        setNotFound(false);
-      } catch (err: any) {
-        if (err.response?.status === 404) {
-          if (!silent) {
-            alert(
-              "등록된 내 룸메이트가 없어요!\n룸메이트 탭에서 룸메이트를 찾아보거나, 이미 같이 하기로 한 친구가 있다면 등록해주세요.",
-            );
-          }
-          setRoommateInfo(null);
-          setNotFound(true);
-        } else {
-          console.log("룸메이트 정보를 불러오는 데 실패했습니다." + err);
-        }
-      }
-    },
-    [],
-  );
 
-  // 매칭 수락·해제(알림 등 별도 웹뷰) 후 돌아오면 룸메이트 정보만 재조회.
-  // 방 규칙은 이 화면에서 편집 중일 수 있어 덮어쓰지 않음.
-  usePageFocus(() => fetchRoommateInfo({ silent: true }));
-
-  useEffect(() => {
-
-    const fetchRules = async () => {
-      try {
-        const res = await getMyRoommateRules();
-        const initialRules = res.data.rules ?? [];
-        setText(initialRules.join("\n"));
-      } catch (error: any) {
-        console.log("방 규칙을 불러오는 데 실패했습니다.", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const fetchUserTimetable = async () => {
-      try {
-        const res = await getUserTimetableImage();
-        setMyTimetableImageUrl(res.data.imageUrl);
-      } catch (error: any) {
-        console.log("내 시간표 이미지 불러오기 실패:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const fetchRoommateTimetable = async () => {
-      try {
-        const res = await getMyRoommateTimeTableImage();
-        setRoommateTimetableImageUrl(res.data.imageUrl);
-      } catch (error: any) {
-        console.log("룸메이트 시간표 이미지 불러오기 실패:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchRules();
-    fetchRoommateInfo();
-    fetchRoommateTimetable();
-    fetchUserTimetable();
-  }, [isNeedReload, fetchRoommateInfo]);
 
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -227,10 +175,7 @@ export default function MyRoomMatePage() {
 
       if (response.status === 200) {
         alert("시간표 이미지가 업로드되었습니다.");
-        const newImageUrl = response.data.fileName;
-        setMyTimetableImageUrl(newImageUrl);
         setShowImgConfirmModal(false);
-        setIsNeedReload(!isNeedReload);
 
         if (sliderRef.current) {
           sliderRef.current.scrollTo({

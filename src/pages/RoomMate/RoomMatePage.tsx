@@ -4,14 +4,17 @@ import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import RoomMateCard from "../../components/roommate/RoomMateCard.tsx";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import useUserStore from "../../stores/useUserStore.ts";
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getMyRoommateBoardId,
   getRoomMateScrollList,
-  getMatchingPostList,
-  getNotificationFilter,
 } from "@/apis/roommate";
-import { getMemberLikePosts } from "@/apis/members";
+import {
+  roommateKeys,
+  useMatchingPostList,
+  useRoommateNotificationFilter,
+} from "@/queries/roommates";
+import { useMemberLikePosts } from "@/queries/members";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import ComingSoonOverlay from "../../components/common/ComingSoonOverlay.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
@@ -65,6 +68,7 @@ function FilterTags({
 
 export default function RoomMatePage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const { ref, inView } = useInView();
@@ -210,12 +214,8 @@ export default function RoomMatePage() {
     return () => window.clearTimeout(timer);
   }, [searchKeyword]);
 
-  const { data: notificationFilterData } = useQuery({
-    queryKey: ["roommateNotificationFilter"],
-    queryFn: getNotificationFilter,
+  const { data: notificationFilterData } = useRoommateNotificationFilter({
     enabled: isLoggedIn,
-    select: (res) => res.data,
-    staleTime: 1000 * 60 * 30,
   });
 
   const isFilterSet = useMemo(() => {
@@ -332,15 +332,10 @@ export default function RoomMatePage() {
 
   const searchedRoommates = filteredRoommates;
 
-  const { data: matchingRoommates, isLoading: isMatchingLoading } = useQuery({
-    queryKey: ["roommates", "matching"],
-    queryFn: async () => {
-      const response = await getMatchingPostList();
-      return response.data;
-    },
-    enabled: isLoggedIn && hasChecklist && isFilterSet,
-    staleTime: 1000 * 60 * 5,
-  });
+  const { data: matchingRoommates, isLoading: isMatchingLoading } =
+    useMatchingPostList({
+      enabled: isLoggedIn && hasChecklist && isFilterSet,
+    });
 
   useEffect(() => {
     const animationFrame = window.requestAnimationFrame(
@@ -355,20 +350,17 @@ export default function RoomMatePage() {
   }, [matchingRoommates?.length]);
 
   const {
-    data: likedRoommates = [],
+    data: allMemberLikePosts = [],
     isLoading: isLikedLoading,
     isError: isLikedError,
-  } = useQuery({
-    queryKey: ["memberLikePosts"],
-    queryFn: async () => {
-      const response = await getMemberLikePosts();
-      return response.data.filter(
-        (post): post is MyPost_RoommateBoard => post.type === "ROOMMATE",
-      );
-    },
-    enabled: isLoggedIn && selectedCategory === CATEGORY_LIST[1],
-    staleTime: 1000 * 60 * 5,
-  });
+  } = useMemberLikePosts();
+
+  const likedRoommates = useMemo(() => {
+    if (!isLoggedIn || selectedCategory !== CATEGORY_LIST[1]) return [];
+    return allMemberLikePosts.filter(
+      (post): post is MyPost_RoommateBoard => post.type === "ROOMMATE",
+    );
+  }, [allMemberLikePosts, isLoggedIn, selectedCategory]);
 
   const [likedTabFilter, setLikedTabFilter] = useState<"ALL" | "RECRUITING">(
     "ALL",
@@ -396,8 +388,12 @@ export default function RoomMatePage() {
     setIsOpeningMyPost(true);
 
     try {
-      const response = await getMyRoommateBoardId();
-      const boardId = response.data.boardId;
+      const resData = await queryClient.fetchQuery({
+        queryKey: roommateKeys.myChecklistBoardId(),
+        queryFn: async () => (await getMyRoommateBoardId()).data,
+        staleTime: 1000 * 60 * 5,
+      });
+      const boardId = resData.boardId;
 
       navigate(PATHS.ROOMMATE.DETAIL(boardId), {
         state: { isMyPost: true },

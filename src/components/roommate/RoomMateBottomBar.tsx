@@ -4,15 +4,14 @@ import { useNavigate, useParams } from "react-router-dom";
 import { createRoommateChatRoom } from "@/apis/chat";
 import useUserStore from "../../stores/useUserStore.ts";
 import {
-  getRoommateLiked,
   likeRoommateBoard,
   unlikeRoommateBoard,
 } from "@/apis/roommate";
-import { useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import { colors, typography } from "@/styles/tokens";
 import HeartToggleButton from "@/components/common/HeartToggleButton";
-import { getBlockedUsers } from "@/apis/block";
+import { useBlockedUsers } from "@/queries/chat";
+import { useRoommateLiked } from "@/queries/roommates";
 import { useRoommateMatchingStatus } from "@/hooks/useRoommateMatchingStatus";
 
 const RoomMateBottomBar = ({
@@ -37,8 +36,6 @@ const RoomMateBottomBar = ({
   postSemester?: string | number;
 }) => {
   const { boardId } = useParams<{ boardId: string }>();
-  const queryClient = useQueryClient();
-
   const { tokenInfo, userInfo } = useUserStore();
   const { data: matchingStatus } = useRoommateMatchingStatus();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
@@ -57,68 +54,30 @@ const RoomMateBottomBar = ({
     userInfo.dormType === postDormType;
   const isCurrentPeriod = currentPeriod !== false;
 
+  const shouldFetchBlock = Boolean(
+    isLoggedIn && partnerId && partnerId !== userInfo.id,
+  );
+  const { data: blockedList, isLoading: isBlockStatusLoading } = useBlockedUsers({
+    enabled: shouldFetchBlock,
+  });
+  const isBlockedPartner = Boolean(
+    blockedList?.some(
+      (blockedUser) => Number(blockedUser.blockedUserId) === partnerId,
+    ),
+  );
+  const isChatBlocked = isBlockedPartner || Boolean(isBlockedByAuthor);
+
+  const numericBoardId = boardId ? Number(boardId) : undefined;
+  const { data: serverLiked } = useRoommateLiked(numericBoardId);
   const [liked, setLiked] = useState<boolean>(false);
   const [isLikeSubmitting, setIsLikeSubmitting] = useState(false);
-  const [isBlockedPartner, setIsBlockedPartner] = useState(false);
-  const [isBlockStatusLoading, setIsBlockStatusLoading] = useState(false);
-  const isChatBlocked = isBlockedPartner || Boolean(isBlockedByAuthor);
   const navigate = useNavigate();
 
   useEffect(() => {
-    let isActive = true;
-
-    if (!isLoggedIn || !partnerId || partnerId === userInfo.id) {
-      setIsBlockedPartner(false);
-      setIsBlockStatusLoading(false);
-      return;
+    if (typeof serverLiked === "boolean") {
+      setLiked(serverLiked);
     }
-
-    const fetchBlockStatus = async () => {
-      setIsBlockStatusLoading(true);
-
-      try {
-        const response = await getBlockedUsers();
-        const isBlocked = response.data.some(
-          (blockedUser) => Number(blockedUser.blockedUserId) === partnerId,
-        );
-
-        if (isActive) {
-          setIsBlockedPartner(isBlocked);
-        }
-      } catch (error) {
-        console.error("차단 상태를 확인하지 못했습니다.", error);
-        if (isActive) {
-          setIsBlockedPartner(false);
-        }
-      } finally {
-        if (isActive) {
-          setIsBlockStatusLoading(false);
-        }
-      }
-    };
-
-    void fetchBlockStatus();
-
-    return () => {
-      isActive = false;
-    };
-  }, [isLoggedIn, partnerId, userInfo.id]);
-
-  // 좋아요 상태 초기값 세팅이 필요하면 API로 받아오는 로직 추가 가능
-  useEffect(() => {
-    const fetchisLiked = async () => {
-      try {
-        const response = await getRoommateLiked(Number(boardId));
-        console.log(response);
-        setLiked(response.data);
-      } catch (error) {
-        console.log("좋아요 정보를 가져오는 중 오류가 발생했습니다.", error);
-      }
-    };
-    if (isLoggedIn && boardId) {
-      fetchisLiked();
-    }
-  }, [boardId, isLoggedIn]);
+  }, [serverLiked]);
 
   const handleLikeClick = async () => {
     if (isLikeSubmitting) return;
@@ -159,12 +118,7 @@ const RoomMateBottomBar = ({
         // 현재 좋아요 개수(res.data)를 필요하면 활용 가능
       }
 
-      await queryClient.invalidateQueries({
-        queryKey: ["roommates", "scroll"],
-      });
-      await queryClient.invalidateQueries({
-        queryKey: ["memberLikePosts"],
-      });
+
     } catch (error) {
       if (isAxiosError(error) && error.response) {
         const code = error.response.status;

@@ -1,19 +1,25 @@
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import {
+  getMyChecklist,
+  getMyRoommateBoardId,
   getMyRoommateInfo,
   getMyRoommateRules,
   getNotificationFilter,
+  getOpponentChecklist,
   getRoomMateDetail,
   getRoommateLiked,
   getRoomMateScrollList,
   getRoommateMatchingStatus,
   getSimilarRoomMateList,
+  getMatchingPostList,
 } from "@/apis/roommate";
 import {
   getMyRoommateTimeTableImage,
   getUserTimetableImage,
 } from "@/apis/members";
 import type {
+  FilteredRoommatePost,
+  MyRoommateBoardIdResponse,
   MyRoommateInfoResponse,
   RoommateMatchingStatus,
   RoommateNotificationFilter,
@@ -31,10 +37,15 @@ export const roommateKeys = {
   scroll: (filters?: { keyword?: string; year?: number; semester?: number }) =>
     ["roommates", "scroll", filters] as const,
   similar: () => ["roommates", "similar"] as const,
+  matching: () => ["roommates", "matching"] as const,
   detail: (id: number) => ["roommates", "detail", id] as const,
   liked: (id: number) => ["roommates", "liked", id] as const,
   matchingStatus: () => ["roommates", "matchingStatus"] as const,
   filter: () => ["roommates", "notificationFilter"] as const,
+  myChecklist: () => ["roommates", "myChecklist"] as const,
+  myChecklistBoardId: () => ["roommates", "myChecklistBoardId"] as const,
+  opponentChecklist: (chatRoomId: number) =>
+    ["roommates", "opponentChecklist", chatRoomId] as const,
 };
 
 /** 내 룸메이트 정보 (404 면 룸메이트 없음). */
@@ -124,6 +135,18 @@ export const useSimilarRoommateList = () =>
     staleTime: 1000 * 60 * 5,
   });
 
+/** 맞춤 룸메이트 매칭 목록. */
+export const useMatchingPostList = (options?: { enabled?: boolean }) =>
+  useQuery({
+    queryKey: roommateKeys.matching(),
+    queryFn: async (): Promise<FilteredRoommatePost[]> => {
+      const res = await getMatchingPostList();
+      return res.data;
+    },
+    enabled: options?.enabled ?? true,
+    staleTime: 1000 * 60 * 5,
+  });
+
 /** 룸메이트 게시글 상세. */
 export const useRoommateBoardDetail = (id: number | undefined) =>
   useQuery({
@@ -170,5 +193,41 @@ export const useRoommateNotificationFilter = (options?: {
       return res.data;
     },
     enabled: options?.enabled ?? true,
+    staleTime: 1000 * 60 * 5,
+  });
+
+/** 내 체크리스트 조회. */
+export const useMyChecklist = (options?: { enabled?: boolean }) =>
+  useQuery({
+    queryKey: roommateKeys.myChecklist(),
+    queryFn: async (): Promise<RoommatePost> => {
+      const res = await getMyChecklist();
+      return res.data;
+    },
+    enabled: options?.enabled ?? true,
+    staleTime: 1000 * 60 * 5,
+  });
+
+/** 내 체크리스트 게시글 ID 조회. */
+export const useMyChecklistBoardId = (options?: { enabled?: boolean }) =>
+  useQuery({
+    queryKey: roommateKeys.myChecklistBoardId(),
+    queryFn: async (): Promise<MyRoommateBoardIdResponse> => {
+      const res = await getMyRoommateBoardId();
+      return res.data;
+    },
+    enabled: options?.enabled ?? true,
+    staleTime: 1000 * 60 * 5,
+  });
+
+/** 상대방 체크리스트 조회. */
+export const useOpponentChecklist = (chatRoomId: number | undefined) =>
+  useQuery({
+    queryKey: roommateKeys.opponentChecklist(chatRoomId ?? 0),
+    queryFn: async (): Promise<RoommatePost> => {
+      const res = await getOpponentChecklist(chatRoomId!);
+      return res.data;
+    },
+    enabled: typeof chatRoomId === "number" && chatRoomId > 0,
     staleTime: 1000 * 60 * 5,
   });

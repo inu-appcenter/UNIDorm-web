@@ -1,13 +1,14 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import styled from "styled-components";
 
+import { deleteRoommatePost } from "@/apis/roommate";
 import {
-  deleteRoommatePost,
-  getOpponentChecklist,
-  getRoomMateDetail,
-} from "@/apis/roommate";
+  useOpponentChecklist,
+  useRoommateBoardDetail,
+} from "@/queries/roommates";
+import { memberKeys } from "@/queries/members";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import RoomMateBottomBar from "@/components/roommate/RoomMateBottomBar";
 import UserInfo from "@/components/common/UserInfo";
@@ -54,43 +55,28 @@ export default function RoomMateBoardDetailPage() {
     | undefined;
   const { userInfo, setUserInfo } = useUserStore();
 
-  const [boardData, setBoardData] = useState<RoommatePost | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isError, setIsError] = useState(false);
+  const isOpponent = Boolean(roomId);
+  const numericBoardId =
+    boardId && boardId !== "opponent" ? Number(boardId) : undefined;
 
-  useEffect(() => {
-    let isActive = true;
+  const {
+    data: opponentData,
+    isLoading: isOpponentLoading,
+    isError: isOpponentError,
+  } = useOpponentChecklist(roomId);
 
-    const fetchBoardData = async () => {
-      setIsLoading(true);
-      setIsError(false);
+  const {
+    data: detailData,
+    isLoading: isDetailLoading,
+    isError: isDetailError,
+  } = useRoommateBoardDetail(isOpponent ? undefined : numericBoardId);
 
-      try {
-        const response = roomId
-          ? await getOpponentChecklist(roomId)
-          : boardId && boardId !== "opponent"
-            ? await getRoomMateDetail(Number(boardId))
-            : null;
-
-        if (isActive && response) {
-          setBoardData(response.data);
-          queryClient.invalidateQueries({ queryKey: ["matchingRoommates"] });
-          queryClient.invalidateQueries({ queryKey: ["roommates"] });
-        }
-      } catch (error) {
-        console.error("게시글 데이터를 불러오지 못했습니다:", error);
-        if (isActive) setIsError(true);
-      } finally {
-        if (isActive) setIsLoading(false);
-      }
-    };
-
-    fetchBoardData();
-
-    return () => {
-      isActive = false;
-    };
-  }, [boardId, queryClient, roomId]);
+  const boardData = (isOpponent ? opponentData : detailData) as
+    | RoommatePost
+    | null
+    | undefined;
+  const isLoading = isOpponent ? isOpponentLoading : isDetailLoading;
+  const isError = isOpponent ? isOpponentError : isDetailError;
 
   const handleDelete = async () => {
     const targetBoardId = boardData?.boardId || Number(boardId);
@@ -108,13 +94,14 @@ export default function RoomMateBoardDetailPage() {
       await deleteRoommatePost(targetBoardId);
 
       try {
-        const memberResponse = await getMemberInfo();
-        setUserInfo(memberResponse.data);
+        const memberData = await queryClient.fetchQuery({
+          queryKey: memberKeys.info(),
+          queryFn: async () => (await getMemberInfo()).data,
+        });
+        setUserInfo(memberData);
       } catch (memberError) {
         console.error("체크리스트 삭제 후 사용자 정보 갱신 실패:", memberError);
       }
-
-      queryClient.invalidateQueries({ queryKey: ["roommates"] });
       alert("게시글이 삭제되었습니다.");
       navigate(
         `${PATHS.ROOMMATE.ROOT}?tab=${encodeURIComponent(CATEGORY_LIST[0])}`,

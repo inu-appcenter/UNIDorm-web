@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import styled from "styled-components";
 import SquareButton from "../../components/common/SquareButton";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
@@ -8,12 +8,12 @@ import Step3LifeRhythm from "../../components/roommate/FindSetting/steps/Step3Li
 import Step4Personality from "../../components/roommate/FindSetting/steps/Step4Personality";
 import { CheckListForm, INITIAL_FORM_STATE } from "@/types/roommates";
 import {
-  getNotificationFilter,
   updateNotificationFilter,
   deleteNotificationFilter,
 } from "@/apis/roommate";
 import { useNavigate } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
+import { useRoommateNotificationFilter } from "@/queries/roommates";
+import { useInitFromQuery } from "@/hooks/useInitFromQuery";
 import {
   bedtime,
   colleges,
@@ -36,7 +36,7 @@ import { CATEGORY_LIST } from "@/constants/roommate";
 
 export default function RoomMateFilterPage() {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
+  const { data: filterData } = useRoommateNotificationFilter();
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [isFilterActive, setIsFilterActive] = useState(true);
@@ -50,89 +50,74 @@ export default function RoomMateFilterPage() {
 
   useSetHeader({ title: "맞춤 룸메이트 설정" });
 
-  useEffect(() => {
-    const fetchFilterData = async () => {
-      setIsLoading(true);
-      try {
-        const { data } = await getNotificationFilter();
+  useInitFromQuery(filterData, (data) => {
+    if (!data) return;
 
-        if (data) {
-          // 필드 설정 여부 확인
-          const hasAnySetting = [
-            data.dormPeriodDays?.length,
-            data.colleges?.length,
-            data.religions?.length,
-            data.dormType,
-            data.smoking,
-            data.snoring,
-            data.toothGrind,
-            data.sleeper,
-            data.showerHour,
-            data.showerTime,
-            data.bedTime,
-            data.arrangement,
-          ].some((value) => {
-            if (Array.isArray(value)) return value.length > 0;
-            if (typeof value === "number") return value > 0;
-            return value !== null && value !== undefined;
-          });
+    const hasAnySetting = [
+      data.dormPeriodDays?.length,
+      data.colleges?.length,
+      data.religions?.length,
+      data.dormType,
+      data.smoking,
+      data.snoring,
+      data.toothGrind,
+      data.sleeper,
+      data.showerHour,
+      data.showerTime,
+      data.bedTime,
+      data.arrangement,
+    ].some((value) => {
+      if (Array.isArray(value)) return value.length > 0;
+      if (typeof value === "number") return value > 0;
+      return value !== null && value !== undefined;
+    });
 
-          setIsFilterActive(hasAnySetting);
+    setIsFilterActive(hasAnySetting);
 
-          // 사용 안함 상태(설정 없음)일 때만 안내 문구 출력
-          if (!hasAnySetting) {
-            setTimeout(() => {
-              alert(
-                "필터에 해당하는 새 글이 올라오면 푸시 알림으로 알려드려요.\n너무 많은 필터 선택은 룸메이트를 구하기 어려울 수 있으니, 꼭 필요한 필터만 선택해주세요!",
-              );
-            }, 100);
-          }
+    if (!hasAnySetting) {
+      setTimeout(() => {
+        alert(
+          "필터에 해당하는 새 글이 올라오면 푸시 알림으로 알려드려요.\n너무 많은 필터 선택은 룸메이트를 구하기 어려울 수 있으니, 꼭 필요한 필터만 선택해주세요!",
+        );
+      }, 100);
+    }
 
-          // 폼 데이터 바인딩
-          setFormData({
-            ...INITIAL_FORM_STATE,
-            dormType: data.dormType ? dormitory.indexOf(data.dormType) : null,
-            dormPeriod: data.dormPeriodDays
-              ? data.dormPeriodDays
-                  .map((d) => days.indexOf(d.replace("요일", "")))
-                  .filter((i) => i !== -1)
-              : [],
-            college: data.colleges
-              ? (data.colleges
-                  .map((c) => colleges.indexOf(c))
-                  .filter((i) => i !== -1) as any)
-              : [],
-            smoking: data.smoking ? smoking.indexOf(data.smoking) : null,
-            snoring: data.snoring ? snoring.indexOf(data.snoring) : null,
-            toothGrind: data.toothGrind
-              ? toothgrinding.indexOf(data.toothGrind)
-              : null,
-            sleeper: data.sleeper ? isLightSleeper.indexOf(data.sleeper) : null,
-            showerHour: data.showerHour
-              ? showertime.indexOf(data.showerHour)
-              : null,
-            showerTime: data.showerTime
-              ? showerDuration.indexOf(data.showerTime)
-              : null,
-            bedTime: data.bedTime ? bedtime.indexOf(data.bedTime) : null,
-            arrangement: data.arrangement
-              ? organizationLevel.indexOf(data.arrangement)
-              : null,
-            religion: data.religions
-              ? (data.religions
-                  .map((r) => religion.indexOf(r))
-                  .filter((i) => i !== -1) as any)
-              : [],
-          });
-        }
-      } catch (error) {
-        console.error("데이터 로드 실패", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchFilterData();
-  }, []);
+    setFormData({
+      ...INITIAL_FORM_STATE,
+      dormType: data.dormType ? dormitory.indexOf(data.dormType) : null,
+      dormPeriod: data.dormPeriodDays
+        ? data.dormPeriodDays
+            .map((d) => days.indexOf(d.replace("요일", "")))
+            .filter((i) => i !== -1)
+        : [],
+      college: data.colleges
+        ? (data.colleges
+            .map((c) => colleges.indexOf(c))
+            .filter((i) => i !== -1) as any)
+        : [],
+      smoking: data.smoking ? smoking.indexOf(data.smoking) : null,
+      snoring: data.snoring ? snoring.indexOf(data.snoring) : null,
+      toothGrind: data.toothGrind
+        ? toothgrinding.indexOf(data.toothGrind)
+        : null,
+      sleeper: data.sleeper ? isLightSleeper.indexOf(data.sleeper) : null,
+      showerHour: data.showerHour
+        ? showertime.indexOf(data.showerHour)
+        : null,
+      showerTime: data.showerTime
+        ? showerDuration.indexOf(data.showerTime)
+        : null,
+      bedTime: data.bedTime ? bedtime.indexOf(data.bedTime) : null,
+      arrangement: data.arrangement
+        ? organizationLevel.indexOf(data.arrangement)
+        : null,
+      religion: data.religions
+        ? (data.religions
+            .map((r) => religion.indexOf(r))
+            .filter((i) => i !== -1) as any)
+        : [],
+    });
+  });
 
   const handleFormChange = (key: keyof CheckListForm, value: any) => {
     if (!isFilterActive) return;
@@ -143,12 +128,6 @@ export default function RoomMateFilterPage() {
     try {
       setIsLoading(true);
       await deleteNotificationFilter();
-      await queryClient.invalidateQueries({
-        queryKey: ["roommates", "matching"],
-      });
-      await queryClient.invalidateQueries({
-        queryKey: ["roommateNotificationFilter"],
-      });
 
       setFormData({
         ...INITIAL_FORM_STATE,
@@ -212,12 +191,6 @@ export default function RoomMateFilterPage() {
     try {
       setIsLoading(true);
       await updateNotificationFilter(filterBody as any);
-      await queryClient.invalidateQueries({
-        queryKey: ["roommates", "matching"],
-      });
-      await queryClient.invalidateQueries({
-        queryKey: ["roommateNotificationFilter"],
-      });
 
       alert(
         "맞춤 필터 설정이 완료되었습니다!\n조건이 일치하는 새 글이 올라오면 알려드릴게요😊",
