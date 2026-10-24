@@ -327,7 +327,7 @@ export type NativeToWebEvent = NativeToWeb["event"];
 type Exact<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
 type Assert<T extends true> = T;
 // Exported (not bare `type _…`) so consumers that compile this file from source
-// under `noUnusedLocals` (the bridge is vendored as a submodule, not a built
+// under `noUnusedLocals` (the bridge is vendored as source, not a built
 // package) don't flag these compile-time-only drift guards as unused. They
 // carry no runtime value.
 export type _AssertWebToNative = Assert<Exact<z.infer<typeof webToNativeSchema>, WebToNative>>;

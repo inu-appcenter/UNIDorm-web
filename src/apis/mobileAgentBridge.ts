@@ -170,8 +170,9 @@ function sendBridgeAction<T = any>(type: string, payload?: any, timeoutMs = 1500
       });
     };
 
-    // 구버전 앱은 intipAgentResult로만 보낸다. 새 앱은 두 이름으로 모두 보내지만
-    // 첫 수신에서 리스너를 모두 떼므로 한 번만 처리된다.
+    // 이미 설치된 구버전 앱은 intipAgentResult로만 보낸다. 새 앱은 두 이름으로 모두
+    // 보내지만 첫 수신에서 리스너를 모두 떼므로 한 번만 처리된다.
+    // 사용자 기기의 앱이 모두 새 버전(OTA 포함)으로 바뀐 뒤 intip 쪽을 지운다.
     const removeListeners = () => {
       window.removeEventListener('unidormAgentResult', handler);
       window.removeEventListener('intipAgentResult', handler);

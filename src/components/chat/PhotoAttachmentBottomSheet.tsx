@@ -41,7 +41,7 @@ export default function PhotoAttachmentBottomSheet({
       } else if (typeof cameraWindow.__unidormRequestCameraPermission === "function") {
         cameraWindow.__unidormRequestCameraPermission();
       } else if (typeof cameraWindow.__intipRequestCameraPermission === "function") {
-        // 이름을 바꾸기 전 구버전 앱
+        // 이미 설치된 구버전 앱. 사용자 기기의 앱이 모두 새 버전으로 바뀐 뒤 지운다.
         cameraWindow.__intipRequestCameraPermission();
       }
     } catch {}
