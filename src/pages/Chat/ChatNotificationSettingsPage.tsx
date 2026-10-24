@@ -1,12 +1,13 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import {
-  getOpenChatNotificationMode,
   updateOpenChatNotificationMode,
   NotificationMode,
 } from "@/apis/chat";
+import { useOpenChatNotificationMode } from "@/queries/chat";
+import { useInitFromQuery } from "@/hooks/useInitFromQuery";
 
 interface NotificationOption {
   title: string;
@@ -36,36 +37,20 @@ export default function ChatNotificationSettingsPage() {
   const { id } = useParams();
   const roomId = Number(id);
 
+  const { data: modeResponse, isLoading } = useOpenChatNotificationMode(roomId);
   const [selectedMode, setSelectedMode] = useState<NotificationMode | null>(
     null,
   );
-  const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useInitFromQuery(modeResponse?.mode, (mode) => {
+    setSelectedMode(mode);
+  }, roomId);
 
   /* 공용 헤더 설정 */
   useSetHeader({
     title: "채팅방 알림 설정",
   });
-
-  /* 현재 알림 모드 조회 */
-  useEffect(() => {
-    if (!roomId) return;
-
-    const fetchNotificationMode = async () => {
-      try {
-        setIsLoading(true);
-        const res = await getOpenChatNotificationMode(roomId);
-        setSelectedMode(res.data.mode);
-      } catch (error) {
-        console.error("알림 모드 조회 실패:", error);
-        alert("알림 설정을 불러오지 못했습니다.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchNotificationMode();
-  }, [roomId]);
 
   const handleSelectOption = async (option: NotificationOption) => {
     if (isSubmitting || isLoading || selectedMode === option.mode) return;

@@ -6,6 +6,8 @@ import useUserStore from "../../../stores/useUserStore.ts";
 import { getMyRoommateInfo } from "@/apis/roommate";
 import { getAllRoommateChatUnreadCount } from "@/apis/chat";
 import { getOpenChatRooms } from "@/apis/openchat";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { roommateKeys } from "@/queries/roommates";
 import TooltipMessage from "@/components/common/TooltipMessage";
 import { useRoommateMatchingStatus } from "@/hooks/useRoommateMatchingStatus";
 import { formatSemesterName } from "@/utils/semester";
@@ -164,6 +166,7 @@ const Button = ({
 export default function BottomBar() {
   const location = useLocation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const pathname = location.pathname;
   const { tokenInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
@@ -178,7 +181,6 @@ export default function BottomBar() {
     ? `${matchingStatus.year}_${matchingStatus.semester}`
     : null;
 
-  const [unreadCount, setUnreadCount] = useState<number>(0);
   const [showTooltip, setShowTooltip] = useState(true);
 
   useEffect(() => {
@@ -206,33 +208,27 @@ export default function BottomBar() {
     }
   };
 
-  useEffect(() => {
-    const fetchUnreadCount = async () => {
-      if (!isLoggedIn) {
-        setUnreadCount(0);
-        return;
-      }
+  const { data: totalUnreadCount = 0 } = useQuery({
+    queryKey: ["chat", "bottomBarUnread"],
+    queryFn: async () => {
+      const [roommateUnreadRes, myOpenChatRes] = await Promise.all([
+        getAllRoommateChatUnreadCount(),
+        getOpenChatRooms("MY", 0, 50),
+      ]);
 
-      try {
-        const [roommateUnreadRes, myOpenChatRes] = await Promise.all([
-          getAllRoommateChatUnreadCount(),
-          getOpenChatRooms("MY", 0, 50),
-        ]);
+      const roommateUnread = roommateUnreadRes.data || 0;
+      const openChatUnread = (myOpenChatRes.data?.content || []).reduce(
+        (acc, room) => acc + (room.unreadCount || 0),
+        0,
+      );
 
-        const roommateUnread = roommateUnreadRes.data || 0;
-        const openChatUnread = (myOpenChatRes.data?.content || []).reduce(
-          (acc, room) => acc + (room.unreadCount || 0),
-          0,
-        );
+      return roommateUnread + openChatUnread;
+    },
+    enabled: isLoggedIn,
+    staleTime: 1000 * 30,
+  });
 
-        setUnreadCount(roommateUnread + openChatUnread);
-      } catch (err) {
-        console.error("미확인 메시지 조회 실패", err);
-      }
-    };
-
-    fetchUnreadCount();
-  }, [pathname, isLoggedIn]);
+  const unreadCount = isLoggedIn ? totalUnreadCount : 0;
 
   if (
     pathname.includes("/chat/roommate") ||
@@ -266,8 +262,16 @@ export default function BottomBar() {
               return;
             }
             try {
-              await getMyRoommateInfo();
-              navigate("/roommate/my");
+              const info = await queryClient.fetchQuery({
+                queryKey: roommateKeys.myInfo(),
+                queryFn: async () => (await getMyRoommateInfo()).data,
+                staleTime: 1000 * 60 * 5,
+              });
+              if (info) {
+                navigate("/roommate/my");
+              } else {
+                navigate("/roommate");
+              }
             } catch {
               navigate("/roommate");
             }
