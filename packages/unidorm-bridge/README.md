@@ -10,7 +10,7 @@
 | `src/adapters/web.ts` | `src/adapters/web.ts` |
 | `src/index.ts` | 웹 전용 엔트리 (`native` 어댑터 제외) |
 
-- 기준 커밋: `unidorm-app@2aece66`
+- 기준 커밋: `unidorm-app@d5bf7a1`
 - 원본과의 차이: 주석 속 저장소 이름만 UNIDorm 명칭으로 바꿨습니다. 코드는 동일합니다.
 
 ## 동기화
