@@ -1,9 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
-import { usePageFocus } from "@/hooks/usePageFocus";
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import styled from "styled-components";
-import { getMyRoommateInfo } from "@/apis/roommate";
+import { useMyRoommateInfo } from "@/queries/roommates";
 import TitleContentArea from "../components/common/TitleContentArea.tsx";
 import BottomBar from "../components/common/BottomBar/BottomBar.tsx";
 import MenuGroup from "../components/mypage/MenuGroup.tsx";
@@ -13,7 +12,6 @@ import { PATHS } from "@/constants/paths";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import useUserStore from "../stores/useUserStore.ts";
 import { createMyPageMenuGroups } from "@/stores/menuGroupsFactory";
-import { MyRoommateInfoResponse } from "@/types/roommates";
 import { mixpanelTrack } from "@/utils/mixpanel";
 
 const overlayText = "로그인 후 사용 가능해요.";
@@ -22,9 +20,11 @@ const MyPage = () => {
   const { tokenInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo?.accessToken ?? "");
   const navigate = useNavigate();
-  const [roommateInfo, setRoommateInfo] =
-    useState<MyRoommateInfoResponse | null>(null);
-  const [notFound, setNotFound] = useState(false);
+  const { data: roommateInfo = null, isSuccess } = useMyRoommateInfo({
+    enabled: isLoggedIn,
+  });
+  const notFound = Boolean(isLoggedIn && isSuccess && !roommateInfo);
+  const hasTrackedRoommate = useRef(false);
 
   const menuGroups = createMyPageMenuGroups(isLoggedIn, navigate);
 
@@ -33,33 +33,17 @@ const MyPage = () => {
     mixpanelTrack.myPageViewed(isLoggedIn);
   }, [isLoggedIn]);
 
-  // silent: 화면 복귀 시 재조회 — 조회 추적 없이 데이터만 교체
-  const fetchRoommateInfo = useCallback(
-    async ({ silent = false }: { silent?: boolean } = {}) => {
-      if (!isLoggedIn) return;
-
-      try {
-        const res = await getMyRoommateInfo();
-        setRoommateInfo(res.data);
-        setNotFound(false);
-        if (!silent) mixpanelTrack.myRoommateInfoLoaded(); // 룸메이트 정보 조회
-      } catch (err: any) {
-        if (err.response?.status === 404) {
-          setRoommateInfo(null);
-          setNotFound(true);
-          if (!silent) mixpanelTrack.myRoommateInfoNotFound(); // 룸메이트 정보 없을 때
-        }
-      }
-    },
-    [isLoggedIn],
-  );
-
   useEffect(() => {
-    fetchRoommateInfo();
-  }, [fetchRoommateInfo]);
-
-  // 매칭 수락·해제, 내 정보 수정(별도 웹뷰) 후 돌아오면 재조회
-  usePageFocus(() => fetchRoommateInfo({ silent: true }));
+    if (!isLoggedIn || hasTrackedRoommate.current) return;
+    if (isSuccess) {
+      hasTrackedRoommate.current = true;
+      if (roommateInfo) {
+        mixpanelTrack.myRoommateInfoLoaded();
+      } else {
+        mixpanelTrack.myRoommateInfoNotFound();
+      }
+    }
+  }, [isLoggedIn, isSuccess, roommateInfo]);
 
   const isProtected = !isLoggedIn;
 

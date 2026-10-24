@@ -1,31 +1,12 @@
 // src/pages/Tip/TipListPage.tsx
 
 import styled from "styled-components";
-import { useCallback, useEffect, useState } from "react";
-import { usePageFocus } from "@/hooks/usePageFocus";
 import TitleContentArea from "../components/common/TitleContentArea.tsx";
 import MyPostLikeCard from "../components/mypage/MyPostLikeCard.tsx";
-import { MyPost } from "@/types/members";
-import { getMemberPosts } from "@/apis/members";
+import { useMemberPosts } from "@/queries/members";
 
 export default function MyPostsPage() {
-  const [posts, setPosts] = useState<MyPost[]>([]);
-
-  const fetchPosts = useCallback(async () => {
-    try {
-      const response = await getMemberPosts();
-      setPosts(response.data);
-    } catch (error) {
-      console.error("게시글을 불러오는 데 실패했습니다.", error);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchPosts();
-  }, [fetchPosts]);
-
-  // 글 상세(별도 웹뷰)에서 글 수정·삭제 후 돌아오면 재조회
-  usePageFocus(() => fetchPosts());
+  const { data: posts = [] } = useMemberPosts();
 
   return (
     <MyPostsPageWrapper>

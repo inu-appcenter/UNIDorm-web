@@ -5,11 +5,13 @@ import SquareButton from "../../components/common/SquareButton.tsx";
 import { useEffect, useState } from "react";
 import {
   deleteMembers,
-  getMemberImage,
   getMemberInfo,
   putMember,
   putUserImage,
 } from "@/apis/members";
+import { useQueryClient } from "@tanstack/react-query";
+import { memberKeys, useMemberImage } from "@/queries/members";
+import { useInitFromQuery } from "@/hooks/useInitFromQuery";
 import useUserStore from "../../stores/useUserStore.ts";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import ToggleGroup from "../../components/roommate/checklist/ToggleGroup.tsx";
@@ -23,7 +25,9 @@ import { useFreshmanMigrationBanner } from "@/hooks/useFreshmanMigrationBanner";
 import { PATHS } from "@/constants/paths";
 
 export default function MyInfoEditPage() {
+  const queryClient = useQueryClient();
   const { userInfo, setUserInfo } = useUserStore();
+  const { data: memberImage } = useMemberImage();
   console.log(userInfo);
 
   const location = useLocation();
@@ -160,9 +164,11 @@ export default function MyInfoEditPage() {
           alert("회원정보 수정을 성공하였습니다.");
         }
         try {
-          const response = await getMemberInfo();
-          console.log(response);
-          setUserInfo(response.data);
+          const updated = await queryClient.fetchQuery({
+            queryKey: memberKeys.info(),
+            queryFn: async () => (await getMemberInfo()).data,
+          });
+          setUserInfo(updated);
         } catch (error) {
           console.error("회원 가져오기 실패", error);
         }
@@ -189,16 +195,9 @@ export default function MyInfoEditPage() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-  useEffect(() => {
-    const getUserProfileImg = async () => {
-      const result = await getMemberImage();
-      console.log(result.data);
-      setPreviewUrl(result.data.imageUrl);
-    };
-
-    getUserProfileImg();
-    // setUserProfileImg(result.data)
-  }, [userInfo]);
+  useInitFromQuery(memberImage?.imageUrl, (url) => {
+    setPreviewUrl(url);
+  });
 
   // 이미지 선택 핸들러
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
