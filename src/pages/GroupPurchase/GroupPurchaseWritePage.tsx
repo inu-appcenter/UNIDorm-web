@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import styled from "styled-components";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { useGroupPurchaseDetail } from "@/queries/groupPurchases";
+import { useQueryClient } from "@tanstack/react-query";
+import { groupPurchaseKeys, useGroupPurchaseDetail } from "@/queries/groupPurchases";
 import { useInitFromQuery } from "@/hooks/useInitFromQuery";
 import CommonBottomSheet from "src/components/modal/CommonBottomSheet";
 import useUserStore from "../../stores/useUserStore";
@@ -21,6 +22,7 @@ import { useSetHeader } from "@/hooks/useSetHeader";
 export default function GroupPurchaseWritePage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const queryId = searchParams.get("id");
   const editId = queryId ? Number(queryId) : undefined;
@@ -113,9 +115,11 @@ export default function GroupPurchaseWritePage() {
       setIsLoading(true);
       if (isEditMode && post?.id) {
         await updateGroupPurchase(post.id, requestDto, files);
+        await queryClient.invalidateQueries({ queryKey: groupPurchaseKeys.all });
         alert("게시글이 수정되었습니다.");
       } else {
         await createGroupPurchase(requestDto, files);
+        await queryClient.invalidateQueries({ queryKey: groupPurchaseKeys.all });
         alert("게시글이 등록되었습니다.");
       }
       navigate(-1);

@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { useAnnouncementDetail } from "@/queries/announcements";
+import { useQueryClient } from "@tanstack/react-query";
+import { announcementKeys, useAnnouncementDetail } from "@/queries/announcements";
 import { useInitFromQuery } from "@/hooks/useInitFromQuery";
 import type { AnnouncementDetail } from "@/types/announcements";
 import { useEffect, useMemo, useState } from "react";
@@ -27,6 +28,7 @@ import { RequestAnnouncementDto } from "@/types/announcements";
 export default function AnnounceWritePage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const queryId = searchParams.get("id");
   const editId = queryId ? Number(queryId) : undefined;
@@ -128,9 +130,11 @@ export default function AnnounceWritePage() {
       if (announce) {
         // 기존 파일이 있었거나 변경/삭제된 경우 항상 with-files로 동기화
         await updateAnnouncementWithFiles(announce.id, data, files);
+        await queryClient.invalidateQueries({ queryKey: announcementKeys.all });
         alert("공지사항이 성공적으로 수정되었습니다.");
       } else {
         await createAnnouncement(data, files);
+        await queryClient.invalidateQueries({ queryKey: announcementKeys.all });
         alert("공지사항이 성공적으로 등록되었습니다.");
       }
 

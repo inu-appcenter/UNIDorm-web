@@ -3,7 +3,8 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import SquareButton from "../../components/common/SquareButton.tsx";
 import { ComplaintReplyDto } from "@/types/complain";
-import { useComplaintDetail } from "@/queries/complaints";
+import { useQueryClient } from "@tanstack/react-query";
+import { complaintKeys, useComplaintDetail } from "@/queries/complaints";
 import { useInitFromQuery } from "@/hooks/useInitFromQuery";
 import {
   createComplaintReply,
@@ -20,6 +21,7 @@ export default function ComplainAnswerWritePage() {
   const { complainId } = useParams<{ complainId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
+  const queryClient = useQueryClient();
   const { complain: stateComplain, manager: stateManager, Images: stateImages } =
     location.state || {};
 
@@ -109,6 +111,7 @@ export default function ComplainAnswerWritePage() {
         await updateComplaintStatus(Number(complainId), "처리완료");
       }
 
+      await queryClient.invalidateQueries({ queryKey: complaintKeys.all });
       alert(`답변이 ${isEditMode ? "수정" : "등록"}되었습니다!`);
       navigate(-1);
     } catch (err: any) {

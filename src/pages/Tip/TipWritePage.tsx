@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { useTipDetail } from "@/queries/tips";
+import { useQueryClient } from "@tanstack/react-query";
+import { tipKeys, useTipDetail } from "@/queries/tips";
 import { useInitFromQuery } from "@/hooks/useInitFromQuery";
 import { useEffect, useMemo, useState } from "react";
 import SquareButton from "../../components/common/SquareButton.tsx";
@@ -15,6 +16,7 @@ import RichTextEditor from "../../components/common/Editor/RichTextEditor.tsx";
 export default function TipWritePage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const queryId = searchParams.get("id");
   const editId = queryId ? Number(queryId) : undefined;
@@ -107,9 +109,11 @@ export default function TipWritePage() {
       setIsLoading(true);
       if (isEditMode) {
         await updateTip(Number(tipid), formData);
+        await queryClient.invalidateQueries({ queryKey: tipKeys.all });
         alert("팁이 수정되었습니다!");
       } else {
         await createTip(formData);
+        await queryClient.invalidateQueries({ queryKey: tipKeys.all });
         mixpanelTrack.postCreated("꿀팁", "꿀팁작성페이지");
         alert("팁이 등록되었습니다!");
       }
