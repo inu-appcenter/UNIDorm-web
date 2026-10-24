@@ -1,7 +1,7 @@
 # unidorm-bridge (vendored)
 
 네이티브 셸(`unidorm-app`)과 웹(`UNIDorm-web`)이 공유하는 브릿지 계약의 복사본입니다.
-원본은 `unidorm-app` 저장소의 `packages/intip-bridge/src` 입니다(폴더명은 레거시).
+원본은 `unidorm-app` 저장소의 `packages/unidorm-bridge/src` 입니다.
 
 | 파일 | 원본 |
 | --- | --- |

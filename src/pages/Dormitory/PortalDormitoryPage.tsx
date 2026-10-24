@@ -32,8 +32,8 @@ import { PortalAccountModal } from "@/components/portal/PortalAccountModal";
 import { parseDormRoomAndBed } from "@/components/portal/MobileDormitoryCard";
 import { formatKoreanDateTime } from "@/utils/portalDateUtils";
 import { secureStorage } from "@/utils/secureStorage";
-import { typography } from "@/styles/intipTypography";
-import { MOBILE_PAGE_GUTTER, DESKTOP_MEDIA } from "@/styles/intipResponsive";
+import { typography } from "@/styles/unidormTypography";
+import { MOBILE_PAGE_GUTTER, DESKTOP_MEDIA } from "@/styles/unidormResponsive";
 import {
   Clock,
   Smartphone,

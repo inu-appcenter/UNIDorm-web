@@ -31,11 +31,18 @@ export default function PhotoAttachmentBottomSheet({
   );
 
   const requestNativeCameraPermissionIfNeeded = () => {
+    const cameraWindow = window as Window & {
+      __unidormRequestCameraPermission?: () => void;
+      __intipRequestCameraPermission?: () => void;
+    };
     try {
       if ((window as any).AndroidBridge?.requestCameraPermission) {
         (window as any).AndroidBridge.requestCameraPermission();
-      } else if (typeof (window as any).__intipRequestCameraPermission === "function") {
-        (window as any).__intipRequestCameraPermission();
+      } else if (typeof cameraWindow.__unidormRequestCameraPermission === "function") {
+        cameraWindow.__unidormRequestCameraPermission();
+      } else if (typeof cameraWindow.__intipRequestCameraPermission === "function") {
+        // 이름을 바꾸기 전 구버전 앱
+        cameraWindow.__intipRequestCameraPermission();
       }
     } catch {}
   };
