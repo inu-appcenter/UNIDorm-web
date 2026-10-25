@@ -401,6 +401,56 @@ export const mixpanelTrack = {
   dormitoryCardNonResidentHomeClicked: () => {
     trackEvent("모바일 사생증 홈으로 클릭");
   },
+
+  dormitoryCardSyncStarted: (syncType: "saved_account" | "manual_input") => {
+    trackEvent("모바일 사생증 동기화 시작", {
+      sync_type: syncType,
+    });
+  },
+
+  dormitoryCardSyncSuccess: (params: {
+    durationMs: number;
+    hasPhoto: boolean;
+    hasDormInfo: boolean;
+  }) => {
+    trackEvent("모바일 사생증 동기화 성공", {
+      duration_ms: params.durationMs,
+      has_photo: params.hasPhoto,
+      has_dorm_info: params.hasDormInfo,
+    });
+  },
+
+  dormitoryCardSyncFailed: (params: {
+    stage:
+      | "CHECK_ACCOUNT"
+      | "SAVE_ACCOUNT"
+      | "DORM_FETCH"
+      | "ACADEMIC_FETCH"
+      | "STORAGE_SAVE"
+      | "UNKNOWN";
+    errorCode?: string;
+    errorMessage?: string;
+    durationMs?: number;
+  }) => {
+    trackEvent("모바일 사생증 동기화 실패", {
+      stage: params.stage,
+      error_code: params.errorCode || "UNKNOWN",
+      error_message: params.errorMessage || "알 수 없는 오류",
+      ...(params.durationMs !== undefined && { duration_ms: params.durationMs }),
+    });
+  },
+
+  nativeBridgeError: (params: {
+    actionType: string;
+    errorCode: string;
+    errorMessage: string;
+  }) => {
+    trackEvent("네이티브 브릿지 에러", {
+      action_type: params.actionType,
+      error_code: params.errorCode,
+      error_message: params.errorMessage,
+    });
+  },
 };
 
 /**

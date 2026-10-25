@@ -96,4 +96,51 @@ describe("Mixpanel - 모바일 사생증 트래킹 및 개인정보(PII) 배제 
     mixpanelTrack.dormitoryCardNonResidentHomeClicked();
     expect(mixpanel.track).toHaveBeenCalledWith("모바일 사생증 홈으로 클릭", undefined);
   });
+
+  it("동기화 시작, 성공, 실패 이벤트가 PII 없이 안전하게 전송되어야 한다", () => {
+    // 1) 동기화 시작
+    mixpanelTrack.dormitoryCardSyncStarted("saved_account");
+    expect(mixpanel.track).toHaveBeenCalledWith("모바일 사생증 동기화 시작", {
+      sync_type: "saved_account",
+    });
+
+    // 2) 동기화 성공
+    mixpanelTrack.dormitoryCardSyncSuccess({
+      durationMs: 1250,
+      hasPhoto: true,
+      hasDormInfo: true,
+    });
+    expect(mixpanel.track).toHaveBeenCalledWith("모바일 사생증 동기화 성공", {
+      duration_ms: 1250,
+      has_photo: true,
+      has_dorm_info: true,
+    });
+
+    // 3) 동기화 실패
+    mixpanelTrack.dormitoryCardSyncFailed({
+      stage: "DORM_FETCH",
+      errorCode: "TIMEOUT",
+      errorMessage: "요청 시간이 초과되었습니다.",
+      durationMs: 15000,
+    });
+    expect(mixpanel.track).toHaveBeenCalledWith("모바일 사생증 동기화 실패", {
+      stage: "DORM_FETCH",
+      error_code: "TIMEOUT",
+      error_message: "요청 시간이 초과되었습니다.",
+      duration_ms: 15000,
+    });
+  });
+
+  it("네이티브 브릿지 에러 이벤트가 액션 타입과 에러 정보를 포함해 정상 전송되어야 한다", () => {
+    mixpanelTrack.nativeBridgeError({
+      actionType: "executeAgentAction",
+      errorCode: "EXECUTION_ERROR",
+      errorMessage: "포털 서버 응답 없음",
+    });
+    expect(mixpanel.track).toHaveBeenCalledWith("네이티브 브릿지 에러", {
+      action_type: "executeAgentAction",
+      error_code: "EXECUTION_ERROR",
+      error_message: "포털 서버 응답 없음",
+    });
+  });
 });

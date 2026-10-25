@@ -17,6 +17,7 @@ import {
 } from "@/apis/mobileAgentBridge";
 import { secureStorage } from "@/utils/secureStorage";
 import { openUnidormAppOrStore } from "@/utils/portalAppLauncher";
+import { mixpanelTrack } from "@/utils/mixpanel";
 
 interface PortalSyncOnboardingProps {
   onSuccess: () => void;
@@ -70,7 +71,13 @@ export default function PortalSyncOnboarding({
   }, [checkStatus]);
 
   // 포털 데이터 동기화 실행 (기기 로컬 처리)
-  const executeSync = async (targetStudentId: string) => {
+  const executeSync = async (
+    targetStudentId: string,
+    syncType: "saved_account" | "manual_input" = "saved_account",
+  ) => {
+    const startTime = Date.now();
+    mixpanelTrack.dormitoryCardSyncStarted(syncType);
+
     setIsLoading(true);
     setErrorMessage("");
     setLoadingMessage("기기에서 안전하게 기숙사 정보를 가져오고 있어요...");
@@ -85,10 +92,17 @@ export default function PortalSyncOnboarding({
         const msg =
           dormRes.errorMessage ||
           "포털에서 기숙사 정보를 가져오지 못했어요. 잠시 후 다시 시도해주세요.";
+        mixpanelTrack.dormitoryCardSyncFailed({
+          stage: "DORM_FETCH",
+          errorCode: dormRes.errorCode || "DORM_FETCH_FAILED",
+          errorMessage: msg,
+          durationMs: Date.now() - startTime,
+        });
         throw new Error(msg);
       }
 
       let finalDormData = dormRes.data;
+      let hasAttachedPhoto = false;
 
       // 2. 사진이나 추가 학적이 필요한 경우 학적 정보도 동기화
       setLoadingMessage("학적 및 증명사진을 확인하고 있어요...");
@@ -108,6 +122,7 @@ export default function PortalSyncOnboarding({
             !finalDormData.photoBase64 &&
             !finalDormData.profile?.photoBase64
           ) {
+            hasAttachedPhoto = true;
             finalDormData = {
               ...finalDormData,
               photoBase64: photo,
@@ -116,24 +131,52 @@ export default function PortalSyncOnboarding({
                 : finalDormData.profile,
             };
           }
+        } else if (!academicRes.success) {
+          mixpanelTrack.dormitoryCardSyncFailed({
+            stage: "ACADEMIC_FETCH",
+            errorCode: academicRes.errorCode || "ACADEMIC_FETCH_WARNING",
+            errorMessage: academicRes.errorMessage || "학적 동기화 건너뜀",
+            durationMs: Date.now() - startTime,
+          });
         }
       } catch (acErr) {
         console.warn("학적 추가 동기화 실패 (무시하고 계속)", acErr);
       }
 
       // 3. 로컬 보안 스토리지에 저장
-      const nowIso = new Date().toISOString();
-      const sanitizedDormData = {
-        ...finalDormData,
-        rawDatasets: {},
-        rawFields: undefined,
-      };
-      await secureStorage.setCacheWithTtl(
-        "portal_dormitory_student_info",
-        sanitizedDormData,
-        24 * 60 * 60 * 1000
-      );
-      localStorage.setItem("portal_dormitory_last_updated", nowIso);
+      try {
+        const nowIso = new Date().toISOString();
+        const sanitizedDormData = {
+          ...finalDormData,
+          rawDatasets: {},
+          rawFields: undefined,
+        };
+        await secureStorage.setCacheWithTtl(
+          "portal_dormitory_student_info",
+          sanitizedDormData,
+          24 * 60 * 60 * 1000
+        );
+        localStorage.setItem("portal_dormitory_last_updated", nowIso);
+      } catch (storageErr) {
+        const storageMsg =
+          storageErr instanceof Error
+            ? storageErr.message
+            : "로컬 스토리지 저장 실패";
+        mixpanelTrack.dormitoryCardSyncFailed({
+          stage: "STORAGE_SAVE",
+          errorCode: "STORAGE_ERROR",
+          errorMessage: storageMsg,
+          durationMs: Date.now() - startTime,
+        });
+        throw new Error("정보를 기기에 안전하게 저장하지 못했어요.");
+      }
+
+      // 동기화 성공 믹스패널 기록
+      mixpanelTrack.dormitoryCardSyncSuccess({
+        durationMs: Date.now() - startTime,
+        hasPhoto: Boolean(finalDormData.photoBase64 || finalDormData.profile?.photoBase64 || hasAttachedPhoto),
+        hasDormInfo: Boolean(finalDormData.studentDormNo || finalDormData.dormitoryType),
+      });
 
       // 성공 콜백 호출
       onSuccess();
@@ -156,7 +199,7 @@ export default function PortalSyncOnboarding({
       setIsRelinkMode(true);
       return;
     }
-    await executeSync(studentId);
+    await executeSync(studentId, "saved_account");
   };
 
   // 2) 신규 또는 재입력 계정 등록 후 가져오기
@@ -183,7 +226,13 @@ export default function PortalSyncOnboarding({
       );
 
       if (!saveRes.success) {
-        throw new Error(saveRes.errorMessage || "계정 등록에 실패했어요.");
+        const errorMsg = saveRes.errorMessage || "계정 등록에 실패했어요.";
+        mixpanelTrack.dormitoryCardSyncFailed({
+          stage: "SAVE_ACCOUNT",
+          errorCode: saveRes.errorCode || "SAVE_FAILED",
+          errorMessage: errorMsg,
+        });
+        throw new Error(errorMsg);
       }
 
       localStorage.setItem("portal_student_id", studentIdInput.trim());
@@ -192,7 +241,7 @@ export default function PortalSyncOnboarding({
       setIsRelinkMode(false);
 
       // 저장 성공 후 즉시 사생정보 동기화 실행
-      await executeSync(studentIdInput.trim());
+      await executeSync(studentIdInput.trim(), "manual_input");
     } catch (err: unknown) {
       const msg =
         err instanceof Error
