@@ -459,11 +459,11 @@ const Container = styled.div`
   width: 100%;
   max-width: 440px;
   margin: 0 auto;
-  padding: 16px 20px calc(24px + var(--safe-area-bottom, 0px));
+  padding: 8px 0 0;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  min-height: calc(100dvh - 80px);
+  height: 100%;
   flex: 1;
 
   .spin {
@@ -484,6 +484,8 @@ const ContentArea = styled.div`
   flex-direction: column;
   gap: 16px;
   flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 `;
 
 const LoadingCenterBox = styled.div`
@@ -653,7 +655,7 @@ const BottomActionArea = styled.div`
   flex-direction: column;
   gap: 8px;
   margin-top: auto;
-  padding-top: 24px;
+  padding-top: 12px;
   width: 100%;
 `;
 

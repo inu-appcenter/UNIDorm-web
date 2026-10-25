@@ -727,7 +727,7 @@ export default function MobileDormitoryCardPage() {
 
   if (!isInitialLoading && !hasValidData) {
     return (
-      <PageContainer as="main" $isScrollable>
+      <PageContainer as="main">
         <PortalSyncOnboarding onSuccess={fetchCached} />
       </PageContainer>
     );
