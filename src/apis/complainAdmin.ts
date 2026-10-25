@@ -21,14 +21,47 @@ export const deleteComplaintReply = async (
   return response;
 };
 
-// 관리자용 민원 전체 조회 (최신순)
+// 관리자용 민원 목록 조회 (단일화 API 규격: 검색 조건 및 페이징 파라미터 지원)
+// 신버전 서버(/admin/complaints?params)와 구버전 서버(/admin/complaints/search) 간 양방향 무중단 폴백 제공
+type ComplaintApiResponseData = AdminComplaint[] | { content?: AdminComplaint[]; complaints?: AdminComplaint[] };
+
+export const getAdminComplaints = async (
+  dto?: ComplaintSearchDto,
+): Promise<AxiosResponse<AdminComplaint[]>> => {
+  try {
+    const response = await tokenInstance.get<ComplaintApiResponseData>(`/admin/complaints`, {
+      params: dto && Object.keys(dto).length > 0 ? dto : undefined,
+    });
+    // 응답 형태가 페이징 객체(content/complaints) 또는 순수 배열 모두 지원
+    const data = Array.isArray(response.data)
+      ? response.data
+      : response.data?.content || response.data?.complaints || [];
+    return { ...response, data };
+  } catch (error) {
+    // 만약 신버전 엔드포인트에서 조건부 쿼리 처리 실패 시, 구버전 검색 API(/admin/complaints/search)로 자동 폴백
+    if (dto && Object.keys(dto).length > 0) {
+      try {
+        const fallbackRes = await tokenInstance.get<ComplaintApiResponseData>(
+          `/admin/complaints/search`,
+          { params: dto },
+        );
+        const data = Array.isArray(fallbackRes.data)
+          ? fallbackRes.data
+          : fallbackRes.data?.content || fallbackRes.data?.complaints || [];
+        return { ...fallbackRes, data };
+      } catch (fallbackError) {
+        console.error("구버전 검색 API 폴백 실패:", fallbackError);
+      }
+    }
+    throw error;
+  }
+};
+
+// 관리자용 민원 전체 조회 (최신순 / 하위 호환성 유지)
 export const getAllComplaints = async (): Promise<
   AxiosResponse<AdminComplaint[]>
 > => {
-  const response =
-    await tokenInstance.get<AdminComplaint[]>(`/admin/complaints`);
-  console.log(response);
-  return response;
+  return getAdminComplaints();
 };
 
 // 관리자용 민원 상세 조회
@@ -122,7 +155,7 @@ export const createComplaintReply = async (
 };
 
 /**
- * 민원 검색
+ * 민원 검색 (하위 호환성 유지)
  * GET /admin/complaints/search
  * @param dto 검색 조건 (쿼리 파라미터)
  * @returns 민원 목록 응답
