@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import styled from "styled-components";
 import {
-  ShieldCheck,
   User,
   Lock,
   AlertCircle,
@@ -216,7 +215,7 @@ export default function PortalSyncOnboarding({
     }
 
     setIsLoading(true);
-    setLoadingMessage("기기 보안 영역(KeyStore)에 저장 중...");
+    setLoadingMessage("기기 보안 영역에 저장 중...");
     setErrorMessage("");
 
     try {
@@ -268,74 +267,74 @@ export default function PortalSyncOnboarding({
   if (!isMobileAppEnvironment()) {
     return (
       <Container>
-        <HeaderSection>
-          <Title>유니돔 앱에서{"\n"}이용할 수 있어요</Title>
-          <Subtitle>
-            모바일 사생증 및 포털 연동은 기기 보안 저장소(KeyStore)를 이용하므로 유니돔 앱 환경에서만 안전하게 지원돼요.
-          </Subtitle>
-        </HeaderSection>
+        <ContentArea>
+          <HeaderSection>
+            <Title>유니돔 앱에서{"\n"}이용할 수 있어요</Title>
+            <Subtitle>
+              모바일 사생증 및 포털 연동은 스마트폰 보안 영역을 이용하므로 유니돔 앱 환경에서만 안전하게 지원돼요.
+            </Subtitle>
+          </HeaderSection>
 
-        <SecurityCard>
-          <ShieldCheck size={22} color="#04B05C" />
-          <SecurityTextGroup>
+          <SecurityCard>
             <SecurityTitle>기기에서만 안전하게 처리돼요</SecurityTitle>
             <SecurityDesc>
               가져오는 작업은 이 기기에서만 수행되며 외부 서버로 전송되지 않아요.
             </SecurityDesc>
-          </SecurityTextGroup>
-        </SecurityCard>
+          </SecurityCard>
+        </ContentArea>
 
-        <PrimaryButton type="button" onClick={() => openUnidormAppOrStore()}>
-          유니돔 앱으로 열기
-        </PrimaryButton>
+        <BottomActionArea>
+          <PrimaryButton type="button" onClick={() => openUnidormAppOrStore()}>
+            유니돔 앱으로 열기
+          </PrimaryButton>
+        </BottomActionArea>
       </Container>
     );
   }
 
   return (
     <Container>
-      <HeaderSection>
-        <Title>
-          포털 사이트에서{"\n"}정보를 가져와야 해요
-        </Title>
-        <Subtitle>
-          모바일 사생증 발급을 위해 인천대학교 포털에서 사생 정보를 안전하게 불러올게요.
-        </Subtitle>
-      </HeaderSection>
-
-      {/* 기기 로컬 처리 및 외부 전송 배제 안심 보안 안내 */}
-      <SecurityCard>
-        <ShieldCheck size={22} color="#3182F6" />
-        <SecurityTextGroup>
-          <SecurityTitle>가져오는 작업은 이 기기에서만 수행돼요</SecurityTitle>
-          <SecurityDesc>
-            포털 아이디와 비밀번호, 사생 정보는 외부 서버로 전송되지 않으며 이 기기의 보안 영역(KeyStore)에만 암호화 보관돼요.
-          </SecurityDesc>
-        </SecurityTextGroup>
-      </SecurityCard>
-
       {/* 상태별 화면: 저장된 계정이 있는 경우 */}
       {isLinked && !isRelinkMode ? (
-        <CardSection>
-          <SavedAccountBox>
-            <AccountInfoRow>
-              <User size={18} color="#4E5968" />
-              <AccountLabel>등록된 포털 학번</AccountLabel>
-              <AccountStudentId>{savedStudentId || "학번 연동됨"}</AccountStudentId>
-            </AccountInfoRow>
-            <AccountSubHint>
-              이미 기기에 안전하게 등록되어 있어 바로 정보를 가져올 수 있어요.
-            </AccountSubHint>
-          </SavedAccountBox>
+        <>
+          <ContentArea>
+            <HeaderSection>
+              <Title>
+                포털 사이트에서{"\n"}정보를 가져와야 해요
+              </Title>
+              <Subtitle>
+                모바일 사생증 발급을 위해 인천대학교 포털에서 사생 정보를 안전하게 불러올게요.
+              </Subtitle>
+            </HeaderSection>
 
-          {errorMessage && (
-            <ErrorBox role="alert">
-              <AlertCircle size={16} />
-              <span>{errorMessage}</span>
-            </ErrorBox>
-          )}
+            {/* 기기 로컬 처리 및 외부 전송 배제 안심 보안 안내 */}
+            <SecurityCard>
+              <SecurityTitle>가져오는 작업은 이 기기에서만 수행돼요</SecurityTitle>
+              <SecurityDesc>
+                포털 아이디와 비밀번호, 사생 정보는 외부 서버로 전송되지 않으며 이 스마트폰의 보안 영역에만 안전하게 보관돼요.
+              </SecurityDesc>
+            </SecurityCard>
 
-          <ActionGroup>
+            <SavedAccountBox>
+              <AccountInfoRow>
+                <User size={18} color="#4E5968" />
+                <AccountLabel>등록된 포털 학번</AccountLabel>
+                <AccountStudentId>{savedStudentId || "학번 연동됨"}</AccountStudentId>
+              </AccountInfoRow>
+              <AccountSubHint>
+                이미 기기에 안전하게 등록되어 있어 바로 정보를 가져올 수 있어요.
+              </AccountSubHint>
+            </SavedAccountBox>
+
+            {errorMessage && (
+              <ErrorBox role="alert">
+                <AlertCircle size={16} />
+                <span>{errorMessage}</span>
+              </ErrorBox>
+            )}
+          </ContentArea>
+
+          <BottomActionArea>
             <PrimaryButton
               type="button"
               onClick={handleSyncWithSavedAccount}
@@ -362,12 +361,28 @@ export default function PortalSyncOnboarding({
                 다른 포털 계정으로 입력하기
               </SecondaryTextButton>
             )}
-          </ActionGroup>
-        </CardSection>
+          </BottomActionArea>
+        </>
       ) : (
         /* 상태별 화면: 계정이 없거나 다른 계정 입력 모드인 경우 */
-        <CardSection>
-          <Form onSubmit={handleSubmitNewAccount}>
+        <Form onSubmit={handleSubmitNewAccount}>
+          <ContentArea>
+            <HeaderSection>
+              <Title>
+                포털 사이트에서{"\n"}정보를 가져와야 해요
+              </Title>
+              <Subtitle>
+                모바일 사생증 발급을 위해 인천대학교 포털에서 사생 정보를 안전하게 불러올게요.
+              </Subtitle>
+            </HeaderSection>
+
+            <SecurityCard>
+              <SecurityTitle>가져오는 작업은 이 기기에서만 수행돼요</SecurityTitle>
+              <SecurityDesc>
+                포털 아이디와 비밀번호, 사생 정보는 외부 서버로 전송되지 않으며 이 스마트폰의 보안 영역에만 안전하게 보관돼요.
+              </SecurityDesc>
+            </SecurityCard>
+
             <InputGroup>
               <InputLabel htmlFor="portal-student-id">포털 학번</InputLabel>
               <InputWrap>
@@ -405,38 +420,38 @@ export default function PortalSyncOnboarding({
                 <span>{errorMessage}</span>
               </ErrorBox>
             )}
+          </ContentArea>
 
-            <ActionGroup>
-              <PrimaryButton
-                type="submit"
-                disabled={
-                  isLoading || !studentIdInput.trim() || !passwordInput.trim()
-                }
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 size={18} className="spin" style={{ marginRight: 8 }} />
-                    {loadingMessage || "정보를 가져오는 중..."}
-                  </>
-                ) : (
-                  "정보 가져오기"
-                )}
-              </PrimaryButton>
-
-              {isLinked && !isLoading && (
-                <SecondaryTextButton
-                  type="button"
-                  onClick={() => {
-                    setErrorMessage("");
-                    setIsRelinkMode(false);
-                  }}
-                >
-                  기존에 등록된 계정 사용하기
-                </SecondaryTextButton>
+          <BottomActionArea>
+            <PrimaryButton
+              type="submit"
+              disabled={
+                isLoading || !studentIdInput.trim() || !passwordInput.trim()
+              }
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 size={18} className="spin" style={{ marginRight: 8 }} />
+                  {loadingMessage || "정보를 가져오는 중..."}
+                </>
+              ) : (
+                "정보 가져오기"
               )}
-            </ActionGroup>
-          </Form>
-        </CardSection>
+            </PrimaryButton>
+
+            {isLinked && !isLoading && (
+              <SecondaryTextButton
+                type="button"
+                onClick={() => {
+                  setErrorMessage("");
+                  setIsRelinkMode(false);
+                }}
+              >
+                기존에 등록된 계정 사용하기
+              </SecondaryTextButton>
+            )}
+          </BottomActionArea>
+        </Form>
       )}
     </Container>
   );
@@ -446,11 +461,12 @@ const Container = styled.div`
   width: 100%;
   max-width: 440px;
   margin: 0 auto;
-  padding: 24px 20px 40px;
+  padding: 16px 20px calc(24px + var(--safe-area-bottom, 0px));
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  min-height: calc(100dvh - 80px);
+  flex: 1;
 
   .spin {
     animation: spin 1s linear infinite;
@@ -463,6 +479,13 @@ const Container = styled.div`
       transform: rotate(360deg);
     }
   }
+`;
+
+const ContentArea = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
 `;
 
 const LoadingCenterBox = styled.div`
@@ -505,18 +528,12 @@ const Subtitle = styled.p`
 
 const SecurityCard = styled.div`
   display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  padding: 16px 18px;
-  background: #f2f4f6;
-  border-radius: 16px;
-  box-sizing: border-box;
-`;
-
-const SecurityTextGroup = styled.div`
-  display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
+  padding: 14px 16px;
+  background: #f2f4f6;
+  border-radius: 14px;
+  box-sizing: border-box;
 `;
 
 const SecurityTitle = styled.span`
@@ -529,13 +546,6 @@ const SecurityDesc = styled.span`
   font-size: 13px;
   line-height: 1.45;
   color: #4e5968;
-`;
-
-const CardSection = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  margin-top: 4px;
 `;
 
 const SavedAccountBox = styled.div`
@@ -577,7 +587,8 @@ const AccountSubHint = styled.p`
 const Form = styled.form`
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  flex: 1;
+  min-height: 100%;
 `;
 
 const InputGroup = styled.div`
@@ -639,16 +650,18 @@ const ErrorBox = styled.div`
   color: #f04452;
 `;
 
-const ActionGroup = styled.div`
+const BottomActionArea = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-top: 10px;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 24px;
+  width: 100%;
 `;
 
 const PrimaryButton = styled.button`
   width: 100%;
-  height: 54px;
+  height: 52px;
   border-radius: 16px;
   background: #3182f6;
   color: #ffffff;
@@ -681,16 +694,16 @@ const PrimaryButton = styled.button`
 const SecondaryTextButton = styled.button`
   background: none;
   border: none;
-  color: #4e5968;
+  color: #8b95a1;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
   padding: 10px;
   cursor: pointer;
   text-align: center;
   transition: color 0.15s ease;
 
   &:hover {
-    color: #191f28;
+    color: #4e5968;
   }
 
   &:active {
