@@ -144,7 +144,7 @@ const Overlay = styled(({ overlay, ...props }) => (
   position: fixed;
   inset: 0;
   background-color: rgba(0, 0, 0, 0.4);
-  z-index: 50;
+  z-index: 10010;
 `;
 
 const Content = styled(({ overlay, ...props }) => (
@@ -154,7 +154,7 @@ const Content = styled(({ overlay, ...props }) => (
   bottom: 0;
   left: 0;
   right: 0;
-  z-index: 9999;
+  z-index: 10011;
   background-color: white;
   border-top-left-radius: 16px;
   border-top-right-radius: 16px;
