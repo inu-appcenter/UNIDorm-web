@@ -491,13 +491,17 @@ export default function MobileDormitoryCardPage() {
     fallbackAcademic?.rawFields?.phtFile
   );
 
+  // 포털에서 사생 정보가 한 번이라도 동기화되어 캐시에 존재하는지 확인
+  // (사생 정보가 없으면 온보딩 화면으로 유도, 동기화 후 비사생이면 비사생 차단 화면으로 정상 전환)
   const hasValidData = Boolean(
     dormInfo &&
     (
-      (dormInfo.studentDormNo && dormInfo.studentDormNo !== "-") ||
-      (dormInfo.dormitoryType && dormInfo.dormitoryType !== "-") ||
-      (dormInfo.profile?.studentDormNo && dormInfo.profile?.studentDormNo !== "-") ||
-      (dormInfo.profile?.dormitoryType && dormInfo.profile?.dormitoryType !== "-")
+      dormInfo.hasData ||
+      dormInfo.studentId ||
+      dormInfo.studentName ||
+      dormInfo.profile?.studentId ||
+      dormInfo.profile?.name ||
+      (dormInfo.rawFields && Object.keys(dormInfo.rawFields).length > 0)
     )
   );
 

@@ -128,9 +128,10 @@ export default function PortalSyncOnboarding({
         rawDatasets: {},
         rawFields: undefined,
       };
-      await secureStorage.setItem(
+      await secureStorage.setCacheWithTtl(
         "portal_dormitory_student_info",
         sanitizedDormData,
+        24 * 60 * 60 * 1000
       );
       localStorage.setItem("portal_dormitory_last_updated", nowIso);
 
