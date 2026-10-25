@@ -12,7 +12,8 @@ import { secureStorage } from "@/utils/secureStorage";
 import { MobileDormitoryCard } from "@/components/portal/MobileDormitoryCard";
 import { MOBILE_PAGE_GUTTER } from "@/styles/unidormResponsive";
 import { PATHS } from "@/constants/paths";
-import { ChevronRight, Building2, RotateCw } from "lucide-react";
+import { ChevronRight, Building2, RotateCw, CalendarClock } from "lucide-react";
+import { isDormitorySemesterExpired } from "@/utils/semesterGuard";
 import PortalSyncOnboarding from "@/components/portal/PortalSyncOnboarding";
 import {
   setScreenCapturePrevented,
@@ -301,14 +302,35 @@ export function evaluateDormitoryResidentStatus(
 export default function MobileDormitoryCardPage() {
   const navigate = useNavigate();
 
-  useSetHeader({
-    title: "모바일 사생증",
-  });
-
   const [isInitialLoading, setIsInitialLoading] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [dormInfo, setDormInfo] = useState<DormitoryStudentInfo | null>(null);
   const [fallbackAcademic, setFallbackAcademic] = useState<any | null>(null);
+  const [lastSyncTimeText, setLastSyncTimeText] = useState<string>("");
+
+  const updateLastSyncTime = useCallback((timestamp?: number | string | null) => {
+    try {
+      let date: Date | null = null;
+      if (timestamp) {
+        date = typeof timestamp === "number" ? new Date(timestamp) : new Date(timestamp);
+      } else {
+        const stored = localStorage.getItem("portal_dormitory_last_updated");
+        if (stored) {
+          date = new Date(stored);
+        }
+      }
+      if (date && !isNaN(date.getTime())) {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, "0");
+        const d = String(date.getDate()).padStart(2, "0");
+        const hh = String(date.getHours()).padStart(2, "0");
+        const mm = String(date.getMinutes()).padStart(2, "0");
+        setLastSyncTimeText(`${y}.${m}.${d} ${hh}:${mm}`);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
 
   const isPreviewMode =
     typeof window !== "undefined" &&
@@ -385,12 +407,17 @@ export default function MobileDormitoryCardPage() {
         // 사생 정보 캐시가 없으면 학적 정보만으로 사생 정보를 채우지 않고 null 유지 (온보딩 유도)
         setDormInfo(null);
       }
+      if (cachedResult?.savedAt) {
+        updateLastSyncTime(cachedResult.savedAt);
+      } else {
+        updateLastSyncTime();
+      }
     } catch (e) {
       console.error("사생정보 로드 실패", e);
     } finally {
       setIsInitialLoading(false);
     }
-  }, []);
+  }, [isPreviewMode, updateLastSyncTime]);
 
   useEffect(() => {
     void fetchCached();
@@ -409,11 +436,14 @@ export default function MobileDormitoryCardPage() {
           const studentId = accountStatus.studentId || resolveCurrentStudentId();
           const res = await fetchDormitoryStudentInfoFromApp({ stuno: studentId });
           if (res.success && res.data) {
+            const nowIso = new Date().toISOString();
             await secureStorage.setCacheWithTtl(
               STORAGE_KEY_DORMITORY_DATA,
               res.data,
               24 * 60 * 60 * 1000
             );
+            localStorage.setItem("portal_dormitory_last_updated", nowIso);
+            updateLastSyncTime(nowIso);
           }
         }
       }
@@ -423,7 +453,21 @@ export default function MobileDormitoryCardPage() {
     } finally {
       setIsRefreshing(false);
     }
-  }, [fetchCached, isRefreshing]);
+  }, [fetchCached, isRefreshing, updateLastSyncTime]);
+
+  useSetHeader({
+    title: "모바일 사생증",
+    headerRightElement: (
+      <HeaderRefreshButton
+        type="button"
+        disabled={isRefreshing}
+        onClick={handleRefresh}
+        aria-label="사생증 새로고침"
+      >
+        <RotateCw size={18} className={isRefreshing ? "spin-icon" : ""} />
+      </HeaderRefreshButton>
+    ),
+  });
 
   // 우리 앱 환경이 아니거나 구버전 앱인 경우 스토어 설치/업데이트 유도
   useEffect(() => {
@@ -454,6 +498,13 @@ export default function MobileDormitoryCardPage() {
     bedNumber,
     lastHistory,
   } = evaluateDormitoryResidentStatus(dormInfo);
+
+  const isSemesterExpired =
+    !isPreviewMode &&
+    isDormitorySemesterExpired({
+      dormYear: year,
+      dormTerm: term,
+    });
 
   const profile = dormInfo?.profile;
   const rawFields = dormInfo?.rawFields;
@@ -651,6 +702,85 @@ export default function MobileDormitoryCardPage() {
     );
   }
 
+  // 학기가 만료된 경우 토스 스타일 학기 만료 안내 화면 표출
+  if (!isInitialLoading && hasValidData && isSemesterExpired) {
+    return (
+      <PageContainer as="main" $isScrollable>
+        <NonResidentWrapper>
+          <NonResidentCard as="section">
+            <IconCircle>
+              <CalendarClock size={32} color="var(--interactive-primary, #3182F6)" strokeWidth={1.8} />
+            </IconCircle>
+
+            <NonResidentTitle>사생증 이용 기간이 만료되었어요</NonResidentTitle>
+            <NonResidentDesc>
+              새로운 학기가 시작되었어요. 최신 사생 정보로 갱신해 주세요.
+            </NonResidentDesc>
+
+            <HistorySummaryBox>
+              <HistorySummaryHeader>
+                <HistorySummaryTitle>만료된 사생증 정보</HistorySummaryTitle>
+                <HistoryStatusBadge $status="02">만료됨</HistoryStatusBadge>
+              </HistorySummaryHeader>
+              <HistorySummaryDetail>
+                <HistoryItem>
+                  <span className="label">발급 학기</span>
+                  <span className="value">
+                    {year ? `${year}학년도 ` : ""}
+                    {formatSemesterTerm(term) || "-"}
+                  </span>
+                </HistoryItem>
+                {resolvedDormType && resolvedDormType !== "-" && (
+                  <HistoryItem>
+                    <span className="label">기숙사</span>
+                    <span className="value">{resolvedDormType}</span>
+                  </HistoryItem>
+                )}
+                {roomNumber && (
+                  <HistoryItem>
+                    <span className="label">호실</span>
+                    <span className="value">
+                      {roomNumber}호 {bedNumber ? `(${bedNumber})` : ""}
+                    </span>
+                  </HistoryItem>
+                )}
+              </HistorySummaryDetail>
+            </HistorySummaryBox>
+
+            <ButtonGroupColumn>
+              <CapsuleButton
+                variant="primary"
+                fullWidth
+                disabled={isRefreshing}
+                onClick={handleRefresh}
+              >
+                <RefreshIconWrapper $isSpinning={isRefreshing}>
+                  <RotateCw size={16} />
+                </RefreshIconWrapper>
+                <span>{isRefreshing ? "기숙사 정보 동기화 중..." : "최신 사생증으로 갱신하기"}</span>
+              </CapsuleButton>
+
+              <CapsuleButton
+                variant="secondary"
+                fullWidth
+                onClick={() => {
+                  mixpanelTrack.dormitoryCardNonResidentHomeClicked();
+                  navigate(PATHS.HOME);
+                }}
+              >
+                홈으로 돌아가기
+              </CapsuleButton>
+            </ButtonGroupColumn>
+          </NonResidentCard>
+
+          <FootnoteNotice>
+            새 학기 입사 처리가 완료된 경우 [최신 사생증으로 갱신하기]를 누르면 새 학기 사생증이 발급돼요.
+          </FootnoteNotice>
+        </NonResidentWrapper>
+      </PageContainer>
+    );
+  }
+
   // 현재 기숙사생이 아니거나 과거 퇴사자 데이터인 경우 안내 화면 표출
   if (!isInitialLoading && !isCurrentlyResident) {
     return (
@@ -755,6 +885,9 @@ export default function MobileDormitoryCardPage() {
           term={term}
           status={status}
         />
+        {lastSyncTimeText && (
+          <LastSyncCaption>최근 동기화 {lastSyncTimeText}</LastSyncCaption>
+        )}
       </CardWrapper>
 
       <BottomButtonWrapper>
@@ -772,6 +905,55 @@ export default function MobileDormitoryCardPage() {
     </PageContainer>
   );
 }
+
+const spinKeyframes = keyframes`
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+`;
+
+const HeaderRefreshButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  color: var(--content-secondary, #4E5968);
+  cursor: pointer;
+  border-radius: 50%;
+  transition: all 0.15s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+
+  &:active {
+    transform: scale(0.92);
+    color: var(--content-primary, #191F28);
+    background: var(--surface-secondary, #F2F4F6);
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.6;
+  }
+
+  .spin-icon {
+    animation: ${spinKeyframes} 0.8s linear infinite;
+  }
+`;
+
+const LastSyncCaption = styled.span`
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--content-tertiary, #8B95A1);
+  letter-spacing: -0.2px;
+  margin-top: 8px;
+  text-align: center;
+`;
 
 const PreviewBadge = styled.div`
   background: var(--surface-secondary, #F2F4F6);
