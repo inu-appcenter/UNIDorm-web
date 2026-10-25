@@ -27,6 +27,62 @@ import { isLatestUnidormApp } from "@/utils/getMobilePlatform";
 
 const STORAGE_KEY_DORMITORY_DATA = "portal_dormitory_student_info";
 
+const MOCK_PREVIEW_DORM_INFO: DormitoryStudentInfo = {
+  hasData: true,
+  studentName: "김유니",
+  studentId: "202301234",
+  department: "컴퓨터공학부",
+  departmentName: "컴퓨터공학부",
+  dormitoryType: "02",
+  dormitoryBuilding: "제2기숙사 B동",
+  studentDormNo: "24-2-0402-A",
+  roomNumber: "402",
+  bedNumber: "A",
+  status: "01",
+  profile: {
+    studentId: "202301234",
+    name: "김유니",
+    englishName: "KIM UNIDORM",
+    gender: "남",
+    nationality: "대한민국",
+    department: "컴퓨터공학부",
+    grade: "3학년",
+    dormitoryType: "02",
+    dormitoryBuilding: "제2기숙사 B동",
+    studentDormNo: "24-2-0402-A",
+    phoneNumber: "010-1234-5678",
+    email: "unidorm@inu.ac.kr",
+    zipCode: "22012",
+    address: "인천광역시 연수구 아카데미로 119",
+    detailedAddress: "기숙사",
+    meritPoints: "3",
+    demeritPoints: "0",
+    nonOffsetDemeritPoints: "0",
+    year: String(new Date().getFullYear()),
+    term: "1학기",
+    rawFields: {},
+  },
+  addressList: [],
+  rewardList: [],
+  inOutList: [
+    {
+      year: String(new Date().getFullYear()),
+      term: "10",
+      status: "01",
+      dormitoryType: "02",
+      studentDormNo: "24-2-0402-A",
+      checkInDate: `${new Date().getFullYear()}-03-01`,
+      checkOutDate: "",
+      rawFields: {},
+    },
+  ],
+  applyList: [],
+  paymentList: [],
+  utilityList: [],
+  pledge: null,
+  rawDatasets: {},
+};
+
 function toImageSrc(base64?: string): string | null {
   if (!base64 || typeof base64 !== "string") return null;
   const clean = base64.replace(/\s/g, "");
@@ -254,8 +310,17 @@ export default function MobileDormitoryCardPage() {
   const [dormInfo, setDormInfo] = useState<DormitoryStudentInfo | null>(null);
   const [fallbackAcademic, setFallbackAcademic] = useState<any | null>(null);
 
+  const isPreviewMode =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("preview") === "true";
+
   const fetchCached = useCallback(async () => {
     setIsInitialLoading(true);
+    if (isPreviewMode) {
+      setDormInfo(MOCK_PREVIEW_DORM_INFO);
+      setIsInitialLoading(false);
+      return;
+    }
     try {
       const cachedResult = await secureStorage.getCacheWithTtl<unknown>(STORAGE_KEY_DORMITORY_DATA);
       const cached = cachedResult?.data;
@@ -362,13 +427,14 @@ export default function MobileDormitoryCardPage() {
 
   // 우리 앱 환경이 아니거나 구버전 앱인 경우 스토어 설치/업데이트 유도
   useEffect(() => {
+    if (isPreviewMode) return;
     if (!isLatestUnidormApp()) {
       guardAppOnly({
         onCancelNavigateBack: true,
         navigate,
       });
     }
-  }, [navigate]);
+  }, [navigate, isPreviewMode]);
 
   // 사생증 화면 캡처 및 녹화 방지 브릿지 연동
   // 활성 사생증 카드가 표시될 때만 FLAG_SECURE를 켜고, 비사생 안내 화면이거나 화면 이탈 시 즉시 해제
@@ -669,6 +735,9 @@ export default function MobileDormitoryCardPage() {
   return (
     <PageContainer as="main">
       <CardWrapper as="section">
+        {isPreviewMode && (
+          <PreviewBadge>PC 브라우저 개발 미리보기 모드 (?preview=true)</PreviewBadge>
+        )}
         <MobileDormitoryCard
           fullscreen
           studentName={studentName}
@@ -703,6 +772,18 @@ export default function MobileDormitoryCardPage() {
     </PageContainer>
   );
 }
+
+const PreviewBadge = styled.div`
+  background: var(--surface-secondary, #F2F4F6);
+  color: var(--content-secondary, #4E5968);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 12px;
+  margin-bottom: 8px;
+  text-align: center;
+  align-self: center;
+`;
 
 const PageContainer = styled.div<{ $isScrollable?: boolean }>`
   width: 100%;
