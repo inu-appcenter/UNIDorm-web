@@ -42,6 +42,7 @@ import useUserStore from "@/stores/useUserStore";
 import { PATHS } from "@/constants/paths";
 import HomeDormitoryCardButton from "@/components/home/HomeDormitoryCardButton";
 import HomeDormitoryPromptModal from "@/components/home/HomeDormitoryPromptModal";
+import { isLatestUnidormApp } from "@/utils/getMobilePlatform";
 
 export default function HomePage() {
   useSetAIChat({ isVisible: true, shouldAnimate: true });
@@ -88,17 +89,35 @@ export default function HomePage() {
     shouldShowMigrationBanner,
   } = useFreshmanMigrationBanner();
 
+  const platform = getMobilePlatform();
+  const [isAppInstallOpen, setIsAppInstallOpen] = useState(
+    (platform === "ios_browser" || platform === "android_browser") &&
+      Math.random() < 0.4,
+  );
+
   const [isDormPromptOpen, setIsDormPromptOpen] = useState(false);
 
   useEffect(() => {
     if (!isLoggedIn) return;
+
+    // 앱 설치 유도 바텀시트가 열려 있으면 모달 중복 노출 방지 (One Thing at a Time)
+    if (isAppInstallOpen) return;
+
+    // 사생증 발급은 유니돔 앱 전용 기능이므로 일반 웹 브라우저에서는 노출 제외
+    const isPreview =
+      typeof window !== "undefined" &&
+      (new URLSearchParams(window.location.search).get("preview_dorm_prompt") === "true" ||
+        localStorage.getItem("preview_dorm_prompt") === "true");
+
+    if (!isLatestUnidormApp() && !isPreview) return;
+
     const hasDismissed = sessionStorage.getItem("hasDismissedDormCardPrompt") === "true";
     if (hasDismissed) return;
     const issueStatus = localStorage.getItem("unidorm_dorm_card_issue_status");
-    if (issueStatus === "FAILED") {
+    if (issueStatus === "FAILED" || isPreview) {
       setIsDormPromptOpen(true);
     }
-  }, [isLoggedIn]);
+  }, [isLoggedIn, isAppInstallOpen]);
 
   const handleCloseDormPrompt = () => {
     sessionStorage.setItem("hasDismissedDormCardPrompt", "true");
@@ -188,12 +207,6 @@ export default function HomePage() {
       }
     }
   }, [isAnnounceLoading, isAnnounceError]);
-
-  const platform = getMobilePlatform();
-  const [isAppInstallOpen, setIsAppInstallOpen] = useState(
-    (platform === "ios_browser" || platform === "android_browser") &&
-      Math.random() < 0.4,
-  );
 
   const CHANNEL_ID = "UCrpqEmMWCOg6P8FSk6mN5Hw"; //인천대학교 생활원 유튜브 채널 id
 

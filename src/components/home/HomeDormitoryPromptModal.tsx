@@ -34,7 +34,7 @@ export default function HomeDormitoryPromptModal({
           <Dialog.Description asChild>
             <Description>
               기숙사에 살고 있다면 모바일 사생증을 바로 이용할 수 있어요.
-              포털에서 최신 사생 정보를 안전하게 가져올게요.
+              간식나눔 등 사생 확인이 필요한 행사 등에서 사용돼요.
             </Description>
           </Dialog.Description>
 
@@ -81,7 +81,7 @@ const Overlay = styled(Dialog.Overlay)`
   inset: 0;
   background-color: rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(4px);
-  z-index: 1000;
+  z-index: 11000;
   animation: ${fadeIn} 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 `;
 
@@ -95,7 +95,7 @@ const Container = styled(Dialog.Content)`
   border-radius: 24px;
   padding: 32px 24px 24px;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
-  z-index: 1001;
+  z-index: 11001;
   display: flex;
   flex-direction: column;
   align-items: center;
