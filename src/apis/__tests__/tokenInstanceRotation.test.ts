@@ -126,6 +126,28 @@ describe("다른 웹뷰가 refreshToken을 먼저 교체했을 때의 재발급 
 
     await assertion;
     expect(location.href).toBe("/logout");
+    // 로그아웃 리다이렉트 전 로컬스토리지 토큰이 동기 소거되었는지 검증
+    expect(localStorage.getItem("accessToken")).toBeNull();
+    expect(localStorage.getItem("refreshToken")).toBeNull();
+  });
+
+  it("403 Forbidden 에러 발생 시 토큰 리프레시를 시도하지 않고 즉시 에러를 반환한다", async () => {
+    const { default: tokenInstance } = await import("../tokenInstance");
+    tokenInstance.defaults.adapter = async (config) => {
+      const error = Object.assign(new Error("Forbidden"), {
+        config,
+        response: { status: 403, data: { message: "권한이 없습니다." } },
+        isAxiosError: true,
+      });
+      throw error;
+    };
+
+    await expect(tokenInstance.get("/users")).rejects.toMatchObject({
+      response: { status: 403 },
+    });
+    // 403은 인가 에러이므로 리프레시를 시도하지 않아야 한다
+    expect(refreshMock).not.toHaveBeenCalled();
+    expect(location.href).toBe("");
   });
 });
 
