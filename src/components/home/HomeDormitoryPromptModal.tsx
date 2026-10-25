@@ -7,13 +7,17 @@ export interface HomeDormitoryPromptModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
+  mode?: "issue" | "renew";
 }
 
 export default function HomeDormitoryPromptModal({
   isOpen,
   onClose,
   onConfirm,
+  mode = "issue",
 }: HomeDormitoryPromptModalProps) {
+  const isRenew = mode === "renew";
+
   return (
     <Dialog.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <Dialog.Portal>
@@ -28,13 +32,18 @@ export default function HomeDormitoryPromptModal({
           </IconCircle>
 
           <Dialog.Title asChild>
-            <Title>모바일 사생증을 발급할까요?</Title>
+            <Title>
+              {isRenew
+                ? "새 학기 사생증을 갱신할까요?"
+                : "모바일 사생증을 발급할까요?"}
+            </Title>
           </Dialog.Title>
 
           <Dialog.Description asChild>
             <Description>
-              기숙사에 살고 있다면 모바일 사생증을 바로 이용할 수 있어요.
-              간식나눔 등 사생 확인이 필요한 행사 등에서 사용돼요.
+              {isRenew
+                ? "지난 학기 사생증이 만료되었어요. 이번 학기 사생 정보를 새로 가져올게요."
+                : "기숙사에 살고 있다면 모바일 사생증을 바로 이용할 수 있어요. 간식나눔 등 사생 확인이 필요한 행사 등에서 사용돼요."}
             </Description>
           </Dialog.Description>
 
@@ -51,7 +60,7 @@ export default function HomeDormitoryPromptModal({
               fullWidth
               onClick={onConfirm}
             >
-              사생증 발급하기
+              {isRenew ? "사생증 갱신하기" : "사생증 발급하기"}
             </CapsuleButton>
           </ButtonGroup>
         </Container>

@@ -43,6 +43,10 @@ import { PATHS } from "@/constants/paths";
 import HomeDormitoryCardButton from "@/components/home/HomeDormitoryCardButton";
 import HomeDormitoryPromptModal from "@/components/home/HomeDormitoryPromptModal";
 import { isLatestUnidormApp } from "@/utils/getMobilePlatform";
+import {
+  isDormitorySemesterExpired,
+  getCurrentAcademicCycleKey,
+} from "@/utils/semesterGuard";
 
 export default function HomePage() {
   useSetAIChat({ isVisible: true, shouldAnimate: true });
@@ -96,6 +100,7 @@ export default function HomePage() {
   );
 
   const [isDormPromptOpen, setIsDormPromptOpen] = useState(false);
+  const [dormPromptMode, setDormPromptMode] = useState<"issue" | "renew">("issue");
 
   useEffect(() => {
     if (!isLoggedIn) return;
@@ -111,23 +116,66 @@ export default function HomePage() {
 
     if (!isLatestUnidormApp() && !isPreview) return;
 
-    const hasDismissed = sessionStorage.getItem("hasDismissedDormCardPrompt") === "true";
-    if (hasDismissed) return;
+    const currentCycle = getCurrentAcademicCycleKey();
+
+    // 1. 기존 저장된 사생 정보의 학기가 만료되어 갱신이 필요한 시점인지 확인
+    try {
+      const savedDormRaw = localStorage.getItem("portal_dormitory_student_info");
+      if (savedDormRaw) {
+        const parsed = JSON.parse(savedDormRaw);
+        const p = parsed.profile || parsed;
+        const isExpired = isDormitorySemesterExpired({
+          dormYear: p.year,
+          dormTerm: p.term,
+        });
+
+        if (isExpired) {
+          // 학기 만료로 갱신이 필요한 시점: 사용자가 해당 갱신 모달을 이번 학기에 닫은 적이 없으면 노출
+          const dismissedRenewalCycle = localStorage.getItem("dismissedDormCardRenewalCycle");
+          if (dismissedRenewalCycle !== currentCycle || isPreview) {
+            setDormPromptMode("renew");
+            setIsDormPromptOpen(true);
+            return;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("[HomePage] 사생증 갱신 만료 확인 오류:", e);
+    }
+
+    // 2. 신규 발급 또는 미완료/실패(FAILED) 상태인 경우
+    // 한 번 닫았으면(localStorage) 동일 학기 주기 내에서는 더 이상 띄우지 않음
+    const dismissedIssueCycle = localStorage.getItem("dismissedDormCardPromptCycle");
+    if (dismissedIssueCycle === currentCycle && !isPreview) return;
+
     const issueStatus = localStorage.getItem("unidorm_dorm_card_issue_status");
     if (issueStatus === "FAILED" || isPreview) {
+      setDormPromptMode("issue");
       setIsDormPromptOpen(true);
     }
   }, [isLoggedIn, isAppInstallOpen]);
 
   const handleCloseDormPrompt = () => {
-    sessionStorage.setItem("hasDismissedDormCardPrompt", "true");
+    const currentCycle = getCurrentAcademicCycleKey();
+    if (dormPromptMode === "renew") {
+      localStorage.setItem("dismissedDormCardRenewalCycle", currentCycle);
+    } else {
+      localStorage.setItem("dismissedDormCardPromptCycle", currentCycle);
+    }
     setIsDormPromptOpen(false);
   };
 
   const handleConfirmDormPrompt = () => {
-    sessionStorage.setItem("hasDismissedDormCardPrompt", "true");
+    const currentCycle = getCurrentAcademicCycleKey();
+    if (dormPromptMode === "renew") {
+      localStorage.setItem("dismissedDormCardRenewalCycle", currentCycle);
+    } else {
+      localStorage.setItem("dismissedDormCardPromptCycle", currentCycle);
+    }
     setIsDormPromptOpen(false);
-    mixpanelTrack.dormitoryCardEntryClicked("홈_발급유도모달");
+    mixpanelTrack.dormitoryCardEntryClicked(
+      dormPromptMode === "renew" ? "홈_사생증갱신모달" : "홈_발급유도모달",
+    );
     navigate(PATHS.DORMITORY_CARD);
   };
 
@@ -513,6 +561,7 @@ export default function HomePage() {
         isOpen={isDormPromptOpen}
         onClose={handleCloseDormPrompt}
         onConfirm={handleConfirmDormPrompt}
+        mode={dormPromptMode}
       />
 
       <CommonBottomSheet

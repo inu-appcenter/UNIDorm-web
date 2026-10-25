@@ -134,3 +134,19 @@ export function isDormitorySemesterExpired({
 
   return false;
 }
+
+/**
+ * 현재 날짜 기준 대략적인 학기 주기 식별자 반환 (예: "2026-10" 또는 "2026-20")
+ * 1학기/여름방학: 1월 1일 ~ 8월 25일 -> "YYYY-10"
+ * 2학기/겨울방학: 8월 26일 ~ 12월 31일 -> "YYYY-20"
+ */
+export function getCurrentAcademicCycleKey(currentDate = new Date()): string {
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth() + 1;
+  const date = currentDate.getDate();
+
+  if (month > 8 || (month === 8 && date > 25)) {
+    return `${year}-20`;
+  }
+  return `${year}-10`;
+}

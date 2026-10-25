@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   normalizeSemesterCode,
   isDormitorySemesterExpired,
+  getCurrentAcademicCycleKey,
 } from "../semesterGuard";
 
 describe("semesterGuard (기숙사 학사일정 및 거주 기반 학기 만료 가드)", () => {
@@ -266,6 +267,19 @@ describe("semesterGuard (기숙사 학사일정 및 거주 기반 학기 만료 
           dormTerm: "INVALID",
         })
       ).toBe(false);
+    });
+  });
+
+  describe("getCurrentAcademicCycleKey - 현재 날짜 기준 학기 주기 키 계산", () => {
+    it("1월 1일부터 8월 25일까지는 1학기 주기 키(YYYY-10)를 반환한다", () => {
+      expect(getCurrentAcademicCycleKey(new Date("2026-03-01T12:00:00"))).toBe("2026-10");
+      expect(getCurrentAcademicCycleKey(new Date("2026-08-25T23:59:00"))).toBe("2026-10");
+    });
+
+    it("8월 26일부터 12월 31일까지는 2학기 주기 키(YYYY-20)를 반환한다", () => {
+      expect(getCurrentAcademicCycleKey(new Date("2026-08-26T00:01:00"))).toBe("2026-20");
+      expect(getCurrentAcademicCycleKey(new Date("2026-10-26T12:00:00"))).toBe("2026-20");
+      expect(getCurrentAcademicCycleKey(new Date("2026-12-31T23:59:00"))).toBe("2026-20");
     });
   });
 });
