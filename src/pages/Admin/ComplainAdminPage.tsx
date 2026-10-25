@@ -5,7 +5,7 @@ import SearchInput from "../../components/complain/SearchInput.tsx";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import ComplainListTable from "../../components/complain/ComplainListTable.tsx";
 import useUserStore from "../../stores/useUserStore.ts";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { ComplaintSearchDto } from "@/types/complain";
 import { downloadComplaintsCSV } from "@/apis/complainAdmin";
 import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
@@ -77,6 +77,11 @@ const ComplainAdminPage = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const filterGroupRef = useRef<HTMLDivElement>(null);
 
+  // 기간 칩 가로 스크롤 영역 참조 및 그라디언트 상태
+  const chipScrollRef = useRef<HTMLDivElement>(null);
+  const [showRightGradient, setShowRightGradient] = useState(false);
+  const [showLeftGradient, setShowLeftGradient] = useState(false);
+
   // URL searchParams로부터 상태 도출 (Single Source of Truth)
   // 상세 페이지를 보고 뒤로 돌아와도 URL 쿼리스트링 덕분에 상태가 100% 복원됩니다.
   const appliedKeyword = searchParams.get("keyword") || "";
@@ -123,6 +128,30 @@ const ComplainAdminPage = () => {
   useEffect(() => {
     setSearchInput(appliedKeyword);
   }, [appliedKeyword]);
+
+  // 가로 스크롤 상태 체크 (우측/좌측 그라디언트 마스크 표시 여부 결정)
+  const checkChipScroll = useCallback(() => {
+    const el = chipScrollRef.current;
+    if (!el) return;
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+    setShowLeftGradient(scrollLeft > 4);
+    setShowRightGradient(scrollLeft + clientWidth < scrollWidth - 4);
+  }, []);
+
+  useLayoutEffect(() => {
+    checkChipScroll();
+  }, [checkChipScroll]);
+
+  useEffect(() => {
+    const el = chipScrollRef.current;
+    if (!el) return;
+    el.addEventListener("scroll", checkChipScroll, { passive: true });
+    window.addEventListener("resize", checkChipScroll);
+    return () => {
+      el.removeEventListener("scroll", checkChipScroll);
+      window.removeEventListener("resize", checkChipScroll);
+    };
+  }, [checkChipScroll]);
 
   // URL searchParams 일괄 업데이트 헬퍼
   const updateFilters = useCallback(
@@ -507,7 +536,7 @@ const ComplainAdminPage = () => {
               onSearch={handleSearchSubmit}
             />
 
-            {/* 필터 버튼 및 기간 칩 그룹 (동일 라인 배치) */}
+            {/* 필터 버튼 및 기간 칩 그룹 (동일 라인 배치 및 가로 스크롤/그라디언트) */}
             <ControlsRow>
               <FilterGroup ref={filterGroupRef}>
                 <FilterButton
@@ -534,13 +563,17 @@ const ComplainAdminPage = () => {
                 )}
               </FilterGroup>
 
-              <ChipGroupWrapper>
-                <SelectableChipGroup
-                  Groups={PERIOD_MENUS}
-                  selectedIndex={selectedPeriodIndex}
-                  onSelect={handleSelectPeriod}
-                />
-              </ChipGroupWrapper>
+              <ChipScrollContainer>
+                {showLeftGradient && <LeftGradientOverlay />}
+                <ChipScrollArea ref={chipScrollRef}>
+                  <SelectableChipGroup
+                    Groups={PERIOD_MENUS}
+                    selectedIndex={selectedPeriodIndex}
+                    onSelect={handleSelectPeriod}
+                  />
+                </ChipScrollArea>
+                {showRightGradient && <RightGradientOverlay />}
+              </ChipScrollContainer>
             </ControlsRow>
 
             {/* 적용된 조건 태그 목록 (있을 때만 노출) */}
@@ -628,25 +661,66 @@ const FilterGroup = styled.div`
   flex-shrink: 0;
 `;
 
-const ChipGroupWrapper = styled.div`
+const ChipScrollContainer = styled.div`
+  position: relative;
   display: flex;
   align-items: center;
   flex: 1;
   min-width: 0;
+  overflow: hidden;
+`;
+
+const ChipScrollArea = styled.div`
+  display: flex;
+  align-items: center;
+  width: 100%;
   overflow-x: auto;
+  scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   &::-webkit-scrollbar {
     display: none;
   }
   scrollbar-width: none;
+  padding: 2px 0;
 
-  /* SelectableChipGroupWrapper의 width: 100%를 한 줄 flex 레이아웃으로 유연하게 처리 */
+  /* SelectableChipGroupWrapper 스타일 오버라이드 및 한 줄 가로 나열 */
   & > div {
     display: flex;
     flex-wrap: nowrap;
     width: max-content;
     gap: 8px;
   }
+
+  /* 개별 칩 텍스트가 줄바꿈되지 않도록 고정 */
+  & > div > div {
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+    word-break: keep-all !important;
+  }
+`;
+
+const RightGradientOverlay = styled.div`
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 36px;
+  background: linear-gradient(to right, rgba(255, 255, 255, 0), #ffffff 85%);
+  pointer-events: none;
+  z-index: 2;
+  transition: opacity 0.2s ease;
+`;
+
+const LeftGradientOverlay = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 24px;
+  background: linear-gradient(to left, rgba(255, 255, 255, 0), #ffffff 85%);
+  pointer-events: none;
+  z-index: 2;
+  transition: opacity 0.2s ease;
 `;
 
 const FilterButton = styled.button<{ $isActive?: boolean }>`
@@ -666,6 +740,7 @@ const FilterButton = styled.button<{ $isActive?: boolean }>`
   cursor: pointer;
   transition: all 0.15s ease-in-out;
   white-space: nowrap;
+  flex-shrink: 0;
 
   &:hover {
     background-color: ${(props) => (props.$isActive ? "#DCEBFE" : "#F2F4F6")};
