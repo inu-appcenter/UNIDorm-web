@@ -87,6 +87,8 @@ const ComplainFilter = ({
   const [floor, setFloor] = useState(initialFilters?.floor || "");
   const [room, setRoom] = useState(initialFilters?.roomNumber || "");
   const [bed, setBed] = useState(initialFilters?.bedNumber || "");
+  const [startDate, setStartDate] = useState(initialFilters?.startDate || "");
+  const [endDate, setEndDate] = useState(initialFilters?.endDate || "");
 
   // 동적 옵션 목록
   const [floorOptions, setFloorOptions] = useState<string[]>([]);
@@ -152,6 +154,8 @@ const ComplainFilter = ({
       ...(floor && { floor }),
       ...(room && { roomNumber: room }),
       ...(bed && { bedNumber: bed }),
+      ...(startDate && { startDate }),
+      ...(endDate && { endDate }),
     };
 
     const hasAnyFilter = Object.keys(filters).length > 0;
@@ -168,6 +172,8 @@ const ComplainFilter = ({
     setFloor("");
     setRoom("");
     setBed("");
+    setStartDate("");
+    setEndDate("");
     onReset();
   };
 
@@ -272,6 +278,25 @@ const ComplainFilter = ({
         </DropdownContainer>
       </FormField>
 
+      <FormField label="접수 기간">
+        <DateRangeContainer>
+          <DateInput
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            aria-label="접수 시작일"
+          />
+          <DateSeparator>~</DateSeparator>
+          <DateInput
+            type="date"
+            value={endDate}
+            min={startDate || undefined}
+            onChange={(e) => setEndDate(e.target.value)}
+            aria-label="접수 종료일"
+          />
+        </DateRangeContainer>
+      </FormField>
+
       <GuideText>
         화면 우측 상단 메뉴에서 현재 조회된 민원 목록을 CSV로 다운로드할 수 있어요.
       </GuideText>
@@ -334,6 +359,36 @@ const CloseButton = styled.button`
     color: #191f28;
     background-color: #f2f4f6;
   }
+`;
+
+const DateRangeContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+`;
+
+const DateInput = styled.input`
+  flex: 1;
+  height: 40px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #e5e8eb;
+  background-color: #ffffff;
+  font-size: 13px;
+  color: #191f28;
+  outline: none;
+  box-sizing: border-box;
+
+  &:focus {
+    border-color: #3182f6;
+  }
+`;
+
+const DateSeparator = styled.span`
+  color: #8b95a1;
+  font-size: 14px;
+  font-weight: 500;
 `;
 
 const GuideText = styled.p`

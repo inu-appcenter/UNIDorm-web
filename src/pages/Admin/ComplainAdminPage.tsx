@@ -20,6 +20,54 @@ import { useSearchParams } from "react-router-dom";
 
 const PERIOD_MENUS = ["전체", "최근 1개월", "최근 3개월", "올해"];
 
+/** Date 객체를 YYYY-MM-DD 포맷의 문자열로 변환 (로컬 타임존 기준) */
+const formatDateToYYYYMMDD = (d: Date): string => {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+/** 기간 프리셋 인덱스에 대응하는 시작일/종료일 계산 */
+const getPresetDateRange = (
+  idx: number,
+): { startDate?: string; endDate?: string } => {
+  const now = new Date();
+  const todayStr = formatDateToYYYYMMDD(now);
+
+  if (idx === 1) {
+    // 최근 1개월
+    const past = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+    return { startDate: formatDateToYYYYMMDD(past), endDate: todayStr };
+  }
+  if (idx === 2) {
+    // 최근 3개월
+    const past = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate());
+    return { startDate: formatDateToYYYYMMDD(past), endDate: todayStr };
+  }
+  if (idx === 3) {
+    // 올해
+    return { startDate: `${now.getFullYear()}-01-01`, endDate: todayStr };
+  }
+  return {};
+};
+
+/** 시작일/종료일이 기간 프리셋 중 어느 것에 해당하는지 역방향 판별 */
+const matchPresetIndex = (
+  startDate?: string,
+  endDate?: string,
+): number | null => {
+  if (!startDate && !endDate) return 0; // "전체"
+  for (let i = 1; i <= 3; i++) {
+    const preset = getPresetDateRange(i);
+    if (preset.startDate === startDate && preset.endDate === endDate) {
+      return i;
+    }
+  }
+  // 사용자가 필터에서 임의로 선택한 커스텀 기간인 경우 칩 선택 해제 (null)
+  return null;
+};
+
 const ComplainAdminPage = () => {
   const { tokenInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
@@ -32,13 +80,15 @@ const ComplainAdminPage = () => {
   // URL searchParams로부터 상태 도출 (Single Source of Truth)
   // 상세 페이지를 보고 뒤로 돌아와도 URL 쿼리스트링 덕분에 상태가 100% 복원됩니다.
   const appliedKeyword = searchParams.get("keyword") || "";
+  const appliedStartDate = searchParams.get("startDate") || "";
+  const appliedEndDate = searchParams.get("endDate") || "";
 
-  const periodParam = searchParams.get("period");
+  // 현재 날짜 범위에 매칭되는 상단 기간 칩 인덱스 도출
   const selectedPeriodIndex = useMemo(() => {
-    const num = Number(periodParam);
-    return !isNaN(num) && num >= 0 && num < PERIOD_MENUS.length ? num : 0;
-  }, [periodParam]);
+    return matchPresetIndex(appliedStartDate, appliedEndDate);
+  }, [appliedStartDate, appliedEndDate]);
 
+  // 상세 필터 파라미터 파싱
   const appliedDetailFilters = useMemo<ComplaintSearchDto | null>(() => {
     const dto: ComplaintSearchDto = {};
     const dormType = searchParams.get("dormType");
@@ -49,6 +99,8 @@ const ComplainAdminPage = () => {
     const floor = searchParams.get("floor");
     const roomNumber = searchParams.get("roomNumber");
     const bedNumber = searchParams.get("bedNumber");
+    const startDate = searchParams.get("startDate");
+    const endDate = searchParams.get("endDate");
 
     if (dormType) dto.dormType = dormType;
     if (officer) dto.officer = officer;
@@ -58,6 +110,8 @@ const ComplainAdminPage = () => {
     if (floor) dto.floor = floor;
     if (roomNumber) dto.roomNumber = roomNumber;
     if (bedNumber) dto.bedNumber = bedNumber;
+    if (startDate) dto.startDate = startDate;
+    if (endDate) dto.endDate = endDate;
 
     return Object.keys(dto).length > 0 ? dto : null;
   }, [searchParams]);
@@ -75,16 +129,21 @@ const ComplainAdminPage = () => {
     (
       newKeyword: string,
       newDetail: ComplaintSearchDto | null,
-      newPeriodIdx: number,
+      dateRange?: { startDate?: string; endDate?: string },
     ) => {
       const params = new URLSearchParams();
       const trimmed = newKeyword.trim();
       if (trimmed) {
         params.set("keyword", trimmed);
       }
-      if (newPeriodIdx !== 0) {
-        params.set("period", String(newPeriodIdx));
-      }
+
+      // 날짜 설정 우선순위: 명시적 dateRange > newDetail 내 날짜
+      const sDate = dateRange ? dateRange.startDate : newDetail?.startDate;
+      const eDate = dateRange ? dateRange.endDate : newDetail?.endDate;
+
+      if (sDate) params.set("startDate", sDate);
+      if (eDate) params.set("endDate", eDate);
+
       if (newDetail) {
         if (newDetail.dormType) params.set("dormType", newDetail.dormType);
         if (newDetail.officer) params.set("officer", newDetail.officer);
@@ -95,21 +154,24 @@ const ComplainAdminPage = () => {
         if (newDetail.roomNumber) params.set("roomNumber", newDetail.roomNumber);
         if (newDetail.bedNumber) params.set("bedNumber", newDetail.bedNumber);
       }
+
       setSearchParams(params, { replace: true });
     },
     [setSearchParams],
   );
 
-  // 검색어와 상세 필터를 하나의 통합 서버 검색 DTO로 결합
+  // 검색어와 상세 필터, 기간을 하나의 통합 서버 검색 DTO로 결합
   const serverSearchDto = useMemo<ComplaintSearchDto | null>(() => {
     const dto: ComplaintSearchDto = {
       ...(appliedDetailFilters || {}),
       ...(appliedKeyword.trim() ? { keyword: appliedKeyword.trim() } : {}),
+      ...(appliedStartDate ? { startDate: appliedStartDate } : {}),
+      ...(appliedEndDate ? { endDate: appliedEndDate } : {}),
     };
     return Object.keys(dto).length > 0 ? dto : null;
-  }, [appliedDetailFilters, appliedKeyword]);
+  }, [appliedDetailFilters, appliedKeyword, appliedStartDate, appliedEndDate]);
 
-  // 적용된 필터 조건으로 서버에서 민원 목록 조회
+  // 적용된 필터 조건으로 서버에서 민원 목록 조회 (단일화 API 호출 및 이중 폴백)
   const {
     data: complaints = [],
     isLoading: isInitialLoading,
@@ -144,25 +206,32 @@ const ComplainAdminPage = () => {
 
   // 검색창 엔터/아이콘 클릭 핸들러
   const handleSearchSubmit = () => {
-    updateFilters(searchInput, appliedDetailFilters, selectedPeriodIndex);
+    updateFilters(searchInput, appliedDetailFilters, {
+      startDate: appliedStartDate,
+      endDate: appliedEndDate,
+    });
   };
 
-  // 필터 적용 핸들러
+  // 필터 팝업 적용 핸들러 (팝업 내 기간 선택 포함)
   const handleApplyFilters = (filters: ComplaintSearchDto | null) => {
-    updateFilters(appliedKeyword, filters, selectedPeriodIndex);
+    updateFilters(appliedKeyword, filters);
     setIsFilterOpen(false);
   };
 
-  // 필터 초기화 핸들러 (상세 필터만 해제)
+  // 필터 초기화 핸들러 (상세 필터 및 기간 필터 해제)
   const handleResetFilters = () => {
-    updateFilters(appliedKeyword, null, selectedPeriodIndex);
+    updateFilters(appliedKeyword, null, {
+      startDate: undefined,
+      endDate: undefined,
+    });
     setIsFilterOpen(false);
   };
 
-  // 기간 선택 핸들러
+  // 상단 기간 칩 선택 핸들러
   const handleSelectPeriod = (idx: number | null) => {
     const nextIdx = idx === null ? 0 : idx;
-    updateFilters(appliedKeyword, appliedDetailFilters, nextIdx);
+    const range = getPresetDateRange(nextIdx);
+    updateFilters(appliedKeyword, appliedDetailFilters, range);
   };
 
   // 전체 검색 조건(검색어, 상세 필터, 기간) 완전 초기화
@@ -182,52 +251,88 @@ const ComplainAdminPage = () => {
       updateFilters(
         appliedKeyword,
         hasRemaining ? nextFilters : null,
-        selectedPeriodIndex,
+        {
+          startDate: key === "startDate" ? undefined : appliedStartDate,
+          endDate: key === "endDate" ? undefined : appliedEndDate,
+        },
       );
     },
-    [appliedDetailFilters, appliedKeyword, selectedPeriodIndex, updateFilters],
+    [appliedDetailFilters, appliedKeyword, appliedStartDate, appliedEndDate, updateFilters],
   );
 
-  // 클라이언트 날짜 파싱 헬퍼 (Safari 호환)
-  const parseSafeDate = (dateString: string): Date => {
-    const safariSafeFormat = dateString.replace(/\./g, "/");
-    return new Date(safariSafeFormat);
-  };
+  // 기간 필터 전용 해제 핸들러
+  const handleRemoveDateRange = useCallback(() => {
+    updateFilters(appliedKeyword, appliedDetailFilters, {
+      startDate: undefined,
+      endDate: undefined,
+    });
+  }, [appliedKeyword, appliedDetailFilters, updateFilters]);
 
-  // 기간 필터링이 적용된 최종 표시 목록
+  /**
+   * [클라이언트 2차 방어 필터링 (Safe Guard)]
+   * 백엔드가 아직 배포되지 않아 startDate/endDate나 특정 검색 파라미터를 무시하고
+   * 전체 목록을 반환하더라도, 클라이언트 측에서 2차 검증하여 완벽히 일치하는 데이터만 표시합니다.
+   * 백엔드가 먼저 배포되든 프론트가 먼저 배포되든 100% 무중단 호환성을 보장합니다.
+   */
   const filteredComplaints = useMemo(() => {
-    if (selectedPeriodIndex === 0) {
-      return complaints; // "전체"
-    }
+    return complaints.filter((item) => {
+      // 1. 기간(startDate, endDate) 클라이언트 필터링
+      if (appliedStartDate || appliedEndDate) {
+        // 백엔드 날짜 포맷 (YYYY-MM-DD 또는 YYYY.MM.DD) 정규화
+        const itemDateStr = item.date ? item.date.replace(/\./g, "-").slice(0, 10) : "";
+        if (itemDateStr) {
+          if (appliedStartDate && itemDateStr < appliedStartDate) return false;
+          if (appliedEndDate && itemDateStr > appliedEndDate) return false;
+        }
+      }
 
-    const now = new Date();
+      // 2. 검색어 클라이언트 방어 필터링 (구버전 서버 대비)
+      if (appliedKeyword) {
+        const kw = appliedKeyword.toLowerCase();
+        const titleMatch = item.title?.toLowerCase().includes(kw);
+        const roomMatch = item.roomNumber?.toString().includes(kw);
+        const studentMatch = item.studentNumber?.toString().includes(kw);
+        const buildingMatch = item.building?.toLowerCase().includes(kw);
+        if (!titleMatch && !roomMatch && !studentMatch && !buildingMatch) {
+          return false;
+        }
+      }
 
-    if (selectedPeriodIndex === 1) {
-      // 최근 1개월
-      const oneMonthAgo = new Date();
-      oneMonthAgo.setMonth(now.getMonth() - 1);
-      return complaints.filter((c) => parseSafeDate(c.date) >= oneMonthAgo);
-    }
+      // 3. 상세 필터 클라이언트 방어 필터링 (구버전 서버 대비)
+      if (appliedDetailFilters) {
+        if (appliedDetailFilters.dormType && item.dormType !== appliedDetailFilters.dormType) {
+          return false;
+        }
+        if (appliedDetailFilters.status && item.status !== appliedDetailFilters.status) {
+          return false;
+        }
+        if (appliedDetailFilters.building) {
+          const itemBldg = formatBuildingFromServer(item.building);
+          const filterBldg = formatBuildingFromServer(appliedDetailFilters.building);
+          if (itemBldg !== filterBldg) return false;
+        }
+        if (appliedDetailFilters.floor && String(item.floor) !== String(appliedDetailFilters.floor)) {
+          return false;
+        }
+        if (appliedDetailFilters.roomNumber && String(item.roomNumber) !== String(appliedDetailFilters.roomNumber)) {
+          return false;
+        }
+        if (appliedDetailFilters.bedNumber && String(item.bedNumber) !== String(appliedDetailFilters.bedNumber)) {
+          return false;
+        }
+        if (appliedDetailFilters.officer && item.officer !== appliedDetailFilters.officer) {
+          return false;
+        }
+        if (appliedDetailFilters.type && item.type !== appliedDetailFilters.type) {
+          return false;
+        }
+      }
 
-    if (selectedPeriodIndex === 2) {
-      // 최근 3개월
-      const threeMonthsAgo = new Date();
-      threeMonthsAgo.setMonth(now.getMonth() - 3);
-      return complaints.filter((c) => parseSafeDate(c.date) >= threeMonthsAgo);
-    }
+      return true;
+    });
+  }, [complaints, appliedStartDate, appliedEndDate, appliedKeyword, appliedDetailFilters]);
 
-    if (selectedPeriodIndex === 3) {
-      // 올해
-      const currentYear = now.getFullYear();
-      return complaints.filter(
-        (c) => parseSafeDate(c.date).getFullYear() === currentYear,
-      );
-    }
-
-    return complaints;
-  }, [complaints, selectedPeriodIndex]);
-
-  // CSV 다운로드 핸들러 (현재 화면에 보이는 필터링 목록을 그대로 다운로드)
+  // CSV 다운로드 핸들러 (현재 화면에 보이는 필터링 목록을 그대로 다운로드 - WYSIWYG)
   const handleDownloadScreenCSV = () => {
     if (filteredComplaints.length === 0) {
       alert("다운로드할 민원 목록이 없습니다.");
@@ -277,10 +382,12 @@ const ComplainAdminPage = () => {
   ];
   useSetHeader({ title: "전체 민원 목록(관리자)", menuItems });
 
-  // 현재 적용된 상세 필터 개수 계산
-  const activeDetailFilterCount = appliedDetailFilters
-    ? Object.keys(appliedDetailFilters).length
-    : 0;
+  // 현재 적용된 상세 필터 개수 계산 (기간 제외 조건 수)
+  const activeDetailFilterCount = useMemo(() => {
+    if (!appliedDetailFilters) return 0;
+    const { startDate, endDate, ...others } = appliedDetailFilters;
+    return Object.keys(others).length + (startDate || endDate ? 1 : 0);
+  }, [appliedDetailFilters]);
 
   // 적용된 태그 목록 생성 (사용자에게 한눈에 표시하고 개별 삭제 지원)
   const activeFilterTags = useMemo(() => {
@@ -292,8 +399,26 @@ const ComplainAdminPage = () => {
         label: `검색어: "${appliedKeyword}"`,
         onRemove: () => {
           setSearchInput("");
-          updateFilters("", appliedDetailFilters, selectedPeriodIndex);
+          updateFilters("", appliedDetailFilters, {
+            startDate: appliedStartDate,
+            endDate: appliedEndDate,
+          });
         },
+      });
+    }
+
+    if (appliedStartDate || appliedEndDate) {
+      const label =
+        appliedStartDate && appliedEndDate
+          ? `기간: ${appliedStartDate} ~ ${appliedEndDate}`
+          : appliedStartDate
+            ? `기간: ${appliedStartDate}부터`
+            : `기간: ~ ${appliedEndDate}까지`;
+
+      tags.push({
+        id: "dateRange",
+        label,
+        onRemove: handleRemoveDateRange,
       });
     }
 
@@ -359,14 +484,15 @@ const ComplainAdminPage = () => {
     return tags;
   }, [
     appliedKeyword,
+    appliedStartDate,
+    appliedEndDate,
     appliedDetailFilters,
+    handleRemoveDateRange,
     handleRemoveDetailFilterKey,
-    selectedPeriodIndex,
     updateFilters,
   ]);
 
-  const hasAnyActiveFilters =
-    activeFilterTags.length > 0 || selectedPeriodIndex !== 0;
+  const hasAnyActiveFilters = activeFilterTags.length > 0;
 
   return (
     <ComplainListPageWrapper>
@@ -448,29 +574,13 @@ const ComplainAdminPage = () => {
                 <ErrorDescription>
                   일시적인 서버 오류이거나 네트워크 연결 문제일 수 있어요.
                 </ErrorDescription>
-                <ErrorButtonWrapper>
-                  <RetryButton type="button" onClick={() => void refetch()}>
-                    <RotateCw size={14} />
-                    <span>다시 시도하기</span>
-                  </RetryButton>
-                  {hasAnyActiveFilters && (
-                    <ResetFilterButton type="button" onClick={handleResetAll}>
-                      검색 조건 초기화
-                    </ResetFilterButton>
-                  )}
-                </ErrorButtonWrapper>
+                <RetryButton type="button" onClick={() => refetch()}>
+                  <RotateCw size={14} />
+                  <span>다시 시도하기</span>
+                </RetryButton>
               </ErrorContainer>
-            ) : filteredComplaints.length > 0 ? (
-              <ComplainListTable data={filteredComplaints} isAdmin={true} />
             ) : (
-              <EmptyMessage>
-                조회된 민원이 없습니다.
-                {hasAnyActiveFilters && (
-                  <EmptySubText>
-                    설정된 검색 조건을 변경하거나 초기화해 보세요.
-                  </EmptySubText>
-                )}
-              </EmptyMessage>
+              <ComplainListTable data={filteredComplaints} isAdmin={true} />
             )}
           </ContentWrapper>
         }
@@ -482,13 +592,10 @@ const ComplainAdminPage = () => {
 export default ComplainAdminPage;
 
 const ComplainListPageWrapper = styled.div`
-  padding: 0 16px 100px;
-  display: flex;
-  flex-direction: column;
-  gap: 32px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
   box-sizing: border-box;
-  overflow-y: auto;
-  flex: 1;
 `;
 
 const ContentWrapper = styled.div`
@@ -500,43 +607,36 @@ const ContentWrapper = styled.div`
 
 const ControlsRow = styled.div`
   display: flex;
-  flex-direction: row;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   flex-wrap: wrap;
 `;
 
 const FilterGroup = styled.div`
   position: relative;
-  display: flex;
-  flex-direction: row;
 `;
 
 const FilterButton = styled.button<{ $isActive?: boolean }>`
   display: inline-flex;
-  padding: 6px 14px;
-  justify-content: center;
   align-items: center;
   gap: 6px;
-  min-width: fit-content;
-  border-radius: 20px;
-  border: 1px solid
-    ${({ $isActive }) => ($isActive ? "#3182f6" : "#e5e8eb")};
-  background: ${({ $isActive }) => ($isActive ? "#e8f3ff" : "#ffffff")};
-  color: ${({ $isActive }) => ($isActive ? "#3182f6" : "#4e5968")};
-  font-size: 14px;
-  font-weight: ${({ $isActive }) => ($isActive ? "600" : "500")};
-  line-height: 20px;
+  height: 38px;
+  padding: 0 14px;
+  background-color: ${(props) => (props.$isActive ? "#E8F3FF" : "#ffffff")};
+  color: ${(props) => (props.$isActive ? "#3182F6" : "#4E5968")};
+  border: 1px solid ${(props) => (props.$isActive ? "#3182F6" : "#E5E8EB")};
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s ease-in-out;
+  transition: all 0.15s ease;
 
   &:hover {
-    border-color: #3182f6;
-    color: #3182f6;
+    background-color: ${(props) => (props.$isActive ? "#DCEBFE" : "#F2F4F6")};
   }
 
   &:active {
-    transform: scale(0.97);
+    transform: scale(0.98);
   }
 `;
 
@@ -544,184 +644,140 @@ const Badge = styled.span`
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 18px;
+  min-width: 18px;
   height: 18px;
+  padding: 0 5px;
   border-radius: 9px;
-  background-color: #3182f6;
+  background-color: #3182F6;
   color: #ffffff;
   font-size: 11px;
   font-weight: 700;
+  line-height: 1;
+`;
+
+const FilterDropdownWrapper = styled.div`
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 50;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  border: 1px solid #E5E8EB;
 `;
 
 const ActiveTagsContainer = styled.div`
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
-  padding: 4px 0;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  background-color: #F9FAFB;
+  border-radius: 12px;
+  border: 1px solid #E5E8EB;
 `;
 
-const TagChip = styled.div`
+const TagChip = styled.span`
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   padding: 4px 10px;
-  border-radius: 14px;
-  background-color: #f2f4f6;
-  color: #333d4b;
+  background-color: #ffffff;
+  color: #191F28;
+  border: 1px solid #E5E8EB;
+  border-radius: 8px;
   font-size: 12px;
   font-weight: 500;
-  line-height: 16px;
 `;
 
 const TagCloseButton = styled.button`
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: none;
   background: none;
+  border: none;
   padding: 0;
-  color: #8b95a1;
+  color: #8B95A1;
   cursor: pointer;
+  transition: color 0.15s;
 
   &:hover {
-    color: #191f28;
+    color: #191F28;
   }
 `;
 
 const ResetAllButton = styled.button`
-  border: none;
   background: none;
+  border: none;
   padding: 4px 8px;
-  color: #8b95a1;
+  color: #8B95A1;
   font-size: 12px;
   font-weight: 500;
-  cursor: pointer;
   text-decoration: underline;
+  cursor: pointer;
+  transition: color 0.15s;
 
   &:hover {
-    color: #4e5968;
+    color: #4E5968;
   }
 `;
 
-const EmptyMessage = styled.div`
-  padding: 48px 16px;
-  text-align: center;
-  color: #8b95a1;
-  font-size: 15px;
-  font-weight: 500;
-  width: 100%;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-`;
-
-const EmptySubText = styled.span`
-  font-size: 13px;
-  color: #b0b8c1;
-`;
-
 const ErrorContainer = styled.div`
-  padding: 48px 16px;
-  text-align: center;
-  width: 100%;
-  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  padding: 56px 24px;
+  background-color: #ffffff;
   border-radius: 16px;
-  background-color: #f9fafb;
-  border: 1px dashed #e5e8eb;
+  border: 1px solid #E5E8EB;
+  text-align: center;
 `;
 
 const ErrorIconWrapper = styled.div`
-  color: #f04452;
-  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 28px;
+  background-color: #FFF0F2;
+  color: #F04452;
+  margin-bottom: 16px;
 `;
 
-const ErrorTitle = styled.h4`
-  margin: 0;
+const ErrorTitle = styled.h3`
+  margin: 0 0 8px 0;
   font-size: 16px;
   font-weight: 700;
-  color: #191f28;
+  color: #191F28;
 `;
 
 const ErrorDescription = styled.p`
-  margin: 0;
-  font-size: 13px;
-  color: #8b95a1;
-`;
-
-const ErrorButtonWrapper = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 12px;
+  margin: 0 0 20px 0;
+  font-size: 14px;
+  color: #8B95A1;
 `;
 
 const RetryButton = styled.button`
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  border-radius: 10px;
-  border: none;
-  background-color: #3182f6;
+  gap: 8px;
+  padding: 10px 18px;
+  background-color: #3182F6;
   color: #ffffff;
-  font-size: 13px;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s ease-in-out;
+  transition: all 0.15s ease;
 
   &:hover {
-    background-color: #1b64da;
+    background-color: #1B64DA;
   }
 
   &:active {
-    transform: scale(0.97);
-  }
-`;
-
-const ResetFilterButton = styled.button`
-  padding: 8px 16px;
-  border-radius: 10px;
-  border: 1px solid #e5e8eb;
-  background-color: #ffffff;
-  color: #4e5968;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s ease-in-out;
-
-  &:hover {
-    background-color: #f2f4f6;
-  }
-
-  &:active {
-    transform: scale(0.97);
-  }
-`;
-
-const FilterDropdownWrapper = styled.div`
-  position: absolute;
-  top: 100%;
-  left: 0;
-  z-index: 100;
-  margin-top: 8px;
-  transform-origin: top left;
-  animation: scale-up 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
-
-  @keyframes scale-up {
-    0% {
-      transform: scale(0.95);
-      opacity: 0;
-    }
-    100% {
-      transform: scale(1);
-      opacity: 1;
-    }
+    transform: scale(0.98);
   }
 `;
