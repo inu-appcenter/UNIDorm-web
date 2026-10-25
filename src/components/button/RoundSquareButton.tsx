@@ -1,6 +1,6 @@
 import styled from "styled-components";
+import Ripple from "../common/Ripple";
 
-// 1. props 인터페이스에 'color' 추가 (선택적 프로퍼티)
 interface RoundSquareButtonProps {
   btnName: string;
   color?: string;
@@ -8,29 +8,29 @@ interface RoundSquareButtonProps {
   disabled?: boolean;
 }
 
-// 2. 컴포넌트 이름 변경 및 color prop 받기
 const RoundSquareButton = ({
   btnName,
   onClick,
-  color = "#0a84ff", // 기본값을 기존 파란색으로 설정
+  color = "#0a84ff",
   disabled = false,
 }: RoundSquareButtonProps) => {
   return (
-    // 3. styled-component에 color prop 전달
     <RoundSquareButtonWrapper
       type="button"
       onClick={onClick}
       color={color}
       disabled={disabled}
     >
-      {btnName}
+      {!disabled && <Ripple color="rgba(255, 255, 255, 0.32)" />}
+      <ButtonText>{btnName}</ButtonText>
     </RoundSquareButtonWrapper>
   );
 };
+
 export default RoundSquareButton;
 
-// 4. styled-component가 color prop을 받도록 타입 지정
 const RoundSquareButtonWrapper = styled.button<{ color: string }>`
+  position: relative;
   flex: 1;
   width: 100%;
   min-width: fit-content;
@@ -44,29 +44,41 @@ const RoundSquareButtonWrapper = styled.button<{ color: string }>`
   justify-content: center;
   align-items: center;
 
-  /* 5. background 색상을 props로부터 동적으로 설정 */
   background: ${(props) => props.color};
   border-radius: 8px;
-
-  font-style: normal;
-  font-weight: 500;
-  font-size: 16px;
-  line-height: 24px;
-
-  letter-spacing: 0.38px;
-
-  color: #f4f4f4;
-
-  /* 줄바꿈 방지 설정 */
-  white-space: nowrap;
-  /* 텍스트 넘침 제어 (필요 시) */
+  border: none;
+  outline: none;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
   overflow: hidden;
-  /* 넘치는 텍스트 말줄임 표시 (필요 시) */
-  text-overflow: ellipsis;
+
+  /* 토스 스타일 쫀득한 감속 이징 및 스케일 피드백 */
+  transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.12s ease;
+
+  &:active:not(:disabled) {
+    transform: scale(0.97);
+  }
 
   &:disabled {
     background: #dfdfdf;
     color: #8b8b8b;
     cursor: not-allowed;
+    pointer-events: none;
+    transform: none;
   }
+`;
+
+const ButtonText = styled.span`
+  position: relative;
+  z-index: 1;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 24px;
+  letter-spacing: 0.38px;
+  color: #f4f4f4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
