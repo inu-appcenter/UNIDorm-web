@@ -211,18 +211,11 @@ export default function HomePage() {
     showAlarm: true,
   });
 
-  const fadeInUp = {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.5 },
-  };
-
-  const staggerContainer = {
-    animate: {
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
+  // Apple & Toss 스타일 0.15초 초고속 페이드
+  const quickFade = {
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    transition: { duration: 0.15 },
   };
 
   return (
@@ -267,7 +260,7 @@ export default function HomePage() {
 
       {shouldShowMigrationBanner && (
         <motion.div
-          {...fadeInUp}
+          {...quickFade}
           style={{ width: "100%", display: "flex", justifyContent: "center" }}
         >
           <StyledMigrationBanner
@@ -287,14 +280,8 @@ export default function HomePage() {
         <HomeDormitoryCardButton onClick={handleDormitoryCardClick} />
       </DormitoryCardButtonWrapper>
 
-      <ContentWrapper
-        as={motion.div}
-        variants={staggerContainer}
-        initial="initial"
-        animate="animate"
-      >
+      <ContentWrapper>
         {isMatchingOpen && (
-          <motion.div variants={fadeInUp}>
             <WidgetContainer>
               <TitleContentArea
                 title={
@@ -337,11 +324,9 @@ export default function HomePage() {
                 </>
               </TitleContentArea>
             </WidgetContainer>
-          </motion.div>
-        )}
+          )}
 
-        <motion.div variants={fadeInUp}>
-          <WidgetContainer>
+        <WidgetContainer>
             <TitleContentArea
               title={"공지사항"}
               link={"/announcements"}
@@ -374,9 +359,6 @@ export default function HomePage() {
               )}
             </TitleContentArea>
           </WidgetContainer>
-        </motion.div>
-
-        <motion.div variants={fadeInUp}>
           <FormSectionWrapper>
             <TitleContentArea title={"INU 폼"} link={"/form"} location="홈">
               {isSurveysLoading ? (
@@ -406,10 +388,8 @@ export default function HomePage() {
               )}
             </TitleContentArea>
           </FormSectionWrapper>
-        </motion.div>
 
-        <motion.div variants={fadeInUp}>
-          <WidgetContainer>
+        <WidgetContainer>
             <TitleContentArea
               title={"생활원 YouTube"}
               externalLink={`https://www.youtube.com/channel/${CHANNEL_ID}`}
@@ -418,11 +398,9 @@ export default function HomePage() {
               <YoutubeWidget />
             </TitleContentArea>
           </WidgetContainer>
-        </motion.div>
 
         <GridContainer>
-          <motion.div variants={fadeInUp}>
-            <WidgetContainer>
+          <WidgetContainer>
               <TitleContentArea
                 title="오늘의 Best 꿀팁"
                 link={"/tips"}
@@ -447,21 +425,17 @@ export default function HomePage() {
                 )}
               </TitleContentArea>
             </WidgetContainer>
-          </motion.div>
-          <motion.div variants={fadeInUp}>
-            <WidgetContainer>
-              <TitleContentArea
+          <WidgetContainer>
+            <TitleContentArea
                 title={"생활원 일정"}
                 children={<Calendar mode={"week"} location="홈" />}
                 link={"/calendar"}
                 location="홈"
               />
             </WidgetContainer>
-          </motion.div>
         </GridContainer>
 
         {isOpenGroupPurchase && (
-          <motion.div variants={fadeInUp}>
             <WidgetContainer>
               <TitleContentArea
                 title={"임박한 공동구매"}
@@ -477,8 +451,7 @@ export default function HomePage() {
                 )}
               </TitleContentArea>
             </WidgetContainer>
-          </motion.div>
-        )}
+          )}
       </ContentWrapper>
 
       <motion.img
