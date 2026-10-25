@@ -350,7 +350,9 @@ const ComplainListPage = () => {
 export default ComplainListPage;
 
 const ComplainListPageWrapper = styled.div`
-  padding: 16px 16px 100px;
+  padding: 16px 16px calc(100px + env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 16px));
+  padding-right: max(16px, env(safe-area-inset-right, 16px));
   display: flex;
   flex-direction: column;
   gap: 32px;

@@ -507,7 +507,7 @@ const ComplainAdminPage = () => {
               onSearch={handleSearchSubmit}
             />
 
-            {/* 필터 버튼 및 기간 칩 그룹 */}
+            {/* 필터 버튼 및 기간 칩 그룹 (동일 라인 배치) */}
             <ControlsRow>
               <FilterGroup ref={filterGroupRef}>
                 <FilterButton
@@ -534,11 +534,13 @@ const ComplainAdminPage = () => {
                 )}
               </FilterGroup>
 
-              <SelectableChipGroup
-                Groups={PERIOD_MENUS}
-                selectedIndex={selectedPeriodIndex}
-                onSelect={handleSelectPeriod}
-              />
+              <ChipGroupWrapper>
+                <SelectableChipGroup
+                  Groups={PERIOD_MENUS}
+                  selectedIndex={selectedPeriodIndex}
+                  onSelect={handleSelectPeriod}
+                />
+              </ChipGroupWrapper>
             </ControlsRow>
 
             {/* 적용된 조건 태그 목록 (있을 때만 노출) */}
@@ -596,6 +598,14 @@ const ComplainListPageWrapper = styled.div`
   max-width: 1200px;
   margin: 0 auto;
   box-sizing: border-box;
+  padding: 0 16px calc(100px + env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 16px));
+  padding-right: max(16px, env(safe-area-inset-right, 16px));
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  overflow-y: auto;
+  flex: 1;
 `;
 
 const ContentWrapper = styled.div`
@@ -608,31 +618,58 @@ const ContentWrapper = styled.div`
 const ControlsRow = styled.div`
   display: flex;
   align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+  flex-wrap: nowrap;
 `;
 
 const FilterGroup = styled.div`
   position: relative;
+  flex-shrink: 0;
+`;
+
+const ChipGroupWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  scrollbar-width: none;
+
+  /* SelectableChipGroupWrapper의 width: 100%를 한 줄 flex 레이아웃으로 유연하게 처리 */
+  & > div {
+    display: flex;
+    flex-wrap: nowrap;
+    width: max-content;
+    gap: 8px;
+  }
 `;
 
 const FilterButton = styled.button<{ $isActive?: boolean }>`
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  height: 38px;
-  padding: 0 14px;
+  padding: 8px 16px;
+  min-width: fit-content;
+  border-radius: 20px;
   background-color: ${(props) => (props.$isActive ? "#E8F3FF" : "#ffffff")};
   color: ${(props) => (props.$isActive ? "#3182F6" : "#4E5968")};
   border: 1px solid ${(props) => (props.$isActive ? "#3182F6" : "#E5E8EB")};
-  border-radius: 12px;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: ${(props) => (props.$isActive ? "600" : "500")};
+  line-height: normal;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.15s ease-in-out;
+  white-space: nowrap;
 
   &:hover {
     background-color: ${(props) => (props.$isActive ? "#DCEBFE" : "#F2F4F6")};
+    border-color: ${(props) => (props.$isActive ? "#1B64DA" : "#3182F6")};
   }
 
   &:active {
