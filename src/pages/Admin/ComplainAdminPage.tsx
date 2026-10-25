@@ -15,7 +15,7 @@ import { useSetHeader } from "@/hooks/useSetHeader";
 import { useAdminComplaints } from "@/queries/complaints";
 import { downloadComplaintsAsCsv } from "@/utils/csvUtils";
 import { formatBuildingFromServer } from "@/constants/constants";
-import { Filter, X } from "lucide-react";
+import { AlertCircle, Filter, RotateCw, X } from "lucide-react";
 
 const PERIOD_MENUS = ["전체", "최근 1개월", "최근 3개월", "올해"];
 
@@ -51,6 +51,8 @@ const ComplainAdminPage = () => {
     data: complaints = [],
     isLoading: isInitialLoading,
     isPlaceholderData,
+    isError,
+    refetch,
   } = useAdminComplaints(serverSearchDto, isLoggedIn);
 
   const isLoading = isInitialLoading || isPlaceholderData;
@@ -361,9 +363,30 @@ const ComplainAdminPage = () => {
               </ActiveTagsContainer>
             )}
 
-            {/* 목록 테이블 및 로딩/빈 상태 */}
+            {/* 목록 테이블 및 로딩/에러/빈 상태 */}
             {isLoading ? (
               <LoadingSpinner message="민원 목록을 불러오는 중..." />
+            ) : isError ? (
+              <ErrorContainer>
+                <ErrorIconWrapper>
+                  <AlertCircle size={32} />
+                </ErrorIconWrapper>
+                <ErrorTitle>민원 목록을 불러오지 못했어요</ErrorTitle>
+                <ErrorDescription>
+                  일시적인 서버 오류이거나 네트워크 연결 문제일 수 있어요.
+                </ErrorDescription>
+                <ErrorButtonWrapper>
+                  <RetryButton type="button" onClick={() => void refetch()}>
+                    <RotateCw size={14} />
+                    <span>다시 시도하기</span>
+                  </RetryButton>
+                  {hasAnyActiveFilters && (
+                    <ResetFilterButton type="button" onClick={handleResetAll}>
+                      검색 조건 초기화
+                    </ResetFilterButton>
+                  )}
+                </ErrorButtonWrapper>
+              </ErrorContainer>
             ) : filteredComplaints.length > 0 ? (
               <ComplainListTable data={filteredComplaints} isAdmin={true} />
             ) : (
@@ -525,6 +548,88 @@ const EmptyMessage = styled.div`
 const EmptySubText = styled.span`
   font-size: 13px;
   color: #b0b8c1;
+`;
+
+const ErrorContainer = styled.div`
+  padding: 48px 16px;
+  text-align: center;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  border-radius: 16px;
+  background-color: #f9fafb;
+  border: 1px dashed #e5e8eb;
+`;
+
+const ErrorIconWrapper = styled.div`
+  color: #f04452;
+  margin-bottom: 4px;
+`;
+
+const ErrorTitle = styled.h4`
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #191f28;
+`;
+
+const ErrorDescription = styled.p`
+  margin: 0;
+  font-size: 13px;
+  color: #8b95a1;
+`;
+
+const ErrorButtonWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+`;
+
+const RetryButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: none;
+  background-color: #3182f6;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+
+  &:hover {
+    background-color: #1b64da;
+  }
+
+  &:active {
+    transform: scale(0.97);
+  }
+`;
+
+const ResetFilterButton = styled.button`
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 1px solid #e5e8eb;
+  background-color: #ffffff;
+  color: #4e5968;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+
+  &:hover {
+    background-color: #f2f4f6;
+  }
+
+  &:active {
+    transform: scale(0.97);
+  }
 `;
 
 const FilterDropdownWrapper = styled.div`
