@@ -12,7 +12,8 @@ import { secureStorage } from "@/utils/secureStorage";
 import { MobileDormitoryCard } from "@/components/portal/MobileDormitoryCard";
 import { MOBILE_PAGE_GUTTER } from "@/styles/unidormResponsive";
 import { PATHS } from "@/constants/paths";
-import { ChevronRight, Building2, RotateCw, CalendarClock } from "lucide-react";
+import { ChevronRight, Building2, RotateCw, CalendarClock, Clock } from "lucide-react";
+import PortalSyncProgressModal from "@/components/portal/PortalSyncProgressModal";
 import { isDormitorySemesterExpired } from "@/utils/semesterGuard";
 import PortalSyncOnboarding from "@/components/portal/PortalSyncOnboarding";
 import {
@@ -437,7 +438,7 @@ export default function MobileDormitoryCardPage() {
     try {
       if (isPreviewMode) {
         // 프리뷰 환경 실시간 시뮬레이션: 1.2초간 동기화 수행
-        await new Promise((resolve) => setTimeout(resolve, 1200));
+        await new Promise((resolve) => setTimeout(resolve, 1500));
         const now = new Date();
         updateLastSyncTime(now.getTime());
         if (previewSimulatedStatus === "expired") {
@@ -475,17 +476,6 @@ export default function MobileDormitoryCardPage() {
 
   useSetHeader({
     title: "모바일 사생증",
-    headerRightElement: (
-      <HeaderRefreshButton
-        type="button"
-        disabled={isRefreshing}
-        onClick={handleRefresh}
-        aria-label="사생증 새로고침"
-      >
-        <RotateCw size={14} className={isRefreshing ? "spin-icon" : ""} />
-        <span>새로고침</span>
-      </HeaderRefreshButton>
-    ),
   });
 
   // 우리 앱 환경이 아니거나 구버전 앱인 경우 스토어 설치/업데이트 유도
@@ -905,10 +895,24 @@ export default function MobileDormitoryCardPage() {
           term={term}
           status={status}
         />
-        {lastSyncTimeText && (
-          <LastSyncCaption>최근 동기화 {lastSyncTimeText}</LastSyncCaption>
-        )}
+        <SyncInfoBar>
+          <SyncTimeWrapper>
+            <Clock size={12} color="var(--content-tertiary, #8B95A1)" />
+            <span>최근 동기화 {lastSyncTimeText || "확인 중..."}</span>
+          </SyncTimeWrapper>
+          <SyncInlineButton
+            type="button"
+            disabled={isRefreshing}
+            onClick={handleRefresh}
+            aria-label="사생증 정보 새로고침"
+          >
+            <RotateCw size={12} className={isRefreshing ? "spin-icon" : ""} />
+            <span>{isRefreshing ? "동기화 중..." : "새로고침"}</span>
+          </SyncInlineButton>
+        </SyncInfoBar>
       </CardWrapper>
+
+      <PortalSyncProgressModal isOpen={isRefreshing} />
 
       <BottomButtonWrapper>
         <DormitoryInfoButton
@@ -935,51 +939,63 @@ const spinKeyframes = keyframes`
   }
 `;
 
-const HeaderRefreshButton = styled.button`
-  display: inline-flex;
+const SyncInfoBar = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 360px;
+  margin-top: 10px;
+  padding: 6px 12px;
+  background: var(--surface-secondary, #f2f4f6);
+  border-radius: 14px;
+  box-sizing: border-box;
+`;
+
+const SyncTimeWrapper = styled.div`
+  display: flex;
   align-items: center;
   gap: 5px;
-  height: 32px;
-  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--content-secondary, #4e5968);
+  letter-spacing: -0.2px;
+`;
+
+const SyncInlineButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   border: 1px solid var(--border-subtle, #e5e8eb);
   background: var(--surface-primary, #ffffff);
-  color: var(--content-secondary, #4e5968);
-  font-size: 13px;
-  font-weight: 600;
+  color: var(--interactive-primary, #3182f6);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 10px;
   cursor: pointer;
-  border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
   transition: all 0.15s ease;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 
   &:hover {
-    background: var(--surface-secondary, #f2f4f6);
-    color: var(--content-primary, #191f28);
+    background: #ffffff;
+    filter: brightness(0.98);
   }
 
   &:active {
     transform: scale(0.95);
-    background: var(--surface-secondary, #f2f4f6);
-    color: var(--content-primary, #191f28);
   }
 
   &:disabled {
-    cursor: default;
     opacity: 0.6;
+    cursor: default;
   }
 
   .spin-icon {
     animation: ${spinKeyframes} 0.8s linear infinite;
   }
-`;
-
-const LastSyncCaption = styled.span`
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--content-tertiary, #8B95A1);
-  letter-spacing: -0.2px;
-  margin-top: 8px;
-  text-align: center;
 `;
 
 const PreviewBadge = styled.div`

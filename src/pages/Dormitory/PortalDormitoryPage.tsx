@@ -30,6 +30,7 @@ import {
   parseDormitoryStudentInfo,
 } from "@/utils/ssvParser";
 import { PortalAccountModal } from "@/components/portal/PortalAccountModal";
+import PortalSyncProgressModal from "@/components/portal/PortalSyncProgressModal";
 import { parseDormRoomAndBed } from "@/components/portal/MobileDormitoryCard";
 import { formatKoreanDateTime } from "@/utils/portalDateUtils";
 import { secureStorage } from "@/utils/secureStorage";
@@ -1666,6 +1667,12 @@ export default function PortalDormitoryPage() {
           setIsPortalAccountModalOpen(false);
           loadDormitoryInfo();
         }}
+      />
+
+      <PortalSyncProgressModal
+        isOpen={isLoading}
+        title="사생 정보를 불러오고 있어요"
+        currentMessage={loadingMessage}
       />
     </Container>
   );
