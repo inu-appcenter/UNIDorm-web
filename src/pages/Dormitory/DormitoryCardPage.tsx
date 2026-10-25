@@ -336,10 +336,18 @@ export default function MobileDormitoryCardPage() {
     typeof window !== "undefined" &&
     new URLSearchParams(window.location.search).get("preview") === "true";
 
+  const [previewSimulatedStatus, setPreviewSimulatedStatus] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      return new URLSearchParams(window.location.search).get("status");
+    }
+    return null;
+  });
+
   const fetchCached = useCallback(async () => {
     setIsInitialLoading(true);
     if (isPreviewMode) {
       setDormInfo(MOCK_PREVIEW_DORM_INFO);
+      updateLastSyncTime(Date.now());
       setIsInitialLoading(false);
       return;
     }
@@ -427,6 +435,16 @@ export default function MobileDormitoryCardPage() {
     if (isRefreshing) return;
     setIsRefreshing(true);
     try {
+      if (isPreviewMode) {
+        // 프리뷰 환경 실시간 시뮬레이션: 1.2초간 동기화 수행
+        await new Promise((resolve) => setTimeout(resolve, 1200));
+        const now = new Date();
+        updateLastSyncTime(now.getTime());
+        if (previewSimulatedStatus === "expired") {
+          setPreviewSimulatedStatus(null);
+        }
+        return;
+      }
       if (isMobileAppEnvironment()) {
         const accountStatus = await checkPortalAccountLinked().catch(() => ({
           linked: false,
@@ -453,7 +471,7 @@ export default function MobileDormitoryCardPage() {
     } finally {
       setIsRefreshing(false);
     }
-  }, [fetchCached, isRefreshing, updateLastSyncTime]);
+  }, [fetchCached, isPreviewMode, isRefreshing, previewSimulatedStatus, updateLastSyncTime]);
 
   useSetHeader({
     title: "모바일 사생증",
@@ -464,7 +482,8 @@ export default function MobileDormitoryCardPage() {
         onClick={handleRefresh}
         aria-label="사생증 새로고침"
       >
-        <RotateCw size={18} className={isRefreshing ? "spin-icon" : ""} />
+        <RotateCw size={14} className={isRefreshing ? "spin-icon" : ""} />
+        <span>새로고침</span>
       </HeaderRefreshButton>
     ),
   });
@@ -500,11 +519,12 @@ export default function MobileDormitoryCardPage() {
   } = evaluateDormitoryResidentStatus(dormInfo);
 
   const isSemesterExpired =
-    !isPreviewMode &&
-    isDormitorySemesterExpired({
-      dormYear: year,
-      dormTerm: term,
-    });
+    !isPreviewMode
+      ? isDormitorySemesterExpired({
+          dormYear: year,
+          dormTerm: term,
+        })
+      : previewSimulatedStatus === "expired";
 
   const profile = dormInfo?.profile;
   const rawFields = dormInfo?.rawFields;
@@ -916,24 +936,31 @@ const spinKeyframes = keyframes`
 `;
 
 const HeaderRefreshButton = styled.button`
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border: none;
-  background: transparent;
-  color: var(--content-secondary, #4E5968);
+  gap: 5px;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--border-subtle, #e5e8eb);
+  background: var(--surface-primary, #ffffff);
+  color: var(--content-secondary, #4e5968);
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
-  border-radius: 50%;
+  border-radius: 16px;
   transition: all 0.15s ease;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 
+  &:hover {
+    background: var(--surface-secondary, #f2f4f6);
+    color: var(--content-primary, #191f28);
+  }
+
   &:active {
-    transform: scale(0.92);
-    color: var(--content-primary, #191F28);
-    background: var(--surface-secondary, #F2F4F6);
+    transform: scale(0.95);
+    background: var(--surface-secondary, #f2f4f6);
+    color: var(--content-primary, #191f28);
   }
 
   &:disabled {
