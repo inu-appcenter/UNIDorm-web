@@ -90,6 +90,15 @@ function formatSemesterTerm(term?: string): string {
   return trimmed.endsWith("학기") ? trimmed : `${trimmed}학기`;
 }
 
+export function normalizeSemesterTerm(term?: string): string {
+  if (!term) return "";
+  const trimmed = term.trim();
+  if (trimmed === "10" || trimmed === "1" || trimmed.includes("1학기")) return "10";
+  if (trimmed === "20" || trimmed === "2" || trimmed.includes("2학기")) return "20";
+  if (trimmed === "30" || trimmed === "3" || trimmed.includes("여름")) return "30";
+  if (trimmed === "40" || trimmed === "4" || trimmed.includes("겨울")) return "40";
+  return trimmed.replace(/학기/g, "");
+}
 export interface ResidentEvaluationResult {
   isCurrentlyResident: boolean;
   isAdmittedStatus: boolean;
@@ -120,15 +129,19 @@ export function evaluateDormitoryResidentStatus(
   const year = profile?.year || dormInfo?.appliedYear || rawFields?.yy || inOutList[0]?.year || "";
   const term = profile?.term || dormInfo?.appliedSemester || rawFields?.tmGbn || inOutList[0]?.term || "";
 
+  // 학기 정규화 (20 vs 2학기, 10 vs 1학기 등)
+  const normalizedYear = (year || "").trim();
+  const normalizedCurrentTerm = normalizeSemesterTerm(term);
+
   // 기본 사생정보의 당해 학기(year, term)와 정확히 일치하는 입퇴사 레코드 탐색
   const currentSemesterInOut = inOutList.find(
     (io) =>
       io.year &&
-      year &&
-      io.year === year &&
+      normalizedYear &&
+      io.year.trim() === normalizedYear &&
       io.term &&
-      term &&
-      (io.term === term || io.term.replace(/학기/g, "") === term.replace(/학기/g, ""))
+      normalizedCurrentTerm &&
+      normalizeSemesterTerm(io.term) === normalizedCurrentTerm
   );
 
   const rawStatus =
@@ -136,7 +149,6 @@ export function evaluateDormitoryResidentStatus(
     dormInfo?.status ||
     profile?.rawFields?.dormLeavdormGbn ||
     rawFields?.dormLeavdormGbn ||
-    inOutList[0]?.status ||
     "";
   const status = rawStatus ? mapInOutStatus(rawStatus) : "-";
 
@@ -153,11 +165,17 @@ export function evaluateDormitoryResidentStatus(
     dormInfo?.dormitoryBuilding ||
     rawFields?.dormBdNm ||
     rawFields?.dormBdCd ||
+    rawFields?.dmtyNm ||
+    rawFields?.domNm ||
     "";
 
   const resolvedDormType =
     mappedDormName ||
     (rawDormBd.includes("A동") || rawDormBd.includes("B동") ? "제2기숙사" : "") ||
+    (rawDormBd.includes("1기숙사") || rawDormBd.includes("본관") ? "제1기숙사" : "") ||
+    (rawDormBd.includes("2기숙사") ? "제2기숙사" : "") ||
+    (rawDormBd.includes("3기숙사") ? "제3기숙사" : "") ||
+    (rawDormBd ? rawDormBd : "") ||
     "-";
   const resolvedDormBuilding = rawDormBd || "";
 
@@ -298,8 +316,9 @@ export default function MobileDormitoryCardPage() {
             setDormInfo(restored);
           }
         }
-      } else if (academicParsed) {
-        setDormInfo(academicParsed);
+      } else {
+        // 사생 정보 캐시가 없으면 학적 정보만으로 사생 정보를 채우지 않고 null 유지 (온보딩 유도)
+        setDormInfo(null);
       }
     } catch (e) {
       console.error("사생정보 로드 실패", e);
@@ -472,8 +491,13 @@ export default function MobileDormitoryCardPage() {
   );
 
   const hasValidData = Boolean(
-    (dormInfo && (dormInfo.studentId || dormInfo.studentName || dormInfo.profile?.studentId)) ||
-    (fallbackAcademic && (fallbackAcademic.studentId || fallbackAcademic.studentName || fallbackAcademic.profile?.studentId))
+    dormInfo &&
+    (
+      (dormInfo.studentDormNo && dormInfo.studentDormNo !== "-") ||
+      (dormInfo.dormitoryType && dormInfo.dormitoryType !== "-") ||
+      (dormInfo.profile?.studentDormNo && dormInfo.profile?.studentDormNo !== "-") ||
+      (dormInfo.profile?.dormitoryType && dormInfo.profile?.dormitoryType !== "-")
+    )
   );
 
   // 1. 페이지 진입 트래킹
@@ -494,6 +518,7 @@ export default function MobileDormitoryCardPage() {
     }
 
     if (!isCurrentlyResident) {
+      localStorage.setItem("unidorm_dorm_card_issue_status", "FAILED");
       if (hasTrackedOutcomeRef.current !== "non_resident") {
         hasTrackedOutcomeRef.current = "non_resident";
         const reason = isPastRecord
@@ -503,12 +528,29 @@ export default function MobileDormitoryCardPage() {
           : !hasValidDormAssignment
           ? "미배정"
           : "기타";
-        mixpanelTrack.dormitoryCardNonResidentBlocked({ reason });
+        const cacheStatus = dormInfo
+          ? "DORM_CACHED"
+          : fallbackAcademic
+          ? "ACADEMIC_ONLY"
+          : "NO_CACHE";
+        mixpanelTrack.dormitoryCardNonResidentBlocked({
+          reason,
+          debug_dormGbn: rawFields?.dormGbn || profile?.dormitoryType || "",
+          debug_dormBdNm: rawFields?.dormBdNm || profile?.dormitoryBuilding || "",
+          debug_hasDomstuNo: Boolean(studentDormNo && studentDormNo !== "-"),
+          debug_rawStatus: rawStatus,
+          debug_year: year,
+          debug_term: term,
+          debug_mainRowsCount: dormInfo?.rawDatasets?.["DS_DMTY209"]?.length ?? 0,
+          debug_inOutCount: Array.isArray(dormInfo?.inOutList) ? dormInfo.inOutList.length : 0,
+          debug_cacheStatus: cacheStatus,
+        });
       }
       return;
     }
 
     if (isCurrentlyResident) {
+      localStorage.setItem("unidorm_dorm_card_issue_status", "SUCCESS");
       if (hasTrackedOutcomeRef.current !== "success") {
         hasTrackedOutcomeRef.current = "success";
         mixpanelTrack.dormitoryCardIssueSuccess({
