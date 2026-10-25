@@ -380,6 +380,7 @@ export default function MobileDormitoryCardPage() {
     year,
     term,
     status,
+    rawStatus,
     resolvedDormType,
     resolvedDormBuilding,
     studentDormNo,
