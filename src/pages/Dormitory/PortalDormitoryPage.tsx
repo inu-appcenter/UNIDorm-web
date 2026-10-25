@@ -4,7 +4,6 @@ import styled from "styled-components";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import { useCountUp } from "@/hooks/useCountUp";
 import TitleContentArea from "@/components/common/TitleContentArea";
-import ActionButton from "@/components/common/ActionButton";
 import EmptyState from "@/components/common/EmptyState";
 import CapsuleButton from "@/components/common/CapsuleButton";
 import { PATHS } from "@/constants/paths";
@@ -30,6 +29,7 @@ import {
   parseDormitoryStudentInfo,
 } from "@/utils/ssvParser";
 import { PortalAccountModal } from "@/components/portal/PortalAccountModal";
+import PortalSyncProgressModal from "@/components/portal/PortalSyncProgressModal";
 import { parseDormRoomAndBed } from "@/components/portal/MobileDormitoryCard";
 import { formatKoreanDateTime } from "@/utils/portalDateUtils";
 import { secureStorage } from "@/utils/secureStorage";
@@ -912,17 +912,17 @@ export default function PortalDormitoryPage() {
 
         <ActionBar>
           <ButtonGroupRow>
-            <ActionButton
-              as="button"
+            <CapsuleButton
+              variant="secondary"
               disabled={isLoading}
               onClick={loadDormitoryInfo}
-              style={{ flex: 1, minWidth: 0 }}
+              style={{ flex: 1 }}
             >
               <RefreshCw size={14} className={isLoading ? "spin" : ""} style={{ marginRight: 6 }} />
-              {isLoading ? loadingMessage || "조회 중..." : "정보 새로고침"}
-            </ActionButton>
+              {isLoading ? (loadingMessage || "조회 중...") : "정보 새로고침"}
+            </CapsuleButton>
             <CapsuleButton
-              variant="brand"
+              variant="primary"
               onClick={() => {
                 mixpanelTrack.dormitoryCardEntryClicked("사생정보조회");
                 if (!guardAppOnly({ navigate })) return;
@@ -1666,6 +1666,12 @@ export default function PortalDormitoryPage() {
           setIsPortalAccountModalOpen(false);
           loadDormitoryInfo();
         }}
+      />
+
+      <PortalSyncProgressModal
+        isOpen={isLoading}
+        title="사생 정보를 불러오고 있어요"
+        currentMessage={loadingMessage}
       />
     </Container>
   );

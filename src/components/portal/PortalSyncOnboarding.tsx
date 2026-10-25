@@ -17,6 +17,8 @@ import {
 import { secureStorage } from "@/utils/secureStorage";
 import { openUnidormAppOrStore } from "@/utils/portalAppLauncher";
 import { mixpanelTrack } from "@/utils/mixpanel";
+import CapsuleButton from "@/components/common/CapsuleButton";
+import PortalSyncProgressModal from "./PortalSyncProgressModal";
 
 interface PortalSyncOnboardingProps {
   onSuccess: () => void;
@@ -284,9 +286,9 @@ export default function PortalSyncOnboarding({
         </ContentArea>
 
         <BottomActionArea>
-          <PrimaryButton type="button" onClick={() => openUnidormAppOrStore()}>
+          <CapsuleButton variant="primary" fullWidth type="button" onClick={() => openUnidormAppOrStore()}>
             유니돔 앱으로 열기
-          </PrimaryButton>
+          </CapsuleButton>
         </BottomActionArea>
       </Container>
     );
@@ -335,20 +337,15 @@ export default function PortalSyncOnboarding({
           </ContentArea>
 
           <BottomActionArea>
-            <PrimaryButton
+            <CapsuleButton
+              variant="primary"
+              fullWidth
               type="button"
               onClick={handleSyncWithSavedAccount}
               disabled={isLoading}
             >
-              {isLoading ? (
-                <>
-                  <Loader2 size={18} className="spin" style={{ marginRight: 8 }} />
-                  {loadingMessage || "정보를 가져오는 중..."}
-                </>
-              ) : (
-                "사생증 정보 가져오기"
-              )}
-            </PrimaryButton>
+              사생증 정보 가져오기
+            </CapsuleButton>
 
             {!isLoading && (
               <SecondaryTextButton
@@ -423,21 +420,16 @@ export default function PortalSyncOnboarding({
           </ContentArea>
 
           <BottomActionArea>
-            <PrimaryButton
+            <CapsuleButton
+              variant="primary"
+              fullWidth
               type="submit"
               disabled={
                 isLoading || !studentIdInput.trim() || !passwordInput.trim()
               }
             >
-              {isLoading ? (
-                <>
-                  <Loader2 size={18} className="spin" style={{ marginRight: 8 }} />
-                  {loadingMessage || "정보를 가져오는 중..."}
-                </>
-              ) : (
-                "정보 가져오기"
-              )}
-            </PrimaryButton>
+              정보 가져오기
+            </CapsuleButton>
 
             {isLinked && !isLoading && (
               <SecondaryTextButton
@@ -453,6 +445,12 @@ export default function PortalSyncOnboarding({
           </BottomActionArea>
         </Form>
       )}
+
+      <PortalSyncProgressModal
+        isOpen={isLoading}
+        title="사생 정보를 불러오고 있어요"
+        currentMessage={loadingMessage}
+      />
     </Container>
   );
 }
@@ -659,37 +657,6 @@ const BottomActionArea = styled.div`
   width: 100%;
 `;
 
-const PrimaryButton = styled.button`
-  width: 100%;
-  height: 52px;
-  border-radius: 16px;
-  background: #3182f6;
-  color: #ffffff;
-  font-size: 16px;
-  font-weight: 700;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  user-select: none;
-  transition: background-color 0.15s ease, transform 0.15s ease;
-
-  &:hover:not(:disabled) {
-    background: #1b64da;
-  }
-
-  &:active:not(:disabled) {
-    transform: scale(0.98);
-    background: #1b64da;
-  }
-
-  &:disabled {
-    background: #e5e8eb;
-    color: #b0b8c1;
-    cursor: not-allowed;
-  }
-`;
 
 const SecondaryTextButton = styled.button`
   background: none;
