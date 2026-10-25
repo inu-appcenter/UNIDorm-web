@@ -41,6 +41,7 @@ import { mixpanelTrack } from "@/utils/mixpanel"; // 추가
 import useUserStore from "@/stores/useUserStore";
 import { PATHS } from "@/constants/paths";
 import HomeDormitoryCardButton from "@/components/home/HomeDormitoryCardButton";
+import HomeDormitoryPromptModal from "@/components/home/HomeDormitoryPromptModal";
 
 export default function HomePage() {
   useSetAIChat({ isVisible: true, shouldAnimate: true });
@@ -86,6 +87,30 @@ export default function HomePage() {
     handleMigrationBannerClick,
     shouldShowMigrationBanner,
   } = useFreshmanMigrationBanner();
+
+  const [isDormPromptOpen, setIsDormPromptOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    const hasDismissed = sessionStorage.getItem("hasDismissedDormCardPrompt") === "true";
+    if (hasDismissed) return;
+    const issueStatus = localStorage.getItem("unidorm_dorm_card_issue_status");
+    if (issueStatus === "FAILED") {
+      setIsDormPromptOpen(true);
+    }
+  }, [isLoggedIn]);
+
+  const handleCloseDormPrompt = () => {
+    sessionStorage.setItem("hasDismissedDormCardPrompt", "true");
+    setIsDormPromptOpen(false);
+  };
+
+  const handleConfirmDormPrompt = () => {
+    sessionStorage.setItem("hasDismissedDormCardPrompt", "true");
+    setIsDormPromptOpen(false);
+    mixpanelTrack.dormitoryCardEntryClicked("홈_발급유도모달");
+    navigate(PATHS.DORMITORY_CARD);
+  };
 
   const handleDormitoryCardClick = () => {
     mixpanelTrack.dormitoryCardEntryClicked("홈");
@@ -469,6 +494,12 @@ export default function HomePage() {
           window.open("https://home.inuappcenter.kr", "_blank");
         }}
         style={{ cursor: "pointer" }}
+      />
+
+      <HomeDormitoryPromptModal
+        isOpen={isDormPromptOpen}
+        onClose={handleCloseDormPrompt}
+        onConfirm={handleConfirmDormPrompt}
       />
 
       <CommonBottomSheet

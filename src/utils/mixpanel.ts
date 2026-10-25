@@ -364,9 +364,27 @@ export const mixpanelTrack = {
 
   dormitoryCardNonResidentBlocked: (params?: {
     reason?: "미배정" | "퇴사" | "과거학기" | "기타";
+    debug_dormGbn?: string;
+    debug_dormBdNm?: string;
+    debug_hasDomstuNo?: boolean;
+    debug_rawStatus?: string;
+    debug_year?: string;
+    debug_term?: string;
+    debug_mainRowsCount?: number;
+    debug_inOutCount?: number;
+    debug_cacheStatus?: "DORM_CACHED" | "ACADEMIC_ONLY" | "NO_CACHE";
   }) => {
     trackEvent("모바일 사생증 비사생 노출", {
       reason: params?.reason || "기타",
+      ...(params?.debug_dormGbn !== undefined && { debug_dormGbn: params.debug_dormGbn }),
+      ...(params?.debug_dormBdNm !== undefined && { debug_dormBdNm: params.debug_dormBdNm }),
+      ...(params?.debug_hasDomstuNo !== undefined && { debug_hasDomstuNo: params.debug_hasDomstuNo }),
+      ...(params?.debug_rawStatus !== undefined && { debug_rawStatus: params.debug_rawStatus }),
+      ...(params?.debug_year !== undefined && { debug_year: params.debug_year }),
+      ...(params?.debug_term !== undefined && { debug_term: params.debug_term }),
+      ...(params?.debug_mainRowsCount !== undefined && { debug_mainRowsCount: params.debug_mainRowsCount }),
+      ...(params?.debug_inOutCount !== undefined && { debug_inOutCount: params.debug_inOutCount }),
+      ...(params?.debug_cacheStatus !== undefined && { debug_cacheStatus: params.debug_cacheStatus }),
     });
   },
 

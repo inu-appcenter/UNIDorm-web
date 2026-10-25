@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { X, ShieldCheck, Lock, User } from "lucide-react";
-import { savePortalAccount, deletePortalAccount, fetchAcademicInfoFromApp, isMobileAppEnvironment } from "@/apis/mobileAgentBridge";
-import { secureStorage } from "@/utils/secureStorage";
+import { savePortalAccount, isMobileAppEnvironment } from "@/apis/mobileAgentBridge";
+
 
 interface Props {
   isOpen: boolean;
@@ -51,35 +51,9 @@ export const PortalAccountModal: React.FC<Props> = ({
     try {
       const res = await savePortalAccount(studentId.trim(), password.trim());
       if (res.success) {
-        setLoadingMessage("포털 로그인 및 학적 정보를 확인 중입니다... (약 10초)");
-        // 최초 1회 학적 정보 스크래핑을 직접 수행하여 유효성 검증 및 사전 캐싱 완료
-        const academicRes = await fetchAcademicInfoFromApp();
-        if (academicRes.success) {
-          if (academicRes.data) {
-            try {
-              const cachedData = {
-                ...academicRes.data,
-                rawFields: undefined,
-              };
-              void secureStorage.setItem("portal_student_info", cachedData);
-              localStorage.setItem("portal_info_last_updated", new Date().toISOString());
-            } catch {}
-          }
-          if (onSuccess) onSuccess();
-          onClose();
-        } else {
-          // 학적 조회가 실패한 경우 (로그인 실패 등)
-          const errText = academicRes.errorMessage || "포털 로그인에 실패했습니다.";
-          const isCredError = errText.includes("비밀번호") || errText.includes("아이디") || errText.includes("틀렸습니다") || errText.includes("휴면");
-          if (isCredError) {
-            await deletePortalAccount().catch(() => {});
-            setErrorMessage("학번 또는 비밀번호가 일치하지 않습니다. 다시 확인해 주세요.");
-          } else {
-            // 일시적 ERP 오류인 경우 계정 저장은 유지하고 성공 처리
-            if (onSuccess) onSuccess();
-            onClose();
-          }
-        }
+        localStorage.setItem("portal_student_id", studentId.trim());
+        if (onSuccess) onSuccess();
+        onClose();
       } else {
         setErrorMessage(res.errorMessage || "계정 연동에 실패했습니다.");
       }
