@@ -8,108 +8,110 @@ import {
   complainStatus,
   ComplainType,
   dormitoryBlocks,
-} from "@/constants/constants"; // 'as const'로 선언된 상수들
+  dormStructure,
+  formatBuildingForServer,
+  formatBuildingFromServer,
+} from "@/constants/constants";
 import { Dropdown, DropdownContainer, Input } from "@/styles/common";
 import { ComplaintSearchDto } from "@/types/complain";
-import { useEffect, useState } from "react"; // ⭐ useState, useEffect 추가
+import { useEffect, useState } from "react";
+import { X } from "lucide-react";
 
-// --- 1. 타입 정의 추가 (ComplainWritePage와 동일) ---
-type DormName = (typeof complainDormitory)[number];
-type BlockName = (typeof dormitoryBlocks)[number];
-
-type DormRules = {
-  floors: { min: number; max: number };
-  rooms: number;
-  beds: number;
-};
-
-// --- 2. dormStructure 정의 (ComplainWritePage와 동일) ---
-const dormStructure: Record<DormName, Partial<Record<BlockName, DormRules>>> = {
-  "1기숙사": {
-    A동: { floors: { min: 3, max: 13 }, rooms: 10, beds: 3 },
-    B동: { floors: { min: 2, max: 9 }, rooms: 11, beds: 3 },
-    C동: { floors: { min: 2, max: 9 }, rooms: 11, beds: 3 },
-  },
-  "2기숙사": {
-    A동: { floors: { min: 2, max: 11 }, rooms: 33, beds: 2 },
-    B동: { floors: { min: 2, max: 15 }, rooms: 23, beds: 2 },
-  },
-  "3기숙사": {
-    A동: { floors: { min: 2, max: 12 }, rooms: 28, beds: 2 },
-    B동: { floors: { min: 2, max: 12 }, rooms: 23, beds: 2 },
-  },
-};
-
-// --- 3. 헬퍼 함수 정의 (ComplainWritePage와 동일) ---
 const generateOptions = (min: number, max: number, suffix: string) => {
   return Array.from({ length: max - min + 1 }, (_, i) => `${min + i}${suffix}`);
 };
 
-// ⭐ 부모로부터 받을 Props 타입 정의
 interface ComplainFilterProps {
-  // 각 필드의 현재 값
-  dormitoryIndex: number | null;
-  typeIndex: number | null;
-  statusIndex: number | null;
-  blockIndex: number | null;
-  manager: string;
-  floor: string;
-  room: string;
-  bed: string;
-
-  // 각 필드의 값을 변경하는 함수
-  onDormitoryChange: (index: number | null) => void;
-  onTypeChange: (index: number | null) => void;
-  onStatusChange: (index: number | null) => void;
-  onBlockChange: (index: number | null) => void;
-  onManagerChange: (value: string) => void;
-  onFloorChange: (value: string) => void;
-  onRoomChange: (value: string) => void;
-  onBedChange: (value: string) => void;
-
-  // 필터 적용 및 초기화 함수
-  onApply: (filters: ComplaintSearchDto) => void;
+  /** 현재 적용된 상세 필터 조건 (초기값으로 사용) */
+  initialFilters: ComplaintSearchDto | null;
+  /** 필터 적용 핸들러 */
+  onApply: (filters: ComplaintSearchDto | null) => void;
+  /** 필터 초기화 핸들러 */
   onReset: () => void;
+  /** 닫기 핸들러 (선택) */
+  onClose?: () => void;
 }
 
+type DormName = keyof typeof dormStructure;
+
 const ComplainFilter = ({
-  // ⭐ Props 비구조화 할당
-  dormitoryIndex,
-  typeIndex,
-  statusIndex,
-  blockIndex,
-  manager,
-  floor,
-  room,
-  bed,
-  onDormitoryChange,
-  onTypeChange,
-  onStatusChange,
-  onBlockChange,
-  onManagerChange,
-  onFloorChange,
-  onRoomChange,
-  onBedChange,
+  initialFilters,
   onApply,
   onReset,
+  onClose,
 }: ComplainFilterProps) => {
-  // --- 4. 동적 옵션 목록을 위한 상태 추가 ---
+  // initialFilters로부터 인덱스 및 필드 값 복원
+  const getInitialDormIndex = () => {
+    if (!initialFilters?.dormType) return null;
+    const idx = (complainDormitory as readonly string[]).indexOf(
+      initialFilters.dormType,
+    );
+    return idx >= 0 ? idx : null;
+  };
+
+  const getInitialTypeIndex = () => {
+    if (!initialFilters?.type) return null;
+    const idx = (ComplainType as readonly string[]).indexOf(
+      initialFilters.type,
+    );
+    return idx >= 0 ? idx : null;
+  };
+
+  const getInitialStatusIndex = () => {
+    if (!initialFilters?.status) return null;
+    const idx = (complainStatus as readonly string[]).indexOf(
+      initialFilters.status,
+    );
+    return idx >= 0 ? idx : null;
+  };
+
+  const getInitialBlockIndex = () => {
+    if (!initialFilters?.building) return null;
+    const formatted = formatBuildingFromServer(initialFilters.building);
+    const idx = (dormitoryBlocks as readonly string[]).indexOf(formatted);
+    return idx >= 0 ? idx : null;
+  };
+
+  // 내부 폼 상태 (Draft State: 적용 전까지 부모 상태를 오염시키지 않음)
+  const [dormitoryIndex, setDormitoryIndex] = useState<number | null>(
+    getInitialDormIndex,
+  );
+  const [typeIndex, setTypeIndex] = useState<number | null>(getInitialTypeIndex);
+  const [statusIndex, setStatusIndex] = useState<number | null>(
+    getInitialStatusIndex,
+  );
+  const [blockIndex, setBlockIndex] = useState<number | null>(
+    getInitialBlockIndex,
+  );
+  const [manager, setManager] = useState(initialFilters?.officer || "");
+  const [floor, setFloor] = useState(initialFilters?.floor || "");
+  const [room, setRoom] = useState(initialFilters?.roomNumber || "");
+  const [bed, setBed] = useState(initialFilters?.bedNumber || "");
+
+  // 동적 옵션 목록
   const [floorOptions, setFloorOptions] = useState<string[]>([]);
   const [roomOptions, setRoomOptions] = useState<string[]>([]);
   const [bedOptions, setBedOptions] = useState<string[]>([]);
 
-  // --- 5. 기숙사/동 선택 시 옵션 동적 생성 Effect ---
+  // 기숙사/동 선택 시 층/호수/침대 옵션 동적 생성
   useEffect(() => {
-    const dormName = complainDormitory[dormitoryIndex as number];
-    const blockName = dormitoryBlocks[blockIndex as number];
+    const dormName =
+      dormitoryIndex !== null ? complainDormitory[dormitoryIndex] : null;
+    const blockName =
+      blockIndex !== null ? dormitoryBlocks[blockIndex] : null;
 
     let floors: string[] = [];
     let rooms: string[] = [];
     let beds: string[] = [];
 
-    if (dormName && blockName) {
-      const dorm = dormStructure[dormName];
-      const rules = dorm?.[blockName];
+    if (dormName && blockName && dormName in dormStructure) {
+      const dorm = dormStructure[dormName as DormName];
+      const rules =
+        blockName in dorm
+          ? (dorm as Record<string, { floors: { min: number; max: number }; rooms: number; beds: number }>)[
+              blockName
+            ]
+          : null;
 
       if (rules) {
         floors = generateOptions(rules.floors.min, rules.floors.max, "층");
@@ -122,94 +124,115 @@ const ComplainFilter = ({
     setRoomOptions(rooms);
     setBedOptions(beds);
 
-    // ⭐ 옵션 변경 시, 부모의 상태(props)가 유효하지 않으면 초기화 핸들러 호출
-    if (!floors.includes(floor)) {
-      onFloorChange("");
+    if (floor && !floors.includes(floor)) {
+      setFloor("");
     }
-    if (!rooms.includes(room)) {
-      onRoomChange("");
+    if (room && !rooms.includes(room)) {
+      setRoom("");
     }
-    if (!beds.includes(bed)) {
-      onBedChange("");
+    if (bed && !beds.includes(bed)) {
+      setBed("");
     }
-    // props로 받은 floor, room, bed 및 핸들러 함수를 의존성 배열에 추가
-  }, [
-    dormitoryIndex,
-    blockIndex,
-    floor,
-    room,
-    bed,
-    onFloorChange,
-    onRoomChange,
-    onBedChange,
-  ]);
+  }, [dormitoryIndex, blockIndex, floor, room, bed]);
 
-  const handleApplyFilters = () => {
+  // 필터 적용
+  const handleApply = () => {
+    const selectedBlock =
+      blockIndex !== null ? dormitoryBlocks[blockIndex] : null;
+    const serverBuilding = formatBuildingForServer(selectedBlock);
+
     const filters: ComplaintSearchDto = {
       ...(dormitoryIndex !== null && {
         dormType: complainDormitory[dormitoryIndex],
       }),
-      ...(manager && { officer: manager }),
+      ...(manager.trim() && { officer: manager.trim() }),
       ...(typeIndex !== null && { type: ComplainType[typeIndex] }),
       ...(statusIndex !== null && { status: complainStatus[statusIndex] }),
-      ...(blockIndex !== null && { building: dormitoryBlocks[blockIndex] }),
+      ...(serverBuilding && { building: serverBuilding }),
       ...(floor && { floor }),
       ...(room && { roomNumber: room }),
       ...(bed && { bedNumber: bed }),
     };
-    onApply(filters);
+
+    const hasAnyFilter = Object.keys(filters).length > 0;
+    onApply(hasAnyFilter ? filters : null);
+  };
+
+  // 필터 초기화
+  const handleReset = () => {
+    setDormitoryIndex(null);
+    setTypeIndex(null);
+    setStatusIndex(null);
+    setBlockIndex(null);
+    setManager("");
+    setFloor("");
+    setRoom("");
+    setBed("");
+    onReset();
   };
 
   return (
     <Wrapper>
+      <HeaderRow>
+        <FilterTitle>필터</FilterTitle>
+        {onClose && (
+          <CloseButton type="button" onClick={onClose} aria-label="필터 닫기">
+            <X size={18} />
+          </CloseButton>
+        )}
+      </HeaderRow>
+
       <FormField label="기숙사">
         <SelectableChipGroup
           Groups={complainDormitory}
           selectedIndex={dormitoryIndex}
-          onSelect={onDormitoryChange}
+          onSelect={setDormitoryIndex}
         />
       </FormField>
+
       <FormField label="담당자">
         <Input
           placeholder="담당자 이름을 입력해주세요"
           value={manager}
-          onChange={(e) => onManagerChange(e.target.value)}
+          onChange={(e) => setManager(e.target.value)}
         />
       </FormField>
+
       <FormField label="유형">
         <SelectableChipGroup
           Groups={ComplainType}
           selectedIndex={typeIndex}
-          onSelect={onTypeChange}
+          onSelect={setTypeIndex}
         />
       </FormField>
+
       <FormField label="현황">
         <SelectableChipGroup
           Groups={complainStatus}
           selectedIndex={statusIndex}
-          onSelect={onStatusChange}
+          onSelect={setStatusIndex}
         />
       </FormField>
+
       <FormField label="동">
         <SelectableChipGroup
           Groups={dormitoryBlocks}
           selectedIndex={blockIndex}
-          onSelect={onBlockChange}
+          onSelect={setBlockIndex}
         />
       </FormField>
-      {/* --- 6. JSX 드롭다운 수정 --- */}
+
       <FormField label="층/호수/침대">
         <DropdownContainer>
           <Dropdown
             value={floor}
-            onChange={(e) => onFloorChange(e.target.value)}
+            onChange={(e) => setFloor(e.target.value)}
             hasValue={!!floor}
-            disabled={floorOptions.length === 0} // ⭐ disabled 추가
+            disabled={floorOptions.length === 0}
           >
             <option value="" disabled>
               층
             </option>
-            {/* ⭐ floorOptions 사용 */}
             {floorOptions.map((f) => (
               <option key={f} value={f}>
                 {f}
@@ -218,14 +241,13 @@ const ComplainFilter = ({
           </Dropdown>
           <Dropdown
             value={room}
-            onChange={(e) => onRoomChange(e.target.value)}
+            onChange={(e) => setRoom(e.target.value)}
             hasValue={!!room}
-            disabled={roomOptions.length === 0} // ⭐ disabled 추가
+            disabled={roomOptions.length === 0}
           >
             <option value="" disabled>
               호수
             </option>
-            {/* ⭐ roomOptions 사용 */}
             {roomOptions.map((r) => (
               <option key={r} value={r}>
                 {r}
@@ -234,14 +256,13 @@ const ComplainFilter = ({
           </Dropdown>
           <Dropdown
             value={bed}
-            onChange={(e) => onBedChange(e.target.value)}
+            onChange={(e) => setBed(e.target.value)}
             hasValue={!!bed}
-            disabled={bedOptions.length === 0} // ⭐ disabled 추가
+            disabled={bedOptions.length === 0}
           >
             <option value="" disabled>
               침대
             </option>
-            {/* ⭐ bedOptions 사용 */}
             {bedOptions.map((b) => (
               <option key={b} value={b}>
                 {b}
@@ -250,14 +271,18 @@ const ComplainFilter = ({
           </Dropdown>
         </DropdownContainer>
       </FormField>
-      민원 내역 다운로드는 우측 상단 점 세개 메뉴에서 할 수 있어요.
-      <br />
-      현재 적용된 필터에 해당하는 민원이 다운로드됩니다.
+
+      <GuideText>
+        화면 우측 상단 메뉴에서 현재 조회된 민원 목록을 CSV로 다운로드할 수 있어요.
+      </GuideText>
+
       <ButtonWrapper>
-        <Button onClick={onReset} isReset>
+        <ResetButton type="button" onClick={handleReset}>
           초기화
-        </Button>
-        <Button onClick={handleApplyFilters}>필터 적용</Button>
+        </ResetButton>
+        <ApplyButton type="button" onClick={handleApply}>
+          필터 적용
+        </ApplyButton>
       </ButtonWrapper>
     </Wrapper>
   );
@@ -265,36 +290,102 @@ const ComplainFilter = ({
 
 export default ComplainFilter;
 
-// (styled-components 코드는 동일)
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
-  border-radius: 8px;
-  border: 2px solid rgba(10, 132, 255, 0.12);
-  background: #fff;
-  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid #e5e8eb;
+  background: #ffffff;
+  padding: 20px;
   box-sizing: border-box;
   gap: 16px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  margin-bottom: 64px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  width: 100%;
+  min-width: 320px;
+  max-width: 480px;
+`;
+
+const HeaderRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 4px;
+`;
+
+const FilterTitle = styled.h3`
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #191f28;
+`;
+
+const CloseButton = styled.button`
+  border: none;
+  background: none;
+  padding: 4px;
+  color: #8b95a1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 6px;
+
+  &:hover {
+    color: #191f28;
+    background-color: #f2f4f6;
+  }
+`;
+
+const GuideText = styled.p`
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #8b95a1;
 `;
 
 const ButtonWrapper = styled.div`
   display: flex;
   gap: 8px;
   justify-content: flex-end;
-  margin-top: 16px;
+  margin-top: 8px;
 `;
 
-const Button = styled.button<{ isReset?: boolean }>`
+const ResetButton = styled.button`
   padding: 8px 16px;
-  border-radius: 8px;
-  border: ${({ isReset }) => (isReset ? "1px solid #ccc" : "none")};
-  background-color: ${({ isReset }) => (isReset ? "#f0f0f0" : "#007bff")};
-  color: ${({ isReset }) => (isReset ? "#333" : "#fff")};
+  border-radius: 10px;
+  border: 1px solid #e5e8eb;
+  background-color: #f2f4f6;
+  color: #4e5968;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
+  transition: all 0.15s ease-in-out;
 
   &:hover {
-    opacity: 0.8;
+    background-color: #e5e8eb;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+`;
+
+const ApplyButton = styled.button`
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: none;
+  background-color: #3182f6;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+
+  &:hover {
+    background-color: #1b64da;
+  }
+
+  &:active {
+    transform: scale(0.98);
   }
 `;
