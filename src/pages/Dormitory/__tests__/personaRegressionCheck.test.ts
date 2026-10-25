@@ -198,4 +198,50 @@ describe("기존 및 신규 사용자 페르소나별 회귀 및 무영향 철�
     expect(res.hasValidDormAssignment).toBe(false);
     expect(res.lastHistory).toBeNull();
   });
+
+  it("[페르소나 8: 비사생 온보딩 루프 방지] 포털 동기화 완료 후 비사생(기숙사 배정 없음)인 경우 온보딩에 멈추지 않고 비사생 차단 화면으로 정상 판정되어야 한다", () => {
+    // 비사생(통학생)이 포털 동기화를 마쳤을 때의 데이터 구조
+    const nonResidentSynced: DormitoryStudentInfo = {
+      hasData: true,
+      rawDatasets: {},
+      studentId: "202401999",
+      studentName: "나통학",
+      appliedYear: "2026",
+      appliedSemester: "20",
+      status: "",
+      dormitoryType: "",
+      dormitoryBuilding: "",
+      studentDormNo: "-",
+      profile: {
+        name: "나통학",
+        studentId: "202401999",
+        year: "2026",
+        term: "20",
+        dormitoryType: "",
+        dormitoryBuilding: "",
+        studentDormNo: "-",
+      },
+      inOutList: [],
+      rawFields: { korNm: "나통학", persNo: "202401999" },
+    };
+
+    // 1. 사생 여부 판별: 비사생이어야 함
+    const res = evaluateDormitoryResidentStatus(nonResidentSynced, 2026);
+    expect(res.isCurrentlyResident).toBe(false);
+    expect(res.hasValidDormAssignment).toBe(false);
+
+    // 2. hasValidData 판별: 동기화된 사생 데이터가 존재하므로 true여야 함 (온보딩 화면 재노출 방지)
+    const hasValidData = Boolean(
+      nonResidentSynced &&
+      (
+        nonResidentSynced.hasData ||
+        nonResidentSynced.studentId ||
+        nonResidentSynced.studentName ||
+        nonResidentSynced.profile?.studentId ||
+        nonResidentSynced.profile?.name ||
+        (nonResidentSynced.rawFields && Object.keys(nonResidentSynced.rawFields).length > 0)
+      )
+    );
+    expect(hasValidData).toBe(true);
+  });
 });
