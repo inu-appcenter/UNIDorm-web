@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { useSetHeader } from "@/hooks/useSetHeader";
+import { useCountUp } from "@/hooks/useCountUp";
 import TitleContentArea from "@/components/common/TitleContentArea";
 import ActionButton from "@/components/common/ActionButton";
 import EmptyState from "@/components/common/EmptyState";
@@ -796,6 +797,12 @@ export default function PortalDormitoryPage() {
   const meritPoints = profile?.meritPoints ?? dormInfo?.meritPoints ?? dormInfo?.rawFields?.ardScr1 ?? "0";
   const demeritPoints = profile?.demeritPoints ?? dormInfo?.demeritPoints ?? dormInfo?.rawFields?.ardScr2 ?? "0";
   const nonOffsetDemeritPoints = profile?.nonOffsetDemeritPoints ?? dormInfo?.rawFields?.ardScr3 ?? "0";
+
+  // Apple & Toss 스타일 상벌점 0.6초 카운트업
+  const meritPrefix = String(meritPoints).trim().startsWith("+") ? "+" : "";
+  const animatedMeritPoints = useCountUp(meritPoints, { duration: 600 });
+  const animatedDemeritPoints = useCountUp(demeritPoints, { duration: 600 });
+  const animatedNonOffsetPoints = useCountUp(nonOffsetDemeritPoints, { duration: 600 });
   const year = profile?.year || dormInfo?.appliedYear || dormInfo?.rawFields?.yy || "";
   const term = profile?.term || dormInfo?.appliedSemester || dormInfo?.rawFields?.tmGbn || "";
 
@@ -1019,15 +1026,15 @@ export default function PortalDormitoryPage() {
             <PointBar>
               <PointChip>
                 <span className="title">상점</span>
-                <span className="score merit">{meritPoints}</span>
+                <span className="score merit">{meritPrefix}{animatedMeritPoints}</span>
               </PointChip>
               <PointChip>
                 <span className="title">일반벌점</span>
-                <span className="score demerit">{demeritPoints}</span>
+                <span className="score demerit">{animatedDemeritPoints}</span>
               </PointChip>
               <PointChip>
                 <span className="title">상쇄불가벌점</span>
-                <span className="score fixed">{nonOffsetDemeritPoints}</span>
+                <span className="score fixed">{animatedNonOffsetPoints}</span>
               </PointChip>
             </PointBar>
           </CardContainer>
