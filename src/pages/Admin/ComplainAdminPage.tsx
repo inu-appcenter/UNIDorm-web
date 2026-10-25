@@ -16,6 +16,7 @@ import { useAdminComplaints } from "@/queries/complaints";
 import { downloadComplaintsAsCsv } from "@/utils/csvUtils";
 import { formatBuildingFromServer } from "@/constants/constants";
 import { AlertCircle, Filter, RotateCw, X } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 
 const PERIOD_MENUS = ["전체", "최근 1개월", "최근 3개월", "올해"];
 
@@ -23,19 +24,81 @@ const ComplainAdminPage = () => {
   const { tokenInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
 
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const filterGroupRef = useRef<HTMLDivElement>(null);
 
-  // 검색창 입력 상태 및 실제 적용된 검색어 (Enter 또는 검색 아이콘 클릭 시 반영)
-  const [searchInput, setSearchInput] = useState<string>("");
-  const [appliedKeyword, setAppliedKeyword] = useState<string>("");
+  // URL searchParams로부터 상태 도출 (Single Source of Truth)
+  // 상세 페이지를 보고 뒤로 돌아와도 URL 쿼리스트링 덕분에 상태가 100% 복원됩니다.
+  const appliedKeyword = searchParams.get("keyword") || "";
 
-  // 서버 상세 필터링 상태 (ComplainFilter에서 적용된 조건)
-  const [appliedDetailFilters, setAppliedDetailFilters] =
-    useState<ComplaintSearchDto | null>(null);
+  const periodParam = searchParams.get("period");
+  const selectedPeriodIndex = useMemo(() => {
+    const num = Number(periodParam);
+    return !isNaN(num) && num >= 0 && num < PERIOD_MENUS.length ? num : 0;
+  }, [periodParam]);
 
-  // 상단 기간 필터 (클라이언트 날짜 기준 필터링)
-  const [selectedPeriodIndex, setSelectedPeriodIndex] = useState<number>(0);
+  const appliedDetailFilters = useMemo<ComplaintSearchDto | null>(() => {
+    const dto: ComplaintSearchDto = {};
+    const dormType = searchParams.get("dormType");
+    const officer = searchParams.get("officer");
+    const type = searchParams.get("type");
+    const status = searchParams.get("status");
+    const building = searchParams.get("building");
+    const floor = searchParams.get("floor");
+    const roomNumber = searchParams.get("roomNumber");
+    const bedNumber = searchParams.get("bedNumber");
+
+    if (dormType) dto.dormType = dormType;
+    if (officer) dto.officer = officer;
+    if (type) dto.type = type;
+    if (status) dto.status = status;
+    if (building) dto.building = building;
+    if (floor) dto.floor = floor;
+    if (roomNumber) dto.roomNumber = roomNumber;
+    if (bedNumber) dto.bedNumber = bedNumber;
+
+    return Object.keys(dto).length > 0 ? dto : null;
+  }, [searchParams]);
+
+  // 검색창 입력 폼 상태 (타이핑용 로컬 state)
+  const [searchInput, setSearchInput] = useState<string>(appliedKeyword);
+
+  // URL의 keyword가 바뀌었을 때(뒤로가기 등) 검색창 텍스트 동기화
+  useEffect(() => {
+    setSearchInput(appliedKeyword);
+  }, [appliedKeyword]);
+
+  // URL searchParams 일괄 업데이트 헬퍼
+  const updateFilters = useCallback(
+    (
+      newKeyword: string,
+      newDetail: ComplaintSearchDto | null,
+      newPeriodIdx: number,
+    ) => {
+      const params = new URLSearchParams();
+      const trimmed = newKeyword.trim();
+      if (trimmed) {
+        params.set("keyword", trimmed);
+      }
+      if (newPeriodIdx !== 0) {
+        params.set("period", String(newPeriodIdx));
+      }
+      if (newDetail) {
+        if (newDetail.dormType) params.set("dormType", newDetail.dormType);
+        if (newDetail.officer) params.set("officer", newDetail.officer);
+        if (newDetail.type) params.set("type", newDetail.type);
+        if (newDetail.status) params.set("status", newDetail.status);
+        if (newDetail.building) params.set("building", newDetail.building);
+        if (newDetail.floor) params.set("floor", newDetail.floor);
+        if (newDetail.roomNumber) params.set("roomNumber", newDetail.roomNumber);
+        if (newDetail.bedNumber) params.set("bedNumber", newDetail.bedNumber);
+      }
+      setSearchParams(params, { replace: true });
+    },
+    [setSearchParams],
+  );
 
   // 검색어와 상세 필터를 하나의 통합 서버 검색 DTO로 결합
   const serverSearchDto = useMemo<ComplaintSearchDto | null>(() => {
@@ -81,42 +144,48 @@ const ComplainAdminPage = () => {
 
   // 검색창 엔터/아이콘 클릭 핸들러
   const handleSearchSubmit = () => {
-    setAppliedKeyword(searchInput.trim());
+    updateFilters(searchInput, appliedDetailFilters, selectedPeriodIndex);
   };
 
   // 필터 적용 핸들러
   const handleApplyFilters = (filters: ComplaintSearchDto | null) => {
-    setAppliedDetailFilters(filters);
+    updateFilters(appliedKeyword, filters, selectedPeriodIndex);
     setIsFilterOpen(false);
   };
 
-  // 필터 초기화 핸들러
+  // 필터 초기화 핸들러 (상세 필터만 해제)
   const handleResetFilters = () => {
-    setAppliedDetailFilters(null);
+    updateFilters(appliedKeyword, null, selectedPeriodIndex);
     setIsFilterOpen(false);
+  };
+
+  // 기간 선택 핸들러
+  const handleSelectPeriod = (idx: number | null) => {
+    const nextIdx = idx === null ? 0 : idx;
+    updateFilters(appliedKeyword, appliedDetailFilters, nextIdx);
   };
 
   // 전체 검색 조건(검색어, 상세 필터, 기간) 완전 초기화
   const handleResetAll = () => {
     setSearchInput("");
-    setAppliedKeyword("");
-    setAppliedDetailFilters(null);
-    setSelectedPeriodIndex(0);
+    setSearchParams(new URLSearchParams(), { replace: true });
     setIsFilterOpen(false);
   };
 
   // 개별 상세 필터 조건 제거
   const handleRemoveDetailFilterKey = useCallback(
     (key: keyof ComplaintSearchDto) => {
-      setAppliedDetailFilters((prev) => {
-        if (!prev) return null;
-        const nextFilters = { ...prev };
-        delete nextFilters[key];
-        const hasRemaining = Object.keys(nextFilters).length > 0;
-        return hasRemaining ? nextFilters : null;
-      });
+      if (!appliedDetailFilters) return;
+      const nextFilters = { ...appliedDetailFilters };
+      delete nextFilters[key];
+      const hasRemaining = Object.keys(nextFilters).length > 0;
+      updateFilters(
+        appliedKeyword,
+        hasRemaining ? nextFilters : null,
+        selectedPeriodIndex,
+      );
     },
-    [],
+    [appliedDetailFilters, appliedKeyword, selectedPeriodIndex, updateFilters],
   );
 
   // 클라이언트 날짜 파싱 헬퍼 (Safari 호환)
@@ -223,7 +292,7 @@ const ComplainAdminPage = () => {
         label: `검색어: "${appliedKeyword}"`,
         onRemove: () => {
           setSearchInput("");
-          setAppliedKeyword("");
+          updateFilters("", appliedDetailFilters, selectedPeriodIndex);
         },
       });
     }
@@ -288,7 +357,13 @@ const ComplainAdminPage = () => {
     }
 
     return tags;
-  }, [appliedKeyword, appliedDetailFilters, handleRemoveDetailFilterKey]);
+  }, [
+    appliedKeyword,
+    appliedDetailFilters,
+    handleRemoveDetailFilterKey,
+    selectedPeriodIndex,
+    updateFilters,
+  ]);
 
   const hasAnyActiveFilters =
     activeFilterTags.length > 0 || selectedPeriodIndex !== 0;
@@ -336,9 +411,7 @@ const ComplainAdminPage = () => {
               <SelectableChipGroup
                 Groups={PERIOD_MENUS}
                 selectedIndex={selectedPeriodIndex}
-                onSelect={(idx) =>
-                  setSelectedPeriodIndex(idx === null ? 0 : idx)
-                }
+                onSelect={handleSelectPeriod}
               />
             </ControlsRow>
 
