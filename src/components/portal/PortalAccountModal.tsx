@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { X, ShieldCheck, Lock, User } from "lucide-react";
 import { savePortalAccount, isMobileAppEnvironment } from "@/apis/mobileAgentBridge";
+import CapsuleButton from "@/components/common/CapsuleButton";
 
 
 interface Props {
@@ -113,9 +114,16 @@ export const PortalAccountModal: React.FC<Props> = ({
 
           {errorMessage && <ErrorText>{errorMessage}</ErrorText>}
 
-          <SubmitButton type="submit" disabled={loading}>
+          <CapsuleButton
+            type="submit"
+            variant="primary"
+            fullWidth
+            loading={loading}
+            disabled={loading}
+            style={{ marginTop: 6 }}
+          >
             {loading ? (loadingMessage || "기기에 안전하게 저장 중...") : "계정 연동 완료"}
-          </SubmitButton>
+          </CapsuleButton>
         </Form>
       </ModalContainer>
     </Overlay>
@@ -233,19 +241,4 @@ const ErrorText = styled.span`
   color: var(--text-error);
 `;
 
-const SubmitButton = styled.button`
-  background: var(--interactive-primary);
-  color: var(--text-inverse);
-  border: none;
-  border-radius: 12px;
-  height: 46px;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  margin-top: 6px;
 
-  &:disabled {
-    background: var(--gray-400);
-    cursor: not-allowed;
-  }
-`;

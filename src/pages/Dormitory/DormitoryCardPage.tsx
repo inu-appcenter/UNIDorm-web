@@ -24,6 +24,8 @@ import {
   resolveCurrentStudentId,
 } from "@/apis/mobileAgentBridge";
 import CapsuleButton from "@/components/common/CapsuleButton";
+import Skeleton from "@/components/common/Skeleton";
+import DormitoryBadge from "@/components/common/DormitoryBadge";
 import { guardAppOnly } from "@/utils/guard";
 import { isLatestUnidormApp } from "@/utils/getMobilePlatform";
 
@@ -704,6 +706,25 @@ export default function MobileDormitoryCardPage() {
     term,
   ]);
 
+  if (isInitialLoading) {
+    return (
+      <PageContainer as="main">
+        <CardWrapper as="section">
+          <Skeleton
+            width="100%"
+            height="100%"
+            style={{
+              maxWidth: 360,
+              maxHeight: 560,
+              borderRadius: 24,
+              minHeight: 460,
+            }}
+          />
+        </CardWrapper>
+      </PageContainer>
+    );
+  }
+
   if (!isInitialLoading && !hasValidData) {
     return (
       <PageContainer as="main" $isScrollable>
@@ -825,7 +846,11 @@ export default function MobileDormitoryCardPage() {
                   {lastHistory.dormitoryType && (
                     <HistoryItem>
                       <span className="label">기숙사</span>
-                      <span className="value">{mapDormitoryType(lastHistory.dormitoryType)}</span>
+                      <DormitoryBadge
+                        dormType={mapDormitoryType(lastHistory.dormitoryType)}
+                        variant="subtle"
+                        size="sm"
+                      />
                     </HistoryItem>
                   )}
                   {lastHistory.checkOutDate && (
