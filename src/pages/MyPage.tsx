@@ -61,28 +61,11 @@ const MyPage = () => {
     navigate(PATHS.LOGIN); //원래 있던 이동 여기로
   }; //로그인 버튼 클릭
 
-  const fadeInUp = {
-    initial: { opacity: 0, y: 15 },
-    animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.4 },
-  };
 
-  const staggerContainer = {
-    animate: {
-      transition: {
-        staggerChildren: 0.08,
-      },
-    },
-  };
 
   return (
-    <MyPageWrapper
-      as={motion.div}
-      variants={staggerContainer}
-      initial="initial"
-      animate="animate"
-    >
-      <InfoAreaWrapper as={motion.div} variants={fadeInUp}>
+    <MyPageWrapper>
+      <InfoAreaWrapper>
         {isLoggedIn ? (
           <MyInfoArea />
         ) : (
@@ -98,11 +81,7 @@ const MyPage = () => {
       </InfoAreaWrapper>
 
       <MenuGroupsWrapper>
-        <ProtectedMenuWrapper
-          disabled={isProtected}
-          as={motion.div}
-          variants={fadeInUp}
-        >
+        <ProtectedMenuWrapper disabled={isProtected}>
           <ProtectedContent disabled={isProtected}>
             <TitleContentArea
               title="내 룸메이트"
@@ -119,7 +98,7 @@ const MyPage = () => {
               as={motion.div}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
+              transition={{ duration: 0.15 }}
             >
               <OverlayChip>{overlayText}</OverlayChip>
             </OverlayMessage>
@@ -127,11 +106,7 @@ const MyPage = () => {
         </ProtectedMenuWrapper>
         {menuGroups.slice(0, -1).map((group, idx) => (
           <div key={group.title || idx} style={{ display: "contents" }}>
-            <ProtectedMenuWrapper
-              disabled={isProtected}
-              as={motion.div}
-              variants={fadeInUp}
-            >
+            <ProtectedMenuWrapper disabled={isProtected}>
               <ProtectedContent disabled={isProtected}>
                 <MenuGroup
                   title={group.title}
@@ -143,24 +118,22 @@ const MyPage = () => {
                   as={motion.div}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ delay: 0.35 + idx * 0.05 }}
+                  transition={{ duration: 0.15 }}
                 >
                   <OverlayChip>{overlayText}</OverlayChip>
                 </OverlayMessage>
               )}
             </ProtectedMenuWrapper>
-            <Divider as={motion.div} variants={fadeInUp} />
+            <Divider />
           </div>
         ))}
 
         {/* 고객지원 섹션 */}
         {menuGroups.length > 0 && (
-          <motion.div variants={fadeInUp}>
-            <MenuGroup
-              title={menuGroups[menuGroups.length - 1].title}
-              menus={menuGroups[menuGroups.length - 1].menus}
-            />
-          </motion.div>
+          <MenuGroup
+            title={menuGroups[menuGroups.length - 1].title}
+            menus={menuGroups[menuGroups.length - 1].menus}
+          />
         )}
       </MenuGroupsWrapper>
       <BottomBar />

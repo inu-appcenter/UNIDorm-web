@@ -329,6 +329,15 @@ const ButtonWrapper = styled.div`
   width: 44px;
   gap: 4px;
   cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+
+  /* Apple & Toss 스타일 하단 탭 바운스 햅틱 */
+  transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);
+
+  &:active {
+    transform: scale(0.92);
+  }
 
   .BtnName {
     font-family: "Pretendard", sans-serif;

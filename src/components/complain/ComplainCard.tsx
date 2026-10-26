@@ -32,7 +32,7 @@ const ComplainCard: React.FC<ComplainCardProps> = ({
   specificLocation,
 }) => {
   // 날짜 형식을 'YY.MM.DD HH:MM'으로 변경
-  const formattedDate = date.replace(
+  const formattedDate = (date || "").replace(
     /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}).*$/,
     (_match, p1, p2, p3, p4, p5) =>
       `${p1.substring(2)}.${p2}.${p3} ${p4}:${p5}`,

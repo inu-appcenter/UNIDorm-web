@@ -126,6 +126,44 @@ describe("다른 웹뷰가 refreshToken을 먼저 교체했을 때의 재발급 
 
     await assertion;
     expect(location.href).toBe("/logout");
+    // 로그아웃 리다이렉트 전 로컬스토리지 토큰이 동기 소거되었는지 검증
+    expect(localStorage.getItem("accessToken")).toBeNull();
+    expect(localStorage.getItem("refreshToken")).toBeNull();
+  });
+
+  it("Spring Security 특성(토큰 만료 시 403 반환)에 대응하여 403 에러 발생 시 토큰 리프레시 후 재시도한다", async () => {
+    const { default: tokenInstance } = await import("../tokenInstance");
+    tokenInstance.defaults.adapter = async (config: InternalAxiosRequestConfig) => {
+      const authorization = String(config.headers?.Authorization ?? "");
+      const response = {
+        data: { ok: true },
+        status: authorization === `Bearer ${VALID_ACCESS_TOKEN}` ? 200 : 403,
+        statusText: "",
+        headers: {},
+        config,
+      };
+      if (response.status === 200) return response;
+      const error = Object.assign(new Error("Forbidden"), {
+        config,
+        response,
+        isAxiosError: true,
+      });
+      throw error;
+    };
+
+    refreshMock.mockImplementation(async () => {
+      localStorage.setItem("accessToken", VALID_ACCESS_TOKEN);
+      localStorage.setItem("refreshToken", "rotated_refresh");
+      return {
+        accessToken: VALID_ACCESS_TOKEN,
+        refreshToken: "rotated_refresh",
+        role: "ROLE_USER",
+      };
+    });
+
+    const response = await tokenInstance.get("/users");
+    expect(response.status).toBe(200);
+    expect(refreshMock).toHaveBeenCalledTimes(1);
   });
 });
 

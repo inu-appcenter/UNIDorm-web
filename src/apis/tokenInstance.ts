@@ -67,6 +67,18 @@ const redirectToLogoutOnce = () => {
   isLogoutRedirectPending = true;
   delete tokenInstance.defaults.headers.common["Authorization"];
 
+  // 리로드 직전 인증 토큰 및 유저 캐시를 동기 소거하여
+  // 새 페이지의 AppInitializer(useAppInit)가 유효하지 않은 토큰으로
+  // getMemberInfo() 등의 2차 API 요청을 연쇄 발송하는 것을 원천 차단
+  try {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("role");
+    localStorage.removeItem("userInfo");
+  } catch {
+    // 스토리지 접근 제한 예외 방어
+  }
+
   if (window.location.pathname !== "/logout") {
     window.location.href = "/logout";
   }
@@ -268,6 +280,8 @@ tokenInstance.interceptors.response.use(
     }
 
     const status = error.response.status;
+    // 백엔드 Spring Security는 토큰 만료 시 별도 AuthenticationEntryPoint가 없을 경우
+    // 익명 사용자 요청에 대해 기본 403 Forbidden을 반환하므로, 401 및 403 모두 토큰 재발급 대상에 포함합니다.
     const isAuthError = status === 401 || status === 403;
 
     if (isAuthError && originalRequest && !originalRequest._retry) {
