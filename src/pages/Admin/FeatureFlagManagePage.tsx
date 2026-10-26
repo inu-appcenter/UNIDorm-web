@@ -1,14 +1,6 @@
 import { useMemo, useState } from "react";
 import styled from "styled-components";
 import {
-  PlusCircle,
-  Search,
-  Sparkles,
-  ToggleLeft,
-  ToggleRight,
-  X,
-} from "lucide-react";
-import {
   createFeatureFlag,
   FeatureFlag,
   updateFeatureFlag,
@@ -16,13 +8,13 @@ import {
 import AdminBottomSheet from "@/components/modal/AdminBottomSheet";
 import { useAdminFeatureFlags } from "@/queries/admin";
 import { useSetHeader } from "@/hooks/useSetHeader";
+import { useCountUp } from "@/hooks/useCountUp";
 import {
   AdminActionRow,
   AdminBadge,
   AdminButton,
   AdminCard,
   AdminCardDescription,
-  AdminCardEyebrow,
   AdminCardHeader,
   AdminCardTitle,
   AdminCardTitleGroup,
@@ -34,8 +26,6 @@ import {
   AdminEmptyState,
   AdminEmptyTitle,
   AdminField,
-  AdminHero,
-  AdminHeroMetricGrid,
   AdminInput,
   AdminLabel,
   AdminMiniStat,
@@ -77,6 +67,10 @@ const FeatureFlagManagePage = () => {
 
   const inactiveCount = flags.length - activeCount;
 
+  const animatedTotal = useCountUp(flags.length);
+  const animatedActive = useCountUp(activeCount);
+  const animatedInactive = useCountUp(inactiveCount);
+
   const openCreator = () => {
     setNewFlag(EMPTY_NEW_FLAG);
     setIsCreatorOpen(true);
@@ -97,7 +91,7 @@ const FeatureFlagManagePage = () => {
       const updated = { ...item, flag: !item.flag };
       await updateFeatureFlag(updated);
     } catch (error) {
-      alert("Feature Flag 상태를 변경하지 못했습니다.");
+      alert("Feature Flag 상태를 변경하지 못했습니다. 잠시 후 다시 시도해 주세요.");
     } finally {
       setPendingKey(null);
     }
@@ -128,7 +122,7 @@ const FeatureFlagManagePage = () => {
       alert("Feature Flag를 등록했습니다.");
       closeCreator();
     } catch (error) {
-      alert("Feature Flag를 생성하지 못했습니다.");
+      alert("Feature Flag를 생성하지 못했습니다. 잠시 후 다시 시도해 주세요.");
     } finally {
       setIsCreating(false);
     }
@@ -139,52 +133,46 @@ const FeatureFlagManagePage = () => {
   return (
     <AdminShell>
       <AdminPage>
-        <AdminHero>
-          <AdminHeroMetricGrid>
-            <AdminMiniStat>
-              <AdminMiniStatLabel>전체 Flag</AdminMiniStatLabel>
-              <AdminMiniStatValue>{flags.length}</AdminMiniStatValue>
-            </AdminMiniStat>
-            <AdminMiniStat>
-              <AdminMiniStatLabel>활성화</AdminMiniStatLabel>
-              <AdminMiniStatValue>{activeCount}</AdminMiniStatValue>
-            </AdminMiniStat>
-            <AdminMiniStat>
-              <AdminMiniStatLabel>비활성화</AdminMiniStatLabel>
-              <AdminMiniStatValue>{inactiveCount}</AdminMiniStatValue>
-            </AdminMiniStat>
-            <AdminMiniStat>
-              <AdminMiniStatLabel>검색 결과</AdminMiniStatLabel>
-              <AdminMiniStatValue>{filteredFlags.length}</AdminMiniStatValue>
-            </AdminMiniStat>
-          </AdminHeroMetricGrid>
-        </AdminHero>
+        {/* 상단 3대 통계 (Zero-Icon & 카운트업) */}
+        <MetricsGrid>
+          <AdminMiniStat>
+            <AdminMiniStatLabel>전체 플래그</AdminMiniStatLabel>
+            <AdminMiniStatValue>{animatedTotal}개</AdminMiniStatValue>
+          </AdminMiniStat>
+          <AdminMiniStat>
+            <AdminMiniStatLabel>활성화 (ON)</AdminMiniStatLabel>
+            <AdminMiniStatValue style={{ color: "#04b05c" }}>
+              {animatedActive}개
+            </AdminMiniStatValue>
+          </AdminMiniStat>
+          <AdminMiniStat>
+            <AdminMiniStatLabel>비활성화 (OFF)</AdminMiniStatLabel>
+            <AdminMiniStatValue style={{ color: "#8b95a1" }}>
+              {animatedInactive}개
+            </AdminMiniStatValue>
+          </AdminMiniStat>
+        </MetricsGrid>
 
         <AdminCard>
           <AdminCardHeader>
             <AdminCardTitleGroup>
-              <AdminCardEyebrow>Flag Inventory</AdminCardEyebrow>
               <AdminCardTitle>Feature Flag 목록</AdminCardTitle>
               <AdminCardDescription>
-                검색으로 빠르게 찾고, 목록에서 바로 상태를 바꿀 수 있습니다.
+                서비스 기능별 활성화 여부를 실시간으로 제어하고 새 플래그를 등록할 수 있습니다.
               </AdminCardDescription>
             </AdminCardTitleGroup>
 
             <HeaderActions>
-              <SearchField>
-                <Search size={16} />
-                <AdminInput
-                  type="text"
-                  placeholder="Flag 명 검색"
-                  value={searchValue}
-                  onChange={(e) => setSearchValue(e.target.value)}
-                />
-              </SearchField>
+              <SearchInput
+                type="text"
+                placeholder="플래그 키 검색..."
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
+              />
 
-              <AdminButton type="button" onClick={openCreator}>
-                <PlusCircle size={16} />
-                Feature Flag 만들기
-              </AdminButton>
+              <DesktopCreateButton type="button" onClick={openCreator}>
+                새 플래그 만들기
+              </DesktopCreateButton>
             </HeaderActions>
           </AdminCardHeader>
 
@@ -194,84 +182,51 @@ const FeatureFlagManagePage = () => {
             <AdminEmptyState>
               <AdminEmptyTitle>표시할 Feature Flag가 없습니다.</AdminEmptyTitle>
               <AdminEmptyDescription>
-                검색어를 비우거나 새 Feature Flag를 추가해 주세요.
+                검색어를 확인하거나 새로운 Feature Flag를 추가해 보세요.
               </AdminEmptyDescription>
               <AdminButton type="button" onClick={openCreator}>
-                <PlusCircle size={16} />
-                Feature Flag 만들기
+                새 Feature Flag 만들기
               </AdminButton>
             </AdminEmptyState>
           ) : (
-            <>
-              <DesktopTable>
-                <thead>
-                  <tr>
-                    <Th>키</Th>
-                    <Th>상태</Th>
-                    <Th style={{ textAlign: "right" }}>액션</Th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredFlags.map((flag) => (
-                    <tr key={flag.key}>
-                      <Td>
-                        <FlagKey>{flag.key}</FlagKey>
-                      </Td>
-                      <Td>
-                        <AdminBadge $tone={flag.flag ? "green" : "slate"}>
-                          {flag.flag ? "활성화" : "비활성화"}
-                        </AdminBadge>
-                      </Td>
-                      <Td style={{ textAlign: "right" }}>
-                        <InlineActionButton
-                          type="button"
-                          $tone="secondary"
-                          onClick={() => handleToggle(flag)}
-                          disabled={pendingKey === flag.key}
-                        >
-                          {flag.flag ? (
-                            <ToggleRight size={16} />
-                          ) : (
-                            <ToggleLeft size={16} />
-                          )}
-                          {pendingKey === flag.key ? "변경 중..." : "상태 전환"}
-                        </InlineActionButton>
-                      </Td>
-                    </tr>
-                  ))}
-                </tbody>
-              </DesktopTable>
-
-              <MobileList>
-                {filteredFlags.map((flag) => (
-                  <MobileItem key={flag.key}>
-                    <MobileItemTop>
-                      <FlagKey>{flag.key}</FlagKey>
-                      <AdminBadge $tone={flag.flag ? "green" : "slate"}>
-                        {flag.flag ? "ON" : "OFF"}
-                      </AdminBadge>
-                    </MobileItemTop>
-                    <InlineActionButton
-                      type="button"
-                      $tone="secondary"
-                      $fullWidth
-                      onClick={() => handleToggle(flag)}
-                      disabled={pendingKey === flag.key}
-                    >
+            <FlagList>
+              {filteredFlags.map((flag) => (
+                <FlagRow key={flag.key}>
+                  <FlagInfo>
+                    <FlagKeyText>{flag.key}</FlagKeyText>
+                    <FlagStatusText>
                       {flag.flag ? (
-                        <ToggleRight size={16} />
+                        <StatusBadge $active={true}>활성화 (ON)</StatusBadge>
                       ) : (
-                        <ToggleLeft size={16} />
+                        <StatusBadge $active={false}>비활성화 (OFF)</StatusBadge>
                       )}
-                      {pendingKey === flag.key ? "변경 중..." : "상태 전환"}
-                    </InlineActionButton>
-                  </MobileItem>
-                ))}
-              </MobileList>
-            </>
+                      <StatusHint>
+                        {flag.flag
+                          ? "현재 모든 사용자에게 이 기능이 켜져 있어요"
+                          : "현재 사용자에게 노출되지 않는 상태예요"}
+                      </StatusHint>
+                    </FlagStatusText>
+                  </FlagInfo>
+
+                  {/* 모던 슬라이딩 스위치 (물리 모션 토글) */}
+                  <SwitchButton
+                    type="button"
+                    role="switch"
+                    aria-checked={flag.flag}
+                    $isOn={flag.flag}
+                    disabled={pendingKey === flag.key}
+                    onClick={() => handleToggle(flag)}
+                    aria-label={`${flag.key} 상태 전환`}
+                  >
+                    <SwitchHandle $isOn={flag.flag} />
+                  </SwitchButton>
+                </FlagRow>
+              ))}
+            </FlagList>
           )}
         </AdminCard>
 
+        {/* 플래그 생성 바텀시트 */}
         <AdminBottomSheet
           isOpen={isCreatorOpen}
           setIsOpen={(nextOpen) => {
@@ -280,39 +235,26 @@ const FeatureFlagManagePage = () => {
             }
           }}
           title="Feature Flag 만들기"
-          description="Feature Flag 생성 패널"
+          description="새 런타임 플래그 등록"
         >
           <CreatorHeader>
             <CreatorTitleGroup>
               <AdminBadge $tone="green">새 Feature Flag</AdminBadge>
-              <CreatorTitle>Feature Flag 만들기</CreatorTitle>
+              <CreatorTitle>새 Feature Flag 만들기</CreatorTitle>
               <AdminSubtleText>
-                이름과 초기 상태를 정한 뒤 바로 추가할 수 있습니다.
+                플래그 키와 초기 활성화 상태를 지정하여 등록합니다.
               </AdminSubtleText>
             </CreatorTitleGroup>
 
             <CloseButton type="button" onClick={closeCreator} aria-label="닫기">
-              <X size={20} />
+              ✕
             </CloseButton>
           </CreatorHeader>
 
           <CreatorScrollArea>
-            <SelectedSummary>
-              <AdminBadge $tone={newFlag.flag ? "green" : "slate"}>
-                {newFlag.flag ? "초기값 ON" : "초기값 OFF"}
-              </AdminBadge>
-              <SelectedSummaryTitle>
-                {newFlag.key.trim() || "새 Feature Flag 이름을 입력해 주세요"}
-              </SelectedSummaryTitle>
-              <AdminSubtleText>
-                영문 소문자와 언더스코어 조합으로 입력해 두면 관리하기
-                쉽습니다.
-              </AdminSubtleText>
-            </SelectedSummary>
-
             <CreateForm onSubmit={handleCreate}>
               <AdminField>
-                <AdminLabel htmlFor="feature-flag-key">Flag 키</AdminLabel>
+                <AdminLabel htmlFor="feature-flag-key">Flag 고유 키</AdminLabel>
                 <AdminInput
                   id="feature-flag-key"
                   type="text"
@@ -321,23 +263,24 @@ const FeatureFlagManagePage = () => {
                     setNewFlag({ ...newFlag, key: e.target.value })
                   }
                   placeholder="예: roommate_recommendation_v2"
+                  required
                 />
                 <AdminSubtleText>
-                  팀 내 규칙에 맞는 고유한 이름으로 입력해 주세요.
+                  영문 소문자와 언더스코어(_) 조합으로 규칙에 맞게 입력해 주세요.
                 </AdminSubtleText>
               </AdminField>
 
               <AdminField>
-                <AdminLabel>초기 상태</AdminLabel>
+                <AdminLabel>초기 상태 설정</AdminLabel>
                 <AdminChoiceGrid $minWidth="140px">
                   <AdminChoiceCard
                     type="button"
                     $selected={newFlag.flag}
                     onClick={() => setNewFlag({ ...newFlag, flag: true })}
                   >
-                    <AdminChoiceTitle>활성화</AdminChoiceTitle>
+                    <AdminChoiceTitle>활성화 (ON)</AdminChoiceTitle>
                     <AdminChoiceDescription>
-                      추가 직후 바로 ON 상태로 시작합니다.
+                      등록 즉시 기능이 모든 사용자에게 켜집니다.
                     </AdminChoiceDescription>
                   </AdminChoiceCard>
                   <AdminChoiceCard
@@ -345,9 +288,9 @@ const FeatureFlagManagePage = () => {
                     $selected={!newFlag.flag}
                     onClick={() => setNewFlag({ ...newFlag, flag: false })}
                   >
-                    <AdminChoiceTitle>비활성화</AdminChoiceTitle>
+                    <AdminChoiceTitle>비활성화 (OFF)</AdminChoiceTitle>
                     <AdminChoiceDescription>
-                      배포만 먼저 하고 추후에 켤 수 있습니다.
+                      배포만 먼저 진행하고 추후에 켤 수 있습니다.
                     </AdminChoiceDescription>
                   </AdminChoiceCard>
                 </AdminChoiceGrid>
@@ -355,7 +298,7 @@ const FeatureFlagManagePage = () => {
 
               <AdminActionRow>
                 <AdminButton type="submit" disabled={isCreating}>
-                  {isCreating ? "생성 중..." : "Feature Flag 생성"}
+                  {isCreating ? "생성하고 있어요..." : "Feature Flag 등록하기"}
                 </AdminButton>
                 <AdminButton
                   type="button"
@@ -363,18 +306,19 @@ const FeatureFlagManagePage = () => {
                   onClick={closeCreator}
                   disabled={isCreating}
                 >
-                  닫기
+                  취소
                 </AdminButton>
               </AdminActionRow>
             </CreateForm>
-
-            <TipsCard>
-              <Sparkles size={16} />
-              이미 등록된 키는 다시 만들 수 없으니, 팀에서 쓰는 명명 규칙에
-              맞춰 생성해 주세요.
-            </TipsCard>
           </CreatorScrollArea>
         </AdminBottomSheet>
+
+        {/* 모바일 하단 고정 CTA */}
+        <MobileCTAContainer>
+          <MobileCTAButton type="button" onClick={openCreator}>
+            새 Feature Flag 만들기
+          </MobileCTAButton>
+        </MobileCTAContainer>
       </AdminPage>
     </AdminShell>
   );
@@ -382,102 +326,153 @@ const FeatureFlagManagePage = () => {
 
 export default FeatureFlagManagePage;
 
-const HeaderActions = styled.div`
-  display: flex;
-  flex-wrap: wrap;
+const MetricsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
-  width: 100%;
 
-  @media (min-width: 960px) {
-    width: auto;
-    justify-content: flex-end;
+  @media (min-width: 768px) {
+    gap: 16px;
   }
 `;
 
-const SearchField = styled.div`
+const HeaderActions = styled.div`
   display: flex;
   align-items: center;
   gap: 10px;
   width: 100%;
-  color: #64748b;
 
-  @media (min-width: 960px) {
-    width: 320px;
+  @media (min-width: 768px) {
+    width: auto;
+  }
+`;
+
+const SearchInput = styled(AdminInput)`
+  height: 42px;
+  padding: 0 14px;
+  font-size: 0.88rem;
+  width: 100%;
+
+  @media (min-width: 768px) {
+    width: 240px;
+  }
+`;
+
+const DesktopCreateButton = styled(AdminButton)`
+  display: none;
+
+  @media (min-width: 768px) {
+    display: inline-flex;
+    white-space: nowrap;
+    min-height: 42px;
+    padding: 0 16px;
   }
 `;
 
 const LoadingState = styled.div`
-  padding: 32px 12px;
+  padding: 40px 16px;
   text-align: center;
-  color: #64748b;
-  font-size: 0.96rem;
+  color: #8b95a1;
+  font-size: 0.95rem;
 `;
 
-const DesktopTable = styled.table`
-  width: 100%;
-  border-collapse: collapse;
-
-  @media (max-width: 767px) {
-    display: none;
-  }
-`;
-
-const Th = styled.th`
-  padding: 0 0 16px;
-  border-bottom: 1px solid #e2e8f0;
-  text-align: left;
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: #64748b;
-`;
-
-const Td = styled.td`
-  padding: 18px 0;
-  border-bottom: 1px solid #edf2f7;
-  vertical-align: middle;
-`;
-
-const FlagKey = styled.strong`
-  font-size: 0.96rem;
-  font-weight: 800;
-  color: #0f172a;
-  word-break: break-word;
-`;
-
-const InlineActionButton = styled(AdminButton)`
-  min-height: 40px;
-  padding: 11px 14px;
-  border-radius: 14px;
-  font-size: 0.88rem;
-`;
-
-const MobileList = styled.div`
-  display: none;
-
-  @media (max-width: 767px) {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-`;
-
-const MobileItem = styled.div`
+const FlagList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 18px;
-  border-radius: 22px;
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
+  divide-y: 1px solid #e5e8eb;
 `;
 
-const MobileItemTop = styled.div`
+const FlagRow = styled.div`
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
+  gap: 16px;
+  padding: 18px 8px;
+  border-bottom: 1px solid #e5e8eb;
+  transition: background-color 0.15s ease-out;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background-color: #f9fafb;
+  }
+`;
+
+const FlagInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+`;
+
+const FlagKeyText = styled.strong`
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #191f28;
+  font-family: monospace;
+  word-break: break-all;
+`;
+
+const FlagStatusText = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+`;
+
+const StatusBadge = styled.span<{ $active: boolean }>`
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: ${({ $active }) => ($active ? "#e6f8ef" : "#f2f4f6")};
+  color: ${({ $active }) => ($active ? "#04b05c" : "#6b7684")};
+`;
+
+const StatusHint = styled.span`
+  font-size: 0.8rem;
+  color: #8b95a1;
+`;
+
+const SwitchButton = styled.button<{ $isOn: boolean }>`
+  position: relative;
+  display: inline-flex;
+  height: 32px;
+  width: 56px;
+  flex-shrink: 0;
+  cursor: pointer;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-color: ${({ $isOn }) => ($isOn ? "#3182f6" : "#e5e8eb")};
+  transition: background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 0;
+
+  &:focus {
+    outline: none;
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: wait;
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.96);
+  }
+`;
+
+const SwitchHandle = styled.span<{ $isOn: boolean }>`
+  pointer-events: none;
+  display: inline-block;
+  height: 28px;
+  width: 28px;
+  border-radius: 999px;
+  background-color: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  transform: translateX(${({ $isOn }) => ($isOn ? "24px" : "0px")});
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 `;
 
 const CreatorHeader = styled.div`
@@ -486,17 +481,13 @@ const CreatorHeader = styled.div`
   justify-content: space-between;
   gap: 16px;
   padding: 20px 20px 16px;
-  border-bottom: 1px solid #e2e8f0;
-
-  @media (min-width: 768px) {
-    padding: 24px 24px 18px;
-  }
+  border-bottom: 1px solid #e5e8eb;
 `;
 
 const CreatorTitleGroup = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   min-width: 0;
 `;
 
@@ -504,22 +495,28 @@ const CreatorTitle = styled.h2`
   margin: 0;
   font-size: 1.2rem;
   font-weight: 800;
-  line-height: 1.3;
-  color: #0f172a;
+  color: #191f28;
 `;
 
 const CloseButton = styled.button`
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 14px;
-  color: #475569;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  color: #6b7684;
+  background: #f2f4f6;
+  border: none;
+  font-size: 1rem;
+  font-weight: 700;
   cursor: pointer;
   flex-shrink: 0;
+
+  &:hover {
+    background: #e5e8eb;
+    color: #191f28;
+  }
 `;
 
 const CreatorScrollArea = styled.div`
@@ -528,44 +525,47 @@ const CreatorScrollArea = styled.div`
   display: flex;
   flex-direction: column;
   gap: 20px;
-
-  @media (min-width: 768px) {
-    padding: 24px;
-  }
-`;
-
-const SelectedSummary = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 18px;
-  border-radius: 22px;
-  background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
-  border: 1px solid #dbeafe;
-`;
-
-const SelectedSummaryTitle = styled.h3`
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 800;
-  color: #0f172a;
 `;
 
 const CreateForm = styled.form`
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
 `;
 
-const TipsCard = styled.div`
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 16px 18px;
-  border-radius: 20px;
-  background: #eff6ff;
-  color: #1d4ed8;
-  font-size: 0.9rem;
-  line-height: 1.6;
-  font-weight: 600;
+const MobileCTAContainer = styled.div`
+  display: block;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 30;
+  max-width: 600px;
+  margin: 0 auto;
+  pointer-events: none;
+  background: linear-gradient(to top, #ffffff 65%, rgba(255, 255, 255, 0));
+  padding: 16px 20px calc(14px + env(safe-area-inset-bottom, 0px));
+
+  @media (min-width: 768px) {
+    display: none;
+  }
+`;
+
+const MobileCTAButton = styled.button`
+  pointer-events: auto;
+  width: 100%;
+  height: 52px;
+  border-radius: 16px;
+  background: #3182f6;
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 800;
+  border: none;
+  box-shadow: 0 4px 16px rgba(49, 130, 246, 0.28);
+  cursor: pointer;
+  transition: all 0.15s ease-out;
+
+  &:active {
+    transform: scale(0.98);
+  }
 `;
