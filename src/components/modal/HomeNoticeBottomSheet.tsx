@@ -47,7 +47,8 @@ export default function HomeNoticeBottomSheet({
         localStorage.getItem("hiddenModals") || "[]",
       );
 
-      if (hiddenModals.includes(id)) {
+      const stringId = String(id);
+      if (hiddenModals.some((item: unknown) => String(item) === stringId)) {
         setIsOpen(false);
       }
     } catch (error) {
@@ -68,8 +69,10 @@ export default function HomeNoticeBottomSheet({
         localStorage.getItem("hiddenModals") || "[]",
       );
 
-      if (!hiddenModals.includes(id)) {
-        hiddenModals.push(id);
+      const stringId = String(id);
+      const isAlreadyHidden = hiddenModals.some((item: unknown) => String(item) === stringId);
+      if (!isAlreadyHidden) {
+        hiddenModals.push(stringId);
         localStorage.setItem("hiddenModals", JSON.stringify(hiddenModals));
       }
     } catch (error) {
