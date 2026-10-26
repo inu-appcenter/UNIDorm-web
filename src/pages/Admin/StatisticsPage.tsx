@@ -655,7 +655,7 @@ export default function StatisticsPage() {
 const PageRoot = styled.div`
   width: 100%;
   min-height: 100%;
-  padding: 16px 20px calc(40px + env(safe-area-inset-bottom, 0px));
+  padding: 10px 14px calc(40px + env(safe-area-inset-bottom, 0px));
   box-sizing: border-box;
   overflow-x: hidden;
 
@@ -676,14 +676,15 @@ const ContentContainer = styled.div`
 /* 상단 필터 카드 */
 const FilterCard = styled.div`
   background: #ffffff;
-  border-radius: 20px;
-  padding: 20px;
+  border-radius: 16px;
+  padding: 14px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
   display: flex;
   flex-direction: column;
   gap: 16px;
 
   @media (min-width: 1024px) {
+    border-radius: 20px;
     padding: 24px;
   }
 `;
@@ -884,12 +885,17 @@ const ChartsGrid = styled.div`
 
 const ChartCard = styled.div`
   background: #ffffff;
-  border-radius: 20px;
-  padding: 20px;
+  border-radius: 16px;
+  padding: 14px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
   display: flex;
   flex-direction: column;
   gap: 12px;
+
+  @media (min-width: 768px) {
+    border-radius: 20px;
+    padding: 20px;
+  }
 `;
 
 const ChartHeader = styled.div`
@@ -918,14 +924,15 @@ const ChartContainer = styled.div`
 /* 상세 목록 카드 */
 const ListCard = styled.div`
   background: #ffffff;
-  border-radius: 20px;
+  border-radius: 16px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
-  padding: 20px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
   gap: 16px;
 
   @media (min-width: 1024px) {
+    border-radius: 20px;
     padding: 24px;
   }
 `;
@@ -1066,7 +1073,7 @@ const MobileRow = styled.div`
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding: 14px 4px;
+  padding: 12px 2px;
   border-bottom: 1px solid #f2f4f6;
 
   &:last-child {

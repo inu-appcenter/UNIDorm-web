@@ -54,13 +54,14 @@ export const useMemberPosts = () =>
   });
 
 /** 내가 좋아요 누른 게시글 목록 조회. */
-export const useMemberLikePosts = () =>
+export const useMemberLikePosts = (options?: { enabled?: boolean }) =>
   useQuery({
     queryKey: memberKeys.likePosts(),
     queryFn: async (): Promise<MyPost[]> => {
       const res = await getMemberLikePosts();
       return res.data;
     },
+    enabled: options?.enabled ?? true,
     staleTime: 1000 * 60 * 5,
   });
 

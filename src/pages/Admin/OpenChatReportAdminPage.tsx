@@ -300,9 +300,9 @@ const PageRoot = styled.div`
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
   box-sizing: border-box;
-  padding: 8px 16px 80px;
+  padding: 10px 14px calc(60px + env(safe-area-inset-bottom, 0px));
 
   @media (min-width: 1024px) {
     padding: 16px 0 60px;
@@ -314,12 +314,18 @@ const PageRoot = styled.div`
 const ControlBarCard = styled.div`
   background: #ffffff;
   border: 1px solid #e5e8eb;
-  border-radius: 20px;
-  padding: 18px 20px;
+  border-radius: 16px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+
+  @media (min-width: 768px) {
+    border-radius: 20px;
+    padding: 18px 20px;
+    gap: 14px;
+  }
 `;
 
 const TopControlRow = styled.div`
@@ -448,13 +454,14 @@ const ContentCard = styled.div`
   overflow: hidden;
   background: #ffffff;
   border: 1px solid #e5e8eb;
-  border-radius: 20px;
-  padding: 20px;
+  border-radius: 16px;
+  padding: 14px 12px;
   display: flex;
   flex-direction: column;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
 
   @media (min-width: 768px) {
+    border-radius: 20px;
     padding: 24px;
   }
 `;
@@ -500,14 +507,20 @@ const ReportListGrid = styled.div`
 
 const ReportCardItem = styled.article`
   border: 1px solid #e5e8eb;
-  border-radius: 18px;
-  padding: 20px;
+  border-radius: 16px;
+  padding: 14px;
   background: #ffffff;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
   transition: border-color 0.18s ease;
+
+  @media (min-width: 768px) {
+    border-radius: 18px;
+    padding: 20px;
+    gap: 14px;
+  }
 
   &:hover {
     border-color: #3182f6;

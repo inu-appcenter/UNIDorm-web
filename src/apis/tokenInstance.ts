@@ -284,6 +284,24 @@ tokenInstance.interceptors.response.use(
     // 익명 사용자 요청에 대해 기본 403 Forbidden을 반환하므로, 401 및 403 모두 토큰 재발급 대상에 포함합니다.
     const isAuthError = status === 401 || status === 403;
 
+    // 비로그인 상태(보낸 액세스 토큰도 없고 저장된 리프레시 토큰도 없음)라면
+    // 애초에 인증되지 않은 익명 요청이므로 재발급이나 강제 로그아웃을 시도하지 않고 즉시 에러 반환
+    const sentAccessToken = originalRequest?._sentAccessToken ?? "";
+    const hasRefreshToken = Boolean(localStorage.getItem("refreshToken"));
+    const isAnonymousRequest = !sentAccessToken && !hasRefreshToken;
+
+    if (isAnonymousRequest) {
+      appendDebugLog({
+        category: "token-refresh",
+        action: "비로그인 익명 요청 인증 실패로 리프레시 건너뜀",
+        details: {
+          ...requestDetails,
+          status,
+        },
+      });
+      return Promise.reject(error);
+    }
+
     if (isAuthError && originalRequest && !originalRequest._retry) {
       originalRequest._retry = true;
 

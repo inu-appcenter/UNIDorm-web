@@ -546,9 +546,9 @@ const PageRoot = styled.div`
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
   box-sizing: border-box;
-  padding: 8px 16px 120px;
+  padding: 10px 14px calc(90px + env(safe-area-inset-bottom, 0px));
 
   @media (min-width: 1024px) {
     padding: 16px 0 60px;
@@ -560,12 +560,18 @@ const PageRoot = styled.div`
 const ControlBarCard = styled.div`
   background: #ffffff;
   border: 1px solid #e5e8eb;
-  border-radius: 20px;
-  padding: 18px 20px;
+  border-radius: 16px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+
+  @media (min-width: 768px) {
+    border-radius: 20px;
+    padding: 18px 20px;
+    gap: 14px;
+  }
 `;
 
 const SearchFilterRow = styled.div`
@@ -723,13 +729,14 @@ const ContentCard = styled.div`
   overflow: hidden;
   background: #ffffff;
   border: 1px solid #e5e8eb;
-  border-radius: 20px;
-  padding: 16px;
+  border-radius: 16px;
+  padding: 12px 14px;
   display: flex;
   flex-direction: column;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
 
   @media (min-width: 768px) {
+    border-radius: 20px;
     padding: 24px;
   }
 `;
@@ -890,7 +897,7 @@ const MobileRowItem = styled.button<{ $isLast: boolean }>`
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 16px 4px;
+  padding: 13px 2px;
   border: none;
   background: transparent;
   border-bottom: ${({ $isLast }) => ($isLast ? "none" : "1px solid #f2f4f6")};
