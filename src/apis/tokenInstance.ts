@@ -280,8 +280,9 @@ tokenInstance.interceptors.response.use(
     }
 
     const status = error.response.status;
-    // 401은 토큰 만료이므로 리프레시 대상이지만, 403은 권한 없음(Forbidden)이므로 리프레시하지 않고 인가 에러로 반환
-    const isAuthError = status === 401;
+    // 백엔드 Spring Security는 토큰 만료 시 별도 AuthenticationEntryPoint가 없을 경우
+    // 익명 사용자 요청에 대해 기본 403 Forbidden을 반환하므로, 401 및 403 모두 토큰 재발급 대상에 포함합니다.
+    const isAuthError = status === 401 || status === 403;
 
     if (isAuthError && originalRequest && !originalRequest._retry) {
       originalRequest._retry = true;
