@@ -16,28 +16,12 @@ import {
 import { sendFcmToAllUsers } from "@/apis/fcm";
 import { useFcmStatsQuery } from "@/queries/admin";
 import { useSetHeader } from "@/hooks/useSetHeader";
-import { useCountUp } from "@/hooks/useCountUp";
 import { NOTIFICATION_TYPE_OPTIONS } from "@/utils/notificationType";
-import {
-  AdminButton,
-  AdminCard,
-  AdminCardDescription,
-  AdminCardHeader,
-  AdminCardTitle,
-  AdminCardTitleGroup,
-  AdminField,
-  AdminInput,
-  AdminLabel,
-  AdminPage,
-  AdminShell,
-  AdminSubtleText,
-  AdminTextarea,
-} from "@/pages/Admin/adminPageStyles";
 
 const DELIVERY_MODES = {
+  ALL_USERS_FCM: "ALL_USERS_FCM",
   AUDIENCE_NOTIFICATION: "AUDIENCE_NOTIFICATION",
   INDIVIDUAL_DIRECT: "INDIVIDUAL_DIRECT",
-  ALL_USERS_FCM: "ALL_USERS_FCM",
 } as const;
 
 type DeliveryMode = (typeof DELIVERY_MODES)[keyof typeof DELIVERY_MODES];
@@ -49,38 +33,24 @@ const DELIVERY_OPTIONS: Array<{
 }> = [
   {
     value: DELIVERY_MODES.ALL_USERS_FCM,
-    title: "전체 유저 (FCM)",
-    description: "앱을 설치한 전체 사용자 기기로 즉시 푸시 알림을 발송합니다.",
+    title: "전체 사용자 (FCM)",
+    description: "앱을 설치한 모든 사용자에게 실시간 시스템 푸시를 보냅니다.",
   },
   {
     value: DELIVERY_MODES.AUDIENCE_NOTIFICATION,
-    title: "로그인 유저",
-    description: "로그인 사용자 중 선택한 카테고리 알림 수신 유저에게 발송합니다.",
+    title: "로그인 사용자",
+    description: "로그인 사용자 중 카테고리 알림을 켜둔 사용자에게 발송합니다.",
   },
   {
     value: DELIVERY_MODES.INDIVIDUAL_DIRECT,
     title: "학번 지정 발송",
-    description: "특정 학번 1명의 사용자에게만 직접 알림을 발송합니다.",
+    description: "특정 학번을 가진 1명의 사용자에게만 직접 알림을 발송합니다.",
   },
 ];
 
 const DEFAULT_NOTIFICATION_TYPE: NotificationType = "UNI_DORM";
 
-const formatDateTime = (value?: string | null) => {
-  if (!value) {
-    return "아직 갱신 전";
-  }
-
-  return new Intl.DateTimeFormat("ko-KR", {
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  }).format(new Date(value));
-};
-
-const CreateNotificationPage = () => {
+export default function CreateNotificationPage() {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>(
@@ -92,39 +62,28 @@ const CreateNotificationPage = () => {
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  useSetHeader({ title: "푸시 알림 전송" });
+
   const {
     data: fcmStats,
     isLoading: isStatsLoading,
-    isError: isStatsError,
-    dataUpdatedAt,
     refetch: refetchFcmStats,
   } = useFcmStatsQuery();
 
-  const lastStatsFetchedAt = dataUpdatedAt
-    ? new Date(dataUpdatedAt).toISOString()
-    : null;
-  const statsError = isStatsError
-    ? "FCM 발송 통계를 불러오지 못했습니다."
-    : null;
-
-  const animatedSuccess = useCountUp(fcmStats?.successCount ?? 0);
-  const animatedFail = useCountUp(fcmStats?.failCount ?? 0);
-
-  const currentDeliveryOption =
-    DELIVERY_OPTIONS.find((option) => option.value === deliveryMode) ??
-    DELIVERY_OPTIONS[0];
-  const currentNotificationType =
-    NOTIFICATION_TYPE_OPTIONS.find(
-      (option) => option.value === notificationType,
-    ) ?? NOTIFICATION_TYPE_OPTIONS[0];
-
   const isFcmBroadcastMode = deliveryMode === DELIVERY_MODES.ALL_USERS_FCM;
-  const requiresStudentNumber =
-    deliveryMode === DELIVERY_MODES.INDIVIDUAL_DIRECT;
+  const requiresStudentNumber = deliveryMode === DELIVERY_MODES.INDIVIDUAL_DIRECT;
   const usesStoredNotification = !isFcmBroadcastMode;
-  const previewNotificationType: NotificationType = isFcmBroadcastMode
-    ? "UNI_DORM"
-    : notificationType;
+
+  const previewNotification: Notification = {
+    id: 0,
+    apiType: "ANNOUNCEMENT",
+    boardId: 0,
+    title: title.trim() || "알림 제목을 입력하면 여기에 실시간으로 표시돼요",
+    body: body.trim() || "본문을 작성하면 실제 사용자가 받게 될 알림함 카드로 실시간 렌더링됩니다.",
+    notificationType: isFcmBroadcastMode ? "UNI_DORM" : notificationType,
+    createdDate: new Date().toISOString(),
+    read: false,
+  };
 
   const isSubmitDisabled =
     !title.trim() ||
@@ -132,37 +91,20 @@ const CreateNotificationPage = () => {
     (requiresStudentNumber && !studentNumber.trim()) ||
     isSubmitting;
 
-  const previewNotification: Notification = {
-    id: 0,
-    apiType: "ANNOUNCEMENT",
-    boardId: 0,
-    title: title.trim() || "알림 제목을 입력하면 여기에 실시간으로 표시돼요.",
-    body:
-      body.trim() ||
-      "본문을 작성하면 실제 사용자의 알림함 카드 형태로 실시간 반영됩니다.",
-    notificationType: previewNotificationType,
-    createdDate: new Date().toISOString(),
-    read: false,
-  };
-
-  useSetHeader({ title: "푸시 알림 전송" });
-
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
 
     if (!title.trim() || !body.trim()) {
-      alert("제목과 내용을 모두 입력해 주세요.");
+      alert("알림 제목과 내용을 모두 입력해 주세요.");
       return;
     }
-
     if (requiresStudentNumber && !studentNumber.trim()) {
-      alert("개인 전송을 선택한 경우 학번이 필요합니다.");
+      alert("수신 대상 학번을 입력해 주세요.");
       return;
     }
 
-    if (
-      !window.confirm(`${currentDeliveryOption.title} 방식으로 푸시 알림을 발송할까요?`)
-    ) {
+    const currentOption = DELIVERY_OPTIONS.find((o) => o.value === deliveryMode);
+    if (!window.confirm(`${currentOption?.title} 대상으로 푸시 알림을 발송할까요?`)) {
       return;
     }
 
@@ -176,14 +118,12 @@ const CreateNotificationPage = () => {
           content: body.trim(),
           notificationType,
         };
-
         await createNotificationByStudentNumber(directPayload);
       } else if (deliveryMode === DELIVERY_MODES.ALL_USERS_FCM) {
         const payload: SendAllFcmPayload = {
           title: title.trim(),
           body: body.trim(),
         };
-
         await sendFcmToAllUsers(payload);
       } else {
         const payload: NotificationPayload = {
@@ -191,449 +131,521 @@ const CreateNotificationPage = () => {
           body: body.trim(),
           notificationType,
         };
-
         await createNotification(payload);
       }
 
       await refetchFcmStats();
-      alert("푸시 알림을 성공적으로 전송했습니다.");
-      resetForm();
+      alert("푸시 알림을 성공적으로 발송했습니다.");
+      setTitle("");
+      setBody("");
+      setStudentNumber("");
     } catch (error) {
       const axiosError = error as AxiosError;
       console.error("푸시 알림 전송 실패:", axiosError);
-      alert("푸시 알림 전송 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+      alert("푸시 알림 전송에 실패했습니다. 다시 시도해 주세요.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const resetForm = () => {
-    setTitle("");
-    setBody("");
-    setDeliveryMode(DELIVERY_MODES.ALL_USERS_FCM);
-    setStudentNumber("");
-    setNotificationType(DEFAULT_NOTIFICATION_TYPE);
-  };
-
   return (
-    <AdminShell>
-      <AdminPage>
-        <FormContainer onSubmit={handleSubmit}>
-          {/* PC 2열 스플릿 뷰: 좌측 폼(7) + 우측 실시간 패널(5) */}
-          <SplitLayout>
-            <FormMainSection>
-              <AdminCard>
-                <AdminCardHeader>
-                  <AdminCardTitleGroup>
-                    <AdminCardTitle>푸시 알림 전송</AdminCardTitle>
-                    <AdminCardDescription>
-                      유니돔 앱을 설치한 사용자에게 푸시 알림을 발송할 수 있습니다.
-                    </AdminCardDescription>
-                  </AdminCardTitleGroup>
-                </AdminCardHeader>
-
-                <FormBody>
-                  {/* 발송 대상 세그먼트 컨트롤러 */}
-                  <AdminField>
-                    <AdminLabel>발송 대상 선택</AdminLabel>
-                    <SegmentGrid>
-                      {DELIVERY_OPTIONS.map((option) => (
-                        <SegmentButton
-                          key={option.value}
-                          type="button"
-                          $selected={deliveryMode === option.value}
-                          onClick={() => setDeliveryMode(option.value)}
-                        >
-                          {option.title}
-                        </SegmentButton>
-                      ))}
-                    </SegmentGrid>
-                    <AdminSubtleText>
-                      {currentDeliveryOption.description}
-                    </AdminSubtleText>
-                  </AdminField>
-
-                  {/* 특정 학번 입력 (개인 지정 발송일 때만) */}
-                  {requiresStudentNumber && (
-                    <AdminField>
-                      <AdminLabel htmlFor="student-number">수신 대상 학번</AdminLabel>
-                      <AdminInput
-                        id="student-number"
-                        type="text"
-                        value={studentNumber}
-                        onChange={(e) => setStudentNumber(e.target.value)}
-                        placeholder="예: 20231234"
-                        required
-                      />
-                      <AdminSubtleText>
-                        입력한 학번 사용자 1명에게만 전송됩니다.
-                      </AdminSubtleText>
-                    </AdminField>
-                  )}
-
-                  {/* 알림 카테고리 (저장형 알림일 때만) */}
-                  {usesStoredNotification && (
-                    <AdminField>
-                      <AdminLabel htmlFor="notification-type">
-                        알림 카테고리
-                      </AdminLabel>
-                      <SelectInput
-                        id="notification-type"
-                        value={notificationType}
-                        onChange={(e) =>
-                          setNotificationType(e.target.value as NotificationType)
-                        }
-                      >
-                        {NOTIFICATION_TYPE_OPTIONS.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.title}
-                          </option>
-                        ))}
-                      </SelectInput>
-                      <AdminSubtleText>
-                        {currentNotificationType.description}
-                      </AdminSubtleText>
-                    </AdminField>
-                  )}
-
-                  {/* 제목 입력 */}
-                  <AdminField>
-                    <FieldHeaderRow>
-                      <AdminLabel htmlFor="notification-title">알림 제목</AdminLabel>
-                      <FieldLengthHint>{title.length}자</FieldLengthHint>
-                    </FieldHeaderRow>
-                    <AdminInput
-                      id="notification-title"
-                      type="text"
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      placeholder="알림 제목을 간결하게 입력해 주세요"
-                      required
-                    />
-                  </AdminField>
-
-                  {/* 본문 입력 */}
-                  <AdminField>
-                    <FieldHeaderRow>
-                      <AdminLabel htmlFor="notification-body">알림 내용</AdminLabel>
-                      <FieldLengthHint>{body.length}자</FieldLengthHint>
-                    </FieldHeaderRow>
-                    <AdminTextarea
-                      id="notification-body"
-                      value={body}
-                      onChange={(e) => setBody(e.target.value)}
-                      rows={6}
-                      placeholder="수신자가 이해하기 쉬운 문장으로 본문을 작성해 주세요."
-                      required
-                    />
-                  </AdminField>
-
-                  {/* PC 전용 폼 내 액션 버튼 */}
-                  <DesktopActionRow>
-                    <AdminButton
-                      type="submit"
-                      disabled={isSubmitDisabled}
-                      style={{ flex: 2 }}
-                    >
-                      {isSubmitting ? "알림을 발송하고 있어요..." : "푸시 알림 보내기"}
-                    </AdminButton>
-                    <AdminButton
-                      type="button"
-                      $tone="secondary"
-                      onClick={resetForm}
-                      disabled={isSubmitting}
-                      style={{ flex: 1 }}
-                    >
-                      입력 초기화
-                    </AdminButton>
-                  </DesktopActionRow>
-                </FormBody>
-              </AdminCard>
-            </FormMainSection>
-
-            {/* PC 전용 우측 패널: 오늘 통계 & 실시간 알림함 미리보기 (Sticky) */}
-            <LiveSidePanel>
-              {/* 오늘 FCM 전송 현황 카드 */}
-              <AdminCard>
-                <AdminCardHeader>
-                  <AdminCardTitleGroup>
-                    <AdminCardTitle>오늘 전송 현황</AdminCardTitle>
-                    <AdminCardDescription>
-                      당일 기준 성공 및 실패 건수입니다.
-                    </AdminCardDescription>
-                  </AdminCardTitleGroup>
-                  <RefreshButton
+    <PageRoot>
+      <LayoutGrid onSubmit={handleSubmit}>
+        {/* 좌측 메인 작성 영역 */}
+        <FormColumn>
+          <FormCard>
+            {/* 1. 발송 대상 선택 칩 */}
+            <FieldGroup>
+              <FieldLabel>발송 대상 선택</FieldLabel>
+              <ModeSegmentGrid>
+                {DELIVERY_OPTIONS.map((opt) => (
+                  <ModeSegmentBtn
+                    key={opt.value}
                     type="button"
-                    onClick={() => void refetchFcmStats()}
-                    disabled={isStatsLoading}
+                    $active={deliveryMode === opt.value}
+                    onClick={() => setDeliveryMode(opt.value)}
                   >
-                    {isStatsLoading ? "갱신 중..." : "새로고침"}
-                  </RefreshButton>
-                </AdminCardHeader>
+                    <ModeTitle>{opt.title}</ModeTitle>
+                    <ModeDesc>{opt.description}</ModeDesc>
+                  </ModeSegmentBtn>
+                ))}
+              </ModeSegmentGrid>
+            </FieldGroup>
 
-                <StatsTimeRow>
-                  <span className="font-mono text-xs text-brand-primary font-bold">
-                    {fcmStats?.date || "당일 기준"}
-                  </span>
-                  <span className="text-xs text-text-caption">
-                    최근 갱신: {formatDateTime(lastStatsFetchedAt)}
-                  </span>
-                </StatsTimeRow>
+            {/* 학번 입력 (개인 지정 발송일 때만 노출) */}
+            {requiresStudentNumber && (
+              <FieldGroup>
+                <FieldLabel htmlFor="noti-student">수신 대상 학번</FieldLabel>
+                <StyledInput
+                  id="noti-student"
+                  type="text"
+                  placeholder="예: 20231234"
+                  value={studentNumber}
+                  onChange={(e) => setStudentNumber(e.target.value)}
+                  required
+                />
+              </FieldGroup>
+            )}
 
-                <StatsMiniGrid>
-                  <StatMiniBox>
-                    <StatMiniLabel>전송 성공</StatMiniLabel>
-                    <StatMiniValue style={{ color: "#04b05c" }}>
-                      {animatedSuccess.toLocaleString()}건
-                    </StatMiniValue>
-                  </StatMiniBox>
-                  <StatMiniBox>
-                    <StatMiniLabel>전송 실패</StatMiniLabel>
-                    <StatMiniValue style={{ color: "#f04452" }}>
-                      {animatedFail.toLocaleString()}건
-                    </StatMiniValue>
-                  </StatMiniBox>
-                </StatsMiniGrid>
+            {/* 알림 카테고리 선택 (저장형 알림일 때만 노출) */}
+            {usesStoredNotification && (
+              <FieldGroup>
+                <FieldLabel htmlFor="noti-cat">알림 카테고리</FieldLabel>
+                <StyledSelect
+                  id="noti-cat"
+                  value={notificationType}
+                  onChange={(e) =>
+                    setNotificationType(e.target.value as NotificationType)
+                  }
+                >
+                  {NOTIFICATION_TYPE_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.title} - {opt.description}
+                    </option>
+                  ))}
+                </StyledSelect>
+              </FieldGroup>
+            )}
 
-                {statsError && (
-                  <StatsNoticeText>{statsError}</StatsNoticeText>
-                )}
-              </AdminCard>
+            {/* 알림 제목 입력 */}
+            <FieldGroup>
+              <FieldHeaderRow>
+                <FieldLabel htmlFor="noti-title">알림 제목</FieldLabel>
+                <LengthHint>{title.length}자</LengthHint>
+              </FieldHeaderRow>
+              <StyledInput
+                id="noti-title"
+                type="text"
+                placeholder="간결하고 명확한 제목을 입력해 주세요"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                required
+              />
+            </FieldGroup>
 
-              {/* 실시간 알림함 미리보기 카드 */}
-              <AdminCard>
-                <AdminCardHeader>
-                  <AdminCardTitleGroup>
-                    <AdminCardTitle>알림함 실시간 미리보기</AdminCardTitle>
-                    <AdminCardDescription>
-                      실제 사용자 기기의 알림함에 도착했을 때의 모습입니다.
-                    </AdminCardDescription>
-                  </AdminCardTitleGroup>
-                </AdminCardHeader>
+            {/* 알림 본문 입력 */}
+            <FieldGroup>
+              <FieldHeaderRow>
+                <FieldLabel htmlFor="noti-body">알림 본문</FieldLabel>
+                <LengthHint>{body.length}자</LengthHint>
+              </FieldHeaderRow>
+              <StyledTextarea
+                id="noti-body"
+                rows={6}
+                placeholder="사용자에게 전달할 알림 내용을 작성해 주세요."
+                value={body}
+                onChange={(e) => setBody(e.target.value)}
+                required
+              />
+            </FieldGroup>
 
-                <PreviewCardFrame>
-                  <NotiItem notidata={previewNotification} />
-                </PreviewCardFrame>
-              </AdminCard>
-            </LiveSidePanel>
-          </SplitLayout>
+            {/* 데스크톱 발송 버튼 */}
+            <DesktopActionRow>
+              <SubmitActionButton type="submit" disabled={isSubmitDisabled}>
+                {isSubmitting ? "발송하고 있어요..." : "푸시 알림 발송하기"}
+              </SubmitActionButton>
+            </DesktopActionRow>
+          </FormCard>
+        </FormColumn>
 
-          {/* 모바일 하단 고정 CTA */}
-          <MobileCTAContainer>
-            <MobilePrimaryButton
-              type="button"
-              onClick={() => handleSubmit()}
-              disabled={isSubmitDisabled}
-            >
-              {isSubmitting ? "알림을 발송하고 있어요..." : "푸시 알림 보내기"}
-            </MobilePrimaryButton>
-          </MobileCTAContainer>
-        </FormContainer>
-      </AdminPage>
-    </AdminShell>
+        {/* 우측 실시간 알림함 미리보기 및 오늘 전송 현황 (PC 전용) */}
+        <SideColumn>
+          {/* 오늘 FCM 통계 */}
+          <SideCard>
+            <SideCardHeader>
+              <SideCardTitle>오늘 발송 현황</SideCardTitle>
+              <RefreshBtn
+                type="button"
+                onClick={() => void refetchFcmStats()}
+                disabled={isStatsLoading}
+              >
+                {isStatsLoading ? "갱신 중" : "새로고침"}
+              </RefreshBtn>
+            </SideCardHeader>
+
+            <StatsRow>
+              <StatItem>
+                <StatLabel>전송 성공</StatLabel>
+                <StatValue style={{ color: "#04b05c" }}>
+                  {(fcmStats?.successCount ?? 0).toLocaleString()}건
+                </StatValue>
+              </StatItem>
+              <StatDivider />
+              <StatItem>
+                <StatLabel>전송 실패</StatLabel>
+                <StatValue style={{ color: "#f04452" }}>
+                  {(fcmStats?.failCount ?? 0).toLocaleString()}건
+                </StatValue>
+              </StatItem>
+            </StatsRow>
+          </SideCard>
+
+          {/* 알림함 실시간 렌더링 미리보기 */}
+          <SideCard>
+            <SideCardHeader>
+              <SideCardTitle>알림함 실시간 미리보기</SideCardTitle>
+            </SideCardHeader>
+
+            <PreviewWrapper>
+              <NotiItem notidata={previewNotification} />
+            </PreviewWrapper>
+          </SideCard>
+        </SideColumn>
+      </LayoutGrid>
+
+      {/* 모바일 전용 하단 고정 CTA */}
+      <MobileFixedBar>
+        <MobileCTAButton
+          type="button"
+          onClick={() => handleSubmit()}
+          disabled={isSubmitDisabled}
+        >
+          {isSubmitting ? "발송하고 있어요..." : "푸시 알림 발송하기"}
+        </MobileCTAButton>
+      </MobileFixedBar>
+    </PageRoot>
   );
-};
+}
 
-export default CreateNotificationPage;
+/* --- Styled Components (가로스크롤 방지 & 배경색 위임) --- */
 
-const FormContainer = styled.form`
+const PageRoot = styled.div`
   width: 100%;
-`;
-
-const SplitLayout = styled.div`
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 24px;
-  align-items: start;
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+  padding: 8px 16px 120px;
 
   @media (min-width: 1024px) {
-    grid-template-columns: minmax(0, 1.18fr) minmax(340px, 0.82fr);
-    gap: 32px;
+    padding: 16px 0 60px;
+    overflow-x: visible;
   }
 `;
 
-const FormMainSection = styled.div`
+const LayoutGrid = styled.form`
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  width: 100%;
+
+  @media (min-width: 1024px) {
+    grid-template-columns: minmax(0, 1.25fr) minmax(360px, 0.95fr);
+    align-items: start;
+    gap: 28px;
+  }
+`;
+
+const FormColumn = styled.div`
   display: flex;
   flex-direction: column;
   gap: 20px;
+  min-width: 0;
 `;
 
-const FormBody = styled.div`
+const FormCard = styled.div`
+  background: #ffffff;
+  border: 1px solid #e5e8eb;
+  border-radius: 20px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+
+  @media (min-width: 768px) {
+    padding: 28px;
+  }
 `;
 
-const SegmentGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+const FieldGroup = styled.div`
+  display: flex;
+  flex-direction: column;
   gap: 8px;
-
-  @media (max-width: 520px) {
-    grid-template-columns: 1fr;
-  }
-`;
-
-const SegmentButton = styled.button<{ $selected: boolean }>`
-  height: 44px;
-  padding: 0 12px;
-  border-radius: 12px;
-  font-size: 0.86rem;
-  font-weight: 700;
-  border: 1.5px solid ${({ $selected }) => ($selected ? "#3182f6" : "#e5e8eb")};
-  background: ${({ $selected }) => ($selected ? "#e8f3ff" : "#ffffff")};
-  color: ${({ $selected }) => ($selected ? "#3182f6" : "#4e5968")};
-  cursor: pointer;
-  transition: all 0.15s ease-out;
-
-  &:hover {
-    border-color: #3182f6;
-  }
-
-  &:active {
-    transform: scale(0.98);
-  }
 `;
 
 const FieldHeaderRow = styled.div`
   display: flex;
-  align-items: center;
   justify-content: space-between;
+  align-items: center;
 `;
 
-const FieldLengthHint = styled.span`
-  font-size: 0.78rem;
+const FieldLabel = styled.label`
+  font-size: 14px;
+  font-weight: 700;
+  color: #191f28;
+`;
+
+const LengthHint = styled.span`
+  font-size: 12px;
   color: #8b95a1;
 `;
 
-const SelectInput = styled(AdminInput).attrs({ as: "select" })`
+const ModeSegmentGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+
+  @media (min-width: 640px) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+`;
+
+const ModeSegmentBtn = styled.button<{ $active: boolean }>`
+  border: 1.5px solid ${({ $active }) => ($active ? "#3182f6" : "#e5e8eb")};
+  background: ${({ $active }) => ($active ? "#e8f3ff" : "#ffffff")};
+  border-radius: 14px;
+  padding: 14px 16px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    border-color: #3182f6;
+  }
+`;
+
+const ModeTitle = styled.span`
+  font-size: 14px;
+  font-weight: 700;
+  color: #191f28;
+`;
+
+const ModeDesc = styled.span`
+  font-size: 12px;
+  color: #6b7684;
+  line-height: 1.4;
+`;
+
+const StyledInput = styled.input`
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid #e5e8eb;
+  background: #f9fafb;
+  font-size: 14px;
+  color: #191f28;
+  outline: none;
+  box-sizing: border-box;
+  transition: all 0.15s ease;
+
+  &::placeholder {
+    color: #8b95a1;
+  }
+
+  &:focus {
+    background: #ffffff;
+    border-color: #3182f6;
+    box-shadow: 0 0 0 3px rgba(49, 130, 246, 0.12);
+  }
+`;
+
+const StyledSelect = styled.select`
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid #e5e8eb;
+  background: #f9fafb;
+  font-size: 14px;
+  font-weight: 600;
+  color: #191f28;
+  outline: none;
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:focus {
+    background: #ffffff;
+    border-color: #3182f6;
+  }
+`;
+
+const StyledTextarea = styled.textarea`
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid #e5e8eb;
+  background: #f9fafb;
+  font-size: 14px;
+  color: #191f28;
+  line-height: 1.6;
+  outline: none;
+  box-sizing: border-box;
+  resize: vertical;
+  transition: all 0.15s ease;
+
+  &::placeholder {
+    color: #8b95a1;
+  }
+
+  &:focus {
+    background: #ffffff;
+    border-color: #3182f6;
+    box-shadow: 0 0 0 3px rgba(49, 130, 246, 0.12);
+  }
 `;
 
 const DesktopActionRow = styled.div`
   display: none;
+  padding-top: 10px;
 
   @media (min-width: 768px) {
     display: flex;
-    gap: 12px;
-    margin-top: 8px;
   }
 `;
 
-const LiveSidePanel = styled.div`
+const SubmitActionButton = styled.button`
+  width: 100%;
+  height: 50px;
+  border-radius: 14px;
+  border: none;
+  background: #3182f6;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(49, 130, 246, 0.25);
+  transition: all 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: #1b64da;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+/* 우측 사이드 패널 (PC 전용) */
+const SideColumn = styled.div`
   display: none;
 
   @media (min-width: 1024px) {
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 20px;
     position: sticky;
-    top: 80px;
+    top: 90px;
   }
 `;
 
-const RefreshButton = styled.button`
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: #3182f6;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-
-  &:hover {
-    text-decoration: underline;
-  }
-
-  &:disabled {
-    opacity: 0.5;
-  }
+const SideCard = styled.div`
+  background: #ffffff;
+  border: 1px solid #e5e8eb;
+  border-radius: 20px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
 `;
 
-const StatsTimeRow = styled.div`
+const SideCardHeader = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
 `;
 
-const StatsMiniGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+const SideCardTitle = styled.h3`
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #191f28;
 `;
 
-const StatMiniBox = styled.div`
-  padding: 16px;
-  border-radius: 14px;
+const RefreshBtn = styled.button`
+  border: none;
+  background: #f2f4f6;
+  color: #6b7684;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: #e5e8eb;
+    color: #191f28;
+  }
+`;
+
+const StatsRow = styled.div`
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
   background: #f9fafb;
+  border-radius: 14px;
+  padding: 14px 18px;
+`;
+
+const StatItem = styled.div`
   display: flex;
   flex-direction: column;
   gap: 4px;
 `;
 
-const StatMiniLabel = styled.span`
-  font-size: 0.75rem;
+const StatLabel = styled.span`
+  font-size: 12px;
   font-weight: 600;
   color: #8b95a1;
 `;
 
-const StatMiniValue = styled.strong`
-  font-size: 1.4rem;
+const StatValue = styled.span`
+  font-size: 20px;
   font-weight: 800;
-  letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
 `;
 
-const StatsNoticeText = styled.p`
-  margin: 0;
-  font-size: 0.8rem;
-  color: #f04452;
+const StatDivider = styled.div`
+  width: 1px;
+  height: 28px;
+  background: #e5e8eb;
 `;
 
-const PreviewCardFrame = styled.div`
-  border-radius: 16px;
+const PreviewWrapper = styled.div`
   background: #f9fafb;
-  border: 1px solid #e5e8eb;
-  overflow: hidden;
-  pointer-events: none;
+  border-radius: 14px;
+  padding: 12px;
+  border: 1px solid #f2f4f6;
 `;
 
-const MobileCTAContainer = styled.div`
+/* 모바일 전용 하단 고정 CTA */
+const MobileFixedBar = styled.div`
   display: block;
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  z-index: 30;
-  max-width: 600px;
-  margin: 0 auto;
-  pointer-events: none;
-  background: linear-gradient(to top, #ffffff 65%, rgba(255, 255, 255, 0));
-  padding: 16px 20px calc(14px + env(safe-area-inset-bottom, 0px));
+  z-index: 25;
+  background: linear-gradient(to top, #ffffff 70%, rgba(255, 255, 255, 0.8) 90%, transparent);
+  padding: 12px 20px calc(14px + env(safe-area-inset-bottom, 0px));
 
   @media (min-width: 768px) {
     display: none;
   }
 `;
 
-const MobilePrimaryButton = styled.button`
-  pointer-events: auto;
+const MobileCTAButton = styled.button`
   width: 100%;
   height: 52px;
   border-radius: 16px;
+  border: none;
   background: #3182f6;
   color: #ffffff;
-  font-size: 1rem;
-  font-weight: 800;
-  border: none;
-  box-shadow: 0 4px 16px rgba(49, 130, 246, 0.28);
+  font-size: 16px;
+  font-weight: 700;
+  box-shadow: 0 4px 16px rgba(49, 130, 246, 0.25);
   cursor: pointer;
-  transition: all 0.15s ease-out;
 
   &:disabled {
-    opacity: 0.45;
+    opacity: 0.5;
   }
 
-  &:active:not(:disabled) {
+  &:active {
     transform: scale(0.98);
   }
 `;
