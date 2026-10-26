@@ -353,7 +353,7 @@ export default function RoomMatePage() {
     data: allMemberLikePosts = [],
     isLoading: isLikedLoading,
     isError: isLikedError,
-  } = useMemberLikePosts();
+  } = useMemberLikePosts({ enabled: isLoggedIn });
 
   const likedRoommates = useMemo(() => {
     if (!isLoggedIn || selectedCategory !== CATEGORY_LIST[1]) return [];
