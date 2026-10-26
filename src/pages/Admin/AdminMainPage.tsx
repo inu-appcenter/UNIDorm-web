@@ -1,36 +1,15 @@
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import useUserStore from "../../stores/useUserStore.ts";
-import { useEffect } from "react";
+import { motion } from "framer-motion";
+import useUserStore from "../../stores/useUserStore";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useSetHeader } from "@/hooks/useSetHeader";
-import { motion } from "framer-motion";
-import {
-  Megaphone,
-  Lightbulb,
-  Calendar,
-  Layout,
-  FileText,
-  MessageSquare,
-  Send,
-  ToggleRight,
-  BarChart3,
-  Bot,
-  Beaker,
-  CreditCard,
-  ShieldAlert,
-  Database,
-  ChevronRight,
-  ShieldCheck,
-  Siren,
-  MessagesSquare,
-} from "lucide-react";
 
 interface AdminPageItem {
   label: string;
   path: string;
   description: string;
-  icon: React.ReactNode;
   isExternal?: boolean;
   category: "콘텐츠 관리" | "운영 및 시스템" | "개발 지원";
 }
@@ -38,7 +17,7 @@ interface AdminPageItem {
 const AdminMainPage: React.FC = () => {
   const navigate = useNavigate();
   const { tokenInfo, userInfo, isLoading } = useUserStore();
-  const { isAdmin, isSupporters, isMainAdmin } = useUserRole();
+  const { isAdmin, isSupporters, isMainAdmin, roleName } = useUserRole();
 
   useEffect(() => {
     if (!isLoading) {
@@ -55,77 +34,66 @@ const AdminMainPage: React.FC = () => {
       label: "민원 관리",
       path: "/admin/complain",
       description: "접수된 민원을 확인하고 처리합니다.",
-      icon: <MessageSquare size={20} />,
       category: "콘텐츠 관리",
     },
     {
       label: "공지사항 관리",
       path: "/announcements",
       description: "생활원 공지사항을 등록하고 수정합니다.",
-      icon: <Megaphone size={20} />,
       category: "콘텐츠 관리",
     },
     {
       label: "캘린더 관리",
       path: "/admin/calendar",
       description: "학사 및 생활원 일정을 관리합니다.",
-      icon: <Calendar size={20} />,
       category: "콘텐츠 관리",
     },
     {
       label: "TIP 관리",
       path: "/tips",
       description: "기숙사 생활 꿀팁을 관리합니다.",
-      icon: <Lightbulb size={20} />,
       category: "콘텐츠 관리",
     },
     {
       label: "홈 화면 팝업 공지",
       path: "/admin/popup-notifications",
       description: "앱 접속 시 노출될 팝업을 설정합니다.",
-      icon: <Layout size={20} />,
       category: "콘텐츠 관리",
     },
     {
       label: "폼 관리",
       path: "/form",
       description: "설문조사 및 신청 폼을 관리합니다.",
-      icon: <FileText size={20} />,
       category: "콘텐츠 관리",
     },
     {
       label: "채팅 신고 관리",
       path: "/admin/open-chat-reports",
       description: "오픈채팅 메시지 신고를 확인하고 처리합니다.",
-      icon: <Siren size={20} />,
       category: "운영 및 시스템",
     },
     {
       label: "푸시 알림 전송",
       path: "/admin/notification/create",
       description: "전체 또는 특정 유저에게 알림을 보냅니다.",
-      icon: <Send size={20} />,
       category: "운영 및 시스템",
     },
     {
       label: "Feature Flag 관리",
       path: "/admin/feature-flag",
       description: "기능별 활성화 여부를 실시간 제어합니다.",
-      icon: <ToggleRight size={20} />,
       category: "운영 및 시스템",
     },
     {
       label: "서비스 이용 통계",
       path: "/admin/statistics",
       description: "유저 활동 및 서비스 지표를 확인합니다.",
-      icon: <BarChart3 size={20} />,
       category: "운영 및 시스템",
     },
     {
       label: "AI 챗불이 관리",
       path: `${import.meta.env.VITE_INUCHAT_CONSOLE_URL}/?service=unidorm`,
       description: "AI 답변을 학습시키고 관리합니다.",
-      icon: <Bot size={20} />,
       isExternal: true,
       category: "운영 및 시스템",
     },
@@ -133,35 +101,30 @@ const AdminMainPage: React.FC = () => {
       label: "오픈채팅방 관리",
       path: "/admin/open-chat-rooms",
       description: "기숙사 공식 채팅방 생성·수정·삭제 및 챗봇 메시지 발송",
-      icon: <MessagesSquare size={20} />,
       category: "운영 및 시스템",
     },
     {
       label: "사생증 시뮬레이션 (정상)",
       path: "/dormitory/card?preview=true",
       description: "모바일 사생증 3D 카드, 최근 동기화 시각 및 실시간 새로고침 시뮬레이션을 테스트합니다.",
-      icon: <CreditCard size={20} />,
       category: "개발 지원",
     },
     {
       label: "사생증 시뮬레이션 (만료)",
       path: "/dormitory/card?preview=true&status=expired",
       description: "학기 만료 가드 차단 안내 및 최신 사생증으로 갱신하는 전환 플로우를 테스트합니다.",
-      icon: <ShieldAlert size={20} />,
       category: "개발 지원",
     },
     {
       label: "사생정보조회 ERP 연동",
       path: "/dormitory/portal",
       description: "기숙사 사생 배정 정보, 상벌점, 공공요금 및 동기화 모달 연동을 확인합니다.",
-      icon: <Database size={20} />,
       category: "개발 지원",
     },
     {
       label: "유니돔 테스트 웹",
       path: "https://unidorm-test.pages.dev",
       description: "개발 중인 유니돔 웹 테스트 배포 페이지로 이동합니다.",
-      icon: <Beaker size={20} />,
       isExternal: true,
       category: "개발 지원",
     },
@@ -189,38 +152,53 @@ const AdminMainPage: React.FC = () => {
     new Set(filteredPages.map((p) => p.category)),
   ) as AdminPageItem["category"][];
 
-  const { roleName } = useUserRole();
-
   return (
     <Wrapper>
       <Container>
-        <HeaderSection>
-          <WelcomeBox>
-            <UserAvatar>
-              <ShieldCheck size={32} color="#3b82f6" />
-            </UserAvatar>
-            <WelcomeText>
-              <h2>안녕하세요, {userInfo.name || "관리자"}님</h2>
-              <p>{roleName} 권한으로 접속 중입니다.</p>
-            </WelcomeText>
-          </WelcomeBox>
-        </HeaderSection>
+        {/* 상단 웰컴 헤더 */}
+        <HeaderCard
+          as={motion.div}
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <HeaderContent>
+            <RoleBadge>{roleName}</RoleBadge>
+            <WelcomeTitle>
+              {userInfo.name ? `${userInfo.name} 관리자님` : "관리자 센터"}
+            </WelcomeTitle>
+            <WelcomeSubtitle>
+              생활원 운영 및 시스템 제어 메뉴를 확인하고 관리하세요.
+            </WelcomeSubtitle>
+          </HeaderContent>
+        </HeaderCard>
 
+        {/* 카테고리별 메뉴 섹션 */}
         <ContentBody>
           {categories.map((category) => (
             <CategorySection key={category}>
-              <CategoryTitle>{category}</CategoryTitle>
+              <CategoryHeader>
+                <CategoryTitle>{category}</CategoryTitle>
+                <CategoryCount>
+                  {filteredPages.filter((p) => p.category === category).length}개 메뉴
+                </CategoryCount>
+              </CategoryHeader>
+
               <MenuGrid>
                 {filteredPages
                   .filter((page) => page.category === category)
                   .map((page, index) => (
                     <MenuCard
                       key={page.label}
-                      as={motion.div}
-                      initial={{ opacity: 0, y: 15 }}
+                      as={motion.button}
+                      type="button"
+                      initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.03 }}
-                      whileHover={{ scale: 1.02 }}
+                      transition={{
+                        delay: index * 0.03,
+                        duration: 0.28,
+                        ease: [0.16, 1, 0.3, 1],
+                      }}
                       onClick={() => {
                         if (page.isExternal) {
                           window.open(
@@ -233,19 +211,15 @@ const AdminMainPage: React.FC = () => {
                         }
                       }}
                     >
-                      <IconWrapper>{page.icon}</IconWrapper>
-                      <CardContent>
-                        <CardHeader>
-                          <CardTitle>{page.label}</CardTitle>
-                          {page.isExternal && (
-                            <ExternalBadge>외부</ExternalBadge>
-                          )}
-                        </CardHeader>
-                        <CardDescription>{page.description}</CardDescription>
-                      </CardContent>
-                      <ChevronWrapper>
-                        <ChevronRight size={18} />
-                      </ChevronWrapper>
+                      <CardTopRow>
+                        <CardTitle>{page.label}</CardTitle>
+                        {page.isExternal ? (
+                          <ExternalBadge>외부</ExternalBadge>
+                        ) : (
+                          <ActionIndicator aria-hidden="true">›</ActionIndicator>
+                        )}
+                      </CardTopRow>
+                      <CardDescription>{page.description}</CardDescription>
                     </MenuCard>
                   ))}
               </MenuGrid>
@@ -259,211 +233,214 @@ const AdminMainPage: React.FC = () => {
 
 export default AdminMainPage;
 
-const Wrapper = styled.div`
-  min-height: 100vh;
+const Wrapper = styled.div`
+  min-height: 100dvh;
   width: 100%;
   display: flex;
   justify-content: center;
+  background: #f9fafb;
 `;
 
 const Container = styled.div`
   width: 100%;
   max-width: 1100px;
-  padding: 40px 20px 100px;
+  padding: 20px 16px calc(40px + env(safe-area-inset-bottom, 0px));
   display: flex;
   flex-direction: column;
-  gap: 48px;
+  gap: 36px;
+  box-sizing: border-box;
 
-  @media (max-width: 768px) {
-    padding: 24px 16px 80px;
-    gap: 32px;
+  @media (min-width: 768px) {
+    padding: 36px 24px 80px;
+    gap: 44px;
   }
 `;
 
-const HeaderSection = styled.div`
+const HeaderCard = styled.div`
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 36px 40px;
-  background-color: white;
-  border-radius: 28px;
-  box-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.05);
+  flex-direction: column;
+  padding: 24px;
+  background-color: #ffffff;
+  border-radius: 24px;
+  border: 1px solid #e5e8eb;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
 
-  @media (max-width: 768px) {
-    padding: 24px;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 20px;
+  @media (min-width: 768px) {
+    padding: 32px 36px;
+    border-radius: 28px;
   }
 `;
 
-const WelcomeBox = styled.div`
+const HeaderContent = styled.div`
   display: flex;
-  align-items: center;
-  gap: 24px;
+  flex-direction: column;
+  gap: 8px;
 `;
 
-const UserAvatar = styled.div`
-  width: 64px;
-  height: 64px;
-  border-radius: 20px;
-  background-color: #eff6ff;
-  display: flex;
+const RoleBadge = styled.span`
+  display: inline-flex;
+  width: fit-content;
   align-items: center;
-  justify-content: center;
-  box-shadow: inset 0 2px 4px rgba(59, 130, 246, 0.05);
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: #e8f3ff;
+  color: #3182f6;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 `;
 
-const WelcomeText = styled.div`
-  h2 {
-    margin: 0;
-    font-size: 1.6rem;
-    font-weight: 800;
-    color: #0f172a;
-    letter-spacing: -0.02em;
+const WelcomeTitle = styled.h1`
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #191f28;
+  letter-spacing: -0.03em;
+  line-height: 1.3;
+
+  @media (min-width: 768px) {
+    font-size: 1.85rem;
   }
-  p {
-    margin: 4px 0 0;
+`;
+
+const WelcomeSubtitle = styled.p`
+  margin: 0;
+  font-size: 0.92rem;
+  color: #6b7684;
+  line-height: 1.55;
+
+  @media (min-width: 768px) {
     font-size: 1rem;
-    color: #64748b;
-    font-weight: 500;
-  }
-
-  @media (max-width: 768px) {
-    h2 {
-      font-size: 1.3rem;
-    }
-    p {
-      font-size: 0.9rem;
-    }
   }
 `;
 
 const ContentBody = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 64px;
+  gap: 40px;
 
-  @media (max-width: 768px) {
-    gap: 40px;
+  @media (min-width: 768px) {
+    gap: 48px;
   }
 `;
 
-const CategorySection = styled.div`
+const CategorySection = styled.section`
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
 `;
 
-const CategoryTitle = styled.h3`
-  margin: 0;
-  font-size: 1.1rem;
-  font-weight: 800;
-  color: #1e293b;
+const CategoryHeader = styled.div`
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: space-between;
+  padding: 0 4px;
+`;
 
-  &::before {
-    content: "";
-    width: 5px;
-    height: 18px;
-    background-color: #3b82f6;
-    border-radius: 3px;
+const CategoryTitle = styled.h2`
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #191f28;
+  letter-spacing: -0.02em;
+
+  @media (min-width: 768px) {
+    font-size: 1.15rem;
   }
+`;
+
+const CategoryCount = styled.span`
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #8b95a1;
 `;
 
 const MenuGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-  gap: 24px;
+  grid-template-columns: 1fr;
+  gap: 12px;
 
-  @media (max-width: 480px) {
-    grid-template-columns: 1fr;
+  @media (min-width: 640px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  @media (min-width: 1024px) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
   }
 `;
 
-const MenuCard = styled.div`
+const MenuCard = styled.button`
   display: flex;
-  align-items: center;
-  padding: 28px;
-  background-color: white;
-  border-radius: 24px;
-  border: 1px solid #f1f5f9;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  padding: 20px 22px;
+  background-color: #ffffff;
+  border-radius: 20px;
+  border: 1px solid #e5e8eb;
+  text-align: left;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02);
 
   &:hover {
-    border-color: #3b82f6;
-    box-shadow: 0 15px 30px -10px rgba(59, 130, 246, 0.12);
-    transform: translateY(-5px);
+    border-color: #3182f6;
+    background-color: #fcfdfe;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px -8px rgba(49, 130, 246, 0.14);
+  }
+
+  &:active {
+    transform: scale(0.985);
   }
 `;
 
-const IconWrapper = styled.div`
-  width: 56px;
-  height: 56px;
-  border-radius: 16px;
-  background-color: #f8fafc;
-  color: #3b82f6;
+const CardTopRow = styled.div`
   display: flex;
   align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  transition: all 0.3s;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+`;
+
+const CardTitle = styled.span`
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #191f28;
+  letter-spacing: -0.02em;
+`;
+
+const ActionIndicator = styled.span`
+  font-size: 1.25rem;
+  font-weight: 400;
+  color: #b0b8c1;
+  line-height: 1;
+  transition: color 0.15s ease, transform 0.15s ease;
 
   ${MenuCard}:hover & {
-    background-color: #3b82f6;
-    color: white;
-    transform: rotate(-5deg) scale(1.1);
+    color: #3182f6;
+    transform: translateX(2px);
   }
-`;
-
-const CardContent = styled.div`
-  margin-left: 24px;
-  flex: 1;
-`;
-
-const CardHeader = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 10px;
-`;
-
-const CardTitle = styled.h4`
-  margin: 0;
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: #1e293b;
 `;
 
 const CardDescription = styled.p`
-  margin: 8px 0 0;
-  font-size: 0.95rem;
-  color: #64748b;
-  line-height: 1.6;
-  font-weight: 450;
+  margin: 0;
+  font-size: 0.86rem;
+  color: #6b7684;
+  line-height: 1.55;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 `;
 
 const ExternalBadge = styled.span`
-  font-size: 0.65rem;
-  font-weight: 800;
-  padding: 2px 8px;
-  background-color: #eff6ff;
-  color: #2563eb;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  background-color: #f2f4f6;
+  color: #6b7684;
   border-radius: 6px;
-  border: 1px solid #dbeafe;
-  text-transform: uppercase;
-`;
-
-const ChevronWrapper = styled.div`
-  color: #cbd5e1;
-  transition: all 0.3s;
-  margin-left: 12px;
-
-  ${MenuCard}:hover & {
-    color: #3b82f6;
-    transform: translateX(8px);
-  }
 `;
