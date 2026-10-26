@@ -1,45 +1,33 @@
+import React from "react";
 import styled from "styled-components";
-import { Dropdown, Input, Textarea } from "@/styles/common"; // 기존 경로
 import { QuestionType } from "@/types/formTypes";
 import { FormFieldState } from "@/pages/Admin/FormCreatePage";
-import { AddButton, AddButtonArea } from "@/styles/form";
 
-// [수정] 1. 부모로부터 받을 props 타입 정의
 interface AddNewFormFieldProps {
   fieldData: FormFieldState;
+  index: number;
   onUpdate: (updatedData: Partial<Omit<FormFieldState, "id">>) => void;
   onRemove: () => void;
   canRemove: boolean;
 }
 
-// [수정] 2. UI 표시용 텍스트와 실제 DTO 값을 매핑
-const typeOptions: { label: string; value: QuestionType }[] = [
-  { label: "주관식", value: "SHORT_ANSWER" },
-  { label: "객관식", value: "MULTIPLE_CHOICE" },
-];
-
-const AddNewFormField = ({
+const AddNewFormField: React.FC<AddNewFormFieldProps> = ({
   fieldData,
+  index,
   onUpdate,
   onRemove,
   canRemove,
-}: AddNewFormFieldProps) => {
-  // [수정] 4. 질문 타입 변경 핸들러 (DTO에 맞게)
-  const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newType = e.target.value as QuestionType;
-    const currentType = fieldData.questionType;
-
-    if (newType === currentType) return;
+}) => {
+  const handleTypeSelect = (newType: QuestionType) => {
+    if (newType === fieldData.questionType) return;
 
     if (newType === "SHORT_ANSWER") {
-      // 주관식으로 변경 시: 옵션 초기화, 다중 선택 비활성화
       onUpdate({
         questionType: newType,
         options: [],
         allowMultipleSelection: false,
       });
     } else {
-      // 객관식으로 변경 시: 옵션이 없다면 기본 1개 추가
       onUpdate({
         questionType: newType,
         options:
@@ -50,279 +38,424 @@ const AddNewFormField = ({
     }
   };
 
-  // [수정] 5. 객관식 옵션 변경 핸들러 (부모 상태 업데이트)
   const handleOptionChange = (id: number, newText: string) => {
-    // 부모의 options 배열(FormOptionState[])을 기준으로 새 배열 생성
     const newOptions = fieldData.options.map((opt) =>
       opt.id === id ? { ...opt, optionText: newText } : opt,
     );
-    // onUpdate로 'options' 키에 새 배열을 담아 전달
     onUpdate({ options: newOptions });
   };
 
-  // [수정] 6. 객관식 옵션 추가 핸들러 (부모 상태 업데이트)
   const handleAddOption = () => {
     const newOptions = [
       ...fieldData.options,
-      { id: Date.now(), optionText: "" }, // DTO에 맞는 객체 추가
+      { id: Date.now(), optionText: "" },
     ];
     onUpdate({ options: newOptions });
   };
 
-  // [수정] 7. 객관식 옵션 제거 핸들러 (부모 상태 업데이트)
   const handleRemoveOption = (id: number) => {
     const newOptions = fieldData.options.filter((opt) => opt.id !== id);
     onUpdate({ options: newOptions });
   };
 
   return (
-    <FormBox>
-      {/* --- 1. 질문 제목 / 질문 타입 --- */}
-      <FirstLine>
-        <Input
-          placeholder="질문 제목을 입력해주세요."
-          value={fieldData.questionText} // 👈 부모 상태 바인딩
-          onChange={(e) => onUpdate({ questionText: e.target.value })} // 👈 onUpdate 호출
-        />
+    <CardContainer>
+      <CardHeader>
+        <HeaderLeft>
+          <QuestionBadge>문항 {index + 1}</QuestionBadge>
+          <TypeSegmentGroup>
+            <TypeSegmentButton
+              type="button"
+              $active={fieldData.questionType === "SHORT_ANSWER"}
+              onClick={() => handleTypeSelect("SHORT_ANSWER")}
+            >
+              주관식
+            </TypeSegmentButton>
+            <TypeSegmentButton
+              type="button"
+              $active={fieldData.questionType === "MULTIPLE_CHOICE"}
+              onClick={() => handleTypeSelect("MULTIPLE_CHOICE")}
+            >
+              객관식
+            </TypeSegmentButton>
+          </TypeSegmentGroup>
+        </HeaderLeft>
 
-        <Dropdown
-          value={fieldData.questionType} // 👈 부모 상태 바인딩
-          onChange={handleTypeChange} // 👈 타입 변경 핸들러
-          hasValue={!!fieldData.questionType}
-        >
-          {typeOptions.map((type) => (
-            <option key={type.value} value={type.value}>
-              {type.label}
-            </option>
-          ))}
-        </Dropdown>
-      </FirstLine>
-      <Textarea
-        placeholder="(선택)설명을 입력해주세요."
-        value={fieldData.questionDescription} // 👈 부모 상태 바인딩
-        onChange={(e) => onUpdate({ questionDescription: e.target.value })} // 👈 onUpdate 호출
-      />
-      {/* --- 2. 토글 / 질문 삭제 버튼 --- */}
-      <SecondLine>
-        <ToggleWrapper>
-          <ToggleLabel>
+        {canRemove && (
+          <DeleteQuestionButton
+            type="button"
+            onClick={onRemove}
+            title="문항 삭제"
+          >
+            문항 삭제
+          </DeleteQuestionButton>
+        )}
+      </CardHeader>
+
+      <FieldGroup>
+        <FieldLabel>질문 제목</FieldLabel>
+        <StyledInput
+          type="text"
+          placeholder="질문 내용을 입력해주세요"
+          value={fieldData.questionText}
+          onChange={(e) => onUpdate({ questionText: e.target.value })}
+        />
+      </FieldGroup>
+
+      <FieldGroup>
+        <FieldLabel>설명 (선택)</FieldLabel>
+        <StyledTextarea
+          placeholder="질문에 대한 추가 안내가 필요하다면 입력해주세요"
+          value={fieldData.questionDescription}
+          onChange={(e) => onUpdate({ questionDescription: e.target.value })}
+          rows={2}
+        />
+      </FieldGroup>
+
+      <SettingsRow>
+        <CheckboxLabel>
+          <input
+            type="checkbox"
+            checked={fieldData.isRequired}
+            onChange={(e) => onUpdate({ isRequired: e.target.checked })}
+          />
+          <span>필수 응답</span>
+        </CheckboxLabel>
+
+        {fieldData.questionType === "MULTIPLE_CHOICE" && (
+          <CheckboxLabel>
             <input
               type="checkbox"
-              checked={fieldData.isRequired}
-              onChange={(e) => onUpdate({ isRequired: e.target.checked })}
+              checked={fieldData.allowMultipleSelection}
+              onChange={(e) =>
+                onUpdate({ allowMultipleSelection: e.target.checked })
+              }
             />
-            필수 응답
-          </ToggleLabel>
-          {fieldData.questionType === "MULTIPLE_CHOICE" && (
-            <ToggleLabel>
-              <input
-                type="checkbox"
-                checked={fieldData.allowMultipleSelection}
-                onChange={(e) =>
-                  onUpdate({ allowMultipleSelection: e.target.checked })
-                }
-              />
-              다중 선택 허용
-            </ToggleLabel>
-          )}
-        </ToggleWrapper>
-        {/* '질문 삭제' 버튼 (onRemove, canRemove props 사용) */}
-        <RemoveQuestionButton onClick={onRemove} disabled={!canRemove}>
-          X
-        </RemoveQuestionButton>
-      </SecondLine>
-      {/* --- 3. 주관식 / 객관식 UI --- */}
-      {/* '주관식' 선택 시 */}
-      {fieldData.questionType === "SHORT_ANSWER" && (
-        <SubjectiveMessage>주관식 텍스트를 받습니다</SubjectiveMessage>
+            <span>다중 선택 허용</span>
+          </CheckboxLabel>
+        )}
+      </SettingsRow>
+
+      {fieldData.questionType === "SHORT_ANSWER" ? (
+        <ShortAnswerPreview>
+          응답자가 자유롭게 주관식 텍스트를 작성할 수 있는 입력란이 제공됩니다.
+        </ShortAnswerPreview>
+      ) : (
+        <OptionsSection>
+          <OptionsTitle>선택지 목록</OptionsTitle>
+          <OptionsList>
+            {fieldData.options.map((option, optIdx) => (
+              <OptionRow key={option.id}>
+                <OptionIndexIndicator>
+                  {fieldData.allowMultipleSelection ? "□" : "○"}
+                </OptionIndexIndicator>
+                <OptionInput
+                  type="text"
+                  placeholder={`선택지 ${optIdx + 1}`}
+                  value={option.optionText}
+                  onChange={(e) =>
+                    handleOptionChange(option.id, e.target.value)
+                  }
+                />
+                {fieldData.options.length > 1 && (
+                  <RemoveOptionButton
+                    type="button"
+                    onClick={() => handleRemoveOption(option.id)}
+                    title="선택지 삭제"
+                  >
+                    ✕
+                  </RemoveOptionButton>
+                )}
+              </OptionRow>
+            ))}
+          </OptionsList>
+          <AddOptionButton type="button" onClick={handleAddOption}>
+            + 선택지 추가하기
+          </AddOptionButton>
+        </OptionsSection>
       )}
-      {/* '객관식' 선택 시 */}
-      {fieldData.questionType === "MULTIPLE_CHOICE" && (
-        <ObjectiveOptionsWrapper>
-          {/* 부모의 options 배열(FormOptionState[])을 순회 */}
-          {fieldData.options.map((option, index) => (
-            <OptionItem key={option.id}>
-              <RadioInput
-                type={fieldData.allowMultipleSelection ? "checkbox" : "radio"}
-                name={`preview-${fieldData.id}`}
-                disabled
-              />
-              <OptionInput
-                placeholder={`옵션 ${index + 1}`}
-                value={option.optionText} // 👈 부모 상태 바인딩
-                onChange={(e) => handleOptionChange(option.id, e.target.value)} // 👈 onUpdate 호출
-              />
-              {/* 옵션이 2개 이상일 때만 '삭제' 버튼 표시 */}
-              {fieldData.options.length > 1 && (
-                <RemoveOptionButton
-                  onClick={() => handleRemoveOption(option.id)} // 👈 onUpdate 호출
-                >
-                  X
-                </RemoveOptionButton>
-              )}
-            </OptionItem>
-          ))}
-          <AddButtonArea>
-            <AddButton onClick={handleAddOption}>{"+"}</AddButton>
-          </AddButtonArea>
-        </ObjectiveOptionsWrapper>
-      )}
-    </FormBox>
+    </CardContainer>
   );
 };
+
 export default AddNewFormField;
 
-// --- Styled Components (기존 + 신규 추가) ---
-
-const FormBox = styled.div`
-  position: relative;
+const CardContainer = styled.div`
+  background: #ffffff;
+  border: 1px solid #e5e8eb;
+  border-radius: 20px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
-  width: 100%;
-  max-width: 600px; // 🖥️ PC 레이아웃 고려
-  height: fit-content;
   gap: 16px;
-  align-items: center;
-
-  padding: 16px;
+  width: 100%;
   box-sizing: border-box;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+  transition: border-color 0.2s ease;
 
-  border-radius: 16px;
-  background: #fff;
-  box-shadow:
-    0 0 16px 0 rgba(10, 132, 255, 0.25),
-    0 0 10px 0 rgba(0, 0, 0, 0.25);
-`;
-
-const FirstLine = styled.div`
-  display: flex;
-  flex-direction: row;
-  gap: 8px;
-  width: 100%;
-
-  /* 드롭다운이 너무 커지는 것을 방지 */
-  & > ${Dropdown} {
-    flex-shrink: 0;
-    width: 100px;
+  &:focus-within {
+    border-color: #3182f6;
   }
 `;
 
-// [신규] 2번째 줄 (토글, 삭제 버튼)
-const SecondLine = styled.div`
+const CardHeader = styled.div`
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  gap: 16px;
-  padding-top: 8px;
-  border-top: 1px solid #f0f0f0;
-  margin-top: 8px;
-`;
-
-// [신규] 토글 스위치들을 감싸는 래퍼
-const ToggleWrapper = styled.div`
-  display: flex;
-  gap: 16px;
-`;
-
-// [신규] 토글 레이블 스타일
-const ToggleLabel = styled.label`
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 14px;
-  color: #333;
-  cursor: pointer;
-
-  input[type="checkbox"] {
-    accent-color: #0a84ff;
-    cursor: pointer;
-  }
-
-  input[type="checkbox"]:disabled {
-    cursor: not-allowed;
-    accent-color: #ccc;
-  }
-`;
-
-// 주관식 타입 선택 시 보여줄 메시지
-const SubjectiveMessage = styled.div`
-  width: 100%;
-  color: var(--5, #6c6c74);
-  text-align: start;
-  font-size: 14px;
-  font-style: normal;
-  font-weight: 600;
-  line-height: normal;
-`;
-
-// 객관식 옵션들을 감싸는 래퍼
-const ObjectiveOptionsWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
   gap: 12px;
-  width: 100%;
-  margin-top: 8px;
+  flex-wrap: wrap;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f2f4f6;
 `;
 
-// 개별 옵션 (라디오 + 인풋 + 삭제버튼) 래퍼
-const OptionItem = styled.div`
+const HeaderLeft = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
-  width: 100%;
+  gap: 10px;
 `;
 
-const OptionInput = styled(Input)`
-  flex: 1;
-`;
-
-const RadioInput = styled.input`
-  flex-shrink: 0;
-  accent-color: #0a84ff;
-  cursor: not-allowed;
-`;
-
-const BaseButton = styled.button`
-  border: none;
+const QuestionBadge = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  background: #f2f4f6;
+  color: #191f28;
   border-radius: 8px;
-  padding: 8px 12px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
 `;
 
-// [수정] 옵션 삭제 버튼 (이름 변경)
-const RemoveOptionButton = styled(BaseButton)`
-  flex-shrink: 0;
-  background-color: #ffe0e0;
-  color: #ff3b30;
-  padding: 6px 10px;
-  font-weight: bold;
-  line-height: 1;
+const TypeSegmentGroup = styled.div`
+  display: inline-flex;
+  background: #f2f4f6;
+  padding: 3px;
+  border-radius: 10px;
+  gap: 2px;
+`;
+
+const TypeSegmentButton = styled.button<{ $active: boolean }>`
+  border: none;
+  background: ${({ $active }) => ($active ? "#3182f6" : "transparent")};
+  color: ${({ $active }) => ($active ? "#ffffff" : "#6b7684")};
+  font-size: 13px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.15s ease;
 
   &:hover {
-    background-color: #ffcfcf;
+    color: ${({ $active }) => ($active ? "#ffffff" : "#191f28")};
   }
 `;
 
-// [신규] 질문 삭제 버튼
-const RemoveQuestionButton = styled(BaseButton)`
-  position: absolute;
-  top: -12px;
-  right: -12px;
-  background-color: #f0f0f0;
-  color: #ff3b30;
+const DeleteQuestionButton = styled.button`
+  border: none;
+  background: transparent;
+  color: #8b95a1;
+  font-size: 13px;
   font-weight: 600;
-  border-radius: 50%;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.15s ease;
 
-  &:hover:not(:disabled) {
-    background-color: #ffcfcf;
+  &:hover {
+    color: #f04452;
+    background: #fdf2f2;
+  }
+`;
+
+const FieldGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+`;
+
+const FieldLabel = styled.label`
+  font-size: 13px;
+  font-weight: 600;
+  color: #4e5968;
+`;
+
+const StyledInput = styled.input`
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #e5e8eb;
+  border-radius: 12px;
+  font-size: 15px;
+  color: #191f28;
+  background: #f9fafb;
+  outline: none;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+
+  &::placeholder {
+    color: #8b95a1;
+  }
+
+  &:focus {
+    background: #ffffff;
+    border-color: #3182f6;
+    box-shadow: 0 0 0 3px rgba(49, 130, 246, 0.12);
+  }
+`;
+
+const StyledTextarea = styled.textarea`
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #e5e8eb;
+  border-radius: 12px;
+  font-size: 14px;
+  color: #191f28;
+  background: #f9fafb;
+  outline: none;
+  box-sizing: border-box;
+  resize: vertical;
+  min-height: 56px;
+  font-family: inherit;
+  transition: all 0.2s ease;
+
+  &::placeholder {
+    color: #8b95a1;
+  }
+
+  &:focus {
+    background: #ffffff;
+    border-color: #3182f6;
+    box-shadow: 0 0 0 3px rgba(49, 130, 246, 0.12);
+  }
+`;
+
+const SettingsRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding-top: 4px;
+`;
+
+const CheckboxLabel = styled.label`
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333d4b;
+  cursor: pointer;
+  user-select: none;
+
+  input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #3182f6;
+    cursor: pointer;
+  }
+`;
+
+const ShortAnswerPreview = styled.div`
+  padding: 14px 16px;
+  background: #f9fafb;
+  border: 1px dashed #e5e8eb;
+  border-radius: 12px;
+  font-size: 13px;
+  color: #8b95a1;
+  line-height: 1.5;
+`;
+
+const OptionsSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 6px;
+`;
+
+const OptionsTitle = styled.div`
+  font-size: 13px;
+  font-weight: 600;
+  color: #4e5968;
+`;
+
+const OptionsList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+const OptionRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+`;
+
+const OptionIndexIndicator = styled.span`
+  color: #8b95a1;
+  font-size: 14px;
+  width: 18px;
+  text-align: center;
+  flex-shrink: 0;
+`;
+
+const OptionInput = styled.input`
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid #e5e8eb;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #191f28;
+  background: #ffffff;
+  outline: none;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+
+  &::placeholder {
+    color: #8b95a1;
+  }
+
+  &:focus {
+    border-color: #3182f6;
+    box-shadow: 0 0 0 3px rgba(49, 130, 246, 0.12);
+  }
+`;
+
+const RemoveOptionButton = styled.button`
+  border: none;
+  background: transparent;
+  color: #8b95a1;
+  font-size: 14px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+
+  &:hover {
+    color: #f04452;
+    background: #fdf2f2;
+  }
+`;
+
+const AddOptionButton = styled.button`
+  border: 1px dashed #d1d6db;
+  background: #ffffff;
+  color: #3182f6;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  width: fit-content;
+
+  &:hover {
+    background: #f2f4f6;
+    border-color: #3182f6;
   }
 `;

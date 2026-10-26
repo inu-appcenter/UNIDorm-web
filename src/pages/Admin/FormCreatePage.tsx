@@ -1,27 +1,32 @@
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import FormField from "../../components/complain/FormField.tsx";
-import { useEffect, useState } from "react";
-import arrowright from "../../assets/arrow-right.svg";
-import { Input, Textarea } from "@/styles/common";
-import AddNewFormField from "../../components/form/AddNewFormField.tsx";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useSurveyDetail } from "@/queries/surveys";
 import { useInitFromQuery } from "@/hooks/useInitFromQuery";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
-
-// [수정] 1. 요청하신 임포트 구문으로 변경 (updateSurvey 추가)
+import AddNewFormField from "@/components/form/AddNewFormField";
 import {
   OptionCreateRequest,
   QuestionCreateRequest,
   QuestionType,
   SurveyCreateRequest,
   SurveyCreateRequest as SurveyUpdateRequest,
-} from "../../types/formTypes.ts";
-// [수정] 2. updateSurvey API 임포트
+} from "@/types/formTypes";
 import { createSurvey, updateSurvey } from "@/apis/formApis";
-import { AddButton, AddButtonArea, FormBoxBlue } from "@/styles/form";
+import {
+  AdminShell,
+  AdminPage,
+  AdminHero,
+  AdminHeroTitle,
+  AdminHeroDescription,
+  AdminCard,
+  AdminButton,
+  AdminInput,
+  AdminTextarea,
+  AdminField,
+  AdminLabel,
+} from "./adminPageStyles";
 
-// (FormOptionState, FormFieldState 인터페이스는 동일)
 export interface FormOptionState {
   id: number;
   optionText: string;
@@ -35,39 +40,23 @@ export interface FormFieldState {
   isRequired: boolean;
   allowMultipleSelection: boolean;
   options: FormOptionState[];
-  isNew?: boolean; // 새로 추가된 필드임을 표시
+  isNew?: boolean;
 }
 
-const FormCreatePage = () => {
-  // --- 기본 설문 정보 상태 ---
+const FormCreatePage: React.FC = () => {
   const [title, setTitle] = useState("");
-  const [content, setContent] = useState(""); // (description)
+  const [content, setContent] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [maxParticipants, setMaxParticipants] = useState<string>("");
-
   const [isLoading, setIsLoading] = useState(false);
+
   const navigate = useNavigate();
-
-  // (formFields 상태 초기화는 동일)
-  const [formFields, setFormFields] = useState<FormFieldState[]>([
-    {
-      id: Date.now(),
-      questionText: "",
-      questionDescription: "",
-      questionType: "SHORT_ANSWER",
-      isRequired: true,
-      allowMultipleSelection: false,
-      options: [],
-      isNew: true, // 새로 추가된 필드임을 표시
-    },
-  ]);
-
   const location = useLocation();
   const [searchParams] = useSearchParams();
+
   const queryId = searchParams.get("id");
   const editId = queryId ? Number(queryId) : undefined;
-
   const { form: stateForm } = location.state || {};
   const [form, setForm] = useState<any>(stateForm ?? null);
   const isEditMode = !!form;
@@ -86,34 +75,45 @@ const FormCreatePage = () => {
     editId,
   );
 
-  // [수정] 4. useEffect 의존성 배열 변경 (기존 []도 문제는 없으나 명시적으로 form 추가)
-  // (기존 코드와 동일하게 두어도 무방합니다.)
+  const [formFields, setFormFields] = useState<FormFieldState[]>([
+    {
+      id: Date.now(),
+      questionText: "",
+      questionDescription: "",
+      questionType: "SHORT_ANSWER",
+      isRequired: true,
+      allowMultipleSelection: false,
+      options: [],
+      isNew: true,
+    },
+  ]);
+
   useEffect(() => {
     if (form) {
-      setTitle(form.title);
-      setContent(form.description);
-      // [수정] 4-1. 날짜 형식이 datetime-local input에 맞게 변환 (ISO -> YYYY-MM-DDTHH:MM)
-      // (서버에서 ISO String (UTC)으로 왔다고 가정)
+      setTitle(form.title || "");
+      setContent(form.description || "");
+
       const toLocalISOString = (isoString: string) => {
         if (!isoString) return "";
         const date = new Date(isoString);
-        // 로컬 시간대로 변환
         date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-        // 'YYYY-MM-DDTHH:MM' 형식으로 자르기
         return date.toISOString().slice(0, 16);
       };
 
       setStartDate(toLocalISOString(form.startDate));
       setEndDate(toLocalISOString(form.endDate));
-      setMaxParticipants(form.recruitmentCount);
+      setMaxParticipants(
+        form.recruitmentCount !== undefined && form.recruitmentCount !== null
+          ? String(form.recruitmentCount)
+          : "",
+      );
 
-      // [중요] form.questions가 FormFieldState[]와 호환되는 구조여야 함
-      // (React key를 위한 id 필드가 포함되어 있어야 함)
-      setFormFields(form.questions);
+      if (Array.isArray(form.questions) && form.questions.length > 0) {
+        setFormFields(form.questions);
+      }
     }
-  }, [form]); // 의존성 배열에 form 추가
+  }, [form]);
 
-  // (필드 추가, 업데이트, 삭제 핸들러는 기존과 동일)
   const handleAddField = () => {
     setFormFields((prevFields) => [
       ...prevFields,
@@ -125,7 +125,7 @@ const FormCreatePage = () => {
         isRequired: true,
         allowMultipleSelection: false,
         options: [],
-        isNew: true, // 새로 추가된 필드임을 표시
+        isNew: true,
       },
     ]);
   };
@@ -151,11 +151,9 @@ const FormCreatePage = () => {
     );
   };
 
-  // [수정] 5. 폼 제출 핸들러 (수정 / 생성 분기 처리)
   const handleSubmit = async () => {
     if (isLoading) return;
 
-    // --- 유효성 검사 (기존과 동일) ---
     if (!title.trim() || !content.trim() || !startDate || !endDate) {
       alert("제목, 설명, 시작 일시, 종료 일시를 모두 입력해주세요.");
       return;
@@ -179,10 +177,9 @@ const FormCreatePage = () => {
       alert("선택형 질문에는 최소 1개 이상의 옵션이 필요합니다.");
       return;
     }
-    // ✅ [추가] 인원 입력값 유효성 검사
+
     if (maxParticipants !== undefined && maxParticipants !== null) {
-      // 비어 있지 않을 때만 검사
-      if (isNaN(Number(maxParticipants))) {
+      if (maxParticipants.trim() !== "" && isNaN(Number(maxParticipants))) {
         alert("인원은 숫자만 입력할 수 있습니다.");
         return;
       }
@@ -190,35 +187,29 @@ const FormCreatePage = () => {
         alert("인원은 0 이상의 숫자여야 합니다.");
         return;
       }
-      if (maxParticipants === "") {
-        //빈 값이면 0으로 보냄
-        setMaxParticipants("0");
-      }
     }
-    // --- 유효성 검사 끝 ---
 
-    // [수정] 6. 모드에 따른 확인 메시지
     const action = isEditMode ? "수정" : "등록";
     if (
-      !window.confirm(`폼을 ${action}할까요? 내용을 다시한번 확인해주세요.`)
+      !window.confirm(
+        `폼을 ${action}할까요? 입력한 내용을 다시 한번 확인해주세요.`,
+      )
     ) {
       return;
     }
     setIsLoading(true);
 
     try {
-      // API DTO 형식에 맞게 데이터 가공 (기존과 동일)
       const questionsForApi: QuestionCreateRequest[] = formFields.map(
         (field, index) => {
           const optionsForApi: OptionCreateRequest[] = field.options.map(
-            (opt, index) => ({
+            (opt, optIdx) => ({
               optionId: opt.id ? opt.id : undefined,
               optionText: opt.optionText,
-              optionOrder: index + 1,
+              optionOrder: optIdx + 1,
             }),
           );
 
-          // 새로 추가된 필드는 questionId를 제외
           const apiQuestionData: QuestionCreateRequest = {
             ...(field.isNew ? {} : { questionId: field.id }),
             questionText: field.questionText,
@@ -239,43 +230,33 @@ const FormCreatePage = () => {
         },
       );
 
-      // 날짜 ISO String 변환 (UTC)
       const isoStartDate = new Date(startDate).toISOString();
       const isoEndDate = new Date(endDate).toISOString();
 
-      // [가정] SurveyUpdateRequest가 SurveyCreateRequest와 동일한 구조라고 가정
       const payload: SurveyCreateRequest | SurveyUpdateRequest = {
         title,
         description: content,
         startDate: isoStartDate,
         endDate: isoEndDate,
         questions: questionsForApi,
-        recruitmentCount: maxParticipants,
+        recruitmentCount: maxParticipants === "" ? "0" : maxParticipants,
       };
 
-      // [수정] 7. 모드에 따라 다른 API 호출
       if (isEditMode) {
-        // [가정] 수정할 폼의 ID가 form.id (또는 form.surveyId)에 있다고 가정
         if (!form.id) {
           alert("수정할 폼의 ID를 찾을 수 없습니다.");
           setIsLoading(false);
           return;
         }
-
-        console.log("요청 보낼 폼 객체 (수정)", form.id, payload);
-        // PUT /surveys/{surveyId} 호출
         await updateSurvey(form.id, payload);
         alert("폼이 성공적으로 수정되었습니다.");
       } else {
-        // POST /surveys 호출
-        console.log("요청 보낼 폼 객체 (생성)", payload);
         await createSurvey(payload);
         alert("폼이 성공적으로 등록되었습니다.");
       }
 
-      navigate(-1); // (성공 시 공통 이동)
+      navigate(-1);
     } catch (error) {
-      // [수정] 8. 모드에 따른 동적 에러 메시지
       const errorAction = isEditMode ? "수정" : "생성";
       console.error(`폼 ${errorAction} 실패:`, error);
       alert(`폼 ${errorAction}에 실패했습니다. 입력 내용을 확인해주세요.`);
@@ -284,130 +265,290 @@ const FormCreatePage = () => {
     }
   };
 
+  const actionText = isEditMode ? "수정" : "등록";
+
   return (
-    <PageWrapper>
-      {isDetailLoading && (
-        <LoadingSpinner overlay message="설문 정보를 불러오는 중입니다..." />
-      )}
-      {/* [수정] 9. 헤더 타이틀 동적 변경 */}
+    <AdminShell>
+      <AdminPage style={{ maxWidth: 760 }}>
+        {isDetailLoading && (
+          <LoadingSpinner overlay message="설문 정보를 불러오는 중입니다..." />
+        )}
 
-      <FormBoxBlue>
-        {/* --- 기본 설문 정보 입력 (폼은 동일) --- */}
-        <FormField label="제목">
-          <Input
-            placeholder="글 제목"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-        </FormField>
-        <FormField label="설명">
-          <Textarea
-            placeholder="내용을 입력해주세요"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-          />
-        </FormField>
-        <FormField label="시작 일시">
-          <Input
-            type="datetime-local"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-          />
-        </FormField>
-        <FormField label="종료 일시">
-          <Input
-            type="datetime-local"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-          />
-        </FormField>
-        <FormField label="최대 인원">
-          <Input
-            placeholder="0 또는 입력하지 않으면 무제한입니다."
-            value={maxParticipants}
-            onChange={(e) => setMaxParticipants(e.target.value)}
-          />
-        </FormField>
-      </FormBoxBlue>
+        <AdminHero style={{ flexDirection: "column", alignItems: "flex-start" }}>
+          <HeaderTopRow>
+            <BackButton type="button" onClick={() => navigate(-1)}>
+              ‹ 뒤로가기
+            </BackButton>
+          </HeaderTopRow>
+          <AdminHeroTitle>
+            {isEditMode ? "설문 폼 수정하기" : "새 설문 폼 만들기"}
+          </AdminHeroTitle>
+          <AdminHeroDescription>
+            기숙사 사생들이 참여할 신청 및 설문 폼의 내용과 질문을 작성합니다.
+          </AdminHeroDescription>
+        </AdminHero>
 
-      {/* (질문 필드 맵핑은 동일) */}
-      {formFields.map((field) => (
-        <AddNewFormField
-          key={field.id}
-          fieldData={field}
-          onUpdate={(updatedData) => handleUpdateField(field.id, updatedData)}
-          onRemove={() => handleRemoveField(field.id)}
-          canRemove={formFields.length > 1}
-        />
-      ))}
+        {/* 1단계: 기본 정보 카드 */}
+        <AdminCard>
+          <SectionHeader>
+            <SectionNumber>1</SectionNumber>
+            <SectionTitle>기본 정보</SectionTitle>
+          </SectionHeader>
 
-      {/* (필드 추가 버튼 동일) */}
-      <AddButtonArea>
-        <AddButton onClick={handleAddField}>{"+"}</AddButton>
-        필드 추가
-      </AddButtonArea>
+          <AdminField>
+            <AdminLabel>제목</AdminLabel>
+            <AdminInput
+              type="text"
+              placeholder="설문 또는 신청 제목을 입력해주세요"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
+          </AdminField>
 
-      <LastLine>
-        {/* [수정] 10. 버튼 텍스트 동적 변경 */}
-        <Button onClick={handleSubmit} disabled={isLoading}>
-          {isLoading
-            ? isEditMode
-              ? "수정 중..."
-              : "생성 중..."
-            : isEditMode
-              ? "수정하기"
-              : "생성하기"}
-          {!isLoading && <img src={arrowright} />}
-        </Button>
-      </LastLine>
-    </PageWrapper>
+          <AdminField>
+            <AdminLabel>설명</AdminLabel>
+            <AdminTextarea
+              rows={4}
+              placeholder="설문의 목적과 작성 시 주의사항을 자세히 적어주세요"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+            />
+          </AdminField>
+
+          <DateGrid>
+            <AdminField>
+              <AdminLabel>시작 일시</AdminLabel>
+              <AdminInput
+                type="datetime-local"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+              />
+            </AdminField>
+
+            <AdminField>
+              <AdminLabel>종료 일시</AdminLabel>
+              <AdminInput
+                type="datetime-local"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+              />
+            </AdminField>
+          </DateGrid>
+
+          <AdminField>
+            <AdminLabel>
+              모집 인원 (선택)
+              <HelperText>0 또는 빈칸으로 두면 무제한으로 설정됩니다.</HelperText>
+            </AdminLabel>
+            <AdminInput
+              type="number"
+              min={0}
+              placeholder="0 (무제한)"
+              value={maxParticipants}
+              onChange={(e) => setMaxParticipants(e.target.value)}
+            />
+          </AdminField>
+        </AdminCard>
+
+        {/* 2단계: 질문 문항 빌더 */}
+        <SectionContainer>
+          <SectionHeaderRow>
+            <SectionHeader>
+              <SectionNumber>2</SectionNumber>
+              <SectionTitle>질문 문항 ({formFields.length}개)</SectionTitle>
+            </SectionHeader>
+          </SectionHeaderRow>
+
+          <QuestionsList>
+            {formFields.map((field, idx) => (
+              <AddNewFormField
+                key={field.id}
+                fieldData={field}
+                index={idx}
+                onUpdate={(updatedData) =>
+                  handleUpdateField(field.id, updatedData)
+                }
+                onRemove={() => handleRemoveField(field.id)}
+                canRemove={formFields.length > 1}
+              />
+            ))}
+          </QuestionsList>
+
+          <AddQuestionDashedButton type="button" onClick={handleAddField}>
+            + 질문 문항 추가하기
+          </AddQuestionDashedButton>
+        </SectionContainer>
+
+        {/* PC용 하단 버튼 영역 */}
+        <DesktopActionArea>
+          <AdminButton
+            type="button"
+            $tone="ghost"
+            onClick={() => navigate(-1)}
+          >
+            취소
+          </AdminButton>
+          <AdminButton
+            type="button"
+            $tone="primary"
+            disabled={isLoading}
+            onClick={handleSubmit}
+            style={{ minWidth: 160 }}
+          >
+            {isLoading ? `${actionText} 처리 중...` : `폼 ${actionText}하기`}
+          </AdminButton>
+        </DesktopActionArea>
+
+        {/* 모바일 하단 플로팅 CTA */}
+        <BottomCTABar>
+          <AdminButton
+            type="button"
+            $tone="primary"
+            $fullWidth
+            disabled={isLoading}
+            onClick={handleSubmit}
+          >
+            {isLoading ? `${actionText} 처리 중...` : `폼 ${actionText}하기`}
+          </AdminButton>
+        </BottomCTABar>
+      </AdminPage>
+    </AdminShell>
   );
 };
 
 export default FormCreatePage;
 
-// ... (styled-components 코드는 기존과 동일) ...
-
-const PageWrapper = styled.div`
-  padding: 90px 16px;
+const HeaderTopRow = styled.div`
   display: flex;
-  flex-direction: column;
-  gap: 32px;
-  box-sizing: border-box;
-  overflow-y: auto;
-  flex: 1;
   align-items: center;
+  margin-bottom: 4px;
+`;
 
-  .description {
-    font-size: 14px;
+const BackButton = styled.button`
+  border: none;
+  background: transparent;
+  color: #6b7684;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 0;
+  transition: color 0.15s ease;
+
+  &:hover {
+    color: #191f28;
   }
 `;
 
-const LastLine = styled.div`
+const SectionContainer = styled.div`
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
+  gap: 16px;
   width: 100%;
-  max-width: 600px;
-  justify-content: end;
 `;
 
-const Button = styled.button`
+const SectionHeaderRow = styled.div`
   display: flex;
-  flex-direction: row;
   align-items: center;
-  border-radius: 23px;
-  background: #0a84ff;
-  padding: 4px 16px;
-  box-sizing: border-box;
-  color: #f4f4f4;
-  font-size: 14px;
-  font-style: normal;
-  font-weight: 400;
-  line-height: 24px;
-  letter-spacing: 0.38px;
+  justify-content: space-between;
+`;
 
-  &:disabled {
-    background: #aaa;
-    cursor: not-allowed;
+const SectionHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+`;
+
+const SectionNumber = styled.span`
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  background: #3182f6;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 800;
+`;
+
+const SectionTitle = styled.h2`
+  font-size: 17px;
+  font-weight: 700;
+  color: #191f28;
+  letter-spacing: -0.3px;
+  margin: 0;
+`;
+
+const HelperText = styled.span`
+  font-size: 12px;
+  font-weight: 400;
+  color: #8b95a1;
+  margin-left: 8px;
+`;
+
+const DateGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+
+  @media (min-width: 600px) {
+    grid-template-columns: 1fr 1fr;
+  }
+`;
+
+const QuestionsList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+`;
+
+const AddQuestionDashedButton = styled.button`
+  width: 100%;
+  padding: 16px;
+  border: 2px dashed #d1d6db;
+  border-radius: 16px;
+  background: #ffffff;
+  color: #3182f6;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #f2f4f6;
+    border-color: #3182f6;
+  }
+
+  &:active {
+    transform: scale(0.99);
+  }
+`;
+
+const DesktopActionArea = styled.div`
+  display: none;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 0 32px;
+
+  @media (min-width: 768px) {
+    display: flex;
+  }
+`;
+
+const BottomCTABar = styled.div`
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border-top: 1px solid #e5e8eb;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+  z-index: 50;
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.04);
+
+  @media (min-width: 768px) {
+    display: none;
   }
 `;
