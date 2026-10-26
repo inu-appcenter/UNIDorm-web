@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useSurveyDetail } from "@/queries/surveys";
 import { useInitFromQuery } from "@/hooks/useInitFromQuery";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import AddNewFormField from "@/components/form/AddNewFormField";
+import { useSetHeader } from "@/hooks/useSetHeader";
 import {
   OptionCreateRequest,
   QuestionCreateRequest,
@@ -13,19 +14,6 @@ import {
   SurveyCreateRequest as SurveyUpdateRequest,
 } from "@/types/formTypes";
 import { createSurvey, updateSurvey } from "@/apis/formApis";
-import {
-  AdminShell,
-  AdminPage,
-  AdminHero,
-  AdminHeroTitle,
-  AdminHeroDescription,
-  AdminCard,
-  AdminButton,
-  AdminInput,
-  AdminTextarea,
-  AdminField,
-  AdminLabel,
-} from "./adminPageStyles";
 
 export interface FormOptionState {
   id: number;
@@ -43,14 +31,7 @@ export interface FormFieldState {
   isNew?: boolean;
 }
 
-const FormCreatePage: React.FC = () => {
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [maxParticipants, setMaxParticipants] = useState<string>("");
-  const [isLoading, setIsLoading] = useState(false);
-
+export default function FormCreatePage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -60,6 +41,17 @@ const FormCreatePage: React.FC = () => {
   const { form: stateForm } = location.state || {};
   const [form, setForm] = useState<any>(stateForm ?? null);
   const isEditMode = !!form;
+
+  useSetHeader({
+    title: isEditMode ? "설문 폼 수정" : "설문 폼 만들기",
+  });
+
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [maxParticipants, setMaxParticipants] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const { data: detailData, isLoading: isDetailLoading } = useSurveyDetail(
     !stateForm && editId ? editId : undefined,
@@ -155,7 +147,7 @@ const FormCreatePage: React.FC = () => {
     if (isLoading) return;
 
     if (!title.trim() || !content.trim() || !startDate || !endDate) {
-      alert("제목, 설명, 시작 일시, 종료 일시를 모두 입력해주세요.");
+      alert("제목, 설명, 시작 일시, 종료 일시를 모두 입력해 주세요.");
       return;
     }
     if (new Date(startDate) >= new Date(endDate)) {
@@ -166,7 +158,7 @@ const FormCreatePage: React.FC = () => {
       (f) => f.questionText.trim() !== "",
     );
     if (!isQuestionsValid) {
-      alert("질문 내용을 모두 입력해주세요.");
+      alert("질문 내용을 모두 입력해 주세요.");
       return;
     }
     const choiceQuestions = formFields.filter(
@@ -192,7 +184,7 @@ const FormCreatePage: React.FC = () => {
     const action = isEditMode ? "수정" : "등록";
     if (
       !window.confirm(
-        `폼을 ${action}할까요? 입력한 내용을 다시 한번 확인해주세요.`,
+        `설문 폼을 ${action}하시겠습니까?\n작성한 내용을 다시 한번 확인해 주세요.`,
       )
     ) {
       return;
@@ -249,276 +241,331 @@ const FormCreatePage: React.FC = () => {
           return;
         }
         await updateSurvey(form.id, payload);
-        alert("폼이 성공적으로 수정되었습니다.");
+        alert("설문 폼이 성공적으로 수정되었습니다.");
       } else {
         await createSurvey(payload);
-        alert("폼이 성공적으로 등록되었습니다.");
+        alert("설문 폼이 성공적으로 등록되었습니다.");
       }
 
       navigate(-1);
     } catch (error) {
       const errorAction = isEditMode ? "수정" : "생성";
       console.error(`폼 ${errorAction} 실패:`, error);
-      alert(`폼 ${errorAction}에 실패했습니다. 입력 내용을 확인해주세요.`);
+      alert(`폼 ${errorAction}에 실패했습니다. 입력 내용을 확인해 주세요.`);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const actionText = isEditMode ? "수정" : "등록";
+  const actionText = isEditMode ? "수정하기" : "등록하기";
 
   return (
-    <AdminShell>
-      <AdminPage style={{ maxWidth: 760 }}>
+    <PageRoot>
+      <ContentContainer>
         {isDetailLoading && (
           <LoadingSpinner overlay message="설문 정보를 불러오는 중입니다..." />
         )}
 
-        <AdminHero style={{ flexDirection: "column", alignItems: "flex-start" }}>
-          <HeaderTopRow>
-            <BackButton type="button" onClick={() => navigate(-1)}>
-              ‹ 뒤로가기
-            </BackButton>
-          </HeaderTopRow>
-          <AdminHeroTitle>
-            {isEditMode ? "설문 폼 수정하기" : "새 설문 폼 만들기"}
-          </AdminHeroTitle>
-          <AdminHeroDescription>
-            기숙사 사생들이 참여할 신청 및 설문 폼의 내용과 질문을 작성합니다.
-          </AdminHeroDescription>
-        </AdminHero>
-
         {/* 1단계: 기본 정보 카드 */}
-        <AdminCard>
+        <SectionCard>
           <SectionHeader>
-            <SectionNumber>1</SectionNumber>
-            <SectionTitle>기본 정보</SectionTitle>
+            <SectionBadge>1</SectionBadge>
+            <SectionTitle>기본 정보 설정</SectionTitle>
           </SectionHeader>
 
-          <AdminField>
-            <AdminLabel>제목</AdminLabel>
-            <AdminInput
+          <FormGroup>
+            <FieldLabel htmlFor="survey-title">설문 제목</FieldLabel>
+            <TextInput
+              id="survey-title"
               type="text"
-              placeholder="설문 또는 신청 제목을 입력해주세요"
+              placeholder="설문 또는 신청 제목을 입력해 주세요"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
-          </AdminField>
+          </FormGroup>
 
-          <AdminField>
-            <AdminLabel>설명</AdminLabel>
-            <AdminTextarea
+          <FormGroup>
+            <FieldLabel htmlFor="survey-content">설문 설명</FieldLabel>
+            <TextareaInput
+              id="survey-content"
               rows={4}
-              placeholder="설문의 목적과 작성 시 주의사항을 자세히 적어주세요"
+              placeholder="설문의 목적과 작성 시 주의사항을 자세히 안내해 주세요"
               value={content}
               onChange={(e) => setContent(e.target.value)}
             />
-          </AdminField>
+          </FormGroup>
 
           <DateGrid>
-            <AdminField>
-              <AdminLabel>시작 일시</AdminLabel>
-              <AdminInput
+            <FormGroup>
+              <FieldLabel htmlFor="start-date">시작 일시</FieldLabel>
+              <DateInput
+                id="start-date"
                 type="datetime-local"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
               />
-            </AdminField>
+            </FormGroup>
 
-            <AdminField>
-              <AdminLabel>종료 일시</AdminLabel>
-              <AdminInput
+            <FormGroup>
+              <FieldLabel htmlFor="end-date">종료 일시</FieldLabel>
+              <DateInput
+                id="end-date"
                 type="datetime-local"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
               />
-            </AdminField>
+            </FormGroup>
           </DateGrid>
 
-          <AdminField>
-            <AdminLabel>
+          <FormGroup>
+            <FieldLabel htmlFor="max-count">
               모집 인원 (선택)
-              <HelperText>0 또는 빈칸으로 두면 무제한으로 설정됩니다.</HelperText>
-            </AdminLabel>
-            <AdminInput
+              <HelperText>0 또는 빈칸으로 두면 무제한으로 설정돼요</HelperText>
+            </FieldLabel>
+            <TextInput
+              id="max-count"
               type="number"
               min={0}
               placeholder="0 (무제한)"
               value={maxParticipants}
               onChange={(e) => setMaxParticipants(e.target.value)}
             />
-          </AdminField>
-        </AdminCard>
+          </FormGroup>
+        </SectionCard>
 
         {/* 2단계: 질문 문항 빌더 */}
-        <SectionContainer>
-          <SectionHeaderRow>
-            <SectionHeader>
-              <SectionNumber>2</SectionNumber>
-              <SectionTitle>질문 문항 ({formFields.length}개)</SectionTitle>
-            </SectionHeader>
-          </SectionHeaderRow>
+        <SectionCard>
+          <SectionHeader>
+            <SectionBadge>2</SectionBadge>
+            <SectionTitle>설문 문항 작성 ({formFields.length}개)</SectionTitle>
+          </SectionHeader>
 
-          <QuestionsList>
-            {formFields.map((field, idx) => (
+          <FieldsContainer>
+            {formFields.map((field, index) => (
               <AddNewFormField
                 key={field.id}
+                index={index}
                 fieldData={field}
-                index={idx}
-                onUpdate={(updatedData) =>
-                  handleUpdateField(field.id, updatedData)
-                }
+                onUpdate={(updatedData) => handleUpdateField(field.id, updatedData)}
                 onRemove={() => handleRemoveField(field.id)}
                 canRemove={formFields.length > 1}
               />
             ))}
-          </QuestionsList>
+          </FieldsContainer>
 
-          <AddQuestionDashedButton type="button" onClick={handleAddField}>
-            + 질문 문항 추가하기
-          </AddQuestionDashedButton>
-        </SectionContainer>
+          <AddFieldButton type="button" onClick={handleAddField}>
+            + 새 질문 추가하기
+          </AddFieldButton>
+        </SectionCard>
 
-        {/* PC용 하단 버튼 영역 */}
-        <DesktopActionArea>
-          <AdminButton
-            type="button"
-            $tone="ghost"
-            onClick={() => navigate(-1)}
-          >
+        {/* PC 하단 액션 버튼 바 */}
+        <DesktopActionBar>
+          <SecondaryButton type="button" onClick={() => navigate(-1)}>
             취소
-          </AdminButton>
-          <AdminButton
+          </SecondaryButton>
+          <PrimaryButton
             type="button"
-            $tone="primary"
-            disabled={isLoading}
             onClick={handleSubmit}
-            style={{ minWidth: 160 }}
+            disabled={isLoading}
           >
-            {isLoading ? `${actionText} 처리 중...` : `폼 ${actionText}하기`}
-          </AdminButton>
-        </DesktopActionArea>
+            {isLoading ? "저장 중..." : `설문 폼 ${actionText}`}
+          </PrimaryButton>
+        </DesktopActionBar>
+      </ContentContainer>
 
-        {/* 모바일 하단 플로팅 CTA */}
-        <BottomCTABar>
-          <AdminButton
-            type="button"
-            $tone="primary"
-            $fullWidth
-            disabled={isLoading}
-            onClick={handleSubmit}
-          >
-            {isLoading ? `${actionText} 처리 중...` : `폼 ${actionText}하기`}
-          </AdminButton>
-        </BottomCTABar>
-      </AdminPage>
-    </AdminShell>
+      {/* 모바일 하단 고정 CTA */}
+      <MobileFixedCTA>
+        <MobileCTAButton
+          type="button"
+          onClick={handleSubmit}
+          disabled={isLoading}
+        >
+          {isLoading ? "저장 중..." : `설문 폼 ${actionText}`}
+        </MobileCTAButton>
+      </MobileFixedCTA>
+    </PageRoot>
   );
-};
+}
 
-export default FormCreatePage;
+/* ================= Styled Components ================= */
 
-const HeaderTopRow = styled.div`
-  display: flex;
-  align-items: center;
-  margin-bottom: 4px;
-`;
+const PageRoot = styled.div`
+  width: 100%;
+  min-height: 100%;
+  padding: 16px 20px calc(90px + env(safe-area-inset-bottom, 0px));
+  box-sizing: border-box;
+  overflow-x: hidden;
 
-const BackButton = styled.button`
-  border: none;
-  background: transparent;
-  color: #6b7684;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  padding: 4px 0;
-  transition: color 0.15s ease;
-
-  &:hover {
-    color: #191f28;
+  @media (min-width: 1024px) {
+    padding: 24px 32px 60px;
   }
 `;
 
-const SectionContainer = styled.div`
+const ContentContainer = styled.div`
+  width: 100%;
+  max-width: 840px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  width: 100%;
+  gap: 20px;
 `;
 
-const SectionHeaderRow = styled.div`
+const SectionCard = styled.div`
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  padding: 24px;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 20px;
+
+  @media (max-width: 640px) {
+    padding: 18px;
+    border-radius: 16px;
+  }
 `;
 
 const SectionHeader = styled.div`
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 8px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f2f4f6;
 `;
 
-const SectionNumber = styled.span`
+const SectionBadge = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 24px;
   height: 24px;
   border-radius: 8px;
   background: #3182f6;
   color: #ffffff;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
+  font-size: 0.82rem;
   font-weight: 800;
 `;
 
 const SectionTitle = styled.h2`
-  font-size: 17px;
-  font-weight: 700;
+  font-size: 1.1rem;
+  font-weight: 800;
   color: #191f28;
-  letter-spacing: -0.3px;
   margin: 0;
 `;
 
+const FormGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+`;
+
+const FieldLabel = styled.label`
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #333d4b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+`;
+
 const HelperText = styled.span`
-  font-size: 12px;
+  font-size: 0.78rem;
   font-weight: 400;
   color: #8b95a1;
-  margin-left: 8px;
+`;
+
+const TextInput = styled.input`
+  height: 46px;
+  border-radius: 12px;
+  border: 1px solid #e5e8eb;
+  background: #f9fafb;
+  padding: 0 14px;
+  font-size: 0.92rem;
+  color: #191f28;
+  outline: none;
+  box-sizing: border-box;
+
+  &:focus {
+    border-color: #3182f6;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(49, 130, 246, 0.12);
+  }
+
+  &::placeholder {
+    color: #8b95a1;
+  }
+`;
+
+const TextareaInput = styled.textarea`
+  border-radius: 12px;
+  border: 1px solid #e5e8eb;
+  background: #f9fafb;
+  padding: 12px 14px;
+  font-size: 0.92rem;
+  color: #191f28;
+  outline: none;
+  resize: vertical;
+  line-height: 1.55;
+  box-sizing: border-box;
+
+  &:focus {
+    border-color: #3182f6;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(49, 130, 246, 0.12);
+  }
+
+  &::placeholder {
+    color: #8b95a1;
+  }
 `;
 
 const DateGrid = styled.div`
   display: grid;
   grid-template-columns: 1fr;
-  gap: 16px;
+  gap: 14px;
 
-  @media (min-width: 600px) {
+  @media (min-width: 640px) {
     grid-template-columns: 1fr 1fr;
   }
 `;
 
-const QuestionsList = styled.div`
+const DateInput = styled.input`
+  height: 46px;
+  border-radius: 12px;
+  border: 1px solid #e5e8eb;
+  background: #f9fafb;
+  padding: 0 12px;
+  font-size: 0.88rem;
+  color: #191f28;
+  outline: none;
+  box-sizing: border-box;
+
+  &:focus {
+    border-color: #3182f6;
+    background: #ffffff;
+  }
+`;
+
+const FieldsContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 16px;
-  width: 100%;
 `;
 
-const AddQuestionDashedButton = styled.button`
-  width: 100%;
-  padding: 16px;
-  border: 2px dashed #d1d6db;
-  border-radius: 16px;
-  background: #ffffff;
+const AddFieldButton = styled.button`
+  height: 48px;
+  border-radius: 14px;
+  border: 1.5px dashed #3182f6;
+  background: #f2f8ff;
   color: #3182f6;
-  font-size: 15px;
+  font-size: 0.92rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease-out;
 
   &:hover {
-    background: #f2f4f6;
-    border-color: #3182f6;
+    background: #e8f3ff;
   }
 
   &:active {
@@ -526,29 +573,90 @@ const AddQuestionDashedButton = styled.button`
   }
 `;
 
-const DesktopActionArea = styled.div`
+const DesktopActionBar = styled.div`
   display: none;
-  justify-content: flex-end;
-  gap: 12px;
-  padding: 16px 0 32px;
 
   @media (min-width: 768px) {
     display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 8px;
   }
 `;
 
-const BottomCTABar = styled.div`
+const SecondaryButton = styled.button`
+  height: 48px;
+  padding: 0 24px;
+  border-radius: 12px;
+  border: 1px solid #e5e8eb;
+  background: #ffffff;
+  color: #4e5968;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover {
+    background: #f9fafb;
+  }
+`;
+
+const PrimaryButton = styled.button`
+  height: 48px;
+  padding: 0 32px;
+  border-radius: 12px;
+  border: none;
+  background: #3182f6;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease-out;
+
+  &:hover {
+    background: #1b64da;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: wait;
+  }
+`;
+
+const MobileFixedCTA = styled.div`
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  background: #ffffff;
-  border-top: 1px solid #e5e8eb;
-  padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
-  z-index: 50;
-  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.04);
+  z-index: 40;
+  background: linear-gradient(to top, #ffffff 70%, rgba(255, 255, 255, 0));
+  padding: 12px 20px calc(14px + env(safe-area-inset-bottom, 0px));
+  box-sizing: border-box;
 
   @media (min-width: 768px) {
     display: none;
+  }
+`;
+
+const MobileCTAButton = styled.button`
+  width: 100%;
+  height: 52px;
+  border-radius: 16px;
+  background: #3182f6;
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 700;
+  border: none;
+  box-shadow: 0 4px 16px rgba(49, 130, 246, 0.28);
+  cursor: pointer;
+  transition: all 0.15s ease-out;
+
+  &:active {
+    transform: scale(0.98);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: wait;
   }
 `;

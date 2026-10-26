@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState, useMemo } from "react";
 import styled from "styled-components";
 import { useParams, useNavigate } from "react-router-dom";
 import { getSurveyResultExcel } from "@/apis/formApis";
@@ -7,24 +7,12 @@ import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { formatDeadlineDate } from "@/utils/dateUtils";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import { useCountUp } from "@/hooks/useCountUp";
-import {
-  AdminShell,
-  AdminPage,
-  AdminHero,
-  AdminHeroTitle,
-  AdminHeroDescription,
-  AdminCard,
-  AdminBadge,
-  AdminButton,
-  AdminEmptyState,
-  AdminEmptyTitle,
-  AdminEmptyDescription,
-} from "./adminPageStyles";
 
-const FormResultPage: React.FC = () => {
+export default function FormResultPage() {
   const { formId } = useParams<{ formId: string }>();
   const navigate = useNavigate();
   const [isDownloading, setIsDownloading] = useState(false);
+  const [shortAnswerSearch, setShortAnswerSearch] = useState<Record<number, string>>({});
 
   const { data: formResultData = null, isLoading } = useSurveyResults(
     formId ? Number(formId) : undefined,
@@ -64,60 +52,48 @@ const FormResultPage: React.FC = () => {
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error("CSV 다운로드 실패:", error);
-      alert("CSV 파일 다운로드에 실패했습니다. 잠시 후 다시 시도해주세요.");
+      alert("CSV 파일 다운로드에 실패했습니다. 잠시 후 다시 시도해 주세요.");
     } finally {
       setIsDownloading(false);
     }
   };
 
-  const menuItems = [
-    {
-      label: "CSV 파일로 다운로드",
-      onClick: handleDownloadCsv,
-    },
-  ];
+  const menuItems = useMemo(
+    () => [
+      {
+        label: "CSV 결과 다운로드",
+        onClick: handleDownloadCsv,
+      },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [formResultData, formId],
+  );
 
-  useSetHeader({ title: "폼 응답 결과", menuItems });
+  useSetHeader({ title: "설문 응답 결과", menuItems });
 
   if (isLoading) {
     return (
-      <AdminShell>
-        <AdminPage>
-          <LoadingSpinner message="설문 응답 결과를 불러오는 중입니다..." />
-        </AdminPage>
-      </AdminShell>
+      <PageRoot>
+        <LoadingSpinner message="설문 응답 결과를 분석하는 중입니다..." />
+      </PageRoot>
     );
   }
 
   if (!formResultData) {
     return (
-      <AdminShell>
-        <AdminPage>
-          <AdminHero style={{ flexDirection: "column", alignItems: "flex-start" }}>
-            <BackButton type="button" onClick={() => navigate(-1)}>
-              ‹ 뒤로가기
-            </BackButton>
-            <AdminHeroTitle>설문 결과를 찾을 수 없습니다</AdminHeroTitle>
-            <AdminHeroDescription>
-              삭제되었거나 잘못된 접근입니다. 설문 목록에서 다시 확인해주세요.
-            </AdminHeroDescription>
-          </AdminHero>
-          <AdminEmptyState>
-            <AdminEmptyTitle>조회 가능한 설문 결과가 없습니다.</AdminEmptyTitle>
-            <AdminEmptyDescription>
-              요청하신 설문 ID가 존재하지 않거나 권한이 없습니다.
-            </AdminEmptyDescription>
-            <AdminButton
-              type="button"
-              $tone="primary"
-              onClick={() => navigate(-1)}
-              style={{ marginTop: 12 }}
-            >
+      <PageRoot>
+        <ContentContainer>
+          <EmptyContainer>
+            <EmptyTitle>설문 결과를 찾을 수 없어요</EmptyTitle>
+            <EmptyDescription>
+              삭제되었거나 요청하신 설문 ID가 존재하지 않습니다.
+            </EmptyDescription>
+            <PrimaryActionButton type="button" onClick={() => navigate(-1)}>
               목록으로 돌아가기
-            </AdminButton>
-          </AdminEmptyState>
-        </AdminPage>
-      </AdminShell>
+            </PrimaryActionButton>
+          </EmptyContainer>
+        </ContentContainer>
+      </PageRoot>
     );
   }
 
@@ -126,73 +102,69 @@ const FormResultPage: React.FC = () => {
   const isExpired = new Date(formResultData.endDate) < new Date();
 
   return (
-    <AdminShell>
-      <AdminPage>
-        <AdminHero style={{ flexDirection: "column", alignItems: "stretch", gap: 16 }}>
-          <HeaderTopRow>
-            <BackButton type="button" onClick={() => navigate(-1)}>
-              ‹ 목록으로
-            </BackButton>
-            <AdminBadge $tone={isExpired ? "slate" : "green"}>
-              {isExpired ? "설문 마감" : "설문 진행 중"}
-            </AdminBadge>
-          </HeaderTopRow>
-
-          <TitleActionRow>
-            <div>
-              <AdminHeroTitle>{formResultData.surveyTitle}</AdminHeroTitle>
+    <PageRoot>
+      <ContentContainer>
+        {/* 상단 설문 개요 및 CSV 다운로드 바 */}
+        <HeaderInfoCard>
+          <HeaderLeft>
+            <BadgeRow>
+              <StatusBadge $expired={isExpired}>
+                {isExpired ? "설문 마감" : "설문 진행 중"}
+              </StatusBadge>
               <PeriodText>
                 기간: {startDateFormatted} ~ {endDateFormatted}
               </PeriodText>
-            </div>
-            <AdminButton
-              type="button"
-              $tone="primary"
-              disabled={isDownloading}
-              onClick={handleDownloadCsv}
-            >
-              {isDownloading ? "파일 생성 중..." : "CSV 파일 다운로드"}
-            </AdminButton>
-          </TitleActionRow>
-        </AdminHero>
+            </BadgeRow>
+            <SurveyTitle>{formResultData.surveyTitle}</SurveyTitle>
+          </HeaderLeft>
 
-        {/* 종합 응답 요약 카드 */}
-        <SummaryCard>
-          <SummaryItem>
-            <SummaryLabel>총 참여 인원</SummaryLabel>
-            <SummaryValue>
-              <HighlightNumber>{totalCount.toLocaleString()}</HighlightNumber>
-              <UnitText>명</UnitText>
-            </SummaryValue>
-          </SummaryItem>
-          <SummaryDivider />
-          <SummaryItem>
-            <SummaryLabel>설문 문항 수</SummaryLabel>
-            <SummaryValue>
-              <HighlightNumber>
+          <DesktopDownloadButton
+            type="button"
+            disabled={isDownloading}
+            onClick={handleDownloadCsv}
+          >
+            {isDownloading ? "다운로드 중..." : "CSV 결과 다운로드"}
+          </DesktopDownloadButton>
+        </HeaderInfoCard>
+
+        {/* 종합 응답 요약 3대 KPI 카드 */}
+        <KpiGrid>
+          <KpiCard>
+            <KpiLabel>총 참여 인원</KpiLabel>
+            <KpiValueWrap>
+              <KpiHighlight style={{ color: "#3182f6" }}>
+                {totalCount.toLocaleString()}
+              </KpiHighlight>
+              <KpiUnit>명</KpiUnit>
+            </KpiValueWrap>
+          </KpiCard>
+
+          <KpiCard>
+            <KpiLabel>총 설문 문항</KpiLabel>
+            <KpiValueWrap>
+              <KpiHighlight>
                 {formResultData.questionResults?.length ?? 0}
-              </HighlightNumber>
-              <UnitText>개</UnitText>
-            </SummaryValue>
-          </SummaryItem>
-          <SummaryDivider />
-          <SummaryItem>
-            <SummaryLabel>설문 상태</SummaryLabel>
-            <SummaryValue>
-              <StatusLabel $expired={isExpired}>
-                {isExpired ? "마감됨" : "실시간 응답 중"}
-              </StatusLabel>
-            </SummaryValue>
-          </SummaryItem>
-        </SummaryCard>
+              </KpiHighlight>
+              <KpiUnit>개</KpiUnit>
+            </KpiValueWrap>
+          </KpiCard>
 
-        {/* 질문 문항별 상세 통계 */}
+          <KpiCard>
+            <KpiLabel>설문 진행 상태</KpiLabel>
+            <KpiValueWrap>
+              <StatusHighlight $expired={isExpired}>
+                {isExpired ? "마감 완료" : "실시간 응답 중"}
+              </StatusHighlight>
+            </KpiValueWrap>
+          </KpiCard>
+        </KpiGrid>
+
+        {/* 질문 문항별 상세 통계 섹션 */}
         <QuestionsSection>
-          <SectionHeading>문항별 응답 상세</SectionHeading>
+          <SectionTitle>문항별 응답 상세 분석</SectionTitle>
 
           {formResultData.questionResults.map((question, qIdx) => {
             const isShort = question.questionType === "SHORT_ANSWER";
-
             const totalVotes = isShort
               ? question.shortAnswers.length
               : question.optionResults.reduce((sum, opt) => sum + opt.count, 0);
@@ -202,198 +174,314 @@ const FormResultPage: React.FC = () => {
               formResultData.totalResponses - totalVotes,
             );
 
+            // 주관식 검색 필터링
+            const kw = (shortAnswerSearch[question.questionId] || "").trim().toLowerCase();
+            const filteredAnswers = isShort
+              ? kw
+                ? question.shortAnswers.filter((a) => a.toLowerCase().includes(kw))
+                : question.shortAnswers
+              : [];
+
             return (
-              <AdminCard key={question.questionId}>
+              <QuestionCard key={question.questionId}>
                 <QuestionCardHeader>
-                  <QuestionTitleArea>
-                    <QuestionNumberTag>문항 {qIdx + 1}</QuestionNumberTag>
-                    <QuestionName>{question.questionText}</QuestionName>
-                  </QuestionTitleArea>
-                  <HeaderMetaArea>
-                    <AdminBadge $tone={isShort ? "blue" : "amber"}>
+                  <QuestionTitleGroup>
+                    <QuestionNumBadge>Q{qIdx + 1}</QuestionNumBadge>
+                    <QuestionNameText>{question.questionText}</QuestionNameText>
+                  </QuestionTitleGroup>
+
+                  <HeaderMetaGroup>
+                    <TypeBadge $isShort={isShort}>
                       {isShort ? "주관식" : "객관식"}
-                    </AdminBadge>
-                    <AnswerCountMeta>
-                      응답 <strong>{totalVotes}</strong> / 미응답{" "}
-                      <strong>{unanswered}</strong>
-                    </AnswerCountMeta>
-                  </HeaderMetaArea>
+                    </TypeBadge>
+                    <MetaVotesText>
+                      응답 <strong>{totalVotes}명</strong> / 미응답{" "}
+                      <strong>{unanswered}명</strong>
+                    </MetaVotesText>
+                  </HeaderMetaGroup>
                 </QuestionCardHeader>
 
-                {/* 객관식: 수평 프로그레스 바 차트 */}
+                {/* 객관식: 블루 단일 톤 수평 막대 그래프 */}
                 {!isShort && (
-                  <HorizontalBarWrapper>
+                  <OptionResultsWrapper>
                     {question.optionResults.length === 0 ? (
                       <EmptyAnswerText>설정된 선택지가 없습니다.</EmptyAnswerText>
                     ) : (
                       question.optionResults.map((opt) => {
                         const percent = opt.percentage ?? 0;
                         return (
-                          <BarRow key={opt.optionId}>
-                            <BarTextRow>
-                              <OptionLabel>{opt.optionText}</OptionLabel>
-                              <OptionCount>
+                          <OptionBarRow key={opt.optionId}>
+                            <OptionTextRow>
+                              <OptionName>{opt.optionText}</OptionName>
+                              <OptionStats>
                                 <strong>{opt.count}명</strong>
                                 <PercentText>({percent.toFixed(1)}%)</PercentText>
-                              </OptionCount>
-                            </BarTextRow>
-                            <TrackBackground>
-                              <FillBar $percentage={Math.min(100, Math.max(0, percent))} />
-                            </TrackBackground>
-                          </BarRow>
+                              </OptionStats>
+                            </OptionTextRow>
+                            <ProgressTrack>
+                              <ProgressFill
+                                style={{
+                                  width: `${Math.min(100, Math.max(0, percent))}%`,
+                                }}
+                              />
+                            </ProgressTrack>
+                          </OptionBarRow>
                         );
                       })
                     )}
-                  </HorizontalBarWrapper>
+                  </OptionResultsWrapper>
                 )}
 
-                {/* 주관식: 정갈한 응답 리스트 */}
+                {/* 주관식: 답변 목록 및 실시간 검색 */}
                 {isShort && (
                   <ShortAnswersWrapper>
+                    {question.shortAnswers.length > 5 && (
+                      <ShortSearchInput
+                        type="text"
+                        placeholder="주관식 답변 내 키워드 검색..."
+                        value={shortAnswerSearch[question.questionId] || ""}
+                        onChange={(e) =>
+                          setShortAnswerSearch((prev) => ({
+                            ...prev,
+                            [question.questionId]: e.target.value,
+                          }))
+                        }
+                      />
+                    )}
+
                     {question.shortAnswers.length === 0 ? (
                       <EmptyAnswerText>등록된 주관식 답변이 없습니다.</EmptyAnswerText>
+                    ) : filteredAnswers.length === 0 ? (
+                      <EmptyAnswerText>검색 조건과 일치하는 답변이 없습니다.</EmptyAnswerText>
                     ) : (
-                      <ShortAnswersList>
-                        {question.shortAnswers.map((answer, aIdx) => (
-                          <ShortAnswerItem key={aIdx}>
+                      <AnswersList>
+                        {filteredAnswers.map((answer, aIdx) => (
+                          <AnswerItem key={aIdx}>
                             <AnswerIndex>{aIdx + 1}</AnswerIndex>
-                            <AnswerContent>{answer}</AnswerContent>
-                          </ShortAnswerItem>
+                            <AnswerText>{answer}</AnswerText>
+                          </AnswerItem>
                         ))}
-                      </ShortAnswersList>
+                      </AnswersList>
                     )}
                   </ShortAnswersWrapper>
                 )}
-              </AdminCard>
+              </QuestionCard>
             );
           })}
         </QuestionsSection>
-      </AdminPage>
-    </AdminShell>
+      </ContentContainer>
+
+      {/* 모바일 하단 고정 CTA */}
+      <MobileFixedCTA>
+        <MobileCTAButton
+          type="button"
+          disabled={isDownloading}
+          onClick={handleDownloadCsv}
+        >
+          {isDownloading ? "파일 다운로드 중..." : "CSV 결과 파일 다운로드"}
+        </MobileCTAButton>
+      </MobileFixedCTA>
+    </PageRoot>
   );
-};
+}
 
-export default FormResultPage;
+/* ================= Styled Components ================= */
 
-const HeaderTopRow = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-`;
+const PageRoot = styled.div`
+  width: 100%;
+  min-height: 100%;
+  padding: 16px 20px calc(90px + env(safe-area-inset-bottom, 0px));
+  box-sizing: border-box;
+  overflow-x: hidden;
 
-const BackButton = styled.button`
-  border: none;
-  background: transparent;
-  color: #6b7684;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  padding: 4px 0;
-  transition: color 0.15s ease;
-
-  &:hover {
-    color: #191f28;
+  @media (min-width: 1024px) {
+    padding: 24px 32px 60px;
   }
 `;
 
-const TitleActionRow = styled.div`
+const ContentContainer = styled.div`
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  justify-content: space-between;
-
-  @media (min-width: 640px) {
-    flex-direction: row;
-    align-items: flex-end;
-  }
+  gap: 20px;
 `;
 
-const PeriodText = styled.div`
-  font-size: 13px;
-  font-weight: 500;
-  color: #8b95a1;
-  margin-top: 6px;
-`;
-
-const SummaryCard = styled.div`
+const HeaderInfoCard = styled.div`
   background: #ffffff;
-  border: 1px solid #e5e8eb;
   border-radius: 20px;
-  padding: 20px 24px;
-  display: grid;
-  grid-template-columns: 1fr;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
   gap: 16px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
 
-  @media (min-width: 640px) {
-    grid-template-columns: 1fr auto 1fr auto 1fr;
+  @media (min-width: 768px) {
+    flex-direction: row;
     align-items: center;
-    gap: 20px;
+    justify-content: space-between;
   }
 `;
 
-const SummaryItem = styled.div`
+const HeaderLeft = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+const BadgeRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+`;
+
+const StatusBadge = styled.span<{ $expired: boolean }>`
+  display: inline-flex;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  background: ${({ $expired }) => ($expired ? "#f2f4f6" : "#e6f8ef")};
+  color: ${({ $expired }) => ($expired ? "#6b7684" : "#04b05c")};
+`;
+
+const PeriodText = styled.span`
+  font-size: 0.8rem;
+  color: #8b95a1;
+`;
+
+const SurveyTitle = styled.h1`
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #191f28;
+  margin: 0;
+  line-height: 1.3;
+`;
+
+const DesktopDownloadButton = styled.button`
+  display: none;
+
+  @media (min-width: 768px) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 44px;
+    padding: 0 20px;
+    border-radius: 12px;
+    background: #3182f6;
+    color: #ffffff;
+    font-size: 0.92rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s ease-out;
+
+    &:hover:not(:disabled) {
+      background: #1b64da;
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: wait;
+    }
+  }
+`;
+
+/* 3대 KPI 카드 */
+const KpiGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+
+  @media (max-width: 640px) {
+    gap: 8px;
+  }
+`;
+
+const KpiCard = styled.div`
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
   display: flex;
   flex-direction: column;
   gap: 6px;
+
+  @media (max-width: 640px) {
+    padding: 14px 10px;
+    border-radius: 14px;
+  }
 `;
 
-const SummaryLabel = styled.span`
-  font-size: 13px;
+const KpiLabel = styled.span`
+  font-size: 0.8rem;
   font-weight: 600;
-  color: #6b7684;
+  color: #4e5968;
 `;
 
-const SummaryValue = styled.div`
+const KpiValueWrap = styled.div`
   display: flex;
   align-items: baseline;
   gap: 4px;
 `;
 
-const HighlightNumber = styled.span`
-  font-size: 26px;
+const KpiHighlight = styled.span`
+  font-size: 1.45rem;
   font-weight: 800;
   color: #191f28;
-  letter-spacing: -0.5px;
-  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+
+  @media (max-width: 640px) {
+    font-size: 1.15rem;
+  }
 `;
 
-const UnitText = styled.span`
-  font-size: 14px;
+const KpiUnit = styled.span`
+  font-size: 0.84rem;
   font-weight: 600;
   color: #8b95a1;
 `;
 
-const StatusLabel = styled.span<{ $expired: boolean }>`
-  font-size: 17px;
-  font-weight: 700;
-  color: ${({ $expired }) => ($expired ? "#8b95a1" : "#04b05c")};
-`;
+const StatusHighlight = styled.span<{ $expired: boolean }>`
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: ${({ $expired }) => ($expired ? "#6b7684" : "#04b05c")};
 
-const SummaryDivider = styled.div`
-  display: none;
-  width: 1px;
-  height: 36px;
-  background: #f2f4f6;
-
-  @media (min-width: 640px) {
-    display: block;
+  @media (max-width: 640px) {
+    font-size: 0.95rem;
   }
 `;
 
+/* 질문 목록 섹션 */
 const QuestionsSection = styled.div`
   display: flex;
   flex-direction: column;
   gap: 16px;
-  width: 100%;
 `;
 
-const SectionHeading = styled.h2`
-  font-size: 18px;
-  font-weight: 700;
+const SectionTitle = styled.h2`
+  font-size: 1.15rem;
+  font-weight: 800;
   color: #191f28;
-  letter-spacing: -0.3px;
   margin: 8px 0 0;
+`;
+
+const QuestionCard = styled.div`
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  @media (max-width: 640px) {
+    padding: 18px;
+    border-radius: 16px;
+  }
 `;
 
 const QuestionCardHeader = styled.div`
@@ -410,83 +498,91 @@ const QuestionCardHeader = styled.div`
   }
 `;
 
-const QuestionTitleArea = styled.div`
+const QuestionTitleGroup = styled.div`
   display: flex;
-  align-items: baseline;
+  align-items: flex-start;
   gap: 10px;
   flex: 1;
 `;
 
-const QuestionNumberTag = styled.span`
-  font-size: 13px;
-  font-weight: 700;
-  color: #3182f6;
-  background: #e8f3ff;
-  padding: 3px 8px;
-  border-radius: 6px;
-  white-space: nowrap;
-`;
-
-const QuestionName = styled.h3`
-  font-size: 16px;
-  font-weight: 700;
-  color: #191f28;
-  line-height: 1.4;
-  margin: 0;
-`;
-
-const HeaderMetaArea = styled.div`
-  display: flex;
+const QuestionNumBadge = styled.span`
+  display: inline-flex;
   align-items: center;
-  gap: 12px;
+  justify-content: center;
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: #e8f3ff;
+  color: #3182f6;
+  font-size: 0.8rem;
+  font-weight: 800;
   flex-shrink: 0;
 `;
 
-const AnswerCountMeta = styled.span`
-  font-size: 12px;
-  color: #8b95a1;
+const QuestionNameText = styled.h3`
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #191f28;
+  margin: 0;
+  line-height: 1.4;
+`;
+
+const HeaderMetaGroup = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+`;
+
+const TypeBadge = styled.span<{ $isShort: boolean }>`
+  display: inline-flex;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  background: ${({ $isShort }) => ($isShort ? "#e8f3ff" : "#fff3e0")};
+  color: ${({ $isShort }) => ($isShort ? "#3182f6" : "#f59e0b")};
+`;
+
+const MetaVotesText = styled.span`
+  font-size: 0.8rem;
+  color: #6b7684;
 
   strong {
-    color: #4e5968;
-    font-weight: 600;
+    color: #191f28;
   }
 `;
 
-const HorizontalBarWrapper = styled.div`
+/* 객관식 프로그레스 바 */
+const OptionResultsWrapper = styled.div`
   display: flex;
   flex-direction: column;
   gap: 14px;
-  padding-top: 8px;
 `;
 
-const BarRow = styled.div`
+const OptionBarRow = styled.div`
   display: flex;
   flex-direction: column;
   gap: 6px;
 `;
 
-const BarTextRow = styled.div`
+const OptionTextRow = styled.div`
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 12px;
-  font-size: 14px;
+  justify-content: space-between;
+  gap: 10px;
 `;
 
-const OptionLabel = styled.span`
+const OptionName = styled.span`
+  font-size: 0.92rem;
   font-weight: 600;
   color: #333d4b;
-  word-break: break-all;
 `;
 
-const OptionCount = styled.span`
-  font-size: 13px;
-  color: #4e5968;
+const OptionStats = styled.div`
   display: flex;
   align-items: center;
   gap: 6px;
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
+  font-size: 0.88rem;
 
   strong {
     color: #191f28;
@@ -495,69 +591,165 @@ const OptionCount = styled.span`
 `;
 
 const PercentText = styled.span`
-  color: #3182f6;
-  font-weight: 600;
+  color: #8b95a1;
+  font-size: 0.8rem;
 `;
 
-const TrackBackground = styled.div`
+const ProgressTrack = styled.div`
   width: 100%;
   height: 10px;
+  border-radius: 999px;
   background: #f2f4f6;
-  border-radius: 6px;
   overflow: hidden;
 `;
 
-const FillBar = styled.div<{ $percentage: number }>`
+const ProgressFill = styled.div`
   height: 100%;
-  width: ${({ $percentage }) => $percentage}%;
+  border-radius: 999px;
   background: #3182f6;
-  border-radius: 6px;
-  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 `;
 
+/* 주관식 답변 */
 const ShortAnswersWrapper = styled.div`
-  padding-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 `;
 
-const ShortAnswersList = styled.div`
+const ShortSearchInput = styled.input`
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid #e5e8eb;
+  background: #f9fafb;
+  padding: 0 12px;
+  font-size: 0.86rem;
+  color: #191f28;
+  outline: none;
+
+  &:focus {
+    border-color: #3182f6;
+    background: #ffffff;
+  }
+`;
+
+const AnswersList = styled.div`
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-height: 380px;
+  max-height: 360px;
   overflow-y: auto;
   padding-right: 4px;
 `;
 
-const ShortAnswerItem = styled.div`
+const AnswerItem = styled.div`
   display: flex;
   align-items: flex-start;
-  gap: 12px;
+  gap: 10px;
   padding: 12px 14px;
-  background: #f9fafb;
   border-radius: 12px;
+  background: #f9fafb;
   border: 1px solid #f2f4f6;
 `;
 
 const AnswerIndex = styled.span`
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 0.74rem;
+  font-weight: 800;
   color: #8b95a1;
-  min-width: 20px;
-  text-align: center;
-  padding-top: 1px;
+  margin-top: 2px;
 `;
 
-const AnswerContent = styled.p`
-  font-size: 14px;
+const AnswerText = styled.span`
+  font-size: 0.9rem;
   color: #191f28;
   line-height: 1.5;
-  margin: 0;
-  word-break: break-word;
+  word-break: break-all;
+  flex: 1;
 `;
 
 const EmptyAnswerText = styled.div`
-  padding: 24px;
+  padding: 24px 0;
   text-align: center;
-  font-size: 13px;
   color: #8b95a1;
+  font-size: 0.88rem;
+`;
+
+/* 빈 상태 */
+const EmptyContainer = styled.div`
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 60px 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+`;
+
+const EmptyTitle = styled.h3`
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #191f28;
+  margin: 0;
+`;
+
+const EmptyDescription = styled.p`
+  font-size: 0.88rem;
+  color: #8b95a1;
+  margin: 0 0 16px;
+`;
+
+const PrimaryActionButton = styled.button`
+  height: 46px;
+  padding: 0 24px;
+  border-radius: 12px;
+  border: none;
+  background: #3182f6;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover {
+    background: #1b64da;
+  }
+`;
+
+/* 모바일 하단 고정 CTA */
+const MobileFixedCTA = styled.div`
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  background: linear-gradient(to top, #ffffff 70%, rgba(255, 255, 255, 0));
+  padding: 12px 20px calc(14px + env(safe-area-inset-bottom, 0px));
+  box-sizing: border-box;
+
+  @media (min-width: 768px) {
+    display: none;
+  }
+`;
+
+const MobileCTAButton = styled.button`
+  width: 100%;
+  height: 52px;
+  border-radius: 16px;
+  background: #3182f6;
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 700;
+  border: none;
+  box-shadow: 0 4px 16px rgba(49, 130, 246, 0.28);
+  cursor: pointer;
+  transition: all 0.15s ease-out;
+
+  &:active {
+    transform: scale(0.98);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: wait;
+  }
 `;
