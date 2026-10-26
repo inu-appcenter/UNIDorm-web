@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
+import { useNavigate } from "react-router-dom";
 import {
   approveOpenChatReport,
   cancelOpenChatReport,
@@ -11,20 +12,6 @@ import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import { useUserRole } from "@/hooks/useUserRole";
 import useUserStore from "@/stores/useUserStore";
-import { useNavigate } from "react-router-dom";
-import {
-  AdminBadge,
-  AdminCard,
-  AdminCardDescription,
-  AdminCardHeader,
-  AdminCardTitle,
-  AdminCardTitleGroup,
-  AdminEmptyDescription,
-  AdminEmptyState,
-  AdminEmptyTitle,
-  AdminPage,
-  AdminShell,
-} from "@/pages/Admin/adminPageStyles";
 
 const STATUS_OPTIONS: Array<{
   value: OpenChatReportStatus;
@@ -47,9 +34,21 @@ export default function OpenChatReportAdminPage() {
   const navigate = useNavigate();
   const { isMainAdmin } = useUserRole();
   const { isLoading: isUserLoading } = useUserStore();
+
   const [status, setStatus] = useState<OpenChatReportStatus>("PENDING");
+  const [reasonFilter, setReasonFilter] = useState<string>("ALL");
+  const [searchKeyword, setSearchKeyword] = useState<string>("");
   const [page, setPage] = useState(0);
   const [processingId, setProcessingId] = useState<number | null>(null);
+
+  // 글로벌 헤더 등록 (중복 헤더 제거)
+  useSetHeader({ title: "채팅 신고 관리" });
+
+  useEffect(() => {
+    if (!isUserLoading && !isMainAdmin) {
+      navigate("/admin", { replace: true });
+    }
+  }, [isMainAdmin, isUserLoading, navigate]);
 
   const {
     data: reportsData,
@@ -59,21 +58,37 @@ export default function OpenChatReportAdminPage() {
     enabled: !isUserLoading && isMainAdmin,
   });
 
-  const reports = reportsData?.content ?? [];
+  const rawReports = reportsData?.content ?? [];
   const totalPages = reportsData?.totalPages ?? 0;
   const totalElements = reportsData?.totalElements ?? 0;
 
-  useSetHeader({ title: "채팅 신고 관리" });
-
-  useEffect(() => {
-    if (!isUserLoading && !isMainAdmin) {
-      navigate("/admin", { replace: true });
-    }
-  }, [isMainAdmin, isUserLoading, navigate]);
+  // 클라이언트 단 검색 및 사유 필터링
+  const filteredReports = useMemo(() => {
+    const keyword = searchKeyword.trim().toLowerCase();
+    return rawReports.filter((report) => {
+      // 1. 사유 필터
+      if (reasonFilter !== "ALL" && report.reason !== reasonFilter) {
+        return false;
+      }
+      // 2. 검색어 (신고 내용, 대상자 이름/학번, 신고자 이름/학번)
+      if (keyword) {
+        const contentMatch = report.reportedContent?.toLowerCase().includes(keyword);
+        const targetMatch =
+          report.targetName?.toLowerCase().includes(keyword) ||
+          report.targetStudentNumber?.includes(keyword);
+        const reporterMatch =
+          report.reporterName?.toLowerCase().includes(keyword) ||
+          report.reporterStudentNumber?.includes(keyword);
+        if (!contentMatch && !targetMatch && !reporterMatch) return false;
+      }
+      return true;
+    });
+  }, [rawReports, reasonFilter, searchKeyword]);
 
   const changeStatus = (nextStatus: OpenChatReportStatus) => {
     setStatus(nextStatus);
     setPage(0);
+    setReasonFilter("ALL");
   };
 
   const processReport = async (
@@ -83,7 +98,7 @@ export default function OpenChatReportAdminPage() {
     const actionLabel = action === "approve" ? "승인" : "반려";
     const confirmMessage =
       action === "approve"
-        ? "이 신고를 승인할까요? 해당 메시지에 대한 조치가 적용됩니다."
+        ? "이 신고를 승인할까요? 해당 메시지에 대한 제재가 적용됩니다."
         : "이 신고를 반려할까요? 별도의 제재 없이 종결됩니다.";
 
     if (!window.confirm(confirmMessage)) return;
@@ -98,37 +113,24 @@ export default function OpenChatReportAdminPage() {
       await fetchReports();
     } catch (error) {
       console.error(`채팅 신고 ${actionLabel} 실패:`, error);
-      alert(`신고 ${actionLabel} 처리에 실패했습니다. 잠시 후 다시 시도해 주세요.`);
+      alert(`신고 ${actionLabel} 처리에 실패했습니다. 다시 시도해 주세요.`);
     } finally {
       setProcessingId(null);
     }
   };
 
   return (
-    <AdminShell>
-      <AdminPage>
-        <AdminCard>
-          <AdminCardHeader>
-            <AdminCardTitleGroup>
-              <AdminCardTitle>채팅 메시지 신고 관리</AdminCardTitle>
-              <AdminCardDescription>
-                오픈채팅방에서 접수된 신고 내용을 확인하고 승인 또는 반려할 수 있습니다.
-              </AdminCardDescription>
-            </AdminCardTitleGroup>
-
-            <TotalCountBadge>
-              총 {totalElements.toLocaleString()}건
-            </TotalCountBadge>
-          </AdminCardHeader>
-
+    <PageRoot>
+      {/* 1. 상태 탭 & 검색 / 필터 제어 바 */}
+      <ControlBarCard>
+        <TopControlRow>
           {/* 상태 세그먼트 탭 */}
-          <StatusTabs aria-label="신고 처리 상태">
+          <StatusTabs>
             {STATUS_OPTIONS.map((option) => (
               <StatusTabButton
                 key={option.value}
                 type="button"
                 $active={status === option.value}
-                aria-pressed={status === option.value}
                 onClick={() => changeStatus(option.value)}
               >
                 {option.label}
@@ -136,176 +138,375 @@ export default function OpenChatReportAdminPage() {
             ))}
           </StatusTabs>
 
-          {/* 신고 카드 목록 */}
-          {loading ? (
-            <LoadingContainer>
-              <LoadingSpinner message="신고 목록을 불러오는 중입니다..." />
-            </LoadingContainer>
-          ) : reports.length === 0 ? (
-            <AdminEmptyState>
-              <AdminEmptyTitle>해당 상태의 신고가 없습니다.</AdminEmptyTitle>
-              <AdminEmptyDescription>
-                현재 {STATUS_OPTIONS.find((o) => o.value === status)?.label} 상태의 신고 내역이 존재하지 않습니다.
-              </AdminEmptyDescription>
-            </AdminEmptyState>
-          ) : (
-            <ReportList>
-              {reports.map((report) => (
-                <ReportCard key={report.reportId}>
-                  <CardTopRow>
-                    <AdminBadge $tone={report.reason === "SPAM_AD" ? "amber" : "red"}>
-                      {REASON_LABELS[report.reason] || "신고"}
-                    </AdminBadge>
-                    <ReportTime>
-                      {new Date(report.createdDate).toLocaleString("ko-KR")}
-                    </ReportTime>
-                  </CardTopRow>
+          <TotalCountTag>
+            총 <strong>{totalElements.toLocaleString()}</strong>건의 신고
+          </TotalCountTag>
+        </TopControlRow>
 
-                  {/* 신고된 메시지 본문 인용 서피스 */}
-                  <ReportedQuoteBox>
-                    <QuoteLabel>신고된 메시지 내용</QuoteLabel>
-                    <QuoteText>
-                      {report.reportedContent || "신고된 내용이 없습니다."}
-                    </QuoteText>
-                  </ReportedQuoteBox>
+        {/* 2행: 검색 인풋 & 사유 필터 드롭다운 */}
+        <SearchFilterRow>
+          <SearchInputWrapper>
+            <SearchInput
+              type="text"
+              placeholder="신고된 메시지, 대상자/신고자 이름·학번 검색..."
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+            />
+            {searchKeyword && (
+              <ClearButton type="button" onClick={() => setSearchKeyword("")}>
+                ✕
+              </ClearButton>
+            )}
+          </SearchInputWrapper>
 
-                  {/* 신고자 및 대상자 메타 정보 */}
-                  <InfoGrid>
-                    <InfoItem>
-                      <InfoLabel>신고 대상</InfoLabel>
-                      <InfoValue>
-                        {report.targetName || "이름 없음"} · {report.targetStudentNumber || "학번 없음"}
-                      </InfoValue>
-                    </InfoItem>
-                    <InfoItem>
-                      <InfoLabel>신고자</InfoLabel>
-                      <InfoValue>
-                        {report.reporterName || "이름 없음"} · {report.reporterStudentNumber || "학번 없음"}
-                      </InfoValue>
-                    </InfoItem>
-                    <InfoItem>
-                      <InfoLabel>채팅방 / 메시지 ID</InfoLabel>
-                      <InfoValue>
-                        방 #{report.roomId} · 메시지 #{report.messageId}
-                      </InfoValue>
-                    </InfoItem>
-                  </InfoGrid>
+          <ReasonSelect
+            value={reasonFilter}
+            onChange={(e) => setReasonFilter(e.target.value)}
+          >
+            <option value="ALL">전체 사유</option>
+            {Object.entries(REASON_LABELS).map(([k, label]) => (
+              <option key={k} value={k}>
+                {label}
+              </option>
+            ))}
+          </ReasonSelect>
+        </SearchFilterRow>
+      </ControlBarCard>
 
-                  {/* 처리 대기 상태 시 액션 버튼 */}
-                  {report.status === "PENDING" && (
-                    <ActionButtonsGrid>
-                      <RejectButton
-                        type="button"
-                        disabled={processingId === report.reportId}
-                        onClick={() => processReport(report, "cancel")}
-                      >
-                        신고 반려하기
-                      </RejectButton>
-                      <ApproveButton
-                        type="button"
-                        disabled={processingId === report.reportId}
-                        onClick={() => processReport(report, "approve")}
-                      >
-                        {processingId === report.reportId
-                          ? "처리하고 있어요..."
-                          : "신고 승인하기"}
-                      </ApproveButton>
-                    </ActionButtonsGrid>
-                  )}
-                </ReportCard>
-              ))}
-            </ReportList>
-          )}
+      {/* 2. 신고 목록 본문 */}
+      <ContentCard>
+        {loading ? (
+          <LoadingWrapper>
+            <LoadingSpinner message="신고 목록을 불러오는 중입니다..." />
+          </LoadingWrapper>
+        ) : filteredReports.length === 0 ? (
+          <EmptyContainer>
+            <EmptyTitle>해당 조건의 신고가 없습니다.</EmptyTitle>
+            <EmptyDesc>
+              현재 {STATUS_OPTIONS.find((o) => o.value === status)?.label} 상태에 표시할 내역이 없습니다.
+            </EmptyDesc>
+          </EmptyContainer>
+        ) : (
+          <ReportListGrid>
+            {filteredReports.map((report) => (
+              <ReportCardItem key={report.reportId}>
+                <CardMetaHeader>
+                  <ReasonBadge $reason={report.reason}>
+                    {REASON_LABELS[report.reason] || "신고"}
+                  </ReasonBadge>
+                  <ReportDateText>
+                    {new Date(report.createdDate).toLocaleString("ko-KR", {
+                      year: "numeric",
+                      month: "2-digit",
+                      day: "2-digit",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </ReportDateText>
+                </CardMetaHeader>
 
-          {/* 페이지네이션 */}
-          {totalPages > 1 && (
-            <PaginationContainer>
-              <PageNavButton
-                type="button"
-                disabled={page === 0 || loading}
-                onClick={() => setPage((current) => Math.max(0, current - 1))}
-              >
-                이전 페이지
-              </PageNavButton>
-              <PageIndicatorText>
-                {page + 1} / {totalPages}
-              </PageIndicatorText>
-              <PageNavButton
-                type="button"
-                disabled={page + 1 >= totalPages || loading}
-                onClick={() => setPage((current) => current + 1)}
-              >
-                다음 페이지
-              </PageNavButton>
-            </PaginationContainer>
-          )}
-        </AdminCard>
-      </AdminPage>
-    </AdminShell>
+                {/* 신고된 메시지 본문 인용 서피스 */}
+                <QuoteSurface>
+                  <QuoteHeading>신고된 메시지 내용</QuoteHeading>
+                  <QuoteBodyText>
+                    {report.reportedContent || "(내용 없음)"}
+                  </QuoteBodyText>
+                </QuoteSurface>
+
+                {/* 메타 정보 3분할 그리드 */}
+                <MetaInfoGrid>
+                  <MetaBox>
+                    <MetaKey>신고 대상자</MetaKey>
+                    <MetaVal>
+                      {report.targetName || "이름 없음"} ({report.targetStudentNumber || "-"})
+                    </MetaVal>
+                  </MetaBox>
+
+                  <MetaBox>
+                    <MetaKey>신고자</MetaKey>
+                    <MetaVal>
+                      {report.reporterName || "이름 없음"} ({report.reporterStudentNumber || "-"})
+                    </MetaVal>
+                  </MetaBox>
+
+                  <MetaBox>
+                    <MetaKey>위치 / ID</MetaKey>
+                    <MetaVal>
+                      방 #{report.roomId} · 메시지 #{report.messageId}
+                    </MetaVal>
+                  </MetaBox>
+                </MetaInfoGrid>
+
+                {/* 대기 상태일 때 승인/반려 액션 버튼 */}
+                {report.status === "PENDING" && (
+                  <ActionButtonsRow>
+                    <RejectActionButton
+                      type="button"
+                      disabled={processingId === report.reportId}
+                      onClick={() => processReport(report, "cancel")}
+                    >
+                      신고 반려
+                    </RejectActionButton>
+                    <ApproveActionButton
+                      type="button"
+                      disabled={processingId === report.reportId}
+                      onClick={() => processReport(report, "approve")}
+                    >
+                      {processingId === report.reportId
+                        ? "처리 중..."
+                        : "신고 승인"}
+                    </ApproveActionButton>
+                  </ActionButtonsRow>
+                )}
+              </ReportCardItem>
+            ))}
+          </ReportListGrid>
+        )}
+
+        {/* 3. 모바일 안전 페이지네이션 바 */}
+        {totalPages > 1 && (
+          <PaginationWrapper>
+            <PageNavButton
+              type="button"
+              disabled={page === 0 || loading}
+              onClick={() => setPage((current) => Math.max(0, current - 1))}
+            >
+              ‹ 이전
+            </PageNavButton>
+
+            <PageIndicator>
+              <strong>{page + 1}</strong> / {totalPages} 페이지
+            </PageIndicator>
+
+            <PageNavButton
+              type="button"
+              disabled={page + 1 >= totalPages || loading}
+              onClick={() => setPage((current) => current + 1)}
+            >
+              다음 ›
+            </PageNavButton>
+          </PaginationWrapper>
+        )}
+      </ContentCard>
+    </PageRoot>
   );
 }
 
-const TotalCountBadge = styled.span`
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: #3182f6;
-  background: #e8f3ff;
-  padding: 6px 14px;
-  border-radius: 999px;
-  letter-spacing: -0.01em;
-`;
+/* --- Styled Components (Zero Brand Pollution, 가로스크롤 원천 차단) --- */
 
-const StatusTabs = styled.div`
-  display: flex;
-  gap: 8px;
-  padding: 4px;
-  background: #f2f4f6;
-  border-radius: 16px;
-  width: fit-content;
+const PageRoot = styled.div`
+  width: 100%;
   max-width: 100%;
-  overflow-x: auto;
-`;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-sizing: border-box;
+  padding: 8px 16px 80px;
 
-const StatusTabButton = styled.button<{ $active: boolean }>`
-  height: 38px;
-  padding: 0 16px;
-  border: none;
-  border-radius: 12px;
-  background: ${({ $active }) => ($active ? "#ffffff" : "transparent")};
-  color: ${({ $active }) => ($active ? "#3182f6" : "#6b7684")};
-  font-size: 0.88rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.15s ease-out;
-  box-shadow: ${({ $active }) =>
-    $active ? "0 1px 4px rgba(0, 0, 0, 0.08)" : "none"};
-  white-space: nowrap;
-
-  &:active {
-    transform: scale(0.98);
+  @media (min-width: 1024px) {
+    padding: 16px 0 60px;
+    gap: 24px;
+    overflow-x: visible;
   }
 `;
 
-const LoadingContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  padding: 60px 0;
-`;
-
-const ReportList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-`;
-
-const ReportCard = styled.article`
-  padding: 22px;
+const ControlBarCard = styled.div`
+  background: #ffffff;
   border: 1px solid #e5e8eb;
   border-radius: 20px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+`;
+
+const TopControlRow = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+`;
+
+const StatusTabs = styled.div`
+  display: inline-flex;
+  background: #f2f4f6;
+  padding: 4px;
+  border-radius: 12px;
+  gap: 4px;
+  width: fit-content;
+`;
+
+const StatusTabButton = styled.button<{ $active: boolean }>`
+  border: none;
+  background: ${({ $active }) => ($active ? "#ffffff" : "transparent")};
+  color: ${({ $active }) => ($active ? "#191f28" : "#6b7684")};
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: ${({ $active }) =>
+    $active ? "0 2px 6px rgba(0, 0, 0, 0.06)" : "none"};
+
+  &:hover {
+    color: #191f28;
+  }
+`;
+
+const TotalCountTag = styled.span`
+  font-size: 13px;
+  color: #6b7684;
+
+  strong {
+    color: #3182f6;
+    font-weight: 700;
+  }
+`;
+
+const SearchFilterRow = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+    align-items: center;
+  }
+`;
+
+const SearchInputWrapper = styled.div`
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+`;
+
+const SearchInput = styled.input`
+  width: 100%;
+  padding: 12px 38px 12px 16px;
+  border-radius: 12px;
+  border: 1px solid #e5e8eb;
+  background: #f9fafb;
+  font-size: 14px;
+  color: #191f28;
+  outline: none;
+  box-sizing: border-box;
+  transition: all 0.15s ease;
+
+  &::placeholder {
+    color: #8b95a1;
+  }
+
+  &:focus {
+    background: #ffffff;
+    border-color: #3182f6;
+    box-shadow: 0 0 0 3px rgba(49, 130, 246, 0.12);
+  }
+`;
+
+const ClearButton = styled.button`
+  position: absolute;
+  right: 12px;
+  border: none;
+  background: transparent;
+  color: #8b95a1;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 4px;
+`;
+
+const ReasonSelect = styled.select`
+  padding: 11px 14px;
+  border-radius: 12px;
+  border: 1px solid #e5e8eb;
+  background: #f9fafb;
+  font-size: 13px;
+  font-weight: 600;
+  color: #333d4b;
+  outline: none;
+  cursor: pointer;
+  min-width: 140px;
+
+  &:focus {
+    border-color: #3182f6;
+    background: #ffffff;
+  }
+`;
+
+const ContentCard = styled.div`
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid #e5e8eb;
+  border-radius: 20px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+
+  @media (min-width: 768px) {
+    padding: 24px;
+  }
+`;
+
+const LoadingWrapper = styled.div`
+  padding: 60px 0;
+  display: flex;
+  justify-content: center;
+`;
+
+const EmptyContainer = styled.div`
+  padding: 60px 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+`;
+
+const EmptyTitle = styled.h4`
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #191f28;
+`;
+
+const EmptyDesc = styled.p`
+  margin: 0;
+  font-size: 13px;
+  color: #8b95a1;
+`;
+
+/* 신고 카드 리스트 그리드: PC에서는 2열 또는 1열 반응형 */
+const ReportListGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+
+  @media (min-width: 1100px) {
+    grid-template-columns: 1fr 1fr;
+  }
+`;
+
+const ReportCardItem = styled.article`
+  border: 1px solid #e5e8eb;
+  border-radius: 18px;
+  padding: 20px;
   background: #ffffff;
   display: flex;
   flex-direction: column;
   gap: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
   transition: border-color 0.18s ease;
 
   &:hover {
@@ -313,151 +514,180 @@ const ReportCard = styled.article`
   }
 `;
 
-const CardTopRow = styled.div`
+const CardMetaHeader = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
 `;
 
-const ReportTime = styled.time`
+const ReasonBadge = styled.span<{ $reason: OpenChatReport["reason"] }>`
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  letter-spacing: -0.2px;
+
+  ${({ $reason }) => {
+    switch ($reason) {
+      case "ABUSE":
+      case "FRAUD":
+        return `
+          background: #fdf2f2;
+          color: #f04452;
+        `;
+      case "SPAM_AD":
+        return `
+          background: #fff5e5;
+          color: #ff8b00;
+        `;
+      default:
+        return `
+          background: #f2f4f6;
+          color: #6b7684;
+        `;
+    }
+  }}
+`;
+
+const ReportDateText = styled.span`
+  font-size: 12px;
   color: #8b95a1;
-  font-size: 0.78rem;
-  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 `;
 
-const ReportedQuoteBox = styled.div`
-  padding: 16px;
-  border-radius: 14px;
+const QuoteSurface = styled.div`
   background: #f9fafb;
-  border-left: 3.5px solid #3182f6;
+  border: 1px solid #f2f4f6;
+  border-radius: 12px;
+  padding: 14px 16px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 `;
 
-const QuoteLabel = styled.span`
-  font-size: 0.72rem;
+const QuoteHeading = styled.span`
+  font-size: 11px;
   font-weight: 700;
   color: #8b95a1;
 `;
 
-const QuoteText = styled.p`
+const QuoteBodyText = styled.p`
   margin: 0;
+  font-size: 14px;
+  font-weight: 600;
   color: #191f28;
-  font-size: 0.94rem;
-  line-height: 1.6;
+  line-height: 1.5;
   white-space: pre-wrap;
-  word-break: break-all;
+  word-break: break-word;
 `;
 
-const InfoGrid = styled.div`
+const MetaInfoGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-  padding: 14px;
-  background: #f9fafb;
-  border-radius: 14px;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  background: #ffffff;
+  border-top: 1px solid #f2f4f6;
+  padding-top: 10px;
 
-  @media (max-width: 680px) {
-    grid-template-columns: 1fr;
-    gap: 8px;
+  @media (min-width: 600px) {
+    grid-template-columns: 1fr 1fr;
   }
 `;
 
-const InfoItem = styled.div`
+const MetaBox = styled.div`
   display: flex;
   flex-direction: column;
   gap: 2px;
 `;
 
-const InfoLabel = styled.span`
-  color: #8b95a1;
-  font-size: 0.72rem;
+const MetaKey = styled.span`
+  font-size: 11px;
   font-weight: 600;
+  color: #8b95a1;
 `;
 
-const InfoValue = styled.strong`
+const MetaVal = styled.span`
+  font-size: 13px;
+  font-weight: 600;
   color: #333d4b;
-  font-size: 0.85rem;
-  font-weight: 700;
-  word-break: break-all;
 `;
 
-const ActionButtonsGrid = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-top: 4px;
-`;
-
-const ActionButton = styled.button`
-  min-height: 48px;
-  border-radius: 14px;
+const ActionButtonsRow = styled.div`
   display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.92rem;
+  gap: 8px;
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: 1px solid #f2f4f6;
+`;
+
+const RejectActionButton = styled.button`
+  flex: 1;
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid #e5e8eb;
+  background: #ffffff;
+  color: #4e5968;
+  font-size: 13px;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.15s ease-out;
+  transition: all 0.15s ease;
 
-  &:active:not(:disabled) {
-    transform: scale(0.98);
+  &:hover:not(:disabled) {
+    background: #fdf2f2;
+    border-color: #fde8e8;
+    color: #f04452;
   }
 
   &:disabled {
-    cursor: not-allowed;
     opacity: 0.5;
+    cursor: not-allowed;
   }
 `;
 
-const RejectButton = styled(ActionButton)`
-  border: 1px solid #e5e8eb;
-  background: #f2f4f6;
-  color: #4e5968;
-
-  &:hover:not(:disabled) {
-    background: #e5e8eb;
-    color: #191f28;
-  }
-`;
-
-const ApproveButton = styled(ActionButton)`
+const ApproveActionButton = styled.button`
+  flex: 1;
+  height: 42px;
+  border-radius: 12px;
   border: none;
-  background: #f04452;
+  background: #3182f6;
   color: #ffffff;
-  box-shadow: 0 2px 8px rgba(240, 68, 82, 0.22);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
 
   &:hover:not(:disabled) {
-    background: #dc3545;
+    background: #1b64da;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 `;
 
-const PaginationContainer = styled.div`
+/* 페이지네이션 */
+const PaginationWrapper = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 16px;
-  margin-top: 16px;
-`;
-
-const PageIndicatorText = styled.span`
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: #4e5968;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid #f2f4f6;
 `;
 
 const PageNavButton = styled.button`
-  padding: 10px 16px;
   border: 1px solid #e5e8eb;
-  border-radius: 12px;
   background: #ffffff;
-  color: #333d4b;
-  font-size: 0.85rem;
+  color: #4e5968;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 13px;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.15s ease-out;
+  transition: all 0.15s ease;
 
   &:hover:not(:disabled) {
     border-color: #3182f6;
@@ -465,7 +695,17 @@ const PageNavButton = styled.button`
   }
 
   &:disabled {
+    opacity: 0.35;
     cursor: not-allowed;
-    opacity: 0.4;
+  }
+`;
+
+const PageIndicator = styled.span`
+  font-size: 13px;
+  color: #6b7684;
+
+  strong {
+    color: #191f28;
+    font-weight: 700;
   }
 `;
