@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Bot, CheckCircle2, Send } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { isAxiosError } from "axios";
 import { sendOpenChatBotMessage } from "@/apis/openchat";
@@ -31,7 +30,7 @@ const OpenChatBotPage = () => {
     }
   });
 
-  useSetHeader({ title: "챗봇" });
+  useSetHeader({ title: "오픈채팅 챗봇" });
 
   useEffect(() => {
     if (!isLoading && !isMainAdmin) navigate("/admin", { replace: true });
@@ -53,7 +52,7 @@ const OpenChatBotPage = () => {
     try {
       await sendOpenChatBotMessage(roomId, trimmedContent);
       setContent("");
-      setSentMessage("챗봇 메시지를 발송했습니다.");
+      setSentMessage("챗봇 메시지를 성공적으로 발송했습니다.");
     } catch (requestError) {
       setError(
         isAxiosError(requestError) && requestError.response?.status === 404
@@ -68,29 +67,71 @@ const OpenChatBotPage = () => {
   return (
     <S.AdminShell>
       <S.AdminPage>
-        <S.AdminHero>
-          <S.AdminHeroContent>
-            <S.AdminHeroEyebrow><Bot size={14} /> Open chat bot</S.AdminHeroEyebrow>
-            <S.AdminHeroTitle>오픈채팅 챗봇</S.AdminHeroTitle>
-            <S.AdminHeroDescription>방에 참여하지 않고 안내 메시지를 발송할 수 있습니다. 개인 채팅방은 목록에 표시되지 않습니다.</S.AdminHeroDescription>
-          </S.AdminHeroContent>
-        </S.AdminHero>
         <S.AdminCard as="form" onSubmit={handleSubmit}>
-          <S.AdminCardHeader><S.AdminCardTitleGroup><S.AdminCardTitle>메시지 작성</S.AdminCardTitle><S.AdminCardDescription>발송된 메시지는 채팅방에서 보라색 챗봇 말풍선으로 표시됩니다.</S.AdminCardDescription></S.AdminCardTitleGroup></S.AdminCardHeader>
+          <S.AdminCardHeader>
+            <S.AdminCardTitleGroup>
+              <S.AdminCardTitle>오픈채팅 챗봇 메시지 발송</S.AdminCardTitle>
+              <S.AdminCardDescription>
+                방에 직접 참여하지 않고 안내 챗봇 메시지를 안전하게 발송할 수 있습니다.
+              </S.AdminCardDescription>
+            </S.AdminCardTitleGroup>
+          </S.AdminCardHeader>
+
           <S.AdminField>
             <S.AdminLabel htmlFor="open-chat-room">발송할 오픈채팅방</S.AdminLabel>
-            <S.AdminSelect id="open-chat-room" value={roomId ?? ""} disabled={isLoadingRooms || rooms.length === 0 || isSubmitting} onChange={(event) => setRoomId(Number(event.target.value))}>
-              {isLoadingRooms ? <option>채팅방을 불러오는 중입니다</option> : rooms.length === 0 ? <option>발송 가능한 오픈채팅방이 없습니다</option> : rooms.map((room) => <option key={room.roomId} value={room.roomId}>{room.roomName}</option>)}
+            <S.AdminSelect
+              id="open-chat-room"
+              value={roomId ?? ""}
+              disabled={isLoadingRooms || rooms.length === 0 || isSubmitting}
+              onChange={(event) => setRoomId(Number(event.target.value))}
+            >
+              {isLoadingRooms ? (
+                <option>채팅방 목록을 불러오는 중입니다...</option>
+              ) : rooms.length === 0 ? (
+                <option>발송 가능한 오픈채팅방이 없습니다</option>
+              ) : (
+                rooms.map((room) => (
+                  <option key={room.roomId} value={room.roomId}>
+                    [방 #{room.roomId}] {room.roomName}
+                  </option>
+                ))
+              )}
             </S.AdminSelect>
           </S.AdminField>
+
           <S.AdminField>
-            <S.AdminLabel htmlFor="bot-content">챗봇 메시지</S.AdminLabel>
-            <S.AdminTextarea id="bot-content" value={content} maxLength={1000} placeholder="입주 준비, 공동구매 등 채팅방에 안내할 내용을 입력해 주세요." disabled={isSubmitting} onChange={(event) => setContent(event.target.value)} />
-            <S.AdminSubtleText>{content.length}/1000</S.AdminSubtleText>
+            <S.AdminLabel htmlFor="bot-content">안내 메시지 내용</S.AdminLabel>
+            <S.AdminTextarea
+              id="bot-content"
+              value={content}
+              maxLength={1000}
+              placeholder="입주 준비, 수칙 안내, 공동구매 등 채팅방에 안내할 내용을 작성해 주세요."
+              disabled={isSubmitting}
+              onChange={(event) => setContent(event.target.value)}
+              style={{ minHeight: "160px" }}
+            />
+            <S.AdminSubtleText>{content.length}/1000자</S.AdminSubtleText>
           </S.AdminField>
+
           {error && <S.AdminNotice $tone="error">{error}</S.AdminNotice>}
-          {sentMessage && <S.AdminNotice $tone="success"><CheckCircle2 size={18} />{sentMessage}</S.AdminNotice>}
-          <S.AdminActionRow><S.AdminButton type="submit" disabled={!roomId || !content.trim() || isSubmitting || isLoadingRooms}><Send size={18} /> {isSubmitting ? "발송 중..." : "챗봇 메시지 발송"}</S.AdminButton></S.AdminActionRow>
+          {sentMessage && <S.AdminNotice $tone="success">{sentMessage}</S.AdminNotice>}
+
+          <S.AdminActionRow>
+            <S.AdminButton
+              type="submit"
+              disabled={!roomId || !content.trim() || isSubmitting || isLoadingRooms}
+            >
+              {isSubmitting ? "메시지를 보내고 있어요..." : "챗봇 메시지 발송하기"}
+            </S.AdminButton>
+            <S.AdminButton
+              type="button"
+              $tone="secondary"
+              onClick={() => navigate(-1)}
+              disabled={isSubmitting}
+            >
+              뒤로가기
+            </S.AdminButton>
+          </S.AdminActionRow>
         </S.AdminCard>
       </S.AdminPage>
     </S.AdminShell>
