@@ -6,6 +6,7 @@ import logo from "@/assets/unidorm-logo.webp";
 import { Bell, Settings, Menu } from "lucide-react";
 import useUserStore from "@/stores/useUserStore";
 import useHeaderStore from "@/stores/useHeaderStore";
+import { flushAllBroadcastSync } from "@/stores/middleware/broadcastSync";
 import { useUserRole } from "@/hooks/useUserRole";
 import { getMobilePlatform } from "@/utils/getMobilePlatform";
 import TooltipMessage from "src/components/common/TooltipMessage";
@@ -22,7 +23,7 @@ export default function Header({ hasBack = false, backPath }: HeaderProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAdmin, roleName } = useUserRole();
-  const { userInfo, setUserInfo } = useUserStore();
+  const { userInfo, clearUnreadNotifications } = useUserStore();
   const platform = getMobilePlatform();
 
   const {
@@ -63,8 +64,9 @@ export default function Header({ hasBack = false, backPath }: HeaderProps) {
 
   /* 알림 핸들러 */
   const handleNotificationClick = () => {
-    setUserInfo({ ...userInfo, hasUnreadNotifications: false });
-    navigate("/notification");
+    clearUnreadNotifications();
+    flushAllBroadcastSync();
+    navigate(PATHS.NOTIFICATION);
   };
 
   return (

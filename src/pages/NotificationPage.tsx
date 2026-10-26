@@ -3,6 +3,7 @@ import NotiItem from "../components/notification/NotiItem.tsx";
 import { useEffect, useRef, useState } from "react";
 import { useNotificationScroll } from "@/queries/notifications";
 import useUserStore from "../stores/useUserStore.ts";
+import { flushAllBroadcastSync } from "@/stores/middleware/broadcastSync";
 import { Link, useNavigate } from "react-router-dom";
 import {
   acceptRoommateMatching,
@@ -18,7 +19,7 @@ const PAGE_SIZE = 20;
 
 const NotificationPage = () => {
   const navigate = useNavigate();
-  const { tokenInfo } = useUserStore();
+  const { tokenInfo, userInfo, clearUnreadNotifications } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
   const observerTarget = useRef<HTMLDivElement>(null);
 
@@ -31,6 +32,25 @@ const NotificationPage = () => {
   // 알림 데이터 무한스크롤 조회
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, refetch, isLoading } =
     useNotificationScroll(PAGE_SIZE, { enabled: isLoggedIn });
+
+  // 알림 페이지 진입 및 이탈 시 미읽음 알림 상태 해제 및 브로드캐스트 동기화
+  useEffect(() => {
+    clearUnreadNotifications();
+    flushAllBroadcastSync();
+
+    return () => {
+      clearUnreadNotifications();
+      flushAllBroadcastSync();
+    };
+  }, [clearUnreadNotifications]);
+
+  // 알림 목록 수신 시에도 미읽음 상태가 남아있다면 해제
+  useEffect(() => {
+    if (userInfo.hasUnreadNotifications) {
+      clearUnreadNotifications();
+      flushAllBroadcastSync();
+    }
+  }, [userInfo.hasUnreadNotifications, clearUnreadNotifications]);
 
   // 데이터 평탄화 처리
   const notifications = data?.pages.flatMap((page) => page.data) || [];
