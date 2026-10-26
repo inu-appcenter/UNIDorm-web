@@ -50,12 +50,12 @@ const MenuGroup = ({ title, menus, hasToggle, onToggle }: MenuGroupProps) => {
             )}
           </MenuContent>
           {hasToggle && menu.checked !== undefined && (
-            <div onClick={(e) => e.stopPropagation()}>
+            <ToggleContainer onClick={(e) => e.stopPropagation()}>
               <Switch
                 checked={menu.checked}
                 onCheckedChange={() => handleToggle(menu)}
               />
-            </div>
+            </ToggleContainer>
           )}
         </MenuLine>
       ))}
@@ -85,7 +85,7 @@ const MenuLine = styled.div`
   border-radius: 12px;
   box-sizing: border-box;
 
-  /* Apple & Toss 스타일 셀 탭 피드백 */
+  /* 셀 탭 피드백 */
   transition: background-color 0.12s ease, transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);
 
   &:hover {
@@ -103,8 +103,16 @@ const MenuContent = styled.div`
   flex-direction: column;
   gap: 4px;
   user-select: none;
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   padding-right: 16px;
+`;
+
+const ToggleContainer = styled.div`
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
 `;
 
 const MenuLabel = styled.div`
