@@ -1,14 +1,6 @@
 import React, { useMemo, useState } from "react";
 import styled from "styled-components";
 import {
-  CalendarDays,
-  Link2,
-  PencilLine,
-  PlusCircle,
-  Trash2,
-  X,
-} from "lucide-react";
-import {
   createCalendar,
   deleteCalendar,
   updateCalendar,
@@ -16,13 +8,13 @@ import {
 import { useAllCalendars } from "@/queries/calendar";
 import AdminBottomSheet from "@/components/modal/AdminBottomSheet";
 import { useSetHeader } from "@/hooks/useSetHeader";
+import { useCountUp } from "@/hooks/useCountUp";
 import {
   AdminActionRow,
   AdminBadge,
   AdminButton,
   AdminCard,
   AdminCardDescription,
-  AdminCardEyebrow,
   AdminCardHeader,
   AdminCardTitle,
   AdminCardTitleGroup,
@@ -31,18 +23,14 @@ import {
   AdminEmptyTitle,
   AdminField,
   AdminFieldGrid,
-  AdminHero,
-  AdminHeroMetricGrid,
   AdminInput,
   AdminLabel,
   AdminMiniStat,
   AdminMiniStatLabel,
   AdminMiniStatValue,
   AdminPage,
-  AdminPageGrid,
   AdminScrollableArea,
   AdminShell,
-  AdminStack,
   AdminSubtleText,
   formatDateRangeLabel,
   getDomainLabel,
@@ -112,6 +100,11 @@ const CalendarAdminPage: React.FC = () => {
       linked,
     };
   }, [calendarList, today]);
+
+  const animatedTotal = useCountUp(summary.total);
+  const animatedActive = useCountUp(summary.active);
+  const animatedUpcoming = useCountUp(summary.upcoming);
+  const animatedLinked = useCountUp(summary.linked);
 
   const openCreateEditor = () => {
     setSelectedItem(null);
@@ -186,107 +179,203 @@ const CalendarAdminPage: React.FC = () => {
 
   useSetHeader({ title: "캘린더 관리" });
 
+  const renderFormFields = () => (
+    <Form onSubmit={handleSubmit}>
+      <AdminField>
+        <AdminLabel htmlFor="calendar-title">일정 제목</AdminLabel>
+        <AdminInput
+          id="calendar-title"
+          name="title"
+          type="text"
+          placeholder="예: 기숙사 입사 신청"
+          value={formData.title}
+          onChange={handleChange}
+          required
+        />
+      </AdminField>
+
+      <AdminField>
+        <AdminLabel htmlFor="calendar-link">연결 링크 (선택)</AdminLabel>
+        <AdminInput
+          id="calendar-link"
+          name="link"
+          type="url"
+          placeholder="https://example.com"
+          value={formData.link}
+          onChange={handleChange}
+        />
+      </AdminField>
+
+      <AdminFieldGrid>
+        <AdminField>
+          <AdminLabel htmlFor="calendar-start-date">시작일</AdminLabel>
+          <AdminInput
+            id="calendar-start-date"
+            name="startDate"
+            type="date"
+            value={formData.startDate}
+            onChange={handleChange}
+            required
+          />
+        </AdminField>
+
+        <AdminField>
+          <AdminLabel htmlFor="calendar-end-date">종료일</AdminLabel>
+          <AdminInput
+            id="calendar-end-date"
+            name="endDate"
+            type="date"
+            value={formData.endDate}
+            onChange={handleChange}
+            required
+          />
+        </AdminField>
+      </AdminFieldGrid>
+
+      <AdminActionRow>
+        <AdminButton type="submit">
+          {selectedItem ? "일정 저장하기" : "일정 등록하기"}
+        </AdminButton>
+        <AdminButton
+          type="button"
+          $tone="secondary"
+          onClick={closeEditor}
+        >
+          취소
+        </AdminButton>
+        {selectedItem && (
+          <AdminButton
+            type="button"
+            $tone="danger"
+            onClick={handleDelete}
+          >
+            일정 삭제
+          </AdminButton>
+        )}
+      </AdminActionRow>
+    </Form>
+  );
+
   return (
     <AdminShell>
       <AdminPage>
-        <AdminHero>
-          <AdminHeroMetricGrid>
-            <AdminMiniStat>
-              <AdminMiniStatLabel>등록 일정</AdminMiniStatLabel>
-              <AdminMiniStatValue>{summary.total}</AdminMiniStatValue>
-            </AdminMiniStat>
-            <AdminMiniStat>
-              <AdminMiniStatLabel>진행 중</AdminMiniStatLabel>
-              <AdminMiniStatValue>{summary.active}</AdminMiniStatValue>
-            </AdminMiniStat>
-            <AdminMiniStat>
-              <AdminMiniStatLabel>예정 일정</AdminMiniStatLabel>
-              <AdminMiniStatValue>{summary.upcoming}</AdminMiniStatValue>
-            </AdminMiniStat>
-            <AdminMiniStat>
-              <AdminMiniStatLabel>링크 포함</AdminMiniStatLabel>
-              <AdminMiniStatValue>{summary.linked}</AdminMiniStatValue>
-            </AdminMiniStat>
-          </AdminHeroMetricGrid>
-        </AdminHero>
+        {/* 상단 4대 핵심 지표 (Zero-Icon & 카운트업) */}
+        <MetricsGrid>
+          <AdminMiniStat>
+            <AdminMiniStatLabel>전체 일정</AdminMiniStatLabel>
+            <AdminMiniStatValue>{animatedTotal}건</AdminMiniStatValue>
+          </AdminMiniStat>
+          <AdminMiniStat>
+            <AdminMiniStatLabel>진행 중</AdminMiniStatLabel>
+            <AdminMiniStatValue style={{ color: "#04b05c" }}>
+              {animatedActive}건
+            </AdminMiniStatValue>
+          </AdminMiniStat>
+          <AdminMiniStat>
+            <AdminMiniStatLabel>예정 일정</AdminMiniStatLabel>
+            <AdminMiniStatValue style={{ color: "#3182f6" }}>
+              {animatedUpcoming}건
+            </AdminMiniStatValue>
+          </AdminMiniStat>
+          <AdminMiniStat>
+            <AdminMiniStatLabel>링크 포함</AdminMiniStatLabel>
+            <AdminMiniStatValue>{animatedLinked}건</AdminMiniStatValue>
+          </AdminMiniStat>
+        </MetricsGrid>
 
-        <AdminPageGrid $desktopColumns="minmax(0, 1fr)">
-          <AdminStack>
-            <AdminCard>
-              <AdminCardHeader>
-                <AdminCardTitleGroup>
-                  <AdminCardEyebrow>Schedule List</AdminCardEyebrow>
-                  <AdminCardTitle>등록된 일정</AdminCardTitle>
-                  <AdminCardDescription>
-                    일정 추가하기 버튼으로 새 일정을 만들고, 기존 일정 카드를
-                    눌러 수정할 수 있습니다.
-                  </AdminCardDescription>
-                </AdminCardTitleGroup>
+        {/* 메인 작업 영역: PC 2열 스플릿 뷰 / 모바일 1열 */}
+        <PageLayoutGrid>
+          {/* 좌측: 등록된 일정 목록 */}
+          <AdminCard>
+            <AdminCardHeader>
+              <AdminCardTitleGroup>
+                <AdminCardTitle>등록된 일정 목록</AdminCardTitle>
+                <AdminCardDescription>
+                  일정 카드를 선택하여 세부 내용을 수정하거나 삭제할 수 있습니다.
+                </AdminCardDescription>
+              </AdminCardTitleGroup>
 
+              <DesktopCreateButton
+                type="button"
+                onClick={openCreateEditor}
+              >
+                새 일정 추가하기
+              </DesktopCreateButton>
+            </AdminCardHeader>
+
+            {calendarList.length === 0 ? (
+              <AdminEmptyState>
+                <AdminEmptyTitle>아직 등록된 일정이 없습니다.</AdminEmptyTitle>
+                <AdminEmptyDescription>
+                  새 일정을 추가하면 생활원 캘린더에 실시간으로 반영됩니다.
+                </AdminEmptyDescription>
                 <AdminButton type="button" onClick={openCreateEditor}>
-                  <PlusCircle size={16} />
-                  일정 추가하기
+                  첫 일정 추가하기
                 </AdminButton>
-              </AdminCardHeader>
+              </AdminEmptyState>
+            ) : (
+              <AdminScrollableArea $maxHeight="700px">
+                <EventList>
+                  {calendarList.map((item) => {
+                    const status = getCalendarStatus(item, today);
+                    const isSelected = selectedItem?.id === item.id;
 
-              {calendarList.length === 0 ? (
-                <AdminEmptyState>
-                  <AdminEmptyTitle>
-                    아직 등록된 일정이 없습니다.
-                  </AdminEmptyTitle>
-                  <AdminEmptyDescription>
-                    첫 일정을 추가하면 캘린더에 바로 반영됩니다.
-                  </AdminEmptyDescription>
-                  <AdminButton type="button" onClick={openCreateEditor}>
-                    <PlusCircle size={16} />첫 일정 추가하기
-                  </AdminButton>
-                </AdminEmptyState>
-              ) : (
-                <AdminScrollableArea $maxHeight="720px">
-                  <EventList>
-                    {calendarList.map((item) => {
-                      const status = getCalendarStatus(item, today);
+                    return (
+                      <EventCard
+                        key={item.id}
+                        type="button"
+                        $isSelected={isSelected}
+                        onClick={() => openEditEditor(item)}
+                      >
+                        <EventHeader>
+                          <EventTitleWrap>
+                            <EventTitle>{item.title}</EventTitle>
+                            <EventDateText>
+                              {formatDateRangeLabel(
+                                item.startDate,
+                                item.endDate,
+                              )}
+                            </EventDateText>
+                          </EventTitleWrap>
+                          <AdminBadge $tone={status.tone}>
+                            {status.label}
+                          </AdminBadge>
+                        </EventHeader>
 
-                      return (
-                        <EventCard
-                          key={item.id}
-                          type="button"
-                          onClick={() => openEditEditor(item)}
-                        >
-                          <EventHeader>
-                            <EventTitleWrap>
-                              <EventTitle>{item.title}</EventTitle>
-                              <EventDateText>
-                                <CalendarDays size={16} />
-                                {formatDateRangeLabel(
-                                  item.startDate,
-                                  item.endDate,
-                                )}
-                              </EventDateText>
-                            </EventTitleWrap>
-                            <EventBadgeGroup>
-                              <AdminBadge $tone={status.tone}>
-                                {status.label}
-                              </AdminBadge>
-                            </EventBadgeGroup>
-                          </EventHeader>
+                        {item.link?.trim() && (
+                          <EventLinkText>
+                            {getDomainLabel(item.link)}
+                          </EventLinkText>
+                        )}
+                      </EventCard>
+                    );
+                  })}
+                </EventList>
+              </AdminScrollableArea>
+            )}
+          </AdminCard>
 
-                          {item.link?.trim() && (
-                            <EventLink>
-                              <Link2 size={16} />
-                              {getDomainLabel(item.link)}
-                            </EventLink>
-                          )}
-                        </EventCard>
-                      );
-                    })}
-                  </EventList>
-                </AdminScrollableArea>
-              )}
-            </AdminCard>
-          </AdminStack>
-        </AdminPageGrid>
+          {/* PC 전용 우측 고정 에디터 패널 (Sticky) */}
+          <DesktopEditorCard $sticky>
+            <AdminCardHeader>
+              <AdminCardTitleGroup>
+                <AdminBadge $tone={selectedItem ? "blue" : "green"}>
+                  {selectedItem ? "일정 편집 중" : "새 일정 작성"}
+                </AdminBadge>
+                <AdminCardTitle>
+                  {selectedItem ? selectedItem.title : "새 일정 등록하기"}
+                </AdminCardTitle>
+                <AdminCardDescription>
+                  일정 제목과 노출 기간, 연결 링크를 입력해 주세요.
+                </AdminCardDescription>
+              </AdminCardTitleGroup>
+            </AdminCardHeader>
 
+            {renderFormFields()}
+          </DesktopEditorCard>
+        </PageLayoutGrid>
+
+        {/* 모바일 전용 슬라이드 인 바텀시트 에디터 */}
         <AdminBottomSheet
           isOpen={isEditorOpen}
           setIsOpen={(nextOpen) => {
@@ -303,126 +392,29 @@ const CalendarAdminPage: React.FC = () => {
                 {selectedItem ? "일정 수정" : "새 일정"}
               </AdminBadge>
               <EditorTitle>
-                {selectedItem ? selectedItem.title : "새 일정 등록"}
+                {selectedItem ? selectedItem.title : "새 일정 등록하기"}
               </EditorTitle>
               <AdminSubtleText>
-                제목, 기간, 링크를 입력해서 저장해 주세요.
+                제목, 기간, 링크를 입력하고 저장해 주세요.
               </AdminSubtleText>
             </EditorTitleGroup>
 
             <CloseButton type="button" onClick={closeEditor} aria-label="닫기">
-              <X size={20} />
+              ✕
             </CloseButton>
           </EditorHeader>
 
           <EditorScrollArea>
-            {selectedItem ? (
-              <SelectedSummary>
-                <AdminBadge $tone="blue">
-                  <PencilLine size={14} />
-                  편집 중
-                </AdminBadge>
-                <SelectedSummaryTitle>
-                  {selectedItem.title}
-                </SelectedSummaryTitle>
-                <AdminSubtleText>
-                  {formatDateRangeLabel(
-                    selectedItem.startDate,
-                    selectedItem.endDate,
-                  )}
-                </AdminSubtleText>
-              </SelectedSummary>
-            ) : (
-              <SelectedSummary>
-                <AdminBadge $tone="green">
-                  <PlusCircle size={14} />새 일정
-                </AdminBadge>
-                <SelectedSummaryTitle>
-                  새 일정 내용을 입력해 주세요
-                </SelectedSummaryTitle>
-                <AdminSubtleText>
-                  링크는 선택 사항이며 입력하지 않으면 제목과 기간만 표시됩니다.
-                </AdminSubtleText>
-              </SelectedSummary>
-            )}
-
-            <Form onSubmit={handleSubmit}>
-              <AdminField>
-                <AdminLabel htmlFor="calendar-title">일정 제목</AdminLabel>
-                <AdminInput
-                  id="calendar-title"
-                  name="title"
-                  type="text"
-                  placeholder="예: 기숙사 입사 신청"
-                  value={formData.title}
-                  onChange={handleChange}
-                  required
-                />
-              </AdminField>
-
-              <AdminField>
-                <AdminLabel htmlFor="calendar-link">연결 링크</AdminLabel>
-                <AdminInput
-                  id="calendar-link"
-                  name="link"
-                  type="url"
-                  placeholder="https://example.com"
-                  value={formData.link}
-                  onChange={handleChange}
-                />
-              </AdminField>
-
-              <AdminFieldGrid>
-                <AdminField>
-                  <AdminLabel htmlFor="calendar-start-date">시작일</AdminLabel>
-                  <AdminInput
-                    id="calendar-start-date"
-                    name="startDate"
-                    type="date"
-                    value={formData.startDate}
-                    onChange={handleChange}
-                    required
-                  />
-                </AdminField>
-
-                <AdminField>
-                  <AdminLabel htmlFor="calendar-end-date">종료일</AdminLabel>
-                  <AdminInput
-                    id="calendar-end-date"
-                    name="endDate"
-                    type="date"
-                    value={formData.endDate}
-                    onChange={handleChange}
-                    required
-                  />
-                </AdminField>
-              </AdminFieldGrid>
-
-              <AdminActionRow>
-                <AdminButton type="submit">
-                  {selectedItem ? "일정 저장" : "일정 등록"}
-                </AdminButton>
-                <AdminButton
-                  type="button"
-                  $tone="secondary"
-                  onClick={closeEditor}
-                >
-                  닫기
-                </AdminButton>
-                {selectedItem && (
-                  <AdminButton
-                    type="button"
-                    $tone="danger"
-                    onClick={handleDelete}
-                  >
-                    <Trash2 size={16} />
-                    일정 삭제
-                  </AdminButton>
-                )}
-              </AdminActionRow>
-            </Form>
+            {renderFormFields()}
           </EditorScrollArea>
         </AdminBottomSheet>
+
+        {/* 모바일 전용 하단 고정 CTA */}
+        <MobileCTAContainer>
+          <MobileCTAButton type="button" onClick={openCreateEditor}>
+            새 일정 추가하기
+          </MobileCTAButton>
+        </MobileCTAContainer>
       </AdminPage>
     </AdminShell>
   );
@@ -430,85 +422,113 @@ const CalendarAdminPage: React.FC = () => {
 
 export default CalendarAdminPage;
 
+const MetricsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+  }
+`;
+
+const PageLayoutGrid = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+
+  @media (min-width: 1080px) {
+    grid-template-columns: minmax(0, 1.18fr) minmax(360px, 0.82fr);
+    align-items: start;
+    gap: 28px;
+  }
+`;
+
+const DesktopCreateButton = styled(AdminButton)`
+  display: none;
+
+  @media (min-width: 768px) {
+    display: inline-flex;
+  }
+`;
+
+const DesktopEditorCard = styled(AdminCard)`
+  display: none;
+
+  @media (min-width: 1080px) {
+    display: flex;
+  }
+`;
+
 const Form = styled.form`
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
 `;
 
 const EventList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 `;
 
-const EventCard = styled.button`
+const EventCard = styled.button<{ $isSelected?: boolean }>`
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 18px;
+  gap: 10px;
+  padding: 18px 20px;
   text-align: left;
-  border-radius: 22px;
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
-  box-shadow: 0 18px 32px -28px rgba(15, 23, 42, 0.12);
+  border-radius: 18px;
+  border: 1.5px solid ${({ $isSelected }) => ($isSelected ? "#3182f6" : "#e5e8eb")};
+  background: ${({ $isSelected }) => ($isSelected ? "#f8fbff" : "#ffffff")};
   cursor: pointer;
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    transform 0.2s ease;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 
   &:hover {
-    border-color: #93c5fd;
-    box-shadow: 0 22px 38px -28px rgba(37, 99, 235, 0.18);
+    border-color: #3182f6;
+    background-color: #fcfdfe;
     transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: scale(0.99);
   }
 `;
 
 const EventHeader = styled.div`
   display: flex;
-  flex-wrap: wrap;
   justify-content: space-between;
+  align-items: flex-start;
   gap: 12px;
 `;
 
 const EventTitleWrap = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
   min-width: 0;
 `;
 
 const EventTitle = styled.h3`
   margin: 0;
   font-size: 1rem;
-  font-weight: 800;
-  color: #0f172a;
+  font-weight: 700;
+  color: #191f28;
+  letter-spacing: -0.01em;
 `;
 
-const EventDateText = styled.div`
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.9rem;
+const EventDateText = styled.span`
+  font-size: 0.85rem;
   font-weight: 600;
-  color: #475569;
+  color: #6b7684;
 `;
 
-const EventBadgeGroup = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-`;
-
-const EventLink = styled.div`
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.9rem;
-  line-height: 1.5;
-  color: #2563eb;
+const EventLinkText = styled.span`
+  font-size: 0.82rem;
+  color: #3182f6;
+  font-weight: 600;
   word-break: break-all;
 `;
 
@@ -518,17 +538,13 @@ const EditorHeader = styled.div`
   justify-content: space-between;
   gap: 16px;
   padding: 20px 20px 16px;
-  border-bottom: 1px solid #e2e8f0;
-
-  @media (min-width: 768px) {
-    padding: 24px 24px 18px;
-  }
+  border-bottom: 1px solid #e5e8eb;
 `;
 
 const EditorTitleGroup = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   min-width: 0;
 `;
 
@@ -536,22 +552,28 @@ const EditorTitle = styled.h2`
   margin: 0;
   font-size: 1.2rem;
   font-weight: 800;
-  line-height: 1.3;
-  color: #0f172a;
+  color: #191f28;
 `;
 
 const CloseButton = styled.button`
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 14px;
-  color: #475569;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  color: #6b7684;
+  background: #f2f4f6;
+  border: none;
+  font-size: 1rem;
+  font-weight: 700;
   cursor: pointer;
   flex-shrink: 0;
+
+  &:hover {
+    background: #e5e8eb;
+    color: #191f28;
+  }
 `;
 
 const EditorScrollArea = styled.div`
@@ -559,26 +581,42 @@ const EditorScrollArea = styled.div`
   padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
+`;
 
-  @media (min-width: 768px) {
-    padding: 24px;
+const MobileCTAContainer = styled.div`
+  display: block;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 30;
+  max-width: 600px;
+  margin: 0 auto;
+  pointer-events: none;
+  background: linear-gradient(to top, #ffffff 60%, rgba(255, 255, 255, 0));
+  padding: 16px 20px calc(14px + env(safe-area-inset-bottom, 0px));
+
+  @media (min-width: 1080px) {
+    display: none;
   }
 `;
 
-const SelectedSummary = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 18px;
-  border-radius: 22px;
-  background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
-  border: 1px solid #dbeafe;
-`;
-
-const SelectedSummaryTitle = styled.h3`
-  margin: 0;
+const MobileCTAButton = styled.button`
+  pointer-events: auto;
+  width: 100%;
+  height: 52px;
+  border-radius: 16px;
+  background: #3182f6;
+  color: #ffffff;
   font-size: 1rem;
   font-weight: 800;
-  color: #0f172a;
+  border: none;
+  box-shadow: 0 4px 16px rgba(49, 130, 246, 0.28);
+  cursor: pointer;
+  transition: all 0.15s ease-out;
+
+  &:active {
+    transform: scale(0.98);
+  }
 `;
