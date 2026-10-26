@@ -323,19 +323,14 @@ export default ComplainFilter;
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
-  border-radius: 16px;
-  border: 1px solid #e5e8eb;
   background: #ffffff;
   box-sizing: border-box;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
   width: 100%;
-  min-width: 320px;
-  max-width: 440px;
-  max-height: min(620px, calc(100dvh - 140px));
+  max-height: min(80vh, 700px);
   overflow: hidden;
 
-  @supports not (height: 100dvh) {
-    max-height: min(620px, calc(100vh - 140px));
+  @media (max-width: 640px) {
+    max-height: 82vh;
   }
 `;
 
@@ -343,7 +338,7 @@ const HeaderRow = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px 14px;
+  padding: 18px 20px 14px;
   border-bottom: 1px solid #f2f4f6;
   flex-shrink: 0;
   background: #ffffff;
@@ -351,7 +346,7 @@ const HeaderRow = styled.div`
 
 const FilterTitle = styled.h3`
   margin: 0;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 700;
   color: #191f28;
 `;
@@ -405,10 +400,12 @@ const DateRangeContainer = styled.div`
   align-items: center;
   gap: 8px;
   width: 100%;
+  min-width: 0;
 `;
 
 const DateInput = styled.input`
   flex: 1;
+  min-width: 0;
   height: 40px;
   padding: 8px 12px;
   border-radius: 8px;
@@ -442,7 +439,9 @@ const FooterRow = styled.div`
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
-  padding: 14px 20px;
+  padding: 14px 20px calc(14px + max(var(--safe-area-bottom, 0px), env(safe-area-inset-bottom, 0px)));
+  padding-left: max(20px, env(safe-area-inset-left, 0px));
+  padding-right: max(20px, env(safe-area-inset-right, 0px));
   border-top: 1px solid #f2f4f6;
   background: #ffffff;
   flex-shrink: 0;

@@ -10,6 +10,7 @@ import { ComplaintSearchDto } from "@/types/complain";
 import { downloadComplaintsCSV } from "@/apis/complainAdmin";
 import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
 import ComplainFilter from "../../components/complain/ComplainFilter.tsx";
+import AdminModal from "@/components/modal/AdminModal";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import { useAdminComplaints } from "@/queries/complaints";
@@ -75,7 +76,6 @@ const ComplainAdminPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const filterGroupRef = useRef<HTMLDivElement>(null);
 
   // 기간 칩 가로 스크롤 영역 참조 및 그라디언트 상태
   const chipScrollRef = useRef<HTMLDivElement>(null);
@@ -210,24 +210,6 @@ const ComplainAdminPage = () => {
   } = useAdminComplaints(serverSearchDto, isLoggedIn);
 
   const isLoading = isInitialLoading || isPlaceholderData;
-
-  // 외부 클릭 시 필터 팝업 닫기
-  useEffect(() => {
-    const handleOutsideClick = (event: MouseEvent) => {
-      if (
-        filterGroupRef.current &&
-        !filterGroupRef.current.contains(event.target as Node)
-      ) {
-        setIsFilterOpen(false);
-      }
-    };
-    if (isFilterOpen) {
-      document.addEventListener("mousedown", handleOutsideClick);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleOutsideClick);
-    };
-  }, [isFilterOpen]);
 
   const handleToggleFilter = () => {
     setIsFilterOpen((prev) => !prev);
@@ -538,30 +520,17 @@ const ComplainAdminPage = () => {
 
             {/* 필터 버튼 및 기간 칩 그룹 (동일 라인 배치 및 가로 스크롤/그라디언트) */}
             <ControlsRow>
-              <FilterGroup ref={filterGroupRef}>
-                <FilterButton
-                  type="button"
-                  onClick={handleToggleFilter}
-                  $isActive={activeDetailFilterCount > 0}
-                >
-                  <Filter size={14} />
-                  <span>필터</span>
-                  {activeDetailFilterCount > 0 && (
-                    <Badge>{activeDetailFilterCount}</Badge>
-                  )}
-                </FilterButton>
-
-                {isFilterOpen && (
-                  <FilterDropdownWrapper>
-                    <ComplainFilter
-                      initialFilters={appliedDetailFilters}
-                      onApply={handleApplyFilters}
-                      onReset={handleResetFilters}
-                      onClose={() => setIsFilterOpen(false)}
-                    />
-                  </FilterDropdownWrapper>
+              <FilterButton
+                type="button"
+                onClick={handleToggleFilter}
+                $isActive={activeDetailFilterCount > 0}
+              >
+                <Filter size={14} />
+                <span>필터</span>
+                {activeDetailFilterCount > 0 && (
+                  <Badge>{activeDetailFilterCount}</Badge>
                 )}
-              </FilterGroup>
+              </FilterButton>
 
               <ChipScrollContainer>
                 {showLeftGradient && <LeftGradientOverlay />}
@@ -575,6 +544,20 @@ const ComplainAdminPage = () => {
                 {showRightGradient && <RightGradientOverlay />}
               </ChipScrollContainer>
             </ControlsRow>
+
+            {/* 필터 모달 (데스크톱: 중앙 팝업, 모바일: 하단 바텀시트) */}
+            <AdminModal
+              isOpen={isFilterOpen}
+              onClose={() => setIsFilterOpen(false)}
+              maxWidth="460px"
+            >
+              <ComplainFilter
+                initialFilters={appliedDetailFilters}
+                onApply={handleApplyFilters}
+                onReset={handleResetFilters}
+                onClose={() => setIsFilterOpen(false)}
+              />
+            </AdminModal>
 
             {/* 적용된 조건 태그 목록 (있을 때만 노출) */}
             {hasAnyActiveFilters && (
@@ -656,10 +639,6 @@ const ControlsRow = styled.div`
   flex-wrap: nowrap;
 `;
 
-const FilterGroup = styled.div`
-  position: relative;
-  flex-shrink: 0;
-`;
 
 const ChipScrollContainer = styled.div`
   position: relative;
@@ -767,16 +746,6 @@ const Badge = styled.span`
   line-height: 1;
 `;
 
-const FilterDropdownWrapper = styled.div`
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 0;
-  z-index: 50;
-  background: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-  border: 1px solid #E5E8EB;
-`;
 
 const ActiveTagsContainer = styled.div`
   display: flex;

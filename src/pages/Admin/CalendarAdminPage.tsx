@@ -1,54 +1,18 @@
 import React, { useMemo, useState } from "react";
 import styled from "styled-components";
 import {
-  CalendarDays,
-  Link2,
-  PencilLine,
-  PlusCircle,
-  Trash2,
-  X,
-} from "lucide-react";
-import {
   createCalendar,
   deleteCalendar,
   updateCalendar,
 } from "@/apis/calendar";
 import { useAllCalendars } from "@/queries/calendar";
-import AdminBottomSheet from "@/components/modal/AdminBottomSheet";
 import { useSetHeader } from "@/hooks/useSetHeader";
-import {
-  AdminActionRow,
-  AdminBadge,
-  AdminButton,
-  AdminCard,
-  AdminCardDescription,
-  AdminCardEyebrow,
-  AdminCardHeader,
-  AdminCardTitle,
-  AdminCardTitleGroup,
-  AdminEmptyDescription,
-  AdminEmptyState,
-  AdminEmptyTitle,
-  AdminField,
-  AdminFieldGrid,
-  AdminHero,
-  AdminHeroMetricGrid,
-  AdminInput,
-  AdminLabel,
-  AdminMiniStat,
-  AdminMiniStatLabel,
-  AdminMiniStatValue,
-  AdminPage,
-  AdminPageGrid,
-  AdminScrollableArea,
-  AdminShell,
-  AdminStack,
-  AdminSubtleText,
-  formatDateRangeLabel,
-  getDomainLabel,
-  getLocalDateInputValue,
-} from "@/pages/Admin/adminPageStyles";
 import { CalendarItem, CreateCalendarDto } from "@/types/calendar";
+
+type FilterStatus = "ALL" | "ACTIVE" | "UPCOMING" | "PAST";
+type SortOption = "START_ASC" | "START_DESC" | "TITLE_ASC";
+
+const ITEMS_PER_PAGE = 10;
 
 const EMPTY_FORM: CreateCalendarDto = {
   title: "",
@@ -57,69 +21,184 @@ const EMPTY_FORM: CreateCalendarDto = {
   endDate: "",
 };
 
-const getCalendarStatus = (item: CalendarItem, today: string) => {
-  if (item.endDate < today) {
-    return { label: "종료됨", tone: "slate" as const };
-  }
+const getTodayString = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
 
-  if (item.startDate > today) {
-    return { label: "예정", tone: "blue" as const };
-  }
+const formatDate = (dateStr: string) => {
+  if (!dateStr) return "-";
+  return dateStr.replace(/-/g, ".");
+};
 
-  return { label: "진행 중", tone: "green" as const };
+const getDomain = (url: string) => {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return url.replace(/^https?:\/\//, "").slice(0, 32);
+  }
 };
 
 const CalendarAdminPage: React.FC = () => {
-  const { data: rawCalendarList = [] } = useAllCalendars();
+  const { data: rawCalendarList = [], isLoading } = useAllCalendars();
+
+  // 글로벌 헤더 제목 등록 (페이지 내 중복 헤더 제거)
+  useSetHeader({ title: "캘린더 관리" });
+
+  const today = getTodayString();
+
+  // 검색 & 필터 상태
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [statusFilter, setStatusFilter] = useState<FilterStatus>("ALL");
+  const [yearMonthFilter, setYearMonthFilter] = useState<string>("ALL");
+  const [sortOption, setSortOption] = useState<SortOption>("START_ASC");
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // 모달(등록/수정) 상태
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<CalendarItem | null>(null);
   const [formData, setFormData] = useState<CreateCalendarDto>(EMPTY_FORM);
-  const [isEditorOpen, setIsEditorOpen] = useState(false);
-  const today = getLocalDateInputValue();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const calendarList = useMemo(() => {
-    return [...rawCalendarList].sort(
-      (a, b) =>
-        a.startDate.localeCompare(b.startDate) ||
-        a.endDate.localeCompare(b.endDate),
-    );
-  }, [rawCalendarList]);
-
-  const summary = useMemo(() => {
-    let active = 0;
-    let upcoming = 0;
-    let linked = 0;
-
-    calendarList.forEach((item) => {
-      if (item.link?.trim()) {
-        linked += 1;
-      }
-
-      if (item.endDate < today) {
-        return;
-      }
-
-      if (item.startDate > today) {
-        upcoming += 1;
-      } else {
-        active += 1;
-      }
-    });
-
-    return {
-      total: calendarList.length,
-      active,
-      upcoming,
-      linked,
-    };
-  }, [calendarList, today]);
-
-  const openCreateEditor = () => {
-    setSelectedItem(null);
-    setFormData(EMPTY_FORM);
-    setIsEditorOpen(true);
+  // 상태 판별 헬퍼
+  const getItemStatus = (item: CalendarItem): "ACTIVE" | "UPCOMING" | "PAST" => {
+    if (item.endDate < today) return "PAST";
+    if (item.startDate > today) return "UPCOMING";
+    return "ACTIVE";
   };
 
-  const openEditEditor = (item: CalendarItem) => {
+  // 등록된 일정들의 고유 연-월 목록 추출 (예: 2026-03, 2026-04 등)
+  const availableYearMonths = useMemo(() => {
+    const set = new Set<string>();
+    rawCalendarList.forEach((item) => {
+      if (item.startDate && item.startDate.length >= 7) {
+        set.add(item.startDate.slice(0, 7));
+      }
+    });
+    return Array.from(set).sort().reverse();
+  }, [rawCalendarList]);
+
+  // 필터링 및 정렬 처리
+  const filteredAndSortedList = useMemo(() => {
+    const keyword = searchKeyword.trim().toLowerCase();
+
+    const filtered = rawCalendarList.filter((item) => {
+      // 1. 키워드 검색
+      if (keyword) {
+        const titleMatch = item.title.toLowerCase().includes(keyword);
+        const linkMatch = item.link?.toLowerCase().includes(keyword);
+        if (!titleMatch && !linkMatch) return false;
+      }
+
+      // 2. 상태 필터
+      if (statusFilter !== "ALL") {
+        if (getItemStatus(item) !== statusFilter) return false;
+      }
+
+      // 3. 연-월 필터
+      if (yearMonthFilter !== "ALL") {
+        if (!item.startDate.startsWith(yearMonthFilter)) return false;
+      }
+
+      return true;
+    });
+
+    // 정렬
+    filtered.sort((a, b) => {
+      if (sortOption === "START_ASC") {
+        return (
+          a.startDate.localeCompare(b.startDate) ||
+          a.endDate.localeCompare(b.endDate)
+        );
+      }
+      if (sortOption === "START_DESC") {
+        return (
+          b.startDate.localeCompare(a.startDate) ||
+          b.endDate.localeCompare(a.endDate)
+        );
+      }
+      if (sortOption === "TITLE_ASC") {
+        return a.title.localeCompare(b.title, "ko");
+      }
+      return 0;
+    });
+
+    return filtered;
+  }, [rawCalendarList, searchKeyword, statusFilter, yearMonthFilter, sortOption, today]);
+
+  // 상태별 개수 통계
+  const counts = useMemo(() => {
+    let active = 0;
+    let upcoming = 0;
+    let past = 0;
+
+    rawCalendarList.forEach((item) => {
+      const s = getItemStatus(item);
+      if (s === "ACTIVE") active += 1;
+      else if (s === "UPCOMING") upcoming += 1;
+      else past += 1;
+    });
+
+    return { all: rawCalendarList.length, active, upcoming, past };
+  }, [rawCalendarList, today]);
+
+  // 페이지네이션 계산
+  const totalPages = Math.max(1, Math.ceil(filteredAndSortedList.length / ITEMS_PER_PAGE));
+  const paginatedList = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredAndSortedList.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredAndSortedList, currentPage]);
+
+  // 모바일 가로 스크롤 방지를 위한 슬라이딩 페이지 번호 (최대 5개 노출)
+  const visiblePages = useMemo(() => {
+    const maxVisible = 5;
+    if (totalPages <= maxVisible) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+
+    let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+    let end = start + maxVisible - 1;
+
+    if (end > totalPages) {
+      end = totalPages;
+      start = Math.max(1, end - maxVisible + 1);
+    }
+
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  }, [totalPages, currentPage]);
+
+  // 필터 변경 시 첫 페이지로 리셋
+  const handleFilterChange = (newStatus: FilterStatus) => {
+    setStatusFilter(newStatus);
+    setCurrentPage(1);
+  };
+
+  const handleKeywordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchKeyword(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleYearMonthChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setYearMonthFilter(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSortOption(e.target.value as SortOption);
+    setCurrentPage(1);
+  };
+
+  // 모달 열기/닫기
+  const handleOpenCreate = () => {
+    setSelectedItem(null);
+    setFormData(EMPTY_FORM);
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEdit = (item: CalendarItem) => {
     setSelectedItem(item);
     setFormData({
       title: item.title,
@@ -127,458 +206,1097 @@ const CalendarAdminPage: React.FC = () => {
       startDate: item.startDate,
       endDate: item.endDate,
     });
-    setIsEditorOpen(true);
+    setIsModalOpen(true);
   };
 
-  const closeEditor = () => {
-    setIsEditorOpen(false);
+  const handleCloseModal = () => {
+    if (isSubmitting) return;
+    setIsModalOpen(false);
     setSelectedItem(null);
     setFormData(EMPTY_FORM);
   };
 
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    if (!formData.title.trim()) {
+      alert("일정 제목을 입력해주세요.");
+      return;
+    }
+    if (!formData.startDate || !formData.endDate) {
+      alert("시작일과 종료일을 모두 선택해 주세요.");
+      return;
+    }
     if (formData.startDate > formData.endDate) {
-      alert("종료일이 시작일보다 빠를 수는 없습니다.");
+      alert("종료일은 시작일보다 이후여야 해요.");
       return;
     }
 
     try {
+      setIsSubmitting(true);
       if (selectedItem) {
         await updateCalendar(selectedItem.id, formData);
-        alert("일정을 수정했습니다.");
+        alert("일정을 수정했어요.");
       } else {
         await createCalendar(formData);
-        alert("일정을 등록했습니다.");
+        alert("새 일정을 등록했어요.");
       }
-
-      closeEditor();
+      handleCloseModal();
     } catch (err) {
-      console.error("캘린더 일정 저장 실패", err);
-      alert("일정을 저장하지 못했습니다. 잠시 뒤 다시 시도해 주세요.");
+      console.error("일정 저장 실패", err);
+      alert("일정 저장에 실패했어요. 다시 시도해 주세요.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!selectedItem) {
-      return;
-    }
-
+    if (!selectedItem || isSubmitting) return;
     if (!window.confirm(`"${selectedItem.title}" 일정을 삭제할까요?`)) {
       return;
     }
 
     try {
+      setIsSubmitting(true);
       await deleteCalendar(selectedItem.id);
-      alert("일정을 삭제했습니다.");
-      closeEditor();
+      alert("일정을 삭제했어요.");
+      handleCloseModal();
     } catch (err) {
-      console.error("캘린더 일정 삭제 실패", err);
-      alert("일정을 삭제하지 못했습니다. 잠시 뒤 다시 시도해 주세요.");
+      console.error("일정 삭제 실패", err);
+      alert("일정 삭제에 실패했어요. 다시 시도해 주세요.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  useSetHeader({ title: "캘린더 관리" });
-
   return (
-    <AdminShell>
-      <AdminPage>
-        <AdminHero>
-          <AdminHeroMetricGrid>
-            <AdminMiniStat>
-              <AdminMiniStatLabel>등록 일정</AdminMiniStatLabel>
-              <AdminMiniStatValue>{summary.total}</AdminMiniStatValue>
-            </AdminMiniStat>
-            <AdminMiniStat>
-              <AdminMiniStatLabel>진행 중</AdminMiniStatLabel>
-              <AdminMiniStatValue>{summary.active}</AdminMiniStatValue>
-            </AdminMiniStat>
-            <AdminMiniStat>
-              <AdminMiniStatLabel>예정 일정</AdminMiniStatLabel>
-              <AdminMiniStatValue>{summary.upcoming}</AdminMiniStatValue>
-            </AdminMiniStat>
-            <AdminMiniStat>
-              <AdminMiniStatLabel>링크 포함</AdminMiniStatLabel>
-              <AdminMiniStatValue>{summary.linked}</AdminMiniStatValue>
-            </AdminMiniStat>
-          </AdminHeroMetricGrid>
-        </AdminHero>
-
-        <AdminPageGrid $desktopColumns="minmax(0, 1fr)">
-          <AdminStack>
-            <AdminCard>
-              <AdminCardHeader>
-                <AdminCardTitleGroup>
-                  <AdminCardEyebrow>Schedule List</AdminCardEyebrow>
-                  <AdminCardTitle>등록된 일정</AdminCardTitle>
-                  <AdminCardDescription>
-                    일정 추가하기 버튼으로 새 일정을 만들고, 기존 일정 카드를
-                    눌러 수정할 수 있습니다.
-                  </AdminCardDescription>
-                </AdminCardTitleGroup>
-
-                <AdminButton type="button" onClick={openCreateEditor}>
-                  <PlusCircle size={16} />
-                  일정 추가하기
-                </AdminButton>
-              </AdminCardHeader>
-
-              {calendarList.length === 0 ? (
-                <AdminEmptyState>
-                  <AdminEmptyTitle>
-                    아직 등록된 일정이 없습니다.
-                  </AdminEmptyTitle>
-                  <AdminEmptyDescription>
-                    첫 일정을 추가하면 캘린더에 바로 반영됩니다.
-                  </AdminEmptyDescription>
-                  <AdminButton type="button" onClick={openCreateEditor}>
-                    <PlusCircle size={16} />첫 일정 추가하기
-                  </AdminButton>
-                </AdminEmptyState>
-              ) : (
-                <AdminScrollableArea $maxHeight="720px">
-                  <EventList>
-                    {calendarList.map((item) => {
-                      const status = getCalendarStatus(item, today);
-
-                      return (
-                        <EventCard
-                          key={item.id}
-                          type="button"
-                          onClick={() => openEditEditor(item)}
-                        >
-                          <EventHeader>
-                            <EventTitleWrap>
-                              <EventTitle>{item.title}</EventTitle>
-                              <EventDateText>
-                                <CalendarDays size={16} />
-                                {formatDateRangeLabel(
-                                  item.startDate,
-                                  item.endDate,
-                                )}
-                              </EventDateText>
-                            </EventTitleWrap>
-                            <EventBadgeGroup>
-                              <AdminBadge $tone={status.tone}>
-                                {status.label}
-                              </AdminBadge>
-                            </EventBadgeGroup>
-                          </EventHeader>
-
-                          {item.link?.trim() && (
-                            <EventLink>
-                              <Link2 size={16} />
-                              {getDomainLabel(item.link)}
-                            </EventLink>
-                          )}
-                        </EventCard>
-                      );
-                    })}
-                  </EventList>
-                </AdminScrollableArea>
-              )}
-            </AdminCard>
-          </AdminStack>
-        </AdminPageGrid>
-
-        <AdminBottomSheet
-          isOpen={isEditorOpen}
-          setIsOpen={(nextOpen) => {
-            if (!nextOpen) {
-              closeEditor();
-            }
-          }}
-          title={selectedItem ? "일정 수정" : "새 일정 등록"}
-          description="캘린더 일정 편집 패널"
-        >
-          <EditorHeader>
-            <EditorTitleGroup>
-              <AdminBadge $tone={selectedItem ? "blue" : "green"}>
-                {selectedItem ? "일정 수정" : "새 일정"}
-              </AdminBadge>
-              <EditorTitle>
-                {selectedItem ? selectedItem.title : "새 일정 등록"}
-              </EditorTitle>
-              <AdminSubtleText>
-                제목, 기간, 링크를 입력해서 저장해 주세요.
-              </AdminSubtleText>
-            </EditorTitleGroup>
-
-            <CloseButton type="button" onClick={closeEditor} aria-label="닫기">
-              <X size={20} />
-            </CloseButton>
-          </EditorHeader>
-
-          <EditorScrollArea>
-            {selectedItem ? (
-              <SelectedSummary>
-                <AdminBadge $tone="blue">
-                  <PencilLine size={14} />
-                  편집 중
-                </AdminBadge>
-                <SelectedSummaryTitle>
-                  {selectedItem.title}
-                </SelectedSummaryTitle>
-                <AdminSubtleText>
-                  {formatDateRangeLabel(
-                    selectedItem.startDate,
-                    selectedItem.endDate,
-                  )}
-                </AdminSubtleText>
-              </SelectedSummary>
-            ) : (
-              <SelectedSummary>
-                <AdminBadge $tone="green">
-                  <PlusCircle size={14} />새 일정
-                </AdminBadge>
-                <SelectedSummaryTitle>
-                  새 일정 내용을 입력해 주세요
-                </SelectedSummaryTitle>
-                <AdminSubtleText>
-                  링크는 선택 사항이며 입력하지 않으면 제목과 기간만 표시됩니다.
-                </AdminSubtleText>
-              </SelectedSummary>
+    <PageRoot>
+      {/* 1. 검색 & 다각도 필터 & 데스크톱 등록 액션 */}
+      <ControlBarCard>
+        <SearchFilterRow>
+          <SearchInputWrapper>
+            <SearchInput
+              type="text"
+              placeholder="일정 제목 또는 링크 검색..."
+              value={searchKeyword}
+              onChange={handleKeywordChange}
+            />
+            {searchKeyword && (
+              <ClearButton type="button" onClick={() => setSearchKeyword("")}>
+                ✕
+              </ClearButton>
             )}
+          </SearchInputWrapper>
 
-            <Form onSubmit={handleSubmit}>
-              <AdminField>
-                <AdminLabel htmlFor="calendar-title">일정 제목</AdminLabel>
-                <AdminInput
-                  id="calendar-title"
+          <SelectGroup>
+            <StyledSelect value={yearMonthFilter} onChange={handleYearMonthChange}>
+              <option value="ALL">전체 기간</option>
+              {availableYearMonths.map((ym) => (
+                <option key={ym} value={ym}>
+                  {ym.replace("-", "년 ")}월
+                </option>
+              ))}
+            </StyledSelect>
+
+            <StyledSelect value={sortOption} onChange={handleSortChange}>
+              <option value="START_ASC">시작일 빠른 순</option>
+              <option value="START_DESC">시작일 늦은 순</option>
+              <option value="TITLE_ASC">제목 가나다 순</option>
+            </StyledSelect>
+          </SelectGroup>
+
+          <DesktopCTAButton type="button" onClick={handleOpenCreate}>
+            + 새 일정 등록
+          </DesktopCTAButton>
+        </SearchFilterRow>
+
+        {/* 상태 필터 세그먼트 칩 */}
+        <StatusChipRow>
+          <StatusChip
+            type="button"
+            $active={statusFilter === "ALL"}
+            onClick={() => handleFilterChange("ALL")}
+          >
+            전체 ({counts.all})
+          </StatusChip>
+          <StatusChip
+            type="button"
+            $active={statusFilter === "ACTIVE"}
+            onClick={() => handleFilterChange("ACTIVE")}
+          >
+            진행 중 ({counts.active})
+          </StatusChip>
+          <StatusChip
+            type="button"
+            $active={statusFilter === "UPCOMING"}
+            onClick={() => handleFilterChange("UPCOMING")}
+          >
+            예정 ({counts.upcoming})
+          </StatusChip>
+          <StatusChip
+            type="button"
+            $active={statusFilter === "PAST"}
+            onClick={() => handleFilterChange("PAST")}
+          >
+            종료됨 ({counts.past})
+          </StatusChip>
+        </StatusChipRow>
+      </ControlBarCard>
+
+      {/* 3. 본문: 데이터 테이블(PC) & 리스트 카드(모바일) */}
+      <ContentCard>
+        <TableHeaderRow>
+          <TableResultCount>
+            총 <strong>{filteredAndSortedList.length}</strong>개의 일정
+            {searchKeyword && ` ('${searchKeyword}' 검색 결과)`}
+          </TableResultCount>
+        </TableHeaderRow>
+
+        {isLoading ? (
+          <EmptyBox>일정 목록을 불러오는 중입니다...</EmptyBox>
+        ) : filteredAndSortedList.length === 0 ? (
+          <EmptyBox>
+            <EmptyMainText>조건에 맞는 일정이 없어요.</EmptyMainText>
+            <EmptySubText>
+              검색어나 필터 조건을 변경하거나 새 일정을 등록해 보세요.
+            </EmptySubText>
+          </EmptyBox>
+        ) : (
+          <>
+            {/* 데스크톱 전용 테이블 뷰 (>= 768px) */}
+            <DesktopTableView>
+              <TableHead>
+                <tr>
+                  <th style={{ width: "90px" }}>상태</th>
+                  <th>일정 제목</th>
+                  <th style={{ width: "230px" }}>노출 기간</th>
+                  <th style={{ width: "200px" }}>연결 링크</th>
+                  <th style={{ width: "120px", textAlign: "right" }}>관리</th>
+                </tr>
+              </TableHead>
+              <tbody>
+                {paginatedList.map((item) => {
+                  const status = getItemStatus(item);
+                  return (
+                    <TableRow key={item.id}>
+                      <td>
+                        <StatusBadge $tone={status}>
+                          {status === "ACTIVE"
+                            ? "진행 중"
+                            : status === "UPCOMING"
+                              ? "예정"
+                              : "종료됨"}
+                        </StatusBadge>
+                      </td>
+                      <td>
+                        <ItemTitleClickable
+                          type="button"
+                          onClick={() => handleOpenEdit(item)}
+                        >
+                          {item.title}
+                        </ItemTitleClickable>
+                      </td>
+                      <td>
+                        <DateRangeText>
+                          {formatDate(item.startDate)} - {formatDate(item.endDate)}
+                        </DateRangeText>
+                      </td>
+                      <td>
+                        {item.link?.trim() ? (
+                          <LinkAnchor
+                            href={item.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {getDomain(item.link)} ↗
+                          </LinkAnchor>
+                        ) : (
+                          <MutedText>-</MutedText>
+                        )}
+                      </td>
+                      <td style={{ textAlign: "right" }}>
+                        <RowActionBtn
+                          type="button"
+                          onClick={() => handleOpenEdit(item)}
+                        >
+                          수정
+                        </RowActionBtn>
+                      </td>
+                    </TableRow>
+                  );
+                })}
+              </tbody>
+            </DesktopTableView>
+
+            {/* 모바일 전용 카드 리스트 뷰 (< 768px) */}
+            <MobileListView>
+              {paginatedList.map((item, idx) => {
+                const status = getItemStatus(item);
+                const isLast = idx === paginatedList.length - 1;
+
+                return (
+                  <MobileRowItem
+                    key={item.id}
+                    type="button"
+                    $isLast={isLast}
+                    onClick={() => handleOpenEdit(item)}
+                  >
+                    <MobileRowTop>
+                      <StatusBadge $tone={status}>
+                        {status === "ACTIVE"
+                          ? "진행 중"
+                          : status === "UPCOMING"
+                            ? "예정"
+                            : "종료됨"}
+                      </StatusBadge>
+                      <MobileDateText>
+                        {formatDate(item.startDate)} - {formatDate(item.endDate)}
+                      </MobileDateText>
+                    </MobileRowTop>
+
+                    <MobileItemTitle>{item.title}</MobileItemTitle>
+
+                    {item.link?.trim() && (
+                      <MobileLinkText>{getDomain(item.link)} ↗</MobileLinkText>
+                    )}
+                  </MobileRowItem>
+                );
+              })}
+            </MobileListView>
+          </>
+        )}
+
+        {/* 4. 페이지네이션 바 (슬라이딩 윈도우로 가로 스크롤 완전 차단) */}
+        {totalPages > 1 && (
+          <PaginationWrapper>
+            <PageNavButton
+              type="button"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              aria-label="이전 페이지"
+            >
+              ‹
+            </PageNavButton>
+
+            <PageNumberList>
+              {visiblePages.map((pageNum) => (
+                <PageNumberButton
+                  key={pageNum}
+                  type="button"
+                  $active={pageNum === currentPage}
+                  onClick={() => setCurrentPage(pageNum)}
+                >
+                  {pageNum}
+                </PageNumberButton>
+              ))}
+            </PageNumberList>
+
+            <PageNavButton
+              type="button"
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              aria-label="다음 페이지"
+            >
+              ›
+            </PageNavButton>
+          </PaginationWrapper>
+        )}
+      </ContentCard>
+
+      {/* 5. 모바일 전용 하단 고정 CTA */}
+      <MobileFixedCTA>
+        <CTAButtonMobile type="button" onClick={handleOpenCreate}>
+          + 새 일정 등록하기
+        </CTAButtonMobile>
+      </MobileFixedCTA>
+
+      {/* 6. 일정 등록 / 수정 모달 (반응형 센터/바텀 모달) */}
+      {isModalOpen && (
+        <ModalOverlay onClick={handleCloseModal}>
+          <ModalContainer onClick={(e) => e.stopPropagation()}>
+            <ModalHeader>
+              <ModalHeading>
+                {selectedItem ? "일정 수정하기" : "새 일정 등록하기"}
+              </ModalHeading>
+              <ModalCloseButton
+                type="button"
+                onClick={handleCloseModal}
+                disabled={isSubmitting}
+              >
+                ✕
+              </ModalCloseButton>
+            </ModalHeader>
+
+            <ModalForm onSubmit={handleSubmit}>
+              <FormField>
+                <FieldLabel htmlFor="cal-title">일정 제목</FieldLabel>
+                <FieldInput
+                  id="cal-title"
                   name="title"
                   type="text"
-                  placeholder="예: 기숙사 입사 신청"
+                  placeholder="예: 2026학년도 1학기 기숙사 입사 신청"
                   value={formData.title}
-                  onChange={handleChange}
+                  onChange={handleFormChange}
+                  autoFocus
                   required
                 />
-              </AdminField>
+              </FormField>
 
-              <AdminField>
-                <AdminLabel htmlFor="calendar-link">연결 링크</AdminLabel>
-                <AdminInput
-                  id="calendar-link"
-                  name="link"
-                  type="url"
-                  placeholder="https://example.com"
-                  value={formData.link}
-                  onChange={handleChange}
-                />
-              </AdminField>
-
-              <AdminFieldGrid>
-                <AdminField>
-                  <AdminLabel htmlFor="calendar-start-date">시작일</AdminLabel>
-                  <AdminInput
-                    id="calendar-start-date"
+              <DateInputGrid>
+                <FormField>
+                  <FieldLabel htmlFor="cal-start">시작일</FieldLabel>
+                  <FieldInput
+                    id="cal-start"
                     name="startDate"
                     type="date"
                     value={formData.startDate}
-                    onChange={handleChange}
+                    onChange={handleFormChange}
                     required
                   />
-                </AdminField>
+                </FormField>
 
-                <AdminField>
-                  <AdminLabel htmlFor="calendar-end-date">종료일</AdminLabel>
-                  <AdminInput
-                    id="calendar-end-date"
+                <FormField>
+                  <FieldLabel htmlFor="cal-end">종료일</FieldLabel>
+                  <FieldInput
+                    id="cal-end"
                     name="endDate"
                     type="date"
                     value={formData.endDate}
-                    onChange={handleChange}
+                    onChange={handleFormChange}
                     required
                   />
-                </AdminField>
-              </AdminFieldGrid>
+                </FormField>
+              </DateInputGrid>
 
-              <AdminActionRow>
-                <AdminButton type="submit">
-                  {selectedItem ? "일정 저장" : "일정 등록"}
-                </AdminButton>
-                <AdminButton
-                  type="button"
-                  $tone="secondary"
-                  onClick={closeEditor}
-                >
-                  닫기
-                </AdminButton>
+              <FormField>
+                <FieldLabel htmlFor="cal-link">연결 링크 (선택)</FieldLabel>
+                <FieldInput
+                  id="cal-link"
+                  name="link"
+                  type="url"
+                  placeholder="https://..."
+                  value={formData.link}
+                  onChange={handleFormChange}
+                />
+              </FormField>
+
+              <ModalActionContainer>
+                <PrimarySubmitButton type="submit" disabled={isSubmitting}>
+                  {isSubmitting
+                    ? "저장 중..."
+                    : selectedItem
+                      ? "수정 내용 저장"
+                      : "일정 등록하기"}
+                </PrimarySubmitButton>
+
                 {selectedItem && (
-                  <AdminButton
+                  <DangerDeleteButton
                     type="button"
-                    $tone="danger"
                     onClick={handleDelete}
+                    disabled={isSubmitting}
                   >
-                    <Trash2 size={16} />
-                    일정 삭제
-                  </AdminButton>
+                    일정 삭제하기
+                  </DangerDeleteButton>
                 )}
-              </AdminActionRow>
-            </Form>
-          </EditorScrollArea>
-        </AdminBottomSheet>
-      </AdminPage>
-    </AdminShell>
+              </ModalActionContainer>
+            </ModalForm>
+          </ModalContainer>
+        </ModalOverlay>
+      )}
+    </PageRoot>
   );
 };
 
 export default CalendarAdminPage;
 
-const Form = styled.form`
+/* --- Styled Components (배경은 상위 레이아웃에 완전 위임, Zero-Slop 표준) --- */
+
+const PageRoot = styled.div`
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   gap: 20px;
+  box-sizing: border-box;
+  padding: 8px 16px 120px;
+
+  @media (min-width: 1024px) {
+    padding: 16px 0 60px;
+    gap: 24px;
+    overflow-x: visible;
+  }
 `;
 
-const EventList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+const DesktopCTAButton = styled.button`
+  display: none;
+
+  @media (min-width: 768px) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 44px;
+    padding: 0 20px;
+    border-radius: 12px;
+    border: none;
+    background: #3182f6;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(49, 130, 246, 0.22);
+    white-space: nowrap;
+    transition: all 0.15s ease;
+
+    &:hover {
+      background: #1b64da;
+    }
+
+    &:active {
+      transform: scale(0.98);
+    }
+  }
 `;
 
-const EventCard = styled.button`
-  width: 100%;
+const ControlBarCard = styled.div`
+  background: #ffffff;
+  border: 1px solid #e5e8eb;
+  border-radius: 20px;
+  padding: 18px 20px;
   display: flex;
   flex-direction: column;
   gap: 14px;
-  padding: 18px;
-  text-align: left;
-  border-radius: 22px;
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
-  box-shadow: 0 18px 32px -28px rgba(15, 23, 42, 0.12);
-  cursor: pointer;
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    transform 0.2s ease;
-
-  &:hover {
-    border-color: #93c5fd;
-    box-shadow: 0 22px 38px -28px rgba(37, 99, 235, 0.18);
-    transform: translateY(-1px);
-  }
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
 `;
 
-const EventHeader = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 12px;
-`;
-
-const EventTitleWrap = styled.div`
+const SearchFilterRow = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  min-width: 0;
-`;
-
-const EventTitle = styled.h3`
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 800;
-  color: #0f172a;
-`;
-
-const EventDateText = styled.div`
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #475569;
-`;
-
-const EventBadgeGroup = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-`;
-
-const EventLink = styled.div`
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.9rem;
-  line-height: 1.5;
-  color: #2563eb;
-  word-break: break-all;
-`;
-
-const EditorHeader = styled.div`
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 20px 20px 16px;
-  border-bottom: 1px solid #e2e8f0;
+  gap: 10px;
 
   @media (min-width: 768px) {
-    padding: 24px 24px 18px;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
   }
 `;
 
-const EditorTitleGroup = styled.div`
+const SearchInputWrapper = styled.div`
+  position: relative;
+  flex: 1;
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-width: 0;
-`;
-
-const EditorTitle = styled.h2`
-  margin: 0;
-  font-size: 1.2rem;
-  font-weight: 800;
-  line-height: 1.3;
-  color: #0f172a;
-`;
-
-const CloseButton = styled.button`
-  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 14px;
-  color: #475569;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  cursor: pointer;
-  flex-shrink: 0;
 `;
 
-const EditorScrollArea = styled.div`
-  overflow-y: auto;
-  padding: 20px;
+const SearchInput = styled.input`
+  width: 100%;
+  padding: 12px 38px 12px 16px;
+  border-radius: 12px;
+  border: 1px solid #e5e8eb;
+  background: #f9fafb;
+  font-size: 14px;
+  color: #191f28;
+  outline: none;
+  box-sizing: border-box;
+  transition: all 0.15s ease;
+
+  &::placeholder {
+    color: #8b95a1;
+  }
+
+  &:focus {
+    background: #ffffff;
+    border-color: #3182f6;
+    box-shadow: 0 0 0 3px rgba(49, 130, 246, 0.12);
+  }
+`;
+
+const ClearButton = styled.button`
+  position: absolute;
+  right: 12px;
+  border: none;
+  background: transparent;
+  color: #8b95a1;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 4px;
+`;
+
+const SelectGroup = styled.div`
+  display: flex;
+  gap: 8px;
+  width: 100%;
+
+  > * {
+    flex: 1;
+    min-width: 0;
+  }
+
+  @media (min-width: 768px) {
+    width: auto;
+    > * {
+      flex: initial;
+    }
+  }
+`;
+
+const StyledSelect = styled.select`
+  padding: 11px 14px;
+  border-radius: 12px;
+  border: 1px solid #e5e8eb;
+  background: #f9fafb;
+  font-size: 13px;
+  font-weight: 600;
+  color: #333d4b;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:focus {
+    border-color: #3182f6;
+    background: #ffffff;
+  }
+`;
+
+const StatusChipRow = styled.div`
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+`;
+
+const StatusChip = styled.button<{ $active: boolean }>`
+  border: none;
+  background: ${({ $active }) => ($active ? "#191f28" : "#f2f4f6")};
+  color: ${({ $active }) => ($active ? "#ffffff" : "#4e5968")};
+  font-size: 13px;
+  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: ${({ $active }) => ($active ? "#191f28" : "#e5e8eb")};
+  }
+`;
+
+const ContentCard = styled.div`
+  background: #ffffff;
+  border: 1px solid #e5e8eb;
+  border-radius: 20px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 
   @media (min-width: 768px) {
     padding: 24px;
   }
 `;
 
-const SelectedSummary = styled.div`
+const TableHeaderRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+`;
+
+const TableResultCount = styled.div`
+  font-size: 14px;
+  color: #6b7684;
+
+  strong {
+    color: #191f28;
+    font-weight: 700;
+  }
+`;
+
+/* 데스크톱 전용 테이블 */
+const DesktopTableView = styled.table`
+  display: none;
+
+  @media (min-width: 768px) {
+    display: table;
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+  }
+`;
+
+const TableHead = styled.thead`
+  border-bottom: 1.5px solid #e5e8eb;
+
+  th {
+    padding: 12px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #6b7684;
+    white-space: nowrap;
+  }
+`;
+
+const TableRow = styled.tr`
+  border-bottom: 1px solid #f2f4f6;
+  transition: background-color 0.15s ease;
+
+  &:hover {
+    background: #f9fafb;
+  }
+
+  td {
+    padding: 16px 14px;
+    font-size: 14px;
+    color: #191f28;
+    vertical-align: middle;
+  }
+`;
+
+const ItemTitleClickable = styled.button`
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #191f28;
+  text-align: left;
+  cursor: pointer;
+  line-height: 1.4;
+
+  &:hover {
+    color: #3182f6;
+    text-decoration: underline;
+  }
+`;
+
+const DateRangeText = styled.span`
+  font-size: 13px;
+  color: #4e5968;
+  font-variant-numeric: tabular-nums;
+`;
+
+const LinkAnchor = styled.a`
+  font-size: 13px;
+  color: #3182f6;
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+`;
+
+const MutedText = styled.span`
+  color: #b0b8c1;
+`;
+
+const RowActionBtn = styled.button`
+  border: 1px solid #e5e8eb;
+  background: #ffffff;
+  color: #4e5968;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    border-color: #3182f6;
+    color: #3182f6;
+    background: #f4f8fe;
+  }
+`;
+
+/* 모바일 전용 카드 뷰 */
+const MobileListView = styled.div`
+  display: flex;
+  flex-direction: column;
+
+  @media (min-width: 768px) {
+    display: none;
+  }
+`;
+
+const MobileRowItem = styled.button<{ $isLast: boolean }>`
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 18px;
-  border-radius: 22px;
-  background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
-  border: 1px solid #dbeafe;
+  padding: 16px 4px;
+  border: none;
+  background: transparent;
+  border-bottom: ${({ $isLast }) => ($isLast ? "none" : "1px solid #f2f4f6")};
+  text-align: left;
+  cursor: pointer;
+
+  &:active {
+    opacity: 0.7;
+  }
 `;
 
-const SelectedSummaryTitle = styled.h3`
+const MobileRowTop = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+`;
+
+const MobileDateText = styled.span`
+  font-size: 12px;
+  color: #8b95a1;
+  font-variant-numeric: tabular-nums;
+`;
+
+const MobileItemTitle = styled.h4`
   margin: 0;
-  font-size: 1rem;
+  font-size: 15px;
+  font-weight: 700;
+  color: #191f28;
+  line-height: 1.4;
+`;
+
+const MobileLinkText = styled.span`
+  font-size: 12px;
+  color: #3182f6;
+  font-weight: 600;
+`;
+
+const StatusBadge = styled.span<{ $tone: "ACTIVE" | "UPCOMING" | "PAST" }>`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+
+  ${({ $tone }) => {
+    switch ($tone) {
+      case "ACTIVE":
+        return `
+          background: #e6f8ef;
+          color: #04b05c;
+        `;
+      case "UPCOMING":
+        return `
+          background: #e8f3ff;
+          color: #3182f6;
+        `;
+      case "PAST":
+      default:
+        return `
+          background: #f2f4f6;
+          color: #8b95a1;
+        `;
+    }
+  }}
+`;
+
+const EmptyBox = styled.div`
+  padding: 56px 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+`;
+
+const EmptyMainText = styled.div`
+  font-size: 15px;
+  font-weight: 700;
+  color: #191f28;
+`;
+
+const EmptySubText = styled.div`
+  font-size: 13px;
+  color: #8b95a1;
+`;
+
+/* 페이지네이션 */
+const PaginationWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid #f2f4f6;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+`;
+
+const PageNavButton = styled.button`
+  border: 1px solid #e5e8eb;
+  background: #ffffff;
+  color: #4e5968;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+`;
+
+const PageNumberList = styled.div`
+  display: flex;
+  gap: 4px;
+`;
+
+const PageNumberButton = styled.button<{ $active: boolean }>`
+  border: none;
+  background: ${({ $active }) => ($active ? "#3182f6" : "transparent")};
+  color: ${({ $active }) => ($active ? "#ffffff" : "#4e5968")};
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: ${({ $active }) => ($active ? "#3182f6" : "#f2f4f6")};
+  }
+`;
+
+/* 모바일 전용 하단 고정 CTA */
+const MobileFixedCTA = styled.div`
+  display: block;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 25;
+  background: linear-gradient(to top, #ffffff 70%, rgba(255, 255, 255, 0.8) 90%, transparent);
+  padding: 12px 20px calc(14px + env(safe-area-inset-bottom, 0px));
+
+  @media (min-width: 768px) {
+    display: none;
+  }
+`;
+
+const CTAButtonMobile = styled.button`
+  width: 100%;
+  height: 52px;
+  border-radius: 16px;
+  border: none;
+  background: #3182f6;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
+  box-shadow: 0 4px 16px rgba(49, 130, 246, 0.25);
+  cursor: pointer;
+
+  &:active {
+    transform: scale(0.98);
+  }
+`;
+
+/* 모달 컴포넌트 */
+const ModalOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+
+  @media (min-width: 640px) {
+    align-items: center;
+    padding: 20px;
+  }
+`;
+
+const ModalContainer = styled.div`
+  width: 100%;
+  max-width: 520px;
+  background: #ffffff;
+  border-top-left-radius: 28px;
+  border-top-right-radius: 28px;
+  padding: 24px 24px calc(24px + env(safe-area-inset-bottom, 0px));
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-height: 90dvh;
+  overflow-y: auto;
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.12);
+  animation: slideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+
+  @media (min-width: 640px) {
+    border-radius: 28px;
+    padding: 28px;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15);
+    animation: fadeInScale 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeInScale {
+    from {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+`;
+
+const ModalHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+`;
+
+const ModalHeading = styled.h3`
+  margin: 0;
+  font-size: 19px;
   font-weight: 800;
-  color: #0f172a;
+  color: #191f28;
+`;
+
+const ModalCloseButton = styled.button`
+  border: none;
+  background: #f2f4f6;
+  color: #6b7684;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: #e5e8eb;
+    color: #191f28;
+  }
+`;
+
+const ModalForm = styled.form`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+`;
+
+const FormField = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+`;
+
+const FieldLabel = styled.label`
+  font-size: 13px;
+  font-weight: 600;
+  color: #4e5968;
+`;
+
+const FieldInput = styled.input`
+  width: 100%;
+  padding: 13px 16px;
+  border-radius: 14px;
+  border: 1px solid #e5e8eb;
+  background: #f9fafb;
+  font-size: 15px;
+  color: #191f28;
+  outline: none;
+  box-sizing: border-box;
+  transition: all 0.15s ease;
+
+  &::placeholder {
+    color: #8b95a1;
+  }
+
+  &:focus {
+    background: #ffffff;
+    border-color: #3182f6;
+    box-shadow: 0 0 0 3px rgba(49, 130, 246, 0.12);
+  }
+`;
+
+const DateInputGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+`;
+
+const ModalActionContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 8px;
+`;
+
+const PrimarySubmitButton = styled.button`
+  width: 100%;
+  height: 50px;
+  border-radius: 16px;
+  border: none;
+  background: #3182f6;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: #1b64da;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+const DangerDeleteButton = styled.button`
+  border: none;
+  background: transparent;
+  color: #f04452;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+
+  &:hover {
+    opacity: 0.8;
+  }
 `;
