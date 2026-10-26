@@ -1,38 +1,28 @@
 import { useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
-import {
-  CalendarRange,
-  Clock3,
-  PencilLine,
-  PlusCircle,
-  Trash2,
-} from "lucide-react";
 import { deletePopupNotification } from "@/apis/popup-notification";
 import { useAdminPopupNotifications } from "@/queries/popupNotifications";
 import HomeNoticeBottomSheet from "@/components/modal/HomeNoticeBottomSheet";
 import { useSetHeader } from "@/hooks/useSetHeader";
+import { useCountUp } from "@/hooks/useCountUp";
 import {
   AdminBadge,
   AdminButton,
   AdminCard,
-  AdminCardEyebrow,
+  AdminCardDescription,
   AdminCardHeader,
   AdminCardTitle,
   AdminCardTitleGroup,
   AdminEmptyDescription,
   AdminEmptyState,
   AdminEmptyTitle,
-  AdminHero,
-  AdminHeroMetricGrid,
   AdminMiniStat,
   AdminMiniStatLabel,
   AdminMiniStatValue,
   AdminPage,
-  AdminPageGrid,
   AdminPreviewImage,
   AdminShell,
-  AdminStack,
   formatDateLabel,
   formatDateRangeLabel,
   getLocalDateInputValue,
@@ -60,7 +50,6 @@ const PopupNotiListPage = () => {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const navigate = useNavigate();
   const today = getLocalDateInputValue();
-
 
   const handleCreateClick = () => {
     navigate("create");
@@ -103,6 +92,11 @@ const PopupNotiListPage = () => {
     (notification) => notification.deadline < today,
   ).length;
 
+  const animatedTotal = useCountUp(notifications.length);
+  const animatedActive = useCountUp(activeCount);
+  const animatedScheduled = useCountUp(scheduledCount);
+  const animatedEnded = useCountUp(endedCount);
+
   const sortedNotifications = [...notifications].sort((a, b) => {
     const statusDiff =
       getPopupStatus(a, today).order - getPopupStatus(b, today).order;
@@ -133,120 +127,114 @@ const PopupNotiListPage = () => {
   return (
     <AdminShell>
       <AdminPage>
-        <AdminHero>
-          <AdminHeroMetricGrid>
-            <AdminMiniStat>
-              <AdminMiniStatLabel>전체 팝업</AdminMiniStatLabel>
-              <AdminMiniStatValue>{notifications.length}</AdminMiniStatValue>
-            </AdminMiniStat>
-            <AdminMiniStat>
-              <AdminMiniStatLabel>노출 중</AdminMiniStatLabel>
-              <AdminMiniStatValue>{activeCount}</AdminMiniStatValue>
-            </AdminMiniStat>
-            <AdminMiniStat>
-              <AdminMiniStatLabel>예정 팝업</AdminMiniStatLabel>
-              <AdminMiniStatValue>{scheduledCount}</AdminMiniStatValue>
-            </AdminMiniStat>
-            <AdminMiniStat>
-              <AdminMiniStatLabel>종료됨</AdminMiniStatLabel>
-              <AdminMiniStatValue>{endedCount}</AdminMiniStatValue>
-            </AdminMiniStat>
-          </AdminHeroMetricGrid>
-        </AdminHero>
+        {/* 상단 4대 카운트업 지표 (Zero-Icon) */}
+        <MetricsGrid>
+          <AdminMiniStat>
+            <AdminMiniStatLabel>전체 팝업</AdminMiniStatLabel>
+            <AdminMiniStatValue>{animatedTotal}건</AdminMiniStatValue>
+          </AdminMiniStat>
+          <AdminMiniStat>
+            <AdminMiniStatLabel>노출 중</AdminMiniStatLabel>
+            <AdminMiniStatValue style={{ color: "#04b05c" }}>
+              {animatedActive}건
+            </AdminMiniStatValue>
+          </AdminMiniStat>
+          <AdminMiniStat>
+            <AdminMiniStatLabel>예정 팝업</AdminMiniStatLabel>
+            <AdminMiniStatValue style={{ color: "#3182f6" }}>
+              {animatedScheduled}건
+            </AdminMiniStatValue>
+          </AdminMiniStat>
+          <AdminMiniStat>
+            <AdminMiniStatLabel>종료됨</AdminMiniStatLabel>
+            <AdminMiniStatValue>{animatedEnded}건</AdminMiniStatValue>
+          </AdminMiniStat>
+        </MetricsGrid>
 
-        <AdminPageGrid $desktopColumns="minmax(0, 1fr)">
-          <AdminStack>
-            <AdminCard>
-              <AdminCardHeader>
-                <AdminCardTitleGroup>
-                  <AdminCardEyebrow>Popup Inventory</AdminCardEyebrow>
-                  <AdminCardTitle>등록된 팝업 공지</AdminCardTitle>
-                </AdminCardTitleGroup>
+        <AdminCard>
+          <AdminCardHeader>
+            <AdminCardTitleGroup>
+              <AdminCardTitle>등록된 팝업 공지</AdminCardTitle>
+              <AdminCardDescription>
+                홈 화면 접속 시 표시되는 팝업 공지 목록입니다. 카드를 눌러 세부 내용을 확인하고 수정/삭제할 수 있습니다.
+              </AdminCardDescription>
+            </AdminCardTitleGroup>
 
-                <AdminButton type="button" onClick={handleCreateClick}>
-                  <PlusCircle size={16} />새 팝업 등록
-                </AdminButton>
-              </AdminCardHeader>
+            <DesktopCreateButton type="button" onClick={handleCreateClick}>
+              새 팝업 등록하기
+            </DesktopCreateButton>
+          </AdminCardHeader>
 
-              {notifications.length === 0 ? (
-                <AdminEmptyState>
-                  <AdminEmptyTitle>
-                    등록된 팝업 공지가 없습니다.
-                  </AdminEmptyTitle>
-                  <AdminEmptyDescription>
-                    홈 화면에 노출할 팝업 공지를 새로 등록해 보세요.
-                  </AdminEmptyDescription>
-                </AdminEmptyState>
-              ) : (
-                <PopupGrid>
-                  {sortedNotifications.map((noti) => {
-                    const status = getPopupStatus(noti, today);
+          {notifications.length === 0 ? (
+            <AdminEmptyState>
+              <AdminEmptyTitle>등록된 팝업 공지가 없습니다.</AdminEmptyTitle>
+              <AdminEmptyDescription>
+                홈 화면에 노출할 팝업 공지를 새로 등록해 보세요.
+              </AdminEmptyDescription>
+              <AdminButton type="button" onClick={handleCreateClick}>
+                첫 팝업 등록하기
+              </AdminButton>
+            </AdminEmptyState>
+          ) : (
+            <PopupGrid>
+              {sortedNotifications.map((noti) => {
+                const status = getPopupStatus(noti, today);
 
-                    return (
-                      <PopupCard
-                        key={noti.id}
-                        type="button"
-                        onClick={() => handleCardClick(noti)}
-                      >
-                        <PopupHeader>
-                          <PopupBadgeRow>
-                            <AdminBadge $tone={status.tone}>
-                              {status.label}
-                            </AdminBadge>
-                            <AdminBadge $tone="blue">
-                              {noti.notificationType}
-                            </AdminBadge>
-                          </PopupBadgeRow>
-                          <PopupTitle>{noti.title}</PopupTitle>
-                          <PopupDescription>
-                            {summarizeText(noti.content, 120)}
-                          </PopupDescription>
-                        </PopupHeader>
+                return (
+                  <PopupCard
+                    key={noti.id}
+                    type="button"
+                    onClick={() => handleCardClick(noti)}
+                  >
+                    <PopupHeader>
+                      <PopupBadgeRow>
+                        <AdminBadge $tone={status.tone}>
+                          {status.label}
+                        </AdminBadge>
+                        <AdminBadge $tone="blue">
+                          {noti.notificationType}
+                        </AdminBadge>
+                      </PopupBadgeRow>
+                      <PopupTitle>{noti.title}</PopupTitle>
+                      <PopupDescription>
+                        {summarizeText(noti.content, 110)}
+                      </PopupDescription>
+                    </PopupHeader>
 
-                        <PopupMetaGrid>
-                          <PopupMetaCard>
-                            <PopupMetaLabel>
-                              <CalendarRange size={14} />
-                              노출 기간
-                            </PopupMetaLabel>
-                            <PopupMetaValue>
-                              {formatDateRangeLabel(
-                                noti.startDate,
-                                noti.deadline,
-                              )}
-                            </PopupMetaValue>
-                          </PopupMetaCard>
-                          <PopupMetaCard>
-                            <PopupMetaLabel>
-                              <Clock3 size={14} />
-                              등록일
-                            </PopupMetaLabel>
-                            <PopupMetaValue>
-                              {formatDateLabel(noti.createdDate)}
-                            </PopupMetaValue>
-                          </PopupMetaCard>
-                        </PopupMetaGrid>
+                    <PopupMetaGrid>
+                      <PopupMetaCard>
+                        <PopupMetaLabel>노출 기간</PopupMetaLabel>
+                        <PopupMetaValue>
+                          {formatDateRangeLabel(noti.startDate, noti.deadline)}
+                        </PopupMetaValue>
+                      </PopupMetaCard>
+                      <PopupMetaCard>
+                        <PopupMetaLabel>등록일</PopupMetaLabel>
+                        <PopupMetaValue>
+                          {formatDateLabel(noti.createdDate)}
+                        </PopupMetaValue>
+                      </PopupMetaCard>
+                    </PopupMetaGrid>
 
-                        {noti.imagePath.length > 0 && (
-                          <ImageRow>
-                            {noti.imagePath.slice(0, 3).map((img, index) => (
-                              <AdminPreviewImage
-                                key={`${img}-${index}`}
-                                src={img}
-                                alt={`popup-image-${index + 1}`}
-                              />
-                            ))}
-                          </ImageRow>
-                        )}
-                      </PopupCard>
-                    );
-                  })}
-                </PopupGrid>
-              )}
-            </AdminCard>
-          </AdminStack>
-        </AdminPageGrid>
+                    {noti.imagePath.length > 0 && (
+                      <ImageRow>
+                        {noti.imagePath.slice(0, 3).map((img, index) => (
+                          <AdminPreviewImage
+                            key={`${img}-${index}`}
+                            src={img}
+                            alt={`popup-thumbnail-${index + 1}`}
+                          />
+                        ))}
+                      </ImageRow>
+                    )}
+                  </PopupCard>
+                );
+              })}
+            </PopupGrid>
+          )}
+        </AdminCard>
 
+        {/* 상세 확인 바텀시트 */}
         <HomeNoticeBottomSheet
           id={`admin-popup-notice-${selectedNotification?.id ?? "detail"}`}
           isOpen={isDetailOpen}
@@ -302,26 +290,33 @@ const PopupNotiListPage = () => {
               )}
 
               <PopupDetailActions>
-                <PopupDetailActionButton
+                <AdminButton
                   type="button"
                   $tone="secondary"
                   onClick={() => handleEditClick(selectedNotification.id)}
+                  style={{ flex: 1 }}
                 >
-                  <PencilLine size={16} />
                   수정하기
-                </PopupDetailActionButton>
-                <PopupDetailActionButton
+                </AdminButton>
+                <AdminButton
                   type="button"
                   $tone="danger"
                   onClick={() => handleDeleteClick(selectedNotification.id)}
+                  style={{ flex: 1 }}
                 >
-                  <Trash2 size={16} />
                   삭제하기
-                </PopupDetailActionButton>
+                </AdminButton>
               </PopupDetailActions>
             </PopupDetailContent>
           )}
         </HomeNoticeBottomSheet>
+
+        {/* 모바일 하단 고정 CTA */}
+        <MobileCTAContainer>
+          <MobileCTAButton type="button" onClick={handleCreateClick}>
+            새 팝업 공지 등록하기
+          </MobileCTAButton>
+        </MobileCTAContainer>
       </AdminPage>
     </AdminShell>
   );
@@ -329,168 +324,175 @@ const PopupNotiListPage = () => {
 
 export default PopupNotiListPage;
 
+const MetricsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+  }
+`;
+
+const DesktopCreateButton = styled(AdminButton)`
+  display: none;
+
+  @media (min-width: 768px) {
+    display: inline-flex;
+  }
+`;
+
 const LoadingMessage = styled.div`
-  padding: 32px 12px;
+  padding: 40px 16px;
   text-align: center;
-  color: #64748b;
-  font-size: 0.96rem;
+  color: #8b95a1;
+  font-size: 0.95rem;
 `;
 
 const PopupGrid = styled.div`
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 18px;
+  gap: 16px;
 
   @media (min-width: 960px) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
   }
 `;
 
 const PopupCard = styled.button`
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
   width: 100%;
   padding: 22px;
-  border-radius: 24px;
-  border: 1px solid #e2e8f0;
-  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
-  box-shadow: 0 18px 32px -34px rgba(15, 23, 42, 0.28);
+  border-radius: 20px;
+  border: 1px solid #e5e8eb;
+  background: #ffffff;
   cursor: pointer;
   text-align: left;
-  transition:
-    transform 0.18s ease,
-    box-shadow 0.18s ease,
-    border-color 0.18s ease;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 
   &:hover {
     transform: translateY(-2px);
-    border-color: #bfdbfe;
-    box-shadow: 0 22px 36px -32px rgba(37, 99, 235, 0.24);
+    border-color: #3182f6;
+    box-shadow: 0 8px 24px -10px rgba(49, 130, 246, 0.15);
   }
 
-  &:focus-visible {
-    outline: 2px solid #2563eb;
-    outline-offset: 2px;
+  &:active {
+    transform: scale(0.99);
   }
 `;
 
 const PopupHeader = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 `;
 
 const PopupBadgeRow = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
 `;
 
 const PopupTitle = styled.h3`
   margin: 0;
-  font-size: 1.08rem;
-  font-weight: 800;
-  line-height: 1.45;
-  color: #0f172a;
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #191f28;
 `;
 
 const PopupDescription = styled.p`
   margin: 0;
-  min-height: 48px;
-  font-size: 0.94rem;
-  line-height: 1.7;
-  color: #475569;
+  min-height: 42px;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #6b7684;
 `;
 
 const PopupMetaGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  gap: 8px;
 
-  /* 모바일 대응: 768px 이하에서 1열 배치 */
-  @media (max-width: 768px) {
-    grid-template-columns: repeat(1, minmax(0, 1fr));
+  @media (max-width: 520px) {
+    grid-template-columns: 1fr;
   }
 `;
 
 const PopupMetaCard = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 14px;
-  border-radius: 18px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  gap: 2px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #f9fafb;
 `;
 
 const PopupMetaLabel = styled.span`
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #8b95a1;
 `;
 
 const PopupMetaValue = styled.strong`
-  font-size: 0.92rem;
-  font-weight: 800;
-  color: #0f172a;
-  line-height: 1.45;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #333d4b;
 `;
 
 const ImageRow = styled.div`
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+  gap: 8px;
 `;
 
 const PopupDetailContent = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
 `;
 
 const PopupDetailBadgeRow = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
 `;
 
 const PopupDetailMetaGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  gap: 10px;
 `;
 
 const PopupDetailMetaCard = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 14px;
-  border-radius: 16px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  gap: 2px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #f9fafb;
 `;
 
 const PopupDetailMetaLabel = styled.span`
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #8b95a1;
 `;
 
 const PopupDetailMetaValue = styled.strong`
-  font-size: 0.92rem;
-  font-weight: 800;
-  color: #0f172a;
-  line-height: 1.45;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #191f28;
 `;
 
 const PopupDetailImageGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  gap: 8px;
 
   @media (min-width: 640px) {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -499,11 +501,43 @@ const PopupDetailImageGrid = styled.div`
 
 const PopupDetailActions = styled.div`
   display: flex;
-  flex-wrap: wrap;
   gap: 10px;
+  margin-top: 8px;
 `;
 
-const PopupDetailActionButton = styled(AdminButton)`
-  flex: 1 1 160px;
-  min-height: 44px;
+const MobileCTAContainer = styled.div`
+  display: block;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 30;
+  max-width: 600px;
+  margin: 0 auto;
+  pointer-events: none;
+  background: linear-gradient(to top, #ffffff 60%, rgba(255, 255, 255, 0));
+  padding: 16px 20px calc(14px + env(safe-area-inset-bottom, 0px));
+
+  @media (min-width: 768px) {
+    display: none;
+  }
+`;
+
+const MobileCTAButton = styled.button`
+  pointer-events: auto;
+  width: 100%;
+  height: 52px;
+  border-radius: 16px;
+  background: #3182f6;
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 800;
+  border: none;
+  box-shadow: 0 4px 16px rgba(49, 130, 246, 0.28);
+  cursor: pointer;
+  transition: all 0.15s ease-out;
+
+  &:active {
+    transform: scale(0.98);
+  }
 `;
