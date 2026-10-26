@@ -87,22 +87,11 @@ const CardWrapper = styled.div.withConfig({
   border-radius: 8px;
   background: var(--Gray-Gray0, #fff);
   box-shadow: 0 0 4px 0 rgba(0, 0, 0, 0.1);
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
-
-  /* Apple & Toss 스타일 카드 탭 햅틱 */
-  transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.12s ease;
-
-  &:active {
-    transform: scale(0.985);
-    box-shadow: 0 0 2px 0 rgba(0, 0, 0, 0.08);
-  }
 
   ${({ matched }) =>
     matched &&
     `
     pointer-events: none;
-    transform: none;
   `}
 `;
 const DisabledOverlay = styled.div`

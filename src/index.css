@@ -8,7 +8,6 @@
     -ms-user-select: none;
     user-select: none;
     -webkit-touch-callout: none;
-    -webkit-tap-highlight-color: transparent; /* 웹뷰/모바일 브라우저 터치 시 회색·파란색 탭 하이라이트 박스 원천 제거 */
 }
 
 html, body, #root {
@@ -36,37 +35,9 @@ textarea {
     resize: none;
 }
 
-/* 버튼, 링크 및 상호작용 요소의 웹 기본 사각형 포커스/아웃라인 제거 및 터치 최적화 */
-button {
+button{
     background-color: transparent;
     border: none;
     padding: 0;
     margin: 0;
-    outline: none;
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-}
-
-a, [role="button"] {
-    outline: none;
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-}
-
-button:focus,
-button:active,
-a:focus,
-a:active,
-[role="button"]:focus,
-[role="button"]:active {
-    outline: none;
-    -webkit-tap-highlight-color: transparent;
-}
-
-/* 키보드 탭 탐색(웹 접근성) 시에만 포커스 링 표시 */
-button:focus-visible,
-a:focus-visible,
-[role="button"]:focus-visible {
-    outline: 2px solid var(--interactive-primary, #3182F6);
-    outline-offset: 2px;
 }

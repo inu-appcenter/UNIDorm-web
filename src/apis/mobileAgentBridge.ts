@@ -1,6 +1,5 @@
 import useUserStore from "@/stores/useUserStore";
 import { secureStorage } from "@/utils/secureStorage";
-import { mixpanelTrack } from "@/utils/mixpanel";
 import {
   parseAcademicBasicInfo,
   parseTimetableList,
@@ -163,15 +162,6 @@ function sendBridgeAction<T = any>(type: string, payload?: any, timeoutMs = 1500
       const resolvedData = detail.data?.data !== undefined ? detail.data.data : detail.data;
       const resolvedErrorCode = detail.errorCode || detail.data?.errorCode;
       const resolvedErrorMessage = detail.errorMessage || detail.data?.errorMessage;
-
-      if (!detail.success || resolvedErrorCode) {
-        mixpanelTrack.nativeBridgeError({
-          actionType: type,
-          errorCode: String(resolvedErrorCode || "BRIDGE_ACTION_FAILED"),
-          errorMessage: String(resolvedErrorMessage || "브릿지 액션 실패"),
-        });
-      }
-
       resolve({
         success: detail.success,
         data: resolvedData,
@@ -193,11 +183,6 @@ function sendBridgeAction<T = any>(type: string, payload?: any, timeoutMs = 1500
     timer = setTimeout(() => {
       console.warn(`[Bridge Action] Request timed out for ${type} (reqId: ${requestId}, ${timeoutMs}ms)`);
       removeListeners();
-      mixpanelTrack.nativeBridgeError({
-        actionType: type,
-        errorCode: 'TIMEOUT',
-        errorMessage: `요청 시간이 초과되었습니다 (${timeoutMs}ms)`,
-      });
       resolve({
         success: false,
         errorCode: 'TIMEOUT',

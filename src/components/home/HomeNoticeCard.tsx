@@ -68,23 +68,13 @@ const NoticeItemWrapper = styled.div`
   flex-direction: column;
   gap: 6px;
   width: 100%;
-  padding: 8px 10px;
-  margin: -4px -10px;
-  border-radius: 10px;
+  //padding: 12px 16px;
+  border-radius: 12px;
   cursor: pointer;
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
-
-  /* Apple 스타일 셀 탭 피드백 */
-  transition: background-color 0.12s ease, transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: background-color 0.2s ease;
 
   &:hover {
-    background-color: #f7f9fa;
-  }
-
-  &:active {
-    background-color: #f2f4f6;
-    transform: scale(0.99);
+    background-color: #fcfcfc;
   }
 `;
 

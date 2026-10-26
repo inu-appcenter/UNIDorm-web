@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import styled from "styled-components";
 import {
+  ShieldCheck,
   User,
   Lock,
   AlertCircle,
@@ -16,9 +17,6 @@ import {
 } from "@/apis/mobileAgentBridge";
 import { secureStorage } from "@/utils/secureStorage";
 import { openUnidormAppOrStore } from "@/utils/portalAppLauncher";
-import { mixpanelTrack } from "@/utils/mixpanel";
-import CapsuleButton from "@/components/common/CapsuleButton";
-import PortalSyncProgressModal from "./PortalSyncProgressModal";
 
 interface PortalSyncOnboardingProps {
   onSuccess: () => void;
@@ -72,13 +70,7 @@ export default function PortalSyncOnboarding({
   }, [checkStatus]);
 
   // 포털 데이터 동기화 실행 (기기 로컬 처리)
-  const executeSync = async (
-    targetStudentId: string,
-    syncType: "saved_account" | "manual_input" = "saved_account",
-  ) => {
-    const startTime = Date.now();
-    mixpanelTrack.dormitoryCardSyncStarted(syncType);
-
+  const executeSync = async (targetStudentId: string) => {
     setIsLoading(true);
     setErrorMessage("");
     setLoadingMessage("기기에서 안전하게 기숙사 정보를 가져오고 있어요...");
@@ -93,17 +85,10 @@ export default function PortalSyncOnboarding({
         const msg =
           dormRes.errorMessage ||
           "포털에서 기숙사 정보를 가져오지 못했어요. 잠시 후 다시 시도해주세요.";
-        mixpanelTrack.dormitoryCardSyncFailed({
-          stage: "DORM_FETCH",
-          errorCode: dormRes.errorCode || "DORM_FETCH_FAILED",
-          errorMessage: msg,
-          durationMs: Date.now() - startTime,
-        });
         throw new Error(msg);
       }
 
       let finalDormData = dormRes.data;
-      let hasAttachedPhoto = false;
 
       // 2. 사진이나 추가 학적이 필요한 경우 학적 정보도 동기화
       setLoadingMessage("학적 및 증명사진을 확인하고 있어요...");
@@ -123,7 +108,6 @@ export default function PortalSyncOnboarding({
             !finalDormData.photoBase64 &&
             !finalDormData.profile?.photoBase64
           ) {
-            hasAttachedPhoto = true;
             finalDormData = {
               ...finalDormData,
               photoBase64: photo,
@@ -132,52 +116,23 @@ export default function PortalSyncOnboarding({
                 : finalDormData.profile,
             };
           }
-        } else if (!academicRes.success) {
-          mixpanelTrack.dormitoryCardSyncFailed({
-            stage: "ACADEMIC_FETCH",
-            errorCode: academicRes.errorCode || "ACADEMIC_FETCH_WARNING",
-            errorMessage: academicRes.errorMessage || "학적 동기화 건너뜀",
-            durationMs: Date.now() - startTime,
-          });
         }
       } catch (acErr) {
         console.warn("학적 추가 동기화 실패 (무시하고 계속)", acErr);
       }
 
       // 3. 로컬 보안 스토리지에 저장
-      try {
-        const nowIso = new Date().toISOString();
-        const sanitizedDormData = {
-          ...finalDormData,
-          rawDatasets: {},
-          rawFields: undefined,
-        };
-        await secureStorage.setCacheWithTtl(
-          "portal_dormitory_student_info",
-          sanitizedDormData,
-          24 * 60 * 60 * 1000
-        );
-        localStorage.setItem("portal_dormitory_last_updated", nowIso);
-      } catch (storageErr) {
-        const storageMsg =
-          storageErr instanceof Error
-            ? storageErr.message
-            : "로컬 스토리지 저장 실패";
-        mixpanelTrack.dormitoryCardSyncFailed({
-          stage: "STORAGE_SAVE",
-          errorCode: "STORAGE_ERROR",
-          errorMessage: storageMsg,
-          durationMs: Date.now() - startTime,
-        });
-        throw new Error("정보를 기기에 안전하게 저장하지 못했어요.");
-      }
-
-      // 동기화 성공 믹스패널 기록
-      mixpanelTrack.dormitoryCardSyncSuccess({
-        durationMs: Date.now() - startTime,
-        hasPhoto: Boolean(finalDormData.photoBase64 || finalDormData.profile?.photoBase64 || hasAttachedPhoto),
-        hasDormInfo: Boolean(finalDormData.studentDormNo || finalDormData.dormitoryType),
-      });
+      const nowIso = new Date().toISOString();
+      const sanitizedDormData = {
+        ...finalDormData,
+        rawDatasets: {},
+        rawFields: undefined,
+      };
+      await secureStorage.setItem(
+        "portal_dormitory_student_info",
+        sanitizedDormData,
+      );
+      localStorage.setItem("portal_dormitory_last_updated", nowIso);
 
       // 성공 콜백 호출
       onSuccess();
@@ -200,7 +155,7 @@ export default function PortalSyncOnboarding({
       setIsRelinkMode(true);
       return;
     }
-    await executeSync(studentId, "saved_account");
+    await executeSync(studentId);
   };
 
   // 2) 신규 또는 재입력 계정 등록 후 가져오기
@@ -217,7 +172,7 @@ export default function PortalSyncOnboarding({
     }
 
     setIsLoading(true);
-    setLoadingMessage("기기 보안 영역에 저장 중...");
+    setLoadingMessage("기기 보안 영역(KeyStore)에 저장 중...");
     setErrorMessage("");
 
     try {
@@ -227,13 +182,7 @@ export default function PortalSyncOnboarding({
       );
 
       if (!saveRes.success) {
-        const errorMsg = saveRes.errorMessage || "계정 등록에 실패했어요.";
-        mixpanelTrack.dormitoryCardSyncFailed({
-          stage: "SAVE_ACCOUNT",
-          errorCode: saveRes.errorCode || "SAVE_FAILED",
-          errorMessage: errorMsg,
-        });
-        throw new Error(errorMsg);
+        throw new Error(saveRes.errorMessage || "계정 등록에 실패했어요.");
       }
 
       localStorage.setItem("portal_student_id", studentIdInput.trim());
@@ -242,7 +191,7 @@ export default function PortalSyncOnboarding({
       setIsRelinkMode(false);
 
       // 저장 성공 후 즉시 사생정보 동기화 실행
-      await executeSync(studentIdInput.trim(), "manual_input");
+      await executeSync(studentIdInput.trim());
     } catch (err: unknown) {
       const msg =
         err instanceof Error
@@ -269,83 +218,88 @@ export default function PortalSyncOnboarding({
   if (!isMobileAppEnvironment()) {
     return (
       <Container>
-        <ContentArea>
-          <HeaderSection>
-            <Title>유니돔 앱에서{"\n"}이용할 수 있어요</Title>
-            <Subtitle>
-              모바일 사생증 및 포털 연동은 스마트폰 보안 영역을 이용하므로 유니돔 앱 환경에서만 안전하게 지원돼요.
-            </Subtitle>
-          </HeaderSection>
+        <HeaderSection>
+          <Title>유니돔 앱에서{"\n"}이용할 수 있어요</Title>
+          <Subtitle>
+            모바일 사생증 및 포털 연동은 기기 보안 저장소(KeyStore)를 이용하므로 유니돔 앱 환경에서만 안전하게 지원돼요.
+          </Subtitle>
+        </HeaderSection>
 
-          <SecurityCard>
+        <SecurityCard>
+          <ShieldCheck size={22} color="#04B05C" />
+          <SecurityTextGroup>
             <SecurityTitle>기기에서만 안전하게 처리돼요</SecurityTitle>
             <SecurityDesc>
               가져오는 작업은 이 기기에서만 수행되며 외부 서버로 전송되지 않아요.
             </SecurityDesc>
-          </SecurityCard>
-        </ContentArea>
+          </SecurityTextGroup>
+        </SecurityCard>
 
-        <BottomActionArea>
-          <CapsuleButton variant="primary" fullWidth type="button" onClick={() => openUnidormAppOrStore()}>
-            유니돔 앱으로 열기
-          </CapsuleButton>
-        </BottomActionArea>
+        <PrimaryButton type="button" onClick={() => openUnidormAppOrStore()}>
+          유니돔 앱으로 열기
+        </PrimaryButton>
       </Container>
     );
   }
 
   return (
     <Container>
+      <HeaderSection>
+        <Title>
+          포털 사이트에서{"\n"}정보를 가져와야 해요
+        </Title>
+        <Subtitle>
+          모바일 사생증 발급을 위해 인천대학교 포털에서 사생 정보를 안전하게 불러올게요.
+        </Subtitle>
+      </HeaderSection>
+
+      {/* 기기 로컬 처리 및 외부 전송 배제 안심 보안 안내 */}
+      <SecurityCard>
+        <ShieldCheck size={22} color="#3182F6" />
+        <SecurityTextGroup>
+          <SecurityTitle>가져오는 작업은 이 기기에서만 수행돼요</SecurityTitle>
+          <SecurityDesc>
+            포털 아이디와 비밀번호, 사생 정보는 외부 서버로 전송되지 않으며 이 기기의 보안 영역(KeyStore)에만 암호화 보관돼요.
+          </SecurityDesc>
+        </SecurityTextGroup>
+      </SecurityCard>
+
       {/* 상태별 화면: 저장된 계정이 있는 경우 */}
       {isLinked && !isRelinkMode ? (
-        <>
-          <ContentArea>
-            <HeaderSection>
-              <Title>
-                포털 사이트에서{"\n"}정보를 가져와야 해요
-              </Title>
-              <Subtitle>
-                모바일 사생증 발급을 위해 인천대학교 포털에서 사생 정보를 안전하게 불러올게요.
-              </Subtitle>
-            </HeaderSection>
+        <CardSection>
+          <SavedAccountBox>
+            <AccountInfoRow>
+              <User size={18} color="#4E5968" />
+              <AccountLabel>등록된 포털 학번</AccountLabel>
+              <AccountStudentId>{savedStudentId || "학번 연동됨"}</AccountStudentId>
+            </AccountInfoRow>
+            <AccountSubHint>
+              이미 기기에 안전하게 등록되어 있어 바로 정보를 가져올 수 있어요.
+            </AccountSubHint>
+          </SavedAccountBox>
 
-            {/* 기기 로컬 처리 및 외부 전송 배제 안심 보안 안내 */}
-            <SecurityCard>
-              <SecurityTitle>가져오는 작업은 이 기기에서만 수행돼요</SecurityTitle>
-              <SecurityDesc>
-                포털 아이디와 비밀번호, 사생 정보는 외부 서버로 전송되지 않으며 이 스마트폰의 보안 영역에만 안전하게 보관돼요.
-              </SecurityDesc>
-            </SecurityCard>
+          {errorMessage && (
+            <ErrorBox role="alert">
+              <AlertCircle size={16} />
+              <span>{errorMessage}</span>
+            </ErrorBox>
+          )}
 
-            <SavedAccountBox>
-              <AccountInfoRow>
-                <User size={18} color="#4E5968" />
-                <AccountLabel>등록된 포털 학번</AccountLabel>
-                <AccountStudentId>{savedStudentId || "학번 연동됨"}</AccountStudentId>
-              </AccountInfoRow>
-              <AccountSubHint>
-                이미 기기에 안전하게 등록되어 있어 바로 정보를 가져올 수 있어요.
-              </AccountSubHint>
-            </SavedAccountBox>
-
-            {errorMessage && (
-              <ErrorBox role="alert">
-                <AlertCircle size={16} />
-                <span>{errorMessage}</span>
-              </ErrorBox>
-            )}
-          </ContentArea>
-
-          <BottomActionArea>
-            <CapsuleButton
-              variant="primary"
-              fullWidth
+          <ActionGroup>
+            <PrimaryButton
               type="button"
               onClick={handleSyncWithSavedAccount}
               disabled={isLoading}
             >
-              사생증 정보 가져오기
-            </CapsuleButton>
+              {isLoading ? (
+                <>
+                  <Loader2 size={18} className="spin" style={{ marginRight: 8 }} />
+                  {loadingMessage || "정보를 가져오는 중..."}
+                </>
+              ) : (
+                "사생증 정보 가져오기"
+              )}
+            </PrimaryButton>
 
             {!isLoading && (
               <SecondaryTextButton
@@ -358,28 +312,12 @@ export default function PortalSyncOnboarding({
                 다른 포털 계정으로 입력하기
               </SecondaryTextButton>
             )}
-          </BottomActionArea>
-        </>
+          </ActionGroup>
+        </CardSection>
       ) : (
         /* 상태별 화면: 계정이 없거나 다른 계정 입력 모드인 경우 */
-        <Form onSubmit={handleSubmitNewAccount}>
-          <ContentArea>
-            <HeaderSection>
-              <Title>
-                포털 사이트에서{"\n"}정보를 가져와야 해요
-              </Title>
-              <Subtitle>
-                모바일 사생증 발급을 위해 인천대학교 포털에서 사생 정보를 안전하게 불러올게요.
-              </Subtitle>
-            </HeaderSection>
-
-            <SecurityCard>
-              <SecurityTitle>가져오는 작업은 이 기기에서만 수행돼요</SecurityTitle>
-              <SecurityDesc>
-                포털 아이디와 비밀번호, 사생 정보는 외부 서버로 전송되지 않으며 이 스마트폰의 보안 영역에만 안전하게 보관돼요.
-              </SecurityDesc>
-            </SecurityCard>
-
+        <CardSection>
+          <Form onSubmit={handleSubmitNewAccount}>
             <InputGroup>
               <InputLabel htmlFor="portal-student-id">포털 학번</InputLabel>
               <InputWrap>
@@ -417,40 +355,39 @@ export default function PortalSyncOnboarding({
                 <span>{errorMessage}</span>
               </ErrorBox>
             )}
-          </ContentArea>
 
-          <BottomActionArea>
-            <CapsuleButton
-              variant="primary"
-              fullWidth
-              type="submit"
-              disabled={
-                isLoading || !studentIdInput.trim() || !passwordInput.trim()
-              }
-            >
-              정보 가져오기
-            </CapsuleButton>
-
-            {isLinked && !isLoading && (
-              <SecondaryTextButton
-                type="button"
-                onClick={() => {
-                  setErrorMessage("");
-                  setIsRelinkMode(false);
-                }}
+            <ActionGroup>
+              <PrimaryButton
+                type="submit"
+                disabled={
+                  isLoading || !studentIdInput.trim() || !passwordInput.trim()
+                }
               >
-                기존에 등록된 계정 사용하기
-              </SecondaryTextButton>
-            )}
-          </BottomActionArea>
-        </Form>
-      )}
+                {isLoading ? (
+                  <>
+                    <Loader2 size={18} className="spin" style={{ marginRight: 8 }} />
+                    {loadingMessage || "정보를 가져오는 중..."}
+                  </>
+                ) : (
+                  "정보 가져오기"
+                )}
+              </PrimaryButton>
 
-      <PortalSyncProgressModal
-        isOpen={isLoading}
-        title="사생 정보를 불러오고 있어요"
-        currentMessage={loadingMessage}
-      />
+              {isLinked && !isLoading && (
+                <SecondaryTextButton
+                  type="button"
+                  onClick={() => {
+                    setErrorMessage("");
+                    setIsRelinkMode(false);
+                  }}
+                >
+                  기존에 등록된 계정 사용하기
+                </SecondaryTextButton>
+              )}
+            </ActionGroup>
+          </Form>
+        </CardSection>
+      )}
     </Container>
   );
 }
@@ -459,12 +396,11 @@ const Container = styled.div`
   width: 100%;
   max-width: 440px;
   margin: 0 auto;
-  padding: 8px 0 0;
+  padding: 24px 20px 40px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  height: 100%;
-  flex: 1;
+  gap: 20px;
 
   .spin {
     animation: spin 1s linear infinite;
@@ -477,15 +413,6 @@ const Container = styled.div`
       transform: rotate(360deg);
     }
   }
-`;
-
-const ContentArea = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  flex: 1;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
 `;
 
 const LoadingCenterBox = styled.div`
@@ -528,12 +455,18 @@ const Subtitle = styled.p`
 
 const SecurityCard = styled.div`
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 14px 16px;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 18px;
   background: #f2f4f6;
-  border-radius: 14px;
+  border-radius: 16px;
   box-sizing: border-box;
+`;
+
+const SecurityTextGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 `;
 
 const SecurityTitle = styled.span`
@@ -546,6 +479,13 @@ const SecurityDesc = styled.span`
   font-size: 13px;
   line-height: 1.45;
   color: #4e5968;
+`;
+
+const CardSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: 4px;
 `;
 
 const SavedAccountBox = styled.div`
@@ -587,8 +527,7 @@ const AccountSubHint = styled.p`
 const Form = styled.form`
   display: flex;
   flex-direction: column;
-  flex: 1;
-  min-height: 100%;
+  gap: 16px;
 `;
 
 const InputGroup = styled.div`
@@ -650,29 +589,58 @@ const ErrorBox = styled.div`
   color: #f04452;
 `;
 
-const BottomActionArea = styled.div`
+const ActionGroup = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-top: auto;
-  padding-top: 12px;
-  width: 100%;
+  gap: 12px;
+  margin-top: 10px;
 `;
 
+const PrimaryButton = styled.button`
+  width: 100%;
+  height: 54px;
+  border-radius: 16px;
+  background: #3182f6;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: #1b64da;
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.98);
+    background: #1b64da;
+  }
+
+  &:disabled {
+    background: #e5e8eb;
+    color: #b0b8c1;
+    cursor: not-allowed;
+  }
+`;
 
 const SecondaryTextButton = styled.button`
   background: none;
   border: none;
-  color: #8b95a1;
+  color: #4e5968;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   padding: 10px;
   cursor: pointer;
   text-align: center;
   transition: color 0.15s ease;
 
   &:hover {
-    color: #4e5968;
+    color: #191f28;
   }
 
   &:active {

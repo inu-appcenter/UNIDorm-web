@@ -6,7 +6,7 @@ const spin = keyframes`
   100% { transform: rotate(360deg); }
 `;
 
-const SpinnerWrapper = styled.div<{ $overlay?: boolean }>`
+const SpinnerWrapper = styled.div<{ overlay?: boolean }>`
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -17,8 +17,8 @@ const SpinnerWrapper = styled.div<{ $overlay?: boolean }>`
   color: #888;
   font-size: 14px;
 
-  ${({ $overlay }) =>
-    $overlay &&
+  ${({ overlay }) =>
+    overlay &&
     css`
       position: fixed;
       top: 0;
@@ -57,7 +57,7 @@ export default function LoadingSpinner({
   overlay = false,
 }: LoadingSpinnerProps) {
   return (
-    <SpinnerWrapper $overlay={overlay}>
+    <SpinnerWrapper overlay={overlay}>
       <Spinner />
       {message && <p>{message}</p>}
     </SpinnerWrapper>

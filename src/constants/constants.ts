@@ -80,36 +80,4 @@ export const dormStructure = {
 // export const rooms = Array.from({ length: 20 }, (_, i) => `${i + 1}호`);
 // export const beds = ["A", "B", "C", "D"];
 
-export const complainStatus = [
-  "대기중",
-  "담당자 배정",
-  "처리중",
-  "처리완료",
-  "반려",
-];
-
-/**
- * 프론트엔드의 'A동' 형식을 백엔드 DormBuilding enum 상수('A')로 변환합니다.
- * 백엔드 검색 API(GET /admin/complaints/search)에서 DormBuilding.valueOf를 호출하므로
- * 'A동'을 넘기면 IllegalArgumentException(500 에러)이 발생합니다.
- */
-export const formatBuildingForServer = (
-  building?: string | null,
-): string | undefined => {
-  if (!building) return undefined;
-  if (building.startsWith("A")) return "A";
-  if (building.startsWith("B")) return "B";
-  if (building.startsWith("C")) return "C";
-  return building;
-};
-
-/**
- * 백엔드 DormBuilding enum 상수('A')를 프론트엔드 표시 형식('A동')으로 복원합니다.
- */
-export const formatBuildingFromServer = (building?: string | null): string => {
-  if (!building) return "";
-  if (building === "A") return "A동";
-  if (building === "B") return "B동";
-  if (building === "C") return "C동";
-  return building;
-};
+export const complainStatus = ["대기중", "담당자 배정", "처리중", "처리완료"];

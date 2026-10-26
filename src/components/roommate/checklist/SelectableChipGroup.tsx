@@ -16,7 +16,6 @@ interface BaseProps {
 
 type SingleSelectProps = BaseProps & {
   selectedIndex: number | null;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onSelect: (index: any) => void;
   selectedIndices?: never;
 };
@@ -137,9 +136,6 @@ const SelectableChip = styled.div<{
   border-radius: 20px;
 
   text-align: center;
-  white-space: nowrap;
-  flex-shrink: 0;
-  word-break: keep-all;
   font-size: 14px;
   font-style: normal;
   font-weight: 500;

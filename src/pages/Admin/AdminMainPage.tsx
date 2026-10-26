@@ -17,9 +17,6 @@ import {
   BarChart3,
   Bot,
   Beaker,
-  CreditCard,
-  ShieldAlert,
-  Database,
   ChevronRight,
   ShieldCheck,
   Siren,
@@ -136,35 +133,6 @@ const AdminMainPage: React.FC = () => {
       icon: <MessagesSquare size={20} />,
       category: "운영 및 시스템",
     },
-    {
-      label: "사생증 시뮬레이션 (정상)",
-      path: "/dormitory/card?preview=true",
-      description: "모바일 사생증 3D 카드, 최근 동기화 시각 및 실시간 새로고침 시뮬레이션을 테스트합니다.",
-      icon: <CreditCard size={20} />,
-      category: "개발 지원",
-    },
-    {
-      label: "사생증 시뮬레이션 (만료)",
-      path: "/dormitory/card?preview=true&status=expired",
-      description: "학기 만료 가드 차단 안내 및 최신 사생증으로 갱신하는 전환 플로우를 테스트합니다.",
-      icon: <ShieldAlert size={20} />,
-      category: "개발 지원",
-    },
-    {
-      label: "사생정보조회 ERP 연동",
-      path: "/dormitory/portal",
-      description: "기숙사 사생 배정 정보, 상벌점, 공공요금 및 동기화 모달 연동을 확인합니다.",
-      icon: <Database size={20} />,
-      category: "개발 지원",
-    },
-    {
-      label: "유니돔 테스트 웹",
-      path: "https://unidorm-test.pages.dev",
-      description: "개발 중인 유니돔 웹 테스트 배포 페이지로 이동합니다.",
-      icon: <Beaker size={20} />,
-      isExternal: true,
-      category: "개발 지원",
-    },
   ];
 
   const filteredPages = isSupporters
@@ -185,9 +153,10 @@ const AdminMainPage: React.FC = () => {
           isMainAdmin,
       );
 
-  const categories = Array.from(
+  let categories = Array.from(
     new Set(filteredPages.map((p) => p.category)),
   ) as AdminPageItem["category"][];
+  if (isMainAdmin) categories = [...categories, "개발 지원"];
 
   const { roleName } = useUserRole();
 
@@ -211,43 +180,74 @@ const AdminMainPage: React.FC = () => {
             <CategorySection key={category}>
               <CategoryTitle>{category}</CategoryTitle>
               <MenuGrid>
-                {filteredPages
-                  .filter((page) => page.category === category)
-                  .map((page, index) => (
-                    <MenuCard
-                      key={page.label}
-                      as={motion.div}
-                      initial={{ opacity: 0, y: 15 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.03 }}
-                      whileHover={{ scale: 1.02 }}
-                      onClick={() => {
-                        if (page.isExternal) {
-                          window.open(
-                            page.path,
-                            "_blank",
-                            "noopener,noreferrer",
-                          );
-                        } else {
-                          navigate(page.path);
-                        }
-                      }}
+                {category === "개발 지원" ? (
+                  <MenuCard
+                    as={motion.div}
+                    whileHover={{ scale: 1.02 }}
+                    onClick={() => {
+                      // 새 탭에서 링크 열기
+                      window.open(
+                        "https://unidorm-test.pages.dev",
+                        "_blank",
+                        "noopener,noreferrer",
+                      );
+                    }}
+                  >
+                    <IconWrapper
+                      style={{ backgroundColor: "#fef3c7", color: "#d97706" }}
                     >
-                      <IconWrapper>{page.icon}</IconWrapper>
-                      <CardContent>
-                        <CardHeader>
-                          <CardTitle>{page.label}</CardTitle>
-                          {page.isExternal && (
-                            <ExternalBadge>외부</ExternalBadge>
-                          )}
-                        </CardHeader>
-                        <CardDescription>{page.description}</CardDescription>
-                      </CardContent>
-                      <ChevronWrapper>
-                        <ChevronRight size={18} />
-                      </ChevronWrapper>
-                    </MenuCard>
-                  ))}
+                      <Beaker size={20} />
+                    </IconWrapper>
+                    <CardContent>
+                      <CardTitle>테스트 페이지</CardTitle>
+                      <CardDescription>
+                        개발 중인 유니돔 테스트 페이지로 이동합니다.
+                      </CardDescription>
+                    </CardContent>
+                    <ChevronWrapper>
+                      <ChevronRight size={18} />
+                    </ChevronWrapper>
+                  </MenuCard>
+                ) : (
+                  filteredPages
+                    .filter((page) => page.category === category)
+                    .map((page, index) => (
+                      <MenuCard
+                        key={page.label}
+                        as={motion.div}
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.03 }}
+                        onClick={() => {
+                          if (page.isExternal) {
+                            // 새 탭에서 외부 링크 열기
+                            window.open(
+                              page.path,
+                              "_blank",
+                              "noopener,noreferrer",
+                            );
+                          } else {
+                            // 내부 페이지 이동
+                            navigate(page.path);
+                          }
+                        }}
+                      >
+                        <IconWrapper>{page.icon}</IconWrapper>
+                        <CardContent>
+                          <CardHeader>
+                            <CardTitle>{page.label}</CardTitle>
+                            {page.isExternal && (
+                              <ExternalBadge>외부</ExternalBadge>
+                            )}
+                          </CardHeader>
+                          <CardDescription>{page.description}</CardDescription>
+                        </CardContent>
+                        <ChevronWrapper>
+                          <ChevronRight size={18} />
+                        </ChevronWrapper>
+                      </MenuCard>
+                    ))
+                )}
               </MenuGrid>
             </CategorySection>
           ))}

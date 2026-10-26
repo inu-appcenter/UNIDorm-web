@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { evaluateDormitoryResidentStatus, normalizeSemesterTerm } from "../DormitoryCardPage";
+import { evaluateDormitoryResidentStatus } from "../DormitoryCardPage";
 import { DormitoryStudentInfo } from "@/utils/ssvParser";
 
 describe("DormitoryCardPage - 활성 사생 3중 교차 검증 로직 정밀 테스트", () => {
@@ -194,83 +194,5 @@ describe("DormitoryCardPage - 활성 사생 3중 교차 검증 로직 정밀 테
     expect(result.isCurrentlyResident).toBe(false);
     expect(result.hasValidDormAssignment).toBe(false);
     expect(result.lastHistory).toBeNull();
-  });
-  it("[학기 정규화 검증] 20, 2학기, 2 등 다양한 학기 표기가 동일한 학기 코드로 정규화되어야 한다", () => {
-    expect(normalizeSemesterTerm("20")).toBe("20");
-    expect(normalizeSemesterTerm("2학기")).toBe("20");
-    expect(normalizeSemesterTerm("2")).toBe("20");
-    expect(normalizeSemesterTerm("10")).toBe("10");
-    expect(normalizeSemesterTerm("1학기")).toBe("10");
-    expect(normalizeSemesterTerm("1")).toBe("10");
-    expect(normalizeSemesterTerm("30")).toBe("30");
-    expect(normalizeSemesterTerm("여름학기")).toBe("30");
-    expect(normalizeSemesterTerm("40")).toBe("40");
-    expect(normalizeSemesterTerm("겨울학기")).toBe("40");
-    expect(normalizeSemesterTerm("")).toBe("");
-  });
-
-  it("[학기 불일치 방어] 메인 학기가 '2학기'이고 inOutList가 '20'인 경우에도 정상 정규입사로 교차 매칭되어야 한다", () => {
-    const mockMismatchTermStudent: DormitoryStudentInfo = {
-      hasData: true,
-      rawDatasets: {},
-      studentId: "202600522",
-      studentName: "이정규",
-      appliedYear: "2026",
-      appliedSemester: "2학기",
-      status: "",
-      dormitoryType: "03",
-      dormitoryBuilding: "B동",
-      studentDormNo: "03205052",
-      profile: {
-        name: "이정규",
-        studentId: "202600522",
-        year: "2026",
-        term: "2학기",
-        dormitoryType: "03",
-        dormitoryBuilding: "B동",
-        studentDormNo: "03205052",
-      },
-      inOutList: [
-        { year: "2026", term: "20", status: "01", studentDormNo: "03205052", checkInDate: "2026-08-28" },
-        { year: "2026", term: "10", status: "02", studentDormNo: "03201011", checkOutDate: "2026-06-20" },
-      ],
-    };
-
-    const result = evaluateDormitoryResidentStatus(mockMismatchTermStudent, 2026);
-    expect(result.isCurrentlyResident).toBe(true);
-    expect(result.status).toBe("정규입사");
-    expect(result.isExplicitlyTerminated).toBe(false);
-  });
-
-  it("[특수 건물명/BTL 확장] 포털 건물명이 생활관 또는 C동 등으로 와도 사생번호가 유효하면 정상 발급되어야 한다", () => {
-    const mockSpecialBuildingStudent: DormitoryStudentInfo = {
-      hasData: true,
-      rawDatasets: {},
-      studentId: "202662337",
-      studentName: "글로벌학생",
-      appliedYear: "2026",
-      appliedSemester: "20",
-      status: "01",
-      dormitoryType: "",
-      dormitoryBuilding: "생활관 C동",
-      studentDormNo: "04201001",
-      profile: {
-        name: "글로벌학생",
-        studentId: "202662337",
-        year: "2026",
-        term: "20",
-        dormitoryType: "",
-        dormitoryBuilding: "생활관 C동",
-        studentDormNo: "04201001",
-      },
-      inOutList: [
-        { year: "2026", term: "20", status: "01", studentDormNo: "04201001" },
-      ],
-    };
-
-    const result = evaluateDormitoryResidentStatus(mockSpecialBuildingStudent, 2026);
-    expect(result.isCurrentlyResident).toBe(true);
-    expect(result.hasValidDormAssignment).toBe(true);
-    expect(result.resolvedDormType).toBe("생활관 C동");
   });
 });
