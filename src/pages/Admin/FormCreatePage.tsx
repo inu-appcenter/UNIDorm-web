@@ -392,7 +392,7 @@ export default function FormCreatePage() {
 const PageRoot = styled.div`
   width: 100%;
   min-height: 100%;
-  padding: 16px 20px calc(90px + env(safe-area-inset-bottom, 0px));
+  padding: 10px 14px calc(90px + env(safe-area-inset-bottom, 0px));
   box-sizing: border-box;
   overflow-x: hidden;
 
@@ -412,16 +412,17 @@ const ContentContainer = styled.div`
 
 const SectionCard = styled.div`
   background: #ffffff;
-  border-radius: 20px;
+  border-radius: 16px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
-  padding: 24px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
 
-  @media (max-width: 640px) {
-    padding: 18px;
-    border-radius: 16px;
+  @media (min-width: 768px) {
+    border-radius: 20px;
+    padding: 24px;
+    gap: 20px;
   }
 `;
 

@@ -189,7 +189,7 @@ export default function OpenChatBotPage() {
 const PageRoot = styled.div`
   width: 100%;
   min-height: 100%;
-  padding: 16px 20px calc(90px + env(safe-area-inset-bottom, 0px));
+  padding: 10px 14px calc(90px + env(safe-area-inset-bottom, 0px));
   box-sizing: border-box;
   overflow-x: hidden;
 
@@ -207,22 +207,29 @@ const ContentContainer = styled.div`
 const LayoutSplit = styled.div`
   display: grid;
   grid-template-columns: 1fr;
-  gap: 20px;
+  gap: 16px;
 
   @media (min-width: 1024px) {
     grid-template-columns: 1fr 1fr;
+    gap: 20px;
     align-items: start;
   }
 `;
 
 const FormCard = styled.div`
   background: #ffffff;
-  border-radius: 20px;
+  border-radius: 16px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
-  padding: 24px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
+
+  @media (min-width: 768px) {
+    border-radius: 20px;
+    padding: 24px;
+    gap: 20px;
+  }
 `;
 
 const FormGroup = styled.div`
@@ -344,12 +351,18 @@ const PrimarySubmitButton = styled.button`
 /* 미리보기 카드 */
 const PreviewCard = styled.div`
   background: #ffffff;
-  border-radius: 20px;
+  border-radius: 16px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
-  padding: 24px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
+
+  @media (min-width: 768px) {
+    border-radius: 20px;
+    padding: 24px;
+    gap: 16px;
+  }
 `;
 
 const PreviewHeader = styled.div`

@@ -311,7 +311,7 @@ export default function AdminMainPage() {
 const PageRoot = styled.div`
   width: 100%;
   min-height: 100%;
-  padding: 16px 20px calc(40px + env(safe-area-inset-bottom, 0px));
+  padding: 10px 14px calc(40px + env(safe-area-inset-bottom, 0px));
   box-sizing: border-box;
   overflow-x: hidden;
 
@@ -332,17 +332,20 @@ const ContentContainer = styled.div`
 /* 상단 프로필 및 검색 바 */
 const TopProfileCard = styled.div`
   background: #ffffff;
-  border-radius: 20px;
-  padding: 20px 24px;
+  border-radius: 16px;
+  padding: 14px 16px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 
   @media (min-width: 768px) {
+    border-radius: 20px;
+    padding: 20px 24px;
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
+    gap: 16px;
   }
 `;
 
@@ -500,13 +503,18 @@ const MenuCard = styled.button`
   flex-direction: column;
   gap: 8px;
   background: #ffffff;
-  border-radius: 18px;
+  border-radius: 16px;
   border: 1px solid #e5e8eb;
-  padding: 20px;
+  padding: 16px 14px;
   text-align: left;
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
   transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+
+  @media (min-width: 768px) {
+    border-radius: 18px;
+    padding: 20px;
+  }
 
   &:hover {
     border-color: #3182f6;
