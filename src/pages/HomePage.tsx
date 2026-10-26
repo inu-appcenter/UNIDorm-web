@@ -40,11 +40,7 @@ import { formatSemesterName } from "@/utils/semester";
 import { mixpanelTrack } from "@/utils/mixpanel"; // 추가
 import useUserStore from "@/stores/useUserStore";
 import { PATHS } from "@/constants/paths";
-import HomeDormitoryCardButton from "@/components/home/HomeDormitoryCardButton";
 import HomeDormitoryPromptModal from "@/components/home/HomeDormitoryPromptModal";
-import { secureStorage } from "@/utils/secureStorage";
-import { parseDormitoryStudentInfo } from "@/utils/ssvParser";
-import { parseDormRoomAndBed } from "@/components/portal/MobileDormitoryCard";
 import { isLatestUnidormApp } from "@/utils/getMobilePlatform";
 import {
   isDormitorySemesterExpired,
@@ -104,91 +100,6 @@ export default function HomePage() {
 
   const [isDormPromptOpen, setIsDormPromptOpen] = useState(false);
   const [dormPromptMode, setDormPromptMode] = useState<"issue" | "renew">("issue");
-  const [dormCardStatus, setDormCardStatus] = useState<{
-    buildingName: string | null;
-    roomNumber: string | null;
-    studentName: string | null;
-    isExpired: boolean;
-    isIssued: boolean;
-  }>({
-    buildingName: null,
-    roomNumber: null,
-    studentName: null,
-    isExpired: false,
-    isIssued: false,
-  });
-
-  useEffect(() => {
-    if (!isLoggedIn) {
-      setDormCardStatus({
-        buildingName: null,
-        roomNumber: null,
-        studentName: null,
-        isExpired: false,
-        isIssued: false,
-      });
-      return;
-    }
-
-    let isMounted = true;
-
-    async function loadDormCardInfo() {
-      try {
-        let rawData: unknown = null;
-        const cachedEnvelope = await secureStorage.getCacheWithTtl<unknown>(
-          "portal_dormitory_student_info",
-        );
-        if (cachedEnvelope?.data) {
-          rawData = cachedEnvelope.data;
-        } else {
-          const rawLocal = localStorage.getItem("portal_dormitory_student_info");
-          if (rawLocal) {
-            try {
-              rawData = JSON.parse(rawLocal);
-            } catch {
-              rawData = rawLocal;
-            }
-          }
-        }
-
-        if (!rawData || !isMounted) return;
-
-        const info = parseDormitoryStudentInfo(rawData as any);
-        const p = info.profile || (rawData as any).profile || rawData;
-
-        const dormYear = p?.year || info.appliedYear;
-        const dormTerm = p?.term || info.appliedSemester;
-        const expired = isDormitorySemesterExpired({
-          dormYear,
-          dormTerm,
-        });
-
-        const roomInfo = parseDormRoomAndBed(info.studentDormNo || p?.studentDormNo);
-        const roomStr = info.roomNumber ? `${info.roomNumber}호` : (roomInfo?.room || null);
-        const buildingStr = info.dormitoryBuilding || p?.dormitoryBuilding || null;
-        const nameStr = info.studentName || p?.name || null;
-        const hasValidDorm = Boolean(buildingStr || roomStr || info.hasData);
-
-        if (isMounted) {
-          setDormCardStatus({
-            buildingName: buildingStr,
-            roomNumber: roomStr,
-            studentName: nameStr,
-            isExpired: expired,
-            isIssued: hasValidDorm,
-          });
-        }
-      } catch (e) {
-        console.warn("[HomePage] 사생 정보 로드 실패:", e);
-      }
-    }
-
-    void loadDormCardInfo();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [isLoggedIn]);
 
   useEffect(() => {
     if (!isLoggedIn) return;
@@ -383,9 +294,11 @@ export default function HomePage() {
 
   useSetHeader({
     showAlarm: true,
+    showDormitoryCard: true,
+    dormitoryCardOnClick: handleDormitoryCardClick,
   });
 
-  // Apple & Toss 스타일 0.15초 초고속 페이드
+  // 0.15초 페이드 전환 효과
   const quickFade = {
     initial: { opacity: 0 },
     animate: { opacity: 1 },
@@ -449,18 +362,6 @@ export default function HomePage() {
           />
         </motion.div>
       )}
-
-      <DormitoryCardButtonWrapper>
-        <HomeDormitoryCardButton
-          onClick={handleDormitoryCardClick}
-          isLoggedIn={isLoggedIn}
-          buildingName={dormCardStatus.buildingName}
-          roomNumber={dormCardStatus.roomNumber}
-          studentName={dormCardStatus.studentName}
-          isExpired={dormCardStatus.isExpired}
-          isIssued={dormCardStatus.isIssued}
-        />
-      </DormitoryCardButtonWrapper>
 
       <ContentWrapper>
         {isMatchingOpen && (
@@ -712,16 +613,6 @@ const HomePageWrapper = styled.div`
   }
 `;
 
-const DormitoryCardButtonWrapper = styled.div`
-  width: 100%;
-  padding: 12px 16px 6px;
-  box-sizing: border-box;
-
-  @media (min-width: 768px) {
-    max-width: 1200px;
-    padding: 16px 20px 8px;
-  }
-`;
 
 const ContentWrapper = styled.div`
   padding: 0;

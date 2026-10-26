@@ -17,6 +17,8 @@ const useHeaderStore = create<HeaderState>((set) => ({
   secondHeader: null,
   hamburgerOnClick: null,
   headerRightElement: null,
+  showDormitoryCard: false,
+  dormitoryCardOnClick: null,
 
   /** 헤더 정보 업데이트 */
   setHeader: (newConfig) =>
@@ -32,6 +34,10 @@ const useHeaderStore = create<HeaderState>((set) => ({
         state.hamburgerOnClick === newConfig.hamburgerOnClick;
       const isSameRightElement =
         state.headerRightElement === newConfig.headerRightElement;
+      const isSameDormCard =
+        state.showDormitoryCard === newConfig.showDormitoryCard;
+      const isSameDormCardOnClick =
+        state.dormitoryCardOnClick === newConfig.dormitoryCardOnClick;
 
       /* 모든 값이 동일하면 상태 업데이트 스킵 (리렌더링 방지) */
       if (
@@ -42,7 +48,9 @@ const useHeaderStore = create<HeaderState>((set) => ({
         isSameMenu &&
         isSameSetting &&
         isSameHamburger &&
-        isSameRightElement
+        isSameRightElement &&
+        isSameDormCard &&
+        isSameDormCardOnClick
       ) {
         return state;
       }
@@ -61,6 +69,8 @@ const useHeaderStore = create<HeaderState>((set) => ({
       secondHeader: null,
       hamburgerOnClick: null,
       headerRightElement: null,
+      showDormitoryCard: false,
+      dormitoryCardOnClick: null,
     }),
 }));
 
