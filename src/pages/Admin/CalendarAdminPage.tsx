@@ -275,21 +275,7 @@ const CalendarAdminPage: React.FC = () => {
 
   return (
     <PageRoot>
-      {/* 1. 상단 타이틀 & 데스크톱 주요 액션 영역 */}
-      <HeaderSection>
-        <HeaderTitleGroup>
-          <PageMainTitle>생활원 캘린더 관리</PageMainTitle>
-          <PageMainSubtitle>
-            기숙사 학사 및 생활원 일정을 검색·필터링하고 빠르게 등록·수정할 수 있습니다.
-          </PageMainSubtitle>
-        </HeaderTitleGroup>
-
-        <DesktopCTAButton type="button" onClick={handleOpenCreate}>
-          + 새 일정 등록하기
-        </DesktopCTAButton>
-      </HeaderSection>
-
-      {/* 2. 검색 & 다각도 필터 제어 바 */}
+      {/* 1. 검색 & 다각도 필터 & 데스크톱 등록 액션 */}
       <ControlBarCard>
         <SearchFilterRow>
           <SearchInputWrapper>
@@ -322,6 +308,10 @@ const CalendarAdminPage: React.FC = () => {
               <option value="TITLE_ASC">제목 가나다 순</option>
             </StyledSelect>
           </SelectGroup>
+
+          <DesktopCTAButton type="button" onClick={handleOpenCreate}>
+            + 새 일정 등록
+          </DesktopCTAButton>
         </SearchFilterRow>
 
         {/* 상태 필터 세그먼트 칩 */}
@@ -642,43 +632,6 @@ const PageRoot = styled.div`
   }
 `;
 
-const HeaderSection = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-
-  @media (min-width: 768px) {
-    flex-direction: row;
-    align-items: flex-end;
-    justify-content: space-between;
-  }
-`;
-
-const HeaderTitleGroup = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-`;
-
-const PageMainTitle = styled.h2`
-  margin: 0;
-  font-size: 24px;
-  font-weight: 800;
-  color: #191f28;
-  letter-spacing: -0.5px;
-
-  @media (min-width: 768px) {
-    font-size: 28px;
-  }
-`;
-
-const PageMainSubtitle = styled.p`
-  margin: 0;
-  font-size: 14px;
-  color: #4e5968;
-  line-height: 1.5;
-`;
-
 const DesktopCTAButton = styled.button`
   display: none;
 
@@ -686,16 +639,16 @@ const DesktopCTAButton = styled.button`
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    height: 48px;
-    padding: 0 24px;
-    border-radius: 14px;
+    height: 44px;
+    padding: 0 20px;
+    border-radius: 12px;
     border: none;
     background: #3182f6;
     color: #ffffff;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 700;
     cursor: pointer;
-    box-shadow: 0 4px 14px rgba(49, 130, 246, 0.25);
+    box-shadow: 0 2px 8px rgba(49, 130, 246, 0.22);
     white-space: nowrap;
     transition: all 0.15s ease;
 
