@@ -152,6 +152,24 @@ const CalendarAdminPage: React.FC = () => {
     return filteredAndSortedList.slice(startIndex, startIndex + ITEMS_PER_PAGE);
   }, [filteredAndSortedList, currentPage]);
 
+  // 모바일 가로 스크롤 방지를 위한 슬라이딩 페이지 번호 (최대 5개 노출)
+  const visiblePages = useMemo(() => {
+    const maxVisible = 5;
+    if (totalPages <= maxVisible) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+
+    let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+    let end = start + maxVisible - 1;
+
+    if (end > totalPages) {
+      end = totalPages;
+      start = Math.max(1, end - maxVisible + 1);
+    }
+
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  }, [totalPages, currentPage]);
+
   // 필터 변경 시 첫 페이지로 리셋
   const handleFilterChange = (newStatus: FilterStatus) => {
     setStatusFilter(newStatus);
@@ -462,19 +480,20 @@ const CalendarAdminPage: React.FC = () => {
           </>
         )}
 
-        {/* 4. 페이지네이션 바 */}
+        {/* 4. 페이지네이션 바 (슬라이딩 윈도우로 가로 스크롤 완전 차단) */}
         {totalPages > 1 && (
           <PaginationWrapper>
             <PageNavButton
               type="button"
               disabled={currentPage === 1}
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              aria-label="이전 페이지"
             >
               ‹
             </PageNavButton>
 
             <PageNumberList>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+              {visiblePages.map((pageNum) => (
                 <PageNumberButton
                   key={pageNum}
                   type="button"
@@ -490,6 +509,7 @@ const CalendarAdminPage: React.FC = () => {
               type="button"
               disabled={currentPage === totalPages}
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              aria-label="다음 페이지"
             >
               ›
             </PageNavButton>
@@ -607,6 +627,8 @@ export default CalendarAdminPage;
 
 const PageRoot = styled.div`
   width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -616,6 +638,7 @@ const PageRoot = styled.div`
   @media (min-width: 1024px) {
     padding: 16px 0 60px;
     gap: 24px;
+    overflow-x: visible;
   }
 `;
 
@@ -753,6 +776,19 @@ const ClearButton = styled.button`
 const SelectGroup = styled.div`
   display: flex;
   gap: 8px;
+  width: 100%;
+
+  > * {
+    flex: 1;
+    min-width: 0;
+  }
+
+  @media (min-width: 768px) {
+    width: auto;
+    > * {
+      flex: initial;
+    }
+  }
 `;
 
 const StyledSelect = styled.select`
@@ -806,10 +842,14 @@ const ContentCard = styled.div`
   background: #ffffff;
   border: 1px solid #e5e8eb;
   border-radius: 20px;
-  padding: 20px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 
   @media (min-width: 768px) {
     padding: 24px;
@@ -1039,10 +1079,13 @@ const PaginationWrapper = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   margin-top: 24px;
   padding-top: 16px;
   border-top: 1px solid #f2f4f6;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 `;
 
 const PageNavButton = styled.button`
