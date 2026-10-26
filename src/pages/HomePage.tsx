@@ -222,10 +222,20 @@ export default function HomePage() {
 
   const hasTrackedPopups = useRef(false);
   useInitFromQuery(popupNotices, (data) => {
+    let hiddenModals: string[] = [];
+    try {
+      hiddenModals = JSON.parse(localStorage.getItem("hiddenModals") || "[]");
+    } catch {
+      hiddenModals = [];
+    }
+
     const initialState = data.reduce(
       (acc, noti) => {
         if (noti.id !== undefined && noti.id !== null) {
-          acc[noti.id] = true;
+          const isHidden = hiddenModals.some(
+            (hiddenId) => String(hiddenId) === String(noti.id),
+          );
+          acc[noti.id] = !isHidden;
         }
         return acc;
       },
@@ -236,7 +246,14 @@ export default function HomePage() {
     if (!hasTrackedPopups.current) {
       hasTrackedPopups.current = true;
       data.forEach((popup: PopupNotification) => {
-        mixpanelTrack.popupViewed(popup.title);
+        if (popup.id !== undefined && popup.id !== null) {
+          const isHidden = hiddenModals.some(
+            (hiddenId) => String(hiddenId) === String(popup.id),
+          );
+          if (!isHidden) {
+            mixpanelTrack.popupViewed(popup.title);
+          }
+        }
       });
     }
   });
