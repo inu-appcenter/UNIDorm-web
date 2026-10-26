@@ -105,9 +105,11 @@ const ComplainListPage = () => {
     }
 
     const now = new Date();
-    const parseSafeDate = (dateString: string) => {
-      const safariSafeFormat = dateString.replace(/\./g, "/");
-      return new Date(safariSafeFormat);
+    const parseSafeDate = (dateString?: string) => {
+      if (!dateString) return new Date(0);
+      const safeFormat = dateString.replace(/\./g, "/").replace(/-/g, "/");
+      const parsed = new Date(safeFormat);
+      return isNaN(parsed.getTime()) ? new Date(0) : parsed;
     };
 
     if (selectedFilterIndex === 1) {
