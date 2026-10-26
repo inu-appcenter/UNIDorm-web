@@ -40,7 +40,6 @@ import { formatSemesterName } from "@/utils/semester";
 import { mixpanelTrack } from "@/utils/mixpanel"; // 추가
 import useUserStore from "@/stores/useUserStore";
 import { PATHS } from "@/constants/paths";
-import HomeDormitoryCardButton from "@/components/home/HomeDormitoryCardButton";
 import HomeDormitoryPromptModal from "@/components/home/HomeDormitoryPromptModal";
 import { isLatestUnidormApp } from "@/utils/getMobilePlatform";
 import {
@@ -295,9 +294,11 @@ export default function HomePage() {
 
   useSetHeader({
     showAlarm: true,
+    showDormitoryCard: true,
+    dormitoryCardOnClick: handleDormitoryCardClick,
   });
 
-  // Apple & Toss 스타일 0.15초 초고속 페이드
+  // 0.15초 페이드 전환 효과
   const quickFade = {
     initial: { opacity: 0 },
     animate: { opacity: 1 },
@@ -361,10 +362,6 @@ export default function HomePage() {
           />
         </motion.div>
       )}
-
-      <DormitoryCardButtonWrapper>
-        <HomeDormitoryCardButton onClick={handleDormitoryCardClick} />
-      </DormitoryCardButtonWrapper>
 
       <ContentWrapper>
         {isMatchingOpen && (
@@ -616,16 +613,6 @@ const HomePageWrapper = styled.div`
   }
 `;
 
-const DormitoryCardButtonWrapper = styled.div`
-  width: 100%;
-  padding: 10px 16px 2px;
-  box-sizing: border-box;
-
-  @media (min-width: 768px) {
-    max-width: 1200px;
-    padding: 14px 20px 4px;
-  }
-`;
 
 const ContentWrapper = styled.div`
   padding: 0;
