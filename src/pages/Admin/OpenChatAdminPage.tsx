@@ -9,45 +9,18 @@ import {
   updateDormOfficialRoom,
 } from "@/apis/openchat";
 import { useAdminOpenChatRooms } from "@/queries/admin";
-import AdminModal from "@/components/modal/AdminModal";
-import AdminBottomSheet from "@/components/modal/AdminBottomSheet";
-import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import { useUserRole } from "@/hooks/useUserRole";
 import useUserStore from "@/stores/useUserStore";
 import { useCountUp } from "@/hooks/useCountUp";
 import { complainDormitory } from "@/constants/constants";
-import {
-  AdminBadge,
-  AdminButton,
-  AdminCard,
-  AdminCardDescription,
-  AdminCardHeader,
-  AdminCardTitle,
-  AdminCardTitleGroup,
-  AdminEmptyDescription,
-  AdminEmptyState,
-  AdminEmptyTitle,
-  AdminField,
-  AdminInput,
-  AdminLabel,
-  AdminMiniStat,
-  AdminMiniStatLabel,
-  AdminMiniStatValue,
-  AdminNotice,
-  AdminPage,
-  AdminScrollableArea,
-  AdminSelect,
-  AdminShell,
-  AdminStack,
-  AdminSubtleText,
-  AdminTextarea,
-} from "@/pages/Admin/adminPageStyles";
 import type {
   AdminOpenChatRoom,
   CreateDormOfficialRoomRequest,
   UpdateDormOfficialRoomRequest,
 } from "@/types/openchat";
+
+const PAGE_SIZE = 10;
 
 const INITIAL_CREATE_FORM: CreateDormOfficialRoomRequest = {
   dormType: complainDormitory[0] ?? "1기숙사",
@@ -60,49 +33,10 @@ const INITIAL_EDIT_FORM: UpdateDormOfficialRoomRequest = {
   description: "",
 };
 
-const OpenChatAdminPage: React.FC = () => {
+export default function OpenChatAdminPage() {
   const navigate = useNavigate();
   const { isMainAdmin } = useUserRole();
   const { isLoading: isUserLoading } = useUserStore();
-
-  const {
-    data: rooms = [],
-    isLoading: loading,
-    refetch: fetchRooms,
-  } = useAdminOpenChatRooms({ enabled: isMainAdmin });
-  const [searchKeyword, setSearchKeyword] = useState("");
-
-  // Create Modal State
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [createForm, setCreateForm] =
-    useState<CreateDormOfficialRoomRequest>(INITIAL_CREATE_FORM);
-  const [isCreating, setIsCreating] = useState(false);
-  const [createError, setCreateError] = useState("");
-
-  // Edit Modal State
-  const [isEditOpen, setIsEditOpen] = useState(false);
-  const [selectedRoomForEdit, setSelectedRoomForEdit] =
-    useState<AdminOpenChatRoom | null>(null);
-  const [editForm, setEditForm] =
-    useState<UpdateDormOfficialRoomRequest>(INITIAL_EDIT_FORM);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editError, setEditError] = useState("");
-
-  // Bot Message Modal State
-  const [isBotModalOpen, setIsBotModalOpen] = useState(false);
-  const [selectedRoomForBot, setSelectedRoomForBot] =
-    useState<AdminOpenChatRoom | null>(null);
-  const [botContent, setBotContent] = useState("");
-  const [isSendingBot, setIsSendingBot] = useState(false);
-  const [botError, setBotError] = useState("");
-  const [botSuccess, setBotSuccess] = useState("");
-
-  // Mobile Action Sheet State
-  const [mobileActionRoom, setMobileActionRoom] =
-    useState<AdminOpenChatRoom | null>(null);
-
-  // Deleting State
-  const [deletingRoomId, setDeletingRoomId] = useState<number | null>(null);
 
   useSetHeader({ title: "오픈채팅방 관리" });
 
@@ -112,6 +46,37 @@ const OpenChatAdminPage: React.FC = () => {
     }
   }, [isMainAdmin, isUserLoading, navigate]);
 
+  const {
+    data: rooms = [],
+    isLoading: loading,
+    refetch: fetchRooms,
+  } = useAdminOpenChatRooms({ enabled: isMainAdmin });
+
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // 모달 상태
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [createForm, setCreateForm] = useState<CreateDormOfficialRoomRequest>(INITIAL_CREATE_FORM);
+  const [isCreating, setIsCreating] = useState(false);
+  const [createError, setCreateError] = useState("");
+
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [selectedRoomForEdit, setSelectedRoomForEdit] = useState<AdminOpenChatRoom | null>(null);
+  const [editForm, setEditForm] = useState<UpdateDormOfficialRoomRequest>(INITIAL_EDIT_FORM);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editError, setEditError] = useState("");
+
+  const [isBotModalOpen, setIsBotModalOpen] = useState(false);
+  const [selectedRoomForBot, setSelectedRoomForBot] = useState<AdminOpenChatRoom | null>(null);
+  const [botContent, setBotContent] = useState("");
+  const [isSendingBot, setIsSendingBot] = useState(false);
+  const [botError, setBotError] = useState("");
+  const [botSuccess, setBotSuccess] = useState("");
+
+  const [deletingRoomId, setDeletingRoomId] = useState<number | null>(null);
+
+  // 검색 필터링
   const filteredRooms = useMemo(() => {
     const keyword = searchKeyword.trim().toLowerCase();
     if (!keyword) return rooms;
@@ -125,7 +90,33 @@ const OpenChatAdminPage: React.FC = () => {
   const animatedTotalRooms = useCountUp(rooms.length);
   const animatedFilteredRooms = useCountUp(filteredRooms.length);
 
-  // Create Handlers
+  // 슬라이딩 윈도우 페이지네이션
+  const totalPages = Math.max(1, Math.ceil(filteredRooms.length / PAGE_SIZE));
+  const currentSafePage = Math.min(currentPage, totalPages);
+
+  const paginatedRooms = useMemo(() => {
+    const start = (currentSafePage - 1) * PAGE_SIZE;
+    return filteredRooms.slice(start, start + PAGE_SIZE);
+  }, [filteredRooms, currentSafePage]);
+
+  const visiblePages = useMemo(() => {
+    const windowSize = 5;
+    let start = Math.max(1, currentSafePage - Math.floor(windowSize / 2));
+    let end = start + windowSize - 1;
+
+    if (end > totalPages) {
+      end = totalPages;
+      start = Math.max(1, end - windowSize + 1);
+    }
+
+    const pages: number[] = [];
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    return pages;
+  }, [currentSafePage, totalPages]);
+
+  // 생성 핸들러
   const handleOpenCreate = () => {
     setCreateForm({
       dormType: complainDormitory[0] ?? "1기숙사",
@@ -145,7 +136,6 @@ const OpenChatAdminPage: React.FC = () => {
       setCreateError("채팅방 이름을 입력해 주세요.");
       return;
     }
-
     if (!trimmedDesc) {
       setCreateError("채팅방 설명을 입력해 주세요.");
       return;
@@ -174,9 +164,8 @@ const OpenChatAdminPage: React.FC = () => {
     }
   };
 
-  // Edit Handlers
+  // 수정 핸들러
   const handleOpenEdit = (room: AdminOpenChatRoom) => {
-    setMobileActionRoom(null);
     setSelectedRoomForEdit(room);
     setEditForm({
       name: room.roomName,
@@ -197,7 +186,6 @@ const OpenChatAdminPage: React.FC = () => {
       setEditError("수정할 채팅방 이름을 입력해 주세요.");
       return;
     }
-
     if (!trimmedDesc) {
       setEditError("수정할 채팅방 설명을 입력해 주세요.");
       return;
@@ -232,9 +220,8 @@ const OpenChatAdminPage: React.FC = () => {
     }
   };
 
-  // Delete Handlers
+  // 삭제 핸들러
   const handleDeleteRoom = async (room: AdminOpenChatRoom) => {
-    setMobileActionRoom(null);
     if (
       !window.confirm(
         `"${room.roomName}" (ID: ${room.roomId}) 공식 채팅방을 삭제하시겠습니까?\n삭제 후 복구할 수 없습니다.`,
@@ -266,9 +253,8 @@ const OpenChatAdminPage: React.FC = () => {
     }
   };
 
-  // Bot Message Handlers
+  // 챗봇 메시지 모달
   const handleOpenBotModal = (room?: AdminOpenChatRoom) => {
-    setMobileActionRoom(null);
     setSelectedRoomForBot(room ?? rooms[0] ?? null);
     setBotContent("");
     setBotError("");
@@ -318,620 +304,906 @@ const OpenChatAdminPage: React.FC = () => {
   };
 
   return (
-    <AdminShell>
-      <AdminPage>
-        {/* 상단 통계 수치 (CountUp) */}
-        <MetricsGrid>
-          <AdminMiniStat>
-            <AdminMiniStatLabel>전체 오픈채팅방</AdminMiniStatLabel>
-            <AdminMiniStatValue>{animatedTotalRooms}개</AdminMiniStatValue>
-          </AdminMiniStat>
-          <AdminMiniStat>
-            <AdminMiniStatLabel>검색된 채팅방</AdminMiniStatLabel>
-            <AdminMiniStatValue style={{ color: "#3182f6" }}>
+    <PageRoot>
+      <ContentContainer>
+        {/* 상단 통계 칩 */}
+        <StatsGrid>
+          <StatMiniCard>
+            <StatMiniLabel>전체 오픈채팅방</StatMiniLabel>
+            <StatMiniValue>{animatedTotalRooms}개</StatMiniValue>
+          </StatMiniCard>
+          <StatMiniCard>
+            <StatMiniLabel>검색된 채팅방</StatMiniLabel>
+            <StatMiniValue style={{ color: "#3182f6" }}>
               {animatedFilteredRooms}개
-            </AdminMiniStatValue>
-          </AdminMiniStat>
-        </MetricsGrid>
+            </StatMiniValue>
+          </StatMiniCard>
+        </StatsGrid>
 
-        <AdminStack>
-          <AdminCard>
-            <AdminCardHeader>
-              <AdminCardTitleGroup>
-                <AdminCardTitle>오픈채팅방 목록</AdminCardTitle>
-                <AdminCardDescription>
-                  기숙사 공식 오픈채팅방을 생성 및 관리하고, 참여자들에게 챗봇 공지 메시지를 발송할 수 있습니다.
-                </AdminCardDescription>
-              </AdminCardTitleGroup>
-
-              <HeaderActions>
-                <AdminButton
-                  $tone="secondary"
-                  onClick={() => void fetchRooms()}
-                  disabled={loading}
-                >
-                  새로고침
-                </AdminButton>
-                <AdminButton
-                  $tone="secondary"
-                  onClick={() => handleOpenBotModal()}
-                  disabled={rooms.length === 0}
-                >
-                  챗봇 메시지 발송
-                </AdminButton>
-                <DesktopCreateButton
-                  $tone="primary"
-                  onClick={handleOpenCreate}
-                >
-                  공식 채팅방 생성
-                </DesktopCreateButton>
-              </HeaderActions>
-            </AdminCardHeader>
-
-            {/* 검색창 */}
-            <SearchContainer>
+        {/* 메인 관리 카드 */}
+        <MainCard>
+          <ToolbarArea>
+            <SearchWrapper>
               <SearchInput
                 type="text"
-                placeholder="채팅방 이름이나 방 번호(ID)로 검색..."
+                placeholder="채팅방 이름 또는 방 번호(#ID) 검색..."
                 value={searchKeyword}
-                onChange={(e) => setSearchKeyword(e.target.value)}
+                onChange={(e) => {
+                  setSearchKeyword(e.target.value);
+                  setCurrentPage(1);
+                }}
               />
               {searchKeyword && (
-                <ClearSearchBtn type="button" onClick={() => setSearchKeyword("")}>
-                  초기화
-                </ClearSearchBtn>
+                <ClearButton
+                  type="button"
+                  onClick={() => {
+                    setSearchKeyword("");
+                    setCurrentPage(1);
+                  }}
+                  aria-label="검색어 지우기"
+                >
+                  ✕
+                </ClearButton>
               )}
-            </SearchContainer>
+            </SearchWrapper>
 
-            {loading ? (
-              <LoadingContainer>
-                <LoadingSpinner />
-              </LoadingContainer>
-            ) : filteredRooms.length === 0 ? (
-              <AdminEmptyState>
-                <AdminEmptyTitle>
-                  {searchKeyword ? "검색 결과가 없습니다." : "등록된 오픈채팅방이 없습니다."}
-                </AdminEmptyTitle>
-                <AdminEmptyDescription>
-                  {searchKeyword
-                    ? `"${searchKeyword}" 키워드와 일치하는 채팅방이 없습니다.`
-                    : "새로운 기숙사 공식 채팅방을 생성해 보세요."}
-                </AdminEmptyDescription>
-                {!searchKeyword && (
-                  <AdminButton $tone="primary" onClick={handleOpenCreate}>
-                    공식 채팅방 만들기
-                  </AdminButton>
-                )}
-              </AdminEmptyState>
-            ) : (
-              <AdminScrollableArea $maxHeight="680px">
-                <RoomListContainer>
-                  {filteredRooms.map((room) => (
-                    <RoomItemCard key={room.roomId}>
-                      <RoomItemMain>
-                        <RoomItemHeader>
-                          <AdminBadge $tone="blue">방 #{room.roomId}</AdminBadge>
-                        </RoomItemHeader>
-                        <RoomItemTitle>{room.roomName}</RoomItemTitle>
-                      </RoomItemMain>
+            <ActionButtonsGroup>
+              <SecondaryActionButton
+                type="button"
+                onClick={() => void fetchRooms()}
+                disabled={loading}
+              >
+                새로고침
+              </SecondaryActionButton>
+              <SecondaryActionButton
+                type="button"
+                onClick={() => handleOpenBotModal()}
+                disabled={rooms.length === 0}
+              >
+                챗봇 공지 발송
+              </SecondaryActionButton>
+              <DesktopPrimaryButton type="button" onClick={handleOpenCreate}>
+                공식 채팅방 생성
+              </DesktopPrimaryButton>
+            </ActionButtonsGroup>
+          </ToolbarArea>
 
-                      {/* PC 전용 인라인 액션 버튼 (Zero-Icon) */}
-                      <DesktopActionGroup>
-                        <AdminButton
-                          $tone="ghost"
-                          onClick={() => handleOpenBotModal(room)}
-                          style={{ padding: "8px 14px", minHeight: "38px", fontSize: "0.85rem" }}
-                        >
-                          챗봇 발송
-                        </AdminButton>
-                        <AdminButton
-                          $tone="secondary"
-                          onClick={() => handleOpenEdit(room)}
-                          style={{ padding: "8px 14px", minHeight: "38px", fontSize: "0.85rem" }}
-                        >
-                          공식방 수정
-                        </AdminButton>
-                        <AdminButton
-                          $tone="danger"
-                          onClick={() => void handleDeleteRoom(room)}
-                          disabled={deletingRoomId === room.roomId}
-                          style={{ padding: "8px 14px", minHeight: "38px", fontSize: "0.85rem" }}
-                        >
-                          {deletingRoomId === room.roomId ? "삭제 중..." : "삭제"}
-                        </AdminButton>
-                      </DesktopActionGroup>
+          {/* 목록 본문 */}
+          {loading ? (
+            <LoadingContainer>
+              <SkeletonRow />
+              <SkeletonRow />
+              <SkeletonRow />
+            </LoadingContainer>
+          ) : filteredRooms.length === 0 ? (
+            <EmptyState>
+              <EmptyTitle>
+                {searchKeyword
+                  ? "검색 결과와 일치하는 채팅방이 없어요"
+                  : "등록된 기숙사 공식 채팅방이 없어요"}
+              </EmptyTitle>
+              <EmptyDescription>
+                {searchKeyword
+                  ? "검색 키워드를 확인하거나 초기화해 보세요."
+                  : "새로운 기숙사 공식 오픈채팅방을 만들어 보세요."}
+              </EmptyDescription>
+              {!searchKeyword && (
+                <PrimaryActionButton type="button" onClick={handleOpenCreate}>
+                  공식 채팅방 만들기
+                </PrimaryActionButton>
+              )}
+            </EmptyState>
+          ) : (
+            <>
+              {/* PC 전용 와이드 데이터 테이블 */}
+              <DesktopTableWrapper>
+                <Table>
+                  <thead>
+                    <tr>
+                      <Th style={{ width: "12%" }}>방 번호</Th>
+                      <Th style={{ width: "50%" }}>채팅방 이름</Th>
+                      <Th style={{ width: "38%", textAlign: "right" }}>관리 옵션</Th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedRooms.map((room) => (
+                      <tr key={room.roomId}>
+                        <Td>
+                          <RoomIdBadge>#{room.roomId}</RoomIdBadge>
+                        </Td>
+                        <Td>
+                          <RoomNameText>{room.roomName}</RoomNameText>
+                        </Td>
+                        <Td style={{ textAlign: "right" }}>
+                          <TableActions>
+                            <GhostButton
+                              type="button"
+                              onClick={() => handleOpenBotModal(room)}
+                            >
+                              챗봇 발송
+                            </GhostButton>
+                            <TableSecondaryButton
+                              type="button"
+                              onClick={() => handleOpenEdit(room)}
+                            >
+                              수정
+                            </TableSecondaryButton>
+                            <DangerButton
+                              type="button"
+                              onClick={() => void handleDeleteRoom(room)}
+                              disabled={deletingRoomId === room.roomId}
+                            >
+                              {deletingRoomId === room.roomId ? "삭제 중..." : "삭제"}
+                            </DangerButton>
+                          </TableActions>
+                        </Td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
+              </DesktopTableWrapper>
 
-                      {/* 모바일 전용 액션 시트 호출 버튼 */}
-                      <MobileActionOpenButton
+              {/* 모바일 전용 ListRow 카드 */}
+              <MobileListWrapper>
+                {paginatedRooms.map((room) => (
+                  <MobileRow key={room.roomId}>
+                    <MobileRowInfo>
+                      <MobileMetaRow>
+                        <RoomIdBadge>#{room.roomId}</RoomIdBadge>
+                      </MobileMetaRow>
+                      <RoomNameText>{room.roomName}</RoomNameText>
+                    </MobileRowInfo>
+
+                    <MobileActionButtons>
+                      <GhostButton
                         type="button"
-                        onClick={() => setMobileActionRoom(room)}
+                        onClick={() => handleOpenBotModal(room)}
                       >
-                        관리 옵션 열기
-                      </MobileActionOpenButton>
-                    </RoomItemCard>
-                  ))}
-                </RoomListContainer>
-              </AdminScrollableArea>
-            )}
-          </AdminCard>
-        </AdminStack>
+                        챗봇
+                      </GhostButton>
+                      <TableSecondaryButton
+                        type="button"
+                        onClick={() => handleOpenEdit(room)}
+                      >
+                        수정
+                      </TableSecondaryButton>
+                      <DangerButton
+                        type="button"
+                        onClick={() => void handleDeleteRoom(room)}
+                        disabled={deletingRoomId === room.roomId}
+                      >
+                        {deletingRoomId === room.roomId ? "삭제 중" : "삭제"}
+                      </DangerButton>
+                    </MobileActionButtons>
+                  </MobileRow>
+                ))}
+              </MobileListWrapper>
 
-        {/* 모바일 전용 룸 액션 바텀시트 */}
-        <AdminBottomSheet
-          isOpen={Boolean(mobileActionRoom)}
-          setIsOpen={(open) => {
-            if (!open) setMobileActionRoom(null);
-          }}
-          title={mobileActionRoom?.roomName ?? "채팅방 관리"}
-          description={`방 번호 #${mobileActionRoom?.roomId}`}
-        >
-          {mobileActionRoom && (
-            <MobileActionMenuContainer>
-              <MobileActionItem
-                type="button"
-                onClick={() => handleOpenBotModal(mobileActionRoom)}
-              >
-                챗봇 공지 메시지 발송하기
-              </MobileActionItem>
-              <MobileActionItem
-                type="button"
-                onClick={() => handleOpenEdit(mobileActionRoom)}
-              >
-                공식 채팅방 정보 수정하기
-              </MobileActionItem>
-              <MobileActionItem
-                type="button"
-                $danger
-                onClick={() => void handleDeleteRoom(mobileActionRoom)}
-              >
-                공식 채팅방 삭제하기
-              </MobileActionItem>
-            </MobileActionMenuContainer>
+              {/* 슬라이딩 윈도우 페이지네이션 */}
+              {totalPages > 1 && (
+                <PaginationContainer>
+                  <PageNavButton
+                    type="button"
+                    disabled={currentSafePage <= 1}
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    aria-label="이전 페이지"
+                  >
+                    이전
+                  </PageNavButton>
+
+                  <PageNumbersWrapper>
+                    {visiblePages.map((pageNum) => (
+                      <PageNumberButton
+                        key={pageNum}
+                        type="button"
+                        $isActive={pageNum === currentSafePage}
+                        onClick={() => setCurrentPage(pageNum)}
+                      >
+                        {pageNum}
+                      </PageNumberButton>
+                    ))}
+                  </PageNumbersWrapper>
+
+                  <PageNavButton
+                    type="button"
+                    disabled={currentSafePage >= totalPages}
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    aria-label="다음 페이지"
+                  >
+                    다음
+                  </PageNavButton>
+                </PaginationContainer>
+              )}
+            </>
           )}
-        </AdminBottomSheet>
+        </MainCard>
+      </ContentContainer>
 
-        {/* 공식 채팅방 생성 모달 */}
-        <AdminModal
-          isOpen={isCreateOpen}
-          onClose={() => setIsCreateOpen(false)}
-          maxWidth="520px"
-        >
-          <ModalContainer as="form" onSubmit={handleCreateSubmit}>
+      {/* 모바일 하단 고정 CTA */}
+      <MobileFixedCTA>
+        <MobileCTAButton type="button" onClick={handleOpenCreate}>
+          공식 채팅방 만들기
+        </MobileCTAButton>
+      </MobileFixedCTA>
+
+      {/* 공식 채팅방 생성 모달 */}
+      {isCreateOpen && (
+        <ModalOverlay onClick={() => setIsCreateOpen(false)}>
+          <ModalContent onClick={(e) => e.stopPropagation()}>
             <ModalHeader>
-              <ModalTitle>기숙사 공식 채팅방 생성</ModalTitle>
-              <ModalSubtitle>기숙사 구분과 방 이름, 설명을 입력해 공식 채팅방을 생성합니다.</ModalSubtitle>
+              <ModalTitleGroup>
+                <ModalTitle>공식 오픈채팅방 만들기</ModalTitle>
+                <ModalSubtitle>기숙사별 공식 오픈채팅방을 새로 개설합니다.</ModalSubtitle>
+              </ModalTitleGroup>
+              <ModalCloseButton type="button" onClick={() => setIsCreateOpen(false)}>
+                ✕
+              </ModalCloseButton>
             </ModalHeader>
 
-            <ModalBody>
-              <AdminField>
-                <AdminLabel htmlFor="create-dorm-type">기숙사 구분</AdminLabel>
-                <AdminSelect
+            <ModalForm onSubmit={handleCreateSubmit}>
+              <FormGroup>
+                <FieldLabel htmlFor="create-dorm-type">대상 기숙사</FieldLabel>
+                <SelectInput
                   id="create-dorm-type"
                   value={createForm.dormType}
-                  onChange={(e) => setCreateForm((prev) => ({ ...prev, dormType: e.target.value }))}
-                  disabled={isCreating}
+                  onChange={(e) =>
+                    setCreateForm((prev) => ({ ...prev, dormType: e.target.value }))
+                  }
                 >
                   {complainDormitory.map((dorm) => (
                     <option key={dorm} value={dorm}>
                       {dorm}
                     </option>
                   ))}
-                </AdminSelect>
-              </AdminField>
+                </SelectInput>
+              </FormGroup>
 
-              <AdminField>
-                <AdminLabel htmlFor="create-room-name">채팅방 이름</AdminLabel>
-                <AdminInput
+              <FormGroup>
+                <FieldLabel htmlFor="create-room-name">채팅방 이름</FieldLabel>
+                <TextInput
                   id="create-room-name"
                   type="text"
-                  placeholder="예: 1기숙사 공식 오픈채팅방"
+                  placeholder="예: 제1기숙사 공식 오픈채팅방"
                   value={createForm.name}
-                  maxLength={100}
-                  onChange={(e) => setCreateForm((prev) => ({ ...prev, name: e.target.value }))}
-                  disabled={isCreating}
+                  onChange={(e) =>
+                    setCreateForm((prev) => ({ ...prev, name: e.target.value }))
+                  }
+                  required
                 />
-              </AdminField>
+              </FormGroup>
 
-              <AdminField>
-                <AdminLabel htmlFor="create-room-desc">채팅방 설명</AdminLabel>
-                <AdminTextarea
+              <FormGroup>
+                <FieldLabel htmlFor="create-room-desc">채팅방 설명</FieldLabel>
+                <TextareaInput
                   id="create-room-desc"
-                  placeholder="공식 채팅방에 대한 안내 및 운영 공지를 입력해 주세요."
+                  placeholder="방의 목적과 기본 수칙을 간결하게 작성해 주세요."
                   value={createForm.description}
-                  maxLength={500}
-                  style={{ minHeight: "120px" }}
-                  onChange={(e) => setCreateForm((prev) => ({ ...prev, description: e.target.value }))}
-                  disabled={isCreating}
+                  onChange={(e) =>
+                    setCreateForm((prev) => ({ ...prev, description: e.target.value }))
+                  }
+                  required
                 />
-                <AdminSubtleText>{createForm.description.length}/500자</AdminSubtleText>
-              </AdminField>
+              </FormGroup>
 
-              {createError && <AdminNotice $tone="error">{createError}</AdminNotice>}
-            </ModalBody>
+              {createError && <ErrorMessage>{createError}</ErrorMessage>}
 
-            <ModalFooter>
-              <AdminButton
-                type="button"
-                $tone="ghost"
-                onClick={() => setIsCreateOpen(false)}
-                disabled={isCreating}
-              >
-                취소
-              </AdminButton>
-              <AdminButton
-                type="submit"
-                $tone="primary"
-                disabled={!createForm.name.trim() || !createForm.description.trim() || isCreating}
-              >
-                {isCreating ? "생성하고 있어요..." : "공식 채팅방 생성하기"}
-              </AdminButton>
-            </ModalFooter>
-          </ModalContainer>
-        </AdminModal>
+              <ModalActionGroup>
+                <SecondaryButton
+                  type="button"
+                  onClick={() => setIsCreateOpen(false)}
+                  disabled={isCreating}
+                >
+                  취소
+                </SecondaryButton>
+                <PrimarySubmitButton type="submit" disabled={isCreating}>
+                  {isCreating ? "개설하고 있어요..." : "공식방 만들기"}
+                </PrimarySubmitButton>
+              </ModalActionGroup>
+            </ModalForm>
+          </ModalContent>
+        </ModalOverlay>
+      )}
 
-        {/* 공식 채팅방 수정 모달 */}
-        <AdminModal
-          isOpen={isEditOpen}
-          onClose={() => setIsEditOpen(false)}
-          maxWidth="520px"
-        >
-          <ModalContainer as="form" onSubmit={handleEditSubmit}>
+      {/* 공식 채팅방 수정 모달 */}
+      {isEditOpen && selectedRoomForEdit && (
+        <ModalOverlay onClick={() => setIsEditOpen(false)}>
+          <ModalContent onClick={(e) => e.stopPropagation()}>
             <ModalHeader>
-              <ModalTitle>기숙사 공식 채팅방 수정</ModalTitle>
-              <ModalSubtitle>
-                채팅방 #{selectedRoomForEdit?.roomId} ({selectedRoomForEdit?.roomName})
-              </ModalSubtitle>
+              <ModalTitleGroup>
+                <ModalTitle>공식 채팅방 정보 수정</ModalTitle>
+                <ModalSubtitle>방 #{selectedRoomForEdit.roomId}의 정보를 변경합니다.</ModalSubtitle>
+              </ModalTitleGroup>
+              <ModalCloseButton type="button" onClick={() => setIsEditOpen(false)}>
+                ✕
+              </ModalCloseButton>
             </ModalHeader>
 
-            <ModalBody>
-              <AdminField>
-                <AdminLabel htmlFor="edit-room-name">수정할 채팅방 이름</AdminLabel>
-                <AdminInput
+            <ModalForm onSubmit={handleEditSubmit}>
+              <FormGroup>
+                <FieldLabel htmlFor="edit-room-name">채팅방 이름</FieldLabel>
+                <TextInput
                   id="edit-room-name"
                   type="text"
-                  placeholder="새로운 채팅방 이름을 입력하세요"
                   value={editForm.name}
-                  maxLength={100}
-                  onChange={(e) => setEditForm((prev) => ({ ...prev, name: e.target.value }))}
-                  disabled={isEditing}
+                  onChange={(e) =>
+                    setEditForm((prev) => ({ ...prev, name: e.target.value }))
+                  }
+                  required
                 />
-              </AdminField>
+              </FormGroup>
 
-              <AdminField>
-                <AdminLabel htmlFor="edit-room-desc">수정할 채팅방 설명</AdminLabel>
-                <AdminTextarea
+              <FormGroup>
+                <FieldLabel htmlFor="edit-room-desc">채팅방 설명</FieldLabel>
+                <TextareaInput
                   id="edit-room-desc"
-                  placeholder="새로운 채팅방 설명을 입력하세요"
+                  placeholder="새로운 설명을 입력해 주세요."
                   value={editForm.description}
-                  maxLength={500}
-                  style={{ minHeight: "120px" }}
-                  onChange={(e) => setEditForm((prev) => ({ ...prev, description: e.target.value }))}
-                  disabled={isEditing}
+                  onChange={(e) =>
+                    setEditForm((prev) => ({ ...prev, description: e.target.value }))
+                  }
+                  required
                 />
-                <AdminSubtleText>{editForm.description.length}/500자</AdminSubtleText>
-              </AdminField>
+              </FormGroup>
 
-              {editError && <AdminNotice $tone="error">{editError}</AdminNotice>}
-            </ModalBody>
+              {editError && <ErrorMessage>{editError}</ErrorMessage>}
 
-            <ModalFooter>
-              <AdminButton
-                type="button"
-                $tone="ghost"
-                onClick={() => setIsEditOpen(false)}
-                disabled={isEditing}
-              >
-                취소
-              </AdminButton>
-              <AdminButton
-                type="submit"
-                $tone="primary"
-                disabled={!editForm.name.trim() || !editForm.description.trim() || isEditing}
-              >
-                {isEditing ? "수정하고 있어요..." : "수정 완료하기"}
-              </AdminButton>
-            </ModalFooter>
-          </ModalContainer>
-        </AdminModal>
+              <ModalActionGroup>
+                <SecondaryButton
+                  type="button"
+                  onClick={() => setIsEditOpen(false)}
+                  disabled={isEditing}
+                >
+                  취소
+                </SecondaryButton>
+                <PrimarySubmitButton type="submit" disabled={isEditing}>
+                  {isEditing ? "수정하고 있어요..." : "수정 완료"}
+                </PrimarySubmitButton>
+              </ModalActionGroup>
+            </ModalForm>
+          </ModalContent>
+        </ModalOverlay>
+      )}
 
-        {/* 챗봇 메시지 발송 모달 */}
-        <AdminModal
-          isOpen={isBotModalOpen}
-          onClose={() => setIsBotModalOpen(false)}
-          maxWidth="520px"
-        >
-          <ModalContainer as="form" onSubmit={handleBotSubmit}>
+      {/* 챗봇 메시지 발송 모달 */}
+      {isBotModalOpen && (
+        <ModalOverlay onClick={() => setIsBotModalOpen(false)}>
+          <ModalContent onClick={(e) => e.stopPropagation()}>
             <ModalHeader>
-              <ModalTitle>챗봇 메시지 발송</ModalTitle>
-              <ModalSubtitle>
-                방에 직접 참여하지 않고 안내 챗봇 메시지를 안전하게 발송합니다.
-              </ModalSubtitle>
+              <ModalTitleGroup>
+                <ModalTitle>오픈채팅 챗봇 메시지 발송</ModalTitle>
+                <ModalSubtitle>지정한 공식 오픈채팅방에 안내 챗봇 공지를 전송합니다.</ModalSubtitle>
+              </ModalTitleGroup>
+              <ModalCloseButton type="button" onClick={() => setIsBotModalOpen(false)}>
+                ✕
+              </ModalCloseButton>
             </ModalHeader>
 
-            <ModalBody>
-              <AdminField>
-                <AdminLabel htmlFor="bot-target-room">발송 대상 오픈채팅방</AdminLabel>
-                <AdminSelect
+            <ModalForm onSubmit={handleBotSubmit}>
+              <FormGroup>
+                <FieldLabel htmlFor="bot-target-room">발송 대상 오픈채팅방</FieldLabel>
+                <SelectInput
                   id="bot-target-room"
                   value={selectedRoomForBot?.roomId ?? ""}
                   onChange={(e) => {
-                    const id = Number(e.target.value);
-                    const found = rooms.find((r) => r.roomId === id) ?? null;
-                    setSelectedRoomForBot(found);
+                    const found = rooms.find((r) => r.roomId === Number(e.target.value));
+                    setSelectedRoomForBot(found ?? null);
                   }}
-                  disabled={isSendingBot || rooms.length === 0}
                 >
-                  {rooms.length === 0 ? (
-                    <option>선택 가능한 채팅방이 없습니다</option>
-                  ) : (
-                    rooms.map((room) => (
-                      <option key={room.roomId} value={room.roomId}>
-                        [방 #{room.roomId}] {room.roomName}
-                      </option>
-                    ))
-                  )}
-                </AdminSelect>
-              </AdminField>
+                  {rooms.map((room) => (
+                    <option key={room.roomId} value={room.roomId}>
+                      [방 #{room.roomId}] {room.roomName}
+                    </option>
+                  ))}
+                </SelectInput>
+              </FormGroup>
 
-              <AdminField>
-                <AdminLabel htmlFor="modal-bot-content">메시지 내용</AdminLabel>
-                <AdminTextarea
-                  id="modal-bot-content"
-                  placeholder="입주 준비, 수칙 안내, 공동구매 등 채팅방에 안내할 내용을 입력해 주세요."
+              <FormGroup>
+                <FieldLabel htmlFor="bot-msg-content">챗봇 메시지 내용</FieldLabel>
+                <TextareaInput
+                  id="bot-msg-content"
+                  rows={5}
+                  placeholder="입주 준비물 안내, 공동시설 이용 수칙 등 채팅방에 알릴 내용을 입력해 주세요."
                   value={botContent}
-                  maxLength={1000}
-                  style={{ minHeight: "140px" }}
                   onChange={(e) => setBotContent(e.target.value)}
-                  disabled={isSendingBot}
+                  maxLength={1000}
+                  required
                 />
-                <AdminSubtleText>{botContent.length}/1000자</AdminSubtleText>
-              </AdminField>
+                <FieldCaption>{botContent.length}/1000자</FieldCaption>
+              </FormGroup>
 
-              {botError && <AdminNotice $tone="error">{botError}</AdminNotice>}
-              {botSuccess && <AdminNotice $tone="success">{botSuccess}</AdminNotice>}
-            </ModalBody>
+              {botError && <ErrorMessage>{botError}</ErrorMessage>}
+              {botSuccess && <SuccessMessage>{botSuccess}</SuccessMessage>}
 
-            <ModalFooter>
-              <AdminButton
-                type="button"
-                $tone="ghost"
-                onClick={() => setIsBotModalOpen(false)}
-                disabled={isSendingBot}
-              >
-                닫기
-              </AdminButton>
-              <AdminButton
-                type="submit"
-                $tone="primary"
-                disabled={!selectedRoomForBot || !botContent.trim() || isSendingBot}
-              >
-                {isSendingBot ? "메시지를 보내고 있어요..." : "메시지 발송하기"}
-              </AdminButton>
-            </ModalFooter>
-          </ModalContainer>
-        </AdminModal>
-
-        {/* 모바일 전용 하단 고정 CTA */}
-        <MobileCTAContainer>
-          <MobileCTAButton type="button" onClick={handleOpenCreate}>
-            공식 채팅방 만들기
-          </MobileCTAButton>
-        </MobileCTAContainer>
-      </AdminPage>
-    </AdminShell>
+              <ModalActionGroup>
+                <SecondaryButton
+                  type="button"
+                  onClick={() => setIsBotModalOpen(false)}
+                  disabled={isSendingBot}
+                >
+                  취소
+                </SecondaryButton>
+                <PrimarySubmitButton
+                  type="submit"
+                  disabled={isSendingBot || !selectedRoomForBot || !botContent.trim()}
+                >
+                  {isSendingBot ? "발송하고 있어요..." : "챗봇 메시지 보내기"}
+                </PrimarySubmitButton>
+              </ModalActionGroup>
+            </ModalForm>
+          </ModalContent>
+        </ModalOverlay>
+      )}
+    </PageRoot>
   );
-};
+}
 
-export default OpenChatAdminPage;
+/* ================= Styled Components ================= */
 
-const MetricsGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-
-  @media (min-width: 768px) {
-    gap: 16px;
-  }
-`;
-
-const HeaderActions = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-`;
-
-const DesktopCreateButton = styled(AdminButton)`
-  display: none;
-
-  @media (min-width: 768px) {
-    display: inline-flex;
-  }
-`;
-
-const SearchContainer = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
+const PageRoot = styled.div`
   width: 100%;
-`;
+  min-height: 100%;
+  padding: 16px 20px calc(90px + env(safe-area-inset-bottom, 0px));
+  box-sizing: border-box;
+  overflow-x: hidden;
 
-const SearchInput = styled(AdminInput)`
-  height: 44px;
-  font-size: 0.9rem;
-`;
-
-const ClearSearchBtn = styled.button`
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: #3182f6;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  white-space: nowrap;
-`;
-
-const LoadingContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  padding: 60px 0;
-`;
-
-const RoomListContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-`;
-
-const RoomItemCard = styled.div`
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 18px 20px;
-  border-radius: 18px;
-  border: 1px solid #e5e8eb;
-  background: #ffffff;
-  transition: all 0.15s ease-out;
-
-  &:hover {
-    border-color: #3182f6;
-    background-color: #f9fbff;
+  @media (min-width: 1024px) {
+    padding: 24px 32px 60px;
   }
+`;
+
+const ContentContainer = styled.div`
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+`;
+
+const StatsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+`;
+
+const StatMiniCard = styled.div`
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 16px 18px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+`;
+
+const StatMiniLabel = styled.span`
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #4e5968;
+`;
+
+const StatMiniValue = styled.span`
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #191f28;
+  letter-spacing: -0.02em;
+`;
+
+/* 메인 카드 */
+const MainCard = styled.div`
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  @media (min-width: 1024px) {
+    padding: 24px;
+  }
+`;
+
+const ToolbarArea = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 
   @media (min-width: 768px) {
     flex-direction: row;
     align-items: center;
-    gap: 20px;
+    justify-content: space-between;
   }
 `;
 
-const RoomItemMain = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
+const SearchWrapper = styled.div`
+  position: relative;
+  flex: 1;
 `;
 
-const RoomItemHeader = styled.div`
+const SearchInput = styled.input`
+  width: 100%;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid #e5e8eb;
+  background: #f9fafb;
+  padding: 0 36px 0 14px;
+  font-size: 0.9rem;
+  color: #191f28;
+  outline: none;
+  box-sizing: border-box;
+
+  &:focus {
+    border-color: #3182f6;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(49, 130, 246, 0.12);
+  }
+
+  &::placeholder {
+    color: #8b95a1;
+  }
+`;
+
+const ClearButton = styled.button`
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: none;
+  color: #8b95a1;
+  font-size: 0.88rem;
+  cursor: pointer;
+  padding: 4px;
+`;
+
+const ActionButtonsGroup = styled.div`
   display: flex;
   align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 `;
 
-const RoomItemTitle = styled.h3`
-  margin: 0;
-  font-size: 1rem;
+const SecondaryActionButton = styled.button`
+  height: 44px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid #e5e8eb;
+  background: #f9fafb;
+  color: #4e5968;
+  font-size: 0.88rem;
   font-weight: 700;
-  color: #191f28;
-  letter-spacing: -0.01em;
-  word-break: break-all;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease-out;
+
+  &:hover:not(:disabled) {
+    background: #f2f4f6;
+    color: #191f28;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 `;
 
-const DesktopActionGroup = styled.div`
+const DesktopPrimaryButton = styled.button`
   display: none;
 
   @media (min-width: 768px) {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
+    justify-content: center;
+    height: 44px;
+    padding: 0 18px;
+    border-radius: 12px;
+    background: #3182f6;
+    color: #ffffff;
+    font-size: 0.92rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s ease-out;
+
+    &:hover {
+      background: #1b64da;
+    }
   }
 `;
 
-const MobileActionOpenButton = styled.button`
+/* PC 테이블 */
+const DesktopTableWrapper = styled.div`
+  display: none;
+
+  @media (min-width: 768px) {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+  }
+`;
+
+const Table = styled.table`
   width: 100%;
-  height: 42px;
-  border-radius: 12px;
+  border-collapse: collapse;
+  text-align: left;
+`;
+
+const Th = styled.th`
+  padding: 12px 14px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #8b95a1;
+  border-bottom: 1px solid #e5e8eb;
+`;
+
+const Td = styled.td`
+  padding: 16px 14px;
+  border-bottom: 1px solid #f2f4f6;
+  font-size: 0.92rem;
+  vertical-align: middle;
+`;
+
+const RoomIdBadge = styled.span`
+  display: inline-flex;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: #e8f3ff;
+  color: #3182f6;
+  font-size: 0.78rem;
+  font-weight: 800;
+  font-family: monospace;
+`;
+
+const RoomNameText = styled.span`
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #191f28;
+`;
+
+const TableActions = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+`;
+
+const GhostButton = styled.button`
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: none;
   background: #f2f4f6;
   color: #4e5968;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 700;
-  border: none;
   cursor: pointer;
+  white-space: nowrap;
 
-  &:active {
-    transform: scale(0.98);
+  &:hover {
+    background: #e5e8eb;
+    color: #191f28;
   }
+`;
+
+const TableSecondaryButton = styled.button`
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid #e5e8eb;
+  background: #ffffff;
+  color: #4e5968;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:hover {
+    background: #f9fafb;
+    color: #191f28;
+  }
+`;
+
+const DangerButton = styled.button`
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: none;
+  background: #feecee;
+  color: #f04452;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:hover:not(:disabled) {
+    background: #fdd8db;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: wait;
+  }
+`;
+
+/* 모바일 ListRow */
+const MobileListWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  divide-y: 1px solid #f2f4f6;
 
   @media (min-width: 768px) {
     display: none;
   }
 `;
 
-const MobileActionMenuContainer = styled.div`
+const MobileRow = styled.div`
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 16px 20px 24px;
-`;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 4px;
+  border-bottom: 1px solid #f2f4f6;
 
-const MobileActionItem = styled.button<{ $danger?: boolean }>`
-  width: 100%;
-  height: 50px;
-  border-radius: 14px;
-  font-size: 0.95rem;
-  font-weight: 700;
-  border: none;
-  background: ${({ $danger }) => ($danger ? "#fdf2f2" : "#f2f4f6")};
-  color: ${({ $danger }) => ($danger ? "#f04452" : "#191f28")};
-  cursor: pointer;
-  transition: all 0.15s ease-out;
-
-  &:active {
-    transform: scale(0.98);
+  &:last-child {
+    border-bottom: none;
   }
 `;
 
-const ModalContainer = styled.div`
+const MobileRowInfo = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
 `;
 
-const ModalHeader = styled.div`
+const MobileMetaRow = styled.div`
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 6px;
 `;
 
-const ModalTitle = styled.h3`
-  margin: 0;
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: #191f28;
+const MobileActionButtons = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
 `;
 
-const ModalSubtitle = styled.p`
-  margin: 0;
+/* 슬라이딩 페이지네이션 */
+const PaginationContainer = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #f2f4f6;
+  overflow-x: hidden;
+`;
+
+const PageNumbersWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+`;
+
+const PageNavButton = styled.button`
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid #e5e8eb;
+  background: #ffffff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #4e5968;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  &:hover:not(:disabled) {
+    background: #f9fafb;
+    color: #191f28;
+  }
+`;
+
+const PageNumberButton = styled.button<{ $isActive: boolean }>`
+  min-width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid ${({ $isActive }) => ($isActive ? "#3182f6" : "#e5e8eb")};
+  background: ${({ $isActive }) => ($isActive ? "#3182f6" : "#ffffff")};
+  color: ${({ $isActive }) => ($isActive ? "#ffffff" : "#4e5968")};
   font-size: 0.88rem;
-  color: #8b95a1;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover {
+    border-color: #3182f6;
+    color: ${({ $isActive }) => ($isActive ? "#ffffff" : "#3182f6")};
+  }
 `;
 
-const ModalBody = styled.div`
+/* 상태 안내 */
+const LoadingContainer = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
+  padding: 24px 0;
 `;
 
-const ModalFooter = styled.div`
+const SkeletonRow = styled.div`
+  height: 48px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #f2f4f6 25%, #e5e8eb 50%, #f2f4f6 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+
+  @keyframes shimmer {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+`;
+
+const EmptyState = styled.div`
   display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 8px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 48px 16px;
+  text-align: center;
 `;
 
-const MobileCTAContainer = styled.div`
-  display: block;
+const EmptyTitle = styled.h3`
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #191f28;
+  margin: 0;
+`;
+
+const EmptyDescription = styled.p`
+  font-size: 0.88rem;
+  color: #8b95a1;
+  margin: 0 0 16px;
+`;
+
+const PrimaryActionButton = styled.button`
+  height: 44px;
+  padding: 0 20px;
+  border-radius: 12px;
+  background: #3182f6;
+  color: #ffffff;
+  font-size: 0.92rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s ease-out;
+
+  &:hover {
+    background: #1b64da;
+  }
+`;
+
+/* 모바일 하단 고정 CTA */
+const MobileFixedCTA = styled.div`
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  z-index: 30;
-  max-width: 600px;
-  margin: 0 auto;
-  pointer-events: none;
-  background: linear-gradient(to top, #ffffff 65%, rgba(255, 255, 255, 0));
-  padding: 16px 20px calc(14px + env(safe-area-inset-bottom, 0px));
+  z-index: 40;
+  background: linear-gradient(to top, #ffffff 70%, rgba(255, 255, 255, 0));
+  padding: 12px 20px calc(14px + env(safe-area-inset-bottom, 0px));
+  box-sizing: border-box;
 
   @media (min-width: 768px) {
     display: none;
@@ -939,14 +1211,13 @@ const MobileCTAContainer = styled.div`
 `;
 
 const MobileCTAButton = styled.button`
-  pointer-events: auto;
   width: 100%;
   height: 52px;
   border-radius: 16px;
   background: #3182f6;
   color: #ffffff;
   font-size: 1rem;
-  font-weight: 800;
+  font-weight: 700;
   border: none;
   box-shadow: 0 4px 16px rgba(49, 130, 246, 0.28);
   cursor: pointer;
@@ -954,5 +1225,233 @@ const MobileCTAButton = styled.button`
 
   &:active {
     transform: scale(0.98);
+  }
+`;
+
+/* 모달 컴포넌트 */
+const ModalOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
+
+  @media (max-width: 640px) {
+    align-items: flex-end;
+    padding: 0;
+  }
+`;
+
+const ModalContent = styled.div`
+  width: 100%;
+  max-width: 500px;
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+
+  @media (max-width: 640px) {
+    max-width: 100%;
+    border-radius: 24px 24px 0 0;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+`;
+
+const ModalHeader = styled.div`
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #f2f4f6;
+`;
+
+const ModalTitleGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+`;
+
+const ModalTitle = styled.h2`
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #191f28;
+  margin: 0;
+`;
+
+const ModalSubtitle = styled.p`
+  font-size: 0.82rem;
+  color: #8b95a1;
+  margin: 0;
+`;
+
+const ModalCloseButton = styled.button`
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: none;
+  background: #f2f4f6;
+  color: #6b7684;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover {
+    background: #e5e8eb;
+    color: #191f28;
+  }
+`;
+
+const ModalForm = styled.form`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 24px 24px;
+`;
+
+const FormGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+`;
+
+const FieldLabel = styled.label`
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: #333d4b;
+`;
+
+const TextInput = styled.input`
+  height: 46px;
+  border-radius: 12px;
+  border: 1px solid #e5e8eb;
+  background: #f9fafb;
+  padding: 0 14px;
+  font-size: 0.92rem;
+  color: #191f28;
+  outline: none;
+
+  &:focus {
+    border-color: #3182f6;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(49, 130, 246, 0.12);
+  }
+`;
+
+const SelectInput = styled.select`
+  height: 46px;
+  border-radius: 12px;
+  border: 1px solid #e5e8eb;
+  background: #f9fafb;
+  padding: 0 12px;
+  font-size: 0.9rem;
+  color: #191f28;
+  outline: none;
+
+  &:focus {
+    border-color: #3182f6;
+  }
+`;
+
+const TextareaInput = styled.textarea`
+  min-height: 100px;
+  border-radius: 12px;
+  border: 1px solid #e5e8eb;
+  background: #f9fafb;
+  padding: 12px 14px;
+  font-size: 0.92rem;
+  color: #191f28;
+  outline: none;
+  resize: vertical;
+  line-height: 1.5;
+
+  &:focus {
+    border-color: #3182f6;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(49, 130, 246, 0.12);
+  }
+`;
+
+const FieldCaption = styled.span`
+  font-size: 0.78rem;
+  color: #8b95a1;
+  text-align: right;
+`;
+
+const ErrorMessage = styled.div`
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #feecee;
+  color: #f04452;
+  font-size: 0.84rem;
+  font-weight: 600;
+`;
+
+const SuccessMessage = styled.div`
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #e6f8ef;
+  color: #04b05c;
+  font-size: 0.84rem;
+  font-weight: 600;
+`;
+
+const ModalActionGroup = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+`;
+
+const SecondaryButton = styled.button`
+  flex: 1;
+  height: 48px;
+  border-radius: 12px;
+  border: 1px solid #e5e8eb;
+  background: #ffffff;
+  color: #4e5968;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover {
+    background: #f9fafb;
+  }
+`;
+
+const PrimarySubmitButton = styled.button`
+  flex: 2;
+  height: 48px;
+  border-radius: 12px;
+  border: none;
+  background: #3182f6;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease-out;
+
+  &:hover {
+    background: #1b64da;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 `;
