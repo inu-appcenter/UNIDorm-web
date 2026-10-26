@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import {
   createCalendar,
@@ -62,7 +62,22 @@ const CalendarAdminPage: React.FC = () => {
   const [selectedItem, setSelectedItem] = useState<CalendarItem | null>(null);
   const [formData, setFormData] = useState<CreateCalendarDto>(EMPTY_FORM);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth >= 1080 : true,
+  );
   const today = getLocalDateInputValue();
+
+  useEffect(() => {
+    const handleResize = () => {
+      const desktop = window.innerWidth >= 1080;
+      setIsDesktop(desktop);
+      if (desktop) {
+        setIsEditorOpen(false);
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const calendarList = useMemo(() => {
     return [...rawCalendarList].sort(
@@ -109,7 +124,9 @@ const CalendarAdminPage: React.FC = () => {
   const openCreateEditor = () => {
     setSelectedItem(null);
     setFormData(EMPTY_FORM);
-    setIsEditorOpen(true);
+    if (!isDesktop) {
+      setIsEditorOpen(true);
+    }
   };
 
   const openEditEditor = (item: CalendarItem) => {
@@ -120,7 +137,9 @@ const CalendarAdminPage: React.FC = () => {
       startDate: item.startDate,
       endDate: item.endDate,
     });
-    setIsEditorOpen(true);
+    if (!isDesktop) {
+      setIsEditorOpen(true);
+    }
   };
 
   const closeEditor = () => {
@@ -375,39 +394,41 @@ const CalendarAdminPage: React.FC = () => {
           </DesktopEditorCard>
         </PageLayoutGrid>
 
-        {/* 모바일 전용 슬라이드 인 바텀시트 에디터 */}
-        <AdminBottomSheet
-          isOpen={isEditorOpen}
-          setIsOpen={(nextOpen) => {
-            if (!nextOpen) {
-              closeEditor();
-            }
-          }}
-          title={selectedItem ? "일정 수정" : "새 일정 등록"}
-          description="캘린더 일정 편집 패널"
-        >
-          <EditorHeader>
-            <EditorTitleGroup>
-              <AdminBadge $tone={selectedItem ? "blue" : "green"}>
-                {selectedItem ? "일정 수정" : "새 일정"}
-              </AdminBadge>
-              <EditorTitle>
-                {selectedItem ? selectedItem.title : "새 일정 등록하기"}
-              </EditorTitle>
-              <AdminSubtleText>
-                제목, 기간, 링크를 입력하고 저장해 주세요.
-              </AdminSubtleText>
-            </EditorTitleGroup>
+        {/* 모바일/태블릿 전용 슬라이드 인 바텀시트 에디터 */}
+        {!isDesktop && (
+          <AdminBottomSheet
+            isOpen={isEditorOpen}
+            setIsOpen={(nextOpen) => {
+              if (!nextOpen) {
+                closeEditor();
+              }
+            }}
+            title={selectedItem ? "일정 수정" : "새 일정 등록"}
+            description="캘린더 일정 편집 패널"
+          >
+            <EditorHeader>
+              <EditorTitleGroup>
+                <AdminBadge $tone={selectedItem ? "blue" : "green"}>
+                  {selectedItem ? "일정 수정" : "새 일정"}
+                </AdminBadge>
+                <EditorTitle>
+                  {selectedItem ? selectedItem.title : "새 일정 등록하기"}
+                </EditorTitle>
+                <AdminSubtleText>
+                  제목, 기간, 링크를 입력하고 저장해 주세요.
+                </AdminSubtleText>
+              </EditorTitleGroup>
 
-            <CloseButton type="button" onClick={closeEditor} aria-label="닫기">
-              ✕
-            </CloseButton>
-          </EditorHeader>
+              <CloseButton type="button" onClick={closeEditor} aria-label="닫기">
+                ✕
+              </CloseButton>
+            </EditorHeader>
 
-          <EditorScrollArea>
-            {renderFormFields()}
-          </EditorScrollArea>
-        </AdminBottomSheet>
+            <EditorScrollArea>
+              {renderFormFields()}
+            </EditorScrollArea>
+          </AdminBottomSheet>
+        )}
 
         {/* 모바일 전용 하단 고정 CTA */}
         <MobileCTAContainer>
@@ -537,8 +558,8 @@ const EditorHeader = styled.div`
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  padding: 20px 20px 16px;
-  border-bottom: 1px solid #e5e8eb;
+  padding: 16px 20px 14px;
+  border-bottom: 1px solid #f2f4f6;
 `;
 
 const EditorTitleGroup = styled.div`
@@ -578,10 +599,11 @@ const CloseButton = styled.button`
 
 const EditorScrollArea = styled.div`
   overflow-y: auto;
-  padding: 20px;
+  padding: 20px 20px calc(24px + env(safe-area-inset-bottom, 0px));
   display: flex;
   flex-direction: column;
   gap: 18px;
+  -webkit-overflow-scrolling: touch;
 `;
 
 const MobileCTAContainer = styled.div`
