@@ -200,7 +200,7 @@ const FloatingButton = styled(motion.button)`
   background: none;
   border: none;
   cursor: pointer;
-  z-index: 1002; /* FAB 계층: BottomBar(1000) 위, Header(10000) 및 모달/바텀시트(10010+) 아래 */
+  z-index: 10002;
   filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.25));
 
   img {

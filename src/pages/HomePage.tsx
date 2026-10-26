@@ -40,12 +40,7 @@ import { formatSemesterName } from "@/utils/semester";
 import { mixpanelTrack } from "@/utils/mixpanel"; // 추가
 import useUserStore from "@/stores/useUserStore";
 import { PATHS } from "@/constants/paths";
-import HomeDormitoryPromptModal from "@/components/home/HomeDormitoryPromptModal";
-import { isLatestUnidormApp } from "@/utils/getMobilePlatform";
-import {
-  isDormitorySemesterExpired,
-  getCurrentAcademicCycleKey,
-} from "@/utils/semesterGuard";
+import HomeDormitoryCardButton from "@/components/home/HomeDormitoryCardButton";
 
 export default function HomePage() {
   useSetAIChat({ isVisible: true, shouldAnimate: true });
@@ -91,92 +86,6 @@ export default function HomePage() {
     handleMigrationBannerClick,
     shouldShowMigrationBanner,
   } = useFreshmanMigrationBanner();
-
-  const platform = getMobilePlatform();
-  const [isAppInstallOpen, setIsAppInstallOpen] = useState(
-    (platform === "ios_browser" || platform === "android_browser") &&
-      Math.random() < 0.4,
-  );
-
-  const [isDormPromptOpen, setIsDormPromptOpen] = useState(false);
-  const [dormPromptMode, setDormPromptMode] = useState<"issue" | "renew">("issue");
-
-  useEffect(() => {
-    if (!isLoggedIn) return;
-
-    // 앱 설치 유도 바텀시트가 열려 있으면 모달 중복 노출 방지 (One Thing at a Time)
-    if (isAppInstallOpen) return;
-
-    // 사생증 발급은 유니돔 앱 전용 기능이므로 일반 웹 브라우저에서는 노출 제외
-    const isPreview =
-      typeof window !== "undefined" &&
-      (new URLSearchParams(window.location.search).get("preview_dorm_prompt") === "true" ||
-        localStorage.getItem("preview_dorm_prompt") === "true");
-
-    if (!isLatestUnidormApp() && !isPreview) return;
-
-    const currentCycle = getCurrentAcademicCycleKey();
-
-    // 1. 기존 저장된 사생 정보의 학기가 만료되어 갱신이 필요한 시점인지 확인
-    try {
-      const savedDormRaw = localStorage.getItem("portal_dormitory_student_info");
-      if (savedDormRaw) {
-        const parsed = JSON.parse(savedDormRaw);
-        const p = parsed.profile || parsed;
-        const isExpired = isDormitorySemesterExpired({
-          dormYear: p.year,
-          dormTerm: p.term,
-        });
-
-        if (isExpired) {
-          // 학기 만료로 갱신이 필요한 시점: 사용자가 해당 갱신 모달을 이번 학기에 닫은 적이 없으면 노출
-          const dismissedRenewalCycle = localStorage.getItem("dismissedDormCardRenewalCycle");
-          if (dismissedRenewalCycle !== currentCycle || isPreview) {
-            setDormPromptMode("renew");
-            setIsDormPromptOpen(true);
-            return;
-          }
-        }
-      }
-    } catch (e) {
-      console.warn("[HomePage] 사생증 갱신 만료 확인 오류:", e);
-    }
-
-    // 2. 신규 발급 또는 미완료/실패(FAILED) 상태인 경우
-    // 한 번 닫았으면(localStorage) 동일 학기 주기 내에서는 더 이상 띄우지 않음
-    const dismissedIssueCycle = localStorage.getItem("dismissedDormCardPromptCycle");
-    if (dismissedIssueCycle === currentCycle && !isPreview) return;
-
-    const issueStatus = localStorage.getItem("unidorm_dorm_card_issue_status");
-    if (issueStatus === "FAILED" || isPreview) {
-      setDormPromptMode("issue");
-      setIsDormPromptOpen(true);
-    }
-  }, [isLoggedIn, isAppInstallOpen]);
-
-  const handleCloseDormPrompt = () => {
-    const currentCycle = getCurrentAcademicCycleKey();
-    if (dormPromptMode === "renew") {
-      localStorage.setItem("dismissedDormCardRenewalCycle", currentCycle);
-    } else {
-      localStorage.setItem("dismissedDormCardPromptCycle", currentCycle);
-    }
-    setIsDormPromptOpen(false);
-  };
-
-  const handleConfirmDormPrompt = () => {
-    const currentCycle = getCurrentAcademicCycleKey();
-    if (dormPromptMode === "renew") {
-      localStorage.setItem("dismissedDormCardRenewalCycle", currentCycle);
-    } else {
-      localStorage.setItem("dismissedDormCardPromptCycle", currentCycle);
-    }
-    setIsDormPromptOpen(false);
-    mixpanelTrack.dormitoryCardEntryClicked(
-      dormPromptMode === "renew" ? "홈_사생증갱신모달" : "홈_발급유도모달",
-    );
-    navigate(PATHS.DORMITORY_CARD);
-  };
 
   const handleDormitoryCardClick = () => {
     mixpanelTrack.dormitoryCardEntryClicked("홈");
@@ -255,6 +164,12 @@ export default function HomePage() {
     }
   }, [isAnnounceLoading, isAnnounceError]);
 
+  const platform = getMobilePlatform();
+  const [isAppInstallOpen, setIsAppInstallOpen] = useState(
+    (platform === "ios_browser" || platform === "android_browser") &&
+      Math.random() < 0.4,
+  );
+
   const CHANNEL_ID = "UCrpqEmMWCOg6P8FSk6mN5Hw"; //인천대학교 생활원 유튜브 채널 id
 
   // 룸메이트 데이터 단일 페이지 조회
@@ -294,15 +209,20 @@ export default function HomePage() {
 
   useSetHeader({
     showAlarm: true,
-    showDormitoryCard: true,
-    dormitoryCardOnClick: handleDormitoryCardClick,
   });
 
-  // 0.15초 페이드 전환 효과
-  const quickFade = {
-    initial: { opacity: 0 },
-    animate: { opacity: 1 },
-    transition: { duration: 0.15 },
+  const fadeInUp = {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.5 },
+  };
+
+  const staggerContainer = {
+    animate: {
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
   };
 
   return (
@@ -347,7 +267,7 @@ export default function HomePage() {
 
       {shouldShowMigrationBanner && (
         <motion.div
-          {...quickFade}
+          {...fadeInUp}
           style={{ width: "100%", display: "flex", justifyContent: "center" }}
         >
           <StyledMigrationBanner
@@ -363,8 +283,18 @@ export default function HomePage() {
         </motion.div>
       )}
 
-      <ContentWrapper>
+      <DormitoryCardButtonWrapper>
+        <HomeDormitoryCardButton onClick={handleDormitoryCardClick} />
+      </DormitoryCardButtonWrapper>
+
+      <ContentWrapper
+        as={motion.div}
+        variants={staggerContainer}
+        initial="initial"
+        animate="animate"
+      >
         {isMatchingOpen && (
+          <motion.div variants={fadeInUp}>
             <WidgetContainer>
               <TitleContentArea
                 title={
@@ -407,9 +337,11 @@ export default function HomePage() {
                 </>
               </TitleContentArea>
             </WidgetContainer>
-          )}
+          </motion.div>
+        )}
 
-        <WidgetContainer>
+        <motion.div variants={fadeInUp}>
+          <WidgetContainer>
             <TitleContentArea
               title={"공지사항"}
               link={"/announcements"}
@@ -442,6 +374,9 @@ export default function HomePage() {
               )}
             </TitleContentArea>
           </WidgetContainer>
+        </motion.div>
+
+        <motion.div variants={fadeInUp}>
           <FormSectionWrapper>
             <TitleContentArea title={"INU 폼"} link={"/form"} location="홈">
               {isSurveysLoading ? (
@@ -471,8 +406,10 @@ export default function HomePage() {
               )}
             </TitleContentArea>
           </FormSectionWrapper>
+        </motion.div>
 
-        <WidgetContainer>
+        <motion.div variants={fadeInUp}>
+          <WidgetContainer>
             <TitleContentArea
               title={"생활원 YouTube"}
               externalLink={`https://www.youtube.com/channel/${CHANNEL_ID}`}
@@ -481,9 +418,11 @@ export default function HomePage() {
               <YoutubeWidget />
             </TitleContentArea>
           </WidgetContainer>
+        </motion.div>
 
         <GridContainer>
-          <WidgetContainer>
+          <motion.div variants={fadeInUp}>
+            <WidgetContainer>
               <TitleContentArea
                 title="오늘의 Best 꿀팁"
                 link={"/tips"}
@@ -508,17 +447,21 @@ export default function HomePage() {
                 )}
               </TitleContentArea>
             </WidgetContainer>
-          <WidgetContainer>
-            <TitleContentArea
+          </motion.div>
+          <motion.div variants={fadeInUp}>
+            <WidgetContainer>
+              <TitleContentArea
                 title={"생활원 일정"}
                 children={<Calendar mode={"week"} location="홈" />}
                 link={"/calendar"}
                 location="홈"
               />
             </WidgetContainer>
+          </motion.div>
         </GridContainer>
 
         {isOpenGroupPurchase && (
+          <motion.div variants={fadeInUp}>
             <WidgetContainer>
               <TitleContentArea
                 title={"임박한 공동구매"}
@@ -534,7 +477,8 @@ export default function HomePage() {
                 )}
               </TitleContentArea>
             </WidgetContainer>
-          )}
+          </motion.div>
+        )}
       </ContentWrapper>
 
       <motion.img
@@ -552,13 +496,6 @@ export default function HomePage() {
           window.open("https://home.inuappcenter.kr", "_blank");
         }}
         style={{ cursor: "pointer" }}
-      />
-
-      <HomeDormitoryPromptModal
-        isOpen={isDormPromptOpen}
-        onClose={handleCloseDormPrompt}
-        onConfirm={handleConfirmDormPrompt}
-        mode={dormPromptMode}
       />
 
       <CommonBottomSheet
@@ -613,6 +550,16 @@ const HomePageWrapper = styled.div`
   }
 `;
 
+const DormitoryCardButtonWrapper = styled.div`
+  width: 100%;
+  padding: 10px 16px 2px;
+  box-sizing: border-box;
+
+  @media (min-width: 768px) {
+    max-width: 1200px;
+    padding: 14px 20px 4px;
+  }
+`;
 
 const ContentWrapper = styled.div`
   padding: 0;

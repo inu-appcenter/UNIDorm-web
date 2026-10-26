@@ -15,7 +15,6 @@ import UserInfo from "@/components/common/UserInfo";
 import { PATHS } from "@/constants/paths";
 import { CATEGORY_LIST } from "@/constants/roommate";
 import { useSetHeader } from "@/hooks/useSetHeader";
-import { useCountUp } from "@/hooks/useCountUp";
 import useUserStore from "@/stores/useUserStore";
 import { colors, typography } from "@/styles/tokens";
 import type { RoommatePost } from "@/types/roommates";
@@ -257,12 +256,6 @@ export default function RoomMateBoardDetailPage() {
 
   const shouldShowBottomBar = !roomId && !isMyPost;
 
-  // Apple & Toss 스타일 일치 항목 수 0.5초 카운트업
-  const animatedMatchedCount = useCountUp(
-    typeof boardData?.matchedFilterCount === "number" ? boardData.matchedFilterCount : 0,
-    { duration: 500, enabled: typeof boardData?.matchedFilterCount === "number" },
-  );
-
   const displayUserName =
     boardData.userName || (roomId && partnerName ? partnerName : "익명");
 
@@ -277,7 +270,7 @@ export default function RoomMateBoardDetailPage() {
           />
           {typeof boardData.matchedFilterCount === "number" && (
             <MatchedFilterBadge>
-              {animatedMatchedCount}개 항목 일치
+              {boardData.matchedFilterCount}개 항목 일치
             </MatchedFilterBadge>
           )}
         </UserSummaryRow>

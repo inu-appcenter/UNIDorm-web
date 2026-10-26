@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import styled, { keyframes } from "styled-components";
 import { User } from "lucide-react";
 import DormitoryBadge from "@/components/common/DormitoryBadge";
@@ -183,43 +183,11 @@ export const MobileDormitoryCard: React.FC<MobileDormitoryCardProps> = ({
     return null;
   }, [studentDormNo, roomNumber, bedNumber]);
 
-    const formattedTerm = formatSemesterTerm(term);
+  const formattedTerm = formatSemesterTerm(term);
   const termDisplay = year && formattedTerm ? `${year}학년도 ${formattedTerm}` : (year ? `${year}학년도` : "");
 
-  // Apple Wallet 감성의 3D 틸트 & 홀로그램 인터랙션
-  const [tilt, setTilt] = useState({ x: 0, y: 0, isTouching: false });
-  const cardRef = useRef<HTMLElement>(null);
-
-  const handlePointerMove = (e: React.PointerEvent<HTMLElement>) => {
-    if (!cardRef.current) return;
-    const rect = cardRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
-
-    const rotateY = ((x - centerX) / centerX) * 4;
-    const rotateX = -((y - centerY) / centerY) * 4;
-
-    setTilt({ x: rotateX, y: rotateY, isTouching: true });
-  };
-
-  const handlePointerLeave = () => {
-    setTilt({ x: 0, y: 0, isTouching: false });
-  };
-
   return (
-    <CardContainer
-      ref={cardRef}
-      $fullscreen={fullscreen}
-      $rotateX={tilt.x}
-      $rotateY={tilt.y}
-      $isTouching={tilt.isTouching}
-      onPointerMove={handlePointerMove}
-      onPointerLeave={handlePointerLeave}
-      onPointerUp={handlePointerLeave}
-    >
-      <HologramShine $rotateX={tilt.x} $rotateY={tilt.y} $active={tilt.isTouching} aria-hidden="true" />
+    <CardContainer $fullscreen={fullscreen}>
       {/* 위조 방지: 한글 워터마크 레이어 (회색 농도 강화) */}
       <WatermarkLayer aria-hidden="true">
         <WatermarkRow>
@@ -331,12 +299,7 @@ const watermarkFlow = keyframes`
   100% { transform: translateX(-50%); }
 `;
 
-const CardContainer = styled.article<{
-  $fullscreen?: boolean;
-  $rotateX?: number;
-  $rotateY?: number;
-  $isTouching?: boolean;
-}>`
+const CardContainer = styled.article<{ $fullscreen?: boolean }>`
   position: relative;
   width: 100%;
   max-width: 420px;
@@ -355,30 +318,6 @@ const CardContainer = styled.article<{
   margin: 0 auto;
   box-sizing: border-box;
   min-height: 0;
-  touch-action: pan-y;
-
-  /* Apple Wallet 스타일 3D 틸트 */
-  transform: perspective(900px) rotateX(${({ $rotateX = 0 }) => $rotateX}deg) rotateY(${({ $rotateY = 0 }) => $rotateY}deg);
-  transition: ${({ $isTouching }) =>
-    $isTouching
-      ? "transform 0.08s ease-out"
-      : "transform 0.45s cubic-bezier(0.16, 1, 0.3, 1)"};
-  will-change: transform;
-`;
-
-const HologramShine = styled.div<{ $rotateX: number; $rotateY: number; $active: boolean }>`
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: radial-gradient(
-    circle at ${({ $rotateY }) => 50 + $rotateY * 8}% ${({ $rotateX }) => 50 - $rotateX * 8}%,
-    rgba(255, 255, 255, 0.28) 0%,
-    rgba(255, 255, 255, 0.05) 50%,
-    rgba(255, 255, 255, 0) 75%
-  );
-  opacity: ${({ $active }) => ($active ? 1 : 0)};
-  transition: opacity 0.25s ease;
-  z-index: 2;
 `;
 
 const WatermarkLayer = styled.div`

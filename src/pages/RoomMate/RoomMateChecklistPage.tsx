@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import styled from "styled-components";
-import { motion, AnimatePresence, type Variants } from "framer-motion";
 import SquareButton from "../../components/common/SquareButton";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import Step1BasicInfo from "../../components/roommate/checklist/steps/Step1BasicInfo";
@@ -38,31 +37,6 @@ import {
 import { useSetHeader } from "@/hooks/useSetHeader";
 
 
-
-// Apple & Toss 스타일 0.18초 감속 좌우 슬라이드
-const stepSlideVariants: Variants = {
-  enter: (direction: number) => ({
-    x: direction > 0 ? 20 : -20,
-    opacity: 0,
-  }),
-  center: {
-    x: 0,
-    opacity: 1,
-    transition: {
-      duration: 0.18,
-      ease: [0.16, 1, 0.3, 1] as const,
-    },
-  },
-  exit: (direction: number) => ({
-    x: direction > 0 ? -20 : 20,
-    opacity: 0,
-    transition: {
-      duration: 0.12,
-      ease: [0.16, 1, 0.3, 1] as const,
-    },
-  }),
-};
-
 export default function RoomMateChecklistPage() {
   const { setUserInfo, userInfo } = useUserStore();
   const navigate = useNavigate();
@@ -70,7 +44,6 @@ export default function RoomMateChecklistPage() {
   const [searchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
-  const [direction, setDirection] = useState<1 | -1>(1);
   const TOTAL_STEPS = 4;
 
   const [formData, setFormData] = useState<CheckListForm>(INITIAL_FORM_STATE);
@@ -228,13 +201,11 @@ export default function RoomMateChecklistPage() {
       alert(msgs[currentStep - 1]);
       return;
     }
-    setDirection(1);
     if (currentStep < TOTAL_STEPS) setCurrentStep((prev) => prev + 1);
     else handleSubmit();
   };
 
   const handlePrev = () => {
-    setDirection(-1);
     if (currentStep > 1) setCurrentStep((prev) => prev - 1);
   };
 
@@ -341,34 +312,22 @@ export default function RoomMateChecklistPage() {
       </StepHeader>
 
       <ContentArea>
-        <AnimatePresence mode="wait" custom={direction}>
-          <motion.div
-            key={currentStep}
-            custom={direction}
-            variants={stepSlideVariants}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            style={{ width: "100%" }}
-          >
-            {currentStep === 1 && (
-              <Step1BasicInfo data={formData} onChange={handleFormChange} />
-            )}
-            {currentStep === 2 && (
-              <Step2LifeStyle data={formData} onChange={handleFormChange} />
-            )}
-            {currentStep === 3 && (
-              <Step3LifeRhythm data={formData} onChange={handleFormChange} />
-            )}
-            {currentStep === 4 && (
-              <Step4Personality
-                data={formData}
-                onChange={handleFormChange}
-                randomTitles={randomTitles}
-              />
-            )}
-          </motion.div>
-        </AnimatePresence>
+        {currentStep === 1 && (
+          <Step1BasicInfo data={formData} onChange={handleFormChange} />
+        )}
+        {currentStep === 2 && (
+          <Step2LifeStyle data={formData} onChange={handleFormChange} />
+        )}
+        {currentStep === 3 && (
+          <Step3LifeRhythm data={formData} onChange={handleFormChange} />
+        )}
+        {currentStep === 4 && (
+          <Step4Personality
+            data={formData}
+            onChange={handleFormChange}
+            randomTitles={randomTitles}
+          />
+        )}
       </ContentArea>
 
       <BottomNav>
@@ -452,9 +411,6 @@ const ContentArea = styled.div`
   display: flex;
   flex-direction: column;
   gap: 24px;
-  overflow-x: hidden;
-  width: 100%;
-  box-sizing: border-box;
 `;
 
 const BottomNav = styled.div`

@@ -12,9 +12,7 @@ import { secureStorage } from "@/utils/secureStorage";
 import { MobileDormitoryCard } from "@/components/portal/MobileDormitoryCard";
 import { MOBILE_PAGE_GUTTER } from "@/styles/unidormResponsive";
 import { PATHS } from "@/constants/paths";
-import { ChevronRight, Building2, RotateCw, CalendarClock, Clock } from "lucide-react";
-import PortalSyncProgressModal from "@/components/portal/PortalSyncProgressModal";
-import { isDormitorySemesterExpired } from "@/utils/semesterGuard";
+import { ChevronRight, Building2, RotateCw } from "lucide-react";
 import PortalSyncOnboarding from "@/components/portal/PortalSyncOnboarding";
 import {
   setScreenCapturePrevented,
@@ -24,68 +22,10 @@ import {
   resolveCurrentStudentId,
 } from "@/apis/mobileAgentBridge";
 import CapsuleButton from "@/components/common/CapsuleButton";
-import Skeleton from "@/components/common/Skeleton";
-import DormitoryBadge from "@/components/common/DormitoryBadge";
 import { guardAppOnly } from "@/utils/guard";
 import { isLatestUnidormApp } from "@/utils/getMobilePlatform";
 
 const STORAGE_KEY_DORMITORY_DATA = "portal_dormitory_student_info";
-
-const MOCK_PREVIEW_DORM_INFO: DormitoryStudentInfo = {
-  hasData: true,
-  studentName: "김유니",
-  studentId: "202301234",
-  department: "컴퓨터공학부",
-  departmentName: "컴퓨터공학부",
-  dormitoryType: "02",
-  dormitoryBuilding: "제2기숙사 B동",
-  studentDormNo: "24-2-0402-A",
-  roomNumber: "402",
-  bedNumber: "A",
-  status: "01",
-  profile: {
-    studentId: "202301234",
-    name: "김유니",
-    englishName: "KIM UNIDORM",
-    gender: "남",
-    nationality: "대한민국",
-    department: "컴퓨터공학부",
-    grade: "3학년",
-    dormitoryType: "02",
-    dormitoryBuilding: "제2기숙사 B동",
-    studentDormNo: "24-2-0402-A",
-    phoneNumber: "010-1234-5678",
-    email: "unidorm@inu.ac.kr",
-    zipCode: "22012",
-    address: "인천광역시 연수구 아카데미로 119",
-    detailedAddress: "기숙사",
-    meritPoints: "3",
-    demeritPoints: "0",
-    nonOffsetDemeritPoints: "0",
-    year: String(new Date().getFullYear()),
-    term: "1학기",
-    rawFields: {},
-  },
-  addressList: [],
-  rewardList: [],
-  inOutList: [
-    {
-      year: String(new Date().getFullYear()),
-      term: "10",
-      status: "01",
-      dormitoryType: "02",
-      studentDormNo: "24-2-0402-A",
-      checkInDate: `${new Date().getFullYear()}-03-01`,
-      checkOutDate: "",
-      rawFields: {},
-    },
-  ],
-  applyList: [],
-  paymentList: [],
-  utilityList: [],
-  pledge: null,
-  rawDatasets: {},
-};
 
 function toImageSrc(base64?: string): string | null {
   if (!base64 || typeof base64 !== "string") return null;
@@ -150,15 +90,6 @@ function formatSemesterTerm(term?: string): string {
   return trimmed.endsWith("학기") ? trimmed : `${trimmed}학기`;
 }
 
-export function normalizeSemesterTerm(term?: string): string {
-  if (!term) return "";
-  const trimmed = term.trim();
-  if (trimmed === "10" || trimmed === "1" || trimmed.includes("1학기")) return "10";
-  if (trimmed === "20" || trimmed === "2" || trimmed.includes("2학기")) return "20";
-  if (trimmed === "30" || trimmed === "3" || trimmed.includes("여름")) return "30";
-  if (trimmed === "40" || trimmed === "4" || trimmed.includes("겨울")) return "40";
-  return trimmed.replace(/학기/g, "");
-}
 export interface ResidentEvaluationResult {
   isCurrentlyResident: boolean;
   isAdmittedStatus: boolean;
@@ -189,19 +120,15 @@ export function evaluateDormitoryResidentStatus(
   const year = profile?.year || dormInfo?.appliedYear || rawFields?.yy || inOutList[0]?.year || "";
   const term = profile?.term || dormInfo?.appliedSemester || rawFields?.tmGbn || inOutList[0]?.term || "";
 
-  // 학기 정규화 (20 vs 2학기, 10 vs 1학기 등)
-  const normalizedYear = (year || "").trim();
-  const normalizedCurrentTerm = normalizeSemesterTerm(term);
-
   // 기본 사생정보의 당해 학기(year, term)와 정확히 일치하는 입퇴사 레코드 탐색
   const currentSemesterInOut = inOutList.find(
     (io) =>
       io.year &&
-      normalizedYear &&
-      io.year.trim() === normalizedYear &&
+      year &&
+      io.year === year &&
       io.term &&
-      normalizedCurrentTerm &&
-      normalizeSemesterTerm(io.term) === normalizedCurrentTerm
+      term &&
+      (io.term === term || io.term.replace(/학기/g, "") === term.replace(/학기/g, ""))
   );
 
   const rawStatus =
@@ -209,6 +136,7 @@ export function evaluateDormitoryResidentStatus(
     dormInfo?.status ||
     profile?.rawFields?.dormLeavdormGbn ||
     rawFields?.dormLeavdormGbn ||
+    inOutList[0]?.status ||
     "";
   const status = rawStatus ? mapInOutStatus(rawStatus) : "-";
 
@@ -225,17 +153,11 @@ export function evaluateDormitoryResidentStatus(
     dormInfo?.dormitoryBuilding ||
     rawFields?.dormBdNm ||
     rawFields?.dormBdCd ||
-    rawFields?.dmtyNm ||
-    rawFields?.domNm ||
     "";
 
   const resolvedDormType =
     mappedDormName ||
     (rawDormBd.includes("A동") || rawDormBd.includes("B동") ? "제2기숙사" : "") ||
-    (rawDormBd.includes("1기숙사") || rawDormBd.includes("본관") ? "제1기숙사" : "") ||
-    (rawDormBd.includes("2기숙사") ? "제2기숙사" : "") ||
-    (rawDormBd.includes("3기숙사") ? "제3기숙사" : "") ||
-    (rawDormBd ? rawDormBd : "") ||
     "-";
   const resolvedDormBuilding = rawDormBd || "";
 
@@ -305,55 +227,17 @@ export function evaluateDormitoryResidentStatus(
 export default function MobileDormitoryCardPage() {
   const navigate = useNavigate();
 
+  useSetHeader({
+    title: "모바일 사생증",
+  });
+
   const [isInitialLoading, setIsInitialLoading] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [dormInfo, setDormInfo] = useState<DormitoryStudentInfo | null>(null);
   const [fallbackAcademic, setFallbackAcademic] = useState<any | null>(null);
-  const [lastSyncTimeText, setLastSyncTimeText] = useState<string>("");
-
-  const updateLastSyncTime = useCallback((timestamp?: number | string | null) => {
-    try {
-      let date: Date | null = null;
-      if (timestamp) {
-        date = typeof timestamp === "number" ? new Date(timestamp) : new Date(timestamp);
-      } else {
-        const stored = localStorage.getItem("portal_dormitory_last_updated");
-        if (stored) {
-          date = new Date(stored);
-        }
-      }
-      if (date && !isNaN(date.getTime())) {
-        const y = date.getFullYear();
-        const m = String(date.getMonth() + 1).padStart(2, "0");
-        const d = String(date.getDate()).padStart(2, "0");
-        const hh = String(date.getHours()).padStart(2, "0");
-        const mm = String(date.getMinutes()).padStart(2, "0");
-        setLastSyncTimeText(`${y}.${m}.${d} ${hh}:${mm}`);
-      }
-    } catch {
-      // ignore
-    }
-  }, []);
-
-  const isPreviewMode =
-    typeof window !== "undefined" &&
-    new URLSearchParams(window.location.search).get("preview") === "true";
-
-  const [previewSimulatedStatus, setPreviewSimulatedStatus] = useState<string | null>(() => {
-    if (typeof window !== "undefined") {
-      return new URLSearchParams(window.location.search).get("status");
-    }
-    return null;
-  });
 
   const fetchCached = useCallback(async () => {
     setIsInitialLoading(true);
-    if (isPreviewMode) {
-      setDormInfo(MOCK_PREVIEW_DORM_INFO);
-      updateLastSyncTime(Date.now());
-      setIsInitialLoading(false);
-      return;
-    }
     try {
       const cachedResult = await secureStorage.getCacheWithTtl<unknown>(STORAGE_KEY_DORMITORY_DATA);
       const cached = cachedResult?.data;
@@ -414,21 +298,15 @@ export default function MobileDormitoryCardPage() {
             setDormInfo(restored);
           }
         }
-      } else {
-        // 사생 정보 캐시가 없으면 학적 정보만으로 사생 정보를 채우지 않고 null 유지 (온보딩 유도)
-        setDormInfo(null);
-      }
-      if (cachedResult?.savedAt) {
-        updateLastSyncTime(cachedResult.savedAt);
-      } else {
-        updateLastSyncTime();
+      } else if (academicParsed) {
+        setDormInfo(academicParsed);
       }
     } catch (e) {
       console.error("사생정보 로드 실패", e);
     } finally {
       setIsInitialLoading(false);
     }
-  }, [isPreviewMode, updateLastSyncTime]);
+  }, []);
 
   useEffect(() => {
     void fetchCached();
@@ -438,16 +316,6 @@ export default function MobileDormitoryCardPage() {
     if (isRefreshing) return;
     setIsRefreshing(true);
     try {
-      if (isPreviewMode) {
-        // 프리뷰 환경 실시간 시뮬레이션: 1.2초간 동기화 수행
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-        const now = new Date();
-        updateLastSyncTime(now.getTime());
-        if (previewSimulatedStatus === "expired") {
-          setPreviewSimulatedStatus(null);
-        }
-        return;
-      }
       if (isMobileAppEnvironment()) {
         const accountStatus = await checkPortalAccountLinked().catch(() => ({
           linked: false,
@@ -457,14 +325,11 @@ export default function MobileDormitoryCardPage() {
           const studentId = accountStatus.studentId || resolveCurrentStudentId();
           const res = await fetchDormitoryStudentInfoFromApp({ stuno: studentId });
           if (res.success && res.data) {
-            const nowIso = new Date().toISOString();
             await secureStorage.setCacheWithTtl(
               STORAGE_KEY_DORMITORY_DATA,
               res.data,
               24 * 60 * 60 * 1000
             );
-            localStorage.setItem("portal_dormitory_last_updated", nowIso);
-            updateLastSyncTime(nowIso);
           }
         }
       }
@@ -474,22 +339,17 @@ export default function MobileDormitoryCardPage() {
     } finally {
       setIsRefreshing(false);
     }
-  }, [fetchCached, isPreviewMode, isRefreshing, previewSimulatedStatus, updateLastSyncTime]);
-
-  useSetHeader({
-    title: "모바일 사생증",
-  });
+  }, [fetchCached, isRefreshing]);
 
   // 우리 앱 환경이 아니거나 구버전 앱인 경우 스토어 설치/업데이트 유도
   useEffect(() => {
-    if (isPreviewMode) return;
     if (!isLatestUnidormApp()) {
       guardAppOnly({
         onCancelNavigateBack: true,
         navigate,
       });
     }
-  }, [navigate, isPreviewMode]);
+  }, [navigate]);
 
   // 사생증 화면 캡처 및 녹화 방지 브릿지 연동
   // 활성 사생증 카드가 표시될 때만 FLAG_SECURE를 켜고, 비사생 안내 화면이거나 화면 이탈 시 즉시 해제
@@ -501,7 +361,6 @@ export default function MobileDormitoryCardPage() {
     year,
     term,
     status,
-    rawStatus,
     resolvedDormType,
     resolvedDormBuilding,
     studentDormNo,
@@ -509,14 +368,6 @@ export default function MobileDormitoryCardPage() {
     bedNumber,
     lastHistory,
   } = evaluateDormitoryResidentStatus(dormInfo);
-
-  const isSemesterExpired =
-    !isPreviewMode
-      ? isDormitorySemesterExpired({
-          dormYear: year,
-          dormTerm: term,
-        })
-      : previewSimulatedStatus === "expired";
 
   const profile = dormInfo?.profile;
   const rawFields = dormInfo?.rawFields;
@@ -620,18 +471,9 @@ export default function MobileDormitoryCardPage() {
     fallbackAcademic?.rawFields?.phtFile
   );
 
-  // 포털에서 사생 정보가 한 번이라도 동기화되어 캐시에 존재하는지 확인
-  // (사생 정보가 없으면 온보딩 화면으로 유도, 동기화 후 비사생이면 비사생 차단 화면으로 정상 전환)
   const hasValidData = Boolean(
-    dormInfo &&
-    (
-      dormInfo.hasData ||
-      dormInfo.studentId ||
-      dormInfo.studentName ||
-      dormInfo.profile?.studentId ||
-      dormInfo.profile?.name ||
-      (dormInfo.rawFields && Object.keys(dormInfo.rawFields).length > 0)
-    )
+    (dormInfo && (dormInfo.studentId || dormInfo.studentName || dormInfo.profile?.studentId)) ||
+    (fallbackAcademic && (fallbackAcademic.studentId || fallbackAcademic.studentName || fallbackAcademic.profile?.studentId))
   );
 
   // 1. 페이지 진입 트래킹
@@ -652,7 +494,6 @@ export default function MobileDormitoryCardPage() {
     }
 
     if (!isCurrentlyResident) {
-      localStorage.setItem("unidorm_dorm_card_issue_status", "FAILED");
       if (hasTrackedOutcomeRef.current !== "non_resident") {
         hasTrackedOutcomeRef.current = "non_resident";
         const reason = isPastRecord
@@ -662,29 +503,12 @@ export default function MobileDormitoryCardPage() {
           : !hasValidDormAssignment
           ? "미배정"
           : "기타";
-        const cacheStatus = dormInfo
-          ? "DORM_CACHED"
-          : fallbackAcademic
-          ? "ACADEMIC_ONLY"
-          : "NO_CACHE";
-        mixpanelTrack.dormitoryCardNonResidentBlocked({
-          reason,
-          debug_dormGbn: rawFields?.dormGbn || profile?.dormitoryType || "",
-          debug_dormBdNm: rawFields?.dormBdNm || profile?.dormitoryBuilding || "",
-          debug_hasDomstuNo: Boolean(studentDormNo && studentDormNo !== "-"),
-          debug_rawStatus: rawStatus,
-          debug_year: year,
-          debug_term: term,
-          debug_mainRowsCount: dormInfo?.rawDatasets?.["DS_DMTY209"]?.length ?? 0,
-          debug_inOutCount: Array.isArray(dormInfo?.inOutList) ? dormInfo.inOutList.length : 0,
-          debug_cacheStatus: cacheStatus,
-        });
+        mixpanelTrack.dormitoryCardNonResidentBlocked({ reason });
       }
       return;
     }
 
     if (isCurrentlyResident) {
-      localStorage.setItem("unidorm_dorm_card_issue_status", "SUCCESS");
       if (hasTrackedOutcomeRef.current !== "success") {
         hasTrackedOutcomeRef.current = "success";
         mixpanelTrack.dormitoryCardIssueSuccess({
@@ -706,108 +530,10 @@ export default function MobileDormitoryCardPage() {
     term,
   ]);
 
-  if (isInitialLoading) {
-    return (
-      <PageContainer as="main">
-        <CardWrapper as="section">
-          <Skeleton
-            width="100%"
-            height="100%"
-            style={{
-              maxWidth: 360,
-              maxHeight: 560,
-              borderRadius: 24,
-              minHeight: 460,
-            }}
-          />
-        </CardWrapper>
-      </PageContainer>
-    );
-  }
-
   if (!isInitialLoading && !hasValidData) {
     return (
-      <PageContainer as="main">
-        <PortalSyncOnboarding onSuccess={fetchCached} />
-      </PageContainer>
-    );
-  }
-
-  // 학기가 만료된 경우 토스 스타일 학기 만료 안내 화면 표출
-  if (!isInitialLoading && hasValidData && isSemesterExpired) {
-    return (
       <PageContainer as="main" $isScrollable>
-        <NonResidentWrapper>
-          <NonResidentCard as="section">
-            <IconCircle>
-              <CalendarClock size={32} color="var(--interactive-primary, #3182F6)" strokeWidth={1.8} />
-            </IconCircle>
-
-            <NonResidentTitle>사생증 이용 기간이 만료되었어요</NonResidentTitle>
-            <NonResidentDesc>
-              새로운 학기가 시작되었어요. 최신 사생 정보로 갱신해 주세요.
-            </NonResidentDesc>
-
-            <HistorySummaryBox>
-              <HistorySummaryHeader>
-                <HistorySummaryTitle>만료된 사생증 정보</HistorySummaryTitle>
-                <HistoryStatusBadge $status="02">만료됨</HistoryStatusBadge>
-              </HistorySummaryHeader>
-              <HistorySummaryDetail>
-                <HistoryItem>
-                  <span className="label">발급 학기</span>
-                  <span className="value">
-                    {year ? `${year}학년도 ` : ""}
-                    {formatSemesterTerm(term) || "-"}
-                  </span>
-                </HistoryItem>
-                {resolvedDormType && resolvedDormType !== "-" && (
-                  <HistoryItem>
-                    <span className="label">기숙사</span>
-                    <span className="value">{resolvedDormType}</span>
-                  </HistoryItem>
-                )}
-                {roomNumber && (
-                  <HistoryItem>
-                    <span className="label">호실</span>
-                    <span className="value">
-                      {roomNumber}호 {bedNumber ? `(${bedNumber})` : ""}
-                    </span>
-                  </HistoryItem>
-                )}
-              </HistorySummaryDetail>
-            </HistorySummaryBox>
-
-            <ButtonGroupColumn>
-              <CapsuleButton
-                variant="primary"
-                fullWidth
-                disabled={isRefreshing}
-                onClick={handleRefresh}
-              >
-                <RefreshIconWrapper $isSpinning={isRefreshing}>
-                  <RotateCw size={16} />
-                </RefreshIconWrapper>
-                <span>{isRefreshing ? "기숙사 정보 동기화 중..." : "최신 사생증으로 갱신하기"}</span>
-              </CapsuleButton>
-
-              <CapsuleButton
-                variant="secondary"
-                fullWidth
-                onClick={() => {
-                  mixpanelTrack.dormitoryCardNonResidentHomeClicked();
-                  navigate(PATHS.HOME);
-                }}
-              >
-                홈으로 돌아가기
-              </CapsuleButton>
-            </ButtonGroupColumn>
-          </NonResidentCard>
-
-          <FootnoteNotice>
-            새 학기 입사 처리가 완료된 경우 [최신 사생증으로 갱신하기]를 누르면 새 학기 사생증이 발급돼요.
-          </FootnoteNotice>
-        </NonResidentWrapper>
+        <PortalSyncOnboarding onSuccess={fetchCached} />
       </PageContainer>
     );
   }
@@ -846,11 +572,7 @@ export default function MobileDormitoryCardPage() {
                   {lastHistory.dormitoryType && (
                     <HistoryItem>
                       <span className="label">기숙사</span>
-                      <DormitoryBadge
-                        dormType={mapDormitoryType(lastHistory.dormitoryType)}
-                        variant="subtle"
-                        size="sm"
-                      />
+                      <span className="value">{mapDormitoryType(lastHistory.dormitoryType)}</span>
                     </HistoryItem>
                   )}
                   {lastHistory.checkOutDate && (
@@ -900,9 +622,6 @@ export default function MobileDormitoryCardPage() {
   return (
     <PageContainer as="main">
       <CardWrapper as="section">
-        {isPreviewMode && (
-          <PreviewBadge>PC 브라우저 개발 미리보기 모드 (?preview=true)</PreviewBadge>
-        )}
         <MobileDormitoryCard
           fullscreen
           studentName={studentName}
@@ -920,24 +639,7 @@ export default function MobileDormitoryCardPage() {
           term={term}
           status={status}
         />
-        <SyncInfoBar>
-          <SyncTimeWrapper>
-            <Clock size={12} color="var(--content-tertiary, #8B95A1)" />
-            <span>최근 동기화 {lastSyncTimeText || "확인 중..."}</span>
-          </SyncTimeWrapper>
-          <SyncInlineButton
-            type="button"
-            disabled={isRefreshing}
-            onClick={handleRefresh}
-            aria-label="사생증 정보 새로고침"
-          >
-            <RotateCw size={12} className={isRefreshing ? "spin-icon" : ""} />
-            <span>{isRefreshing ? "동기화 중..." : "새로고침"}</span>
-          </SyncInlineButton>
-        </SyncInfoBar>
       </CardWrapper>
-
-      <PortalSyncProgressModal isOpen={isRefreshing} />
 
       <BottomButtonWrapper>
         <DormitoryInfoButton
@@ -954,86 +656,6 @@ export default function MobileDormitoryCardPage() {
     </PageContainer>
   );
 }
-
-const spinKeyframes = keyframes`
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-`;
-
-const SyncInfoBar = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  max-width: 360px;
-  margin-top: 10px;
-  padding: 6px 12px;
-  background: var(--surface-secondary, #f2f4f6);
-  border-radius: 14px;
-  box-sizing: border-box;
-`;
-
-const SyncTimeWrapper = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--content-secondary, #4e5968);
-  letter-spacing: -0.2px;
-`;
-
-const SyncInlineButton = styled.button`
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  border: 1px solid var(--border-subtle, #e5e8eb);
-  background: var(--surface-primary, #ffffff);
-  color: var(--interactive-primary, #3182f6);
-  font-size: 11px;
-  font-weight: 700;
-  padding: 4px 10px;
-  border-radius: 10px;
-  cursor: pointer;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-  transition: all 0.15s ease;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-
-  &:hover {
-    background: #ffffff;
-    filter: brightness(0.98);
-  }
-
-  &:active {
-    transform: scale(0.95);
-  }
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: default;
-  }
-
-  .spin-icon {
-    animation: ${spinKeyframes} 0.8s linear infinite;
-  }
-`;
-
-const PreviewBadge = styled.div`
-  background: var(--surface-secondary, #F2F4F6);
-  color: var(--content-secondary, #4E5968);
-  font-size: 11px;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 12px;
-  margin-bottom: 8px;
-  text-align: center;
-  align-self: center;
-`;
 
 const PageContainer = styled.div<{ $isScrollable?: boolean }>`
   width: 100%;

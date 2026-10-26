@@ -90,28 +90,7 @@ const LogoutPage = () => {
       mixpanelTrack.logout();
 
       console.log("로그아웃 성공: 모든 계정 및 캐시가 초기화되었습니다.");
-
-      const alertKey = "unidorm_logout_alert_shown";
-      const isAlreadyAlerted =
-        typeof sessionStorage !== "undefined" &&
-        sessionStorage.getItem(alertKey) === "true";
-
-      if (!isAlreadyAlerted) {
-        try {
-          sessionStorage.setItem(alertKey, "true");
-          // 나중에 다시 정상 로그아웃할 수 있도록 5초 후 세션 플래그 해제
-          setTimeout(() => {
-            try {
-              sessionStorage.removeItem(alertKey);
-            } catch {
-              // 스토리지 예외 무시
-            }
-          }, 5000);
-        } catch {
-          // 세션스토리지 접근 제한 예외 방어
-        }
-        alert("로그아웃되었습니다.");
-      }
+      alert("로그아웃되었습니다.");
 
       // 6. 홈으로 이동
       navigate("/home", { replace: true });

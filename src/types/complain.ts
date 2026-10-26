@@ -120,6 +120,18 @@ export interface ComplaintReplyResponse {
   createdDate: string;
 }
 
+// 민원 등록 응답 타입
+export interface ComplaintResponse {
+  id: number;
+  title: string;
+  content: string;
+  type: string;
+  dormType: string;
+  caseNumber: string;
+  status: string;
+  createdDate: string;
+}
+
 /**
  * 민원 검색 조건 DTO (쿼리 파라미터로 사용)
  */
@@ -133,6 +145,4 @@ export interface ComplaintSearchDto {
   bedNumber?: string;
   roomNumber?: string;
   type?: string;
-  startDate?: string; // YYYY-MM-DD
-  endDate?: string; // YYYY-MM-DD
 }

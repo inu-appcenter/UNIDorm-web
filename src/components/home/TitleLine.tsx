@@ -63,16 +63,9 @@ const TitleLineWrapper = styled.div`
     align-items: center;
     justify-content: start;
     height: fit-content;
-    gap: 6px;
-    cursor: pointer;
-    user-select: none;
-    -webkit-tap-highlight-color: transparent;
-    transition: opacity 0.12s ease, transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);
+    gap: 8px;
 
-    &:active {
-      opacity: 0.6;
-      transform: scale(0.96);
-    }
+    cursor: pointer;
   }
 
   img {

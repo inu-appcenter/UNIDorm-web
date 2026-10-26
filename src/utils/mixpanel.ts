@@ -364,27 +364,9 @@ export const mixpanelTrack = {
 
   dormitoryCardNonResidentBlocked: (params?: {
     reason?: "미배정" | "퇴사" | "과거학기" | "기타";
-    debug_dormGbn?: string;
-    debug_dormBdNm?: string;
-    debug_hasDomstuNo?: boolean;
-    debug_rawStatus?: string;
-    debug_year?: string;
-    debug_term?: string;
-    debug_mainRowsCount?: number;
-    debug_inOutCount?: number;
-    debug_cacheStatus?: "DORM_CACHED" | "ACADEMIC_ONLY" | "NO_CACHE";
   }) => {
     trackEvent("모바일 사생증 비사생 노출", {
       reason: params?.reason || "기타",
-      ...(params?.debug_dormGbn !== undefined && { debug_dormGbn: params.debug_dormGbn }),
-      ...(params?.debug_dormBdNm !== undefined && { debug_dormBdNm: params.debug_dormBdNm }),
-      ...(params?.debug_hasDomstuNo !== undefined && { debug_hasDomstuNo: params.debug_hasDomstuNo }),
-      ...(params?.debug_rawStatus !== undefined && { debug_rawStatus: params.debug_rawStatus }),
-      ...(params?.debug_year !== undefined && { debug_year: params.debug_year }),
-      ...(params?.debug_term !== undefined && { debug_term: params.debug_term }),
-      ...(params?.debug_mainRowsCount !== undefined && { debug_mainRowsCount: params.debug_mainRowsCount }),
-      ...(params?.debug_inOutCount !== undefined && { debug_inOutCount: params.debug_inOutCount }),
-      ...(params?.debug_cacheStatus !== undefined && { debug_cacheStatus: params.debug_cacheStatus }),
     });
   },
 
@@ -400,56 +382,6 @@ export const mixpanelTrack = {
 
   dormitoryCardNonResidentHomeClicked: () => {
     trackEvent("모바일 사생증 홈으로 클릭");
-  },
-
-  dormitoryCardSyncStarted: (syncType: "saved_account" | "manual_input") => {
-    trackEvent("모바일 사생증 동기화 시작", {
-      sync_type: syncType,
-    });
-  },
-
-  dormitoryCardSyncSuccess: (params: {
-    durationMs: number;
-    hasPhoto: boolean;
-    hasDormInfo: boolean;
-  }) => {
-    trackEvent("모바일 사생증 동기화 성공", {
-      duration_ms: params.durationMs,
-      has_photo: params.hasPhoto,
-      has_dorm_info: params.hasDormInfo,
-    });
-  },
-
-  dormitoryCardSyncFailed: (params: {
-    stage:
-      | "CHECK_ACCOUNT"
-      | "SAVE_ACCOUNT"
-      | "DORM_FETCH"
-      | "ACADEMIC_FETCH"
-      | "STORAGE_SAVE"
-      | "UNKNOWN";
-    errorCode?: string;
-    errorMessage?: string;
-    durationMs?: number;
-  }) => {
-    trackEvent("모바일 사생증 동기화 실패", {
-      stage: params.stage,
-      error_code: params.errorCode || "UNKNOWN",
-      error_message: params.errorMessage || "알 수 없는 오류",
-      ...(params.durationMs !== undefined && { duration_ms: params.durationMs }),
-    });
-  },
-
-  nativeBridgeError: (params: {
-    actionType: string;
-    errorCode: string;
-    errorMessage: string;
-  }) => {
-    trackEvent("네이티브 브릿지 에러", {
-      action_type: params.actionType,
-      error_code: params.errorCode,
-      error_message: params.errorMessage,
-    });
   },
 };
 

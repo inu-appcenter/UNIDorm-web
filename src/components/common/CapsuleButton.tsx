@@ -1,6 +1,5 @@
 import React, { ButtonHTMLAttributes, ReactNode } from "react";
 import styled, { css, keyframes } from "styled-components";
-import Ripple from "./Ripple";
 
 export type CapsuleButtonVariant = "brand" | "danger" | "primary" | "secondary";
 
@@ -108,26 +107,11 @@ const getSpinnerColor = (variant: CapsuleButtonVariant) => {
   }
 };
 
-const getRippleColor = (variant: CapsuleButtonVariant) => {
-  switch (variant) {
-    case "primary":
-      return "rgba(255, 255, 255, 0.32)";
-    case "brand":
-      return "rgba(0, 97, 255, 0.18)";
-    case "danger":
-      return "rgba(239, 68, 68, 0.18)";
-    case "secondary":
-    default:
-      return "rgba(0, 0, 0, 0.08)";
-  }
-};
-
 const StyledButton = styled.button<{
   $variant: CapsuleButtonVariant;
   $fullWidth: boolean;
   $loading: boolean;
 }>`
-  position: relative;
   display: flex;
   padding: 12px 24px;
   justify-content: center;
@@ -138,12 +122,7 @@ const StyledButton = styled.button<{
   cursor: pointer;
   box-sizing: border-box;
   width: ${({ $fullWidth }) => ($fullWidth ? "100%" : "auto")};
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
-  overflow: hidden;
-
-  /* 토스 스타일 쫀득한 감속 이징 */
-  transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s ease, box-shadow 0.15s ease;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 
   box-shadow: var(--elevation-1-shadow);
 
@@ -163,8 +142,6 @@ const StyledButton = styled.button<{
     color: var(--text-disabled);
     cursor: not-allowed;
     box-shadow: none;
-    pointer-events: none;
-    transform: none;
   }
 
   ${({ $loading }) =>
@@ -176,8 +153,6 @@ const StyledButton = styled.button<{
 `;
 
 const ContentWrapper = styled.span`
-  position: relative;
-  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -255,7 +230,6 @@ const CapsuleButton: CapsuleButtonComponent = function CapsuleButton({
       disabled={isButtonDisabled}
       {...props}
     >
-      {!isButtonDisabled && <Ripple color={getRippleColor(variant)} />}
       <ContentWrapper>
         {loading && <Spinner $color={spinnerColor} />}
         {!loading && leftIcon && leftIcon}
