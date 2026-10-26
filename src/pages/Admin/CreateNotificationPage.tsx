@@ -314,7 +314,7 @@ const PageRoot = styled.div`
   max-width: 100%;
   overflow-x: hidden;
   box-sizing: border-box;
-  padding: 8px 16px 120px;
+  padding: 10px 14px calc(90px + env(safe-area-inset-bottom, 0px));
 
   @media (min-width: 1024px) {
     padding: 16px 0 60px;
@@ -325,7 +325,7 @@ const PageRoot = styled.div`
 const LayoutGrid = styled.form`
   display: grid;
   grid-template-columns: 1fr;
-  gap: 20px;
+  gap: 16px;
   width: 100%;
 
   @media (min-width: 1024px) {
@@ -338,22 +338,24 @@ const LayoutGrid = styled.form`
 const FormColumn = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
   min-width: 0;
 `;
 
 const FormCard = styled.div`
   background: #ffffff;
   border: 1px solid #e5e8eb;
-  border-radius: 20px;
-  padding: 20px;
+  border-radius: 16px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
 
   @media (min-width: 768px) {
+    border-radius: 20px;
     padding: 28px;
+    gap: 20px;
   }
 `;
 

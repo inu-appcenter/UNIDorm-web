@@ -742,7 +742,7 @@ export default function OpenChatAdminPage() {
 const PageRoot = styled.div`
   width: 100%;
   min-height: 100%;
-  padding: 16px 20px calc(90px + env(safe-area-inset-bottom, 0px));
+  padding: 10px 14px calc(90px + env(safe-area-inset-bottom, 0px));
   box-sizing: border-box;
   overflow-x: hidden;
 
@@ -792,14 +792,15 @@ const StatMiniValue = styled.span`
 /* 메인 카드 */
 const MainCard = styled.div`
   background: #ffffff;
-  border-radius: 20px;
+  border-radius: 16px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
-  padding: 20px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
   gap: 16px;
 
   @media (min-width: 1024px) {
+    border-radius: 20px;
     padding: 24px;
   }
 `;
@@ -1043,7 +1044,7 @@ const MobileRow = styled.div`
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 16px 4px;
+  padding: 12px 2px;
   border-bottom: 1px solid #f2f4f6;
 
   &:last-child {
