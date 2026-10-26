@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -11,51 +11,14 @@ import { useSetHeader } from "@/hooks/useSetHeader";
 import { useInitFromQuery } from "@/hooks/useInitFromQuery";
 import { usePopupNotification } from "@/queries/popupNotifications";
 import { type InitialFile, useFileHandler } from "@/hooks/useFileHandler";
-import {
-  AdminActionRow,
-  AdminButton,
-  AdminCard,
-  AdminCardDescription,
-  AdminCardHeader,
-  AdminCardTitle,
-  AdminCardTitleGroup,
-  AdminField,
-  AdminFieldGrid,
-  AdminInput,
-  AdminLabel,
-  AdminPage,
-  AdminShell,
-  AdminSubtleText,
-  AdminTextarea,
-} from "@/pages/Admin/adminPageStyles";
 import { RequestPopupNotificationDto } from "@/types/popup-notifications";
 
 const POPUP_TYPE_OPTIONS = [
-  {
-    value: "룸메이트",
-    title: "룸메이트",
-    description: "매칭, 설정, 체크리스트 관련 팝업 공지에 적합합니다.",
-  },
-  {
-    value: "공동구매",
-    title: "공동구매",
-    description: "참여 독려나 기간 한정 이벤트를 강조할 때 좋습니다.",
-  },
-  {
-    value: "생활관",
-    title: "생활관",
-    description: "기숙사 운영 안내와 생활관 전용 정보를 노출합니다.",
-  },
-  {
-    value: "유니돔",
-    title: "유니돔",
-    description: "전체 사용자에게 보여야 하는 홈 팝업 공지용입니다.",
-  },
-  {
-    value: "서포터즈",
-    title: "서포터즈",
-    description: "서포터즈 운영 메시지나 캠페인 홍보에 사용합니다.",
-  },
+  { value: "유니돔", label: "유니돔 (전체 공지)" },
+  { value: "생활관", label: "생활관 (기숙사 운영)" },
+  { value: "룸메이트", label: "룸메이트" },
+  { value: "공동구매", label: "공동구매" },
+  { value: "서포터즈", label: "서포터즈" },
 ] as const;
 
 const EMPTY_FORM: RequestPopupNotificationDto = {
@@ -68,13 +31,12 @@ const EMPTY_FORM: RequestPopupNotificationDto = {
 
 const getImageNameFromUrl = (url: string, index: number) => {
   const fileName = url.split("?")[0].split("#")[0].split("/").pop();
-
   return fileName && fileName.length > 0
     ? fileName
     : `popup-image-${index + 1}.jpg`;
 };
 
-const PopupNotiFormPage = () => {
+const PopupNotiFormPage: React.FC = () => {
   const { popupNotificationId } = useParams<{ popupNotificationId: string }>();
   const navigate = useNavigate();
   const isEditMode = !!popupNotificationId;
@@ -83,7 +45,7 @@ const PopupNotiFormPage = () => {
   const [initialImageFiles, setInitialImageFiles] = useState<InitialFile[]>([]);
   const [loading, setLoading] = useState(false);
   const [imagesChanged, setImagesChanged] = useState(false);
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [isMobilePreviewOpen, setIsMobilePreviewOpen] = useState(false);
 
   const { files, addFiles, deleteFile, isFileLoading } = useFileHandler({
     mode: "image",
@@ -103,7 +65,7 @@ const PopupNotiFormPage = () => {
 
   useEffect(() => {
     if (!isError) return;
-    alert("팝업 공지 정보를 불러오지 못했습니다.");
+    alert("팝업 공지 정보를 불러오지 못했어요.");
     navigate(-1);
   }, [isError, navigate]);
 
@@ -141,16 +103,19 @@ const PopupNotiFormPage = () => {
     deleteFile(index);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
 
-    if (!formData.title || !formData.content) {
+    if (!formData.title.trim() || !formData.content.trim()) {
       alert("제목과 내용을 모두 입력해 주세요.");
       return;
     }
-
+    if (!formData.startDate || !formData.deadline) {
+      alert("시작일과 종료일을 모두 선택해 주세요.");
+      return;
+    }
     if (formData.startDate > formData.deadline) {
-      alert("종료일은 시작일보다 빠를 수 없습니다.");
+      alert("종료일은 시작일보다 빠를 수 없어요.");
       return;
     }
 
@@ -163,19 +128,16 @@ const PopupNotiFormPage = () => {
           formData,
           imagesChanged ? uploadedImages : undefined,
         );
-        alert("팝업 공지를 수정했습니다.");
+        alert("팝업 공지를 수정했어요.");
       } else {
         await createPopupNotification(formData, uploadedImages);
-        alert("팝업 공지를 등록했습니다.");
+        alert("팝업 공지를 등록했어요.");
       }
 
       navigate(-1);
     } catch (error) {
-      console.error(
-        `팝업 공지 ${isEditMode ? "수정" : "등록"} 실패:`,
-        error,
-      );
-      alert(`팝업 공지를 ${isEditMode ? "수정" : "등록"}하지 못했습니다.`);
+      console.error(`팝업 공지 ${isEditMode ? "수정" : "등록"} 실패:`, error);
+      alert(`팝업 공지를 ${isEditMode ? "수정" : "등록"}하지 못했어요.`);
     } finally {
       setLoading(false);
     }
@@ -184,238 +146,611 @@ const PopupNotiFormPage = () => {
   const pageTitle = isEditMode
     ? "홈 화면 팝업 공지 수정"
     : "홈 화면 팝업 공지 등록";
-  const submitButtonText = isEditMode ? "변경 사항 저장" : "팝업 공지 등록";
-  const loadingButtonText = isEditMode ? "저장 중..." : "등록 중...";
-  const selectedPopupType =
-    POPUP_TYPE_OPTIONS.find(
-      (option) => option.value === formData.notificationType,
-    ) ?? POPUP_TYPE_OPTIONS[3];
-  const previewTitle = formData.title.trim() || "팝업 제목 미리보기";
-  const previewText =
-    formData.content.trim() ||
-    "내용을 입력하면 실제 홈 화면 바텀시트에서 그대로 확인할 수 있습니다.";
 
   useSetHeader({ title: pageTitle });
 
   return (
-    <AdminShell>
-      <AdminPage>
-        <AdminCard>
-          <AdminCardHeader>
-            <AdminCardTitleGroup>
-              <AdminCardTitle>팝업 공지 작성</AdminCardTitle>
-              <AdminCardDescription>
-                유형, 일정, 이미지를 입력하고 하단 버튼에서 바로 미리보기 또는
-                저장을 진행합니다.
-              </AdminCardDescription>
-            </AdminCardTitleGroup>
-          </AdminCardHeader>
+    <PageContainer>
+      <FormGrid onSubmit={handleSubmit}>
+        {/* 좌측 메인 작성 영역 */}
+        <FormColumn>
+          <FormCard>
+            {/* 공지 구분 선택 칩 */}
+            <FieldWrapper>
+              <FieldLabel>공지 구분</FieldLabel>
+              <TypeChipRow>
+                {POPUP_TYPE_OPTIONS.map((opt) => (
+                  <TypeChip
+                    key={opt.value}
+                    type="button"
+                    $active={formData.notificationType === opt.value}
+                    onClick={() =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        notificationType: opt.value,
+                      }))
+                    }
+                  >
+                    {opt.label}
+                  </TypeChip>
+                ))}
+              </TypeChipRow>
+            </FieldWrapper>
 
-          <Form onSubmit={handleSubmit}>
-            <SectionBlock>
-              <SectionTitle>기본 정보</SectionTitle>
-              <AdminField>
-                <AdminLabel htmlFor="popup-title">제목</AdminLabel>
-                <AdminInput
-                  id="popup-title"
-                  type="text"
-                  name="title"
-                  value={formData.title}
+            {/* 제목 입력 */}
+            <FieldWrapper>
+              <FieldHeaderRow>
+                <FieldLabel htmlFor="popup-title">공지 제목</FieldLabel>
+                <CharCount>{formData.title.length}자</CharCount>
+              </FieldHeaderRow>
+              <StyledInput
+                id="popup-title"
+                type="text"
+                name="title"
+                value={formData.title}
+                onChange={handleChange}
+                placeholder="예: 오늘 밤 11시 기숙사 정기 점검 안내"
+                required
+              />
+            </FieldWrapper>
+
+            {/* 내용 입력 */}
+            <FieldWrapper>
+              <FieldHeaderRow>
+                <FieldLabel htmlFor="popup-content">공지 내용</FieldLabel>
+                <CharCount>{formData.content.length}자</CharCount>
+              </FieldHeaderRow>
+              <StyledTextarea
+                id="popup-content"
+                name="content"
+                rows={6}
+                value={formData.content}
+                onChange={handleChange}
+                placeholder="팝업에서 보여줄 핵심 내용을 작성해 주세요."
+                required
+              />
+            </FieldWrapper>
+
+            {/* 노출 기간 */}
+            <DateGrid>
+              <FieldWrapper>
+                <FieldLabel htmlFor="popup-start">노출 시작일</FieldLabel>
+                <StyledInput
+                  id="popup-start"
+                  type="date"
+                  name="startDate"
+                  value={formData.startDate}
                   onChange={handleChange}
-                  placeholder="예: 오늘 밤 11시 앱 점검 안내"
                   required
                 />
-                <FieldLengthHint>현재 {formData.title.length}자</FieldLengthHint>
-              </AdminField>
+              </FieldWrapper>
 
-              <AdminField>
-                <AdminLabel htmlFor="popup-content">내용</AdminLabel>
-                <AdminTextarea
-                  id="popup-content"
-                  name="content"
-                  value={formData.content}
+              <FieldWrapper>
+                <FieldLabel htmlFor="popup-deadline">노출 종료일</FieldLabel>
+                <StyledInput
+                  id="popup-deadline"
+                  type="date"
+                  name="deadline"
+                  value={formData.deadline}
                   onChange={handleChange}
-                  placeholder="팝업에서 보여 줄 핵심 내용을 입력해 주세요."
                   required
                 />
-                <FieldLengthHint>
-                  현재 {formData.content.length}자
-                </FieldLengthHint>
-              </AdminField>
-            </SectionBlock>
+              </FieldWrapper>
+            </DateGrid>
 
-            <SectionBlock>
-              <SectionTitle>노출 유형</SectionTitle>
-              <AdminField>
-                <AdminLabel htmlFor="popup-notification-type">
-                  노출 유형 선택
-                </AdminLabel>
-                <PopupTypeSelect
-                  id="popup-notification-type"
-                  name="notificationType"
-                  value={formData.notificationType}
-                  onChange={handleChange}
-                >
-                  {POPUP_TYPE_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.title}
-                    </option>
-                  ))}
-                </PopupTypeSelect>
-              </AdminField>
-              <SelectedTypeDescription>
-                {selectedPopupType.description}
-              </SelectedTypeDescription>
-            </SectionBlock>
+            {/* 이미지 첨부 */}
+            <FieldWrapper>
+              <FieldLabel>이미지 첨부 (최대 5장)</FieldLabel>
+              <FileUploader
+                images={files}
+                onAddImages={handleAddImages}
+                onDeleteImage={handleDeleteImage}
+                isLoading={isFileLoading}
+                mode="image"
+              />
+            </FieldWrapper>
 
-            <SectionBlock>
-              <SectionTitle>노출 일정</SectionTitle>
-              <AdminFieldGrid>
-                <AdminField>
-                  <AdminLabel htmlFor="popup-start-date">시작일</AdminLabel>
-                  <AdminInput
-                    id="popup-start-date"
-                    type="date"
-                    name="startDate"
-                    value={formData.startDate}
-                    onChange={handleChange}
-                    required
-                  />
-                </AdminField>
-                <AdminField>
-                  <AdminLabel htmlFor="popup-end-date">종료일</AdminLabel>
-                  <AdminInput
-                    id="popup-end-date"
-                    type="date"
-                    name="deadline"
-                    value={formData.deadline}
-                    onChange={handleChange}
-                    required
-                  />
-                </AdminField>
-              </AdminFieldGrid>
-            </SectionBlock>
+            {/* 데스크톱 저장 버튼 */}
+            <DesktopActionRow>
+              <CancelButton type="button" onClick={() => navigate(-1)}>
+                취소
+              </CancelButton>
+              <SubmitButton type="submit" disabled={loading}>
+                {loading
+                  ? "저장 중..."
+                  : isEditMode
+                    ? "수정 내용 저장"
+                    : "팝업 공지 등록하기"}
+              </SubmitButton>
+            </DesktopActionRow>
+          </FormCard>
+        </FormColumn>
 
-            <SectionBlock>
-              <SectionTitle>이미지 첨부</SectionTitle>
-              <UploadPanel>
-                <FileUploader
-                  images={files}
-                  onAddImages={handleAddImages}
-                  onDeleteImage={handleDeleteImage}
-                  isLoading={isFileLoading}
-                />
-              </UploadPanel>
-              <AdminSubtleText>
-                {isEditMode
-                  ? "기존 이미지를 먼저 불러오고, 추가하거나 제외한 현재 목록을 기준으로 저장합니다."
-                  : "공동구매 게시글 작성과 같은 이미지 업로더를 사용합니다."}
-              </AdminSubtleText>
-            </SectionBlock>
+        {/* 우측 홈 팝업 미리보기 (PC 전용) */}
+        <PreviewColumn>
+          <PreviewStickyCard>
+            <PreviewCardHeader>
+              <PreviewHeading>홈 팝업 미리보기</PreviewHeading>
+              <PreviewSubText>
+                홈 화면에서 표시될 팝업 형태입니다.
+              </PreviewSubText>
+            </PreviewCardHeader>
 
-            <AdminActionRow>
-              <AdminButton type="submit" disabled={loading}>
-                {loading ? loadingButtonText : submitButtonText}
-              </AdminButton>
-              <AdminButton
-                type="button"
-                $tone="secondary"
-                onClick={() => setIsPreviewOpen(true)}
-                disabled={loading}
-              >
-                홈 바텀시트 미리보기
-              </AdminButton>
-            </AdminActionRow>
-          </Form>
-        </AdminCard>
+            <PhoneFrame>
+              <PopupSimulationCard>
+                <SimTypeBadge>{formData.notificationType || "유니돔"}</SimTypeBadge>
+                <SimTitle>
+                  {formData.title || "공지 제목이 여기에 표시돼요"}
+                </SimTitle>
+                <SimContent>
+                  {formData.content || "작성 중인 공지 내용이 여기에 표시돼요."}
+                </SimContent>
 
-        <HomeNoticeBottomSheet
-          id="admin-home-popup-preview"
-          isOpen={isPreviewOpen}
-          setIsOpen={setIsPreviewOpen}
-          title={previewTitle}
-          text={previewText}
-          links={[]}
-          showHideAction={false}
-          useStorage={false}
-          closeButtonText="미리보기 닫기"
+                {previewUrls.length > 0 && (
+                  <SimImageContainer>
+                    <SimPreviewImage src={previewUrls[0]} alt="preview" />
+                    {previewUrls.length > 1 && (
+                      <SimImageCountBadge>
+                        +{previewUrls.length - 1}장 더보기
+                      </SimImageCountBadge>
+                    )}
+                  </SimImageContainer>
+                )}
+
+                <SimButtonGroup>
+                  <SimSecondaryButton type="button">
+                    오늘 하루 보지 않기
+                  </SimSecondaryButton>
+                  <SimPrimaryButton type="button">
+                    닫기
+                  </SimPrimaryButton>
+                </SimButtonGroup>
+              </PopupSimulationCard>
+            </PhoneFrame>
+          </PreviewStickyCard>
+        </PreviewColumn>
+      </FormGrid>
+
+      {/* 모바일 전용 하단 고정 액션바 */}
+      <MobileFixedBar>
+        <MobilePreviewTrigger
+          type="button"
+          onClick={() => setIsMobilePreviewOpen(true)}
         >
-          {previewUrls.length > 0 && (
-            <PreviewBottomSheetContent>
-              {previewUrls.map((url, index) => (
-                <img
-                  key={`${url}-${index}`}
-                  src={url}
-                  alt={`홈 팝업 미리보기 이미지 ${index + 1}`}
-                />
-              ))}
-            </PreviewBottomSheetContent>
-          )}
-        </HomeNoticeBottomSheet>
-      </AdminPage>
-    </AdminShell>
+          미리보기
+        </MobilePreviewTrigger>
+        <MobileSubmitButton type="button" onClick={() => handleSubmit()} disabled={loading}>
+          {loading ? "저장 중..." : isEditMode ? "수정 저장" : "공지 등록"}
+        </MobileSubmitButton>
+      </MobileFixedBar>
+
+      {/* 모바일 팝업 미리보기 모달 */}
+      <HomeNoticeBottomSheet
+        id="preview-popup"
+        isOpen={isMobilePreviewOpen}
+        setIsOpen={setIsMobilePreviewOpen}
+        title={formData.title || "공지 미리보기"}
+        text={formData.content || "내용이 없어요."}
+        links={[]}
+        showHideAction={false}
+        useStorage={false}
+        closeButtonText="닫기"
+      >
+        {previewUrls.length > 0 && (
+          <MobilePreviewImgWrapper>
+            {previewUrls.map((url, idx) => (
+              <img key={idx} src={url} alt={`preview-${idx}`} />
+            ))}
+          </MobilePreviewImgWrapper>
+        )}
+      </HomeNoticeBottomSheet>
+    </PageContainer>
   );
 };
 
 export default PopupNotiFormPage;
 
-const Form = styled.form`
-  display: flex;
-  flex-direction: column;
-  gap: 28px;
-`;
+/* --- Styled Components (배경색 위임, PC/모바일 최적화) --- */
 
-const SectionBlock = styled.section`
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-`;
-
-const SectionTitle = styled.h3`
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 800;
-  color: #0f172a;
-`;
-
-const PopupTypeSelect = styled(AdminInput).attrs({ as: "select" })`
-  appearance: none;
-  padding-right: 44px;
-  background-image:
-    linear-gradient(45deg, transparent 50%, #64748b 50%),
-    linear-gradient(135deg, #64748b 50%, transparent 50%);
-  background-position:
-    calc(100% - 20px) calc(50% - 3px),
-    calc(100% - 14px) calc(50% - 3px);
-  background-size: 6px 6px;
-  background-repeat: no-repeat;
-  cursor: pointer;
-`;
-
-const SelectedTypeDescription = styled(AdminSubtleText)`
-  margin-top: -6px;
-`;
-
-const FieldLengthHint = styled(AdminSubtleText)`
+const PageContainer = styled.div`
   width: 100%;
-  text-align: right;
-  font-size: 0.78rem;
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+  padding: 8px 16px 120px;
+
+  @media (min-width: 1024px) {
+    padding: 16px 0 60px;
+  }
 `;
 
-const UploadPanel = styled.div`
-  display: flex;
-  flex-direction: column;
+const FormGrid = styled.form`
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  width: 100%;
+
+  @media (min-width: 1024px) {
+    grid-template-columns: minmax(0, 1.25fr) minmax(360px, 0.95fr);
+    align-items: start;
+    gap: 32px;
+  }
 `;
 
-const PreviewBottomSheetContent = styled.div`
+const FormColumn = styled.div`
   display: flex;
   flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+`;
+
+const FormCard = styled.div`
+  background: #ffffff;
+  border: 1px solid #e5e8eb;
+  border-radius: 20px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+
+  @media (min-width: 768px) {
+    padding: 28px;
+  }
+`;
+
+const FieldWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+const FieldHeaderRow = styled.div`
+  display: flex;
+  justify-content: space-between;
   align-items: center;
+`;
+
+const FieldLabel = styled.label`
+  font-size: 14px;
+  font-weight: 700;
+  color: #191f28;
+`;
+
+const CharCount = styled.span`
+  font-size: 12px;
+  color: #8b95a1;
+`;
+
+const TypeChipRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+`;
+
+const TypeChip = styled.button<{ $active: boolean }>`
+  border: 1.5px solid ${({ $active }) => ($active ? "#3182f6" : "#e5e8eb")};
+  background: ${({ $active }) => ($active ? "#e8f3ff" : "#ffffff")};
+  color: ${({ $active }) => ($active ? "#3182f6" : "#4e5968")};
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    border-color: #3182f6;
+  }
+`;
+
+const StyledInput = styled.input`
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid #e5e8eb;
+  background: #f9fafb;
+  font-size: 14px;
+  color: #191f28;
+  outline: none;
+  box-sizing: border-box;
+  transition: all 0.15s ease;
+
+  &::placeholder {
+    color: #8b95a1;
+  }
+
+  &:focus {
+    background: #ffffff;
+    border-color: #3182f6;
+    box-shadow: 0 0 0 3px rgba(49, 130, 246, 0.12);
+  }
+`;
+
+const StyledTextarea = styled.textarea`
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid #e5e8eb;
+  background: #f9fafb;
+  font-size: 14px;
+  color: #191f28;
+  line-height: 1.6;
+  outline: none;
+  box-sizing: border-box;
+  resize: vertical;
+  transition: all 0.15s ease;
+
+  &::placeholder {
+    color: #8b95a1;
+  }
+
+  &:focus {
+    background: #ffffff;
+    border-color: #3182f6;
+    box-shadow: 0 0 0 3px rgba(49, 130, 246, 0.12);
+  }
+`;
+
+const DateGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+
+  @media (min-width: 600px) {
+    grid-template-columns: 1fr 1fr;
+  }
+`;
+
+const DesktopActionRow = styled.div`
+  display: none;
+  justify-content: flex-end;
   gap: 12px;
-  text-align: center;
+  padding-top: 12px;
+  border-top: 1px solid #f2f4f6;
+
+  @media (min-width: 768px) {
+    display: flex;
+  }
+`;
+
+const CancelButton = styled.button`
+  height: 48px;
+  padding: 0 20px;
+  border-radius: 12px;
+  border: 1px solid #e5e8eb;
+  background: #ffffff;
+  color: #4e5968;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: #f9fafb;
+  }
+`;
+
+const SubmitButton = styled.button`
+  height: 48px;
+  padding: 0 28px;
+  border-radius: 12px;
+  border: none;
+  background: #3182f6;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(49, 130, 246, 0.25);
+  transition: all 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: #1b64da;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+/* 우측 미리보기 (PC 전용) */
+const PreviewColumn = styled.div`
+  display: none;
+
+  @media (min-width: 1024px) {
+    display: block;
+  }
+`;
+
+const PreviewStickyCard = styled.div`
+  position: sticky;
+  top: 90px;
+  background: #ffffff;
+  border: 1px solid #e5e8eb;
+  border-radius: 24px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
+`;
+
+const PreviewCardHeader = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+`;
+
+const PreviewHeading = styled.h3`
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: #191f28;
+`;
+
+const PreviewSubText = styled.p`
+  margin: 0;
+  font-size: 13px;
+  color: #8b95a1;
+`;
+
+const PhoneFrame = styled.div`
+  background: #f2f4f6;
+  border-radius: 24px;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
+
+const PopupSimulationCard = styled.div`
+  width: 100%;
+  max-width: 320px;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+`;
+
+const SimTypeBadge = styled.span`
+  align-self: flex-start;
+  font-size: 11px;
+  font-weight: 700;
+  color: #3182f6;
+  background: #e8f3ff;
+  padding: 3px 8px;
+  border-radius: 6px;
+`;
+
+const SimTitle = styled.h4`
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: #191f28;
+  line-height: 1.4;
+`;
+
+const SimContent = styled.p`
+  margin: 0;
+  font-size: 13px;
+  color: #4e5968;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 120px;
+  overflow-y: auto;
+`;
+
+const SimImageContainer = styled.div`
+  position: relative;
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+`;
+
+const SimPreviewImage = styled.img`
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 12px;
+`;
+
+const SimImageCountBadge = styled.span`
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 6px;
+`;
+
+const SimButtonGroup = styled.div`
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+`;
+
+const SimSecondaryButton = styled.button`
+  flex: 1;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid #e5e8eb;
+  background: #ffffff;
+  color: #6b7684;
+  font-size: 12px;
+  font-weight: 600;
+`;
+
+const SimPrimaryButton = styled.button`
+  flex: 1;
+  height: 38px;
+  border-radius: 10px;
+  border: none;
+  background: #3182f6;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+`;
+
+/* 모바일 전용 하단 고정 바 */
+const MobileFixedBar = styled.div`
+  display: flex;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 25;
+  background: #ffffff;
+  border-top: 1px solid #f2f4f6;
+  padding: 10px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+  gap: 10px;
+
+  @media (min-width: 768px) {
+    display: none;
+  }
+`;
+
+const MobilePreviewTrigger = styled.button`
+  flex: 1;
+  height: 48px;
+  border-radius: 14px;
+  border: 1px solid #e5e8eb;
+  background: #ffffff;
+  color: #4e5968;
+  font-size: 14px;
+  font-weight: 700;
+`;
+
+const MobileSubmitButton = styled.button`
+  flex: 2;
+  height: 48px;
+  border-radius: 14px;
+  border: none;
+  background: #3182f6;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+
+  &:disabled {
+    opacity: 0.5;
+  }
+`;
+
+const MobilePreviewImgWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
 
   img {
-    max-width: 100%;
-    border-radius: 8px;
+    width: 100%;
+    border-radius: 12px;
   }
 `;
