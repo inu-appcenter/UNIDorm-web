@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import styled, { keyframes } from "styled-components";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import { mixpanelTrack } from "@/utils/mixpanel";
@@ -304,6 +304,18 @@ export function evaluateDormitoryResidentStatus(
 
 export default function MobileDormitoryCardPage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const modeParam = searchParams.get("mode");
+
+  const [isForceOnboarding, setIsForceOnboarding] = useState<boolean>(() => {
+    return modeParam === "issue" || modeParam === "renew";
+  });
+
+  useEffect(() => {
+    if (modeParam === "issue" || modeParam === "renew") {
+      setIsForceOnboarding(true);
+    }
+  }, [modeParam]);
 
   const [isInitialLoading, setIsInitialLoading] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
@@ -725,10 +737,31 @@ export default function MobileDormitoryCardPage() {
     );
   }
 
-  if (!isInitialLoading && !hasValidData) {
+  // 발급 화면(PortalSyncOnboarding) 표출 조건:
+  // 1. 포털 캐시 데이터가 아예 없는 경우 (!hasValidData)
+  // 2. 홈 발급 유도 모달 등에서 발급/갱신을 시도하러 들어왔거나(isForceOnboarding),
+  //    현재 활성 사생이 아니거나 학기가 만료된 경우
+  const shouldShowOnboarding =
+    !hasValidData ||
+    (isForceOnboarding && (!isCurrentlyResident || isSemesterExpired));
+
+  if (!isInitialLoading && shouldShowOnboarding) {
     return (
       <PageContainer as="main">
-        <PortalSyncOnboarding onSuccess={fetchCached} />
+        <PortalSyncOnboarding
+          onSuccess={async () => {
+            setIsForceOnboarding(false);
+            setSearchParams(
+              (prev) => {
+                const next = new URLSearchParams(prev);
+                next.delete("mode");
+                return next;
+              },
+              { replace: true }
+            );
+            await fetchCached();
+          }}
+        />
       </PageContainer>
     );
   }
@@ -782,13 +815,24 @@ export default function MobileDormitoryCardPage() {
               <CapsuleButton
                 variant="primary"
                 fullWidth
+                onClick={() => {
+                  mixpanelTrack.dormitoryCardEntryClicked("만료사생증_갱신하기");
+                  setIsForceOnboarding(true);
+                }}
+              >
+                최신 사생증으로 갱신하기
+              </CapsuleButton>
+
+              <CapsuleButton
+                variant="secondary"
+                fullWidth
                 disabled={isRefreshing}
                 onClick={handleRefresh}
               >
                 <RefreshIconWrapper $isSpinning={isRefreshing}>
                   <RotateCw size={16} />
                 </RefreshIconWrapper>
-                <span>{isRefreshing ? "기숙사 정보 동기화 중..." : "최신 사생증으로 갱신하기"}</span>
+                <span>{isRefreshing ? "기숙사 정보 동기화 중..." : "새로고침"}</span>
               </CapsuleButton>
 
               <CapsuleButton
@@ -867,6 +911,17 @@ export default function MobileDormitoryCardPage() {
               <CapsuleButton
                 variant="primary"
                 fullWidth
+                onClick={() => {
+                  mixpanelTrack.dormitoryCardEntryClicked("비사생_다시발급하기");
+                  setIsForceOnboarding(true);
+                }}
+              >
+                사생증 다시 발급하기
+              </CapsuleButton>
+
+              <CapsuleButton
+                variant="secondary"
+                fullWidth
                 disabled={isRefreshing}
                 onClick={handleRefresh}
               >
@@ -890,7 +945,7 @@ export default function MobileDormitoryCardPage() {
           </NonResidentCard>
 
           <FootnoteNotice>
-            방금 입사 처리가 되었거나 호실 배정이 변경되었다면 [새로고침]을 눌러 최신 정보를 확인해 주세요.
+            방금 입사 처리가 되었거나 호실 배정이 변경되었다면 [사생증 다시 발급하기] 또는 [새로고침]을 눌러 최신 정보를 확인해 주세요.
           </FootnoteNotice>
         </NonResidentWrapper>
       </PageContainer>
