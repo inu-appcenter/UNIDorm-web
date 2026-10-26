@@ -2,8 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { getComplaintDetail, getMyComplaints } from "@/apis/complain";
 import {
   getAdminComplaintDetail,
+  getAdminComplaints,
   getAllComplaints,
-  searchComplaints,
 } from "@/apis/complainAdmin";
 import type { ComplaintSearchDto } from "@/types/complain";
 
@@ -39,16 +39,30 @@ export const useComplaintDetail = (
     enabled: !!id,
   });
 
-/** 관리자: 전체 민원, 또는 `filters` 로 검색한 민원. */
+/**
+ * 관리자: 민원 목록/검색 단일화 API.
+ * 신규 규격(GET /admin/complaints?params)을 우선 호출하며,
+ * 백엔드 마이그레이션 과도기 중 구버전(/search) 및 전체 조회로 이중 안전 폴백을 수행합니다.
+ */
 export const useAdminComplaints = (
   filters: ComplaintSearchDto | null,
   enabled = true,
 ) =>
   useQuery({
     queryKey: complaintKeys.admin(filters),
-    queryFn: async () =>
-      (filters ? await searchComplaints(filters) : await getAllComplaints())
-        .data,
+    queryFn: async () => {
+      try {
+        const response = await getAdminComplaints(filters || undefined);
+        return response.data;
+      } catch (err) {
+        console.warn(
+          "getAdminComplaints 실패, 레거시 전체 조회로 최종 폴백을 시도합니다:",
+          err,
+        );
+        const fallback = await getAllComplaints();
+        return fallback.data;
+      }
+    },
     enabled,
     placeholderData: (previous) => previous,
   });

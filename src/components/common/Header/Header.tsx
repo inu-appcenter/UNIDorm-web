@@ -10,6 +10,8 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { getMobilePlatform } from "@/utils/getMobilePlatform";
 import TooltipMessage from "src/components/common/TooltipMessage";
 import TopRightDropdownMenu from "../TopRightDropdownMenu";
+import { PATHS } from "@/constants/paths";
+import HeaderDormitoryCardButton from "./HeaderDormitoryCardButton";
 
 interface HeaderProps {
   hasBack?: boolean;
@@ -32,6 +34,8 @@ export default function Header({ hasBack = false, backPath }: HeaderProps) {
     secondHeader,
     hamburgerOnClick,
     headerRightElement,
+    showDormitoryCard,
+    dormitoryCardOnClick,
   } = useHeaderStore();
 
   const [showSettingTooltip, setShowSettingTooltip] = useState(() => {
@@ -98,6 +102,19 @@ export default function Header({ hasBack = false, backPath }: HeaderProps) {
             <RoundButton onClick={() => navigate("/admin")}>
               {roleName}
             </RoundButton>
+          )}
+
+          {/* 모바일 사생증 버튼 */}
+          {showDormitoryCard && (
+            <HeaderDormitoryCardButton
+              onClick={() => {
+                if (dormitoryCardOnClick) {
+                  dormitoryCardOnClick();
+                } else {
+                  navigate(PATHS.DORMITORY_CARD);
+                }
+              }}
+            />
           )}
 
           {/* 알림 아이콘 */}

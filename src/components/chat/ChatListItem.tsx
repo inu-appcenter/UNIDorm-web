@@ -105,12 +105,28 @@ export default ChatListItem;
 
 const ChatItemWrapper = styled.div`
   width: 100%;
-  padding: 16px 0;
+  padding: 14px 12px;
+  margin: 0 -12px;
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
   box-sizing: border-box;
   cursor: pointer;
+  border-radius: 12px;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+
+  /* iOS 메시지 앱 스타일 셀 하이라이트 & 탭 햅틱 */
+  transition: background-color 0.12s ease, transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+  }
+
+  &:active {
+    background-color: rgba(0, 0, 0, 0.05);
+    transform: scale(0.99);
+  }
 `;
 
 const LeftSection = styled.div`

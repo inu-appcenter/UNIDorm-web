@@ -35,10 +35,22 @@ const HomeCardWrapper = styled.div`
   gap: 8px;
   width: 100%;
   cursor: pointer;
-  transition: opacity 0.2s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  padding: 6px 8px;
+  margin: -3px -8px;
+  border-radius: 8px;
+
+  /* Apple 스타일 미세 탭 피드백 */
+  transition: background-color 0.12s ease, transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);
 
   &:hover {
-    opacity: 0.8;
+    background-color: #f7f9fa;
+  }
+
+  &:active {
+    background-color: #f2f4f6;
+    transform: scale(0.99);
   }
 
   .tip-badge {

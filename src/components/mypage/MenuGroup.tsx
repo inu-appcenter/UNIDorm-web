@@ -77,10 +77,24 @@ const MenuLine = styled.div`
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  cursor: pointer; /* 라인 전체 클릭 가능 표시 */
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  padding: 10px 12px;
+  margin: -4px -12px;
+  border-radius: 12px;
+  box-sizing: border-box;
+
+  /* Apple & Toss 스타일 셀 탭 피드백 */
+  transition: background-color 0.12s ease, transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);
 
   &:hover {
-    opacity: 0.7;
+    background-color: rgba(0, 0, 0, 0.03);
+  }
+
+  &:active {
+    background-color: rgba(0, 0, 0, 0.06);
+    transform: scale(0.99);
   }
 `;
 
