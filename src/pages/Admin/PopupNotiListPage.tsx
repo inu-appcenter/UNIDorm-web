@@ -197,11 +197,11 @@ const PopupNotiListPage: React.FC = () => {
     try {
       setIsDeleting(true);
       await deletePopupNotification(id);
-      alert("팝업 공지가 삭제되었습니다.");
+      alert("팝업 공지를 삭제했어요.");
       handleCloseDetail();
     } catch (error) {
       console.error("팝업 공지 삭제 실패:", error);
-      alert("팝업 공지 삭제에 실패했습니다. 다시 시도해주세요.");
+      alert("팝업 공지 삭제에 실패했어요. 다시 시도해 주세요.");
     } finally {
       setIsDeleting(false);
     }
@@ -294,9 +294,9 @@ const PopupNotiListPage: React.FC = () => {
           <EmptyBox>팝업 공지 목록을 불러오는 중입니다...</EmptyBox>
         ) : filteredAndSortedList.length === 0 ? (
           <EmptyBox>
-            <EmptyMainText>조건에 맞는 팝업 공지가 없습니다.</EmptyMainText>
+            <EmptyMainText>조건에 맞는 팝업 공지가 없어요.</EmptyMainText>
             <EmptySubText>
-              검색어나 필터 조건을 변경하거나 새 팝업을 등록해보세요.
+              검색어나 필터 조건을 변경하거나 새 팝업을 등록해 보세요.
             </EmptySubText>
           </EmptyBox>
         ) : (

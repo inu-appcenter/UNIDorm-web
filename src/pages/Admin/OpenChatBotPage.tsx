@@ -42,7 +42,7 @@ export default function OpenChatBotPage() {
 
   useEffect(() => {
     if (isRoomsError) {
-      setError("오픈채팅방 목록을 불러오지 못했습니다.");
+      setError("오픈채팅방 목록을 불러오지 못했어요.");
     }
   }, [isRoomsError]);
 
@@ -60,13 +60,13 @@ export default function OpenChatBotPage() {
     try {
       await sendOpenChatBotMessage(roomId, trimmedContent);
       setContent("");
-      setSentMessage("챗봇 메시지를 성공적으로 발송했습니다.");
+      setSentMessage("챗봇 메시지를 보냈어요.");
       setTimeout(() => setSentMessage(""), 4000);
     } catch (requestError) {
       setError(
         isAxiosError(requestError) && requestError.response?.status === 404
-          ? "선택한 채팅방을 찾을 수 없습니다. 목록을 새로고침해 주세요."
-          : "챗봇 메시지 발송에 실패했습니다. 잠시 후 다시 시도해 주세요.",
+          ? "선택한 채팅방을 찾을 수 없어요. 목록을 새로고침해 주세요."
+          : "챗봇 메시지를 보내지 못했어요. 다시 시도해 주세요.",
       );
     } finally {
       setIsSubmitting(false);
@@ -94,7 +94,7 @@ export default function OpenChatBotPage() {
                 {isLoadingRooms ? (
                   <option>채팅방 목록을 불러오는 중입니다...</option>
                 ) : rooms.length === 0 ? (
-                  <option>발송 가능한 오픈채팅방이 없습니다</option>
+                  <option>발송 가능한 오픈채팅방이 없어요</option>
                 ) : (
                   rooms.map((room) => (
                     <option key={room.roomId} value={room.roomId}>
@@ -142,7 +142,7 @@ export default function OpenChatBotPage() {
               <PreviewSubtitle>
                 {selectedRoom
                   ? `[방 #${selectedRoom.roomId}] ${selectedRoom.roomName}`
-                  : "선택된 채팅방이 없습니다"}
+                  : "선택된 채팅방이 없어요"}
               </PreviewSubtitle>
             </PreviewHeader>
 

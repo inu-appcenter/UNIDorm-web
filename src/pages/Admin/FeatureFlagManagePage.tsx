@@ -109,7 +109,7 @@ export default function FeatureFlagManagePage() {
       await updateFeatureFlag(updated);
       refetch();
     } catch (error) {
-      alert("Feature Flag 상태를 변경하지 못했습니다. 잠시 후 다시 시도해 주세요.");
+      alert("Feature Flag 상태를 변경하지 못했어요. 다시 시도해 주세요.");
     } finally {
       setPendingKey(null);
     }
@@ -136,18 +136,18 @@ export default function FeatureFlagManagePage() {
     }
 
     if (rawFlags.some((f) => f.key.toLowerCase() === normalizedKey.toLowerCase())) {
-      alert("이미 등록된 Feature Flag 키입니다.");
+      alert("이미 등록된 Feature Flag 키예요.");
       return;
     }
 
     try {
       setIsCreating(true);
       await createFeatureFlag({ ...newFlag, key: normalizedKey });
-      alert("새 Feature Flag를 등록했습니다.");
+      alert("새 Feature Flag를 등록했어요.");
       closeCreator();
       refetch();
     } catch (error) {
-      alert("Feature Flag를 생성하지 못했습니다. 잠시 후 다시 시도해 주세요.");
+      alert("Feature Flag를 만들지 못했어요. 다시 시도해 주세요.");
     } finally {
       setIsCreating(false);
     }
@@ -437,7 +437,7 @@ export default function FeatureFlagManagePage() {
                   >
                     <ChoiceTitle>활성화 (ON)</ChoiceTitle>
                     <ChoiceDescription>
-                      등록 시 기능을 켭니다.
+                      등록하면 기능을 켜요.
                     </ChoiceDescription>
                   </ChoiceCard>
 
@@ -448,7 +448,7 @@ export default function FeatureFlagManagePage() {
                   >
                     <ChoiceTitle>비활성화 (OFF)</ChoiceTitle>
                     <ChoiceDescription>
-                      기능을 끈 상태로 등록합니다.
+                      기능을 끈 상태로 등록해요.
                     </ChoiceDescription>
                   </ChoiceCard>
                 </ChoiceGrid>

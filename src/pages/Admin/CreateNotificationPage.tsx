@@ -39,12 +39,12 @@ const DELIVERY_OPTIONS: Array<{
   {
     value: DELIVERY_MODES.AUDIENCE_NOTIFICATION,
     title: "로그인 사용자",
-    description: "로그인 사용자 중 카테고리 알림을 켜둔 사용자에게 발송합니다.",
+    description: "로그인 사용자 중 카테고리 알림을 켜둔 사용자에게 보내요.",
   },
   {
     value: DELIVERY_MODES.INDIVIDUAL_DIRECT,
     title: "학번 지정 발송",
-    description: "특정 학번을 가진 1명의 사용자에게만 직접 알림을 발송합니다.",
+    description: "특정 학번 사용자에게 직접 알림을 보내요.",
   },
 ];
 
@@ -135,14 +135,14 @@ export default function CreateNotificationPage() {
       }
 
       await refetchFcmStats();
-      alert("푸시 알림을 성공적으로 발송했습니다.");
+      alert("푸시 알림을 발송했어요.");
       setTitle("");
       setBody("");
       setStudentNumber("");
     } catch (error) {
       const axiosError = error as AxiosError;
       console.error("푸시 알림 전송 실패:", axiosError);
-      alert("푸시 알림 전송에 실패했습니다. 다시 시도해 주세요.");
+      alert("푸시 알림 전송에 실패했어요. 다시 시도해 주세요.");
     } finally {
       setIsSubmitting(false);
     }

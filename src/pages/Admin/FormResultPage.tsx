@@ -27,7 +27,7 @@ export default function FormResultPage() {
 
     if (
       !window.confirm(
-        "응답 데이터를 CSV 파일로 다운로드할까요?\n응답 수에 따라 수 초 정도 걸릴 수 있습니다.",
+        "응답 데이터를 CSV 파일로 다운로드할까요?\n응답 수에 따라 몇 초 정도 걸릴 수 있어요.",
       )
     ) {
       return;
@@ -52,7 +52,7 @@ export default function FormResultPage() {
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error("CSV 다운로드 실패:", error);
-      alert("CSV 파일 다운로드에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+      alert("CSV 파일 다운로드에 실패했어요. 다시 시도해 주세요.");
     } finally {
       setIsDownloading(false);
     }
@@ -86,7 +86,7 @@ export default function FormResultPage() {
           <EmptyContainer>
             <EmptyTitle>설문 결과를 찾을 수 없어요</EmptyTitle>
             <EmptyDescription>
-              삭제되었거나 요청하신 설문 ID가 존재하지 않습니다.
+              삭제되었거나 요청하신 설문 ID가 존재하지 않아요.
             </EmptyDescription>
             <PrimaryActionButton type="button" onClick={() => navigate(-1)}>
               목록으로 돌아가기
@@ -205,7 +205,7 @@ export default function FormResultPage() {
                 {!isShort && (
                   <OptionResultsWrapper>
                     {question.optionResults.length === 0 ? (
-                      <EmptyAnswerText>설정된 선택지가 없습니다.</EmptyAnswerText>
+                      <EmptyAnswerText>설정된 선택지가 없어요.</EmptyAnswerText>
                     ) : (
                       question.optionResults.map((opt) => {
                         const percent = opt.percentage ?? 0;
@@ -250,9 +250,9 @@ export default function FormResultPage() {
                     )}
 
                     {question.shortAnswers.length === 0 ? (
-                      <EmptyAnswerText>등록된 주관식 답변이 없습니다.</EmptyAnswerText>
+                      <EmptyAnswerText>등록된 주관식 답변이 없어요.</EmptyAnswerText>
                     ) : filteredAnswers.length === 0 ? (
-                      <EmptyAnswerText>검색 조건과 일치하는 답변이 없습니다.</EmptyAnswerText>
+                      <EmptyAnswerText>검색 결과와 일치하는 답변이 없어요.</EmptyAnswerText>
                     ) : (
                       <AnswersList>
                         {filteredAnswers.map((answer, aIdx) => (

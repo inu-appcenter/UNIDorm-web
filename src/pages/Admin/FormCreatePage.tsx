@@ -135,7 +135,7 @@ export default function FormCreatePage() {
 
   const handleRemoveField = (id: number) => {
     if (formFields.length <= 1) {
-      alert("최소 1개의 질문이 필요합니다.");
+      alert("최소 1개의 질문이 필요해요.");
       return;
     }
     setFormFields((prevFields) =>
@@ -151,7 +151,7 @@ export default function FormCreatePage() {
       return;
     }
     if (new Date(startDate) >= new Date(endDate)) {
-      alert("종료 일시는 시작 일시보다 이후여야 합니다.");
+      alert("종료 일시는 시작 일시보다 이후여야 해요.");
       return;
     }
     const isQuestionsValid = formFields.every(
@@ -166,17 +166,17 @@ export default function FormCreatePage() {
     );
     const isOptionsValid = choiceQuestions.every((f) => f.options.length > 0);
     if (!isOptionsValid) {
-      alert("선택형 질문에는 최소 1개 이상의 옵션이 필요합니다.");
+      alert("선택형 질문에는 최소 1개 이상의 보기가 필요해요.");
       return;
     }
 
     if (maxParticipants !== undefined && maxParticipants !== null) {
       if (maxParticipants.trim() !== "" && isNaN(Number(maxParticipants))) {
-        alert("인원은 숫자만 입력할 수 있습니다.");
+        alert("인원은 숫자만 입력할 수 있어요.");
         return;
       }
       if (Number(maxParticipants) < 0) {
-        alert("인원은 0 이상의 숫자여야 합니다.");
+        alert("인원은 0 이상의 숫자여야 해요.");
         return;
       }
     }
@@ -184,7 +184,7 @@ export default function FormCreatePage() {
     const action = isEditMode ? "수정" : "등록";
     if (
       !window.confirm(
-        `설문 폼을 ${action}하시겠습니까?\n작성한 내용을 다시 한번 확인해 주세요.`,
+        `설문 폼을 ${action}할까요?\n작성한 내용을 다시 한번 확인해 주세요.`,
       )
     ) {
       return;
@@ -236,22 +236,22 @@ export default function FormCreatePage() {
 
       if (isEditMode) {
         if (!form.id) {
-          alert("수정할 폼의 ID를 찾을 수 없습니다.");
+          alert("수정할 폼의 ID를 찾을 수 없어요.");
           setIsLoading(false);
           return;
         }
         await updateSurvey(form.id, payload);
-        alert("설문 폼이 성공적으로 수정되었습니다.");
+        alert("설문 폼을 수정했어요.");
       } else {
         await createSurvey(payload);
-        alert("설문 폼이 성공적으로 등록되었습니다.");
+        alert("설문 폼을 등록했어요.");
       }
 
       navigate(-1);
     } catch (error) {
       const errorAction = isEditMode ? "수정" : "생성";
       console.error(`폼 ${errorAction} 실패:`, error);
-      alert(`폼 ${errorAction}에 실패했습니다. 입력 내용을 확인해 주세요.`);
+      alert(`폼 ${errorAction}에 실패했어요. 입력 내용을 확인해 주세요.`);
     } finally {
       setIsLoading(false);
     }

@@ -228,11 +228,11 @@ const CalendarAdminPage: React.FC = () => {
       return;
     }
     if (!formData.startDate || !formData.endDate) {
-      alert("시작일과 종료일을 모두 선택해주세요.");
+      alert("시작일과 종료일을 모두 선택해 주세요.");
       return;
     }
     if (formData.startDate > formData.endDate) {
-      alert("종료일은 시작일보다 이후여야 합니다.");
+      alert("종료일은 시작일보다 이후여야 해요.");
       return;
     }
 
@@ -240,15 +240,15 @@ const CalendarAdminPage: React.FC = () => {
       setIsSubmitting(true);
       if (selectedItem) {
         await updateCalendar(selectedItem.id, formData);
-        alert("일정을 성공적으로 수정했습니다.");
+        alert("일정을 수정했어요.");
       } else {
         await createCalendar(formData);
-        alert("새 일정을 성공적으로 등록했습니다.");
+        alert("새 일정을 등록했어요.");
       }
       handleCloseModal();
     } catch (err) {
       console.error("일정 저장 실패", err);
-      alert("일정 저장에 실패했습니다. 다시 시도해주세요.");
+      alert("일정 저장에 실패했어요. 다시 시도해 주세요.");
     } finally {
       setIsSubmitting(false);
     }
@@ -263,11 +263,11 @@ const CalendarAdminPage: React.FC = () => {
     try {
       setIsSubmitting(true);
       await deleteCalendar(selectedItem.id);
-      alert("일정을 삭제했습니다.");
+      alert("일정을 삭제했어요.");
       handleCloseModal();
     } catch (err) {
       console.error("일정 삭제 실패", err);
-      alert("일정 삭제에 실패했습니다. 다시 시도해주세요.");
+      alert("일정 삭제에 실패했어요. 다시 시도해 주세요.");
     } finally {
       setIsSubmitting(false);
     }
@@ -360,9 +360,9 @@ const CalendarAdminPage: React.FC = () => {
           <EmptyBox>일정 목록을 불러오는 중입니다...</EmptyBox>
         ) : filteredAndSortedList.length === 0 ? (
           <EmptyBox>
-            <EmptyMainText>조건에 맞는 일정이 없습니다.</EmptyMainText>
+            <EmptyMainText>조건에 맞는 일정이 없어요.</EmptyMainText>
             <EmptySubText>
-              검색어나 필터 조건을 변경하거나 새 일정을 등록해보세요.
+              검색어나 필터 조건을 변경하거나 새 일정을 등록해 보세요.
             </EmptySubText>
           </EmptyBox>
         ) : (

@@ -98,8 +98,8 @@ export default function OpenChatReportAdminPage() {
     const actionLabel = action === "approve" ? "승인" : "반려";
     const confirmMessage =
       action === "approve"
-        ? "이 신고를 승인할까요? 해당 메시지에 대한 제재가 적용됩니다."
-        : "이 신고를 반려할까요? 별도의 제재 없이 종결됩니다.";
+        ? "이 신고를 승인할까요? 해당 메시지에 제재를 적용해요."
+        : "이 신고를 반려할까요? 별도 제재 없이 종결해요.";
 
     if (!window.confirm(confirmMessage)) return;
 
@@ -113,7 +113,7 @@ export default function OpenChatReportAdminPage() {
       await fetchReports();
     } catch (error) {
       console.error(`채팅 신고 ${actionLabel} 실패:`, error);
-      alert(`신고 ${actionLabel} 처리에 실패했습니다. 다시 시도해 주세요.`);
+      alert(`신고 ${actionLabel} 처리에 실패했어요. 다시 시도해 주세요.`);
     } finally {
       setProcessingId(null);
     }
@@ -181,9 +181,9 @@ export default function OpenChatReportAdminPage() {
           </LoadingWrapper>
         ) : filteredReports.length === 0 ? (
           <EmptyContainer>
-            <EmptyTitle>해당 조건의 신고가 없습니다.</EmptyTitle>
+            <EmptyTitle>해당 조건의 신고가 없어요.</EmptyTitle>
             <EmptyDesc>
-              현재 {STATUS_OPTIONS.find((o) => o.value === status)?.label} 상태에 표시할 내역이 없습니다.
+              현재 {STATUS_OPTIONS.find((o) => o.value === status)?.label} 상태에 표시할 내역이 없어요.
             </EmptyDesc>
           </EmptyContainer>
         ) : (

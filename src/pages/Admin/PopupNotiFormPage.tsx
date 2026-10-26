@@ -65,7 +65,7 @@ const PopupNotiFormPage: React.FC = () => {
 
   useEffect(() => {
     if (!isError) return;
-    alert("팝업 공지 정보를 불러오지 못했습니다.");
+    alert("팝업 공지 정보를 불러오지 못했어요.");
     navigate(-1);
   }, [isError, navigate]);
 
@@ -115,7 +115,7 @@ const PopupNotiFormPage: React.FC = () => {
       return;
     }
     if (formData.startDate > formData.deadline) {
-      alert("종료일은 시작일보다 빠를 수 없습니다.");
+      alert("종료일은 시작일보다 빠를 수 없어요.");
       return;
     }
 
@@ -128,16 +128,16 @@ const PopupNotiFormPage: React.FC = () => {
           formData,
           imagesChanged ? uploadedImages : undefined,
         );
-        alert("팝업 공지를 수정했습니다.");
+        alert("팝업 공지를 수정했어요.");
       } else {
         await createPopupNotification(formData, uploadedImages);
-        alert("팝업 공지를 등록했습니다.");
+        alert("팝업 공지를 등록했어요.");
       }
 
       navigate(-1);
     } catch (error) {
       console.error(`팝업 공지 ${isEditMode ? "수정" : "등록"} 실패:`, error);
-      alert(`팝업 공지를 ${isEditMode ? "수정" : "등록"}하지 못했습니다.`);
+      alert(`팝업 공지를 ${isEditMode ? "수정" : "등록"}하지 못했어요.`);
     } finally {
       setLoading(false);
     }
@@ -280,10 +280,10 @@ const PopupNotiFormPage: React.FC = () => {
               <PopupSimulationCard>
                 <SimTypeBadge>{formData.notificationType || "유니돔"}</SimTypeBadge>
                 <SimTitle>
-                  {formData.title || "공지 제목이 여기에 표시됩니다"}
+                  {formData.title || "공지 제목이 여기에 표시돼요"}
                 </SimTitle>
                 <SimContent>
-                  {formData.content || "작성 중인 공지 내용이 여기에 표시됩니다."}
+                  {formData.content || "작성 중인 공지 내용이 여기에 표시돼요."}
                 </SimContent>
 
                 {previewUrls.length > 0 && (
@@ -330,7 +330,7 @@ const PopupNotiFormPage: React.FC = () => {
         isOpen={isMobilePreviewOpen}
         setIsOpen={setIsMobilePreviewOpen}
         title={formData.title || "공지 미리보기"}
-        text={formData.content || "내용이 없습니다."}
+        text={formData.content || "내용이 없어요."}
         links={[]}
         showHideAction={false}
         useStorage={false}

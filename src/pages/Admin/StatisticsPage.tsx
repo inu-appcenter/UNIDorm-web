@@ -518,7 +518,7 @@ export default function StatisticsPage() {
             </LoadingContainer>
           ) : filteredAndSortedStats.length === 0 ? (
             <EmptyState>
-              <EmptyTitle>조회된 통계 데이터가 없습니다</EmptyTitle>
+              <EmptyTitle>조회된 통계 데이터가 없어요</EmptyTitle>
               <EmptyDescription>
                 조회 기간을 넓히거나 검색 조건을 변경해 보세요.
               </EmptyDescription>

@@ -149,15 +149,15 @@ export default function OpenChatAdminPage() {
         name: trimmedName,
         description: trimmedDesc,
       });
-      alert("기숙사 공식 채팅방을 생성했습니다.");
+      alert("기숙사 공식 채팅방을 만들었어요.");
       setIsCreateOpen(false);
       await fetchRooms();
     } catch (error) {
       console.error("공식 채팅방 생성 실패:", error);
       if (isAxiosError(error) && error.response?.status === 403) {
-        setCreateError("관리자 권한이 없습니다.");
+        setCreateError("관리자 권한이 없어요.");
       } else {
-        setCreateError("공식 채팅방 생성에 실패했습니다. 다시 시도해 주세요.");
+        setCreateError("공식 채팅방을 만들지 못했어요. 다시 시도해 주세요.");
       }
     } finally {
       setIsCreating(false);
@@ -198,7 +198,7 @@ export default function OpenChatAdminPage() {
         name: trimmedName,
         description: trimmedDesc,
       });
-      alert("기숙사 공식 채팅방 정보를 수정했습니다.");
+      alert("기숙사 공식 채팅방 정보를 수정했어요.");
       setIsEditOpen(false);
       setSelectedRoomForEdit(null);
       await fetchRooms();
@@ -206,14 +206,14 @@ export default function OpenChatAdminPage() {
       console.error("공식 채팅방 수정 실패:", error);
       if (isAxiosError(error)) {
         if (error.response?.status === 403) {
-          setEditError("관리자 권한이 없습니다.");
+          setEditError("관리자 권한이 없어요.");
         } else if (error.response?.status === 404) {
-          setEditError("해당 기숙사 공식 채팅방을 찾을 수 없습니다.");
+          setEditError("해당 기숙사 공식 채팅방을 찾을 수 없어요.");
         } else {
-          setEditError("공식 채팅방 수정에 실패했습니다. 다시 시도해 주세요.");
+          setEditError("공식 채팅방 정보를 수정하지 못했어요. 다시 시도해 주세요.");
         }
       } else {
-        setEditError("공식 채팅방 수정에 실패했습니다.");
+        setEditError("공식 채팅방 정보를 수정하지 못했어요.");
       }
     } finally {
       setIsEditing(false);
@@ -224,7 +224,7 @@ export default function OpenChatAdminPage() {
   const handleDeleteRoom = async (room: AdminOpenChatRoom) => {
     if (
       !window.confirm(
-        `"${room.roomName}" (ID: ${room.roomId}) 공식 채팅방을 삭제하시겠습니까?\n삭제 후 복구할 수 없습니다.`,
+        `"${room.roomName}" (ID: ${room.roomId}) 공식 채팅방을 삭제할까요?\n삭제하면 되돌릴 수 없어요.`,
       )
     ) {
       return;
@@ -233,20 +233,20 @@ export default function OpenChatAdminPage() {
     setDeletingRoomId(room.roomId);
     try {
       await deleteDormOfficialRoom(room.roomId);
-      alert("기숙사 공식 채팅방을 삭제했습니다.");
+      alert("기숙사 공식 채팅방을 삭제했어요.");
       await fetchRooms();
     } catch (error) {
       console.error("공식 채팅방 삭제 실패:", error);
       if (isAxiosError(error)) {
         if (error.response?.status === 403) {
-          alert("관리자 권한이 없습니다.");
+          alert("관리자 권한이 없어요.");
         } else if (error.response?.status === 404) {
-          alert("삭제할 기숙사 공식 채팅방을 찾을 수 없습니다.");
+          alert("삭제할 기숙사 공식 채팅방을 찾을 수 없어요.");
         } else {
-          alert("공식 채팅방 삭제에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+          alert("공식 채팅방을 삭제하지 못했어요. 다시 시도해 주세요.");
         }
       } else {
-        alert("공식 채팅방 삭제에 실패했습니다.");
+        alert("공식 채팅방을 삭제하지 못했어요.");
       }
     } finally {
       setDeletingRoomId(null);
@@ -277,7 +277,7 @@ export default function OpenChatAdminPage() {
     setIsSendingBot(true);
     try {
       await sendOpenChatBotMessage(selectedRoomForBot.roomId, trimmedContent);
-      setBotSuccess("챗봇 메시지를 성공적으로 발송했습니다.");
+      setBotSuccess("챗봇 메시지를 보냈어요.");
       setBotContent("");
       setTimeout(() => {
         setIsBotModalOpen(false);
@@ -287,16 +287,16 @@ export default function OpenChatAdminPage() {
       console.error("챗봇 메시지 발송 실패:", error);
       if (isAxiosError(error)) {
         if (error.response?.status === 400) {
-          setBotError("개인 채팅방에는 챗봇 메시지를 전송할 수 없습니다.");
+          setBotError("개인 채팅방에는 챗봇 메시지를 보낼 수 없어요.");
         } else if (error.response?.status === 403) {
-          setBotError("관리자 권한이 없습니다.");
+          setBotError("관리자 권한이 없어요.");
         } else if (error.response?.status === 404) {
-          setBotError("선택한 채팅방을 찾을 수 없습니다.");
+          setBotError("선택한 채팅방을 찾을 수 없어요.");
         } else {
-          setBotError("챗봇 메시지 발송에 실패했습니다.");
+          setBotError("챗봇 메시지를 보내지 못했어요. 다시 시도해 주세요.");
         }
       } else {
-        setBotError("챗봇 메시지 발송에 실패했습니다.");
+        setBotError("챗봇 메시지를 보내지 못했어요.");
       }
     } finally {
       setIsSendingBot(false);
@@ -533,7 +533,7 @@ export default function OpenChatAdminPage() {
             <ModalHeader>
               <ModalTitleGroup>
                 <ModalTitle>공식 오픈채팅방 만들기</ModalTitle>
-                <ModalSubtitle>기숙사별 공식 오픈채팅방을 새로 개설합니다.</ModalSubtitle>
+                <ModalSubtitle>기숙사별 공식 오픈채팅방을 새로 개설해요.</ModalSubtitle>
               </ModalTitleGroup>
               <ModalCloseButton type="button" onClick={() => setIsCreateOpen(false)}>
                 ✕
@@ -611,7 +611,7 @@ export default function OpenChatAdminPage() {
             <ModalHeader>
               <ModalTitleGroup>
                 <ModalTitle>공식 채팅방 정보 수정</ModalTitle>
-                <ModalSubtitle>방 #{selectedRoomForEdit.roomId}의 정보를 변경합니다.</ModalSubtitle>
+                <ModalSubtitle>방 #{selectedRoomForEdit.roomId}의 정보를 변경해요.</ModalSubtitle>
               </ModalTitleGroup>
               <ModalCloseButton type="button" onClick={() => setIsEditOpen(false)}>
                 ✕
@@ -671,7 +671,7 @@ export default function OpenChatAdminPage() {
             <ModalHeader>
               <ModalTitleGroup>
                 <ModalTitle>오픈채팅 챗봇 메시지 발송</ModalTitle>
-                <ModalSubtitle>지정한 공식 오픈채팅방에 안내 챗봇 공지를 전송합니다.</ModalSubtitle>
+                <ModalSubtitle>지정한 공식 오픈채팅방에 안내 챗봇 공지를 보내요.</ModalSubtitle>
               </ModalTitleGroup>
               <ModalCloseButton type="button" onClick={() => setIsBotModalOpen(false)}>
                 ✕
