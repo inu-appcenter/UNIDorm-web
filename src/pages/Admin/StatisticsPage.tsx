@@ -32,7 +32,7 @@ export default function StatisticsPage() {
     apiPath: "",
   });
 
-  // 진입 시 오늘 날짜로 즉시 조회하여 빈 화면 방지
+  // 오늘 날짜 기본 조회로 빈 화면 방지
   const [submittedParams, setSubmittedParams] = useState<{
     date?: string;
     from?: string;
@@ -341,7 +341,7 @@ export default function StatisticsPage() {
               onClick={handleSearch}
               disabled={loading}
             >
-              {loading ? "분석 중..." : "조회하기"}
+              {loading ? "조회 중..." : "조회하기"}
             </SearchExecuteButton>
           </FilterInputsGrid>
         </FilterCard>

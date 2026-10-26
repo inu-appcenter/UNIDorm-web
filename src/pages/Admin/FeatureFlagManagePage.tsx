@@ -292,8 +292,8 @@ export default function FeatureFlagManagePage() {
                         <Td>
                           <HintText>
                             {item.flag
-                              ? "모든 사용자에게 기능이 켜져 있어요"
-                              : "기능이 안전하게 비활성화되어 있어요"}
+                              ? "기능 켜짐"
+                              : "기능 꺼짐"}
                           </HintText>
                         </Td>
                         <Td style={{ textAlign: "right" }}>
@@ -437,7 +437,7 @@ export default function FeatureFlagManagePage() {
                   >
                     <ChoiceTitle>활성화 (ON)</ChoiceTitle>
                     <ChoiceDescription>
-                      등록 즉시 모든 사용자에게 기능이 켜져요.
+                      등록 시 기능을 켭니다.
                     </ChoiceDescription>
                   </ChoiceCard>
 
@@ -448,7 +448,7 @@ export default function FeatureFlagManagePage() {
                   >
                     <ChoiceTitle>비활성화 (OFF)</ChoiceTitle>
                     <ChoiceDescription>
-                      배포만 먼저 완료하고 추후 안전하게 켤 수 있어요.
+                      기능을 끈 상태로 등록합니다.
                     </ChoiceDescription>
                   </ChoiceCard>
                 </ChoiceGrid>

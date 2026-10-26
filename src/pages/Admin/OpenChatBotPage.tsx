@@ -135,10 +135,10 @@ export default function OpenChatBotPage() {
             </DesktopActionRow>
           </FormCard>
 
-          {/* 우측: 실시간 챗봇 말풍선 미리보기 (PC 와이드) */}
+          {/* 우측: 챗봇 말풍선 미리보기 (PC 와이드) */}
           <PreviewCard>
             <PreviewHeader>
-              <PreviewTitle>실시간 채팅방 미리보기</PreviewTitle>
+              <PreviewTitle>채팅방 미리보기</PreviewTitle>
               <PreviewSubtitle>
                 {selectedRoom
                   ? `[방 #${selectedRoom.roomId}] ${selectedRoom.roomName}`
@@ -155,7 +155,7 @@ export default function OpenChatBotPage() {
                   <BotSenderName>유니돔 공식 챗봇</BotSenderName>
                   <ChatBubble>
                     {content.trim() ||
-                      "메시지를 작성하면 실제 오픈채팅방 사용자에게 전달될 말풍선이 실시간으로 여기에 렌더링돼요."}
+                      "작성한 메시지가 채팅방에 표시되는 형태입니다."}
                   </ChatBubble>
                   <ChatTimeText>
                     {new Date().toLocaleTimeString("ko-KR", {

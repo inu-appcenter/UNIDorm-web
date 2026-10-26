@@ -33,8 +33,8 @@ const DELIVERY_OPTIONS: Array<{
 }> = [
   {
     value: DELIVERY_MODES.ALL_USERS_FCM,
-    title: "전체 사용자 (FCM)",
-    description: "앱을 설치한 모든 사용자에게 실시간 시스템 푸시를 보냅니다.",
+    title: "전체 사용자",
+    description: "앱을 설치한 모든 사용자에게 알림을 보냅니다.",
   },
   {
     value: DELIVERY_MODES.AUDIENCE_NOTIFICATION,
@@ -78,8 +78,8 @@ export default function CreateNotificationPage() {
     id: 0,
     apiType: "ANNOUNCEMENT",
     boardId: 0,
-    title: title.trim() || "알림 제목을 입력하면 여기에 실시간으로 표시돼요",
-    body: body.trim() || "본문을 작성하면 실제 사용자가 받게 될 알림함 카드로 실시간 렌더링됩니다.",
+    title: title.trim() || "알림 제목을 입력해 주세요",
+    body: body.trim() || "작성한 내용이 사용자 알림함에 표시되는 형태입니다.",
     notificationType: isFcmBroadcastMode ? "UNI_DORM" : notificationType,
     createdDate: new Date().toISOString(),
     read: false,
@@ -248,9 +248,9 @@ export default function CreateNotificationPage() {
           </FormCard>
         </FormColumn>
 
-        {/* 우측 실시간 알림함 미리보기 및 오늘 전송 현황 (PC 전용) */}
+        {/* 우측 알림함 미리보기 및 오늘 전송 현황 (PC 전용) */}
         <SideColumn>
-          {/* 오늘 FCM 통계 */}
+          {/* 오늘 발송 현황 */}
           <SideCard>
             <SideCardHeader>
               <SideCardTitle>오늘 발송 현황</SideCardTitle>
@@ -280,10 +280,10 @@ export default function CreateNotificationPage() {
             </StatsRow>
           </SideCard>
 
-          {/* 알림함 실시간 렌더링 미리보기 */}
+          {/* 알림함 미리보기 */}
           <SideCard>
             <SideCardHeader>
-              <SideCardTitle>알림함 실시간 미리보기</SideCardTitle>
+              <SideCardTitle>알림함 미리보기</SideCardTitle>
             </SideCardHeader>
 
             <PreviewWrapper>

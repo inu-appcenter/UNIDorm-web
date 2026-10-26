@@ -266,13 +266,13 @@ const PopupNotiFormPage: React.FC = () => {
           </FormCard>
         </FormColumn>
 
-        {/* 우측 실시간 모바일 팝업 미리보기 (PC 전용) */}
+        {/* 우측 홈 팝업 미리보기 (PC 전용) */}
         <PreviewColumn>
           <PreviewStickyCard>
             <PreviewCardHeader>
-              <PreviewHeading>실시간 홈 팝업 미리보기</PreviewHeading>
+              <PreviewHeading>홈 팝업 미리보기</PreviewHeading>
               <PreviewSubText>
-                사생들이 홈 화면에서 보게 될 팝업의 실제 크기와 비율입니다.
+                홈 화면에서 표시될 팝업 형태입니다.
               </PreviewSubText>
             </PreviewCardHeader>
 
@@ -283,7 +283,7 @@ const PopupNotiFormPage: React.FC = () => {
                   {formData.title || "공지 제목이 여기에 표시됩니다"}
                 </SimTitle>
                 <SimContent>
-                  {formData.content || "작성 중인 공지 내용이 여기에 실시간으로 표시됩니다."}
+                  {formData.content || "작성 중인 공지 내용이 여기에 표시됩니다."}
                 </SimContent>
 
                 {previewUrls.length > 0 && (
@@ -554,7 +554,7 @@ const SubmitButton = styled.button`
   }
 `;
 
-/* 우측 실시간 미리보기 (PC 전용) */
+/* 우측 미리보기 (PC 전용) */
 const PreviewColumn = styled.div`
   display: none;
 

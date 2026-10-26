@@ -85,13 +85,13 @@ export default function AdminMainPage() {
     {
       label: "Feature Flag 관리",
       path: "/admin/feature-flag",
-      description: "서비스 기능별 활성화 여부를 실시간으로 제어합니다.",
+      description: "서비스 기능별 활성화 여부를 켜고 끕니다.",
       category: "운영 및 시스템",
     },
     {
       label: "서비스 이용 통계",
       path: "/admin/statistics",
-      description: "API 트래픽 및 서비스 이용 지표를 분석합니다.",
+      description: "API 호출 수와 서비스 이용 지표를 확인합니다.",
       category: "운영 및 시스템",
     },
     {
@@ -110,7 +110,7 @@ export default function AdminMainPage() {
     {
       label: "사생증 시뮬레이션 (정상)",
       path: "/dormitory/card?preview=true",
-      description: "모바일 사생증 3D 카드, 최근 동기화 시각 및 실시간 새로고침을 테스트합니다.",
+      description: "모바일 사생증 카드와 동기화 동작을 테스트합니다.",
       category: "개발 지원",
     },
     {

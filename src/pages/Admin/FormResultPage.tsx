@@ -74,7 +74,7 @@ export default function FormResultPage() {
   if (isLoading) {
     return (
       <PageRoot>
-        <LoadingSpinner message="설문 응답 결과를 분석하는 중입니다..." />
+        <LoadingSpinner message="설문 응답 결과를 불러오는 중입니다..." />
       </PageRoot>
     );
   }
@@ -153,7 +153,7 @@ export default function FormResultPage() {
             <KpiLabel>설문 진행 상태</KpiLabel>
             <KpiValueWrap>
               <StatusHighlight $expired={isExpired}>
-                {isExpired ? "마감 완료" : "실시간 응답 중"}
+                {isExpired ? "마감" : "진행 중"}
               </StatusHighlight>
             </KpiValueWrap>
           </KpiCard>
@@ -161,7 +161,7 @@ export default function FormResultPage() {
 
         {/* 질문 문항별 상세 통계 섹션 */}
         <QuestionsSection>
-          <SectionTitle>문항별 응답 상세 분석</SectionTitle>
+          <SectionTitle>문항별 응답 상세</SectionTitle>
 
           {formResultData.questionResults.map((question, qIdx) => {
             const isShort = question.questionType === "SHORT_ANSWER";
@@ -232,7 +232,7 @@ export default function FormResultPage() {
                   </OptionResultsWrapper>
                 )}
 
-                {/* 주관식: 답변 목록 및 실시간 검색 */}
+                {/* 주관식: 답변 목록 및 검색 */}
                 {isShort && (
                   <ShortAnswersWrapper>
                     {question.shortAnswers.length > 5 && (
