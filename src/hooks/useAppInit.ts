@@ -33,7 +33,11 @@ export const useAppInit = () => {
     const initializeUser = async () => {
       try {
         const memberResponse = await getMemberInfo();
-        setUserInfo(memberResponse.data);
+        const isNotificationPath = window.location.pathname.startsWith(PATHS.NOTIFICATION);
+        const resolvedData = isNotificationPath
+          ? { ...memberResponse.data, hasUnreadNotifications: false }
+          : memberResponse.data;
+        setUserInfo(resolvedData);
 
         // 첫 방문 유도
         if (tokenInfo.accessToken && memberResponse.data.name === "") {
