@@ -131,23 +131,39 @@ describe("다른 웹뷰가 refreshToken을 먼저 교체했을 때의 재발급 
     expect(localStorage.getItem("refreshToken")).toBeNull();
   });
 
-  it("403 Forbidden 에러 발생 시 토큰 리프레시를 시도하지 않고 즉시 에러를 반환한다", async () => {
+  it("Spring Security 특성(토큰 만료 시 403 반환)에 대응하여 403 에러 발생 시 토큰 리프레시 후 재시도한다", async () => {
     const { default: tokenInstance } = await import("../tokenInstance");
-    tokenInstance.defaults.adapter = async (config) => {
+    tokenInstance.defaults.adapter = async (config: InternalAxiosRequestConfig) => {
+      const authorization = String(config.headers?.Authorization ?? "");
+      const response = {
+        data: { ok: true },
+        status: authorization === `Bearer ${VALID_ACCESS_TOKEN}` ? 200 : 403,
+        statusText: "",
+        headers: {},
+        config,
+      };
+      if (response.status === 200) return response;
       const error = Object.assign(new Error("Forbidden"), {
         config,
-        response: { status: 403, data: { message: "권한이 없습니다." } },
+        response,
         isAxiosError: true,
       });
       throw error;
     };
 
-    await expect(tokenInstance.get("/users")).rejects.toMatchObject({
-      response: { status: 403 },
+    refreshMock.mockImplementation(async () => {
+      localStorage.setItem("accessToken", VALID_ACCESS_TOKEN);
+      localStorage.setItem("refreshToken", "rotated_refresh");
+      return {
+        accessToken: VALID_ACCESS_TOKEN,
+        refreshToken: "rotated_refresh",
+        role: "ROLE_USER",
+      };
     });
-    // 403은 인가 에러이므로 리프레시를 시도하지 않아야 한다
-    expect(refreshMock).not.toHaveBeenCalled();
-    expect(location.href).toBe("");
+
+    const response = await tokenInstance.get("/users");
+    expect(response.status).toBe(200);
+    expect(refreshMock).toHaveBeenCalledTimes(1);
   });
 });
 
