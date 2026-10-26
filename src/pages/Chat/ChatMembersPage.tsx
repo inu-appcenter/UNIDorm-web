@@ -785,11 +785,16 @@ export default function ChatMembersPage() {
 }
 
 const Page = styled.div`
-  height: calc(100vh - 70px);
+  width: 100%;
+  height: calc(100dvh - 70px - var(--safe-area-top, 0px));
+  @supports not (height: 100dvh) {
+    height: calc(100vh - 70px - var(--safe-area-top, 0px));
+  }
   display: flex;
-  flex-direction: column;
+  flex-direction: column;
   overflow: hidden;
   position: relative;
+  box-sizing: border-box;
 `;
 const Guide = styled.div`
   padding: 10px 20px;
@@ -801,8 +806,10 @@ const Guide = styled.div`
 `;
 const Scroll = styled.div`
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
-  padding-bottom: calc(130px + var(--safe-area-bottom, 0px));
+  padding-bottom: 24px;
+  -webkit-overflow-scrolling: touch;
 `;
 const Section = styled.section`
   padding: 16px 20px 0;
@@ -864,13 +871,14 @@ const HeaderRight = styled.div`
     sans-serif;
 `;
 const BottomActions = styled.div`
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  padding: 16px 20px calc(24px + var(--safe-area-bottom, 0px));
+  flex-shrink: 0;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 16px 20px calc(24px + max(var(--safe-area-bottom, 0px), env(safe-area-inset-bottom, 0px)));
+  padding-left: max(20px, env(safe-area-inset-left, 0px));
+  padding-right: max(20px, env(safe-area-inset-right, 0px));
   border-top: 1px solid #efefef;
-  background: #fff;
+  background: #ffffff;
   display: flex;
   flex-direction: column;
   gap: 16px;
