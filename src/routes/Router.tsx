@@ -1,4 +1,5 @@
 import { createBrowserRouter, Navigate, useParams } from "react-router-dom";
+import { resolveNavigationTarget } from "@/utils/navigation";
 import FeatureFlagGate from "@/components/common/FeatureFlagGate";
 import {
   FRESHMAN_LOGIN_FEATURE_FLAG_KEY,
@@ -372,16 +373,7 @@ export const router = createBrowserRouter([
   },
 ]);
 
-function getPathname(to: any): string {
-  if (!to) return "";
-  if (typeof to === "string") {
-    return to.split("?")[0].split("#")[0];
-  }
-  if (typeof to === "object" && to !== null) {
-    return to.pathname || "";
-  }
-  return "";
-}
+export { resolveNavigationTarget } from "@/utils/navigation";
 
 if (typeof window !== "undefined") {
   const originalNavigate = router.navigate;
@@ -396,7 +388,8 @@ if (typeof window !== "undefined") {
       return (originalNavigate as any).call(router, to, opts);
     }
 
-    const path = getPathname(to);
+    const resolvedTarget = resolveNavigationTarget(to, window.location.pathname);
+    const path = resolvedTarget.pathname;
     const isTabNavigation = opts?.state?.isTabNavigation === true;
     const isHomePath = path === PATHS.HOME || path === PATHS.ROOT;
     const isBootstrapRedirect = window.location.pathname === "/" && isHomePath;
@@ -415,10 +408,7 @@ if (typeof window !== "undefined") {
       const stateKeys = Object.keys(opts.state).filter(
         (key) => key !== 'isTabNavigation' && key !== 'usr' && key !== 'key'
       );
-      const fullPath =
-        typeof to === 'string'
-          ? to
-          : `${to.pathname || ''}${to.search || ''}${to.hash || ''}`;
+      const fullPath = resolvedTarget.fullPath;
       const hasQuery = fullPath.includes('?');
 
       if (stateKeys.length > 0 && !hasQuery && !isMainTabPath(path)) {
@@ -454,11 +444,7 @@ if (typeof window !== "undefined") {
       !isHashOrSearchOnly &&
       !isSamePath
     ) {
-      const fullPath =
-        typeof to === "string"
-          ? to
-          : `${to.pathname || ""}${to.search || ""}${to.hash || ""}`;
-      appBridge.navigateTo(fullPath);
+      appBridge.navigateTo(resolvedTarget.fullPath);
       return Promise.resolve(); // 현재 웹뷰에서의 SPA 라우팅을 수행하지 않음
     }
 

@@ -50,6 +50,13 @@ export interface MyComplaint {
   type: string;
   title: string;
   status: string;
+  officer?: string | null;
+  building?: string | null;
+  floor?: string | null;
+  roomNumber?: string | null;
+  bedNumber?: string | null;
+  dormType?: string | null;
+  studentNumber?: string | null;
 }
 
 // 민원 등록 요청 DTO
@@ -123,6 +130,15 @@ export interface ComplaintReplyResponse {
 /**
  * 민원 검색 조건 DTO (쿼리 파라미터로 사용)
  */
+export interface ComplaintCursorPageResponse<T = AdminComplaint> {
+  content: T[];
+  hasNext: boolean;
+  nextCursor: number | null;
+}
+
+/**
+ * 민원 검색 조건 DTO (쿼리 파라미터로 사용)
+ */
 export interface ComplaintSearchDto {
   dormType?: string;
   officer?: string;
@@ -135,4 +151,7 @@ export interface ComplaintSearchDto {
   type?: string;
   startDate?: string; // YYYY-MM-DD
   endDate?: string; // YYYY-MM-DD
+  lastId?: number;
+  cursor?: number;
+  size?: number;
 }
