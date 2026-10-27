@@ -33,7 +33,7 @@ const HomeCardWrapper = styled.div`
   flex-direction: row;
   align-items: center;
   gap: 8px;
-  width: 100%;
+  width: calc(100% + 16px);
   cursor: pointer;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
