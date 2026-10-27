@@ -76,7 +76,7 @@ const MenuLine = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: 100%;
+  width: calc(100% + 24px);
   cursor: pointer;
   user-select: none;
   -webkit-tap-highlight-color: transparent;

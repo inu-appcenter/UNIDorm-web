@@ -26,8 +26,9 @@ const CalendarPageWrapper = styled.div`
   gap: 16px;
   padding: 0 16px 100px;
   box-sizing: border-box;
-  //
-  //width: 100%;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
   height: 100%;
 
   overflow-y: auto;
