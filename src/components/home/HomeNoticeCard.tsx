@@ -67,7 +67,7 @@ const NoticeItemWrapper = styled.div`
   display: flex;
   flex-direction: column;
   gap: 6px;
-  width: 100%;
+  width: calc(100% + 20px);
   padding: 8px 10px;
   margin: -4px -10px;
   border-radius: 10px;
