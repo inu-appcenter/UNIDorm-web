@@ -2,6 +2,7 @@
 import tokenInstance from "./tokenInstance.ts";
 import {
   AdminComplaint,
+  ComplaintCursorPageResponse,
   ComplaintDetail,
   ComplaintReplyDto,
   ComplaintReplyResponse,
@@ -24,7 +25,35 @@ export const deleteComplaintReply = async (
 
 // 관리자용 민원 목록 조회 (단일화 API 규격: 검색 조건 및 페이징 파라미터 지원)
 // 신버전 서버(/admin/complaints?params)와 구버전 서버(/admin/complaints/search) 간 양방향 무중단 폴백 제공
-type ComplaintApiResponseData = AdminComplaint[] | { content?: AdminComplaint[]; complaints?: AdminComplaint[] };
+type ComplaintApiResponseData =
+  | AdminComplaint[]
+  | {
+      content?: AdminComplaint[];
+      complaints?: AdminComplaint[];
+      hasNext?: boolean;
+      nextCursor?: number | null;
+    };
+
+export const adaptAdminComplaintListResponse = (
+  raw: any,
+): ComplaintCursorPageResponse<AdminComplaint> => {
+  if (Array.isArray(raw)) {
+    return {
+      content: raw,
+      hasNext: false,
+      nextCursor: null,
+    };
+  }
+  return {
+    content: Array.isArray(raw?.content)
+      ? raw.content
+      : Array.isArray(raw?.complaints)
+        ? raw.complaints
+        : [],
+    hasNext: Boolean(raw?.hasNext),
+    nextCursor: raw?.nextCursor ?? null,
+  };
+};
 
 const normalizeComplaintListResponse = (
   response: AxiosResponse<ComplaintApiResponseData>,
@@ -91,6 +120,22 @@ export const getAdminComplaints = async (
       throw searchError;
     }
   }
+};
+
+
+// 관리자용 민원 목록 커서 페이징 조회 (신규 규격)
+export const getAdminComplaintsPage = async (
+  dto?: ComplaintSearchDto,
+): Promise<AxiosResponse<ComplaintCursorPageResponse<AdminComplaint>>> => {
+  const normalized = normalizeSearchDto(dto);
+  const response = await tokenInstance.get<ComplaintApiResponseData>(
+    `/admin/complaints`,
+    { params: normalized },
+  );
+  return {
+    ...response,
+    data: adaptAdminComplaintListResponse(response.data),
+  };
 };
 
 // 관리자용 민원 상세 조회
