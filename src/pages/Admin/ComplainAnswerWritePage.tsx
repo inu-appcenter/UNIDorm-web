@@ -28,18 +28,20 @@ export default function ComplainAnswerWritePage() {
   const [complain, setComplain] = useState<ComplaintDetail | null>(
     stateComplain ?? null,
   );
-  const [manager, setManager] = useState(
+  const [manager, setManager] = useState<string>(
     stateManager ?? stateComplain?.officer ?? "",
   );
 
-  const [isEditMode, setIsEditMode] = useState(Boolean(stateComplain?.reply));
-  const [isRejected, setIsRejected] = useState(
+  const [isEditMode, setIsEditMode] = useState<boolean>(
+    Boolean(stateComplain?.reply),
+  );
+  const [isRejected, setIsRejected] = useState<boolean>(
     stateComplain?.status === "반려",
   );
-  const [title, setTitle] = useState(
+  const [title, setTitle] = useState<string>(
     stateComplain?.reply?.replyTitle ?? "",
   );
-  const [content, setContent] = useState(
+  const [content, setContent] = useState<string>(
     stateComplain?.reply?.replyContent ?? "",
   );
 
@@ -71,7 +73,7 @@ export default function ComplainAnswerWritePage() {
     (fetched: ComplaintDetail) => {
       if (!stateComplain && fetched) {
         setComplain(fetched);
-        if (fetched.officer) setManager((prev) => prev || fetched.officer);
+        if (fetched.officer) setManager((prev: string) => prev || fetched.officer);
       }
     },
     complainId,
@@ -96,7 +98,7 @@ export default function ComplainAnswerWritePage() {
     } else {
       setIsEditMode(false);
       if (complain.officer) {
-        setManager((prev) => prev || complain.officer);
+        setManager((prev: string) => prev || complain.officer);
       }
     }
 
