@@ -83,42 +83,31 @@ export const getAllComplaints = async (): Promise<
 };
 
 // 관리자용 민원 목록/검색 통합 조회
-// 구버전 서버(/admin/complaints/search) 및 신규 단일화 규격(/admin/complaints) 양방향 자동 폴백
+// 신규 단일화 규격(/admin/complaints) 우선 호출, 레거시 환경 대비(/admin/complaints/search) 자동 폴백
 export const getAdminComplaints = async (
   dto?: ComplaintSearchDto,
 ): Promise<AxiosResponse<AdminComplaint[]>> => {
   const normalized = normalizeSearchDto(dto);
-  const hasFilter = Boolean(normalized && Object.keys(normalized).length > 0);
 
-  // 1. 조건이 없는 순수 전체 목록 조회는 항상 GET /admin/complaints 호출
-  if (!hasFilter) {
-    return getAllComplaints();
-  }
-
-  // 2. 검색 조건이 있는 경우:
-  // 레거시 서버 환경에서는 GET /admin/complaints/search 가 검색을 처리하므로 우선 호출하고,
-  // 신규 단일화 규격이 배포되어 /search 가 404가 되면 GET /admin/complaints 로 안전하게 폴백합니다.
   try {
-    const searchRes = await tokenInstance.get<ComplaintApiResponseData>(
-      `/admin/complaints/search`,
+    const unifiedRes = await tokenInstance.get<ComplaintApiResponseData>(
+      `/admin/complaints`,
       { params: normalized },
     );
-    return normalizeComplaintListResponse(searchRes);
-  } catch (searchError) {
-    console.warn(
-      "구버전 검색 API(/admin/complaints/search) 실패, 신규 단일화 API(/admin/complaints)로 폴백 시도:",
-      searchError,
-    );
-    try {
-      const unifiedRes = await tokenInstance.get<ComplaintApiResponseData>(
-        `/admin/complaints`,
-        { params: normalized },
-      );
-      return normalizeComplaintListResponse(unifiedRes);
-    } catch (unifiedError) {
-      console.error("신규 단일화 API 폴백도 실패했습니다:", unifiedError);
-      throw searchError;
+    return normalizeComplaintListResponse(unifiedRes);
+  } catch (unifiedError) {
+    if (normalized && Object.keys(normalized).length > 0) {
+      try {
+        const searchRes = await tokenInstance.get<ComplaintApiResponseData>(
+          `/admin/complaints/search`,
+          { params: normalized },
+        );
+        return normalizeComplaintListResponse(searchRes);
+      } catch (searchError) {
+        throw unifiedError;
+      }
     }
+    throw unifiedError;
   }
 };
 
