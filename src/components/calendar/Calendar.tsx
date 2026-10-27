@@ -453,7 +453,6 @@ const CalendarContainer = styled.div`
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 480px;
 `;
 
 const CalendarHeader = styled.div`
