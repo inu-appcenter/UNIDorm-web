@@ -318,20 +318,7 @@ export function resolveNonResidentReasonDetail(
 ): NonResidentReasonDetail {
   const { isPastRecord, isExplicitlyTerminated, hasValidDormAssignment, lastHistory } = evaluation;
 
-  // 1) 이번 학기 퇴사 처리된 경우
-  if (isExplicitlyTerminated) {
-    const termType = evaluation.rawStatus === "03" ? "중도퇴사" : "정규퇴사";
-    return {
-      type: "TERMINATED",
-      badgeLabel: termType,
-      badgeStatus: "02",
-      title: "기숙사 퇴사 처리가 완료되었어요",
-      description: "이번 학기 퇴사 기록이 확인되어 모바일 사생증 이용 권한이 종료되었어요.",
-      statusSummary: `${termType} 완료`,
-    };
-  }
-
-  // 2) 과거 학기 기록만 남아 있는 경우 (상위는 '배정 내역 없음', 세부 사유로 이전 거주 안내)
+  // 1) 과거 학기 기록만 남아 있는 경우 (상위는 '배정 내역 없음', 세부 사유로 이전 거주 안내)
   if (isPastRecord) {
     const formattedTerm = lastHistory
       ? `${lastHistory.year ? `${lastHistory.year}학년도 ` : ""}${formatSemesterTerm(lastHistory.term)}`
@@ -343,6 +330,19 @@ export function resolveNonResidentReasonDetail(
       title: "이번 학기 기숙사 배정 내역이 없어요",
       description: `학교 포털에 ${formattedTerm} 거주 기록만 남아 있어 이번 학기 사생증을 발급할 수 없어요.`,
       statusSummary: `${formattedTerm} 거주 후 퇴사`,
+    };
+  }
+
+  // 2) 이번 학기 퇴사 처리된 경우
+  if (isExplicitlyTerminated) {
+    const termType = evaluation.rawStatus === "03" ? "중도퇴사" : "정규퇴사";
+    return {
+      type: "TERMINATED",
+      badgeLabel: termType,
+      badgeStatus: "02",
+      title: "기숙사 퇴사 처리가 완료되었어요",
+      description: "이번 학기 퇴사 기록이 확인되어 모바일 사생증 이용 권한이 종료되었어요.",
+      statusSummary: `${termType} 완료`,
     };
   }
 
@@ -427,7 +427,68 @@ export default function MobileDormitoryCardPage() {
   const fetchCached = useCallback(async () => {
     setIsInitialLoading(true);
     if (isPreviewMode) {
-      setDormInfo(MOCK_PREVIEW_DORM_INFO);
+      if (previewSimulatedStatus === "terminated") {
+        setDormInfo({
+          ...MOCK_PREVIEW_DORM_INFO,
+          status: "02",
+          inOutList: [
+            {
+              year: String(new Date().getFullYear()),
+              term: "20",
+              status: "02",
+              dormitoryType: "02",
+              checkOutDate: "2026.10.15",
+            },
+          ],
+        });
+      } else if (previewSimulatedStatus === "past_record") {
+        setDormInfo({
+          ...MOCK_PREVIEW_DORM_INFO,
+          status: "02",
+          studentDormNo: "",
+          roomNumber: "",
+          bedNumber: "",
+          dormitoryBuilding: "",
+          profile: {
+            ...MOCK_PREVIEW_DORM_INFO.profile,
+            year: "2024",
+            term: "1학기",
+            studentDormNo: "",
+            roomNumber: "",
+            bedNumber: "",
+          },
+          inOutList: [
+            {
+              year: "2024",
+              term: "10",
+              status: "02",
+              dormitoryType: "01",
+              checkOutDate: "2024.06.21",
+            },
+          ],
+        });
+      } else if (previewSimulatedStatus === "unassigned" || previewSimulatedStatus === "non_resident") {
+        setDormInfo({
+          ...MOCK_PREVIEW_DORM_INFO,
+          status: "",
+          studentDormNo: "",
+          roomNumber: "",
+          bedNumber: "",
+          dormitoryType: "",
+          dormitoryBuilding: "",
+          profile: {
+            ...MOCK_PREVIEW_DORM_INFO.profile,
+            studentDormNo: "",
+            roomNumber: "",
+            bedNumber: "",
+            dormitoryType: "",
+            dormitoryBuilding: "",
+          },
+          inOutList: [],
+        });
+      } else {
+        setDormInfo(MOCK_PREVIEW_DORM_INFO);
+      }
       updateLastSyncTime(Date.now());
       setIsInitialLoading(false);
       return;
