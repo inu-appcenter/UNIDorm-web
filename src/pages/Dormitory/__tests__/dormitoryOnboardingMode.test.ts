@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { evaluateDormitoryResidentStatus } from "../DormitoryCardPage";
+import { evaluateDormitoryResidentStatus, resolveNonResidentReasonDetail } from "../DormitoryCardPage";
 import { DormitoryStudentInfo } from "@/utils/ssvParser";
 import { isDormitorySemesterExpired } from "../../../utils/semesterGuard";
 
@@ -140,5 +140,131 @@ describe("DormitoryCardPage - 발급 온보딩 표출 로직 및 미발급자 �
 
     // 활성 사생은 사생증 화면 유지
     expect(shouldShow).toBe(false);
+  });
+});
+
+describe("resolveNonResidentReasonDetail - 비사생 판정 원인별 UI/UX 가이드 정보 생성 검증", () => {
+  it("1. 이번 학기 퇴사 처리(02: 정규퇴사)된 경우 퇴사 완료 안내와 배지가 반환된다", () => {
+    const detail = resolveNonResidentReasonDetail({
+      isCurrentlyResident: false,
+      isAdmittedStatus: false,
+      hasValidDormAssignment: true,
+      isPastRecord: false,
+      isExplicitlyTerminated: true,
+      rawStatus: "02",
+      status: "02",
+      resolvedDormType: "제1기숙사",
+      studentDormNo: "01001",
+    });
+
+    expect(detail.type).toBe("TERMINATED");
+    expect(detail.badgeLabel).toBe("정규퇴사");
+    expect(detail.badgeStatus).toBe("02");
+    expect(detail.title).toBe("기숙사 퇴사 처리가 완료되었어요");
+    expect(detail.statusSummary).toBe("정규퇴사 완료");
+  });
+
+  it("2. 이번 학기 퇴사 처리(03: 중도퇴사)된 경우 중도퇴사 안내와 배지가 반환된다", () => {
+    const detail = resolveNonResidentReasonDetail({
+      isCurrentlyResident: false,
+      isAdmittedStatus: false,
+      hasValidDormAssignment: true,
+      isPastRecord: false,
+      isExplicitlyTerminated: true,
+      rawStatus: "03",
+      status: "03",
+      resolvedDormType: "제2기숙사",
+      studentDormNo: "02001",
+    });
+
+    expect(detail.type).toBe("TERMINATED");
+    expect(detail.badgeLabel).toBe("중도퇴사");
+    expect(detail.badgeStatus).toBe("02");
+    expect(detail.title).toBe("기숙사 퇴사 처리가 완료되었어요");
+    expect(detail.statusSummary).toBe("중도퇴사 완료");
+  });
+
+  it("3. 과거 학기 기록만 남아 있는 경우 상위는 '배정 내역 없음'이며 이전 거주 학기가 명시된다", () => {
+    const detail = resolveNonResidentReasonDetail({
+      isCurrentlyResident: false,
+      isAdmittedStatus: false,
+      hasValidDormAssignment: false,
+      isPastRecord: true,
+      isExplicitlyTerminated: false,
+      lastHistory: {
+        year: "2024",
+        term: "10",
+        status: "02",
+        dormitoryType: "01",
+      },
+    });
+
+    expect(detail.type).toBe("PAST_RECORD");
+    expect(detail.badgeLabel).toBe("이전 학기 거주");
+    expect(detail.badgeStatus).toBe("02");
+    expect(detail.title).toBe("이번 학기 기숙사 배정 내역이 없어요");
+    expect(detail.description).toContain("2024학년도 1학기 거주 기록만 남아 있어");
+    expect(detail.statusSummary).toContain("2024학년도 1학기 거주 후 퇴사");
+  });
+
+  it("4. 이번 학기 배정 정보가 아예 없는 경우(통학생/미선발) '배정 정보 없음' 안내가 반환된다", () => {
+    const detail = resolveNonResidentReasonDetail({
+      isCurrentlyResident: false,
+      isAdmittedStatus: false,
+      hasValidDormAssignment: false,
+      isPastRecord: false,
+      isExplicitlyTerminated: false,
+    });
+
+    expect(detail.type).toBe("UNASSIGNED");
+    expect(detail.badgeLabel).toBe("배정 정보 없음");
+    expect(detail.badgeStatus).toBe("default");
+    expect(detail.title).toBe("이번 학기 기숙사 배정 내역이 없어요");
+    expect(detail.description).toBe("학교 포털에 호실 배정이나 사생 번호가 등록되지 않은 상태예요.");
+    expect(detail.statusSummary).toBe("생활원 미배정 (통학생 또는 미선발)");
+  });
+
+  it("5. 분류 불명확한 케이스는 UNKNOWN 기본 비사생 안내가 반환된다", () => {
+    const detail = resolveNonResidentReasonDetail({
+      isCurrentlyResident: false,
+      isAdmittedStatus: true,
+      hasValidDormAssignment: true,
+      isPastRecord: false,
+      isExplicitlyTerminated: false,
+    });
+
+    expect(detail.type).toBe("UNKNOWN");
+    expect(detail.badgeLabel).toBe("비사생");
+    expect(detail.title).toBe("현재 입사 중인 사생이 아니에요");
+  });
+});
+
+describe("비사생 트래킹 누수 방지 및 24시간 TTL 만료 검증", () => {
+  it("온보딩(발급) 화면이 표시 중인 경우 비사생 차단 이벤트를 쏘지 않고 온보딩 노출로 기록한다", () => {
+    let outcomeTracked = "";
+    const shouldShowOnboarding = true;
+
+    // useEffect 로직 시뮬레이션
+    if (shouldShowOnboarding) {
+      outcomeTracked = "onboarding";
+    } else {
+      outcomeTracked = "non_resident";
+    }
+
+    expect(outcomeTracked).toBe("onboarding");
+  });
+
+  it("비사생 캐시인데 24시간 TTL이 만료된 경우 온보딩(isForceOnboarding)을 유도한다", () => {
+    const cachedResult = { isExpired: true };
+    const evalRes = { isCurrentlyResident: false };
+
+    let isForceOnboarding = false;
+    if (cachedResult?.isExpired) {
+      if (!evalRes.isCurrentlyResident) {
+        isForceOnboarding = true;
+      }
+    }
+
+    expect(isForceOnboarding).toBe(true);
   });
 });

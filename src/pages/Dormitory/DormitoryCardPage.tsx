@@ -12,7 +12,7 @@ import { secureStorage } from "@/utils/secureStorage";
 import { MobileDormitoryCard } from "@/components/portal/MobileDormitoryCard";
 import { MOBILE_PAGE_GUTTER } from "@/styles/unidormResponsive";
 import { PATHS } from "@/constants/paths";
-import { ChevronRight, Building2, RotateCw, CalendarClock, Clock } from "lucide-react";
+import { ChevronRight, RotateCw, Clock } from "lucide-react";
 import PortalSyncProgressModal from "@/components/portal/PortalSyncProgressModal";
 import { isDormitorySemesterExpired } from "@/utils/semesterGuard";
 import PortalSyncOnboarding from "@/components/portal/PortalSyncOnboarding";
@@ -302,6 +302,72 @@ export function evaluateDormitoryResidentStatus(
   };
 }
 
+export type NonResidentReasonType = "UNASSIGNED" | "TERMINATED" | "PAST_RECORD" | "UNKNOWN";
+
+export interface NonResidentReasonDetail {
+  type: NonResidentReasonType;
+  badgeLabel: string;
+  badgeStatus: "01" | "02" | "default";
+  title: string;
+  description: string;
+  statusSummary: string;
+}
+
+export function resolveNonResidentReasonDetail(
+  evaluation: ResidentEvaluationResult
+): NonResidentReasonDetail {
+  const { isPastRecord, isExplicitlyTerminated, hasValidDormAssignment, lastHistory } = evaluation;
+
+  // 1) 과거 학기 기록만 남아 있는 경우 (상위는 '배정 내역 없음', 세부 사유로 이전 거주 안내)
+  if (isPastRecord) {
+    const formattedTerm = lastHistory
+      ? `${lastHistory.year ? `${lastHistory.year}학년도 ` : ""}${formatSemesterTerm(lastHistory.term)}`
+      : "이전 학기";
+    return {
+      type: "PAST_RECORD",
+      badgeLabel: "이전 학기 거주",
+      badgeStatus: "02",
+      title: "이번 학기 기숙사 배정 내역이 없어요",
+      description: `학교 포털에 ${formattedTerm} 거주 기록만 남아 있어 이번 학기 사생증을 발급할 수 없어요.`,
+      statusSummary: `${formattedTerm} 거주 후 퇴사`,
+    };
+  }
+
+  // 2) 이번 학기 퇴사 처리된 경우
+  if (isExplicitlyTerminated) {
+    const termType = evaluation.rawStatus === "03" ? "중도퇴사" : "정규퇴사";
+    return {
+      type: "TERMINATED",
+      badgeLabel: termType,
+      badgeStatus: "02",
+      title: "기숙사 퇴사 처리가 완료되었어요",
+      description: "이번 학기 퇴사 기록이 확인되어 모바일 사생증 이용 권한이 종료되었어요.",
+      statusSummary: `${termType} 완료`,
+    };
+  }
+
+  // 3) 이번 학기 배정 정보가 아예 없는 경우 (통학생, 미선발)
+  if (!hasValidDormAssignment) {
+    return {
+      type: "UNASSIGNED",
+      badgeLabel: "배정 정보 없음",
+      badgeStatus: "default",
+      title: "이번 학기 기숙사 배정 내역이 없어요",
+      description: "학교 포털에 호실 배정이나 사생 번호가 등록되지 않은 상태예요.",
+      statusSummary: "생활원 미배정 (통학생 또는 미선발)",
+    };
+  }
+
+  return {
+    type: "UNKNOWN",
+    badgeLabel: "비사생",
+    badgeStatus: "default",
+    title: "현재 입사 중인 사생이 아니에요",
+    description: "이번 학기 기숙사에 정규 입사한 사생만 모바일 사생증을 이용할 수 있어요.",
+    statusSummary: "사생 정보 미확인",
+  };
+}
+
 export default function MobileDormitoryCardPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -361,7 +427,68 @@ export default function MobileDormitoryCardPage() {
   const fetchCached = useCallback(async () => {
     setIsInitialLoading(true);
     if (isPreviewMode) {
-      setDormInfo(MOCK_PREVIEW_DORM_INFO);
+      if (previewSimulatedStatus === "terminated") {
+        setDormInfo({
+          ...MOCK_PREVIEW_DORM_INFO,
+          status: "02",
+          inOutList: [
+            {
+              year: String(new Date().getFullYear()),
+              term: "20",
+              status: "02",
+              dormitoryType: "02",
+              checkOutDate: "2026.10.15",
+            },
+          ],
+        });
+      } else if (previewSimulatedStatus === "past_record") {
+        setDormInfo({
+          ...MOCK_PREVIEW_DORM_INFO,
+          status: "02",
+          studentDormNo: "",
+          roomNumber: "",
+          bedNumber: "",
+          dormitoryBuilding: "",
+          profile: {
+            ...MOCK_PREVIEW_DORM_INFO.profile,
+            year: "2024",
+            term: "1학기",
+            studentDormNo: "",
+            roomNumber: "",
+            bedNumber: "",
+          },
+          inOutList: [
+            {
+              year: "2024",
+              term: "10",
+              status: "02",
+              dormitoryType: "01",
+              checkOutDate: "2024.06.21",
+            },
+          ],
+        });
+      } else if (previewSimulatedStatus === "unassigned" || previewSimulatedStatus === "non_resident") {
+        setDormInfo({
+          ...MOCK_PREVIEW_DORM_INFO,
+          status: "",
+          studentDormNo: "",
+          roomNumber: "",
+          bedNumber: "",
+          dormitoryType: "",
+          dormitoryBuilding: "",
+          profile: {
+            ...MOCK_PREVIEW_DORM_INFO.profile,
+            studentDormNo: "",
+            roomNumber: "",
+            bedNumber: "",
+            dormitoryType: "",
+            dormitoryBuilding: "",
+          },
+          inOutList: [],
+        });
+      } else {
+        setDormInfo(MOCK_PREVIEW_DORM_INFO);
+      }
       updateLastSyncTime(Date.now());
       setIsInitialLoading(false);
       return;
@@ -424,6 +551,14 @@ export default function MobileDormitoryCardPage() {
             });
           } else {
             setDormInfo(restored);
+          }
+        }
+
+        // 비사생 캐시인데 24시간 TTL이 만료된 경우, 오래된 비사생 화면 대신 온보딩 화면을 우선 유도
+        if (cachedResult?.isExpired) {
+          const evalRes = evaluateDormitoryResidentStatus(restored);
+          if (!evalRes.isCurrentlyResident) {
+            setIsForceOnboarding(true);
           }
         }
       } else {
@@ -505,6 +640,7 @@ export default function MobileDormitoryCardPage() {
 
   // 사생증 화면 캡처 및 녹화 방지 브릿지 연동
   // 활성 사생증 카드가 표시될 때만 FLAG_SECURE를 켜고, 비사생 안내 화면이거나 화면 이탈 시 즉시 해제
+  const residentEvaluation = evaluateDormitoryResidentStatus(dormInfo);
   const {
     isCurrentlyResident,
     isPastRecord,
@@ -520,7 +656,7 @@ export default function MobileDormitoryCardPage() {
     roomNumber,
     bedNumber,
     lastHistory,
-  } = evaluateDormitoryResidentStatus(dormInfo);
+  } = residentEvaluation;
 
   const isSemesterExpired =
     !isPreviewMode
@@ -646,6 +782,14 @@ export default function MobileDormitoryCardPage() {
     )
   );
 
+  // 발급 화면(PortalSyncOnboarding) 표출 조건:
+  // 1. 포털 캐시 데이터가 아예 없는 경우 (!hasValidData)
+  // 2. 홈 발급 유도 모달 등에서 발급/갱신을 시도하러 들어왔거나(isForceOnboarding),
+  //    현재 활성 사생이 아니거나 학기가 만료된 경우
+  const shouldShowOnboarding =
+    !hasValidData ||
+    (isForceOnboarding && (!isCurrentlyResident || isSemesterExpired));
+
   // 1. 페이지 진입 트래킹
   useEffect(() => {
     mixpanelTrack.dormitoryCardPageViewed();
@@ -654,6 +798,15 @@ export default function MobileDormitoryCardPage() {
   // 2. 발급 상태 결과 트래킹 (온보딩 노출 / 비사생 차단 / 발급 성공)
   useEffect(() => {
     if (isInitialLoading) return;
+
+    // 온보딩(발급) 화면이 표시 중인 경우에는 비사생 차단 이벤트를 전송하지 않음 (트래킹 누수 방지)
+    if (shouldShowOnboarding) {
+      if (hasTrackedOutcomeRef.current !== "onboarding") {
+        hasTrackedOutcomeRef.current = "onboarding";
+        mixpanelTrack.dormitoryCardOnboardingViewed();
+      }
+      return;
+    }
 
     if (!hasValidData) {
       if (hasTrackedOutcomeRef.current !== "onboarding") {
@@ -709,6 +862,7 @@ export default function MobileDormitoryCardPage() {
   }, [
     isInitialLoading,
     hasValidData,
+    shouldShowOnboarding,
     isCurrentlyResident,
     isPastRecord,
     isExplicitlyTerminated,
@@ -737,14 +891,6 @@ export default function MobileDormitoryCardPage() {
     );
   }
 
-  // 발급 화면(PortalSyncOnboarding) 표출 조건:
-  // 1. 포털 캐시 데이터가 아예 없는 경우 (!hasValidData)
-  // 2. 홈 발급 유도 모달 등에서 발급/갱신을 시도하러 들어왔거나(isForceOnboarding),
-  //    현재 활성 사생이 아니거나 학기가 만료된 경우
-  const shouldShowOnboarding =
-    !hasValidData ||
-    (isForceOnboarding && (!isCurrentlyResident || isSemesterExpired));
-
   if (!isInitialLoading && shouldShowOnboarding) {
     return (
       <PageContainer as="main">
@@ -766,16 +912,12 @@ export default function MobileDormitoryCardPage() {
     );
   }
 
-  // 학기가 만료된 경우 토스 스타일 학기 만료 안내 화면 표출
+  // 학기가 만료된 경우 만료 안내 화면 표출
   if (!isInitialLoading && hasValidData && isSemesterExpired) {
     return (
       <PageContainer as="main" $isScrollable>
         <NonResidentWrapper>
           <NonResidentCard as="section">
-            <IconCircle>
-              <CalendarClock size={32} color="var(--interactive-primary, #3182F6)" strokeWidth={1.8} />
-            </IconCircle>
-
             <NonResidentTitle>사생증 이용 기간이 만료되었어요</NonResidentTitle>
             <NonResidentDesc>
               새로운 학기가 시작되었어요. 최신 사생 정보로 갱신해 주세요.
@@ -858,54 +1000,74 @@ export default function MobileDormitoryCardPage() {
 
   // 현재 기숙사생이 아니거나 과거 퇴사자 데이터인 경우 안내 화면 표출
   if (!isInitialLoading && !isCurrentlyResident) {
+    const reasonDetail = resolveNonResidentReasonDetail(residentEvaluation);
+
     return (
       <PageContainer as="main" $isScrollable>
         <NonResidentWrapper>
           <NonResidentCard as="section">
-            <IconCircle>
-              <Building2 size={32} color="var(--interactive-primary, #3182F6)" strokeWidth={1.8} />
-            </IconCircle>
+            <NonResidentTitle>{reasonDetail.title}</NonResidentTitle>
+            <NonResidentDesc>{reasonDetail.description}</NonResidentDesc>
 
-            <NonResidentTitle>현재 입사 중인 사생이 아니에요</NonResidentTitle>
-            <NonResidentDesc>
-              이번 학기 기숙사에 정규 입사한 사생만 모바일 사생증을 이용할 수 있어요.
-            </NonResidentDesc>
-
-            {lastHistory && (
-              <HistorySummaryBox>
-                <HistorySummaryHeader>
-                  <HistorySummaryTitle>최근 입퇴사 기록</HistorySummaryTitle>
-                  <HistoryStatusBadge $status={lastHistory.status}>
-                    {mapInOutStatus(lastHistory.status) || "기록 있음"}
-                  </HistoryStatusBadge>
-                </HistorySummaryHeader>
-                <HistorySummaryDetail>
+            <HistorySummaryBox>
+              <HistorySummaryHeader>
+                <HistorySummaryTitle>포털 확인 정보</HistorySummaryTitle>
+                <HistoryStatusBadge $status={reasonDetail.badgeStatus}>
+                  {reasonDetail.badgeLabel}
+                </HistoryStatusBadge>
+              </HistorySummaryHeader>
+              <HistorySummaryDetail>
+                <HistoryItem>
+                  <span className="label">판정 사유</span>
+                  <span className="value">{reasonDetail.statusSummary}</span>
+                </HistoryItem>
+                {lastHistory?.year && (
                   <HistoryItem>
-                    <span className="label">학기</span>
+                    <span className="label">최근 거주 학기</span>
                     <span className="value">
-                      {lastHistory.year ? `${lastHistory.year}학년도 ` : ""}
-                      {formatSemesterTerm(lastHistory.term) || "-"}
+                      {lastHistory.year}학년도 {formatSemesterTerm(lastHistory.term)}
                     </span>
                   </HistoryItem>
-                  {lastHistory.dormitoryType && (
-                    <HistoryItem>
-                      <span className="label">기숙사</span>
-                      <DormitoryBadge
-                        dormType={mapDormitoryType(lastHistory.dormitoryType)}
-                        variant="subtle"
-                        size="sm"
-                      />
-                    </HistoryItem>
-                  )}
-                  {lastHistory.checkOutDate && (
-                    <HistoryItem>
-                      <span className="label">퇴사일</span>
-                      <span className="value">{lastHistory.checkOutDate}</span>
-                    </HistoryItem>
-                  )}
-                </HistorySummaryDetail>
-              </HistorySummaryBox>
-            )}
+                )}
+                {lastHistory?.dormitoryType && (
+                  <HistoryItem>
+                    <span className="label">기숙사</span>
+                    <DormitoryBadge
+                      dormType={mapDormitoryType(lastHistory.dormitoryType)}
+                      variant="subtle"
+                      size="sm"
+                    />
+                  </HistoryItem>
+                )}
+                {lastHistory?.checkOutDate && (
+                  <HistoryItem>
+                    <span className="label">퇴사 일자</span>
+                    <span className="value">{lastHistory.checkOutDate}</span>
+                  </HistoryItem>
+                )}
+              </HistorySummaryDetail>
+            </HistorySummaryBox>
+
+            <ActionGuideBox>
+              <GuideStep>
+                <StepBadge>1</StepBadge>
+                <StepText>학교 포털(ERP) 사생정보조회에서 이번 학기 호실 배정과 입사 상태가 정상인지 먼저 확인해 주세요.</StepText>
+              </GuideStep>
+              <GuideStep>
+                <StepBadge>2</StepBadge>
+                <StepText>
+                  포털에서는 정상 입사로 나오는데 사생증이 발급되지 않는다면,{" "}
+                  <InquiryLink
+                    href="https://forms.gle/PGkiDutmmT8gzddF7"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    마이페이지 1:1 문의
+                  </InquiryLink>
+                  를 통해 유니돔 팀으로 문의해 주세요.
+                </StepText>
+              </GuideStep>
+            </ActionGuideBox>
 
             <ButtonGroupColumn>
               <CapsuleButton
@@ -1183,16 +1345,7 @@ const NonResidentCard = styled.div`
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
 `;
 
-const IconCircle = styled.div`
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background-color: var(--blue-50, #e8f3ff);
-  margin: 0 auto 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
+
 
 const NonResidentTitle = styled.h2`
   font-size: 20px;
@@ -1238,8 +1391,71 @@ const HistoryStatusBadge = styled.span<{ $status?: string }>`
   font-weight: 600;
   padding: 3px 8px;
   border-radius: 6px;
-  background-color: #e5e8eb;
-  color: #4e5968;
+  background-color: ${(props) =>
+    props.$status === "01"
+      ? "var(--brand-subtle, #e8f3ff)"
+      : props.$status === "02"
+      ? "#fee8e8"
+      : "#e5e8eb"};
+  color: ${(props) =>
+    props.$status === "01"
+      ? "var(--brand-primary, #3182f6)"
+      : props.$status === "02"
+      ? "var(--status-error, #f04452)"
+      : "#4e5968"};
+`;
+
+const ActionGuideBox = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--bg-surface, #ffffff);
+  border: 1px solid var(--border-divider, #e5e8eb);
+  border-radius: 16px;
+  padding: 16px 18px;
+  margin-bottom: 24px;
+  text-align: left;
+`;
+
+const GuideStep = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+`;
+
+const StepBadge = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--brand-subtle, #e8f3ff);
+  color: var(--brand-primary, #3182f6);
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-top: 1px;
+`;
+
+const StepText = styled.p`
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary, #4e5968);
+  word-break: keep-all;
+`;
+
+const InquiryLink = styled.a`
+  color: var(--brand-primary, #3182f6);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+
+  &:hover {
+    filter: brightness(0.9);
+  }
 `;
 
 const HistorySummaryDetail = styled.div`
