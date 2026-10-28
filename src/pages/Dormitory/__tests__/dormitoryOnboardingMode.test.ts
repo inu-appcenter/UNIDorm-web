@@ -207,7 +207,7 @@ describe("resolveNonResidentReasonDetail - 비사생 판정 원인별 UI/UX 가�
     expect(detail.statusSummary).toContain("2024학년도 1학기 거주 후 퇴사");
   });
 
-  it("4. 이번 학기 배정 정보가 아예 없는 경우(통학생/미선발) '배정 정보 없음' 안내가 반환된다", () => {
+  it("4. 이번 학기 배정 정보가 아예 없는 경우 '배정 정보 없음' 안내가 반환된다", () => {
     const detail = resolveNonResidentReasonDetail({
       isCurrentlyResident: false,
       isAdmittedStatus: false,
@@ -221,7 +221,7 @@ describe("resolveNonResidentReasonDetail - 비사생 판정 원인별 UI/UX 가�
     expect(detail.badgeStatus).toBe("default");
     expect(detail.title).toBe("이번 학기 기숙사 배정 내역이 없어요");
     expect(detail.description).toBe("학교 포털에 호실 배정이나 사생 번호가 등록되지 않은 상태예요.");
-    expect(detail.statusSummary).toBe("생활원 미배정 (통학생 또는 미선발)");
+    expect(detail.statusSummary).toBe("배정 정보 없음");
   });
 
   it("5. 분류 불명확한 케이스는 UNKNOWN 기본 비사생 안내가 반환된다", () => {
