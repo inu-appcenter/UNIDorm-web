@@ -348,7 +348,7 @@ export function resolveNonResidentReasonDetail(
     };
   }
 
-  // 3) 이번 학기 배정 정보가 아예 없는 경우 (통학생, 미선발)
+  // 3) 이번 학기 배정 정보가 아예 없는 경우
   if (!hasValidDormAssignment) {
     return {
       type: "UNASSIGNED",
@@ -356,7 +356,7 @@ export function resolveNonResidentReasonDetail(
       badgeStatus: "default",
       title: "이번 학기 기숙사 배정 내역이 없어요",
       description: "학교 포털에 호실 배정이나 사생 번호가 등록되지 않은 상태예요.",
-      statusSummary: "생활원 미배정 (통학생 또는 미선발)",
+      statusSummary: "배정 정보 없음",
     };
   }
 
