@@ -87,6 +87,8 @@ const MOCK_PREVIEW_DORM_INFO: DormitoryStudentInfo = {
   rawDatasets: {},
 };
 
+const MOCK_PREVIEW_PROFILE = MOCK_PREVIEW_DORM_INFO.profile!;
+
 function toImageSrc(base64?: string): string | null {
   if (!base64 || typeof base64 !== "string") return null;
   const clean = base64.replace(/\s/g, "");
@@ -437,7 +439,10 @@ export default function MobileDormitoryCardPage() {
               term: "20",
               status: "02",
               dormitoryType: "02",
+              studentDormNo: "24-2-0402-A",
+              checkInDate: "",
               checkOutDate: "2026.10.15",
+              rawFields: {},
             },
           ],
         });
@@ -450,12 +455,10 @@ export default function MobileDormitoryCardPage() {
           bedNumber: "",
           dormitoryBuilding: "",
           profile: {
-            ...MOCK_PREVIEW_DORM_INFO.profile,
+            ...MOCK_PREVIEW_PROFILE,
             year: "2024",
             term: "1학기",
             studentDormNo: "",
-            roomNumber: "",
-            bedNumber: "",
           },
           inOutList: [
             {
@@ -463,7 +466,10 @@ export default function MobileDormitoryCardPage() {
               term: "10",
               status: "02",
               dormitoryType: "01",
+              studentDormNo: "",
+              checkInDate: "",
               checkOutDate: "2024.06.21",
+              rawFields: {},
             },
           ],
         });
@@ -477,10 +483,8 @@ export default function MobileDormitoryCardPage() {
           dormitoryType: "",
           dormitoryBuilding: "",
           profile: {
-            ...MOCK_PREVIEW_DORM_INFO.profile,
+            ...MOCK_PREVIEW_PROFILE,
             studentDormNo: "",
-            roomNumber: "",
-            bedNumber: "",
             dormitoryType: "",
             dormitoryBuilding: "",
           },
