@@ -20,6 +20,16 @@ export function flushBroadcastSync(name: string): void {
 }
 
 /**
+ * 화면 전환 전 즉시 플러시해야 하는 작업을 등록합니다.
+ */
+export function registerPendingFlusher(name: string, flusher: () => void): () => void {
+  pendingFlushers.set(name, flusher);
+  return () => {
+    pendingFlushers.delete(name);
+  };
+}
+
+/**
  * broadcastSync를 쓰는 모든 스토어의 대기 중인 브로드캐스트를 한 번에 내보냄.
  * 화면을 떠나기 전(navigateTo / goBack / goHome) 호출하여 유실 방지.
  */

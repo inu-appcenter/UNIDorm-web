@@ -5,6 +5,7 @@ import {
   openMultiWebViewChannel,
   type MultiWebViewChannel,
 } from "@/utils/multiWebViewChannel";
+import { registerPendingFlusher } from "@/stores/middleware/broadcastSync";
 
 /**
  * 서버 데이터 자동 동기화.
@@ -50,6 +51,8 @@ let queryClientRef: QueryClient | null = null;
 let channel: MultiWebViewChannel | null = null;
 let changedElsewhere = false;
 let flushQueued = false;
+let unregisterFlusher: (() => void) | null = null;
+let cleanupRefocus: (() => void) | null = null;
 
 function isDataWrite(config?: InternalAxiosRequestConfig): boolean {
   const method = config?.method?.toLowerCase();
@@ -58,16 +61,27 @@ function isDataWrite(config?: InternalAxiosRequestConfig): boolean {
   return !NON_DATA_WRITES.some((pattern) => pattern.test(url));
 }
 
+/**
+ * 대기 중인 서버 데이터 변경 브로드캐스트 및 캐시 무효화를 즉시 실행합니다.
+ * 화면 이탈(goHome, goBack, navigateTo) 시 네이티브 브릿지 종료 전 즉시 호출됩니다.
+ */
+export function flushServerDataSync(): void {
+  if (!channel) return;
+  flushQueued = false;
+  channel.postMessage({ changedAt: Date.now() });
+  void queryClientRef?.invalidateQueries({
+    predicate: (query) => (query.meta?.sync ?? "all") === "all",
+    refetchType: "all",
+  });
+}
+
 /** 이 웹뷰에서 서버 데이터를 바꾸는 요청이 성공했을 때 (한 틱에 여러 번이면 한 번만 처리). */
 function onServerDataWritten(): void {
   if (flushQueued) return;
   flushQueued = true;
   queueMicrotask(() => {
-    flushQueued = false;
-    channel?.postMessage({ changedAt: Date.now() });
-    void queryClientRef?.invalidateQueries({
-      predicate: (query) => (query.meta?.sync ?? "all") === "all",
-    });
+    if (!flushQueued) return;
+    flushServerDataSync();
   });
 }
 
@@ -85,9 +99,14 @@ let installed = false;
 export function _resetServerDataSyncForTest(): void {
   installed = false;
   queryClientRef = null;
+  channel?.close();
   channel = null;
   changedElsewhere = false;
   flushQueued = false;
+  unregisterFlusher?.();
+  unregisterFlusher = null;
+  cleanupRefocus?.();
+  cleanupRefocus = null;
 }
 
 /** 앱 시작 시 한 번 호출합니다. */
@@ -100,11 +119,44 @@ export function installServerDataSync(queryClient: QueryClient): void {
     changedElsewhere = true;
   });
 
-  appBridge.onPageFocus(() => {
+  unregisterFlusher = registerPendingFlusher("serverDataSync", () => {
+    if (flushQueued) {
+      flushServerDataSync();
+    }
+  });
+
+  const handleRefocus = () => {
     if (!changedElsewhere) return;
     changedElsewhere = false;
     void queryClient.invalidateQueries({
       predicate: (query) => (query.meta?.sync ?? "all") !== "none",
+      refetchType: "all",
     });
-  });
+  };
+
+  const offPageFocus = appBridge.onPageFocus(handleRefocus);
+
+  let offWindow: (() => void) | null = null;
+  if (typeof window !== "undefined") {
+    const currentWindow = window;
+    const currentDoc = typeof document !== "undefined" ? document : null;
+    const onVisibilityChange = () => {
+      if (currentDoc?.visibilityState === "visible") {
+        handleRefocus();
+      }
+    };
+    currentWindow.addEventListener("focus", handleRefocus);
+    currentDoc?.addEventListener("visibilitychange", onVisibilityChange);
+    offWindow = () => {
+      try {
+        currentWindow.removeEventListener("focus", handleRefocus);
+        currentDoc?.removeEventListener("visibilitychange", onVisibilityChange);
+      } catch {}
+    };
+  }
+
+  cleanupRefocus = () => {
+    offPageFocus();
+    offWindow?.();
+  };
 }

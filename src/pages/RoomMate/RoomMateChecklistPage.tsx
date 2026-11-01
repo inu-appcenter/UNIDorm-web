@@ -17,6 +17,9 @@ import { useInitFromQuery } from "@/hooks/useInitFromQuery";
 import { getMemberInfo } from "@/apis/members";
 import useUserStore from "../../stores/useUserStore";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import { roommateKeys } from "@/queries/roommates";
+import { flushServerDataSync } from "@/utils/serverDataSync";
 import {
   bedtime,
   colleges,
@@ -66,6 +69,7 @@ const stepSlideVariants: Variants = {
 export default function RoomMateChecklistPage() {
   const { setUserInfo, userInfo } = useUserStore();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
@@ -291,6 +295,12 @@ export default function RoomMateChecklistPage() {
 
       const { data } = await getMemberInfo();
       setUserInfo(data);
+
+      await queryClient.invalidateQueries({
+        queryKey: roommateKeys.all,
+        refetchType: "all",
+      });
+      flushServerDataSync();
 
       alert(`체크리스트 ${isEditMode ? "수정" : "등록"} 완료!`);
       navigate("/roommate");
