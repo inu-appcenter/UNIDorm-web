@@ -247,6 +247,12 @@ export default function RoomMateBoardDetailPage() {
     ];
   }, [boardData]);
 
+  // Apple & Toss 스타일 일치 항목 수 0.5초 카운트업
+  const animatedMatchedCount = useCountUp(
+    typeof boardData?.matchedFilterCount === "number" ? boardData.matchedFilterCount : 0,
+    { duration: 500, enabled: typeof boardData?.matchedFilterCount === "number" },
+  );
+
   if (isLoading) {
     return <LoadingSpinner message="게시글을 불러오는 중..." />;
   }
@@ -257,11 +263,6 @@ export default function RoomMateBoardDetailPage() {
 
   const shouldShowBottomBar = !roomId && !isMyPost;
 
-  // Apple & Toss 스타일 일치 항목 수 0.5초 카운트업
-  const animatedMatchedCount = useCountUp(
-    typeof boardData?.matchedFilterCount === "number" ? boardData.matchedFilterCount : 0,
-    { duration: 500, enabled: typeof boardData?.matchedFilterCount === "number" },
-  );
 
   const displayUserName =
     boardData.userName || (roomId && partnerName ? partnerName : "익명");
