@@ -6,8 +6,10 @@ import * as multiWebViewChannel from "../multiWebViewChannel";
 import {
   installServerDataSync,
   trackServerWrites,
+  flushServerDataSync,
   _resetServerDataSyncForTest,
 } from "../serverDataSync";
+import { flushAllBroadcastSync } from "../../stores/middleware/broadcastSync";
 
 describe("serverDataSync", () => {
   let mockQueryClient: {
@@ -196,6 +198,81 @@ describe("serverDataSync", () => {
       mockQueryClient.invalidateQueries.mockClear();
       pageFocusHandler!();
       expect(mockQueryClient.invalidateQueries).not.toHaveBeenCalled();
+    });
+    it("pageFocus 시 refetchType: 'all' 옵션으로 비활성 쿼리까지 모두 재조회한다", async () => {
+      installServerDataSync(mockQueryClient as unknown as QueryClient);
+      broadcastHandler!({ changedAt: Date.now() });
+
+      pageFocusHandler!();
+
+      expect(mockQueryClient.invalidateQueries).toHaveBeenCalledWith(
+        expect.objectContaining({ refetchType: "all" }),
+      );
+    });
+
+    it("웹 브라우저 환경에서 창 포커스(focus) 시 변경사항을 반영한다", async () => {
+      const listeners: Record<string, () => void> = {};
+      const fakeWindow = {
+        addEventListener: vi.fn((event: string, cb: () => void) => {
+          listeners[event] = cb;
+        }),
+        removeEventListener: vi.fn(),
+      };
+      const fakeDocument = {
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        visibilityState: "visible",
+      };
+
+      vi.stubGlobal("window", fakeWindow);
+      vi.stubGlobal("document", fakeDocument);
+
+      try {
+        _resetServerDataSyncForTest();
+        installServerDataSync(mockQueryClient as unknown as QueryClient);
+        broadcastHandler!({ changedAt: Date.now() });
+
+        listeners["focus"]?.();
+
+        expect(mockQueryClient.invalidateQueries).toHaveBeenCalledTimes(1);
+        expect(mockQueryClient.invalidateQueries).toHaveBeenCalledWith(
+          expect.objectContaining({ refetchType: "all" }),
+        );
+      } finally {
+        vi.unstubAllGlobals();
+      }
+    });
+  });
+
+  describe("즉시 플러시 (flushServerDataSync & flushAllBroadcastSync)", () => {
+    it("flushServerDataSync 호출 시 대기 중인 변경사항을 즉시 전송하고 refetchType: 'all'로 무효화한다", () => {
+      installServerDataSync(mockQueryClient as unknown as QueryClient);
+
+      flushServerDataSync();
+
+      expect(postMessageMock).toHaveBeenCalledTimes(1);
+      expect(mockQueryClient.invalidateQueries).toHaveBeenCalledWith(
+        expect.objectContaining({ refetchType: "all" }),
+      );
+    });
+
+    it("쓰기 발생 후 화면 이탈(flushAllBroadcastSync) 시 microtask 대기 없이 즉시 플러시한다", () => {
+      const instance = axios.create();
+      installServerDataSync(mockQueryClient as unknown as QueryClient);
+      trackServerWrites(instance);
+
+      const responseInterceptor = (instance.interceptors.response as any).handlers[0].fulfilled;
+      responseInterceptor({
+        config: { method: "post", url: "/roommates" },
+        data: {},
+        status: 200,
+      });
+
+      // microtask 대기 전 flushAllBroadcastSync 호출 (goHome, goBack, navigateTo 동작)
+      flushAllBroadcastSync();
+
+      expect(postMessageMock).toHaveBeenCalledTimes(1);
+      expect(mockQueryClient.invalidateQueries).toHaveBeenCalledTimes(1);
     });
   });
 });
