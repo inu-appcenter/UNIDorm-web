@@ -77,6 +77,16 @@ export default function RoomMateListPage() {
     return {};
   }, [location.state?.filters]);
 
+  const { data: matchingStatus } = useRoommateMatchingStatus();
+
+  const currentSemesterFilters = useMemo(() => {
+    if (!matchingStatus?.year || !matchingStatus?.semester) return undefined;
+    return {
+      year: matchingStatus.year,
+      semester: Number(matchingStatus.semester),
+    };
+  }, [matchingStatus?.year, matchingStatus?.semester]);
+
   const {
     data,
     fetchNextPage,
@@ -84,7 +94,7 @@ export default function RoomMateListPage() {
     isFetchingNextPage,
     isLoading,
     isError,
-  } = useRoommateScroll(10);
+  } = useRoommateScroll(10, currentSemesterFilters);
 
   useEffect(() => {
     if (inView && hasNextPage && !isFetchingNextPage) {
@@ -127,8 +137,6 @@ export default function RoomMateListPage() {
       return true;
     });
   }, [data, filters]);
-
-  const { data: matchingStatus } = useRoommateMatchingStatus();
 
   const pageTitle = matchingStatus
     ? `${matchingStatus.year}년 ${formatSemesterName(matchingStatus.semester)} 룸메이트`

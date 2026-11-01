@@ -286,12 +286,20 @@ export default function HomePage() {
 
   const CHANNEL_ID = "UCrpqEmMWCOg6P8FSk6mN5Hw"; //인천대학교 생활원 유튜브 채널 id
 
-  // 룸메이트 데이터 단일 페이지 조회
+  const currentSemesterFilters = useMemo(() => {
+    if (!matchingStatus?.year || !matchingStatus?.semester) return undefined;
+    return {
+      year: matchingStatus.year,
+      semester: Number(matchingStatus.semester),
+    };
+  }, [matchingStatus?.year, matchingStatus?.semester]);
+
+  // 룸메이트 데이터 단일 페이지 조회 (현재 학기 기준)
   const { data: roommates, isLoading: isRoommateLoading } = useQuery({
-    queryKey: ["roommates", "home"],
-    queryFn: () => getRoomMateScrollList(undefined, 10),
+    queryKey: ["roommates", "home", currentSemesterFilters],
+    queryFn: () => getRoomMateScrollList(undefined, 10, currentSemesterFilters),
     staleTime: 1000 * 60 * 5,
-    enabled: isMatchingOpen,
+    enabled: Boolean(isMatchingOpen && currentSemesterFilters),
   });
 
   interface NotificationData {
