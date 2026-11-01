@@ -28,6 +28,7 @@ import { useDailyRandomTips } from "@/queries/tips";
 import { useActivePopupNotifications } from "@/queries/popupNotifications";
 import { useInitFromQuery } from "@/hooks/useInitFromQuery";
 import RoomMateCard from "@/components/roommate/RoomMateCard.tsx";
+import RoommateEmptyState from "@/components/roommate/RoommateEmptyState";
 import { useQuery } from "@tanstack/react-query";
 import { getRoomMateScrollList } from "@/apis/roommate.ts";
 import YoutubeWidget from "@/components/home/YoutubeWidget.tsx";
@@ -439,7 +440,7 @@ export default function HomePage() {
                         />
                       ))
                   ) : (
-                    <EmptyMessage>게시글이 없습니다.</EmptyMessage>
+                    <RoommateEmptyState />
                   )}
                 </>
               </TitleContentArea>
