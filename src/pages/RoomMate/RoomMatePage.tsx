@@ -29,6 +29,7 @@ import type { MyPost_RoommateBoard } from "@/types/members";
 import { useRoommateMatchingStatus } from "@/hooks/useRoommateMatchingStatus";
 import { formatSemesterName } from "@/utils/semester";
 import MatchedRoomMateCard from "@/components/roommate/MatchedRoomMateCard";
+import RoommateEmptyState from "@/components/roommate/RoommateEmptyState";
 import { colors, typography } from "@/styles/tokens";
 import ChipButton from "@/components/button/ChipButton";
 import searchIcon from "@/assets/roommate/search-normal.svg";
@@ -657,12 +658,14 @@ export default function RoomMatePage() {
                     location="룸메이트_홈"
                   />
                 ))
-              ) : (
+              ) : searchKeyword.trim() ? (
+                <EmptyMessage>검색 결과가 없습니다.</EmptyMessage>
+              ) : Object.keys(filters).length > 0 ? (
                 <EmptyMessage>
-                  {searchKeyword.trim()
-                    ? "검색 결과가 없습니다."
-                    : "게시글이 없습니다."}
+                  필터 조건에 맞는 게시글이 없습니다.
                 </EmptyMessage>
+              ) : (
+                <RoommateEmptyState />
               )}
 
               <div ref={ref} style={{ height: "20px" }}>
