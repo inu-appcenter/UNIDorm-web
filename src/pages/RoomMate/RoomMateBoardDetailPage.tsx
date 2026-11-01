@@ -5,9 +5,11 @@ import styled from "styled-components";
 
 import { deleteRoommatePost } from "@/apis/roommate";
 import {
+  roommateKeys,
   useOpponentChecklist,
   useRoommateBoardDetail,
 } from "@/queries/roommates";
+import { flushServerDataSync } from "@/utils/serverDataSync";
 import { memberKeys } from "@/queries/members";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import RoomMateBottomBar from "@/components/roommate/RoomMateBottomBar";
@@ -93,6 +95,15 @@ export default function RoomMateBoardDetailPage() {
 
     try {
       await deleteRoommatePost(targetBoardId);
+
+      await queryClient.invalidateQueries({
+        queryKey: roommateKeys.all,
+        refetchType: "all",
+      });
+      queryClient.removeQueries({
+        queryKey: roommateKeys.detail(targetBoardId),
+      });
+      flushServerDataSync();
 
       try {
         const memberData = await queryClient.fetchQuery({
