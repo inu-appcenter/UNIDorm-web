@@ -4,7 +4,7 @@ import {
   dormitoryBlocks,
   dormStructure,
 } from "../../../constants/constants";
-import { extractDormitoryFormAutoFill } from "../../../utils/complainDormitoryAdapter";
+import { extractDormitoryFormAutoFill, getAutoFillNoticeMessage } from "../../../utils/complainDormitoryAdapter";
 import { ComplaintCreateDto, ComplaintDetail } from "../../../types/complain";
 
 describe("ComplainWritePage - 사생증 자동완성 및 옵션 반응성 정밀 기능 검증", () => {
@@ -192,5 +192,23 @@ describe("ComplainWritePage - 사생증 자동완성 및 옵션 반응성 정밀
     expect(dto.floor).toBe("5층");
     expect(dto.roomNumber).toBe("5호");
     expect(dto.bedNumber).toBe("2번");
+  });
+
+  it("6. 자동 완성 상태별 안내 메시지가 담백하고 정확하게 생성된다", () => {
+    // 성공 시
+    const successMsg = getAutoFillNoticeMessage("success", false);
+    expect(successMsg).toBe("사생증 정보로 자동 선택했어요. 다른 위치라면 직접 변경해주세요.");
+
+    // 사생 정보 미확인 / 실패 시
+    const notFoundMsg = getAutoFillNoticeMessage("not_found", false);
+    expect(notFoundMsg).toBe("사생증 정보를 찾을 수 없어 직접 선택해주세요.");
+
+    // 대기(idle) 상태
+    const idleMsg = getAutoFillNoticeMessage("idle", false);
+    expect(idleMsg).toBeUndefined();
+
+    // 수정 모드인 경우 어떤 상태여도 안내 메시지가 노출되지 않아야 함
+    expect(getAutoFillNoticeMessage("success", true)).toBeUndefined();
+    expect(getAutoFillNoticeMessage("not_found", true)).toBeUndefined();
   });
 });
