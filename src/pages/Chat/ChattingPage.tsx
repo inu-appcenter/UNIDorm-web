@@ -472,13 +472,11 @@ function DerivedRoomCardItem({
   msg,
   isJoining,
   onJoin,
-  onClosed,
   onOpenMenu,
 }: {
   msg: MessageType;
   isJoining: boolean;
   onJoin: () => void;
-  onClosed: () => void;
   onOpenMenu: (rect?: DOMRect) => void;
 }) {
   const cardRef = useRef<HTMLButtonElement>(null);
@@ -508,11 +506,7 @@ function DerivedRoomCardItem({
           isLongPressRef.current = false;
           return;
         }
-        if (isClosed) {
-          onClosed();
-        } else {
-          onJoin();
-        }
+        onJoin();
       }}
     >
       <S.RoomLinkTextArea>
@@ -527,7 +521,9 @@ function DerivedRoomCardItem({
         )}
       </S.RoomLinkTextArea>
       {isClosed ? (
-        <S.RoomLinkClosedAction>모집 마감</S.RoomLinkClosedAction>
+        <S.RoomLinkClosedAction>
+          {isJoining ? "입장 중..." : "모집 마감"}
+        </S.RoomLinkClosedAction>
       ) : (
         <S.RoomLinkAction>
           {isJoining ? "입장 중..." : "참여하기"}
@@ -741,6 +737,9 @@ export default function ChattingPage() {
     if (chatType !== "open" || !roomId) return;
     try {
       const roomsResponse = await getOpenChatRooms("MY", 0, 50);
+      if (roomsResponse.data?.content) {
+        useChatListStore.getState().setTabRooms("MY", roomsResponse.data.content);
+      }
       const currentRoom = roomsResponse.data.content.find(
         (room) => room.roomId === roomId,
       );
@@ -2570,6 +2569,9 @@ export default function ChattingPage() {
         if (chatType === "open" || chatType === "personal") {
           try {
             const roomsResponse = await getOpenChatRooms("MY", 0, 50);
+            if (roomsResponse.data?.content) {
+              useChatListStore.getState().setTabRooms("MY", roomsResponse.data.content);
+            }
             const currentRoom = roomsResponse.data.content.find(
               (room) => room.roomId === roomId,
             );
@@ -3606,21 +3608,47 @@ export default function ChattingPage() {
     const linkedRoomId = message.linkedRoomId;
     if (!linkedRoomId || joiningLinkedRoomId) return;
 
-    const myRooms = useChatListStore.getState().roomsByTab.MY ?? [];
-    const isAlreadyJoined = myRooms.some((r) => r.roomId === linkedRoomId);
+    setJoiningLinkedRoomId(linkedRoomId);
     const targetRoomName = message.linkedRoomName ?? "단체 톡방";
+    const isClosed =
+      message.linkedRoomRecruitmentStatus === "CLOSED" ||
+      Boolean(message.linkedRoomRecruitmentClosed);
 
-    if (isAlreadyJoined) {
-      navigate(`/chat/open/${linkedRoomId}`, {
-        state: {
-          roomName: targetRoomName,
-          roomDescription: message.linkedRoomDescription,
-        },
-      });
-      return;
-    }
+    try {
+      // 1. 이미 참여 중인 방인지 로컬 스토어 캐시에서 1차 확인
+      let myRooms = useChatListStore.getState().roomsByTab.MY ?? [];
+      let isAlreadyJoined = myRooms.some((r) => r.roomId === linkedRoomId);
 
-    const enterRoom = async () => {
+      // 2. 스토어에 없다면 서버의 최신 참여 목록(MY)을 조회하여 2차 확인
+      if (!isAlreadyJoined) {
+        try {
+          const myRoomsRes = await getOpenChatRooms("MY", 0, 100);
+          myRooms = myRoomsRes.data.content || [];
+          useChatListStore.getState().setTabRooms("MY", myRooms);
+          isAlreadyJoined = myRooms.some((r) => r.roomId === linkedRoomId);
+        } catch (err) {
+          console.warn("내 채팅방 목록 확인 실패:", err);
+        }
+      }
+
+      // 3. 기존 참여자라면 모집 마감 여부와 무관하게 바로 방으로 이동하여 대화 가능
+      if (isAlreadyJoined) {
+        navigate(`/chat/open/${linkedRoomId}`, {
+          state: {
+            roomName: targetRoomName,
+            roomDescription: message.linkedRoomDescription,
+          },
+        });
+        return;
+      }
+
+      // 4. 미참여자인데 모집 마감 상태인 경우: 신규 참여자 진입 차단 안내 모달 노출
+      if (isClosed) {
+        setRecruitmentClosedModalOpen(true);
+        return;
+      }
+
+      // 5. 미참여자이고 모집 중인 경우: 신규 참여 API 호출 후 입장
       const response = await joinOpenChatRoom(linkedRoomId);
       const targetRoomId = response.data.roomId ?? linkedRoomId;
       const resolvedName = response.data.name ?? targetRoomName;
@@ -3631,22 +3659,32 @@ export default function ChattingPage() {
           roomDescription: message.linkedRoomDescription,
         },
       });
-    };
-
-    try {
-      setJoiningLinkedRoomId(linkedRoomId);
-      await enterRoom();
     } catch (error) {
       console.error("파생 톡방 입장 실패:", error);
       if (isAxiosError(error)) {
         const errorMsg = String(error.response?.data?.message || "");
+
+        // 서버에서 이미 참여한 방이라는 응답을 반환한 경우 기존 참여자로 처리하여 바로 입장
+        if (
+          errorMsg.includes("이미") ||
+          errorMsg.includes("참여") ||
+          (error.response?.status === 409 && errorMsg.includes("참여"))
+        ) {
+          navigate(`/chat/open/${linkedRoomId}`, {
+            state: {
+              roomName: targetRoomName,
+              roomDescription: message.linkedRoomDescription,
+            },
+          });
+          return;
+        }
+
         if (
           error.response?.status === 400 ||
           error.response?.status === 403 ||
           errorMsg.includes("마감") ||
           errorMsg.includes("모집") ||
-          message.linkedRoomRecruitmentStatus === "CLOSED" ||
-          Boolean(message.linkedRoomRecruitmentClosed)
+          isClosed
         ) {
           setRecruitmentClosedModalOpen(true);
           return;
@@ -3848,7 +3886,6 @@ export default function ChattingPage() {
                         msg={msg}
                         isJoining={isJoining}
                         onJoin={() => handleJoinLinkedRoom(msg)}
-                        onClosed={() => setRecruitmentClosedModalOpen(true)}
                         onOpenMenu={(rect) => handleOpenMessageMenu(msg, rect)}
                       />
                     </S.RoomLinkRow>
