@@ -25,6 +25,8 @@ import Box from "@/components/common/Box";
 import TitleContentArea from "@/components/common/TitleContentArea";
 import { PATHS } from "@/constants/paths";
 import { mixpanelTrack } from "@/utils/mixpanel";
+import { secureStorage } from "@/utils/secureStorage";
+import { extractDormitoryFormAutoFill } from "@/utils/complainDormitoryAdapter";
 
 // ---  옵션 배열 생성 헬퍼 함수 ---
 const generateOptions = (min: number, max: number, suffix: string) => {
@@ -99,19 +101,21 @@ export default function ComplainWritePage() {
   const [incidentDate, setIncidentDate] = useState("");
   const [incidentTime, setIncidentTime] = useState("");
 
-  // ---  동적 옵션 목록을 위한 상태 ---
-  const [floorOptions, setFloorOptions] = useState<string[]>([]);
-  const [roomOptions, setRoomOptions] = useState<string[]>([]);
-  const [bedOptions, setBedOptions] = useState<string[]>([]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  // ---  기숙사/동 선택 시 옵션 동적 생성 ---
-  useEffect(() => {
-    const dormName = complainDormitory[selectedDormitoryIndex as number];
-    const blockName = dormitoryBlocks[selectedDormitoryBlockIndex as number];
+  // --- 기숙사/동 선택 시 옵션 동적 생성 (useMemo로 레이스 컨디션 제거) ---
+  const { floorOptions, roomOptions, bedOptions } = useMemo(() => {
+    const dormName =
+      selectedDormitoryIndex !== null
+        ? complainDormitory[selectedDormitoryIndex]
+        : null;
+    const blockName =
+      selectedDormitoryBlockIndex !== null
+        ? dormitoryBlocks[selectedDormitoryBlockIndex]
+        : null;
 
     let floors: string[] = [];
     let rooms: string[] = [];
@@ -126,27 +130,59 @@ export default function ComplainWritePage() {
       beds = generateOptions(1, rules.beds, "번");
     }
 
-    setFloorOptions(floors);
-    setRoomOptions(rooms);
-    setBedOptions(beds);
+    return { floorOptions: floors, roomOptions: rooms, bedOptions: beds };
+  }, [selectedDormitoryIndex, selectedDormitoryBlockIndex]);
 
-    // 옵션이 변경되었을 때, 기존 선택 값이 새 옵션에 없으면 초기화
-    if (!floors.includes(selectedFloor)) {
+  // 옵션 목록이 갱신되었을 때, 기존 선택 값이 새 옵션에 없으면 초기화
+  useEffect(() => {
+    if (selectedFloor && floorOptions.length > 0 && !floorOptions.includes(selectedFloor)) {
       setSelectedFloor("");
     }
-    if (!rooms.includes(selectedRoom)) {
+    if (selectedRoom && roomOptions.length > 0 && !roomOptions.includes(selectedRoom)) {
       setSelectedRoom("");
     }
-    if (!beds.includes(selectedBed)) {
+    if (selectedBed && bedOptions.length > 0 && !bedOptions.includes(selectedBed)) {
       setSelectedBed("");
     }
-  }, [
-    selectedDormitoryIndex,
-    selectedDormitoryBlockIndex,
-    selectedFloor,
-    selectedRoom,
-    selectedBed,
-  ]);
+  }, [floorOptions, roomOptions, bedOptions, selectedFloor, selectedRoom, selectedBed]);
+
+  // --- 신규 민원 작성 시 모바일 사생증 정보 기반 기본값 자동 선택 ---
+  useEffect(() => {
+    if (isEditMode || editId || stateComplain) return;
+
+    let isMounted = true;
+    (async () => {
+      try {
+        const cached = await secureStorage.getCacheWithTtl<any>("portal_dormitory_student_info");
+        const dormData = cached?.data;
+        if (!dormData || !isMounted) return;
+
+        const autoFill = extractDormitoryFormAutoFill(dormData);
+
+        if (autoFill.dormitoryIndex !== null) {
+          setSelectedDormitoryIndex(autoFill.dormitoryIndex);
+        }
+        if (autoFill.dormitoryBlockIndex !== null) {
+          setSelectedDormitoryBlockIndex(autoFill.dormitoryBlockIndex);
+        }
+        if (autoFill.floor) {
+          setSelectedFloor(autoFill.floor);
+        }
+        if (autoFill.room) {
+          setSelectedRoom(autoFill.room);
+        }
+        if (autoFill.bed) {
+          setSelectedBed(autoFill.bed);
+        }
+      } catch (err) {
+        console.warn("[ComplainWritePage] 사생 정보 자동 완성 실패:", err);
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isEditMode, editId, stateComplain]);
 
   useEffect(() => {
     if (complain) {
