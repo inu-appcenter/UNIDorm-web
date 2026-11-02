@@ -212,7 +212,7 @@ export function getAutoFillNoticeMessage(
 ): string | undefined {
   if (isEditMode) return undefined;
   if (status === "success") {
-    return "사생증 정보로 자동 선택했어요. 다른 위치라면 직접 변경해주세요.";
+    return "사생증에 등록된 방 정보예요. 정보가 다르다면 직접 변경할 수 있어요.";
   }
   if (status === "not_found") {
     return "사생증 정보를 찾을 수 없어 직접 선택해주세요.";
