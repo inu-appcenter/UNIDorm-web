@@ -26,7 +26,11 @@ import TitleContentArea from "@/components/common/TitleContentArea";
 import { PATHS } from "@/constants/paths";
 import { mixpanelTrack } from "@/utils/mixpanel";
 import { secureStorage } from "@/utils/secureStorage";
-import { extractDormitoryFormAutoFill } from "@/utils/complainDormitoryAdapter";
+import {
+  extractDormitoryFormAutoFill,
+  AutoFillStatus,
+  getAutoFillNoticeMessage,
+} from "@/utils/complainDormitoryAdapter";
 
 // ---  옵션 배열 생성 헬퍼 함수 ---
 const generateOptions = (min: number, max: number, suffix: string) => {
@@ -51,6 +55,7 @@ export default function ComplainWritePage() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [privacyAgreed, setPrivacyAgreed] = useState(false);
+  const [autoFillStatus, setAutoFillStatus] = useState<AutoFillStatus>("idle");
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -155,9 +160,24 @@ export default function ComplainWritePage() {
       try {
         const cached = await secureStorage.getCacheWithTtl<any>("portal_dormitory_student_info");
         const dormData = cached?.data;
-        if (!dormData || !isMounted) return;
+        if (!dormData) {
+          if (isMounted) setAutoFillStatus("not_found");
+          return;
+        }
 
         const autoFill = extractDormitoryFormAutoFill(dormData);
+
+        const hasAppliedValues =
+          autoFill.dormitoryIndex !== null ||
+          autoFill.dormitoryBlockIndex !== null ||
+          Boolean(autoFill.floor) ||
+          Boolean(autoFill.room) ||
+          Boolean(autoFill.bed);
+
+        if (!hasAppliedValues) {
+          if (isMounted) setAutoFillStatus("not_found");
+          return;
+        }
 
         if (autoFill.dormitoryIndex !== null) {
           setSelectedDormitoryIndex(autoFill.dormitoryIndex);
@@ -174,8 +194,13 @@ export default function ComplainWritePage() {
         if (autoFill.bed) {
           setSelectedBed(autoFill.bed);
         }
+
+        if (isMounted) {
+          setAutoFillStatus("success");
+        }
       } catch (err) {
         console.warn("[ComplainWritePage] 사생 정보 자동 완성 실패:", err);
+        if (isMounted) setAutoFillStatus("not_found");
       }
     })();
 
@@ -183,6 +208,15 @@ export default function ComplainWritePage() {
       isMounted = false;
     };
   }, [isEditMode, editId, stateComplain]);
+
+  const autoFillNotice = useMemo(
+    () =>
+      getAutoFillNoticeMessage(
+        autoFillStatus,
+        isEditMode || Boolean(editId) || Boolean(stateComplain)
+      ),
+    [autoFillStatus, isEditMode, editId, stateComplain]
+  );
 
   useEffect(() => {
     if (complain) {
@@ -339,7 +373,7 @@ export default function ComplainWritePage() {
           />
         </FormField>
 
-        <TitleContentArea title={"민원인 정보"}>
+        <TitleContentArea title={"민원인 정보"} description={autoFillNotice}>
           <Box>
             <Content>
               <FormField label="기숙사" required>

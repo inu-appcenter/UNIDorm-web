@@ -200,3 +200,22 @@ export function extractDormitoryFormAutoFill(
 
   return result;
 }
+
+export type AutoFillStatus = "idle" | "success" | "not_found";
+
+/**
+ * 자동 완성 결과 상태에 따른 사용자 안내 문구를 반환합니다.
+ */
+export function getAutoFillNoticeMessage(
+  status: AutoFillStatus,
+  isEditMode?: boolean
+): string | undefined {
+  if (isEditMode) return undefined;
+  if (status === "success") {
+    return "사생증 정보로 자동 선택했어요. 다른 위치라면 직접 변경해주세요.";
+  }
+  if (status === "not_found") {
+    return "사생증 정보를 찾을 수 없어 직접 선택해주세요.";
+  }
+  return undefined;
+}
