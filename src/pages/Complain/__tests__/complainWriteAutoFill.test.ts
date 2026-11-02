@@ -197,7 +197,7 @@ describe("ComplainWritePage - 사생증 자동완성 및 옵션 반응성 정밀
   it("6. 자동 완성 상태별 안내 메시지가 담백하고 정확하게 생성된다", () => {
     // 성공 시
     const successMsg = getAutoFillNoticeMessage("success", false);
-    expect(successMsg).toBe("사생증 정보로 자동 선택했어요. 다른 위치라면 직접 변경해주세요.");
+    expect(successMsg).toBe("사생증에 등록된 방 정보예요. 정보가 다르다면 직접 변경할 수 있어요.");
 
     // 사생 정보 미확인 / 실패 시
     const notFoundMsg = getAutoFillNoticeMessage("not_found", false);
