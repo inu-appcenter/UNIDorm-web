@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { useNotificationScroll } from "@/queries/notifications";
 import useUserStore from "../stores/useUserStore.ts";
 import { Link, useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import { roommateKeys } from "@/queries/roommates";
 import {
   acceptRoommateMatching,
   rejectRoommateMatching,
@@ -18,6 +20,7 @@ const PAGE_SIZE = 20;
 
 const NotificationPage = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { tokenInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
   const observerTarget = useRef<HTMLDivElement>(null);
@@ -67,6 +70,7 @@ const NotificationPage = () => {
     if (!selectedMatching) return;
     try {
       await acceptRoommateMatching(selectedMatching.id);
+      queryClient.invalidateQueries({ queryKey: roommateKeys.myInfo() });
       alert("매칭 요청이 수락되었습니다.");
       alert(
         "UNI Dorm에서의 룸메이트 매칭은 실제 기숙사 룸메이트 지정과 무관하며, 룸메이트와의 편리한 생활을 위한 서비스를 제공하기 위함입니다.\n반드시 룸메이트 사전 지정 기간에 인천대학교 포털에서 신청해주세요!!!!",

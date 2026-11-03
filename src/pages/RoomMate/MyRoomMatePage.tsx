@@ -14,10 +14,12 @@ import QuickMessageModal from "../../components/roommate/QuickMessageModal.tsx";
 import { putUserTimetableImage } from "@/apis/members";
 import RoundSquareWhiteButton from "../../components/button/RoundSquareWhiteButton.tsx";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import BottomBar from "../../components/common/BottomBar/BottomBar.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import CommonBottomSheet from "../../components/modal/CommonBottomSheet.tsx";
 import {
+  roommateKeys,
   useMyRoommateInfo,
   useMyRoommateRules,
   useMyRoommateTimetableImage,
@@ -27,6 +29,7 @@ import { useInitFromQuery } from "@/hooks/useInitFromQuery";
 
 export default function MyRoomMatePage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { data: roommateInfo = null, isSuccess: isRoommateSuccess } =
     useMyRoommateInfo();
   const notFound = Boolean(isRoommateSuccess && !roommateInfo);
@@ -83,6 +86,7 @@ export default function MyRoomMatePage() {
           }
           cancelRoommateMatching(matchingId)
             .then(() => {
+              queryClient.invalidateQueries({ queryKey: roommateKeys.myInfo() });
               alert(
                 `${roommateInfo?.name}님과의 룸메이트 관계가 해제되었습니다.`,
               );
