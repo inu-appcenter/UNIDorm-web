@@ -12,6 +12,7 @@ import {
 import {
   roommateKeys,
   useMatchingPostList,
+  useMyRoommateInfo,
   useRoommateNotificationFilter,
 } from "@/queries/roommates";
 import { useMemberLikePosts } from "@/queries/members";
@@ -28,6 +29,7 @@ import { RoommatePost } from "@/types/roommates";
 import type { MyPost_RoommateBoard } from "@/types/members";
 import { useRoommateMatchingStatus } from "@/hooks/useRoommateMatchingStatus";
 import { formatSemesterName } from "@/utils/semester";
+import { mixpanelTrack } from "@/utils/mixpanel";
 import MatchedRoomMateCard from "@/components/roommate/MatchedRoomMateCard";
 import RoommateEmptyState from "@/components/roommate/RoommateEmptyState";
 import { colors, typography } from "@/styles/tokens";
@@ -82,6 +84,7 @@ export default function RoomMatePage() {
 
   const isLoggedIn = Boolean(tokenInfo.accessToken);
   const hasChecklist = userInfo.roommateCheckList;
+  const { data: roommateInfo } = useMyRoommateInfo({ enabled: isLoggedIn });
 
   const selectedCategory = searchParams.get("tab") || CATEGORY_LIST[0];
   const semesterParam = searchParams.get("semester");
@@ -434,6 +437,28 @@ export default function RoomMatePage() {
 
       {selectedCategory === CATEGORY_LIST[0] && (
         <>
+          {isLoggedIn && roommateInfo && (
+            <MyRoommateBanner
+              role="button"
+              tabIndex={0}
+              onClick={() => {
+                mixpanelTrack.featureClicked(
+                  "내 룸메이트 바로가기",
+                  "룸메이트_홈",
+                );
+                navigate(PATHS.ROOMMATE.MY);
+              }}
+            >
+              <MyRoommateBannerLeft>
+                <span className="roommate-name">{roommateInfo.name}</span>님과 룸메이트 중이에요
+              </MyRoommateBannerLeft>
+              <MyRoommateBannerRight>
+                내 룸메이트 보기
+                <ChevronRight size={16} />
+              </MyRoommateBannerRight>
+            </MyRoommateBanner>
+          )}
+
           <TitleContentArea
             title={"맞춤 룸메이트"}
             description={"조건에 맞는 글이 올라오면 알림을 받을 수 있어요."}
@@ -1114,4 +1139,49 @@ const WriteButton = styled.button`
     cursor: wait;
     opacity: 0.7;
   }
+`;
+
+
+const MyRoommateBanner = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background-color: #ffffff;
+  border: 1px solid ${colors.gray.gray200};
+  border-radius: 16px;
+  cursor: pointer;
+  user-select: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.12s ease;
+
+  &:active {
+    transform: scale(0.98);
+    background-color: ${colors.bg.bg1};
+  }
+`;
+
+const MyRoommateBannerLeft = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: "Pretendard", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: ${colors.gray.gray700};
+
+  .roommate-name {
+    font-weight: 700;
+    color: ${colors.gray.gray900};
+  }
+`;
+
+const MyRoommateBannerRight = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-family: "Pretendard", sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1677ff;
 `;

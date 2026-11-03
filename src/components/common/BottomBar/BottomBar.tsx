@@ -3,11 +3,10 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 import useUserStore from "../../../stores/useUserStore.ts";
-import { getMyRoommateInfo } from "@/apis/roommate";
 import { getAllRoommateChatUnreadCount } from "@/apis/chat";
 import { getOpenChatRooms } from "@/apis/openchat";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { roommateKeys } from "@/queries/roommates";
+import { useQuery } from "@tanstack/react-query";
+import { useMyRoommateInfo } from "@/queries/roommates";
 import TooltipMessage from "@/components/common/TooltipMessage";
 import { useRoommateMatchingStatus } from "@/hooks/useRoommateMatchingStatus";
 import { formatSemesterName } from "@/utils/semester";
@@ -166,12 +165,14 @@ const Button = ({
 export default function BottomBar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const pathname = location.pathname;
   const { tokenInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
   const { data: matchingStatus, isOpen: isMatchingOpen } =
     useRoommateMatchingStatus();
+  const { data: roommateInfo } = useMyRoommateInfo({
+    enabled: isLoggedIn,
+  });
 
   const formattedTooltipMessage = matchingStatus
     ? `${matchingStatus.year % 100}년 ${formatSemesterName(matchingStatus.semester)}\n룸메이트 매칭 중!`
@@ -255,24 +256,17 @@ export default function BottomBar() {
           isActive={
             pathname === "/roommate" || pathname.startsWith("/roommate")
           }
-          onClick={async () => {
+          onClick={() => {
             mixpanelTrack.featureClicked("룸메이트", "BottomBar");
             if (!isLoggedIn) {
               navigate("/roommate");
               return;
             }
-            try {
-              const info = await queryClient.fetchQuery({
-                queryKey: roommateKeys.myInfo(),
-                queryFn: async () => (await getMyRoommateInfo()).data,
-                staleTime: 1000 * 60 * 5,
-              });
-              if (info) {
-                navigate("/roommate/my");
-              } else {
-                navigate("/roommate");
-              }
-            } catch {
+            if (isMatchingOpen) {
+              navigate("/roommate");
+            } else if (roommateInfo) {
+              navigate("/roommate/my");
+            } else {
               navigate("/roommate");
             }
           }}
