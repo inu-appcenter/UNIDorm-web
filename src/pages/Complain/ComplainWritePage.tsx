@@ -16,6 +16,7 @@ import {
 import { createComplaint, updateComplaint } from "@/apis/complain";
 import { ComplaintCreateDto } from "@/types/complain";
 import FormField from "../../components/complain/FormField.tsx";
+import FacilityComplaintModal from "../../components/complain/FacilityComplaintModal";
 import { Dropdown, DropdownContainer, Input } from "@/styles/common";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import { useFileHandler } from "@/hooks/useFileHandler";
@@ -31,6 +32,9 @@ import {
   AutoFillStatus,
   getAutoFillNoticeMessage,
 } from "@/utils/complainDormitoryAdapter";
+
+// 프론트 표시용 민원 유형 (가짜 선택지 '시설(고장 등)' 포함)
+const DISPLAY_COMPLAIN_TYPES = [...ComplainType, "시설(고장 등)"];
 
 // ---  옵션 배열 생성 헬퍼 함수 ---
 const generateOptions = (min: number, max: number, suffix: string) => {
@@ -56,6 +60,7 @@ export default function ComplainWritePage() {
   const [content, setContent] = useState("");
   const [privacyAgreed, setPrivacyAgreed] = useState(false);
   const [autoFillStatus, setAutoFillStatus] = useState<AutoFillStatus>("idle");
+  const [isFacilityModalOpen, setIsFacilityModalOpen] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -94,6 +99,15 @@ export default function ComplainWritePage() {
   const [selectedComplainTypeIndex, setSelectedComplainTypeIndex] = useState<
     number | null
   >(null);
+
+  // 민원 유형 선택 핸들러 (가짜 선택지 '시설(고장 등)' 클릭 시 선택을 차단하고 안내 모달 표출)
+  const handleSelectComplainType = (index: number | null) => {
+    if (index === ComplainType.length) {
+      setIsFacilityModalOpen(true);
+      return;
+    }
+    setSelectedComplainTypeIndex(index);
+  };
   const [selectedDormitoryIndex, setSelectedDormitoryIndex] = useState<
     number | null
   >(null);
@@ -367,9 +381,9 @@ export default function ComplainWritePage() {
       <Content>
         <FormField label="유형" required>
           <SelectableChipGroup
-            Groups={ComplainType}
+            Groups={DISPLAY_COMPLAIN_TYPES}
             selectedIndex={selectedComplainTypeIndex}
-            onSelect={setSelectedComplainTypeIndex}
+            onSelect={handleSelectComplainType}
           />
         </FormField>
 
@@ -526,6 +540,11 @@ export default function ComplainWritePage() {
           onClick={handleSubmit}
         />
       </ButtonWrapper>
+
+      <FacilityComplaintModal
+        show={isFacilityModalOpen}
+        onClose={() => setIsFacilityModalOpen(false)}
+      />
     </Wrapper>
   );
 }
