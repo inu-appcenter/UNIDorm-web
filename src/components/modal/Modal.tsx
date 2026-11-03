@@ -252,8 +252,8 @@ const ModalHeader = styled.div`
 
 const ModalScrollArea = styled.div`
   flex: 1;
-  overflow-y: scroll;
-  padding-right: 8px;
+  overflow-y: auto;
+  scrollbar-gutter: stable both-edges;
   color: #6c6c74;
   font-size: 14px;
   word-break: break-word;
