@@ -65,6 +65,7 @@ export const useMyRoommateInfo = (options?: { enabled?: boolean }) =>
     },
     enabled: options?.enabled ?? true,
     retry: false,
+    refetchOnWindowFocus: true,
     staleTime: 1000 * 60 * 5,
   });
 
