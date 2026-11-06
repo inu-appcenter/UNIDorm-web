@@ -1,5 +1,5 @@
 // components/Onboarding.tsx
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import styled from "styled-components";
 import RoundSquareButton from "../components/button/RoundSquareButton.tsx";
 
@@ -15,6 +15,9 @@ import TermOfUse from "../components/TermOfUse.tsx";
 import { useNavigate } from "react-router-dom";
 
 const SLIDE_DURATION = 3000;
+
+// 온보딩에 사용되는 이미지 에셋 목록
+const PRELOAD_IMAGES = [로고, onboarding1, 민원접수, onboarding4];
 
 const slides = [
   {
@@ -60,7 +63,7 @@ const FirstSlide = ({ title }: { title: string }) => {
     <FirstSlideWrapper>
       <FirstSlideText>
         {parts[0]}
-        <LogoInText src={로고} alt="Unidorm 로고" />
+        <LogoInText src={로고} alt="Unidorm 로고" loading="eager" decoding="sync" />
         {parts[1]}
       </FirstSlideText>
     </FirstSlideWrapper>
@@ -69,7 +72,7 @@ const FirstSlide = ({ title }: { title: string }) => {
 
 const FirstSlideWrapper = styled.div`
   width: 80%;
-  //height: 100%;
+  max-width: 450px;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -95,7 +98,7 @@ const FirstSlideText = styled.div`
 
 const LogoInText = styled.img`
   height: 70px;
-  vertical-align: -0.1em; // 살짝 아래로 내림 (기본은 baseline)
+  vertical-align: -0.1em;
   display: inline;
 `;
 
@@ -105,35 +108,37 @@ const OnboardingPage: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const isLastSlide = currentIndex === slides.length - 1;
-  const isFirstSlide = currentIndex === 0;
 
-  const goToNextSlide = () => {
-    if (!isLastSlide) {
-      setCurrentIndex((prev) => prev + 1);
-    }
-  };
+  // 모든 온보딩 이미지 사전 로딩 (브라우저 캐시 적재)
+  useEffect(() => {
+    PRELOAD_IMAGES.forEach((src) => {
+      const img = new window.Image();
+      img.src = src;
+    });
+  }, []);
 
-  const goToPrevSlide = () => {
-    if (!isFirstSlide) {
-      setCurrentIndex((prev) => prev - 1);
-    }
-  };
+  const goToNextSlide = useCallback(() => {
+    setCurrentIndex((prev) => (prev < slides.length - 1 ? prev + 1 : prev));
+  }, []);
 
-  const resetTimer = () => {
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(goToNextSlide, SLIDE_DURATION);
-  };
+  const goToPrevSlide = useCallback(() => {
+    setCurrentIndex((prev) => (prev > 0 ? prev - 1 : prev));
+  }, []);
 
   useEffect(() => {
-    resetTimer();
+    if (timerRef.current) clearTimeout(timerRef.current);
+    if (!isLastSlide) {
+      timerRef.current = setTimeout(goToNextSlide, SLIDE_DURATION);
+    }
+
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [currentIndex]);
+  }, [currentIndex, isLastSlide, goToNextSlide]);
 
   // 터치 이벤트 핸들러: 터치 위치에 따라 이전/다음 슬라이드 이동
   const handleTouch = (e: React.MouseEvent<HTMLDivElement>) => {
-    resetTimer();
+    if (timerRef.current) clearTimeout(timerRef.current);
     const touchX = e.clientX;
     const screenWidth = window.innerWidth;
 
@@ -145,18 +150,14 @@ const OnboardingPage: React.FC = () => {
   };
 
   const handleStart = () => {
-    localStorage.setItem("isFirstVisit(10.20)", "false"); //온보딩페이지 변경돼서 다른 사람들한테도 보이게 하려면 로컬스토리지에 날짜를 기록하여 관리
-
+    localStorage.setItem("isFirstVisit(10.20)", "false");
     navigate("/home");
   };
 
   const handleJump = (e?: React.MouseEvent<HTMLButtonElement>) => {
     if (e) e.stopPropagation();
-
     setCurrentIndex(slides.length - 1);
   };
-
-  const { id, title, content, subContent, image } = slides[currentIndex];
 
   return (
     <Wrapper onClick={handleTouch}>
@@ -178,39 +179,54 @@ const OnboardingPage: React.FC = () => {
           })}
         </ProgressContainer>
 
-        {!isLastSlide && (
-          <TopRight>
-            <SkipButton onClick={(e) => handleJump(e)}>건너뛰기</SkipButton>
-          </TopRight>
-        )}
+        <TopRight>
+          <SkipButton $isVisible={!isLastSlide} onClick={(e) => handleJump(e)}>
+            건너뛰기
+          </SkipButton>
+        </TopRight>
       </TopSection>
 
-      {id === 0 ? (
-        <FirstSlide title={title} />
-      ) : (
-        <Content>
-          <TitleTextWrapper>
-            <Title>{title}</Title>
-            <Text>{content}</Text>
-            <Text style={{ fontSize: "12px" }}>{subContent}</Text>
-          </TitleTextWrapper>
+      <SliderViewport>
+        <SliderTrack style={{ transform: `translateX(-${currentIndex * 100}%)` }}>
+          {slides.map((slide) => (
+            <SlideItem key={slide.id}>
+              {slide.id === 0 ? (
+                <FirstSlide title={slide.title} />
+              ) : (
+                <Content>
+                  <TitleTextWrapper>
+                    <Title>{slide.title}</Title>
+                    <Text>{slide.content}</Text>
+                    {slide.subContent && (
+                      <SubText>{slide.subContent}</SubText>
+                    )}
+                  </TitleTextWrapper>
 
-          <Image src={image ?? undefined} alt={title} />
-        </Content>
-      )}
+                  {slide.image && (
+                    <SlideImage
+                      src={slide.image}
+                      alt={slide.title}
+                      loading="eager"
+                      decoding="sync"
+                    />
+                  )}
+                </Content>
+              )}
+            </SlideItem>
+          ))}
+        </SliderTrack>
+      </SliderViewport>
 
-      <Bottom>
-        {isLastSlide && (
-          <>
-            <TermOfUse />
-            <div>
-              <RoundSquareButton
-                btnName={"UNI Dorm 시작하기"}
-                onClick={handleStart}
-              />
-            </div>
-          </>
-        )}
+      <Bottom onClick={(e) => e.stopPropagation()}>
+        <BottomContent $isVisible={isLastSlide}>
+          <TermOfUse />
+          <div>
+            <RoundSquareButton
+              btnName={"UNI Dorm 시작하기"}
+              onClick={handleStart}
+            />
+          </div>
+        </BottomContent>
       </Bottom>
     </Wrapper>
   );
@@ -224,37 +240,70 @@ const Wrapper = styled.div`
   flex-direction: column;
   align-items: center;
   box-sizing: border-box;
-  overflow-y: auto;
+  overflow: hidden;
   width: 100%;
+  height: 100%;
+  user-select: none;
 `;
 
 const TopRight = styled.div`
   width: 100%;
   display: flex;
   justify-content: flex-end;
-  //padding: 1rem;
+  min-height: 24px;
   box-sizing: border-box;
 `;
 
 const TopSection = styled.div`
   width: 100%;
-  padding: 20px;
+  padding: 20px 20px 0 20px;
   padding-top: calc(32px + var(--safe-area-top, 0px));
   box-sizing: border-box;
+  z-index: 2;
 `;
 
-const SkipButton = styled.button`
+const SkipButton = styled.button<{ $isVisible: boolean }>`
   font-size: 16px;
-  color: black;
+  color: #191f28;
   font-weight: 600;
   background: none;
   border: none;
   cursor: pointer;
+  visibility: ${({ $isVisible }) => ($isVisible ? "visible" : "hidden")};
+  opacity: ${({ $isVisible }) => ($isVisible ? 1 : 0)};
+  transition: opacity 150ms ease;
+  padding: 0;
+`;
+
+const SliderViewport = styled.div`
+  width: 100%;
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  position: relative;
+`;
+
+const SliderTrack = styled.div`
+  display: flex;
+  width: 100%;
+  height: 100%;
+  transition: transform 350ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+`;
+
+const SlideItem = styled.div`
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
 `;
 
 const Content = styled.div`
   width: 100%;
-  //height: 100%;
   flex: 1;
   max-width: 450px;
   display: flex;
@@ -264,9 +313,7 @@ const Content = styled.div`
   text-align: center;
   padding: 0 1.5rem;
   box-sizing: border-box;
-
-  //margin-top: 10vh; // 여기서 높이 조절
-  margin-bottom: auto; // 아래 영역 확보
+  margin-bottom: auto;
 `;
 
 const TitleTextWrapper = styled.div`
@@ -277,9 +324,8 @@ const TitleTextWrapper = styled.div`
 const Title = styled.h2`
   font-size: 28px;
   font-weight: 700;
-  color: #000;
+  color: #191f28;
   margin-bottom: 0.75rem;
-
   word-break: keep-all;
 `;
 
@@ -287,30 +333,51 @@ const Text = styled.p`
   font-size: 14px;
   color: #666;
   line-height: 1.4;
-  //margin: 0 0 1.5rem;
   white-space: pre-line;
   word-break: keep-all;
   margin: 0;
-  //padding: 0;
 `;
 
-const Image = styled.img`
+const SubText = styled.p`
+  font-size: 12px;
+  color: #8b95a1;
+  line-height: 1.4;
+  white-space: pre-line;
+  word-break: keep-all;
+  margin-top: 4px;
+  margin-bottom: 0;
+`;
+
+const SlideImage = styled.img`
   width: 100%;
   height: auto;
   max-height: 200px;
   object-fit: contain;
-  //margin-top: auto;
   margin-top: 40px;
   margin-bottom: 2rem;
 `;
 
 const Bottom = styled.div`
   width: 100%;
-  padding: 20px 20px calc(20px + var(--safe-area-bottom, 0px)) 20px;
+  padding: 0 20px calc(20px + var(--safe-area-bottom, 0px)) 20px;
   box-sizing: border-box;
+  z-index: 2;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+`;
+
+const BottomContent = styled.div<{ $isVisible: boolean }>`
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  visibility: ${({ $isVisible }) => ($isVisible ? "visible" : "hidden")};
+  opacity: ${({ $isVisible }) => ($isVisible ? 1 : 0)};
+  transform: translateY(${({ $isVisible }) => ($isVisible ? "0px" : "8px")});
+  transition: opacity 250ms ease, transform 250ms ease;
+  pointer-events: ${({ $isVisible }) => ($isVisible ? "auto" : "none")};
 `;
 
 const ProgressContainer = styled.div`
@@ -321,7 +388,7 @@ const ProgressContainer = styled.div`
 `;
 
 interface ProgressProps {
-  active?: boolean; // 혹시 쓰는 곳 있으면
+  active?: boolean;
   total: number;
 }
 
@@ -333,7 +400,6 @@ const ProgressBarWrapper = styled.div<ProgressProps>`
   overflow: hidden;
 `;
 
-// ProgressFill.tsx
 const ProgressFill = styled.div<{
   status: "filled" | "active" | "empty";
 }>`
@@ -359,16 +425,3 @@ const ProgressFill = styled.div<{
     }
   }
 `;
-
-// const ButtonWrapper = styled.div`
-//   width: 100%;
-//   height: fit-content;
-//   position: fixed;
-//   bottom: 0;
-//   left: 0;
-//   padding: 16px;
-//   box-sizing: border-box;
-//   background: rgba(244, 244, 244, 0.6);
-//   backdrop-filter: blur(10px);
-//   -webkit-backdrop-filter: blur(10px);
-// `;
