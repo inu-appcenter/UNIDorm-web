@@ -88,6 +88,7 @@ const FirstSlideWrapper = styled.div`
   font-weight: 700;
   color: #191f28;
   text-align: center;
+  margin: auto 0;
 `;
 
 const FirstSlideText = styled.div`
@@ -346,13 +347,15 @@ export default OnboardingPage;
 const Wrapper = styled.div`
   position: relative;
   display: flex;
-  flex: 1;
   flex-direction: column;
   align-items: center;
   box-sizing: border-box;
   overflow: hidden;
   width: 100%;
-  height: 100%;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 100vh;
+  min-height: 100dvh;
   user-select: none;
   touch-action: pan-y;
 `;
@@ -432,11 +435,11 @@ const SlideItem = styled.div<{ $isLast: boolean }>`
   justify-content: center;
   box-sizing: border-box;
   padding: 0 1.5rem;
-  padding-top: calc(50px + var(--safe-area-top, 0px));
+  padding-top: calc(40px + var(--safe-area-top, 0px));
   padding-bottom: ${({ $isLast }) =>
     $isLast
       ? "calc(160px + var(--safe-area-bottom, 0px))"
-      : "calc(50px + var(--safe-area-bottom, 0px))"};
+      : "calc(40px + var(--safe-area-bottom, 0px))"};
 `;
 
 const Content = styled.div`
@@ -448,6 +451,7 @@ const Content = styled.div`
   justify-content: center;
   text-align: center;
   box-sizing: border-box;
+  margin: auto 0;
 `;
 
 const TitleTextWrapper = styled.div`
