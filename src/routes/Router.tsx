@@ -102,6 +102,19 @@ function ChattingPageRoute() {
   return <ChattingPage key={`${chatType}-${id}`} />;
 }
 
+function RootIndexRedirect() {
+  const firstVisit =
+    typeof window !== "undefined"
+      ? localStorage.getItem("isFirstVisit(10.20)")
+      : "false";
+
+  if (firstVisit === null) {
+    return <Navigate to={PATHS.ONBOARDING} replace />;
+  }
+
+  return <Navigate to={PATHS.HOME} replace />;
+}
+
 export const router = createBrowserRouter([
   {
     path: PATHS.ROOT,
@@ -111,7 +124,7 @@ export const router = createBrowserRouter([
       {
         element: <OutPage />,
         children: [
-          { index: true, element: <Navigate to="/home" replace /> },
+          { index: true, element: <RootIndexRedirect /> },
           { path: "logout", element: <LogoutPage />, handle: { bg: "white" } },
           { path: "onboarding", element: <OnboardingPage />, handle: { bg: "white" } },
         ],
@@ -392,7 +405,8 @@ if (typeof window !== "undefined") {
     const path = resolvedTarget.pathname;
     const isTabNavigation = opts?.state?.isTabNavigation === true;
     const isHomePath = path === PATHS.HOME || path === PATHS.ROOT;
-    const isBootstrapRedirect = window.location.pathname === "/" && isHomePath;
+    const isBootstrapRedirect =
+      window.location.pathname === "/" && (isHomePath || path === PATHS.ONBOARDING);
 
     // 단순 해시(#)나 쿼리(?)만 변경하는 라우팅이거나 빈 이동인지 확인
     const isHashOrSearchOnly =
