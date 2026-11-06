@@ -58,12 +58,22 @@ export const useAppInit = () => {
     else setLoading(false);
   }, [tokenInfo.accessToken, setUserInfo, setLoading, navigate]);
 
-  // 온보딩 방문 이력 체크
+  // 온보딩 방문 이력 체크 (루트 또는 홈 진입 시에만 체크하여 서브 웹뷰 튕김 방지)
   useEffect(() => {
-    localStorage.removeItem("isFirstVisit");
-    const firstVisit = localStorage.getItem("isFirstVisit(10.20)");
-    if (firstVisit === null && window.location.pathname !== PATHS.ONBOARDING) {
-      navigate(PATHS.ONBOARDING, { replace: true });
+    try {
+      localStorage.removeItem("isFirstVisit");
+      const currentPath = window.location.pathname;
+      const isRootOrHome = currentPath === PATHS.ROOT || currentPath === PATHS.HOME;
+
+      // 서브 웹뷰나 상세 페이지에서는 온보딩 체크 및 리다이렉트를 수행하지 않음
+      if (!isRootOrHome) return;
+
+      const firstVisit = localStorage.getItem("isFirstVisit(10.20)");
+      if (firstVisit === null) {
+        navigate(PATHS.ONBOARDING, { replace: true });
+      }
+    } catch (e) {
+      console.error("Onboarding check error:", e);
     }
   }, [navigate]);
 
