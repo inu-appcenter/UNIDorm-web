@@ -54,8 +54,8 @@ const RoomMateAddPage = lazy(() => import("@/pages/RoomMate/RoomMateAddPage"));
 
 /*OpenCHAT*/
 const OpenChatPage = lazy(() => import("@/pages/Chat/openChatPage"));
-const OpenChatCreatePage = lazy(() => import("../pages/Chat/OpenChatCreatePage"));
-const OpenChatEditPage = lazy(() => import("../pages/Chat/OpenChatEditPage"));
+const OpenChatCreatePage = lazy(() => import("@/pages/Chat/OpenChatCreatePage"));
+const OpenChatEditPage = lazy(() => import("@/pages/Chat/OpenChatEditPage"));
 const ChattingPage = lazy(() => import("@/pages/Chat/ChattingPage"));
 const ChatMembersPage = lazy(() => import("@/pages/Chat/ChatMembersPage"));
 const ChatNotificationSettingsPage = lazy(() => import("@/pages/Chat/ChatNotificationSettingsPage"));
