@@ -7,6 +7,7 @@ const spin = keyframes`
 `;
 
 const SpinnerWrapper = styled.div<{ $overlay?: boolean }>`
+  flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;

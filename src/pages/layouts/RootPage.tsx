@@ -1,8 +1,10 @@
+import { Suspense } from "react";
 import { Outlet } from "react-router-dom";
 import BottomBar from "@/components/common/BottomBar/BottomBar"; // 기존 바텀바 컴포넌트
 import * as S from "@/styles/Layout.styles";
 import Header from "@/components/common/Header/Header";
 import useCurrentRouteBg from "@/hooks/useCurrentRouteBg";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 
 export default function RootPage() {
   const bgType = useCurrentRouteBg();
@@ -11,7 +13,9 @@ export default function RootPage() {
     <S.PageWrapper $bgType={bgType}>
       <Header hasBack={false} />
       <S.ContentContainer $hasHeader={true} $hasBottomBar={true}>
-        <Outlet />
+        <Suspense fallback={<LoadingSpinner />}>
+          <Outlet />
+        </Suspense>
       </S.ContentContainer>
       <BottomBar />
     </S.PageWrapper>
