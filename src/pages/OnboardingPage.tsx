@@ -120,9 +120,10 @@ const OnboardingPage: React.FC = () => {
   // 좌우 드래그/스와이프 상태
   const [dragOffset, setDragOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
-  const dragStartX = useRef(0);
-  const dragStartTime = useRef(0);
-  const hasMoved = useRef(false);
+  const isPointerDownRef = useRef(false);
+  const dragStartXRef = useRef(0);
+  const dragStartTimeRef = useRef(0);
+  const hasMovedRef = useRef(false);
 
   // 모든 온보딩 이미지 사전 로딩 (브라우저 캐시 적재)
   useEffect(() => {
@@ -152,21 +153,31 @@ const OnboardingPage: React.FC = () => {
     };
   }, [currentIndex, isLastSlide, isDragging, goToNextSlide]);
 
-  // 드래그 제스처 핸들러
-  const onDragStart = (clientX: number) => {
+  // 포인터 이벤트(터치/마우스 단일 통합 제어 - 중복 이벤트 방지)
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+
     if (timerRef.current) clearTimeout(timerRef.current);
-    setIsDragging(true);
-    dragStartX.current = clientX;
-    dragStartTime.current = Date.now();
-    hasMoved.current = false;
+    isPointerDownRef.current = true;
+    dragStartXRef.current = e.clientX;
+    dragStartTimeRef.current = Date.now();
+    hasMovedRef.current = false;
     setDragOffset(0);
+
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      // ignore
+    }
   };
 
-  const onDragMove = (clientX: number) => {
-    if (!isDragging) return;
-    const deltaX = clientX - dragStartX.current;
-    if (Math.abs(deltaX) > 5) {
-      hasMoved.current = true;
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isPointerDownRef.current) return;
+
+    const deltaX = e.clientX - dragStartXRef.current;
+    if (Math.abs(deltaX) > 6) {
+      hasMovedRef.current = true;
+      setIsDragging(true);
     }
 
     const isFirst = currentIndex === 0;
@@ -180,28 +191,38 @@ const OnboardingPage: React.FC = () => {
     }
   };
 
-  const onDragEnd = () => {
-    if (!isDragging) return;
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isPointerDownRef.current) return;
+    isPointerDownRef.current = false;
     setIsDragging(false);
 
-    const deltaTime = Math.max(Date.now() - dragStartTime.current, 1);
-    const velocity = Math.abs(dragOffset) / deltaTime;
+    try {
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      }
+    } catch {
+      // ignore
+    }
+
+    const deltaTime = Math.max(Date.now() - dragStartTimeRef.current, 1);
+    const deltaX = e.clientX - dragStartXRef.current;
+    const velocity = Math.abs(deltaX) / deltaTime;
     const isFirst = currentIndex === 0;
     const isLast = currentIndex === slides.length - 1;
 
-    // 50px 이상 드래그하거나 빠른 플릭 시 이동
-    if (dragOffset < -50 || (dragOffset < -20 && velocity > 0.3)) {
+    // 50px 이상 드래그하거나 빠른 플릭 시 슬라이드 이동
+    if (deltaX < -50 || (deltaX < -20 && velocity > 0.3)) {
       if (!isLast) {
         goToNextSlide();
       }
-    } else if (dragOffset > 50 || (dragOffset > 20 && velocity > 0.3)) {
+    } else if (deltaX > 50 || (deltaX > 20 && velocity > 0.3)) {
       if (!isFirst) {
         goToPrevSlide();
       }
-    } else if (!hasMoved.current) {
-      // 드래그 없는 단순 탭/클릭 시 좌우 분기 이동
+    } else if (!hasMovedRef.current) {
+      // 드래그 없는 단순 탭/클릭 시 좌우 50% 분기 이동 (단 1회만 실행)
       const screenWidth = window.innerWidth;
-      if (dragStartX.current < screenWidth / 2) {
+      if (dragStartXRef.current < screenWidth / 2) {
         if (!isFirst) goToPrevSlide();
       } else {
         if (!isLast) goToNextSlide();
@@ -211,32 +232,11 @@ const OnboardingPage: React.FC = () => {
     setDragOffset(0);
   };
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    onDragStart(e.clientX);
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    onDragMove(e.clientX);
-  };
-
-  const handleMouseUp = () => {
-    onDragEnd();
-  };
-
-  const handleMouseLeave = () => {
-    if (isDragging) onDragEnd();
-  };
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    onDragStart(e.touches[0].clientX);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    onDragMove(e.touches[0].clientX);
-  };
-
-  const handleTouchEnd = () => {
-    onDragEnd();
+  const handlePointerCancel = () => {
+    if (!isPointerDownRef.current) return;
+    isPointerDownRef.current = false;
+    setIsDragging(false);
+    setDragOffset(0);
   };
 
   const handleStart = (e?: React.MouseEvent) => {
@@ -278,15 +278,12 @@ const OnboardingPage: React.FC = () => {
         </TopRight>
       </TopSection>
 
-      {/* 중앙 슬라이더 뷰포트 (드래그/터치 제스처 영역) */}
+      {/* 중앙 슬라이더 뷰포트 (Pointer Events 단일 통합) */}
       <SliderViewport
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseLeave}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerCancel}
       >
         <SliderTrack
           $isDragging={isDragging}
@@ -410,6 +407,8 @@ const SliderViewport = styled.div`
   display: flex;
   position: relative;
   cursor: grab;
+  touch-action: pan-y;
+  user-select: none;
 
   &:active {
     cursor: grabbing;
