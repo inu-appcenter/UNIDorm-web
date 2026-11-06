@@ -209,6 +209,27 @@ export default function HomePage() {
     mixpanelTrack.homeViewed();
   }, []);
 
+  // 유휴 시간에 바텀바 주요 탭 청크를 사전 로드하여 탭 전환 지연 방지
+  useEffect(() => {
+    const preloadRoutes = () => {
+      import("@/pages/RoomMate/RoomMatePage");
+      import("@/pages/GroupPurchase/GroupPurchaseMainPage");
+      import("@/pages/Chat/openChatPage");
+      import("@/pages/Complain/ComplainListPage");
+      import("@/pages/MyPage");
+    };
+
+    if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+      const handle = (window as any).requestIdleCallback(preloadRoutes, {
+        timeout: 2000,
+      });
+      return () => (window as any).cancelIdleCallback(handle);
+    }
+
+    const timer = setTimeout(preloadRoutes, 1200);
+    return () => clearTimeout(timer);
+  }, []);
+
   useEffect(() => {
     const hasSeenMigrationAlert = sessionStorage.getItem(
       "hasSeenFreshmanMigrationAlert",
