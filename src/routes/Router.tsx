@@ -27,9 +27,11 @@ const FreshmanLoginPage = lazy(() => import("@/pages/FreshmanLoginPage"));
 const FreshmanSignupPage = lazy(() => import("@/pages/FreshmanSignupPage"));
 
 /* 페이지 - 메인 5개 탭 (RootPage 하위) */
-const HomePage = lazy(() => import("@/pages/HomePage"));
+import HomePage from "@/pages/HomePage";
 const RoomMatePage = lazy(() => import("@/pages/RoomMate/RoomMatePage"));
 const GroupPurchaseMainPage = lazy(() => import("@/pages/GroupPurchase/GroupPurchaseMainPage"));
+const OpenChatPage = lazy(() => import("@/pages/Chat/openChatPage"));
+const ComplainListPage = lazy(() => import("@/pages/Complain/ComplainListPage"));
 const MyPage = lazy(() => import("@/pages/MyPage"));
 
 /* 페이지 - 서브 상세 (SubPage 하위) */
@@ -53,7 +55,6 @@ const RoomMateChecklistPage = lazy(() => import("@/pages/RoomMate/RoomMateCheckl
 const RoomMateAddPage = lazy(() => import("@/pages/RoomMate/RoomMateAddPage"));
 
 /*OpenCHAT*/
-const OpenChatPage = lazy(() => import("@/pages/Chat/openChatPage"));
 const OpenChatCreatePage = lazy(() => import("@/pages/Chat/OpenChatCreatePage"));
 const OpenChatEditPage = lazy(() => import("@/pages/Chat/OpenChatEditPage"));
 const ChattingPage = lazy(() => import("@/pages/Chat/ChattingPage"));
@@ -71,7 +72,6 @@ const TipListPage = lazy(() => import("@/pages/Tip/TipListPage"));
 const TipWritePage = lazy(() => import("@/pages/Tip/TipWritePage"));
 const TipDetailPage = lazy(() => import("@/pages/Tip/TipDetailPage"));
 
-const ComplainListPage = lazy(() => import("@/pages/Complain/ComplainListPage"));
 const ComplainDetailPage = lazy(() => import("@/pages/Complain/ComplainDetailPage"));
 const ComplainWritePage = lazy(() => import("@/pages/Complain/ComplainWritePage"));
 const FormListPage = lazy(() => import("@/pages/Form/FormListPage"));
