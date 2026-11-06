@@ -1,3 +1,4 @@
+import { lazy } from "react";
 import { createBrowserRouter, Navigate, useParams } from "react-router-dom";
 import { resolveNavigationTarget } from "@/utils/navigation";
 import FeatureFlagGate from "@/components/common/FeatureFlagGate";
@@ -19,83 +20,83 @@ import SubPage from "@/pages/layouts/SubPage";
 import OutPage from "@/pages/layouts/OutPage";
 
 /* 페이지 - 인증/온보딩 */
-import LoginPage from "@/pages/LoginPage";
-import LogoutPage from "@/pages/LogoutPage";
-import OnboardingPage from "@/pages/OnboardingPage";
-import FreshmanLoginPage from "@/pages/FreshmanLoginPage";
-import FreshmanSignupPage from "@/pages/FreshmanSignupPage";
+const LoginPage = lazy(() => import("@/pages/LoginPage"));
+const LogoutPage = lazy(() => import("@/pages/LogoutPage"));
+const OnboardingPage = lazy(() => import("@/pages/OnboardingPage"));
+const FreshmanLoginPage = lazy(() => import("@/pages/FreshmanLoginPage"));
+const FreshmanSignupPage = lazy(() => import("@/pages/FreshmanSignupPage"));
 
 /* 페이지 - 메인 5개 탭 (RootPage 하위) */
-import HomePage from "@/pages/HomePage";
-import RoomMatePage from "@/pages/RoomMate/RoomMatePage";
-import GroupPurchaseMainPage from "@/pages/GroupPurchase/GroupPurchaseMainPage";
-import MyPage from "@/pages/MyPage";
+const HomePage = lazy(() => import("@/pages/HomePage"));
+const RoomMatePage = lazy(() => import("@/pages/RoomMate/RoomMatePage"));
+const GroupPurchaseMainPage = lazy(() => import("@/pages/GroupPurchase/GroupPurchaseMainPage"));
+const MyPage = lazy(() => import("@/pages/MyPage"));
 
 /* 페이지 - 서브 상세 (SubPage 하위) */
-import MyInfoEditPage from "@/pages/MyPage/MyInfoEditPage";
-import FreshmanMigrationPage from "@/pages/MyPage/FreshmanMigrationPage";
-import AgreementPage from "@/pages/MyPage/AgreementPage";
-import NotificationSettingPage from "@/pages/MyPage/NotificationSettingPage";
-import MyPostsPage from "@/pages/MyPostsPage";
-import MyLikesPage from "@/pages/MyLikesPage";
-import NotificationPage from "@/pages/NotificationPage";
-import CalendarPage from "@/pages/CalendarPage";
-import PortalDormitoryPage from "@/pages/Dormitory/PortalDormitoryPage";
-import DormitoryCardPage from "@/pages/Dormitory/DormitoryCardPage";
-import PortalAccountPage from "@/pages/MyPage/PortalAccountPage";
+const MyInfoEditPage = lazy(() => import("@/pages/MyPage/MyInfoEditPage"));
+const FreshmanMigrationPage = lazy(() => import("@/pages/MyPage/FreshmanMigrationPage"));
+const AgreementPage = lazy(() => import("@/pages/MyPage/AgreementPage"));
+const NotificationSettingPage = lazy(() => import("@/pages/MyPage/NotificationSettingPage"));
+const MyPostsPage = lazy(() => import("@/pages/MyPostsPage"));
+const MyLikesPage = lazy(() => import("@/pages/MyLikesPage"));
+const NotificationPage = lazy(() => import("@/pages/NotificationPage"));
+const CalendarPage = lazy(() => import("@/pages/CalendarPage"));
+const PortalDormitoryPage = lazy(() => import("@/pages/Dormitory/PortalDormitoryPage"));
+const DormitoryCardPage = lazy(() => import("@/pages/Dormitory/DormitoryCardPage"));
+const PortalAccountPage = lazy(() => import("@/pages/MyPage/PortalAccountPage"));
 
-import MyRoomMatePage from "@/pages/RoomMate/MyRoomMatePage";
-import RoomMateListPage from "@/pages/RoomMate/RoomMateListPage";
-import RoomMateBoardDetailPage from "@/pages/RoomMate/RoomMateBoardDetailPage";
-import RoomMateFilterPage from "@/pages/RoomMate/RoomMateFilterPage";
-import RoomMateChecklistPage from "@/pages/RoomMate/RoomMateChecklistPage";
-import RoomMateAddPage from "@/pages/RoomMate/RoomMateAddPage";
+const MyRoomMatePage = lazy(() => import("@/pages/RoomMate/MyRoomMatePage"));
+const RoomMateListPage = lazy(() => import("@/pages/RoomMate/RoomMateListPage"));
+const RoomMateBoardDetailPage = lazy(() => import("@/pages/RoomMate/RoomMateBoardDetailPage"));
+const RoomMateFilterPage = lazy(() => import("@/pages/RoomMate/RoomMateFilterPage"));
+const RoomMateChecklistPage = lazy(() => import("@/pages/RoomMate/RoomMateChecklistPage"));
+const RoomMateAddPage = lazy(() => import("@/pages/RoomMate/RoomMateAddPage"));
 
 /*OpenCHAT*/
-import OpenChatPage from "@/pages/Chat/openChatPage";
-import OpenChatCreatePage from "../pages/Chat/OpenChatCreatePage";
-import OpenChatEditPage from "../pages/Chat/OpenChatEditPage";
-import ChattingPage from "@/pages/Chat/ChattingPage";
-import ChatMembersPage from "@/pages/Chat/ChatMembersPage";
-import ChatNotificationSettingsPage from "@/pages/Chat/ChatNotificationSettingsPage";
-import BlockListPage from "@/pages/Chat/BlockListPage";
+const OpenChatPage = lazy(() => import("@/pages/Chat/openChatPage"));
+const OpenChatCreatePage = lazy(() => import("../pages/Chat/OpenChatCreatePage"));
+const OpenChatEditPage = lazy(() => import("../pages/Chat/OpenChatEditPage"));
+const ChattingPage = lazy(() => import("@/pages/Chat/ChattingPage"));
+const ChatMembersPage = lazy(() => import("@/pages/Chat/ChatMembersPage"));
+const ChatNotificationSettingsPage = lazy(() => import("@/pages/Chat/ChatNotificationSettingsPage"));
+const BlockListPage = lazy(() => import("@/pages/Chat/BlockListPage"));
 
-import GroupPurchasePostPage from "@/pages/GroupPurchase/GroupPurchasePostPage";
-import GroupPurchaseWritePage from "@/pages/GroupPurchase/GroupPurchaseWritePage";
-import KeywordAlertSettingPage from "@/pages/GroupPurchase/KeywordAlertSettingPage";
+const GroupPurchasePostPage = lazy(() => import("@/pages/GroupPurchase/GroupPurchasePostPage"));
+const GroupPurchaseWritePage = lazy(() => import("@/pages/GroupPurchase/GroupPurchaseWritePage"));
+const KeywordAlertSettingPage = lazy(() => import("@/pages/GroupPurchase/KeywordAlertSettingPage"));
 
-import NotificationBoardPage from "@/pages/Announcement/AnnouncementPage";
-import AnnounceDetailPage from "@/pages/Announcement/AnnounceDetailPage";
-import TipListPage from "@/pages/Tip/TipListPage";
-import TipWritePage from "@/pages/Tip/TipWritePage";
-import TipDetailPage from "@/pages/Tip/TipDetailPage";
+const NotificationBoardPage = lazy(() => import("@/pages/Announcement/AnnouncementPage"));
+const AnnounceDetailPage = lazy(() => import("@/pages/Announcement/AnnounceDetailPage"));
+const TipListPage = lazy(() => import("@/pages/Tip/TipListPage"));
+const TipWritePage = lazy(() => import("@/pages/Tip/TipWritePage"));
+const TipDetailPage = lazy(() => import("@/pages/Tip/TipDetailPage"));
 
-import ComplainListPage from "@/pages/Complain/ComplainListPage";
-import ComplainDetailPage from "@/pages/Complain/ComplainDetailPage";
-import ComplainWritePage from "@/pages/Complain/ComplainWritePage";
-import FormListPage from "@/pages/Form/FormListPage";
-import FormDetailPage from "@/pages/Form/FormDetailPage";
+const ComplainListPage = lazy(() => import("@/pages/Complain/ComplainListPage"));
+const ComplainDetailPage = lazy(() => import("@/pages/Complain/ComplainDetailPage"));
+const ComplainWritePage = lazy(() => import("@/pages/Complain/ComplainWritePage"));
+const FormListPage = lazy(() => import("@/pages/Form/FormListPage"));
+const FormDetailPage = lazy(() => import("@/pages/Form/FormDetailPage"));
 
 /* 페이지 - 관리자 */
-import AdminMainPage from "@/pages/Admin/AdminMainPage";
-import CalendarAdminPage from "@/pages/Admin/CalendarAdminPage";
-import AnnounceWritePage from "@/pages/Admin/AnnounceWritePage";
-import ComplainAdminPage from "@/pages/Admin/ComplainAdminPage";
-import ComplainAnswerWritePage from "@/pages/Admin/ComplainAnswerWritePage";
-import PopupNotiListPage from "@/pages/Admin/PopupNotiListPage";
-import PopupNotiCreatePage from "@/pages/Admin/PopupNotiFormPage";
-import CreateNotificationPage from "@/pages/Admin/CreateNotificationPage";
-import FormCreatePage from "@/pages/Admin/FormCreatePage";
-import FormResultPage from "@/pages/Admin/FormResultPage";
-import FCMPage from "@/pages/Admin/FCMPage";
-import FeatureFlagManagePage from "@/pages/Admin/FeatureFlagManagePage";
-import RoomMateFindSettingPage from "@/pages/RoomMate/RoomMateFindSettingPage";
-import DebugLogPage from "@/pages/MyPage/DebugLogPage";
-import SettingsPage from "@/pages/MyPage/SettingsPage";
-import StatisticsPage from "@/pages/Admin/StatisticsPage";
-import OpenChatReportAdminPage from "@/pages/Admin/OpenChatReportAdminPage";
-import OpenChatBotPage from "@/pages/Admin/OpenChatBotPage";
-import OpenChatAdminPage from "@/pages/Admin/OpenChatAdminPage";
+const AdminMainPage = lazy(() => import("@/pages/Admin/AdminMainPage"));
+const CalendarAdminPage = lazy(() => import("@/pages/Admin/CalendarAdminPage"));
+const AnnounceWritePage = lazy(() => import("@/pages/Admin/AnnounceWritePage"));
+const ComplainAdminPage = lazy(() => import("@/pages/Admin/ComplainAdminPage"));
+const ComplainAnswerWritePage = lazy(() => import("@/pages/Admin/ComplainAnswerWritePage"));
+const PopupNotiListPage = lazy(() => import("@/pages/Admin/PopupNotiListPage"));
+const PopupNotiCreatePage = lazy(() => import("@/pages/Admin/PopupNotiFormPage"));
+const CreateNotificationPage = lazy(() => import("@/pages/Admin/CreateNotificationPage"));
+const FormCreatePage = lazy(() => import("@/pages/Admin/FormCreatePage"));
+const FormResultPage = lazy(() => import("@/pages/Admin/FormResultPage"));
+const FCMPage = lazy(() => import("@/pages/Admin/FCMPage"));
+const FeatureFlagManagePage = lazy(() => import("@/pages/Admin/FeatureFlagManagePage"));
+const RoomMateFindSettingPage = lazy(() => import("@/pages/RoomMate/RoomMateFindSettingPage"));
+const DebugLogPage = lazy(() => import("@/pages/MyPage/DebugLogPage"));
+const SettingsPage = lazy(() => import("@/pages/MyPage/SettingsPage"));
+const StatisticsPage = lazy(() => import("@/pages/Admin/StatisticsPage"));
+const OpenChatReportAdminPage = lazy(() => import("@/pages/Admin/OpenChatReportAdminPage"));
+const OpenChatBotPage = lazy(() => import("@/pages/Admin/OpenChatBotPage"));
+const OpenChatAdminPage = lazy(() => import("@/pages/Admin/OpenChatAdminPage"));
 
 function ChattingPageRoute() {
   const { chatType, id } = useParams();
