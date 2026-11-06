@@ -12,7 +12,7 @@ export default function SubPage() {
     <S.PageWrapper $bgType={bgType}>
       <Header hasBack={true} />
       <S.ContentContainer $hasHeader={true} $hasBottomBar={false}>
-        <Suspense fallback={<LoadingSpinner overlay />}>
+        <Suspense fallback={<LoadingSpinner />}>
           <Outlet />
         </Suspense>
       </S.ContentContainer>

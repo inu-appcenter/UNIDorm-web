@@ -13,7 +13,7 @@ export default function RootPage() {
     <S.PageWrapper $bgType={bgType}>
       <Header hasBack={false} />
       <S.ContentContainer $hasHeader={true} $hasBottomBar={true}>
-        <Suspense fallback={<LoadingSpinner overlay />}>
+        <Suspense fallback={<LoadingSpinner />}>
           <Outlet />
         </Suspense>
       </S.ContentContainer>

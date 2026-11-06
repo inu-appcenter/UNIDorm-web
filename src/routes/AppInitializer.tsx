@@ -28,7 +28,7 @@ const AppInitializer = () => {
       {/* 1. 스크롤 최상단 이동 보장 */}
       <ScrollToTop />
       {/* 2. 하위 레이아웃/페이지 렌더링 */}
-      <Suspense fallback={<LoadingSpinner overlay />}>
+      <Suspense fallback={<LoadingSpinner />}>
         <Outlet />
       </Suspense>
       {/* 3. 전역 AI 챗봇 버튼 */}

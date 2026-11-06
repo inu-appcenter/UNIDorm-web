@@ -10,7 +10,7 @@ export default function OutPage() {
   return (
     <S.PageWrapper $bgType={bgType}>
       <S.ContentContainer $hasHeader={false} $hasBottomBar={false}>
-        <Suspense fallback={<LoadingSpinner overlay />}>
+        <Suspense fallback={<LoadingSpinner />}>
           <Outlet />
         </Suspense>
       </S.ContentContainer>
