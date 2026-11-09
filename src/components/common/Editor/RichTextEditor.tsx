@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import styled from "styled-components";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -25,13 +25,15 @@ interface RichTextEditorProps {
 }
 
 export default function RichTextEditor({
-  content,
+  content = "",
   onChange,
   placeholder = "내용을 입력해주세요...",
   minHeight = "200px",
 }: RichTextEditorProps) {
-  const editor = useEditor({
-    extensions: [
+  const safeContent = content ?? "";
+
+  const extensions = useMemo(
+    () => [
       StarterKit.configure({
         heading: {
           levels: [2, 3],
@@ -41,8 +43,17 @@ export default function RichTextEditor({
         placeholder,
       }),
     ],
-    content,
+    [placeholder],
+  );
+
+  const editor = useEditor({
+    extensions,
+    content: safeContent,
+    immediatelyRender: false,
     onUpdate: ({ editor: currentEditor }) => {
+      if (!currentEditor || currentEditor.isDestroyed) {
+        return;
+      }
       // 내용이 완전히 비어있을 때는 빈 문자열 전달
       const html = currentEditor.isEmpty ? "" : currentEditor.getHTML();
       onChange(html);
@@ -51,26 +62,41 @@ export default function RichTextEditor({
 
   // 외부 content 변경 시 에디터 동기화 (초기값 설정 등)
   useEffect(() => {
-    if (editor && content !== editor.getHTML()) {
+    if (!editor || editor.isDestroyed) {
+      return;
+    }
+
+    try {
+      const currentHtml = editor.getHTML();
+      if (safeContent === currentHtml) {
+        return;
+      }
+
       // 기존 텍스트가 일반 텍스트(줄바꿈)일 수도 있고 HTML일 수도 있음
-      const isHtml = /<[a-z][\s\S]*>/i.test(content);
+      const isHtml = /<[a-z][\s\S]*>/i.test(safeContent);
       const formattedContent = isHtml
-        ? content
-        : content
-          ? content
+        ? safeContent
+        : safeContent
+          ? safeContent
               .split("\n")
               .map((line) => `<p>${line || "<br>"}</p>`)
               .join("")
           : "";
 
-      if (formattedContent !== editor.getHTML()) {
+      if (formattedContent !== currentHtml) {
         editor.commands.setContent(formattedContent);
       }
+    } catch {
+      // 에디터 파괴 또는 스키마 미초기화 시 예외 방어
     }
-  }, [content, editor]);
+  }, [safeContent, editor]);
 
-  if (!editor) {
-    return null;
+  if (!editor || editor.isDestroyed) {
+    return (
+      <Container>
+        <EditorWrapper $minHeight={minHeight} />
+      </Container>
+    );
   }
 
   return (
