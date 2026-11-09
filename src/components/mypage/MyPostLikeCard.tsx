@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { stripHtmlTags } from "@/utils/text";
 import {
   MyPost_GroupOrder,
   MyPost_RoommateBoard,
@@ -48,7 +49,7 @@ export default function MyPostLikeCard({ post, isLike }: MyPostLikeCardProps) {
         </TopRow>
 
         {post.type === "GROUP_ORDER" && <Price>{post.price}원</Price>}
-        {post.type === "TIP" && <Text>{post.content}</Text>}
+        {post.type === "TIP" && <Text>{stripHtmlTags(post.content)}</Text>}
         {post.type === "ROOMMATE" && (
           <Text>
             <TagRow>
