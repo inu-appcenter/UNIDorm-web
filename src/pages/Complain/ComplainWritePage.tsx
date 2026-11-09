@@ -16,6 +16,7 @@ import {
 import { createComplaint, updateComplaint } from "@/apis/complain";
 import { ComplaintCreateDto } from "@/types/complain";
 import FormField from "../../components/complain/FormField.tsx";
+import RichTextEditor from "../../components/common/Editor/RichTextEditor.tsx";
 import FacilityComplaintModal from "../../components/complain/FacilityComplaintModal";
 import { Dropdown, DropdownContainer, Input } from "@/styles/common";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
@@ -236,7 +237,7 @@ export default function ComplainWritePage() {
     if (complain) {
       setIsEditMode(true);
       setTitle(complain.title);
-      setContent(complain.content);
+      setContent(complain.content ?? "");
       // setPrivacyAgreed(complain.privacyAgreed || false); //api에 없음
 
       const typeIndex = ComplainType.indexOf(complain.type);
@@ -503,10 +504,11 @@ export default function ComplainWritePage() {
         </FormField>
 
         <FormField label="내용" required>
-          <Textarea
+          <RichTextEditor
+            content={content}
+            onChange={(html) => setContent(html)}
             placeholder="내용을 입력해주세요"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
+            minHeight="220px"
           />
         </FormField>
 
@@ -566,23 +568,6 @@ const Content = styled.div`
   width: 100%;
 `;
 
-const Textarea = styled.textarea`
-  width: 100%;
-  min-height: 250px;
-  padding: 12px;
-  border-radius: 8px;
-  border: 1px solid #eee;
-  background: #f8f8f8;
-  resize: vertical;
-  color: #1c1c1e;
-  font-size: 15px;
-  font-weight: 500;
-  box-sizing: border-box;
-
-  &::placeholder {
-    color: #aeaeae;
-  }
-`;
 
 const ButtonWrapper = styled.div`
   position: fixed;
