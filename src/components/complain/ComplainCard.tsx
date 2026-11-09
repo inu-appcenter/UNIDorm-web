@@ -1,5 +1,7 @@
 import React from "react";
 import styled from "styled-components";
+import { stripHtmlTags } from "@/utils/text";
+import RichTextViewer from "@/components/common/Viewer/RichTextViewer";
 
 interface ComplainCardProps {
   miniView?: boolean;
@@ -66,7 +68,11 @@ const ComplainCard: React.FC<ComplainCardProps> = ({
       )}
 
       <Title>{title}</Title>
-      <Content miniView={miniView}>{content}</Content>
+      {miniView ? (
+        <Content miniView={true}>{stripHtmlTags(content)}</Content>
+      ) : (
+        <RichTextViewer content={content} />
+      )}
       {!miniView &&
         images &&
         images.length > 0 &&

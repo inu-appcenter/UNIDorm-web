@@ -15,6 +15,7 @@ import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import FileUploader from "../../components/common/FileUploader.tsx";
 import { useFileHandler } from "@/hooks/useFileHandler";
 import LabeledField from "../../components/complain/LabeledField.tsx";
+import RichTextEditor from "../../components/common/Editor/RichTextEditor.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
 
 export default function ComplainAnswerWritePage() {
@@ -197,10 +198,11 @@ export default function ComplainAnswerWritePage() {
         </LabeledField>
 
         <LabeledField label="내용" required>
-          <Textarea
+          <RichTextEditor
+            content={content}
+            onChange={(html) => setContent(html)}
             placeholder="내용을 입력해주세요"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
+            minHeight="200px"
           />
         </LabeledField>
 
@@ -262,11 +264,3 @@ const Input = styled.input`
   background: rgba(0, 0, 0, 0.04);
 `;
 
-const Textarea = styled.textarea`
-  min-height: 200px;
-  padding: 12px;
-  border-radius: 8px;
-  border: none;
-  background: rgba(0, 0, 0, 0.04);
-  resize: none;
-`;
