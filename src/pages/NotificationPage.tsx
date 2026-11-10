@@ -5,6 +5,8 @@ import { useNotificationScroll } from "@/queries/notifications";
 import useUserStore from "../stores/useUserStore.ts";
 import { flushAllBroadcastSync } from "@/stores/middleware/broadcastSync";
 import { Link, useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import { roommateKeys } from "@/queries/roommates";
 import {
   acceptRoommateMatching,
   rejectRoommateMatching,
@@ -19,6 +21,7 @@ const PAGE_SIZE = 20;
 
 const NotificationPage = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { tokenInfo, userInfo, clearUnreadNotifications } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
   const observerTarget = useRef<HTMLDivElement>(null);
@@ -29,11 +32,11 @@ const NotificationPage = () => {
     message: string;
   } | null>(null);
 
-  // 알림 데이터 무한스크롤 조회
+  // ?�림 ?�이??무한?�크�?조회
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, refetch, isLoading } =
     useNotificationScroll(PAGE_SIZE, { enabled: isLoggedIn });
 
-  // 알림 페이지 진입 및 이탈 시 미읽음 알림 상태 해제 및 브로드캐스트 동기화
+  // ?�림 ?�이지 진입 �??�탈 ??미읽???�림 ?�태 ?�제 �?브로?�캐?�트 ?�기??
   useEffect(() => {
     clearUnreadNotifications();
     flushAllBroadcastSync();
@@ -44,7 +47,7 @@ const NotificationPage = () => {
     };
   }, [clearUnreadNotifications]);
 
-  // 알림 목록 수신 시에도 미읽음 상태가 남아있다면 해제
+  // ?�림 목록 ?�신 ?�에??미읽???�태가 ?�아?�다�??�제
   useEffect(() => {
     if (userInfo.hasUnreadNotifications) {
       clearUnreadNotifications();
@@ -52,10 +55,10 @@ const NotificationPage = () => {
     }
   }, [userInfo.hasUnreadNotifications, clearUnreadNotifications]);
 
-  // 데이터 평탄화 처리
+  // ?�이???�탄??처리
   const notifications = data?.pages.flatMap((page) => page.data) || [];
 
-  // 관찰자 설정 (하단 도달 시 다음 페이지 호출)
+  // 관찰자 ?�정 (?�단 ?�달 ???�음 ?�이지 ?�출)
   useEffect(() => {
     if (!observerTarget.current || !hasNextPage) return;
 
@@ -72,24 +75,25 @@ const NotificationPage = () => {
     return () => observer.disconnect();
   }, [hasNextPage, fetchNextPage, isFetchingNextPage]);
 
-  // 매칭 요청 클릭 핸들러
+  // 매칭 ?�청 ?�릭 ?�들??
   const handleRoommateRequestClick = (matchingId: number, message: string) => {
     setSelectedMatching({ id: matchingId, message });
     setIsMatchModalOpen(true);
   };
 
-  // 수락 핸들러
+  // ?�락 ?�들??
   const handleAccept = async () => {
-    if (!window.confirm("정말 매칭을 수락할까요?")) {
+    if (!window.confirm("?�말 매칭???�락?�까??")) {
       return;
     }
 
     if (!selectedMatching) return;
     try {
       await acceptRoommateMatching(selectedMatching.id);
-      alert("매칭 요청이 수락되었습니다.");
+      queryClient.invalidateQueries({ queryKey: roommateKeys.myInfo() });
+      alert("매칭 ?�청???�락?�었?�니??");
       alert(
-        "UNI Dorm에서의 룸메이트 매칭은 실제 기숙사 룸메이트 지정과 무관하며, 룸메이트와의 편리한 생활을 위한 서비스를 제공하기 위함입니다.\n반드시 룸메이트 사전 지정 기간에 인천대학교 포털에서 신청해주세요!!!!",
+        "UNI Dorm?�서??룸메?�트 매칭?� ?�제 기숙??룸메?�트 지?�과 무�??�며, 룸메?�트?�???�리???�활???�한 ?�비?��? ?�공?�기 ?�함?�니??\n반드??룸메?�트 ?�전 지??기간???�천?�?�교 ?�털?�서 ?�청?�주?�요!!!!",
       );
       refetch();
     } catch (e: any) {
@@ -99,15 +103,15 @@ const NotificationPage = () => {
     }
   };
 
-  // 거절 핸들러
+  // 거절 ?�들??
   const handleReject = async () => {
-    if (!window.confirm("정말 매칭을 거절할까요?")) {
+    if (!window.confirm("?�말 매칭??거절?�까??")) {
       return;
     }
     if (!selectedMatching) return;
     try {
       await rejectRoommateMatching(selectedMatching.id);
-      alert("매칭 요청이 거절되었습니다.");
+      alert("매칭 ?�청??거절?�었?�니??");
       refetch();
     } catch (e: any) {
       handleError(e);
@@ -116,29 +120,29 @@ const NotificationPage = () => {
     }
   };
 
-  // 에러 처리 핸들러
+  // ?�러 처리 ?�들??
   const handleError = (e: any) => {
     if (isAxiosError(e) && e.response?.status === 409) {
-      alert("이미 처리된 매칭 요청입니다.");
+      alert("?��? 처리??매칭 ?�청?�니??");
       refetch();
       return;
     }
-    alert("처리 중 오류가 발생했습니다.");
+    alert("처리 �??�류가 발생?�습?�다.");
   };
 
-  // 헤더 설정
+  // ?�더 ?�정
   useSetHeader({
-    title: "알림",
+    title: "?�림",
     menuItems: [
       {
-        label: "알림 수신 설정",
+        label: "?�림 ?�신 ?�정",
         onClick: () => navigate("/notification-setting"),
       },
     ],
   });
 
   if (isLoading && !isFetchingNextPage) {
-    return <LoadingSpinner message="알림을 불러오는 중입니다..." />;
+    return <LoadingSpinner message="?�림??불러?�는 중입?�다..." />;
   }
 
   return (
@@ -153,18 +157,18 @@ const NotificationPage = () => {
                 onMatchRequestClick={handleRoommateRequestClick}
               />
             ))}
-            {/* 무한스크롤 트리거 지점 */}
+            {/* 무한?�크�??�리�?지??*/}
             <div ref={observerTarget} style={{ height: "10px" }} />
             {isFetchingNextPage && <LoadingSpinner message="" />}
           </>
         ) : isLoggedIn ? (
-          <EmptyMessage>알림이 없습니다.</EmptyMessage>
+          <EmptyMessage>?�림???�습?�다.</EmptyMessage>
         ) : (
           <EmptyMessage>
-            로그인 후 알림을 확인할 수 있습니다.
+            로그?????�림???�인?????�습?�다.
             <br />
             <br />
-            <LoginLink to={PATHS.LOGIN}>로그인 하기</LoginLink>
+            <LoginLink to={PATHS.LOGIN}>로그???�기</LoginLink>
           </EmptyMessage>
         )}
       </ContentWrapper>
@@ -172,10 +176,10 @@ const NotificationPage = () => {
       <Modal
         show={isMatchModalOpen}
         onClose={() => setIsMatchModalOpen(false)}
-        title={"룸메이트 매칭 요청"}
+        title={"룸메?�트 매칭 ?�청"}
         headerImageId={1}
         content={selectedMatching ? selectedMatching.message : ""}
-        closeButtonText="수락"
+        closeButtonText="?�락"
         onCloseClick={handleAccept}
         secondaryButtonText="거절"
         onSecondaryButtonClick={handleReject}

@@ -251,7 +251,7 @@ const ComplainDetailPage = () => {
           onClick={() =>
             navigate(`/admin/complain/answer/${complainId}`, {
               state: {
-                complain: complaint.reply ? complaint : undefined,
+                complain: complaint,
                 manager: complaint.officer,
                 Images: complaint?.reply?.attachmentUrl,
               },

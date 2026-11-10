@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
+import { PATHS } from "@/constants/paths";
 import { deletePopupNotification } from "@/apis/popup-notification";
 import { useAdminPopupNotifications } from "@/queries/popupNotifications";
 import { useSetHeader } from "@/hooks/useSetHeader";
@@ -181,11 +182,11 @@ const PopupNotiListPage: React.FC = () => {
   };
 
   const handleNavigateCreate = () => {
-    navigate("create");
+    navigate(PATHS.ADMIN.POPUP_CREATE);
   };
 
   const handleNavigateEdit = (id: number) => {
-    navigate(`edit/${id}`);
+    navigate(PATHS.ADMIN.POPUP_EDIT(id));
   };
 
   const handleDelete = async (id: number) => {

@@ -94,18 +94,27 @@ export default function ChatMembersPage() {
     void fetchRoomInfo();
   }, [chatType, roomId]);
 
-  const isDerivedRoom =
-    roomType === "DERIVED" ||
-    routeRoom?.roomType === "DERIVED" ||
-    Boolean(routeRoom?.recruitmentStatus) ||
-    Boolean((routeRoom as any)?.originRoomId);
+  const effectiveRoomType = roomType ?? routeRoom?.roomType;
+  const isRecruitmentSupportedRoom =
+    chatType === "open" &&
+    effectiveRoomType !== "PERSONAL" &&
+    (effectiveRoomType === "OPEN" ||
+      effectiveRoomType === "DERIVED" ||
+      Boolean((routeRoom as any)?.originRoomId) ||
+      effectiveRoomType === undefined);
 
   const [reopenConfirmModalOpen, setReopenConfirmModalOpen] = useState(false);
 
   const handleToggleRecruitmentStatus = async (
     targetStatus: "OPEN" | "CLOSED",
   ) => {
-    if (isUpdatingStatus || targetStatus === recruitmentStatus) return;
+    if (
+      !isRecruitmentSupportedRoom ||
+      isUpdatingStatus ||
+      targetStatus === recruitmentStatus
+    ) {
+      return;
+    }
 
     if (targetStatus === "OPEN") {
       setReopenConfirmModalOpen(true);
@@ -481,7 +490,7 @@ export default function ChatMembersPage() {
           <LoadingSpinner message="참여자를 불러오고 있습니다..." />
         ) : isOpenChatRoom ? (
           <>
-            {isDerivedRoom && (
+            {isRecruitmentSupportedRoom && (
               <Section>
                 <SectionTitle>모집 상태</SectionTitle>
                 {me?.isHost ? (

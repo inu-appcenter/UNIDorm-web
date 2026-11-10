@@ -1,15 +1,18 @@
-import { useQuery } from "@tanstack/react-query";
-import { getComplaintDetail, getMyComplaints } from "@/apis/complain";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { getComplaintDetail, getMyComplaints, getMyComplaintsPage } from "@/apis/complain";
 import {
   getAdminComplaintDetail,
   getAdminComplaints,
+  getAdminComplaintsPage,
   getAllComplaints,
 } from "@/apis/complainAdmin";
-import type { ComplaintSearchDto } from "@/types/complain";
+import type { ComplaintSearchDto, MyComplaint } from "@/types/complain";
 
 export const complaintKeys = {
   all: ["complaints"] as const,
-  mine: () => ["complaints", "mine"] as const,
+  mine: (filters?: ComplaintSearchDto | null) => ["complaints", "mine", filters] as const,
+  mineInfinite: (filters?: ComplaintSearchDto | null) => ["complaints", "mine", "infinite", filters] as const,
+  adminInfinite: (filters?: ComplaintSearchDto | null) => ["complaints", "admin", "infinite", filters] as const,
   detail: (id: number, asAdmin: boolean) =>
     ["complaints", "detail", id, asAdmin ? "admin" : "user"] as const,
   admin: (filters: ComplaintSearchDto | null) =>
@@ -17,10 +20,47 @@ export const complaintKeys = {
 };
 
 /** 내 민원 목록. */
-export const useMyComplaints = (enabled = true) =>
-  useQuery({
-    queryKey: complaintKeys.mine(),
-    queryFn: async () => (await getMyComplaints()).data,
+export function useMyComplaints(
+  enabled?: boolean,
+): ReturnType<typeof useQuery<MyComplaint[]>>;
+export function useMyComplaints(
+  filters?: ComplaintSearchDto | null,
+  enabled?: boolean,
+): ReturnType<typeof useQuery<MyComplaint[]>>;
+export function useMyComplaints(
+  arg1?: boolean | ComplaintSearchDto | null,
+  arg2 = true,
+) {
+  const enabled = typeof arg1 === "boolean" ? arg1 : arg2;
+  const filters = typeof arg1 === "object" ? arg1 : null;
+
+  return useQuery({
+    queryKey: complaintKeys.mine(filters),
+    queryFn: async () => (await getMyComplaints(filters || undefined)).data,
+    enabled,
+  });
+}
+
+/** 내 민원 목록 무한 스크롤 훅 (신규 커서 페이징 규격) */
+export const useInfiniteMyComplaints = (
+  filters?: ComplaintSearchDto | null,
+  pageSize = 20,
+  enabled = true,
+) =>
+  useInfiniteQuery({
+    queryKey: complaintKeys.mineInfinite(filters),
+    queryFn: async ({ pageParam }) => {
+      const response = await getMyComplaintsPage({
+        ...(filters || {}),
+        cursor: (pageParam as number) || undefined,
+        lastId: (pageParam as number) || undefined,
+        size: pageSize,
+      });
+      return response.data;
+    },
+    initialPageParam: null as number | null,
+    getNextPageParam: (lastPage) =>
+      lastPage.hasNext ? lastPage.nextCursor : undefined,
     enabled,
   });
 
@@ -65,4 +105,28 @@ export const useAdminComplaints = (
     },
     enabled,
     placeholderData: (previous) => previous,
+  });
+
+
+/** 관리자 민원 목록 무한 스크롤 훅 (신규 커서 페이징 규격) */
+export const useInfiniteAdminComplaints = (
+  filters?: ComplaintSearchDto | null,
+  pageSize = 20,
+  enabled = true,
+) =>
+  useInfiniteQuery({
+    queryKey: complaintKeys.adminInfinite(filters),
+    queryFn: async ({ pageParam }) => {
+      const response = await getAdminComplaintsPage({
+        ...(filters || {}),
+        cursor: (pageParam as number) || undefined,
+        lastId: (pageParam as number) || undefined,
+        size: pageSize,
+      });
+      return response.data;
+    },
+    initialPageParam: null as number | null,
+    getNextPageParam: (lastPage) =>
+      lastPage.hasNext ? lastPage.nextCursor : undefined,
+    enabled,
   });

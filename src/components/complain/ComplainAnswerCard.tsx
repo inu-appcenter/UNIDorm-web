@@ -1,6 +1,7 @@
 // NoticeCard.tsx
 import React from "react";
 import styled from "styled-components";
+import RichTextViewer from "@/components/common/Viewer/RichTextViewer";
 import { Files } from "@/types/complain";
 import { useUserRole } from "@/hooks/useUserRole";
 
@@ -24,7 +25,7 @@ const ComplainCard: React.FC<NoticeCardProps> = ({
   const { isAdmin } = useUserRole();
 
   // 날짜 형식을 'YY.MM.DD HH:MM'으로 변경
-  const formattedDate = date.replace(
+  const formattedDate = (date || "").replace(
     /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}).*$/,
     (_match, p1, p2, p3, p4, p5) =>
       `${p1.substring(2)}.${p2}.${p3} ${p4}:${p5}`,
@@ -45,7 +46,7 @@ const ComplainCard: React.FC<NoticeCardProps> = ({
       )}
 
       <Title>{title}</Title>
-      <Content>{content}</Content>
+      <RichTextViewer content={content} />
       {images &&
         images.length > 0 &&
         images.map((image, index) => (
@@ -106,13 +107,6 @@ const Title = styled.div`
   font-size: 1rem;
 `;
 
-const Content = styled.div`
-  font-size: 0.9rem;
-  color: #333;
-  overflow: hidden;
-
-  white-space: pre-line;
-`;
 
 const ImagePlaceholder = styled.img`
   width: 100%;

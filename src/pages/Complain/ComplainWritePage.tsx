@@ -16,6 +16,8 @@ import {
 import { createComplaint, updateComplaint } from "@/apis/complain";
 import { ComplaintCreateDto } from "@/types/complain";
 import FormField from "../../components/complain/FormField.tsx";
+import RichTextEditor from "../../components/common/Editor/RichTextEditor.tsx";
+import FacilityComplaintModal from "../../components/complain/FacilityComplaintModal";
 import { Dropdown, DropdownContainer, Input } from "@/styles/common";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import { useFileHandler } from "@/hooks/useFileHandler";
@@ -25,6 +27,15 @@ import Box from "@/components/common/Box";
 import TitleContentArea from "@/components/common/TitleContentArea";
 import { PATHS } from "@/constants/paths";
 import { mixpanelTrack } from "@/utils/mixpanel";
+import { secureStorage } from "@/utils/secureStorage";
+import {
+  extractDormitoryFormAutoFill,
+  AutoFillStatus,
+  getAutoFillNoticeMessage,
+} from "@/utils/complainDormitoryAdapter";
+
+// 프론트 표시용 민원 유형 (가짜 선택지 '시설(고장 등)' 포함)
+const DISPLAY_COMPLAIN_TYPES = [...ComplainType, "시설(고장 등)"];
 
 // ---  옵션 배열 생성 헬퍼 함수 ---
 const generateOptions = (min: number, max: number, suffix: string) => {
@@ -49,6 +60,8 @@ export default function ComplainWritePage() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [privacyAgreed, setPrivacyAgreed] = useState(false);
+  const [autoFillStatus, setAutoFillStatus] = useState<AutoFillStatus>("idle");
+  const [isFacilityModalOpen, setIsFacilityModalOpen] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -87,6 +100,15 @@ export default function ComplainWritePage() {
   const [selectedComplainTypeIndex, setSelectedComplainTypeIndex] = useState<
     number | null
   >(null);
+
+  // 민원 유형 선택 핸들러 (가짜 선택지 '시설(고장 등)' 클릭 시 선택을 차단하고 안내 모달 표출)
+  const handleSelectComplainType = (index: number | null) => {
+    if (index === ComplainType.length) {
+      setIsFacilityModalOpen(true);
+      return;
+    }
+    setSelectedComplainTypeIndex(index);
+  };
   const [selectedDormitoryIndex, setSelectedDormitoryIndex] = useState<
     number | null
   >(null);
@@ -99,19 +121,21 @@ export default function ComplainWritePage() {
   const [incidentDate, setIncidentDate] = useState("");
   const [incidentTime, setIncidentTime] = useState("");
 
-  // ---  동적 옵션 목록을 위한 상태 ---
-  const [floorOptions, setFloorOptions] = useState<string[]>([]);
-  const [roomOptions, setRoomOptions] = useState<string[]>([]);
-  const [bedOptions, setBedOptions] = useState<string[]>([]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  // ---  기숙사/동 선택 시 옵션 동적 생성 ---
-  useEffect(() => {
-    const dormName = complainDormitory[selectedDormitoryIndex as number];
-    const blockName = dormitoryBlocks[selectedDormitoryBlockIndex as number];
+  // --- 기숙사/동 선택 시 옵션 동적 생성 (useMemo로 레이스 컨디션 제거) ---
+  const { floorOptions, roomOptions, bedOptions } = useMemo(() => {
+    const dormName =
+      selectedDormitoryIndex !== null
+        ? complainDormitory[selectedDormitoryIndex]
+        : null;
+    const blockName =
+      selectedDormitoryBlockIndex !== null
+        ? dormitoryBlocks[selectedDormitoryBlockIndex]
+        : null;
 
     let floors: string[] = [];
     let rooms: string[] = [];
@@ -126,33 +150,94 @@ export default function ComplainWritePage() {
       beds = generateOptions(1, rules.beds, "번");
     }
 
-    setFloorOptions(floors);
-    setRoomOptions(rooms);
-    setBedOptions(beds);
+    return { floorOptions: floors, roomOptions: rooms, bedOptions: beds };
+  }, [selectedDormitoryIndex, selectedDormitoryBlockIndex]);
 
-    // 옵션이 변경되었을 때, 기존 선택 값이 새 옵션에 없으면 초기화
-    if (!floors.includes(selectedFloor)) {
+  // 옵션 목록이 갱신되었을 때, 기존 선택 값이 새 옵션에 없으면 초기화
+  useEffect(() => {
+    if (selectedFloor && floorOptions.length > 0 && !floorOptions.includes(selectedFloor)) {
       setSelectedFloor("");
     }
-    if (!rooms.includes(selectedRoom)) {
+    if (selectedRoom && roomOptions.length > 0 && !roomOptions.includes(selectedRoom)) {
       setSelectedRoom("");
     }
-    if (!beds.includes(selectedBed)) {
+    if (selectedBed && bedOptions.length > 0 && !bedOptions.includes(selectedBed)) {
       setSelectedBed("");
     }
-  }, [
-    selectedDormitoryIndex,
-    selectedDormitoryBlockIndex,
-    selectedFloor,
-    selectedRoom,
-    selectedBed,
-  ]);
+  }, [floorOptions, roomOptions, bedOptions, selectedFloor, selectedRoom, selectedBed]);
+
+  // --- 신규 민원 작성 시 모바일 사생증 정보 기반 기본값 자동 선택 ---
+  useEffect(() => {
+    if (isEditMode || editId || stateComplain) return;
+
+    let isMounted = true;
+    (async () => {
+      try {
+        const cached = await secureStorage.getCacheWithTtl<any>("portal_dormitory_student_info");
+        const dormData = cached?.data;
+        if (!dormData) {
+          if (isMounted) setAutoFillStatus("not_found");
+          return;
+        }
+
+        const autoFill = extractDormitoryFormAutoFill(dormData);
+
+        const hasAppliedValues =
+          autoFill.dormitoryIndex !== null ||
+          autoFill.dormitoryBlockIndex !== null ||
+          Boolean(autoFill.floor) ||
+          Boolean(autoFill.room) ||
+          Boolean(autoFill.bed);
+
+        if (!hasAppliedValues) {
+          if (isMounted) setAutoFillStatus("not_found");
+          return;
+        }
+
+        if (autoFill.dormitoryIndex !== null) {
+          setSelectedDormitoryIndex(autoFill.dormitoryIndex);
+        }
+        if (autoFill.dormitoryBlockIndex !== null) {
+          setSelectedDormitoryBlockIndex(autoFill.dormitoryBlockIndex);
+        }
+        if (autoFill.floor) {
+          setSelectedFloor(autoFill.floor);
+        }
+        if (autoFill.room) {
+          setSelectedRoom(autoFill.room);
+        }
+        if (autoFill.bed) {
+          setSelectedBed(autoFill.bed);
+        }
+
+        if (isMounted) {
+          setAutoFillStatus("success");
+        }
+      } catch (err) {
+        console.warn("[ComplainWritePage] 사생 정보 자동 완성 실패:", err);
+        if (isMounted) setAutoFillStatus("not_found");
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isEditMode, editId, stateComplain]);
+
+  const autoFillNotice = useMemo(
+    () =>
+      getAutoFillNoticeMessage(
+        autoFillStatus,
+        isEditMode || Boolean(editId) || Boolean(stateComplain)
+      ),
+    [autoFillStatus, isEditMode, editId, stateComplain]
+  );
 
   useEffect(() => {
     if (complain) {
       setIsEditMode(true);
       setTitle(complain.title);
-      setContent(complain.content);
+      setContent(complain.content ?? "");
       // setPrivacyAgreed(complain.privacyAgreed || false); //api에 없음
 
       const typeIndex = ComplainType.indexOf(complain.type);
@@ -297,13 +382,13 @@ export default function ComplainWritePage() {
       <Content>
         <FormField label="유형" required>
           <SelectableChipGroup
-            Groups={ComplainType}
+            Groups={DISPLAY_COMPLAIN_TYPES}
             selectedIndex={selectedComplainTypeIndex}
-            onSelect={setSelectedComplainTypeIndex}
+            onSelect={handleSelectComplainType}
           />
         </FormField>
 
-        <TitleContentArea title={"민원인 정보"}>
+        <TitleContentArea title={"민원인 정보"} description={autoFillNotice}>
           <Box>
             <Content>
               <FormField label="기숙사" required>
@@ -419,10 +504,11 @@ export default function ComplainWritePage() {
         </FormField>
 
         <FormField label="내용" required>
-          <Textarea
+          <RichTextEditor
+            content={content}
+            onChange={(html) => setContent(html)}
             placeholder="내용을 입력해주세요"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
+            minHeight="220px"
           />
         </FormField>
 
@@ -456,6 +542,11 @@ export default function ComplainWritePage() {
           onClick={handleSubmit}
         />
       </ButtonWrapper>
+
+      <FacilityComplaintModal
+        show={isFacilityModalOpen}
+        onClose={() => setIsFacilityModalOpen(false)}
+      />
     </Wrapper>
   );
 }
@@ -477,23 +568,6 @@ const Content = styled.div`
   width: 100%;
 `;
 
-const Textarea = styled.textarea`
-  width: 100%;
-  min-height: 250px;
-  padding: 12px;
-  border-radius: 8px;
-  border: 1px solid #eee;
-  background: #f8f8f8;
-  resize: vertical;
-  color: #1c1c1e;
-  font-size: 15px;
-  font-weight: 500;
-  box-sizing: border-box;
-
-  &::placeholder {
-    color: #aeaeae;
-  }
-`;
 
 const ButtonWrapper = styled.div`
   position: fixed;

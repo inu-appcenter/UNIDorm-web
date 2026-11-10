@@ -28,6 +28,7 @@ import { useDailyRandomTips } from "@/queries/tips";
 import { useActivePopupNotifications } from "@/queries/popupNotifications";
 import { useInitFromQuery } from "@/hooks/useInitFromQuery";
 import RoomMateCard from "@/components/roommate/RoomMateCard.tsx";
+import RoommateEmptyState from "@/components/roommate/RoommateEmptyState";
 import { useQuery } from "@tanstack/react-query";
 import { getRoomMateScrollList } from "@/apis/roommate.ts";
 import YoutubeWidget from "@/components/home/YoutubeWidget.tsx";
@@ -46,6 +47,8 @@ import {
   isDormitorySemesterExpired,
   getCurrentAcademicCycleKey,
 } from "@/utils/semesterGuard";
+import { evaluateDormitoryResidentStatus } from "@/pages/Dormitory/DormitoryCardPage";
+import { secureStorage } from "@/utils/secureStorage";
 
 export default function HomePage() {
   useSetAIChat({ isVisible: true, shouldAnimate: true });
@@ -117,41 +120,51 @@ export default function HomePage() {
 
     const currentCycle = getCurrentAcademicCycleKey();
 
-    // 1. 기존 저장된 사생 정보의 학기가 만료되어 갱신이 필요한 시점인지 확인
-    try {
-      const savedDormRaw = localStorage.getItem("portal_dormitory_student_info");
-      if (savedDormRaw) {
-        const parsed = JSON.parse(savedDormRaw);
-        const p = parsed.profile || parsed;
-        const isExpired = isDormitorySemesterExpired({
-          dormYear: p.year,
-          dormTerm: p.term,
-        });
+    void (async () => {
+      let isExpired = false;
+      let isResident = false;
 
-        if (isExpired) {
-          // 학기 만료로 갱신이 필요한 시점: 사용자가 해당 갱신 모달을 이번 학기에 닫은 적이 없으면 노출
-          const dismissedRenewalCycle = localStorage.getItem("dismissedDormCardRenewalCycle");
-          if (dismissedRenewalCycle !== currentCycle || isPreview) {
-            setDormPromptMode("renew");
-            setIsDormPromptOpen(true);
-            return;
-          }
+      try {
+        const cached = await secureStorage.getCacheWithTtl<any>("portal_dormitory_student_info");
+        const dormData = cached?.data;
+        if (dormData) {
+          const evalResult = evaluateDormitoryResidentStatus(dormData);
+          isResident = evalResult.isCurrentlyResident;
+          isExpired = isDormitorySemesterExpired({
+            dormYear: evalResult.year,
+            dormTerm: evalResult.term,
+          });
+        }
+      } catch (e) {
+        console.warn("[HomePage] 사생증 캐시 확인 오류:", e);
+      }
+
+      // 1. 학기 만료로 갱신이 필요한 시점: 사용자가 해당 갱신 모달을 이번 학기에 닫은 적이 없으면 노출
+      if (isExpired) {
+        const dismissedRenewalCycle = localStorage.getItem("dismissedDormCardRenewalCycle");
+        if (dismissedRenewalCycle !== currentCycle || isPreview) {
+          setDormPromptMode("renew");
+          setIsDormPromptOpen(true);
+          return;
         }
       }
-    } catch (e) {
-      console.warn("[HomePage] 사생증 갱신 만료 확인 오류:", e);
-    }
 
-    // 2. 신규 발급 또는 미완료/실패(FAILED) 상태인 경우
-    // 한 번 닫았으면(localStorage) 동일 학기 주기 내에서는 더 이상 띄우지 않음
-    const dismissedIssueCycle = localStorage.getItem("dismissedDormCardPromptCycle");
-    if (dismissedIssueCycle === currentCycle && !isPreview) return;
+      // 2. 이미 유효한 활성 사생증을 보유하고 있는 경우: 발급 유도 모달 노출 제외
+      if (isResident && !isExpired && !isPreview) {
+        return;
+      }
 
-    const issueStatus = localStorage.getItem("unidorm_dorm_card_issue_status");
-    if (issueStatus === "FAILED" || isPreview) {
-      setDormPromptMode("issue");
-      setIsDormPromptOpen(true);
-    }
+      // 3. 신규 발급 대상자 또는 실패(FAILED) 상태인 경우
+      // 한 번 닫았으면(localStorage) 동일 학기 주기 내에서는 더 이상 띄우지 않음
+      const dismissedIssueCycle = localStorage.getItem("dismissedDormCardPromptCycle");
+      if (dismissedIssueCycle === currentCycle && !isPreview) return;
+
+      const issueStatus = localStorage.getItem("unidorm_dorm_card_issue_status");
+      if (issueStatus === "FAILED" || !isResident || isPreview) {
+        setDormPromptMode("issue");
+        setIsDormPromptOpen(true);
+      }
+    })();
   }, [isLoggedIn, isAppInstallOpen]);
 
   const handleCloseDormPrompt = () => {
@@ -175,7 +188,7 @@ export default function HomePage() {
     mixpanelTrack.dormitoryCardEntryClicked(
       dormPromptMode === "renew" ? "홈_사생증갱신모달" : "홈_발급유도모달",
     );
-    navigate(PATHS.DORMITORY_CARD);
+    navigate(`${PATHS.DORMITORY_CARD}?mode=${dormPromptMode}`);
   };
 
   const handleDormitoryCardClick = () => {
@@ -194,6 +207,27 @@ export default function HomePage() {
 
   useEffect(() => {
     mixpanelTrack.homeViewed();
+  }, []);
+
+  // 유휴 시간에 바텀바 주요 탭 청크를 사전 로드하여 탭 전환 지연 방지
+  useEffect(() => {
+    const preloadRoutes = () => {
+      import("@/pages/RoomMate/RoomMatePage");
+      import("@/pages/GroupPurchase/GroupPurchaseMainPage");
+      import("@/pages/Chat/openChatPage");
+      import("@/pages/Complain/ComplainListPage");
+      import("@/pages/MyPage");
+    };
+
+    if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+      const handle = (window as any).requestIdleCallback(preloadRoutes, {
+        timeout: 2000,
+      });
+      return () => (window as any).cancelIdleCallback(handle);
+    }
+
+    const timer = setTimeout(preloadRoutes, 1200);
+    return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
@@ -274,12 +308,20 @@ export default function HomePage() {
 
   const CHANNEL_ID = "UCrpqEmMWCOg6P8FSk6mN5Hw"; //인천대학교 생활원 유튜브 채널 id
 
-  // 룸메이트 데이터 단일 페이지 조회
+  const currentSemesterFilters = useMemo(() => {
+    if (!matchingStatus?.year || !matchingStatus?.semester) return undefined;
+    return {
+      year: matchingStatus.year,
+      semester: Number(matchingStatus.semester),
+    };
+  }, [matchingStatus?.year, matchingStatus?.semester]);
+
+  // 룸메이트 데이터 단일 페이지 조회 (현재 학기 기준)
   const { data: roommates, isLoading: isRoommateLoading } = useQuery({
-    queryKey: ["roommates", "home"],
-    queryFn: () => getRoomMateScrollList(undefined, 10),
+    queryKey: ["roommates", "home", currentSemesterFilters],
+    queryFn: () => getRoomMateScrollList(undefined, 10, currentSemesterFilters),
     staleTime: 1000 * 60 * 5,
-    enabled: isMatchingOpen,
+    enabled: Boolean(isMatchingOpen && currentSemesterFilters),
   });
 
   interface NotificationData {
@@ -419,7 +461,7 @@ export default function HomePage() {
                         />
                       ))
                   ) : (
-                    <EmptyMessage>게시글이 없습니다.</EmptyMessage>
+                    <RoommateEmptyState />
                   )}
                 </>
               </TitleContentArea>

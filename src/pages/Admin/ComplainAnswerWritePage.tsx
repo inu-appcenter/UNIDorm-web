@@ -2,7 +2,7 @@ import styled from "styled-components";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import SquareButton from "../../components/common/SquareButton.tsx";
-import { ComplaintReplyDto } from "@/types/complain";
+import { ComplaintDetail, ComplaintReplyDto } from "@/types/complain";
 import { useQueryClient } from "@tanstack/react-query";
 import { complaintKeys, useComplaintDetail } from "@/queries/complaints";
 import { useInitFromQuery } from "@/hooks/useInitFromQuery";
@@ -15,6 +15,7 @@ import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import FileUploader from "../../components/common/FileUploader.tsx";
 import { useFileHandler } from "@/hooks/useFileHandler";
 import LabeledField from "../../components/complain/LabeledField.tsx";
+import RichTextEditor from "../../components/common/Editor/RichTextEditor.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
 
 export default function ComplainAnswerWritePage() {
@@ -25,13 +26,25 @@ export default function ComplainAnswerWritePage() {
   const { complain: stateComplain, manager: stateManager, Images: stateImages } =
     location.state || {};
 
-  const [complain, setComplain] = useState<any>(stateComplain ?? null);
-  const [manager, setManager] = useState(stateManager ?? "");
+  const [complain, setComplain] = useState<ComplaintDetail | null>(
+    stateComplain ?? null,
+  );
+  const [manager, setManager] = useState<string>(
+    stateManager ?? stateComplain?.officer ?? "",
+  );
 
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [isRejected, setIsRejected] = useState(false);
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
+  const [isEditMode, setIsEditMode] = useState<boolean>(
+    Boolean(stateComplain?.reply),
+  );
+  const [isRejected, setIsRejected] = useState<boolean>(
+    stateComplain?.status === "반려",
+  );
+  const [title, setTitle] = useState<string>(
+    stateComplain?.reply?.replyTitle ?? "",
+  );
+  const [content, setContent] = useState<string>(
+    stateComplain?.reply?.replyContent ?? "",
+  );
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -42,11 +55,14 @@ export default function ComplainAnswerWritePage() {
 
   const initialImages = useMemo(() => {
     if (stateImages && stateImages.length > 0) return stateImages;
+    if (stateComplain?.reply?.attachmentUrl && stateComplain.reply.attachmentUrl.length > 0) {
+      return stateComplain.reply.attachmentUrl;
+    }
     if (detailData?.reply?.attachmentUrl && detailData.reply.attachmentUrl.length > 0) {
       return detailData.reply.attachmentUrl;
     }
     return [];
-  }, [stateImages, detailData?.reply?.attachmentUrl]);
+  }, [stateImages, stateComplain?.reply?.attachmentUrl, detailData?.reply?.attachmentUrl]);
 
   const { files, addFiles, deleteFile, isFileLoading } = useFileHandler({
     initialFiles: initialImages,
@@ -55,10 +71,10 @@ export default function ComplainAnswerWritePage() {
 
   useInitFromQuery(
     detailData,
-    (fetched: any) => {
+    (fetched: ComplaintDetail) => {
       if (!stateComplain && fetched) {
         setComplain(fetched);
-        if (fetched.officer) setManager(fetched.officer);
+        if (fetched.officer) setManager((prev: string) => prev || fetched.officer);
       }
     },
     complainId,
@@ -69,12 +85,25 @@ export default function ComplainAnswerWritePage() {
   }, []);
 
   useEffect(() => {
-    if (complain) {
-      setTitle(complain.reply.replyTitle);
-      setContent(complain.reply.replyContent);
+    if (!complain) return;
+
+    if (complain.reply) {
+      setTitle(complain.reply.replyTitle ?? "");
+      setContent(complain.reply.replyContent ?? "");
       setIsEditMode(true);
-      setIsRejected(complain.status === "반려");
+      if (complain.reply.responderName) {
+        setManager(complain.reply.responderName);
+      } else if (complain.officer) {
+        setManager(complain.officer);
+      }
+    } else {
+      setIsEditMode(false);
+      if (complain.officer) {
+        setManager((prev: string) => prev || complain.officer);
+      }
     }
+
+    setIsRejected(complain.status === "반려");
   }, [complain]);
 
   const handleSubmit = async () => {
@@ -114,10 +143,11 @@ export default function ComplainAnswerWritePage() {
       await queryClient.invalidateQueries({ queryKey: complaintKeys.all });
       alert(`답변이 ${isEditMode ? "수정" : "등록"}되었습니다!`);
       navigate(-1);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("실패", err);
-      if (err.response?.data?.message) {
-        alert(`[서버 응답] ${err.response.data.message}`);
+      const axiosError = err as { response?: { data?: { message?: string } } };
+      if (axiosError.response?.data?.message) {
+        alert(`[서버 응답] ${axiosError.response.data.message}`);
       } else {
         alert("처리 중 오류가 발생했습니다.");
       }
@@ -168,10 +198,11 @@ export default function ComplainAnswerWritePage() {
         </LabeledField>
 
         <LabeledField label="내용" required>
-          <Textarea
+          <RichTextEditor
+            content={content}
+            onChange={(html) => setContent(html)}
             placeholder="내용을 입력해주세요"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
+            minHeight="200px"
           />
         </LabeledField>
 
@@ -186,7 +217,10 @@ export default function ComplainAnswerWritePage() {
       </Content>
 
       <ButtonWrapper>
-        <SquareButton text="등록하기" onClick={handleSubmit} />
+        <SquareButton
+          text={isEditMode ? "수정하기" : "등록하기"}
+          onClick={handleSubmit}
+        />
       </ButtonWrapper>
     </Wrapper>
   );
@@ -230,11 +264,3 @@ const Input = styled.input`
   background: rgba(0, 0, 0, 0.04);
 `;
 
-const Textarea = styled.textarea`
-  min-height: 200px;
-  padding: 12px;
-  border-radius: 8px;
-  border: none;
-  background: rgba(0, 0, 0, 0.04);
-  resize: none;
-`;

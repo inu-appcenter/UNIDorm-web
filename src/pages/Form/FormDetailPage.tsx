@@ -18,19 +18,24 @@ import { FormBoxGray } from "@/styles/form";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import { useInitFromQuery } from "@/hooks/useInitFromQuery";
 import { useSurveyDetail } from "@/queries/surveys";
+import { resolveFormSubmittedState } from "@/utils/formUtils";
 import { useUserRole } from "@/hooks/useUserRole";
 
 const FormDetailPage = () => {
   const navigate = useNavigate();
 
   const location = useLocation();
-  const { hasSubmitted } = location.state || {}; // 수정할 민원 데이터
-
   const { formId } = useParams<{ formId: string }>();
   const { data: formData, isLoading } = useSurveyDetail(
     formId ? Number(formId) : undefined,
   );
   const form: SurveyDetail | null = formData ?? null;
+
+  // 웹 라우터 state 우선, 없을 경우(앱 멀티 웹뷰, 새로고침 등) 서버 API 응답 데이터로 안전하게 폴백
+  const isAlreadySubmitted = resolveFormSubmittedState(
+    location.state?.hasSubmitted,
+    form?.hasSubmitted,
+  );
   const [isSubmitLoading, setIsSubmitLoading] = useState(false);
 
   // 답변 상태 (문항 순서대로 관리)
@@ -222,7 +227,7 @@ const FormDetailPage = () => {
     if (form.status === "진행전" || form.status === "마감") {
       return true;
     }
-    if (hasSubmitted) {
+    if (isAlreadySubmitted) {
       return true;
     }
 
@@ -282,7 +287,7 @@ const FormDetailPage = () => {
             />
             {form.status === "진행전" || form.status === "마감" ? (
               <EmptyMessage>진행 기간이 아닙니다.</EmptyMessage>
-            ) : !hasSubmitted ? ( //제출하지 않은 사용자인 경우에만 폼 필드 보여줌
+            ) : !isAlreadySubmitted ? ( //제출하지 않은 사용자인 경우에만 폼 필드 보여줌
               <>
                 {/* 질문 리스트 */}
                 {form.questions.map((question, index) => {

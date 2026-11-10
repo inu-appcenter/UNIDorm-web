@@ -27,6 +27,7 @@ import {
   TagList,
 } from "@/styles/common";
 import { getLabelByValue } from "@/utils/announceUtils";
+import { stripHtmlTags } from "@/utils/text";
 import SelectableChipGroup from "../../components/roommate/checklist/SelectableChipGroup.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
 
@@ -438,7 +439,7 @@ export default function AnnouncementPage() {
                   </NoticeTagWrapper>
                 </NoticeTop>
 
-                <NoticeContent>{notice.content}</NoticeContent>
+                <NoticeContent>{stripHtmlTags(notice.content)}</NoticeContent>
 
                 <NoticeBottom>
                   <div className="viewCount">

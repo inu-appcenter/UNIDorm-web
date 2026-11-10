@@ -79,7 +79,7 @@ const CardWrapper = styled.div.withConfig({
   padding: 16px;
   border: none;
   width: 100%;
-  height: 176px;
+  height: 154px;
   cursor: ${({ matched }) => (matched ? "not-allowed" : "pointer")};
   box-sizing: border-box;
   overflow: hidden;
@@ -143,6 +143,7 @@ const LeftCircle = styled.div.withConfig({
   min-width: 48px;
   min-height: 48px;
   border-radius: 50%;
+  align-self: flex-start;
   background: conic-gradient(
     #0a84ff ${({ percentage }) => percentage * 3.6}deg,
     #e0e0e0 0deg
@@ -190,7 +191,7 @@ const ContentContainer = styled.div`
     font-style: normal;
     font-weight: 700;
     font-size: 16px;
-    line-height: 24px;
+    line-height: 22px;
     letter-spacing: 0.38px;
     white-space: nowrap;
     overflow: hidden;
@@ -204,7 +205,7 @@ const TagRow = styled.div`
   display: flex;
   flex-wrap: nowrap;
   gap: 6px;
-  min-height: 26px;
+  min-height: 24px;
   overflow: hidden;
 `;
 
@@ -216,7 +217,7 @@ const Tag = styled.div.withConfig({
   justify-content: center;
   min-width: 0;
 
-  padding: 4px 8px;
+  padding: 3px 8px;
   border-radius: 12px;
 
   color: var(--Gray-Gray800, #3d3d3d);
@@ -247,6 +248,7 @@ const Tag = styled.div.withConfig({
 
 const StayInfo = styled.div`
   font-size: 12px;
+  line-height: 16px;
   color: #3a3a3c;
   white-space: nowrap;
   overflow: hidden;
@@ -255,8 +257,8 @@ const StayInfo = styled.div`
 
 const Description = styled.div`
   font-size: 13px;
-  line-height: 20px;
-  min-height: 20px;
+  line-height: 18px;
+  min-height: 18px;
   color: #1c1c1e;
   white-space: nowrap;
   overflow: hidden;

@@ -9,7 +9,6 @@ import { useSwipeable } from "react-swipeable";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../../constants/EmptyMessage.tsx";
 import { useUserRole } from "@/hooks/useUserRole";
-import linkify from "../../utils/linkfy.tsx";
 import {
   NoticeTagWrapper,
   TypeBadge,
@@ -20,7 +19,7 @@ import { getLabelByValue } from "@/utils/announceUtils";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import { mixpanelTrack } from "@/utils/mixpanel";
 import { appBridge } from "@/utils/appBridgeAdapter";
-import DOMPurify from "dompurify";
+import RichTextViewer from "@/components/common/Viewer/RichTextViewer";
 
 export default function AnnounceDetailPage() {
   const { boardId } = useParams<{ boardId: string }>();
@@ -79,7 +78,7 @@ export default function AnnounceDetailPage() {
       await deleteAnnouncement(Number(boardId));
       alert("삭제되었습니다.");
       navigate(-1);
-    } catch (err) {
+    } catch {
       alert("삭제에 실패했습니다.");
     }
   };
@@ -120,7 +119,7 @@ export default function AnnounceDetailPage() {
       title: "공지사항 상세",
       menuItems: menuItems.length > 0 ? menuItems : null, // 메뉴가 없으면 null 처리
     };
-  }, [announce, images, isAdmin, navigate, handleDelete]); // 의존성 배열에 모두 추가
+  }, [announce, images, isAdmin, navigate, handleDelete, boardId]); // 의존성 배열에 모두 추가
 
   /* 3. 헤더 주입 */
   useSetHeader(headerConfig);
@@ -133,27 +132,6 @@ export default function AnnounceDetailPage() {
     trackMouse: true,
   });
 
-  const isHtmlContent = useMemo(() => {
-    if (!announce?.content) return false;
-    return /<[a-z][\s\S]*>/i.test(announce.content);
-  }, [announce?.content]);
-
-  const sanitizedHtml = useMemo(() => {
-    if (!announce?.content || !isHtmlContent) return "";
-    DOMPurify.addHook("afterSanitizeAttributes", (node) => {
-      if (node.tagName === "A" && node.hasAttribute("href")) {
-        node.setAttribute("target", "_blank");
-        node.setAttribute("rel", "noopener noreferrer");
-      }
-    });
-
-    const clean = DOMPurify.sanitize(announce.content, {
-      ADD_ATTR: ["target"],
-    });
-
-    DOMPurify.removeHook("afterSanitizeAttributes");
-    return clean;
-  }, [announce?.content, isHtmlContent]);
 
   return (
     <Wrapper>
@@ -214,11 +192,7 @@ export default function AnnounceDetailPage() {
               <AnnounceAttachment attachments={attachments} />
             )}
 
-            {isHtmlContent ? (
-              <HtmlContent dangerouslySetInnerHTML={{ __html: sanitizedHtml }} />
-            ) : (
-              <BodyText>{linkify(announce.content)}</BodyText>
-            )}
+            <RichTextViewer content={announce.content} />
           </>
         ) : (
           <EmptyMessage message="공지사항을 불러올 수 없습니다." />
@@ -288,12 +262,6 @@ const Title = styled.h2`
   margin: 8px 0;
 `;
 
-const BodyText = styled.p`
-  font-size: 16px;
-  line-height: 1.5;
-  word-break: break-all;
-  overflow-wrap: break-word;
-`;
 
 const ImageSlider = styled.div`
   width: 100%;
@@ -337,74 +305,4 @@ const TitleArea = styled.div`
   align-items: center;
 `;
 
-const HtmlContent = styled.div`
-  width: 100%;
-  font-size: 15px;
-  line-height: 1.6;
-  color: #333;
-  overflow-x: auto;
-  word-break: break-word;
-  overflow-wrap: break-word;
-
-  .view-con {
-    width: 100%;
-  }
-
-  p,
-  div,
-  span,
-  font {
-    max-width: 100%;
-    word-break: break-word;
-    overflow-wrap: break-word;
-  }
-
-  img {
-    max-width: 100% !important;
-    height: auto !important;
-    border-radius: 8px;
-    margin: 8px 0;
-  }
-
-  table {
-    max-width: 100% !important;
-    width: 100% !important;
-    border-collapse: collapse;
-    margin: 12px 0;
-    font-size: 13px;
-  }
-
-  table,
-  th,
-  td {
-    border: 1px solid #ddd;
-  }
-
-  th,
-  td {
-    padding: 8px 6px;
-    word-break: keep-all;
-  }
-
-  th {
-    background-color: #f8f9fa;
-    font-weight: 600;
-  }
-
-  a {
-    color: #0066cc;
-    text-decoration: underline;
-    word-break: break-all;
-  }
-
-  ul,
-  ol {
-    padding-left: 20px;
-    margin: 8px 0;
-  }
-
-  li {
-    margin-bottom: 4px;
-  }
-`;
 

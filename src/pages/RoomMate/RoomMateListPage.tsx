@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import RoomMateCard from "../../components/roommate/RoomMateCard.tsx";
+import RoommateEmptyState from "@/components/roommate/RoommateEmptyState";
 import { useEffect, useMemo } from "react";
 import { RoommatePost } from "@/types/roommates"; // 타입 임포트
 import { useLocation, useNavigate } from "react-router-dom";
@@ -77,6 +78,16 @@ export default function RoomMateListPage() {
     return {};
   }, [location.state?.filters]);
 
+  const { data: matchingStatus } = useRoommateMatchingStatus();
+
+  const currentSemesterFilters = useMemo(() => {
+    if (!matchingStatus?.year || !matchingStatus?.semester) return undefined;
+    return {
+      year: matchingStatus.year,
+      semester: Number(matchingStatus.semester),
+    };
+  }, [matchingStatus?.year, matchingStatus?.semester]);
+
   const {
     data,
     fetchNextPage,
@@ -84,7 +95,7 @@ export default function RoomMateListPage() {
     isFetchingNextPage,
     isLoading,
     isError,
-  } = useRoommateScroll(10);
+  } = useRoommateScroll(10, currentSemesterFilters);
 
   useEffect(() => {
     if (inView && hasNextPage && !isFetchingNextPage) {
@@ -127,8 +138,6 @@ export default function RoomMateListPage() {
       return true;
     });
   }, [data, filters]);
-
-  const { data: matchingStatus } = useRoommateMatchingStatus();
 
   const pageTitle = matchingStatus
     ? `${matchingStatus.year}년 ${formatSemesterName(matchingStatus.semester)} 룸메이트`
@@ -177,7 +186,13 @@ export default function RoomMateListPage() {
                   location="룸메이트_리스트"
                 />
               ))
-            : !isLoading && <EmptyMessage>게시글이 없습니다.</EmptyMessage>}
+            : !isLoading && (
+              Object.keys(filters).length > 0 ? (
+                <EmptyMessage>필터 조건에 맞는 게시글이 없습니다.</EmptyMessage>
+              ) : (
+                <RoommateEmptyState />
+              )
+            )}
 
           <div ref={ref} style={{ height: "20px" }}>
             {isFetchingNextPage && (

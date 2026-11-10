@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { SurveySummary } from "@/types/formTypes";
 import { formatDeadlineDate } from "@/utils/dateUtils";
 import { statusText } from "@/utils/formUtils";
-import { useUserRole } from "@/hooks/useUserRole";
+import { PATHS } from "@/constants/paths";
 import useUserStore from "../../stores/useUserStore.ts";
 
 interface FormCardProps {
@@ -20,7 +20,6 @@ const FormCard = ({
   buttonText = "상세 보기",
 }: FormCardProps) => {
   const navigate = useNavigate();
-  const { isAdmin } = useUserRole();
   const { tokenInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
 
@@ -49,24 +48,9 @@ const FormCard = ({
       navigate("/login");
       return;
     }
-    if (!isAdmin) {
-      //관리자인 경우 무조건 폼 접근 가능
-      navigate(`${SurveySummary.id}`);
-    } else {
-      //일반 사용자인 경우,
-      if (SurveySummary.hasSubmitted) {
-        //제출하지 않은 사용자인 경우(서버가 반대로 보내주고 있음)
-        navigate(`${SurveySummary.id}`, {
-          state: { hasSubmitted: true },
-        });
-        return;
-      } else {
-        navigate(`${SurveySummary.id}`, {
-          state: { hasSubmitted: false },
-        });
-        return;
-      }
-    }
+    navigate(PATHS.FORM.DETAIL(SurveySummary.id), {
+      state: { hasSubmitted: SurveySummary.hasSubmitted },
+    });
   };
 
   return (

@@ -3,8 +3,10 @@ import tokenInstance from "./tokenInstance.ts";
 import { AxiosResponse } from "axios";
 import {
   ComplaintCreateDto,
+  ComplaintCursorPageResponse,
   ComplaintDetail,
   ComplaintResponse,
+  ComplaintSearchDto,
   MyComplaint,
 } from "@/types/complain";
 import { ManagedFile } from "@/hooks/useFileHandler";
@@ -30,13 +32,66 @@ export const getComplaintDetail = async (
   return response;
 };
 
-// 내 민원 목록 조회 (최신순)
-export const getMyComplaints = async (): Promise<
-  AxiosResponse<MyComplaint[]>
-> => {
-  const response = await tokenInstance.get<MyComplaint[]>(`/complaints`);
-  console.log(response);
-  return response;
+type UserComplaintApiResponseData =
+  | MyComplaint[]
+  | {
+      content?: MyComplaint[];
+      complaints?: MyComplaint[];
+      hasNext?: boolean;
+      nextCursor?: number | null;
+    };
+
+export const adaptUserComplaintListResponse = (
+  raw: any,
+): ComplaintCursorPageResponse<MyComplaint> => {
+  if (Array.isArray(raw)) {
+    return {
+      content: raw,
+      hasNext: false,
+      nextCursor: null,
+    };
+  }
+  return {
+    content: Array.isArray(raw?.content)
+      ? raw.content
+      : Array.isArray(raw?.complaints)
+        ? raw.complaints
+        : [],
+    hasNext: Boolean(raw?.hasNext),
+    nextCursor: raw?.nextCursor ?? null,
+  };
+};
+
+const normalizeMyComplaintListResponse = (
+  response: AxiosResponse<UserComplaintApiResponseData>,
+): AxiosResponse<MyComplaint[]> => {
+  const page = adaptUserComplaintListResponse(response.data);
+  return { ...response, data: page.content };
+};
+
+// 내 민원 목록 조회 (최신순 / 하위 호환성 어댑터 적용)
+export const getMyComplaints = async (
+  params?: ComplaintSearchDto,
+): Promise<AxiosResponse<MyComplaint[]>> => {
+  const response = await tokenInstance.get<UserComplaintApiResponseData>(
+    `/complaints`,
+    { params },
+  );
+  return normalizeMyComplaintListResponse(response);
+};
+
+// 내 민원 목록 커서 페이징 조회 (신규 규격)
+export const getMyComplaintsPage = async (
+  params?: ComplaintSearchDto,
+): Promise<AxiosResponse<ComplaintCursorPageResponse<MyComplaint>>> => {
+  const response = await tokenInstance.get<UserComplaintApiResponseData>(
+    `/complaints`,
+    { params },
+  );
+  return {
+    ...response,
+    data: adaptUserComplaintListResponse(response.data),
+  };
 };
 
 // 민원 등록

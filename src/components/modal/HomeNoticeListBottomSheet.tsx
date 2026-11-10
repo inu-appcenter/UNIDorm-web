@@ -3,6 +3,7 @@ import { Drawer } from "vaul";
 import { PopupNotification } from "@/types/popup-notifications";
 import { formatTimeAgo } from "@/utils/dateUtils";
 import { getNotificationTypeLabel } from "@/utils/notificationType";
+import { stripHtmlTags } from "@/utils/text";
 
 interface Props {
   isOpen: boolean;
@@ -47,7 +48,7 @@ export default function HomeNoticeListBottomSheet({
                       </span>
                     </div>
                     <div className="title">{noti.title}</div>
-                    <div className="preview">{noti.content}</div>
+                    <div className="preview">{stripHtmlTags(noti.content)}</div>
                   </NotiItem>
                 ))}
               </ListWrapper>
@@ -61,18 +62,14 @@ export default function HomeNoticeListBottomSheet({
   );
 }
 
-const Overlay = styled(({ overlay, ...props }) => (
-  <Drawer.Overlay {...props} />
-))`
+const Overlay = styled(Drawer.Overlay)`
   position: fixed;
   inset: 0;
   background-color: rgba(0, 0, 0, 0.4);
   z-index: 10010;
 `;
 
-const Content = styled(({ overlay, ...props }) => (
-  <Drawer.Content {...props} />
-))`
+const Content = styled(Drawer.Content)`
   position: fixed;
   bottom: 0;
   left: 0;

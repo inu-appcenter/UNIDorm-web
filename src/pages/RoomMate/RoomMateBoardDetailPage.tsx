@@ -5,9 +5,11 @@ import styled from "styled-components";
 
 import { deleteRoommatePost } from "@/apis/roommate";
 import {
+  roommateKeys,
   useOpponentChecklist,
   useRoommateBoardDetail,
 } from "@/queries/roommates";
+import { flushServerDataSync } from "@/utils/serverDataSync";
 import { memberKeys } from "@/queries/members";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import RoomMateBottomBar from "@/components/roommate/RoomMateBottomBar";
@@ -93,6 +95,15 @@ export default function RoomMateBoardDetailPage() {
 
     try {
       await deleteRoommatePost(targetBoardId);
+
+      await queryClient.invalidateQueries({
+        queryKey: roommateKeys.all,
+        refetchType: "all",
+      });
+      queryClient.removeQueries({
+        queryKey: roommateKeys.detail(targetBoardId),
+      });
+      flushServerDataSync();
 
       try {
         const memberData = await queryClient.fetchQuery({
@@ -247,6 +258,12 @@ export default function RoomMateBoardDetailPage() {
     ];
   }, [boardData]);
 
+  // Apple & Toss 스타일 일치 항목 수 0.5초 카운트업
+  const animatedMatchedCount = useCountUp(
+    typeof boardData?.matchedFilterCount === "number" ? boardData.matchedFilterCount : 0,
+    { duration: 500, enabled: typeof boardData?.matchedFilterCount === "number" },
+  );
+
   if (isLoading) {
     return <LoadingSpinner message="게시글을 불러오는 중..." />;
   }
@@ -257,11 +274,6 @@ export default function RoomMateBoardDetailPage() {
 
   const shouldShowBottomBar = !roomId && !isMyPost;
 
-  // Apple & Toss 스타일 일치 항목 수 0.5초 카운트업
-  const animatedMatchedCount = useCountUp(
-    typeof boardData?.matchedFilterCount === "number" ? boardData.matchedFilterCount : 0,
-    { duration: 500, enabled: typeof boardData?.matchedFilterCount === "number" },
-  );
 
   const displayUserName =
     boardData.userName || (roomId && partnerName ? partnerName : "익명");

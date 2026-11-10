@@ -1,5 +1,5 @@
 // components/Onboarding.tsx
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import styled from "styled-components";
 import RoundSquareButton from "../components/button/RoundSquareButton.tsx";
 
@@ -15,6 +15,9 @@ import TermOfUse from "../components/TermOfUse.tsx";
 import { useNavigate } from "react-router-dom";
 
 const SLIDE_DURATION = 3000;
+
+// 온보딩에 사용되는 이미지 에셋 목록
+const PRELOAD_IMAGES = [로고, onboarding1, 민원접수, onboarding4];
 
 const slides = [
   {
@@ -60,7 +63,13 @@ const FirstSlide = ({ title }: { title: string }) => {
     <FirstSlideWrapper>
       <FirstSlideText>
         {parts[0]}
-        <LogoInText src={로고} alt="Unidorm 로고" />
+        <LogoInText
+          src={로고}
+          alt="Unidorm 로고"
+          loading="eager"
+          decoding="sync"
+          draggable={false}
+        />
         {parts[1]}
       </FirstSlideText>
     </FirstSlideWrapper>
@@ -68,35 +77,37 @@ const FirstSlide = ({ title }: { title: string }) => {
 };
 
 const FirstSlideWrapper = styled.div`
-  width: 80%;
-  //height: 100%;
-  flex: 1;
+  width: 85%;
+  max-width: 450px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 1rem;
-
-  font-size: 36px;
+  font-size: 32px;
   font-weight: 700;
-  color: #000;
+  color: #191f28;
   text-align: center;
+  margin: auto 0;
 `;
 
 const FirstSlideText = styled.div`
-  color: #000;
+  color: #191f28;
   text-align: center;
-  font-size: 36px;
+  font-size: 32px;
   font-weight: 700;
-  line-height: 1.4;
+  line-height: 1.45;
   display: inline;
   word-break: keep-all;
 `;
 
 const LogoInText = styled.img`
-  height: 70px;
-  vertical-align: -0.1em; // 살짝 아래로 내림 (기본은 baseline)
+  height: 64px;
+  vertical-align: -0.12em;
   display: inline;
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
 `;
 
 const OnboardingPage: React.FC = () => {
@@ -105,61 +116,143 @@ const OnboardingPage: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const isLastSlide = currentIndex === slides.length - 1;
-  const isFirstSlide = currentIndex === 0;
 
-  const goToNextSlide = () => {
-    if (!isLastSlide) {
-      setCurrentIndex((prev) => prev + 1);
-    }
-  };
+  // 좌우 드래그/스와이프 상태
+  const [dragOffset, setDragOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const isPointerDownRef = useRef(false);
+  const dragStartXRef = useRef(0);
+  const dragStartTimeRef = useRef(0);
+  const hasMovedRef = useRef(false);
 
-  const goToPrevSlide = () => {
-    if (!isFirstSlide) {
-      setCurrentIndex((prev) => prev - 1);
-    }
-  };
-
-  const resetTimer = () => {
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(goToNextSlide, SLIDE_DURATION);
-  };
-
+  // 모든 온보딩 이미지 사전 로딩 (브라우저 캐시 적재)
   useEffect(() => {
-    resetTimer();
+    PRELOAD_IMAGES.forEach((src) => {
+      const img = new window.Image();
+      img.src = src;
+    });
+  }, []);
+
+  const goToNextSlide = useCallback(() => {
+    setCurrentIndex((prev) => (prev < slides.length - 1 ? prev + 1 : prev));
+  }, []);
+
+  const goToPrevSlide = useCallback(() => {
+    setCurrentIndex((prev) => (prev > 0 ? prev - 1 : prev));
+  }, []);
+
+  // 자동 진행 타이머
+  useEffect(() => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    if (!isLastSlide && !isDragging) {
+      timerRef.current = setTimeout(goToNextSlide, SLIDE_DURATION);
+    }
+
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [currentIndex]);
+  }, [currentIndex, isLastSlide, isDragging, goToNextSlide]);
 
-  // 터치 이벤트 핸들러: 터치 위치에 따라 이전/다음 슬라이드 이동
-  const handleTouch = (e: React.MouseEvent<HTMLDivElement>) => {
-    resetTimer();
-    const touchX = e.clientX;
-    const screenWidth = window.innerWidth;
+  // 포인터 이벤트(터치/마우스 단일 통합 제어 - 중복 이벤트 방지)
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
 
-    if (touchX < screenWidth / 2) {
-      goToPrevSlide();
-    } else {
-      goToNextSlide();
+    if (timerRef.current) clearTimeout(timerRef.current);
+    isPointerDownRef.current = true;
+    dragStartXRef.current = e.clientX;
+    dragStartTimeRef.current = Date.now();
+    hasMovedRef.current = false;
+    setDragOffset(0);
+
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      // ignore
     }
   };
 
-  const handleStart = () => {
-    localStorage.setItem("isFirstVisit(10.20)", "false"); //온보딩페이지 변경돼서 다른 사람들한테도 보이게 하려면 로컬스토리지에 날짜를 기록하여 관리
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isPointerDownRef.current) return;
 
+    const deltaX = e.clientX - dragStartXRef.current;
+    if (Math.abs(deltaX) > 6) {
+      hasMovedRef.current = true;
+      setIsDragging(true);
+    }
+
+    const isFirst = currentIndex === 0;
+    const isLast = currentIndex === slides.length - 1;
+
+    // 양 끝 경계에서는 탄성 댐핑
+    if ((isFirst && deltaX > 0) || (isLast && deltaX < 0)) {
+      setDragOffset(deltaX * 0.25);
+    } else {
+      setDragOffset(deltaX);
+    }
+  };
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isPointerDownRef.current) return;
+    isPointerDownRef.current = false;
+    setIsDragging(false);
+
+    try {
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      }
+    } catch {
+      // ignore
+    }
+
+    const deltaTime = Math.max(Date.now() - dragStartTimeRef.current, 1);
+    const deltaX = e.clientX - dragStartXRef.current;
+    const velocity = Math.abs(deltaX) / deltaTime;
+    const isFirst = currentIndex === 0;
+    const isLast = currentIndex === slides.length - 1;
+
+    // 50px 이상 드래그하거나 빠른 플릭 시 슬라이드 이동
+    if (deltaX < -50 || (deltaX < -20 && velocity > 0.3)) {
+      if (!isLast) {
+        goToNextSlide();
+      }
+    } else if (deltaX > 50 || (deltaX > 20 && velocity > 0.3)) {
+      if (!isFirst) {
+        goToPrevSlide();
+      }
+    } else if (!hasMovedRef.current) {
+      // 드래그 없는 단순 탭/클릭 시 좌우 50% 분기 이동 (단 1회만 실행)
+      const screenWidth = window.innerWidth;
+      if (dragStartXRef.current < screenWidth / 2) {
+        if (!isFirst) goToPrevSlide();
+      } else {
+        if (!isLast) goToNextSlide();
+      }
+    }
+
+    setDragOffset(0);
+  };
+
+  const handlePointerCancel = () => {
+    if (!isPointerDownRef.current) return;
+    isPointerDownRef.current = false;
+    setIsDragging(false);
+    setDragOffset(0);
+  };
+
+  const handleStart = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    localStorage.setItem("isFirstVisit(10.20)", "false");
     navigate("/home");
   };
 
   const handleJump = (e?: React.MouseEvent<HTMLButtonElement>) => {
     if (e) e.stopPropagation();
-
     setCurrentIndex(slides.length - 1);
   };
 
-  const { id, title, content, subContent, image } = slides[currentIndex];
-
   return (
-    <Wrapper onClick={handleTouch}>
+    <Wrapper>
+      {/* 상단 프로그레스 및 건너뛰기 버튼 (플로팅) */}
       <TopSection>
         <ProgressContainer>
           {slides.map((_, index) => {
@@ -178,39 +271,69 @@ const OnboardingPage: React.FC = () => {
           })}
         </ProgressContainer>
 
-        {!isLastSlide && (
-          <TopRight>
-            <SkipButton onClick={(e) => handleJump(e)}>건너뛰기</SkipButton>
-          </TopRight>
-        )}
+        <TopRight>
+          <SkipButton $isVisible={!isLastSlide} onClick={(e) => handleJump(e)}>
+            건너뛰기
+          </SkipButton>
+        </TopRight>
       </TopSection>
 
-      {id === 0 ? (
-        <FirstSlide title={title} />
-      ) : (
-        <Content>
-          <TitleTextWrapper>
-            <Title>{title}</Title>
-            <Text>{content}</Text>
-            <Text style={{ fontSize: "12px" }}>{subContent}</Text>
-          </TitleTextWrapper>
+      {/* 중앙 슬라이더 뷰포트 (Pointer Events 단일 통합) */}
+      <SliderViewport
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerCancel}
+      >
+        <SliderTrack
+          $isDragging={isDragging}
+          style={{
+            transform: `translateX(calc(-${currentIndex * 100}% + ${dragOffset}px))`,
+          }}
+        >
+          {slides.map((slide, index) => {
+            const isLast = index === slides.length - 1;
 
-          <Image src={image ?? undefined} alt={title} />
-        </Content>
-      )}
+            return (
+              <SlideItem key={slide.id} $isLast={isLast}>
+                {slide.id === 0 ? (
+                  <FirstSlide title={slide.title} />
+                ) : (
+                  <Content>
+                    <TitleTextWrapper>
+                      <Title>{slide.title}</Title>
+                      <Text>{slide.content}</Text>
+                      {slide.subContent && (
+                        <SubText>{slide.subContent}</SubText>
+                      )}
+                    </TitleTextWrapper>
 
-      <Bottom>
-        {isLastSlide && (
-          <>
-            <TermOfUse />
-            <div>
-              <RoundSquareButton
-                btnName={"UNI Dorm 시작하기"}
-                onClick={handleStart}
-              />
-            </div>
-          </>
-        )}
+                    {slide.image && (
+                      <SlideImage
+                        src={slide.image}
+                        alt={slide.title}
+                        loading="eager"
+                        decoding="sync"
+                        draggable={false}
+                      />
+                    )}
+                  </Content>
+                )}
+              </SlideItem>
+            );
+          })}
+        </SliderTrack>
+      </SliderViewport>
+
+      {/* 하단 약관 및 시작하기 버튼 (마지막 슬라이드에서 부드럽게 부상) */}
+      <Bottom $isVisible={isLastSlide} onClick={(e) => e.stopPropagation()}>
+        <TermOfUse />
+        <div>
+          <RoundSquareButton
+            btnName={"UNI Dorm 시작하기"}
+            onClick={handleStart}
+          />
+        </div>
       </Bottom>
     </Wrapper>
   );
@@ -219,54 +342,115 @@ const OnboardingPage: React.FC = () => {
 export default OnboardingPage;
 
 const Wrapper = styled.div`
+  position: relative;
   display: flex;
-  flex: 1;
   flex-direction: column;
   align-items: center;
   box-sizing: border-box;
-  overflow-y: auto;
+  overflow: hidden;
   width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 100vh;
+  min-height: 100dvh;
+  user-select: none;
+  touch-action: pan-y;
+`;
+
+const TopSection = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 20px 20px 0 20px;
+  padding-top: calc(32px + var(--safe-area-top, 0px));
+  box-sizing: border-box;
+  z-index: 10;
+  pointer-events: none;
+`;
+
+const ProgressContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  pointer-events: auto;
 `;
 
 const TopRight = styled.div`
   width: 100%;
   display: flex;
   justify-content: flex-end;
-  //padding: 1rem;
+  min-height: 24px;
   box-sizing: border-box;
+  pointer-events: auto;
 `;
 
-const TopSection = styled.div`
-  width: 100%;
-  padding: 20px;
-  padding-top: calc(32px + var(--safe-area-top, 0px));
-  box-sizing: border-box;
-`;
-
-const SkipButton = styled.button`
+const SkipButton = styled.button<{ $isVisible: boolean }>`
   font-size: 16px;
-  color: black;
+  color: #191f28;
   font-weight: 600;
   background: none;
   border: none;
   cursor: pointer;
+  visibility: ${({ $isVisible }) => ($isVisible ? "visible" : "hidden")};
+  opacity: ${({ $isVisible }) => ($isVisible ? 1 : 0)};
+  transition: opacity 150ms ease;
+  padding: 0;
+`;
+
+const SliderViewport = styled.div`
+  width: 100%;
+  height: 100%;
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  position: relative;
+  cursor: grab;
+  touch-action: pan-y;
+  user-select: none;
+
+  &:active {
+    cursor: grabbing;
+  }
+`;
+
+const SliderTrack = styled.div<{ $isDragging: boolean }>`
+  display: flex;
+  width: 100%;
+  height: 100%;
+  transition: ${({ $isDragging }) =>
+    $isDragging ? "none" : "transform 350ms cubic-bezier(0.16, 1, 0.3, 1)"};
+  will-change: transform;
+`;
+
+const SlideItem = styled.div<{ $isLast: boolean }>`
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 0 1.5rem;
+  padding-top: calc(40px + var(--safe-area-top, 0px));
+  padding-bottom: ${({ $isLast }) =>
+    $isLast
+      ? "calc(160px + var(--safe-area-bottom, 0px))"
+      : "calc(40px + var(--safe-area-bottom, 0px))"};
 `;
 
 const Content = styled.div`
   width: 100%;
-  //height: 100%;
-  flex: 1;
   max-width: 450px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 0 1.5rem;
   box-sizing: border-box;
-
-  //margin-top: 10vh; // 여기서 높이 조절
-  margin-bottom: auto; // 아래 영역 확보
+  margin: auto 0;
 `;
 
 const TitleTextWrapper = styled.div`
@@ -277,51 +461,61 @@ const TitleTextWrapper = styled.div`
 const Title = styled.h2`
   font-size: 28px;
   font-weight: 700;
-  color: #000;
+  color: #191f28;
   margin-bottom: 0.75rem;
-
   word-break: keep-all;
 `;
 
 const Text = styled.p`
   font-size: 14px;
   color: #666;
-  line-height: 1.4;
-  //margin: 0 0 1.5rem;
+  line-height: 1.45;
   white-space: pre-line;
   word-break: keep-all;
   margin: 0;
-  //padding: 0;
 `;
 
-const Image = styled.img`
+const SubText = styled.p`
+  font-size: 12px;
+  color: #8b95a1;
+  line-height: 1.4;
+  white-space: pre-line;
+  word-break: keep-all;
+  margin-top: 6px;
+  margin-bottom: 0;
+`;
+
+const SlideImage = styled.img`
   width: 100%;
   height: auto;
-  max-height: 200px;
+  max-height: 210px;
   object-fit: contain;
-  //margin-top: auto;
-  margin-top: 40px;
-  margin-bottom: 2rem;
+  margin-top: 36px;
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
 `;
 
-const Bottom = styled.div`
+const Bottom = styled.div<{ $isVisible: boolean }>`
+  position: absolute;
+  bottom: 0;
+  left: 0;
   width: 100%;
-  padding: 20px 20px calc(20px + var(--safe-area-bottom, 0px)) 20px;
+  padding: 0 20px calc(20px + var(--safe-area-bottom, 0px)) 20px;
   box-sizing: border-box;
+  z-index: 10;
   display: flex;
   flex-direction: column;
   gap: 16px;
-`;
-
-const ProgressContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
+  visibility: ${({ $isVisible }) => ($isVisible ? "visible" : "hidden")};
+  opacity: ${({ $isVisible }) => ($isVisible ? 1 : 0)};
+  transform: translateY(${({ $isVisible }) => ($isVisible ? "0px" : "12px")});
+  transition: opacity 250ms ease, transform 250ms cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: ${({ $isVisible }) => ($isVisible ? "auto" : "none")};
 `;
 
 interface ProgressProps {
-  active?: boolean; // 혹시 쓰는 곳 있으면
+  active?: boolean;
   total: number;
 }
 
@@ -333,7 +527,6 @@ const ProgressBarWrapper = styled.div<ProgressProps>`
   overflow: hidden;
 `;
 
-// ProgressFill.tsx
 const ProgressFill = styled.div<{
   status: "filled" | "active" | "empty";
 }>`
@@ -359,16 +552,3 @@ const ProgressFill = styled.div<{
     }
   }
 `;
-
-// const ButtonWrapper = styled.div`
-//   width: 100%;
-//   height: fit-content;
-//   position: fixed;
-//   bottom: 0;
-//   left: 0;
-//   padding: 16px;
-//   box-sizing: border-box;
-//   background: rgba(244, 244, 244, 0.6);
-//   backdrop-filter: blur(10px);
-//   -webkit-backdrop-filter: blur(10px);
-// `;

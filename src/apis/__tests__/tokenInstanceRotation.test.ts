@@ -165,6 +165,44 @@ describe("다른 웹뷰가 refreshToken을 먼저 교체했을 때의 재발급 
     expect(response.status).toBe(200);
     expect(refreshMock).toHaveBeenCalledTimes(1);
   });
+
+  it("비로그인(토큰 없음) 상태에서 403 에러 발생 시 리프레시나 로그아웃 이동 없이 즉시 에러를 반환한다", async () => {
+    localStorage.clear();
+    const { default: tokenInstance } = await import("../tokenInstance");
+    tokenInstance.defaults.adapter = async (config) => {
+      const error = Object.assign(new Error("Forbidden"), {
+        config,
+        response: { status: 403, data: { message: "인증되지 않은 사용자입니다." } },
+        isAxiosError: true,
+      });
+      throw error;
+    };
+
+    await expect(tokenInstance.get("/users/like")).rejects.toMatchObject({
+      response: { status: 403 },
+    });
+    expect(refreshMock).not.toHaveBeenCalled();
+    expect(location.href).toBe("");
+  });
+
+  it("비로그인(토큰 없음) 상태에서 401 에러 발생 시 리프레시나 로그아웃 이동 없이 즉시 에러를 반환한다", async () => {
+    localStorage.clear();
+    const { default: tokenInstance } = await import("../tokenInstance");
+    tokenInstance.defaults.adapter = async (config) => {
+      const error = Object.assign(new Error("Unauthorized"), {
+        config,
+        response: { status: 401, data: { message: "인증이 필요합니다." } },
+        isAxiosError: true,
+      });
+      throw error;
+    };
+
+    await expect(tokenInstance.get("/users/like")).rejects.toMatchObject({
+      response: { status: 401 },
+    });
+    expect(refreshMock).not.toHaveBeenCalled();
+    expect(location.href).toBe("");
+  });
 });
 
 describe("앱 웹뷰에서 네이티브에 재발급을 맡기는 처리", () => {
