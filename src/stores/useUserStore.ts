@@ -11,6 +11,7 @@ interface UserState {
   userInfo: UserInfo;
   setTokenInfo: (tokenInfo: TokenInfo, options?: { fromNative?: boolean }) => void;
   setUserInfo: (userInfo: UserInfo) => void;
+  clearUnreadNotifications: () => void;
   setLoading: (isLoading: boolean) => void;
   isLoading: boolean;
 }
@@ -123,6 +124,14 @@ const useUserStore = create<UserState>()(
         studentNumber: userInfo.studentNumber,
         hasTimeTableImage: userInfo.hasTimeTableImage,
         roommateCheckList: userInfo.roommateCheckList,
+      });
+    },
+    clearUnreadNotifications: () => {
+      set((state) => {
+        if (!state.userInfo.hasUnreadNotifications) return state;
+        const updated = { ...state.userInfo, hasUnreadNotifications: false };
+        safeLocalStorage.setItem("userInfo", JSON.stringify(updated));
+        return { userInfo: updated };
       });
     },
     setLoading: (isLoading: boolean) => {
