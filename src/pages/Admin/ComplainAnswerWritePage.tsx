@@ -229,7 +229,7 @@ export default function ComplainAnswerWritePage() {
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  min-height: 100%;
 `;
 
 const Content = styled.div`
@@ -238,7 +238,6 @@ const Content = styled.div`
   display: flex;
   flex-direction: column;
   gap: 16px;
-  overflow-y: auto;
 `;
 
 const ButtonWrapper = styled.div`
