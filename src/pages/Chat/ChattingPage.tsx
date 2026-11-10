@@ -567,7 +567,9 @@ export default function ChattingPage() {
     useState<StudentIdDisclosureStatus | null>(null);
 
   const location = useLocation();
-  const partnerName = location.state?.partnerName ?? undefined;
+  const [partnerName, setPartnerName] = useState<string | undefined>(
+    location.state?.partnerName ?? undefined,
+  );
   const routeRoom = location.state?.room as OpenChatRoom | undefined;
   const routeRoomName = location.state?.roomName as string | undefined;
   const routeRoomDescription = location.state?.roomDescription as
@@ -636,8 +638,9 @@ export default function ChattingPage() {
       }
     }
   }, [routeRoom]);
-  const partnerProfileImageUrl =
-    location.state?.partnerProfileImageUrl ?? undefined;
+  const [partnerProfileImageUrl, setPartnerProfileImageUrl] = useState<
+    string | undefined
+  >(location.state?.partnerProfileImageUrl ?? undefined);
   const pendingDisclosureRequestId = Number(
     location.state?.disclosureRequestId,
   );
@@ -2353,18 +2356,42 @@ export default function ChattingPage() {
             const roomResponse = await getRoommateChatRoom(roomId);
             const currentRoom = roomResponse.data;
             if (currentRoom) {
+              const resolvedPartnerName =
+                currentRoom.partnerName?.trim() ||
+                currentRoom.opponentNickname?.trim();
+              if (resolvedPartnerName) {
+                setPartnerName(resolvedPartnerName);
+              }
+              if (currentRoom.partnerProfileImageUrl) {
+                setPartnerProfileImageUrl(currentRoom.partnerProfileImageUrl);
+              }
+
               oppId = currentRoom.partnerId;
               opponentIdRef.current = oppId;
               setIsBlockedByPartner(
-                Boolean(currentRoom.isBlockedByPartner),
+                Boolean(
+                  currentRoom.isBlockedByPartner ??
+                    (currentRoom as any).blockedByPartner,
+                ),
               );
               void refreshBlockedPartnerStatus(oppId);
 
               const opponentBoardTitle = currentRoom.opponentBoardTitle?.trim();
-              const nextBoardLink = {
-                title: opponentBoardTitle || "삭제된 게시물입니다",
-                owner: "opponent" as const,
-              };
+              const myBoardTitle = currentRoom.myBoardTitle?.trim();
+              const nextBoardLink = opponentBoardTitle
+                ? {
+                    title: opponentBoardTitle,
+                    owner: "opponent" as const,
+                  }
+                : myBoardTitle
+                  ? {
+                      title: myBoardTitle,
+                      owner: "me" as const,
+                    }
+                  : {
+                      title: "삭제된 게시물입니다",
+                      owner: "opponent" as const,
+                    };
 
               setRoommateBoardLink((current) => ({
                 ...nextBoardLink,

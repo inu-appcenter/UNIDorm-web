@@ -1,6 +1,7 @@
 // NoticeCard.tsx
 import React from "react";
 import styled from "styled-components";
+import RichTextViewer from "@/components/common/Viewer/RichTextViewer";
 import { Files } from "@/types/complain";
 import { useUserRole } from "@/hooks/useUserRole";
 
@@ -45,7 +46,7 @@ const ComplainCard: React.FC<NoticeCardProps> = ({
       )}
 
       <Title>{title}</Title>
-      <Content>{content}</Content>
+      <RichTextViewer content={content} />
       {images &&
         images.length > 0 &&
         images.map((image, index) => (
@@ -106,13 +107,6 @@ const Title = styled.div`
   font-size: 1rem;
 `;
 
-const Content = styled.div`
-  font-size: 0.9rem;
-  color: #333;
-  overflow: hidden;
-
-  white-space: pre-line;
-`;
 
 const ImagePlaceholder = styled.img`
   width: 100%;

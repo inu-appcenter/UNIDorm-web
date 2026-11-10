@@ -7,6 +7,7 @@ import { mixpanelTrack } from "@/utils/mixpanel";
 import { ANNOUNCE_CATEGORY_LIST } from "@/constants/announcement";
 import { TypeBadge } from "@/styles/announcement";
 import { getLabelByValue } from "@/utils/announceUtils";
+import { stripHtmlTags } from "@/utils/text";
 
 interface HomeCardProps {
   id: number;
@@ -55,7 +56,7 @@ const HomeNoticeCard = ({
         </TimeGroup>
       </MetaRow>
       <TitleText>{title}</TitleText>
-      <ContentText>{content}</ContentText>
+      <ContentText>{stripHtmlTags(content)}</ContentText>
     </NoticeItemWrapper>
   );
 };

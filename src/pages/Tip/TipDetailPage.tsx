@@ -1,7 +1,7 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
-import DOMPurify from "dompurify";
+import RichTextViewer from "@/components/common/Viewer/RichTextViewer";
 import { FaRegHeart } from "react-icons/fa";
 import { useSwipeable } from "react-swipeable";
 import useUserStore from "../../stores/useUserStore.ts";
@@ -69,7 +69,7 @@ export default function TipDetailPage() {
       await deleteTip(Number(boardId));
       alert("삭제되었습니다.");
       navigate(-1);
-    } catch (err) {
+    } catch {
       alert("삭제에 실패했습니다.");
     }
   };
@@ -89,7 +89,7 @@ export default function TipDetailPage() {
 
       setLiked((prev) => !prev);
       setLikeCount((prev) => prev + (liked ? -1 : 1));
-    } catch (err) {
+    } catch {
       alert("좋아요 실패!");
     }
   };
@@ -108,7 +108,7 @@ export default function TipDetailPage() {
       });
       mixpanelTrack.commentCreated("꿀팁", "꿀팁상세");
       setCommentInput("");
-    } catch (err) {
+    } catch {
       alert("댓글 등록 실패");
     }
   };
@@ -130,7 +130,7 @@ export default function TipDetailPage() {
       mixpanelTrack.commentCreated("꿀팁_답글", "꿀팁상세");
       setReplyInputs((prev) => ({ ...prev, [parentCommentId]: "" }));
       setReplyInputOpen((prev) => ({ ...prev, [parentCommentId]: false }));
-    } catch (err) {
+    } catch {
       alert("대댓글 등록 실패");
     }
   };
@@ -163,50 +163,6 @@ export default function TipDetailPage() {
           ]
         : undefined,
   });
-
-  const isHtmlContent = useMemo(() => {
-    if (!tip?.content) return false;
-    return /<[a-z][\s\S]*>/i.test(tip.content);
-  }, [tip?.content]);
-
-  const sanitizedHtml = useMemo(() => {
-    if (!tip?.content || !isHtmlContent) return "";
-    DOMPurify.addHook("afterSanitizeAttributes", (node) => {
-      if (node.tagName === "A" && node.hasAttribute("href")) {
-        node.setAttribute("target", "_blank");
-        node.setAttribute("rel", "noopener noreferrer");
-      }
-    });
-
-    const clean = DOMPurify.sanitize(tip.content, {
-      ADD_ATTR: ["target", "rel"],
-    });
-
-    DOMPurify.removeHook("afterSanitizeAttributes");
-    return clean;
-  }, [tip?.content, isHtmlContent]);
-
-  // 텍스트 내 URL 감지 및 링크 변환 (일반 텍스트용)
-  const renderContentWithLinks = (content: string) => {
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    const parts = content.split(urlRegex);
-
-    return parts.map((part, index) => {
-      if (part.match(urlRegex)) {
-        return (
-          <StyledLink
-            key={index}
-            href={part}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {part}
-          </StyledLink>
-        );
-      }
-      return part;
-    });
-  };
 
   return (
     <Wrapper>
@@ -252,11 +208,7 @@ export default function TipDetailPage() {
             )}
 
             <Title>{tip.title}</Title>
-            {isHtmlContent ? (
-              <HtmlContent dangerouslySetInnerHTML={{ __html: sanitizedHtml }} />
-            ) : (
-              <BodyText>{renderContentWithLinks(tip.content)}</BodyText>
-            )}
+            <RichTextViewer content={tip.content} />
             <Divider />
 
             <LikeBox onClick={handleLike} style={{ cursor: "pointer" }}>
@@ -346,78 +298,6 @@ const Title = styled.h2`
   font-size: 16px;
   font-weight: bold;
   margin: 8px 0;
-`;
-
-const BodyText = styled.div`
-  font-size: 14px;
-  line-height: 1.5;
-  white-space: pre-wrap;
-  word-break: break-all;
-  overflow-wrap: break-word;
-`;
-
-const HtmlContent = styled.div`
-  font-size: 15px;
-  line-height: 1.6;
-  color: #222;
-  word-break: break-word;
-  overflow-wrap: break-word;
-
-  p {
-    margin: 0 0 8px 0;
-    &:last-child {
-      margin-bottom: 0;
-    }
-  }
-
-  h2 {
-    font-size: 1.25rem;
-    font-weight: 700;
-    margin: 16px 0 8px 0;
-    color: #111;
-  }
-
-  h3 {
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin: 14px 0 6px 0;
-    color: #111;
-  }
-
-  ul,
-  ol {
-    padding-left: 20px;
-    margin: 8px 0;
-  }
-
-  li {
-    margin-bottom: 4px;
-  }
-
-  blockquote {
-    border-left: 3px solid #007aff;
-    padding-left: 12px;
-    margin: 12px 0;
-    color: #666;
-    font-style: italic;
-  }
-
-  hr {
-    border: none;
-    border-top: 1px solid #eee;
-    margin: 16px 0;
-  }
-
-  a {
-    color: #007bff;
-    text-decoration: underline;
-  }
-`;
-
-const StyledLink = styled.a`
-  color: #007bff;
-  text-decoration: underline;
-  word-break: break-all;
 `;
 
 const LikeBox = styled.div`
