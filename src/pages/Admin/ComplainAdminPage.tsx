@@ -13,11 +13,12 @@ import ComplainFilter from "../../components/complain/ComplainFilter.tsx";
 import AdminModal from "@/components/modal/AdminModal";
 import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
-import { useAdminComplaints } from "@/queries/complaints";
+import { useInfiniteAdminComplaints } from "@/queries/complaints";
 import { downloadComplaintsAsCsv } from "@/utils/csvUtils";
 import { formatBuildingFromServer } from "@/constants/constants";
 import { AlertCircle, Filter, RotateCw, X } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
+import { useInView } from "react-intersection-observer";
 
 const PERIOD_MENUS = ["전체", "최근 1개월", "최근 3개월", "올해"];
 
@@ -200,16 +201,49 @@ const ComplainAdminPage = () => {
     return Object.keys(dto).length > 0 ? dto : null;
   }, [appliedDetailFilters, appliedKeyword, appliedStartDate, appliedEndDate]);
 
-  // 적용된 필터 조건으로 서버에서 민원 목록 조회 (단일화 API 호출 및 이중 폴백)
+  // 적용된 필터 조건으로 서버에서 민원 목록 커서 페이징 조회
   const {
-    data: complaints = [],
-    isLoading: isInitialLoading,
-    isPlaceholderData,
+    data,
+    isLoading,
     isError,
     refetch,
-  } = useAdminComplaints(serverSearchDto, isLoggedIn);
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isFetchNextPageError,
+  } = useInfiniteAdminComplaints(serverSearchDto, 20, isLoggedIn);
 
-  const isLoading = isInitialLoading || isPlaceholderData;
+  // 페이지별 민원 목록 병합 및 ID 기준 중복 제거
+  const complaints = useMemo(() => {
+    const merged = data?.pages.flatMap((page) => page.content) ?? [];
+    const seen = new Set<number>();
+    return merged.filter((item) => {
+      if (seen.has(item.id)) return false;
+      seen.add(item.id);
+      return true;
+    });
+  }, [data]);
+
+  const { ref: loadMoreRef, inView } = useInView({
+    rootMargin: "200px 0px",
+  });
+
+  useEffect(() => {
+    if (
+      inView &&
+      hasNextPage &&
+      !isFetchingNextPage &&
+      !isFetchNextPageError
+    ) {
+      void fetchNextPage();
+    }
+  }, [
+    inView,
+    hasNextPage,
+    isFetchingNextPage,
+    isFetchNextPageError,
+    fetchNextPage,
+  ]);
 
   const handleToggleFilter = () => {
     setIsFilterOpen((prev) => !prev);
@@ -583,7 +617,7 @@ const ComplainAdminPage = () => {
             {/* 목록 테이블 및 로딩/에러/빈 상태 */}
             {isLoading ? (
               <LoadingSpinner message="민원 목록을 불러오는 중..." />
-            ) : isError ? (
+            ) : isError && complaints.length === 0 ? (
               <ErrorContainer>
                 <ErrorIconWrapper>
                   <AlertCircle size={32} />
@@ -598,7 +632,41 @@ const ComplainAdminPage = () => {
                 </RetryButton>
               </ErrorContainer>
             ) : (
-              <ComplainListTable data={filteredComplaints} isAdmin={true} />
+              <>
+                <ComplainListTable data={filteredComplaints} isAdmin={true} />
+                {isFetchingNextPage && (
+                  <LoadMoreStatus>
+                    <LoadingSpinner message="이전 민원을 불러오는 중..." />
+                  </LoadMoreStatus>
+                )}
+                {isFetchNextPageError && (
+                  <LoadMoreStatus>
+                    <LoadMoreErrorText>
+                      이전 민원을 불러오지 못했어요.
+                    </LoadMoreErrorText>
+                    <LoadMoreButton
+                      type="button"
+                      onClick={() => void fetchNextPage()}
+                    >
+                      <RotateCw size={14} />
+                      <span>다시 불러오기</span>
+                    </LoadMoreButton>
+                  </LoadMoreStatus>
+                )}
+                {hasNextPage && !isFetchingNextPage && !isFetchNextPageError && (
+                  <LoadMoreStatus ref={loadMoreRef}>
+                    <LoadMoreButton
+                      type="button"
+                      onClick={() => void fetchNextPage()}
+                    >
+                      이전 민원 더 보기
+                    </LoadMoreButton>
+                  </LoadMoreStatus>
+                )}
+                {!hasNextPage && filteredComplaints.length > 0 && (
+                  <EndOfListText>모든 민원을 불러왔어요.</EndOfListText>
+                )}
+              </>
             )}
           </ContentWrapper>
         }
@@ -861,4 +929,52 @@ const RetryButton = styled.button`
   &:active {
     transform: scale(0.98);
   }
+`;
+
+const LoadMoreStatus = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px 0 8px;
+`;
+
+const LoadMoreButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 20px;
+  border-radius: 12px;
+  border: 1px solid #E5E8EB;
+  background-color: #ffffff;
+  color: #4E5968;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background-color: #F2F4F6;
+    color: #191F28;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+`;
+
+const LoadMoreErrorText = styled.p`
+  margin: 0;
+  font-size: 13px;
+  color: #F04452;
+`;
+
+const EndOfListText = styled.p`
+  margin: 0;
+  padding: 16px 0 8px;
+  text-align: center;
+  font-size: 13px;
+  color: #8B95A1;
 `;
