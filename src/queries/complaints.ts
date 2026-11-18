@@ -117,16 +117,19 @@ export const useInfiniteAdminComplaints = (
   useInfiniteQuery({
     queryKey: complaintKeys.adminInfinite(filters),
     queryFn: async ({ pageParam }) => {
+      const cursorParam = pageParam != null ? pageParam : undefined;
       const response = await getAdminComplaintsPage({
         ...(filters || {}),
-        cursor: (pageParam as number) || undefined,
-        lastId: (pageParam as number) || undefined,
+        cursor: cursorParam,
+        lastId: cursorParam,
         size: pageSize,
       });
       return response.data;
     },
     initialPageParam: null as number | null,
     getNextPageParam: (lastPage) =>
-      lastPage.hasNext ? lastPage.nextCursor : undefined,
+      lastPage.hasNext && lastPage.nextCursor != null
+        ? lastPage.nextCursor
+        : undefined,
     enabled,
   });

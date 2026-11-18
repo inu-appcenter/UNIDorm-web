@@ -113,18 +113,43 @@ export const getAdminComplaints = async (
 
 
 // 관리자용 민원 목록 커서 페이징 조회 (신규 규격)
+// 신버전 서버(/admin/complaints) 우선 호출, 구버전 서버(/admin/complaints/search) 폴백 지원
 export const getAdminComplaintsPage = async (
   dto?: ComplaintSearchDto,
 ): Promise<AxiosResponse<ComplaintCursorPageResponse<AdminComplaint>>> => {
   const normalized = normalizeSearchDto(dto);
-  const response = await tokenInstance.get<ComplaintApiResponseData>(
-    `/admin/complaints`,
-    { params: normalized },
-  );
-  return {
-    ...response,
-    data: adaptAdminComplaintListResponse(response.data),
-  };
+  try {
+    const response = await tokenInstance.get<ComplaintApiResponseData>(
+      `/admin/complaints`,
+      { params: normalized },
+    );
+    return {
+      ...response,
+      data: adaptAdminComplaintListResponse(response.data),
+    };
+  } catch (unifiedError) {
+    if (normalized && !normalized.lastId && !normalized.cursor) {
+      const legacyFilters = { ...normalized };
+      delete legacyFilters.size;
+      delete legacyFilters.cursor;
+      delete legacyFilters.lastId;
+      if (Object.keys(legacyFilters).length > 0) {
+        try {
+          const searchRes = await tokenInstance.get<ComplaintApiResponseData>(
+            `/admin/complaints/search`,
+            { params: legacyFilters },
+          );
+          return {
+            ...searchRes,
+            data: adaptAdminComplaintListResponse(searchRes.data),
+          };
+        } catch {
+          throw unifiedError;
+        }
+      }
+    }
+    throw unifiedError;
+  }
 };
 
 // 관리자용 민원 상세 조회
