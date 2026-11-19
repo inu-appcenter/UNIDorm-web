@@ -1,26 +1,23 @@
+import { Trans } from "react-i18next";
 import styled from "styled-components";
+import { colors, typography } from "@/styles/tokens";
 
 export default function TermOfUse() {
   return (
     <StyledDiv>
-      유니돔은 <strong>인천대학교 앱센터</strong>(IT이노베이션랩)에서 생활원과
-      협력하여 개발하는 서비스입니다.
-      {/*서비스 사용 시{" "}*/}
-      {/*<a href="/terms-of-use.html" target="_blank" rel="noopener noreferrer">*/}
-      {/*  이용약관*/}
-      {/*</a>{" "}*/}
-      {/*및{" "}*/}
-      {/*<a href="/privacy-policy.html" target="_blank" rel="noopener noreferrer">*/}
-      {/*  <strong>개인정보 처리방침</strong>*/}
-      {/*</a>*/}
-      {/*에 동의한 것으로 간주됩니다.*/}
+      <Trans
+        i18nKey="terms.notice"
+        ns="onboarding"
+        components={{ strong: <strong /> }}
+      />
     </StyledDiv>
   );
 }
 
 const StyledDiv = styled.div`
+  ${typography.label2}
   width: 100%;
-  font-size: 14px;
-  color: #666;
-  line-height: 1.4;
+  color: ${colors.text.text2};
+  text-align: center;
+  word-break: keep-all;
 `;

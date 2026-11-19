@@ -1,0 +1,39 @@
+{
+  "header": {
+    "skip": "跳过"
+  },
+  "languageOptions": {
+    "ko": "한국어",
+    "en": "English",
+    "zh": "中文",
+    "vi": "Tiếng Việt"
+  },
+  "step1": {
+    "title": "请选择\n使用语言",
+    "subtitle": "Choose your language",
+    "cta": "继续"
+  },
+  "step2": {
+    "title": "住宿证与生活馆公告\n一站式查看",
+    "subtitle": "常用宿舍功能都已整合在首页。",
+    "card": {
+      "dormIdTitle": "电子住宿证",
+      "dormIdAction": "打开住宿证",
+      "noticeTitle": "生活馆公告"
+    },
+    "cta": "下一步"
+  },
+  "step3": {
+    "title": "寻找作息合拍的\n室友",
+    "subtitle": "查看生活习惯并申请成为室友。",
+    "card": {
+      "title": "符合我条件的室友",
+      "tags": ["不吸烟", "早起型"],
+      "action": "浏览室友"
+    },
+    "cta": "开始使用 UNI Dorm"
+  },
+  "terms": {
+    "notice": "UNI Dorm 由<strong>仁川大学 AppCenter</strong>（IT创新实验室）与生活馆合作开发。"
+  }
+}

@@ -1,340 +1,353 @@
-// components/Onboarding.tsx
-import React, { useEffect, useRef, useState, useCallback } from "react";
-import styled from "styled-components";
-import RoundSquareButton from "../components/button/RoundSquareButton.tsx";
-
-import onboarding1 from "../assets/onboarding/onboarding1.webp";
-// import onboarding2 from "../assets/onboarding/onboarding2.webp";
-// import onboarding3 from "../assets/onboarding/onboarding3.webp";
-import onboarding4 from "../assets/onboarding/onboarding4.webp";
-// import onboarding5 from "../assets/onboarding/onboarding5.webp";
-import 민원접수 from "../assets/민원접수.svg";
-
-import 로고 from "../assets/unidorm-logo.webp";
-import TermOfUse from "../components/TermOfUse.tsx";
+import React, { useCallback, useRef, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { Check } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import styled from "styled-components";
 
-const SLIDE_DURATION = 3000;
+import dormIdCardSvg from "@/assets/onboarding/dorm-id-card.svg";
+import globeSvg from "@/assets/onboarding/globe.svg";
+import roommateBubbleBackSvg from "@/assets/onboarding/roommate-bubble-back.svg";
+import roommateBubbleFrontSvg from "@/assets/onboarding/roommate-bubble-front.svg";
+import speechBubbleSvg from "@/assets/onboarding/speech-bubble.svg";
+import unidormLogo from "@/assets/unidorm-logo.webp";
+import RoundSquareButton from "@/components/button/RoundSquareButton";
+import TermOfUse from "@/components/TermOfUse";
+import { SUPPORTED_LANGUAGES } from "@/i18n";
+import { useLanguageStore, type Language } from "@/stores/useLanguageStore";
+import { colors, typography } from "@/styles/tokens";
 
-// 온보딩에 사용되는 이미지 에셋 목록
-const PRELOAD_IMAGES = [로고, onboarding1, 민원접수, onboarding4];
+const TOTAL_STEPS = 3;
+const EASE_OUT_EXPO: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
-const slides = [
-  {
-    id: 0,
-    title: "UNI Dorm에서 할 수 있는 다양한 경험을 알아보세요!",
-    content: "",
-    image: null,
+const stepVariants = {
+  enter: (direction: number) => ({
+    opacity: 0,
+    x: direction > 0 ? 24 : -24,
+  }),
+  center: {
+    opacity: 1,
+    x: 0,
+    transition: {
+      duration: 0.28,
+      ease: EASE_OUT_EXPO,
+    },
   },
-  {
-    id: 1,
-    title: "룸메이트 매칭",
-    content:
-      "UNI Dorm은 개인별 생활 패턴 체크리스트를 기반으로, 나와 가장 비슷한 룸메이트를 추천해줍니다.",
-    image: onboarding1,
-  },
-  // {
-  //   id: 2,
-  //   title: "공동구매",
-  //   content: "배달음식, 식자재, 생활용품 등 함께 공동구매해서 절약해보세요!",
-  //   image: onboarding2,
-  // },
-  {
-    id: 3,
-    title: "생활원 민원 작성",
-    content:
-      "기숙사를 살면서 발생한 불편사항을 간편하게 접수하고, 답변이 등록되면 알림으로 알려드려요.",
-    image: 민원접수,
-  },
-  {
-    id: 4,
-    title: "푸시알림으로 놓치지 마세요",
-    content:
-      "기숙사 공지사항 및 이벤트, 공동구매 새 글 알림 등 알림 기능으로 놓치지 마세요!",
-    subContent: "*스토어에서 앱 설치 시 사용할 수 있습니다.",
-    image: onboarding4,
-  },
-];
-
-const FirstSlide = ({ title }: { title: string }) => {
-  const parts = title.split("UNI Dorm");
-
-  return (
-    <FirstSlideWrapper>
-      <FirstSlideText>
-        {parts[0]}
-        <LogoInText
-          src={로고}
-          alt="Unidorm 로고"
-          loading="eager"
-          decoding="sync"
-          draggable={false}
-        />
-        {parts[1]}
-      </FirstSlideText>
-    </FirstSlideWrapper>
-  );
+  exit: (direction: number) => ({
+    opacity: 0,
+    x: direction > 0 ? -20 : 20,
+    transition: {
+      duration: 0.2,
+      ease: EASE_OUT_EXPO,
+    },
+  }),
 };
-
-const FirstSlideWrapper = styled.div`
-  width: 85%;
-  max-width: 450px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  font-size: 32px;
-  font-weight: 700;
-  color: #191f28;
-  text-align: center;
-  margin: auto 0;
-`;
-
-const FirstSlideText = styled.div`
-  color: #191f28;
-  text-align: center;
-  font-size: 32px;
-  font-weight: 700;
-  line-height: 1.45;
-  display: inline;
-  word-break: keep-all;
-`;
-
-const LogoInText = styled.img`
-  height: 64px;
-  vertical-align: -0.12em;
-  display: inline;
-  user-select: none;
-  -webkit-user-drag: none;
-  pointer-events: none;
-`;
 
 const OnboardingPage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation("onboarding");
+  const language = useLanguageStore((state) => state.language);
+  const setLanguage = useLanguageStore((state) => state.setLanguage);
+  const prefersReducedMotion = useReducedMotion();
 
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const isLastSlide = currentIndex === slides.length - 1;
+  const [step, setStep] = useState(0);
+  const [direction, setDirection] = useState(1);
+  const swipeStartXRef = useRef<number | null>(null);
 
-  // 좌우 드래그/스와이프 상태
-  const [dragOffset, setDragOffset] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
-  const isPointerDownRef = useRef(false);
-  const dragStartXRef = useRef(0);
-  const dragStartTimeRef = useRef(0);
-  const hasMovedRef = useRef(false);
+  const isLastStep = step === TOTAL_STEPS - 1;
 
-  // 모든 온보딩 이미지 사전 로딩 (브라우저 캐시 적재)
-  useEffect(() => {
-    PRELOAD_IMAGES.forEach((src) => {
-      const img = new window.Image();
-      img.src = src;
-    });
-  }, []);
+  const goToStep = useCallback(
+    (nextStep: number) => {
+      if (nextStep < 0 || nextStep >= TOTAL_STEPS || nextStep === step) return;
+      setDirection(nextStep > step ? 1 : -1);
+      setStep(nextStep);
+    },
+    [step],
+  );
 
-  const goToNextSlide = useCallback(() => {
-    setCurrentIndex((prev) => (prev < slides.length - 1 ? prev + 1 : prev));
-  }, []);
+  const handleComplete = useCallback(() => {
+    localStorage.setItem("isFirstVisit(10.20)", "false");
+    navigate("/home");
+  }, [navigate]);
 
-  const goToPrevSlide = useCallback(() => {
-    setCurrentIndex((prev) => (prev > 0 ? prev - 1 : prev));
-  }, []);
-
-  // 자동 진행 타이머
-  useEffect(() => {
-    if (timerRef.current) clearTimeout(timerRef.current);
-    if (!isLastSlide && !isDragging) {
-      timerRef.current = setTimeout(goToNextSlide, SLIDE_DURATION);
+  const handlePrimaryAction = () => {
+    if (isLastStep) {
+      handleComplete();
+      return;
     }
-
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, [currentIndex, isLastSlide, isDragging, goToNextSlide]);
-
-  // 포인터 이벤트(터치/마우스 단일 통합 제어 - 중복 이벤트 방지)
-  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (e.pointerType === "mouse" && e.button !== 0) return;
-
-    if (timerRef.current) clearTimeout(timerRef.current);
-    isPointerDownRef.current = true;
-    dragStartXRef.current = e.clientX;
-    dragStartTimeRef.current = Date.now();
-    hasMovedRef.current = false;
-    setDragOffset(0);
-
-    try {
-      e.currentTarget.setPointerCapture(e.pointerId);
-    } catch {
-      // ignore
-    }
+    goToStep(step + 1);
   };
 
-  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isPointerDownRef.current) return;
+  const handleSkip = () => {
+    goToStep(TOTAL_STEPS - 1);
+  };
 
-    const deltaX = e.clientX - dragStartXRef.current;
-    if (Math.abs(deltaX) > 6) {
-      hasMovedRef.current = true;
-      setIsDragging(true);
-    }
+  const handleLanguageSelect = (nextLang: Language) => {
+    setLanguage(nextLang);
+  };
 
-    const isFirst = currentIndex === 0;
-    const isLast = currentIndex === slides.length - 1;
-
-    // 양 끝 경계에서는 탄성 댐핑
-    if ((isFirst && deltaX > 0) || (isLast && deltaX < 0)) {
-      setDragOffset(deltaX * 0.25);
-    } else {
-      setDragOffset(deltaX);
-    }
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (step === 0) return;
+    swipeStartXRef.current = e.clientX;
   };
 
   const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isPointerDownRef.current) return;
-    isPointerDownRef.current = false;
-    setIsDragging(false);
+    if (step === 0 || swipeStartXRef.current === null) return;
+    const deltaX = e.clientX - swipeStartXRef.current;
+    swipeStartXRef.current = null;
 
-    try {
-      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
-        e.currentTarget.releasePointerCapture(e.pointerId);
-      }
-    } catch {
-      // ignore
+    if (deltaX < -48 && step < TOTAL_STEPS - 1) {
+      goToStep(step + 1);
+    } else if (deltaX > 48 && step > 0) {
+      goToStep(step - 1);
     }
-
-    const deltaTime = Math.max(Date.now() - dragStartTimeRef.current, 1);
-    const deltaX = e.clientX - dragStartXRef.current;
-    const velocity = Math.abs(deltaX) / deltaTime;
-    const isFirst = currentIndex === 0;
-    const isLast = currentIndex === slides.length - 1;
-
-    // 50px 이상 드래그하거나 빠른 플릭 시 슬라이드 이동
-    if (deltaX < -50 || (deltaX < -20 && velocity > 0.3)) {
-      if (!isLast) {
-        goToNextSlide();
-      }
-    } else if (deltaX > 50 || (deltaX > 20 && velocity > 0.3)) {
-      if (!isFirst) {
-        goToPrevSlide();
-      }
-    } else if (!hasMovedRef.current) {
-      // 드래그 없는 단순 탭/클릭 시 좌우 50% 분기 이동 (단 1회만 실행)
-      const screenWidth = window.innerWidth;
-      if (dragStartXRef.current < screenWidth / 2) {
-        if (!isFirst) goToPrevSlide();
-      } else {
-        if (!isLast) goToNextSlide();
-      }
-    }
-
-    setDragOffset(0);
   };
 
-  const handlePointerCancel = () => {
-    if (!isPointerDownRef.current) return;
-    isPointerDownRef.current = false;
-    setIsDragging(false);
-    setDragOffset(0);
-  };
+  const roommateTags = t("step3.card.tags", {
+    returnObjects: true,
+  }) as string[];
 
-  const handleStart = (e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
-    localStorage.setItem("isFirstVisit(10.20)", "false");
-    navigate("/home");
-  };
+  const ctaLabel =
+    step === 0
+      ? t("step1.cta")
+      : step === 1
+        ? t("step2.cta")
+        : t("step3.cta");
 
-  const handleJump = (e?: React.MouseEvent<HTMLButtonElement>) => {
-    if (e) e.stopPropagation();
-    setCurrentIndex(slides.length - 1);
-  };
+  const floatAnimation = prefersReducedMotion
+    ? undefined
+    : {
+        y: [0, -4, 0],
+        transition: {
+          duration: 3.6,
+          repeat: Infinity,
+          ease: "easeInOut" as const,
+        },
+      };
 
   return (
-    <Wrapper>
-      {/* 상단 프로그레스 및 건너뛰기 버튼 (플로팅) */}
-      <TopSection>
-        <ProgressContainer>
-          {slides.map((_, index) => {
-            const status: "filled" | "active" | "empty" =
-              index < currentIndex
-                ? "filled"
-                : index === currentIndex
-                  ? "active"
-                  : "empty";
+    <Wrapper
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={() => {
+        swipeStartXRef.current = null;
+      }}
+    >
+      <Header>
+        <HeaderLogo src={unidormLogo} alt="UNI Dorm 로고" draggable={false} />
 
-            return (
-              <ProgressBarWrapper key={index} total={slides.length}>
-                <ProgressFill status={status} />
-              </ProgressBarWrapper>
-            );
-          })}
-        </ProgressContainer>
-
-        <TopRight>
-          <SkipButton $isVisible={!isLastSlide} onClick={(e) => handleJump(e)}>
-            건너뛰기
+        {step > 0 && (
+          <SkipButton type="button" onClick={handleSkip}>
+            {t("header.skip")}
           </SkipButton>
-        </TopRight>
-      </TopSection>
+        )}
+      </Header>
 
-      {/* 중앙 슬라이더 뷰포트 (Pointer Events 단일 통합) */}
-      <SliderViewport
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerCancel}
-      >
-        <SliderTrack
-          $isDragging={isDragging}
-          style={{
-            transform: `translateX(calc(-${currentIndex * 100}% + ${dragOffset}px))`,
-          }}
-        >
-          {slides.map((slide, index) => {
-            const isLast = index === slides.length - 1;
+      <MainArea>
+        <AnimatePresence mode="wait" custom={direction} initial={false}>
+          <StepContainer
+            key={step}
+            custom={direction}
+            variants={prefersReducedMotion ? undefined : stepVariants}
+            initial={prefersReducedMotion ? false : "enter"}
+            animate="center"
+            exit={prefersReducedMotion ? undefined : "exit"}
+          >
+            <TitleGroup>
+              <StepIndicator role="tablist" aria-label="Onboarding steps">
+                {Array.from({ length: TOTAL_STEPS }).map((_, idx) => (
+                  <IndicatorDot
+                    key={idx}
+                    $active={idx === step}
+                    aria-current={idx === step ? "step" : undefined}
+                  />
+                ))}
+              </StepIndicator>
 
-            return (
-              <SlideItem key={slide.id} $isLast={isLast}>
-                {slide.id === 0 ? (
-                  <FirstSlide title={slide.title} />
-                ) : (
-                  <Content>
-                    <TitleTextWrapper>
-                      <Title>{slide.title}</Title>
-                      <Text>{slide.content}</Text>
-                      {slide.subContent && (
-                        <SubText>{slide.subContent}</SubText>
-                      )}
-                    </TitleTextWrapper>
+              <Title>
+                {step === 0
+                  ? t("step1.title")
+                  : step === 1
+                    ? t("step2.title")
+                    : t("step3.title")}
+              </Title>
+              <Subtitle>
+                {step === 0
+                  ? t("step1.subtitle")
+                  : step === 1
+                    ? t("step2.subtitle")
+                    : t("step3.subtitle")}
+              </Subtitle>
+            </TitleGroup>
 
-                    {slide.image && (
-                      <SlideImage
-                        src={slide.image}
-                        alt={slide.title}
-                        loading="eager"
-                        decoding="sync"
-                        draggable={false}
-                      />
-                    )}
-                  </Content>
-                )}
-              </SlideItem>
-            );
-          })}
-        </SliderTrack>
-      </SliderViewport>
+            {step === 0 && (
+              <StepOneBody>
+                <PreviewBox>
+                  <GlobeStage animate={floatAnimation}>
+                    <GlobeImage src={globeSvg} alt="" draggable={false} />
+                    <SpeechBubbleImage
+                      src={speechBubbleSvg}
+                      alt=""
+                      draggable={false}
+                      initial={
+                        prefersReducedMotion ? false : { opacity: 0, scale: 0.86 }
+                      }
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{
+                        delay: 0.1,
+                        duration: 0.3,
+                        ease: EASE_OUT_EXPO,
+                      }}
+                    />
+                  </GlobeStage>
+                </PreviewBox>
 
-      {/* 하단 약관 및 시작하기 버튼 (마지막 슬라이드에서 부드럽게 부상) */}
-      <Bottom $isVisible={isLastSlide} onClick={(e) => e.stopPropagation()}>
-        <TermOfUse />
-        <div>
-          <RoundSquareButton
-            btnName={"UNI Dorm 시작하기"}
-            onClick={handleStart}
-          />
-        </div>
-      </Bottom>
+                <LanguageList role="radiogroup" aria-label="Language selection">
+                  {SUPPORTED_LANGUAGES.map((langOption) => {
+                    const selected = language === langOption;
+                    return (
+                      <LanguageCard
+                        key={langOption}
+                        type="button"
+                        role="radio"
+                        aria-checked={selected}
+                        $selected={selected}
+                        whileTap={
+                          prefersReducedMotion ? undefined : { scale: 0.985 }
+                        }
+                        onClick={() => handleLanguageSelect(langOption)}
+                      >
+                        <LanguageLabel>
+                          {t(`languageOptions.${langOption}`)}
+                        </LanguageLabel>
+                        <LanguageCheck $selected={selected} aria-hidden="true">
+                          {selected ? (
+                            <Check size={18} strokeWidth={2.6} />
+                          ) : (
+                            <UnselectedCircle />
+                          )}
+                        </LanguageCheck>
+                      </LanguageCard>
+                    );
+                  })}
+                </LanguageList>
+              </StepOneBody>
+            )}
+
+            {step === 1 && (
+              <FeaturePreviewCard>
+                <IllustrationStage animate={floatAnimation}>
+                  <DormCardImage
+                    src={dormIdCardSvg}
+                    alt=""
+                    draggable={false}
+                  />
+                </IllustrationStage>
+
+                <InnerInfoCard
+                  initial={
+                    prefersReducedMotion ? false : { opacity: 0, y: 8 }
+                  }
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    delay: 0.08,
+                    duration: 0.28,
+                    ease: EASE_OUT_EXPO,
+                  }}
+                >
+                  <CardTopBlock>
+                    <CardTitle>{t("step2.card.dormIdTitle")}</CardTitle>
+                    <CardActionLink>
+                      {t("step2.card.dormIdAction")} <Chevron>›</Chevron>
+                    </CardActionLink>
+                  </CardTopBlock>
+
+                  <CardDivider />
+
+                  <CardNoticeRow>
+                    <CardNoticeText>
+                      {t("step2.card.noticeTitle")}
+                    </CardNoticeText>
+                    <CardNoticeChevron aria-hidden="true">›</CardNoticeChevron>
+                  </CardNoticeRow>
+                </InnerInfoCard>
+              </FeaturePreviewCard>
+            )}
+
+            {step === 2 && (
+              <FeaturePreviewCard>
+                <RoommateIllustrationStage animate={floatAnimation}>
+                  <BubbleBackWrapper>
+                    <BubbleImage
+                      src={roommateBubbleBackSvg}
+                      alt=""
+                      draggable={false}
+                    />
+                  </BubbleBackWrapper>
+                  <BubbleFrontWrapper
+                    initial={
+                      prefersReducedMotion ? false : { opacity: 0, scale: 0.92 }
+                    }
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{
+                      delay: 0.08,
+                      duration: 0.3,
+                      ease: EASE_OUT_EXPO,
+                    }}
+                  >
+                    <BubbleImage
+                      src={roommateBubbleFrontSvg}
+                      alt=""
+                      draggable={false}
+                    />
+                  </BubbleFrontWrapper>
+                </RoommateIllustrationStage>
+
+                <InnerInfoCard
+                  initial={
+                    prefersReducedMotion ? false : { opacity: 0, y: 8 }
+                  }
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    delay: 0.08,
+                    duration: 0.28,
+                    ease: EASE_OUT_EXPO,
+                  }}
+                >
+                  <CardTitle>{t("step3.card.title")}</CardTitle>
+                  <ChipRow>
+                    {Array.isArray(roommateTags) &&
+                      roommateTags.map((tag) => (
+                        <TagChip key={tag}>{tag}</TagChip>
+                      ))}
+                  </ChipRow>
+                  <CardActionLink $spaced>
+                    {t("step3.card.action")} <Chevron>›</Chevron>
+                  </CardActionLink>
+                </InnerInfoCard>
+              </FeaturePreviewCard>
+            )}
+          </StepContainer>
+        </AnimatePresence>
+      </MainArea>
+
+      <Footer>
+        {isLastStep && (
+          <TermsWrapper
+            initial={prefersReducedMotion ? false : { opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.24, ease: EASE_OUT_EXPO }}
+          >
+            <TermOfUse />
+          </TermsWrapper>
+        )}
+
+        <PrimaryCTAButton
+          btnName={ctaLabel}
+          color={colors.cta.default}
+          onClick={handlePrimaryAction}
+        />
+      </Footer>
     </Wrapper>
   );
 };
@@ -342,213 +355,369 @@ const OnboardingPage: React.FC = () => {
 export default OnboardingPage;
 
 const Wrapper = styled.div`
-  position: relative;
+  width: 100%;
+  max-width: 440px;
+  min-height: 100dvh;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  align-items: center;
   box-sizing: border-box;
-  overflow: hidden;
-  width: 100%;
-  height: 100vh;
-  height: 100dvh;
-  min-height: 100vh;
-  min-height: 100dvh;
+  padding-top: max(var(--safe-area-top, 0px), env(safe-area-inset-top, 0px));
+  padding-bottom: max(
+    var(--safe-area-bottom, 0px),
+    env(safe-area-inset-bottom, 0px)
+  );
+  padding-left: max(var(--safe-area-left, 0px), env(safe-area-inset-left, 0px));
+  padding-right: max(
+    var(--safe-area-right, 0px),
+    env(safe-area-inset-right, 0px)
+  );
   user-select: none;
   touch-action: pan-y;
 `;
 
-const TopSection = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  padding: 20px 20px 0 20px;
-  padding-top: calc(32px + var(--safe-area-top, 0px));
+const Header = styled.header`
+  height: 70px;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
   box-sizing: border-box;
-  z-index: 10;
+`;
+
+const HeaderLogo = styled.img`
+  width: 60px;
+  height: auto;
+  display: block;
+  object-fit: contain;
   pointer-events: none;
 `;
 
-const ProgressContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-  pointer-events: auto;
-`;
-
-const TopRight = styled.div`
-  width: 100%;
-  display: flex;
-  justify-content: flex-end;
-  min-height: 24px;
-  box-sizing: border-box;
-  pointer-events: auto;
-`;
-
-const SkipButton = styled.button<{ $isVisible: boolean }>`
-  font-size: 16px;
-  color: #191f28;
+const SkipButton = styled.button`
+  ${typography.label1Normal}
   font-weight: 600;
   background: none;
   border: none;
+  padding: 8px 4px;
+  color: ${colors.text.text2};
   cursor: pointer;
-  visibility: ${({ $isVisible }) => ($isVisible ? "visible" : "hidden")};
-  opacity: ${({ $isVisible }) => ($isVisible ? 1 : 0)};
   transition: opacity 150ms ease;
-  padding: 0;
-`;
-
-const SliderViewport = styled.div`
-  width: 100%;
-  height: 100%;
-  flex: 1;
-  overflow: hidden;
-  display: flex;
-  position: relative;
-  cursor: grab;
-  touch-action: pan-y;
-  user-select: none;
 
   &:active {
-    cursor: grabbing;
+    opacity: 0.6;
   }
 `;
 
-const SliderTrack = styled.div<{ $isDragging: boolean }>`
-  display: flex;
-  width: 100%;
-  height: 100%;
-  transition: ${({ $isDragging }) =>
-    $isDragging ? "none" : "transform 350ms cubic-bezier(0.16, 1, 0.3, 1)"};
-  will-change: transform;
-`;
-
-const SlideItem = styled.div<{ $isLast: boolean }>`
-  flex: 0 0 100%;
-  width: 100%;
-  height: 100%;
+const MainArea = styled.main`
+  flex: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  padding: 20px 24px 16px;
   box-sizing: border-box;
-  padding: 0 1.5rem;
-  padding-top: calc(40px + var(--safe-area-top, 0px));
-  padding-bottom: ${({ $isLast }) =>
-    $isLast
-      ? "calc(160px + var(--safe-area-bottom, 0px))"
-      : "calc(40px + var(--safe-area-bottom, 0px))"};
+  overflow-x: hidden;
 `;
 
-const Content = styled.div`
-  width: 100%;
-  max-width: 450px;
+const StepContainer = styled(motion.div)`
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  box-sizing: border-box;
-  margin: auto 0;
-`;
-
-const TitleTextWrapper = styled.div`
-  width: 90%;
-  height: fit-content;
-`;
-
-const Title = styled.h2`
-  font-size: 28px;
-  font-weight: 700;
-  color: #191f28;
-  margin-bottom: 0.75rem;
-  word-break: keep-all;
-`;
-
-const Text = styled.p`
-  font-size: 14px;
-  color: #666;
-  line-height: 1.45;
-  white-space: pre-line;
-  word-break: keep-all;
-  margin: 0;
-`;
-
-const SubText = styled.p`
-  font-size: 12px;
-  color: #8b95a1;
-  line-height: 1.4;
-  white-space: pre-line;
-  word-break: keep-all;
-  margin-top: 6px;
-  margin-bottom: 0;
-`;
-
-const SlideImage = styled.img`
+  gap: 32px;
   width: 100%;
-  height: auto;
-  max-height: 210px;
-  object-fit: contain;
-  margin-top: 36px;
-  user-select: none;
-  -webkit-user-drag: none;
-  pointer-events: none;
 `;
 
-const Bottom = styled.div<{ $isVisible: boolean }>`
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  padding: 0 20px calc(20px + var(--safe-area-bottom, 0px)) 20px;
-  box-sizing: border-box;
-  z-index: 10;
+const TitleGroup = styled.div`
   display: flex;
   flex-direction: column;
   gap: 16px;
-  visibility: ${({ $isVisible }) => ($isVisible ? "visible" : "hidden")};
-  opacity: ${({ $isVisible }) => ($isVisible ? 1 : 0)};
-  transform: translateY(${({ $isVisible }) => ($isVisible ? "0px" : "12px")});
-  transition: opacity 250ms ease, transform 250ms cubic-bezier(0.16, 1, 0.3, 1);
-  pointer-events: ${({ $isVisible }) => ($isVisible ? "auto" : "none")};
+  align-items: flex-start;
 `;
 
-interface ProgressProps {
-  active?: boolean;
-  total: number;
-}
+const StepIndicator = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+`;
 
-const ProgressBarWrapper = styled.div<ProgressProps>`
-  height: 4px;
-  width: ${(props) => 100 / props.total}%;
-  background-color: #ddd;
-  border-radius: 999px;
+const IndicatorDot = styled.span<{ $active: boolean }>`
+  height: 6px;
+  width: ${({ $active }) => ($active ? "18px" : "7px")};
+  border-radius: 3px;
+  background-color: ${({ $active }) =>
+    $active ? colors.main.main2 : colors.blue.blue100};
+  transition:
+    width 260ms cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 260ms ease;
+`;
+
+const Title = styled.h1`
+  margin: 0;
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.192px;
+  color: ${colors.text.text1};
+  white-space: pre-line;
+  word-break: keep-all;
+`;
+
+const Subtitle = styled.p`
+  ${typography.body1Reading}
+  margin: 0;
+  color: ${colors.text.text2};
+  word-break: keep-all;
+`;
+
+const StepOneBody = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+`;
+
+const PreviewBox = styled.div`
+  background-color: ${colors.bg.bg2};
+  border-radius: 24px;
+  height: 152px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
+  position: relative;
 `;
 
-const ProgressFill = styled.div<{
-  status: "filled" | "active" | "empty";
-}>`
-  height: 100%;
-  background-color: #0a84ff;
-  width: ${({ status }) =>
-    status === "filled" ? "100%" : status === "empty" ? "0%" : "100%"};
-  transition: ${({ status }) =>
-    status === "active" ? `width ${SLIDE_DURATION}ms linear` : "none"};
-  ${({ status }) =>
-    status === "active" &&
-    `
-    width: 0%;
-    animation: fillBar ${SLIDE_DURATION}ms linear forwards;
-  `}
+const GlobeStage = styled(motion.div)`
+  position: relative;
+  width: 240px;
+  height: 150px;
+`;
 
-  @keyframes fillBar {
-    from {
-      width: 0%;
-    }
-    to {
-      width: 100%;
-    }
-  }
+const GlobeImage = styled.img`
+  width: 240px;
+  height: 150px;
+  display: block;
+  pointer-events: none;
+`;
+
+const SpeechBubbleImage = styled(motion.img)`
+  position: absolute;
+  left: 147px;
+  top: 80px;
+  width: 66px;
+  height: 57px;
+  pointer-events: none;
+`;
+
+const LanguageList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+`;
+
+const LanguageCard = styled(motion.button)<{ $selected: boolean }>`
+  width: 100%;
+  height: 52px;
+  padding: 0 20px 0 18px;
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  box-sizing: border-box;
+  background-color: ${({ $selected }) =>
+    $selected ? colors.blue.blue100 : colors.bg.bg1};
+  border: 1px solid
+    ${({ $selected }) => ($selected ? "transparent" : colors.gray.gray200)};
+  transition:
+    background-color 200ms ease,
+    border-color 200ms ease;
+`;
+
+const LanguageLabel = styled.span`
+  ${typography.headline1}
+  font-weight: 600;
+  color: ${colors.text.text1};
+`;
+
+const LanguageCheck = styled.span<{ $selected: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  color: ${({ $selected }) =>
+    $selected ? colors.main.main2 : colors.gray.gray300};
+  transition: color 200ms ease;
+`;
+
+const UnselectedCircle = styled.span`
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1.5px solid ${colors.gray.gray300};
+  box-sizing: border-box;
+`;
+
+const FeaturePreviewCard = styled.div`
+  background-color: ${colors.bg.bg2};
+  border-radius: 24px;
+  padding: 16px;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+`;
+
+const IllustrationStage = styled(motion.div)`
+  width: 240px;
+  height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const DormCardImage = styled.img`
+  width: 240px;
+  height: 150px;
+  display: block;
+  pointer-events: none;
+`;
+
+const RoommateIllustrationStage = styled(motion.div)`
+  position: relative;
+  width: 240px;
+  height: 150px;
+`;
+
+const BubbleBackWrapper = styled.div`
+  position: absolute;
+  right: 14%;
+  top: 30%;
+  width: 44%;
+  height: 60%;
+  transform: rotate(9deg);
+`;
+
+const BubbleFrontWrapper = styled(motion.div)`
+  position: absolute;
+  left: 14%;
+  top: 12%;
+  width: 52%;
+  height: 74%;
+  transform: rotate(-9deg);
+`;
+
+const BubbleImage = styled.img`
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  pointer-events: none;
+`;
+
+const InnerInfoCard = styled(motion.div)`
+  width: 100%;
+  background-color: ${colors.bg.bg1};
+  border-radius: 18px;
+  padding: 16px 18px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+`;
+
+const CardTopBlock = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+`;
+
+const CardTitle = styled.p`
+  ${typography.headline1}
+  font-weight: 600;
+  margin: 0;
+  color: ${colors.text.text1};
+`;
+
+const CardActionLink = styled.span<{ $spaced?: boolean }>`
+  ${typography.body2Normal}
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: ${colors.main.main2};
+  margin-top: ${({ $spaced }) => ($spaced ? "22px" : "0")};
+`;
+
+const Chevron = styled.span`
+  font-size: 17px;
+  line-height: 1;
+`;
+
+const CardDivider = styled.div`
+  width: 100%;
+  height: 1px;
+  background-color: ${colors.blue.blue100};
+  margin: 14px 0;
+`;
+
+const CardNoticeRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+`;
+
+const CardNoticeText = styled.span`
+  ${typography.body2Normal}
+  font-weight: 600;
+  color: ${colors.text.text1};
+`;
+
+const CardNoticeChevron = styled.span`
+  font-size: 19px;
+  font-weight: 400;
+  line-height: 1;
+  color: ${colors.text.text1};
+`;
+
+const ChipRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 7px;
+`;
+
+const TagChip = styled.span`
+  ${typography.label2}
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border-radius: 13px;
+  background-color: ${colors.blue.blue100};
+  color: ${colors.main.main2};
+  line-height: 1.2;
+  white-space: nowrap;
+`;
+
+const Footer = styled.footer`
+  padding: 10px 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+`;
+
+const TermsWrapper = styled(motion.div)`
+  width: 100%;
+`;
+
+const PrimaryCTAButton = styled(RoundSquareButton)`
+  min-height: 56px;
+  border-radius: 16px;
 `;

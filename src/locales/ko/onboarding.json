@@ -1,0 +1,39 @@
+{
+  "header": {
+    "skip": "건너뛰기"
+  },
+  "languageOptions": {
+    "ko": "한국어",
+    "en": "English",
+    "zh": "中文",
+    "vi": "Tiếng Việt"
+  },
+  "step1": {
+    "title": "어떤 언어로\n시작할까요?",
+    "subtitle": "Choose your language",
+    "cta": "계속하기"
+  },
+  "step2": {
+    "title": "사생증과 생활원 공지를\n한곳에서 확인해요",
+    "subtitle": "기숙사에서 자주 쓰는 기능을 홈에 모았어요.",
+    "card": {
+      "dormIdTitle": "모바일 사생증",
+      "dormIdAction": "사생증 열기",
+      "noticeTitle": "생활원 공지사항"
+    },
+    "cta": "다음"
+  },
+  "step3": {
+    "title": "나와 생활 리듬이 맞는\n룸메를 찾아요",
+    "subtitle": "생활 습관을 살펴보고 룸메를 신청해요.",
+    "card": {
+      "title": "내 조건에 맞는 룸메",
+      "tags": ["비흡연", "아침형"],
+      "action": "룸메이트 모아보기"
+    },
+    "cta": "유니돔 시작하기"
+  },
+  "terms": {
+    "notice": "유니돔은 <strong>인천대학교 앱센터</strong>(IT이노베이션랩)에서 생활원과 협력하여 개발하는 서비스입니다."
+  }
+}
