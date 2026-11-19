@@ -6,6 +6,7 @@ interface RoundSquareButtonProps {
   color?: string;
   onClick?: () => void;
   disabled?: boolean;
+  className?: string;
 }
 
 const RoundSquareButton = ({
@@ -13,6 +14,7 @@ const RoundSquareButton = ({
   onClick,
   color = "#0a84ff",
   disabled = false,
+  className,
 }: RoundSquareButtonProps) => {
   return (
     <RoundSquareButtonWrapper
@@ -20,6 +22,7 @@ const RoundSquareButton = ({
       onClick={onClick}
       color={color}
       disabled={disabled}
+      className={className}
     >
       {!disabled && <Ripple color="rgba(255, 255, 255, 0.32)" />}
       <ButtonText>{btnName}</ButtonText>
