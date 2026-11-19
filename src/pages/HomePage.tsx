@@ -14,9 +14,6 @@ import LoadingSpinner from "../components/common/LoadingSpinner.tsx";
 import EmptyMessage from "../constants/EmptyMessage.tsx";
 import { statusText } from "@/utils/formUtils";
 import { PopupNotification } from "@/types/popup-notifications";
-import { getMobilePlatform } from "@/utils/getMobilePlatform";
-import ModalContent_AppInstall from "../components/common/ModalContent_AppInstall.tsx";
-import CommonBottomSheet from "src/components/modal/CommonBottomSheet.tsx";
 import TopPopupNotification from "../components/common/TopPopupNotification.tsx";
 import useNetworkStore from "../stores/useNetworkStore.ts";
 import Calendar from "../components/calendar/Calendar.tsx";
@@ -95,20 +92,11 @@ export default function HomePage() {
     shouldShowMigrationBanner,
   } = useFreshmanMigrationBanner();
 
-  const platform = getMobilePlatform();
-  const [isAppInstallOpen, setIsAppInstallOpen] = useState(
-    (platform === "ios_browser" || platform === "android_browser") &&
-      Math.random() < 0.4,
-  );
-
   const [isDormPromptOpen, setIsDormPromptOpen] = useState(false);
   const [dormPromptMode, setDormPromptMode] = useState<"issue" | "renew">("issue");
 
   useEffect(() => {
     if (!isLoggedIn) return;
-
-    // 앱 설치 유도 바텀시트가 열려 있으면 모달 중복 노출 방지 (One Thing at a Time)
-    if (isAppInstallOpen) return;
 
     // 사생증 발급은 유니돔 앱 전용 기능이므로 일반 웹 브라우저에서는 노출 제외
     const isPreview =
@@ -165,7 +153,7 @@ export default function HomePage() {
         setIsDormPromptOpen(true);
       }
     })();
-  }, [isLoggedIn, isAppInstallOpen]);
+  }, [isLoggedIn]);
 
   const handleCloseDormPrompt = () => {
     const currentCycle = getCurrentAcademicCycleKey();
@@ -618,34 +606,6 @@ export default function HomePage() {
         onClose={handleCloseDormPrompt}
         onConfirm={handleConfirmDormPrompt}
         mode={dormPromptMode}
-      />
-
-      <CommonBottomSheet
-        id={"이벤트 당첨"}
-        isOpen={isAppInstallOpen}
-        setIsOpen={(open) => {
-          if (open) mixpanelTrack.appInstallImpression("홈");
-          setIsAppInstallOpen(open);
-        }}
-        title={"유니돔 앱을 사용해보세요!"}
-        headerImageId={0}
-        children={ModalContent_AppInstall()}
-        closeButtonText={"스토어에서 설치하기"}
-        onCloseClick={() => {
-          if (platform === "ios_browser") {
-            mixpanelTrack.appInstallClicked("iOS", "홈");
-            window.open(
-              "https://apps.apple.com/kr/app/%EC%9C%A0%EB%8B%88%EB%8F%94/id6751404748",
-              "_blank",
-            );
-          } else if (platform === "android_browser") {
-            mixpanelTrack.appInstallClicked("Android", "홈");
-            window.open(
-              "https://play.google.com/store/apps/details?id=com.hjunieee.inudormitory",
-              "_blank",
-            );
-          }
-        }}
       />
     </HomePageWrapper>
   );
