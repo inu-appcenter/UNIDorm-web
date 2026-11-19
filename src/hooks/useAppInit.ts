@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import useUserStore from "../stores/useUserStore";
 import { getMemberInfo } from "@/apis/members";
 import tokenInstance from "../apis/tokenInstance";
@@ -13,6 +13,7 @@ export const useAppInit = () => {
   const { tokenInfo, setUserInfo, setLoading } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
   const navigate = useNavigate();
+  const location = useLocation();
   const [fcmToken, setFcmToken] = useState("");
   // const platform = getMobilePlatform();
 
@@ -66,7 +67,7 @@ export const useAppInit = () => {
   useEffect(() => {
     try {
       localStorage.removeItem("isFirstVisit");
-      const currentPath = window.location.pathname;
+      const currentPath = location.pathname;
       const isRootOrHome = currentPath === PATHS.ROOT || currentPath === PATHS.HOME;
 
       // 서브 웹뷰나 상세 페이지에서는 온보딩 체크 및 리다이렉트를 수행하지 않음
@@ -79,7 +80,7 @@ export const useAppInit = () => {
     } catch (e) {
       console.error("Onboarding check error:", e);
     }
-  }, [navigate]);
+  }, [location.pathname, navigate]);
 
   // 웹뷰 FCM 토큰 수신 설정
   useEffect(() => {

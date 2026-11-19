@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Check } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -16,6 +16,7 @@ import TermOfUse from "@/components/TermOfUse";
 import { SUPPORTED_LANGUAGES } from "@/i18n";
 import { useLanguageStore, type Language } from "@/stores/useLanguageStore";
 import { colors, typography } from "@/styles/tokens";
+import { appBridge } from "@/utils/appBridgeAdapter";
 
 const TOTAL_STEPS = 3;
 const EASE_OUT_EXPO: [number, number, number, number] = [0.16, 1, 0.3, 1];
@@ -52,22 +53,88 @@ const OnboardingPage: React.FC = () => {
 
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1);
+  const stepRef = useRef(0);
+  stepRef.current = step;
   const swipeStartXRef = useRef<number | null>(null);
 
   const isLastStep = step === TOTAL_STEPS - 1;
 
   const goToStep = useCallback(
-    (nextStep: number) => {
-      if (nextStep < 0 || nextStep >= TOTAL_STEPS || nextStep === step) return;
-      setDirection(nextStep > step ? 1 : -1);
+    (nextStep: number, options?: { syncHistory?: boolean }) => {
+      if (nextStep < 0 || nextStep >= TOTAL_STEPS || nextStep === stepRef.current)
+        return;
+      const prevStep = stepRef.current;
+      setDirection(nextStep > prevStep ? 1 : -1);
       setStep(nextStep);
+
+      if (options?.syncHistory !== false && typeof window !== "undefined") {
+        if (nextStep > prevStep) {
+          window.history.pushState(
+            { ...(window.history.state ?? {}), onboardingStep: nextStep },
+            "",
+          );
+        } else {
+          window.history.replaceState(
+            { ...(window.history.state ?? {}), onboardingStep: nextStep },
+            "",
+          );
+        }
+      }
     },
-    [step],
+    [],
   );
+
+  // 브라우저 뒤로가기(popstate) 및 최초 방문 이탈 방지
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    window.history.replaceState(
+      { ...(window.history.state ?? {}), onboardingStep: stepRef.current },
+      "",
+    );
+
+    const handlePopState = (event: PopStateEvent) => {
+      const targetStep = event.state?.onboardingStep;
+      if (
+        typeof targetStep === "number" &&
+        targetStep >= 0 &&
+        targetStep < TOTAL_STEPS
+      ) {
+        setDirection(targetStep > stepRef.current ? 1 : -1);
+        setStep(targetStep);
+        return;
+      }
+
+      // 온보딩 미완료 상태에서 1단계 이전으로 뒤로가기 시 홈 이탈 차단
+      if (localStorage.getItem("isFirstVisit(10.20)") === null) {
+        window.history.pushState(
+          { ...(window.history.state ?? {}), onboardingStep: 0 },
+          "",
+        );
+        setDirection(-1);
+        setStep(0);
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  // 앱(WebView) 하드웨어/제스처 뒤로가기 대응
+  useEffect(() => {
+    return appBridge.onCheckBack(() => {
+      if (stepRef.current > 0) {
+        goToStep(stepRef.current - 1);
+        return true;
+      }
+      // 1단계에서는 /home 강제 이탈을 막기 위해 handled=true 반환
+      return true;
+    });
+  }, [goToStep]);
 
   const handleComplete = useCallback(() => {
     localStorage.setItem("isFirstVisit(10.20)", "false");
-    navigate("/home");
+    navigate("/home", { replace: true });
   }, [navigate]);
 
   const handlePrimaryAction = () => {

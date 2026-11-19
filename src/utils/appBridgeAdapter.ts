@@ -209,6 +209,19 @@ export const appBridge = {
   },
 
   /**
+   * 네이티브의 뒤로가기 확인(`checkBack`) 요청 핸들러를 등록합니다.
+   * 핸들러가 `true`를 반환하면 네이티브는 기본 뒤로가기/홈 이동을 수행하지 않습니다.
+   */
+  onCheckBack(handler: () => boolean): () => void {
+    const ch = getChannel();
+    if (!ch) return () => {};
+    return ch.on("checkBack", (_value, msg) => {
+      const handled = handler();
+      ch.reply(msg, "backResult", { handled });
+    });
+  },
+
+  /**
    * 이 웹뷰가 다시 화면 맨 위로 올라왔을 때(위의 서브 웹뷰가 닫힘) 호출됩니다.
    * 스택 아래 웹뷰는 브라우저 focus/visibilitychange를 받지 못하므로 이 신호로
    * 다른 웹뷰에서 바뀐 데이터를 다시 조회합니다.
