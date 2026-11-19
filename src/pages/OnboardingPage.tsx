@@ -357,10 +357,12 @@ export default OnboardingPage;
 const Wrapper = styled.div`
   width: 100%;
   max-width: 440px;
-  min-height: 100dvh;
+  height: 100dvh;
+  max-height: 100dvh;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   box-sizing: border-box;
   padding-top: max(var(--safe-area-top, 0px), env(safe-area-inset-top, 0px));
   padding-bottom: max(
@@ -411,24 +413,37 @@ const SkipButton = styled.button`
 
 const MainArea = styled.main`
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  padding: 20px 24px 16px;
+  padding: 16px 24px 8px;
   box-sizing: border-box;
-  overflow-x: hidden;
+  overflow: hidden;
 `;
 
 const StepContainer = styled(motion.div)`
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 28px;
   width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 `;
 
 const TitleGroup = styled.div`
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
   align-items: flex-start;
 `;
 
@@ -468,13 +483,16 @@ const Subtitle = styled.p`
 `;
 
 const StepOneBody = styled.div`
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
   width: 100%;
 `;
 
 const PreviewBox = styled.div`
+  flex-shrink: 0;
   background-color: ${colors.bg.bg2};
   border-radius: 24px;
   height: 152px;
@@ -509,13 +527,25 @@ const SpeechBubbleImage = styled(motion.img)`
 `;
 
 const LanguageList = styled.div`
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 8px;
   width: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 `;
 
 const LanguageCard = styled(motion.button)<{ $selected: boolean }>`
+  flex-shrink: 0;
   width: 100%;
   height: 52px;
   padding: 0 20px 0 18px;
