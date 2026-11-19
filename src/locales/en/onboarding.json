@@ -1,0 +1,39 @@
+{
+  "header": {
+    "skip": "Skip"
+  },
+  "languageOptions": {
+    "ko": "한국어",
+    "en": "English",
+    "zh": "中文",
+    "vi": "Tiếng Việt"
+  },
+  "step1": {
+    "title": "Choose your\nlanguage",
+    "subtitle": "언어를 선택해 주세요",
+    "cta": "Continue"
+  },
+  "step2": {
+    "title": "Your dorm ID and notices,\nin one place",
+    "subtitle": "Open your ID and check dorm updates.",
+    "card": {
+      "dormIdTitle": "Mobile dorm ID",
+      "dormIdAction": "Open dorm ID",
+      "noticeTitle": "Dorm notices"
+    },
+    "cta": "Next"
+  },
+  "step3": {
+    "title": "Find a roommate who\nshares your routine",
+    "subtitle": "Explore profiles and send a roommate request.",
+    "card": {
+      "title": "Roommates for you",
+      "tags": ["Non-smoker", "Early bird"],
+      "action": "Explore roommates"
+    },
+    "cta": "Get started"
+  },
+  "terms": {
+    "notice": "UNI Dorm is developed by <strong>Incheon National University AppCenter</strong> (IT Innovation Lab) in collaboration with the Dormitory Office."
+  }
+}

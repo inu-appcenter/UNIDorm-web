@@ -1,0 +1,39 @@
+{
+  "header": {
+    "skip": "Bỏ qua"
+  },
+  "languageOptions": {
+    "ko": "한국어",
+    "en": "English",
+    "zh": "中文",
+    "vi": "Tiếng Việt"
+  },
+  "step1": {
+    "title": "Chọn ngôn ngữ\nbắt đầu",
+    "subtitle": "Choose your language",
+    "cta": "Tiếp tục"
+  },
+  "step2": {
+    "title": "Thẻ nội trú và thông báo\ntrong một nơi",
+    "subtitle": "Các tính năng ký túc xá hay dùng đều có ở trang chủ.",
+    "card": {
+      "dormIdTitle": "Thẻ nội trú điện tử",
+      "dormIdAction": "Mở thẻ nội trú",
+      "noticeTitle": "Thông báo ký túc xá"
+    },
+    "cta": "Tiếp theo"
+  },
+  "step3": {
+    "title": "Tìm bạn cùng phòng\nhợp nhịp sinh hoạt",
+    "subtitle": "Xem thói quen sinh hoạt và gửi lời mời ghép phòng.",
+    "card": {
+      "title": "Bạn cùng phòng phù hợp",
+      "tags": ["Không hút thuốc", "Dậy sớm"],
+      "action": "Xem bạn cùng phòng"
+    },
+    "cta": "Bắt đầu UNI Dorm"
+  },
+  "terms": {
+    "notice": "UNI Dorm được phát triển bởi <strong>AppCenter Đại học Quốc gia Incheon</strong> (IT Innovation Lab) phối hợp cùng Ban Quản lý Ký túc xá."
+  }
+}
