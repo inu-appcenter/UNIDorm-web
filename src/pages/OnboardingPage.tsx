@@ -127,8 +127,8 @@ const OnboardingPage: React.FC = () => {
         goToStep(stepRef.current - 1);
         return true;
       }
-      // 1단계에서는 /home 강제 이탈을 막기 위해 handled=true 반환
-      return true;
+      // 1단계에서는 네이티브의 종료 프롬프트(exitPrompt)로 위임
+      return false;
     });
   }, [goToStep]);
 
