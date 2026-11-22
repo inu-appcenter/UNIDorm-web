@@ -46,6 +46,7 @@ import {
 } from "@/utils/semesterGuard";
 import { evaluateDormitoryResidentStatus } from "@/pages/Dormitory/DormitoryCardPage";
 import { secureStorage } from "@/utils/secureStorage";
+import { ChevronRight } from "lucide-react";
 
 export default function HomePage() {
   useSetAIChat({ isVisible: true, shouldAnimate: true });
@@ -191,6 +192,11 @@ export default function HomePage() {
       return;
     }
     navigate(PATHS.DORMITORY_CARD);
+  };
+
+  const handleDormitoryGuideClick = () => {
+    mixpanelTrack.featureClicked("기숙사_생활안내", "홈");
+    navigate(PATHS.DORMITORY_GUIDE);
   };
 
   useEffect(() => {
@@ -455,6 +461,21 @@ export default function HomePage() {
               </TitleContentArea>
             </WidgetContainer>
           )}
+
+        <WidgetContainer>
+          <GuideEntryCard type="button" onClick={handleDormitoryGuideClick}>
+            <GuideEntryText>
+              <GuideEntryTitle>기숙사 생활 안내</GuideEntryTitle>
+              <GuideEntrySubtitle>
+                세탁기·시설 고장·학식·생활 수칙 모아보기
+              </GuideEntrySubtitle>
+            </GuideEntryText>
+            <GuideEntryAction>
+              <span>보기</span>
+              <ChevronRight size={14} strokeWidth={2.5} />
+            </GuideEntryAction>
+          </GuideEntryCard>
+        </WidgetContainer>
 
         <WidgetContainer>
             <TitleContentArea
@@ -765,4 +786,70 @@ const TipsListContainer = styled.div`
   flex-direction: column;
   gap: 16px;
   width: 100%;
+`;
+
+const GuideEntryCard = styled.button`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  background: ${colors.bg.bg2};
+  border: 1px solid ${colors.gray.gray200};
+  border-radius: 14px;
+  box-sizing: border-box;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    transform 0.14s cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+
+  &:hover {
+    border-color: ${colors.blue.blue300};
+  }
+
+  &:active {
+    transform: scale(0.985);
+    background: ${colors.gray.gray100};
+  }
+`;
+
+const GuideEntryText = styled.div`
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+`;
+
+const GuideEntryTitle = styled.span`
+  ${typography.title3}
+  color: ${colors.text.text1};
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+const GuideEntrySubtitle = styled.span`
+  ${typography.caption1}
+  color: ${colors.text.text2};
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+const GuideEntryAction = styled.div`
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 11px;
+  border-radius: 9999px;
+  background: ${colors.blue.blue100};
+  color: ${colors.blue.blue700};
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
 `;
