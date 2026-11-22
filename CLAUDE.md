@@ -93,3 +93,15 @@ export const calendarKeys = {
   detail: (id: number) => [...calendarKeys.all, "detail", id] as const,
 };
 ```
+
+---
+
+## 5. UI/UX 가이드라인 및 공용 컴포넌트·에셋 재사용 원칙
+
+UI, 화면, 컴포넌트, 스타일 작업 전에는 반드시 `AGENTS.md`와 `docs/ui-ux-guideline.md`를 먼저 읽고 아래 기준을 따릅니다.
+
+1. **공용 컴포넌트·에셋 우선 재사용**: 새 UI를 작성하기 전 `src/components/`(`common/`, `button/`, `modal/`, 도메인 폴더)와 `src/assets/`를 먼저 확인해 기존 컴포넌트와 SVG·이미지를 재사용합니다. 없는 아이콘만 `lucide-react`를 사용합니다.
+2. **스타일링 및 디자인 토큰**: Tailwind CSS 없이 `styled-components`와 `@/styles/tokens`(포털·사생증 도메인은 `src/styles/portalVariables.css`)를 사용합니다.
+3. **배경색 SSOT 및 레이아웃 위임**: `src/routes/Router.tsx`에 `handle: { bg: "white" | "gray" }`를 선언하고, 페이지 최상위 루트 래퍼에는 `background`를 직접 지정하지 않습니다. 헤더·챗봇 버튼은 `useSetHeader`, `useSetAIChat`으로 제어하고 Safe Area에는 `var(--safe-area-*)`를 적용합니다.
+4. **AI 슬롭 차단**: 보라·네온 그라데이션, 장식용 방패·로켓·스파클 아이콘과 `Icon-in-Circle`, 3열 피처 카드 그리드, 영문 대문자 아이브로우 및 번호·코드 병기 라벨, 타사 브랜드명 오염, 과장 바운스 모션, 과장 부사·번역투 문구, 로딩·빈 상태·에러 상태 누락을 금지합니다.
+5. **검증**: 라우트 또는 UI 수정 후 `npm run verify:bg`, `npm run lint`, `npm run build`를 실행해 확인합니다.
