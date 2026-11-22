@@ -63,30 +63,41 @@ const FUNCTION_ICONS: Partial<Record<GuideVisualKey, LucideIcon>> = {
   phone: Phone,
 };
 
-function renderGuideVisual(visual: GuideVisualKey) {
+function renderGuideVisual(visual: GuideVisualKey, isExternal: boolean) {
   const fullBleedSrc = FULL_BLEED_LOGOS[visual];
+  const containedSrc = CONTAINED_LOGOS[visual];
+  const IconComponent = FUNCTION_ICONS[visual] ?? FileText;
+
+  let slotContent: React.ReactNode;
   if (fullBleedSrc) {
-    return (
+    slotContent = (
       <AppIconSlot>
         <AppIconImage src={fullBleedSrc} alt="" aria-hidden="true" />
       </AppIconSlot>
     );
-  }
-
-  const containedSrc = CONTAINED_LOGOS[visual];
-  if (containedSrc) {
-    return (
+  } else if (containedSrc) {
+    slotContent = (
       <LogoSlot>
         <LogoImage src={containedSrc} alt="" aria-hidden="true" />
       </LogoSlot>
     );
+  } else {
+    slotContent = (
+      <IconSlot>
+        <IconComponent size={19} strokeWidth={1.9} aria-hidden="true" />
+      </IconSlot>
+    );
   }
 
-  const IconComponent = FUNCTION_ICONS[visual] ?? FileText;
   return (
-    <IconSlot>
-      <IconComponent size={19} strokeWidth={1.9} aria-hidden="true" />
-    </IconSlot>
+    <VisualWrapper>
+      {slotContent}
+      {isExternal && (
+        <ExternalBadge aria-hidden="true">
+          <ExternalLink size={10} strokeWidth={2.4} />
+        </ExternalBadge>
+      )}
+    </VisualWrapper>
   );
 }
 
@@ -241,7 +252,7 @@ export default function DormitoryGuidePage() {
                         : undefined
                     }
                   >
-                    {renderGuideVisual(item.visual)}
+                    {renderGuideVisual(item.visual, isExternalAction)}
 
                     <CardBody>
                       <TitleRow>
@@ -272,15 +283,12 @@ export default function DormitoryGuidePage() {
                       )}
                     </CardBody>
 
-                    {isInteractive && item.actionLabel && (
-                      <ActionPill $highlight={item.type === "aichat"}>
-                        <span>{item.actionLabel}</span>
-                        {isExternalAction ? (
-                          <ExternalLink size={13} strokeWidth={2.2} />
-                        ) : (
-                          <ChevronRight size={14} strokeWidth={2.4} />
-                        )}
-                      </ActionPill>
+                    {isInteractive && (
+                      <CardChevron
+                        size={16}
+                        strokeWidth={2}
+                        aria-hidden="true"
+                      />
                     )}
                   </GuideCard>
                 );
@@ -388,11 +396,33 @@ const GuideCard = styled.div<{ $interactive: boolean }>`
     `}
 `;
 
+const VisualWrapper = styled.div`
+  position: relative;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+`;
+
+const ExternalBadge = styled.span`
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  width: 17px;
+  height: 17px;
+  border-radius: 5px;
+  background: ${colors.bg.bg1};
+  border: 1px solid ${colors.gray.gray200};
+  color: ${colors.gray.gray600};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+`;
+
 const visualSlotBase = css`
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  flex-shrink: 0;
   box-sizing: border-box;
   display: flex;
   align-items: center;
@@ -495,26 +525,7 @@ const SecondaryButton = styled.button`
   }
 `;
 
-const ActionPill = styled.div<{ $highlight?: boolean }>`
+const CardChevron = styled(ChevronRight)`
   flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  padding: 7px 12px;
-  border-radius: 9999px;
-  ${typography.label2}
-  font-weight: 700;
-  line-height: 1;
-  white-space: nowrap;
-
-  ${({ $highlight }) =>
-    $highlight
-      ? css`
-          background: ${colors.main.main1};
-          color: ${colors.gray.gray0};
-        `
-      : css`
-          background: ${colors.blue.blue100};
-          color: ${colors.blue.blue700};
-        `}
+  color: ${colors.gray.gray400};
 `;
