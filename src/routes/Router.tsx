@@ -45,6 +45,8 @@ const NotificationPage = lazy(() => import("@/pages/NotificationPage"));
 const CalendarPage = lazy(() => import("@/pages/CalendarPage"));
 const PortalDormitoryPage = lazy(() => import("@/pages/Dormitory/PortalDormitoryPage"));
 const DormitoryCardPage = lazy(() => import("@/pages/Dormitory/DormitoryCardPage"));
+const DormitoryGuidePage = lazy(() => import("@/pages/Dormitory/DormitoryGuidePage"));
+const DormitoryWebViewerPage = lazy(() => import("@/pages/Dormitory/DormitoryWebViewerPage"));
 const PortalAccountPage = lazy(() => import("@/pages/MyPage/PortalAccountPage"));
 
 const MyRoomMatePage = lazy(() => import("@/pages/RoomMate/MyRoomMatePage"));
@@ -330,6 +332,8 @@ export const router = createBrowserRouter([
             children: [
               { path: "info", element: <PortalDormitoryPage />, handle: { bg: "gray" } },
               { path: "card", element: <DormitoryCardPage />, handle: { bg: "gray" } },
+              { path: "guide", element: <DormitoryGuidePage />, handle: { bg: "gray" } },
+              { path: "viewer", element: <DormitoryWebViewerPage />, handle: { bg: "white" } },
             ],
           },
 
