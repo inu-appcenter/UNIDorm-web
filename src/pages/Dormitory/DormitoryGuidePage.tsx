@@ -2,6 +2,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled, { css } from "styled-components";
 import { ChevronRight, ExternalLink } from "lucide-react";
+import chatbuliLogo from "@/assets/ai-chat/챗불이로고.svg";
+import ChipButton from "@/components/button/ChipButton";
+import DormitoryBadge from "@/components/common/DormitoryBadge";
+import TitleContentArea from "@/components/common/TitleContentArea";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import useUserStore from "@/stores/useUserStore";
 import useAIChatStore from "@/stores/useAIChatStore";
@@ -17,6 +21,8 @@ import {
 import { getMobilePlatform } from "@/utils/getMobilePlatform";
 import { mixpanelTrack } from "@/utils/mixpanel";
 import { colors, typography } from "@/styles/tokens";
+
+const SINGLE_DORM_BADGES = new Set(["1기숙사", "2기숙사", "3기숙사"]);
 
 export default function DormitoryGuidePage() {
   const navigate = useNavigate();
@@ -119,16 +125,15 @@ export default function DormitoryGuidePage() {
           {DORMITORY_FILTER_OPTIONS.map((option) => {
             const isActive = selectedFilter === option.value;
             return (
-              <FilterChip
+              <GuideFilterChip
                 key={option.value}
-                type="button"
                 role="tab"
                 aria-selected={isActive}
-                $active={isActive}
+                active={isActive}
                 onClick={() => handleFilterSelect(option.value)}
               >
                 {option.label}
-              </FilterChip>
+              </GuideFilterChip>
             );
           })}
         </FilterChipRow>
@@ -136,13 +141,19 @@ export default function DormitoryGuidePage() {
 
       <SectionList>
         {sections.map((section) => (
-          <SectionBlock key={section.category}>
-            <SectionTitle>{section.category}</SectionTitle>
+          <TitleContentArea
+            key={section.category}
+            title={section.category}
+            gap="10px"
+          >
             <CardList>
               {section.items.map((item) => {
                 const isInteractive = item.type !== "info";
                 const isExternalAction =
                   item.type === "external" || item.type === "app";
+                const isSingleDormBadge = Boolean(
+                  item.badge && SINGLE_DORM_BADGES.has(item.badge),
+                );
 
                 return (
                   <GuideCard
@@ -166,11 +177,22 @@ export default function DormitoryGuidePage() {
                   >
                     <CardBody>
                       <TitleRow>
+                        {item.type === "aichat" && (
+                          <ChatBuliLogo
+                            src={chatbuliLogo}
+                            alt=""
+                            aria-hidden="true"
+                          />
+                        )}
                         <CardTitle>{item.title}</CardTitle>
                         {item.badge && (
-                          <Badge $muted={item.type === "info"}>
+                          <DormitoryBadge
+                            dormType={isSingleDormBadge ? item.badge : ""}
+                            variant="subtle"
+                            size="sm"
+                          >
                             {item.badge}
-                          </Badge>
+                          </DormitoryBadge>
                         )}
                       </TitleRow>
                       <CardDescription>{item.description}</CardDescription>
@@ -203,7 +225,7 @@ export default function DormitoryGuidePage() {
                 );
               })}
             </CardList>
-          </SectionBlock>
+          </TitleContentArea>
         ))}
       </SectionList>
     </PageWrapper>
@@ -214,7 +236,7 @@ const PageWrapper = styled.div`
   width: 100%;
   max-width: 840px;
   margin: 0 auto;
-  padding: 12px 20px calc(48px + env(safe-area-inset-bottom, 0px));
+  padding: 12px 20px calc(48px + var(--safe-area-bottom, 0px));
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -228,7 +250,7 @@ const IntroArea = styled.div`
 `;
 
 const IntroDescription = styled.p`
-  ${typography.body2Normal}
+  ${typography.label1Normal}
   color: ${colors.text.text2};
   margin: 0;
   word-break: keep-all;
@@ -248,32 +270,14 @@ const FilterChipRow = styled.div`
   }
 `;
 
-const FilterChip = styled.button<{ $active: boolean }>`
+const GuideFilterChip = styled(ChipButton)`
   flex-shrink: 0;
-  padding: 8px 14px;
-  border-radius: 9999px;
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1.2;
-  cursor: pointer;
+  min-height: 36px;
   transition:
     background-color 0.15s ease,
     color 0.15s ease,
-    border-color 0.15s ease,
+    opacity 0.15s ease,
     transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);
-
-  ${({ $active }) =>
-    $active
-      ? css`
-          background: ${colors.main.main1};
-          color: #ffffff;
-          border: 1px solid ${colors.main.main1};
-        `
-      : css`
-          background: ${colors.bg.bg1};
-          color: ${colors.text.text2};
-          border: 1px solid ${colors.gray.gray200};
-        `}
 
   &:active {
     transform: scale(0.97);
@@ -284,19 +288,6 @@ const SectionList = styled.div`
   display: flex;
   flex-direction: column;
   gap: 24px;
-`;
-
-const SectionBlock = styled.section`
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-`;
-
-const SectionTitle = styled.h2`
-  ${typography.heading2}
-  color: ${colors.text.text1};
-  margin: 0;
-  padding-left: 2px;
 `;
 
 const CardList = styled.div`
@@ -349,38 +340,25 @@ const TitleRow = styled.div`
   align-items: center;
   flex-wrap: wrap;
   gap: 6px;
+  min-width: 0;
+`;
+
+const ChatBuliLogo = styled.img`
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  display: block;
 `;
 
 const CardTitle = styled.span`
-  ${typography.title3}
+  ${typography.body1Normal}
   color: ${colors.text.text1};
   overflow-wrap: anywhere;
-`;
-
-const Badge = styled.span<{ $muted?: boolean }>`
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 8px;
-  border-radius: 9999px;
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 1.4;
-  white-space: nowrap;
-
-  ${({ $muted }) =>
-    $muted
-      ? css`
-          background: ${colors.gray.gray100};
-          color: ${colors.gray.gray700};
-        `
-      : css`
-          background: ${colors.blue.blue100};
-          color: ${colors.blue.blue700};
-        `}
+  word-break: keep-all;
 `;
 
 const CardDescription = styled.p`
-  ${typography.body2Normal}
+  ${typography.label1Normal}
   color: ${colors.text.text2};
   margin: 0;
   word-break: keep-all;
@@ -397,15 +375,17 @@ const SecondaryButton = styled.button`
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 5px 10px;
+  min-height: 36px;
+  padding: 6px 12px;
   border-radius: 8px;
   background: ${colors.gray.gray100};
   color: ${colors.gray.gray800};
-  font-size: 12px;
+  ${typography.caption1}
   font-weight: 600;
-  line-height: 1.2;
   cursor: pointer;
-  transition: background-color 0.15s ease, transform 0.12s ease;
+  transition:
+    background-color 0.15s ease,
+    transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);
 
   &:hover {
     background: ${colors.gray.gray200};
@@ -423,7 +403,7 @@ const ActionPill = styled.div<{ $highlight?: boolean }>`
   gap: 3px;
   padding: 7px 12px;
   border-radius: 9999px;
-  font-size: 13px;
+  ${typography.label2}
   font-weight: 700;
   line-height: 1;
   white-space: nowrap;
@@ -432,7 +412,7 @@ const ActionPill = styled.div<{ $highlight?: boolean }>`
     $highlight
       ? css`
           background: ${colors.main.main1};
-          color: #ffffff;
+          color: ${colors.gray.gray0};
         `
       : css`
           background: ${colors.blue.blue100};

@@ -790,6 +790,7 @@ const TipsListContainer = styled.div`
 
 const GuideEntryCard = styled.button`
   width: 100%;
+  min-height: 60px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -825,11 +826,12 @@ const GuideEntryText = styled.div`
 `;
 
 const GuideEntryTitle = styled.span`
-  ${typography.title3}
+  ${typography.body1Normal}
   color: ${colors.text.text1};
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  word-break: keep-all;
 `;
 
 const GuideEntrySubtitle = styled.span`
