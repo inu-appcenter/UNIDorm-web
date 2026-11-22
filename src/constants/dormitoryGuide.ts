@@ -19,6 +19,21 @@ export type DormitoryGuideCategory =
   | "생활 정보"
   | "질문·문의";
 
+export type GuideVisualKey =
+  | "metaclub"
+  | "intip"
+  | "inu"
+  | "unidorm"
+  | "chatbuli"
+  | "washing"
+  | "wrench"
+  | "lecture"
+  | "rules"
+  | "facilities"
+  | "archive"
+  | "qna"
+  | "phone";
+
 export interface AppStoreLinks {
   android: string;
   ios: string;
@@ -30,6 +45,7 @@ export interface DormitoryGuideItem {
   title: string;
   description: string;
   dorms: DormitoryFilter[];
+  visual: GuideVisualKey;
   badge?: string;
   type: GuideActionType;
   url?: string;
@@ -83,6 +99,7 @@ export const DORMITORY_GUIDE_ITEMS: readonly DormitoryGuideItem[] = [
     title: "세탁·건조기 (메타클럽)",
     description: "1·2기숙사 세탁기·건조기 현황 확인과 결제에 사용해요.",
     dorms: ["1기숙사", "2기숙사"],
+    visual: "metaclub",
     badge: "1·2기숙사",
     type: "app",
     appLinks: METACLUB_STORE_LINKS,
@@ -94,6 +111,7 @@ export const DORMITORY_GUIDE_ITEMS: readonly DormitoryGuideItem[] = [
     title: "3기숙사 세탁실",
     description: "전용 앱이 없어 세탁실에서 현금 또는 충전카드로 이용해요.",
     dorms: ["3기숙사"],
+    visual: "washing",
     badge: "앱 미지원",
     type: "info",
   },
@@ -103,6 +121,7 @@ export const DORMITORY_GUIDE_ITEMS: readonly DormitoryGuideItem[] = [
     title: "시설 고장·보수 신청",
     description: "제1기숙사 시설 불편은 INU 포털 통합정보시스템에서 접수해요.",
     dorms: ["1기숙사"],
+    visual: "inu",
     badge: "1기숙사",
     type: "external",
     url: "https://portal.inu.ac.kr:444/enview/",
@@ -114,6 +133,7 @@ export const DORMITORY_GUIDE_ITEMS: readonly DormitoryGuideItem[] = [
     title: "시설 고장·보수 신청",
     description: "제2·3기숙사(BTL) 고장·수리는 에듀맥 시설관리시스템에서 접수해요.",
     dorms: ["2기숙사", "3기숙사"],
+    visual: "wrench",
     badge: "2·3기숙사",
     type: "external",
     url: "https://edumac.kr/mon/index.do?schlType=Univ",
@@ -125,6 +145,7 @@ export const DORMITORY_GUIDE_ITEMS: readonly DormitoryGuideItem[] = [
     title: "기타 생활 민원",
     description: "시설 고장 외 생활 불편은 유니돔 민원에서 접수하고 처리 현황을 볼 수 있어요.",
     dorms: ["all"],
+    visual: "unidorm",
     type: "internal",
     path: PATHS.COMPLAIN.ROOT,
     actionLabel: "민원 이동",
@@ -135,6 +156,7 @@ export const DORMITORY_GUIDE_ITEMS: readonly DormitoryGuideItem[] = [
     title: "기숙사 식당·학식 메뉴",
     description: "제1기숙사 식당과 교내 학식 메뉴를 INTIP에서 확인해요.",
     dorms: ["all"],
+    visual: "intip",
     type: "iframe",
     url: "https://intip.inuappcenter.kr/home/menu",
     actionLabel: "식단 보기",
@@ -149,6 +171,7 @@ export const DORMITORY_GUIDE_ITEMS: readonly DormitoryGuideItem[] = [
     title: "재학생 입·퇴사 신청",
     description: "INU 포털에서 재학생 입사신청과 정기·중도퇴사를 신청해요.",
     dorms: ["all"],
+    visual: "inu",
     type: "external",
     url: "https://portal.inu.ac.kr:444/enview/",
     actionLabel: "포털 열기",
@@ -159,6 +182,7 @@ export const DORMITORY_GUIDE_ITEMS: readonly DormitoryGuideItem[] = [
     title: "신·편입생 입사 신청",
     description: "포털 아이디가 없는 신·편입생 전용 입사신청 페이지예요.",
     dorms: ["all"],
+    visual: "inu",
     type: "external",
     url: "https://erp.inu.ac.kr:8443/dorm.html",
     actionLabel: "신청 이동",
@@ -169,6 +193,7 @@ export const DORMITORY_GUIDE_ITEMS: readonly DormitoryGuideItem[] = [
     title: "생활원 교양강좌 신청",
     description: "기숙사생 무료 교양강좌 일정 확인과 신청 안내예요.",
     dorms: ["all"],
+    visual: "lecture",
     type: "iframe",
     url: "https://dorm.inu.ac.kr/dorm/6533/subview.do",
     actionLabel: "안내 보기",
@@ -179,6 +204,7 @@ export const DORMITORY_GUIDE_ITEMS: readonly DormitoryGuideItem[] = [
     title: "생활 수칙",
     description: "출입 통제 시간(05:00~02:00), 외박·택배실·공용시설 이용 규정이에요.",
     dorms: ["all"],
+    visual: "rules",
     type: "iframe",
     url: "https://dorm.inu.ac.kr/dorm/11480/subview.do",
     actionLabel: "보기",
@@ -189,6 +215,7 @@ export const DORMITORY_GUIDE_ITEMS: readonly DormitoryGuideItem[] = [
     title: "기숙사별 편의시설 현황",
     description: "편의점, 택배실, 체력단련실, 간이취사실 등 층별 위치를 확인해요.",
     dorms: ["all"],
+    visual: "facilities",
     type: "iframe",
     url: "https://dorm.inu.ac.kr/dorm/6515/subview.do",
     actionLabel: "보기",
@@ -199,6 +226,7 @@ export const DORMITORY_GUIDE_ITEMS: readonly DormitoryGuideItem[] = [
     title: "상·벌점표 및 자료실",
     description: "최신 기숙사 상·벌점 기준표와 생활 안내문 자료실이에요.",
     dorms: ["all"],
+    visual: "archive",
     type: "iframe",
     url: "https://dorm.inu.ac.kr/dorm/6530/subview.do",
     actionLabel: "보기",
@@ -209,6 +237,7 @@ export const DORMITORY_GUIDE_ITEMS: readonly DormitoryGuideItem[] = [
     title: "인천대학교 생활원 홈페이지",
     description: "생활원 공식 홈페이지로 이동해요.",
     dorms: ["all"],
+    visual: "inu",
     type: "external",
     url: "https://dorm.inu.ac.kr/",
     actionLabel: "열기",
@@ -219,6 +248,7 @@ export const DORMITORY_GUIDE_ITEMS: readonly DormitoryGuideItem[] = [
     title: "챗불이에게 물어보기",
     description: "통금, 상·벌점, 입퇴사 등 기숙사 궁금증을 AI 챗봇에게 물어보세요.",
     dorms: ["all"],
+    visual: "chatbuli",
     type: "aichat",
     actionLabel: "질문하기",
   },
@@ -228,6 +258,7 @@ export const DORMITORY_GUIDE_ITEMS: readonly DormitoryGuideItem[] = [
     title: "생활원 질문과 답변 (Q&A)",
     description: "생활원 행정실 공식 1:1 문의 게시판이에요.",
     dorms: ["all"],
+    visual: "qna",
     type: "external",
     url: "https://dorm.inu.ac.kr/dorm/6529/subview.do",
     actionLabel: "열기",
@@ -238,6 +269,7 @@ export const DORMITORY_GUIDE_ITEMS: readonly DormitoryGuideItem[] = [
     title: "통합행정실",
     description: "입·퇴사 및 일반 행정 문의 (032-835-9810)",
     dorms: ["all"],
+    visual: "phone",
     type: "tel",
     tel: "032-835-9810",
     actionLabel: "전화 걸기",
@@ -248,6 +280,7 @@ export const DORMITORY_GUIDE_ITEMS: readonly DormitoryGuideItem[] = [
     title: "제2기숙사 관리사무실",
     description: "제2기숙사 시설·생활 문의 (032-858-7233)",
     dorms: ["2기숙사"],
+    visual: "phone",
     badge: "2기숙사",
     type: "tel",
     tel: "032-858-7233",
@@ -259,6 +292,7 @@ export const DORMITORY_GUIDE_ITEMS: readonly DormitoryGuideItem[] = [
     title: "제3기숙사 관리사무실",
     description: "제3기숙사 시설·생활 문의 (032-858-7222)",
     dorms: ["3기숙사"],
+    visual: "phone",
     badge: "3기숙사",
     type: "tel",
     tel: "032-858-7222",

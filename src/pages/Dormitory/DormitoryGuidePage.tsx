@@ -1,8 +1,24 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled, { css } from "styled-components";
-import { ChevronRight, ExternalLink } from "lucide-react";
+import {
+  BookOpen,
+  Building2,
+  ChevronRight,
+  ExternalLink,
+  FileText,
+  GraduationCap,
+  LucideIcon,
+  MessageSquare,
+  Phone,
+  WashingMachine,
+  Wrench,
+} from "lucide-react";
 import chatbuliLogo from "@/assets/ai-chat/챗불이로고.svg";
+import intipIcon from "@/assets/dormitory-guide/intip-icon.webp";
+import inuSymbol from "@/assets/dormitory-guide/inu-symbol.webp";
+import metaclubLogo from "@/assets/dormitory-guide/metaclub-logo.webp";
+import unidormLogo from "@/assets/unidorm-logo.webp";
 import ChipButton from "@/components/button/ChipButton";
 import DormitoryBadge from "@/components/common/DormitoryBadge";
 import TitleContentArea from "@/components/common/TitleContentArea";
@@ -14,6 +30,7 @@ import {
   DORMITORY_FILTER_OPTIONS,
   DormitoryFilter,
   DormitoryGuideItem,
+  GuideVisualKey,
   filterGuideSections,
   resolveAppStoreUrl,
   resolveDormitoryFilter,
@@ -23,6 +40,55 @@ import { mixpanelTrack } from "@/utils/mixpanel";
 import { colors, typography } from "@/styles/tokens";
 
 const SINGLE_DORM_BADGES = new Set(["1기숙사", "2기숙사", "3기숙사"]);
+
+const FULL_BLEED_LOGOS: Partial<Record<GuideVisualKey, string>> = {
+  metaclub: metaclubLogo,
+  intip: intipIcon,
+};
+
+const CONTAINED_LOGOS: Partial<Record<GuideVisualKey, string>> = {
+  inu: inuSymbol,
+  unidorm: unidormLogo,
+  chatbuli: chatbuliLogo,
+};
+
+const FUNCTION_ICONS: Partial<Record<GuideVisualKey, LucideIcon>> = {
+  washing: WashingMachine,
+  wrench: Wrench,
+  lecture: GraduationCap,
+  rules: BookOpen,
+  facilities: Building2,
+  archive: FileText,
+  qna: MessageSquare,
+  phone: Phone,
+};
+
+function renderGuideVisual(visual: GuideVisualKey) {
+  const fullBleedSrc = FULL_BLEED_LOGOS[visual];
+  if (fullBleedSrc) {
+    return (
+      <AppIconSlot>
+        <AppIconImage src={fullBleedSrc} alt="" aria-hidden="true" />
+      </AppIconSlot>
+    );
+  }
+
+  const containedSrc = CONTAINED_LOGOS[visual];
+  if (containedSrc) {
+    return (
+      <LogoSlot>
+        <LogoImage src={containedSrc} alt="" aria-hidden="true" />
+      </LogoSlot>
+    );
+  }
+
+  const IconComponent = FUNCTION_ICONS[visual] ?? FileText;
+  return (
+    <IconSlot>
+      <IconComponent size={19} strokeWidth={1.9} aria-hidden="true" />
+    </IconSlot>
+  );
+}
 
 export default function DormitoryGuidePage() {
   const navigate = useNavigate();
@@ -175,15 +241,10 @@ export default function DormitoryGuidePage() {
                         : undefined
                     }
                   >
+                    {renderGuideVisual(item.visual)}
+
                     <CardBody>
                       <TitleRow>
-                        {item.type === "aichat" && (
-                          <ChatBuliLogo
-                            src={chatbuliLogo}
-                            alt=""
-                            aria-hidden="true"
-                          />
-                        )}
                         <CardTitle>{item.title}</CardTitle>
                         {item.badge && (
                           <DormitoryBadge
@@ -302,7 +363,7 @@ const GuideCard = styled.div<{ $interactive: boolean }>`
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 16px 18px;
+  padding: 15px 16px;
   background: ${colors.bg.bg1};
   border: 1px solid ${colors.gray.gray200};
   border-radius: 16px;
@@ -327,6 +388,51 @@ const GuideCard = styled.div<{ $interactive: boolean }>`
     `}
 `;
 
+const visualSlotBase = css`
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const AppIconSlot = styled.div`
+  ${visualSlotBase}
+  overflow: hidden;
+  border: 1px solid ${colors.gray.gray100};
+`;
+
+const AppIconImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+`;
+
+const LogoSlot = styled.div`
+  ${visualSlotBase}
+  padding: 4px;
+  background: ${colors.bg.bg1};
+  border: 1px solid ${colors.gray.gray200};
+`;
+
+const LogoImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+`;
+
+const IconSlot = styled.div`
+  ${visualSlotBase}
+  background: ${colors.gray.gray50};
+  border: 1px solid ${colors.gray.gray200};
+  color: ${colors.gray.gray700};
+`;
+
 const CardBody = styled.div`
   flex: 1;
   min-width: 0;
@@ -341,13 +447,6 @@ const TitleRow = styled.div`
   flex-wrap: wrap;
   gap: 6px;
   min-width: 0;
-`;
-
-const ChatBuliLogo = styled.img`
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
-  display: block;
 `;
 
 const CardTitle = styled.span`
