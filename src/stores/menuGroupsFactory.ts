@@ -32,6 +32,10 @@ export const createMyPageMenuGroups = (
     title: "고객지원",
     menus: [
       {
+        label: "기숙사 생활 안내",
+        onClick: () => navigate(PATHS.DORMITORY_GUIDE),
+      },
+      {
         label: "1:1 문의",
         onClick: () =>
           window.open("https://forms.gle/PGkiDutmmT8gzddF7", "_blank"),

@@ -17,6 +17,8 @@ export const PATHS = {
   MY_LIKES: "/liked",
   DORMITORY_INFO: "/dormitory/info",
   DORMITORY_CARD: "/dormitory/card",
+  DORMITORY_GUIDE: "/dormitory/guide",
+  DORMITORY_VIEWER: "/dormitory/viewer",
   PORTAL_ACCOUNT: "/mypage/portal",
   ROOMMATE: {
     ROOT: "/roommate",
