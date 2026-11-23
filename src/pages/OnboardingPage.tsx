@@ -322,21 +322,11 @@ const OnboardingPage: React.FC = () => {
                     ease: EASE_OUT_EXPO,
                   }}
                 >
-                  <CardTopBlock>
-                    <CardTitle>{t("step2.card.dormIdTitle")}</CardTitle>
-                    <CardActionLink>
-                      {t("step2.card.dormIdAction")} <Chevron>›</Chevron>
-                    </CardActionLink>
-                  </CardTopBlock>
+                  <CardTitle>{t("step2.card.dormIdTitle")}</CardTitle>
 
                   <CardDivider />
 
-                  <CardNoticeRow>
-                    <CardNoticeText>
-                      {t("step2.card.noticeTitle")}
-                    </CardNoticeText>
-                    <CardNoticeChevron aria-hidden="true">›</CardNoticeChevron>
-                  </CardNoticeRow>
+                  <CardTitle>{t("step2.card.noticeTitle")}</CardTitle>
                 </InnerInfoCard>
               </FeaturePreviewCard>
             )}
@@ -388,9 +378,6 @@ const OnboardingPage: React.FC = () => {
                         <TagChip key={tag}>{tag}</TagChip>
                       ))}
                   </ChipRow>
-                  <CardActionLink $spaced>
-                    {t("step3.card.action")} <Chevron>›</Chevron>
-                  </CardActionLink>
                 </InnerInfoCard>
               </FeaturePreviewCard>
             )}
@@ -483,7 +470,7 @@ const MainArea = styled.main`
   min-height: 0;
   display: flex;
   flex-direction: column;
-  padding: 16px 24px 8px;
+  padding: 48px 24px 16px;
   box-sizing: border-box;
   overflow: hidden;
 `;
@@ -725,12 +712,6 @@ const InnerInfoCard = styled(motion.div)`
   flex-direction: column;
 `;
 
-const CardTopBlock = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-`;
-
 const CardTitle = styled.p`
   ${typography.headline1}
   font-weight: 600;
@@ -738,46 +719,11 @@ const CardTitle = styled.p`
   color: ${colors.text.text1};
 `;
 
-const CardActionLink = styled.span<{ $spaced?: boolean }>`
-  ${typography.body2Normal}
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: ${colors.main.main2};
-  margin-top: ${({ $spaced }) => ($spaced ? "22px" : "0")};
-`;
-
-const Chevron = styled.span`
-  font-size: 17px;
-  line-height: 1;
-`;
-
 const CardDivider = styled.div`
   width: 100%;
   height: 1px;
   background-color: ${colors.blue.blue100};
   margin: 14px 0;
-`;
-
-const CardNoticeRow = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-`;
-
-const CardNoticeText = styled.span`
-  ${typography.body2Normal}
-  font-weight: 600;
-  color: ${colors.text.text1};
-`;
-
-const CardNoticeChevron = styled.span`
-  font-size: 19px;
-  font-weight: 400;
-  line-height: 1;
-  color: ${colors.text.text1};
 `;
 
 const ChipRow = styled.div`

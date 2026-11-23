@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import styled, { css } from "styled-components";
 import {
   BookOpen,
@@ -109,15 +109,22 @@ function renderGuideVisual(visual: GuideVisualKey, isExternal: boolean) {
 
 export default function DormitoryGuidePage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const initialQuery = searchParams.get("q") ?? "";
   const dormType = useUserStore((state) => state.userInfo?.dormType);
 
   const [selectedFilter, setSelectedFilter] = useState<DormitoryFilter>(() =>
     resolveDormitoryFilter(dormType),
   );
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [activeInfoItem, setActiveInfoItem] =
     useState<DormitoryGuideItem | null>(null);
   const hasManualFilterChange = useRef(false);
+
+  useEffect(() => {
+    const nextQuery = searchParams.get("q") ?? "";
+    setSearchQuery(nextQuery);
+  }, [searchParams]);
 
   useEffect(() => {
     if (hasManualFilterChange.current) return;

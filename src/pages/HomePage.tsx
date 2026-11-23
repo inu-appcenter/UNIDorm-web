@@ -46,7 +46,14 @@ import {
 } from "@/utils/semesterGuard";
 import { evaluateDormitoryResidentStatus } from "@/pages/Dormitory/DormitoryCardPage";
 import { secureStorage } from "@/utils/secureStorage";
-import { ChevronRight } from "lucide-react";
+import dormitoryGuideSvg from "@/assets/home/dormitory-guide-widget.svg";
+
+const GUIDE_KEYWORDS = [
+  { label: "세탁기 예약", query: "세탁" },
+  { label: "시설 고장", query: "고장" },
+  { label: "학식·식단", query: "식단" },
+  { label: "생활 수칙", query: "수칙" },
+] as const;
 
 export default function HomePage() {
   useSetAIChat({ isVisible: true, shouldAnimate: true });
@@ -197,6 +204,15 @@ export default function HomePage() {
   const handleDormitoryGuideClick = () => {
     mixpanelTrack.featureClicked("기숙사_생활안내", "홈");
     navigate(PATHS.DORMITORY_GUIDE);
+  };
+
+  const handleDormitoryGuideKeywordClick = (
+    e: React.MouseEvent<HTMLButtonElement>,
+    query: string,
+  ) => {
+    e.stopPropagation();
+    mixpanelTrack.featureClicked(`기숙사_생활안내_${query}`, "홈");
+    navigate(`${PATHS.DORMITORY_GUIDE}?q=${encodeURIComponent(query)}`);
   };
 
   useEffect(() => {
@@ -463,18 +479,49 @@ export default function HomePage() {
           )}
 
         <WidgetContainer>
-          <GuideEntryCard type="button" onClick={handleDormitoryGuideClick}>
-            <GuideEntryText>
-              <GuideEntryTitle>기숙사 생활 안내</GuideEntryTitle>
-              <GuideEntrySubtitle>
-                세탁기·시설 고장·학식·생활 수칙 모아보기
-              </GuideEntrySubtitle>
-            </GuideEntryText>
-            <GuideEntryAction>
-              <span>보기</span>
-              <ChevronRight size={14} strokeWidth={2.5} />
-            </GuideEntryAction>
-          </GuideEntryCard>
+          <TitleContentArea
+            title={"기숙사 생활 안내"}
+            link={PATHS.DORMITORY_GUIDE}
+            location="홈"
+            gap={"12px"}
+          >
+            <GuideWidgetCard
+              role="button"
+              tabIndex={0}
+              onClick={handleDormitoryGuideClick}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  handleDormitoryGuideClick();
+                }
+              }}
+            >
+              <GuideIllustration
+                src={dormitoryGuideSvg}
+                alt=""
+                aria-hidden="true"
+                draggable={false}
+              />
+              <GuideWidgetContent>
+                <GuideWidgetSummary>
+                  자주 찾는 기숙사 정보를 모았어요
+                </GuideWidgetSummary>
+                <GuideChipRow>
+                  {GUIDE_KEYWORDS.map((chip) => (
+                    <GuideKeywordChip
+                      key={chip.query}
+                      type="button"
+                      onClick={(e) =>
+                        handleDormitoryGuideKeywordClick(e, chip.query)
+                      }
+                    >
+                      {chip.label}
+                    </GuideKeywordChip>
+                  ))}
+                </GuideChipRow>
+              </GuideWidgetContent>
+            </GuideWidgetCard>
+          </TitleContentArea>
         </WidgetContainer>
 
         <WidgetContainer>
@@ -788,28 +835,19 @@ const TipsListContainer = styled.div`
   width: 100%;
 `;
 
-const GuideEntryCard = styled.button`
+const GuideWidgetCard = styled.div`
   width: 100%;
-  min-height: 60px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 14px 16px;
+  gap: 14px;
+  padding: 16px;
   background: ${colors.bg.bg2};
-  border: 1px solid ${colors.gray.gray200};
-  border-radius: 14px;
+  border-radius: 18px;
   box-sizing: border-box;
-  text-align: left;
   cursor: pointer;
   transition:
     transform 0.14s cubic-bezier(0.16, 1, 0.3, 1),
-    background-color 0.15s ease,
-    border-color 0.15s ease;
-
-  &:hover {
-    border-color: ${colors.blue.blue300};
-  }
+    background-color 0.15s ease;
 
   &:active {
     transform: scale(0.985);
@@ -817,41 +855,53 @@ const GuideEntryCard = styled.button`
   }
 `;
 
-const GuideEntryText = styled.div`
+const GuideIllustration = styled.img`
+  width: 76px;
+  height: 76px;
+  flex-shrink: 0;
+  display: block;
+  pointer-events: none;
+`;
+
+const GuideWidgetContent = styled.div`
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 10px;
 `;
 
-const GuideEntryTitle = styled.span`
-  ${typography.body1Normal}
+const GuideWidgetSummary = styled.p`
+  ${typography.body2Normal}
+  font-weight: 600;
+  margin: 0;
   color: ${colors.text.text1};
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   word-break: keep-all;
 `;
 
-const GuideEntrySubtitle = styled.span`
-  ${typography.caption1}
-  color: ${colors.text.text2};
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+const GuideChipRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 `;
 
-const GuideEntryAction = styled.div`
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
+const GuideKeywordChip = styled.button`
+  ${typography.label2}
+  font-weight: 600;
   padding: 6px 11px;
-  border-radius: 9999px;
+  border: none;
+  border-radius: 13px;
   background: ${colors.blue.blue100};
-  color: ${colors.blue.blue700};
-  font-size: 13px;
-  font-weight: 700;
-  line-height: 1;
+  color: ${colors.main.main2};
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    transform 0.12s cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 0.12s ease;
+
+  &:active {
+    transform: scale(0.96);
+    background: ${colors.blue.blue200};
+  }
 `;

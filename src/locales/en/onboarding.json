@@ -18,7 +18,6 @@
     "subtitle": "Open your ID and check dorm updates.",
     "card": {
       "dormIdTitle": "Mobile dorm ID",
-      "dormIdAction": "Open dorm ID",
       "noticeTitle": "Dorm notices"
     },
     "cta": "Next"
@@ -28,8 +27,7 @@
     "subtitle": "Explore profiles and send a roommate request.",
     "card": {
       "title": "Roommates for you",
-      "tags": ["Non-smoker", "Early bird"],
-      "action": "Explore roommates"
+      "tags": ["Non-smoker", "Early bird"]
     },
     "cta": "Get started"
   },
