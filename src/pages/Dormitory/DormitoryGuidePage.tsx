@@ -83,7 +83,7 @@ function renderGuideVisual(visual: GuideVisualKey, isExternal: boolean) {
   } else {
     slotContent = (
       <IconSlot>
-        <IconComponent size={19} strokeWidth={1.9} aria-hidden="true" />
+        <IconComponent size={22} strokeWidth={1.8} aria-hidden="true" />
       </IconSlot>
     );
   }
@@ -455,7 +455,6 @@ const visualSlotBase = css`
 const AppIconSlot = styled.div`
   ${visualSlotBase}
   overflow: hidden;
-  border: 1px solid ${colors.gray.gray100};
 `;
 
 const AppIconImage = styled.img`
@@ -467,9 +466,7 @@ const AppIconImage = styled.img`
 
 const LogoSlot = styled.div`
   ${visualSlotBase}
-  padding: 4px;
-  background: ${colors.bg.bg1};
-  border: 1px solid ${colors.gray.gray200};
+  padding: 2px;
 `;
 
 const LogoImage = styled.img`
@@ -481,8 +478,6 @@ const LogoImage = styled.img`
 
 const IconSlot = styled.div`
   ${visualSlotBase}
-  background: ${colors.gray.gray50};
-  border: 1px solid ${colors.gray.gray200};
   color: ${colors.gray.gray700};
 `;
 
