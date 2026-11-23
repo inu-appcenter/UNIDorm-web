@@ -18,7 +18,6 @@
     "subtitle": "常用宿舍功能都已整合在首页。",
     "card": {
       "dormIdTitle": "电子住宿证",
-      "dormIdAction": "打开住宿证",
       "noticeTitle": "生活馆公告"
     },
     "cta": "下一步"
@@ -28,8 +27,7 @@
     "subtitle": "查看生活习惯并申请成为室友。",
     "card": {
       "title": "符合我条件的室友",
-      "tags": ["不吸烟", "早起型"],
-      "action": "浏览室友"
+      "tags": ["不吸烟", "早起型"]
     },
     "cta": "开始使用 UNI Dorm"
   },

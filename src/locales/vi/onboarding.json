@@ -18,7 +18,6 @@
     "subtitle": "Các tính năng ký túc xá hay dùng đều có ở trang chủ.",
     "card": {
       "dormIdTitle": "Thẻ nội trú điện tử",
-      "dormIdAction": "Mở thẻ nội trú",
       "noticeTitle": "Thông báo ký túc xá"
     },
     "cta": "Tiếp theo"
@@ -28,8 +27,7 @@
     "subtitle": "Xem thói quen sinh hoạt và gửi lời mời ghép phòng.",
     "card": {
       "title": "Bạn cùng phòng phù hợp",
-      "tags": ["Không hút thuốc", "Dậy sớm"],
-      "action": "Xem bạn cùng phòng"
+      "tags": ["Không hút thuốc", "Dậy sớm"]
     },
     "cta": "Bắt đầu UNI Dorm"
   },
