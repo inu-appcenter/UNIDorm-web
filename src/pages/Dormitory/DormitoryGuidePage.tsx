@@ -21,6 +21,12 @@ import metaclubLogo from "@/assets/dormitory-guide/metaclub-logo.webp";
 import unidormLogo from "@/assets/unidorm-logo.webp";
 import ChipButton from "@/components/button/ChipButton";
 import DormitoryBadge from "@/components/common/DormitoryBadge";
+import EmptyState from "@/components/common/EmptyState";
+import FloatingSearchBar, {
+  FLOATING_SEARCH_BAR_CLEARANCE,
+  normalizeSearchQuery,
+} from "@/components/common/FloatingSearchBar";
+import SquareButton from "@/components/common/SquareButton";
 import TitleContentArea from "@/components/common/TitleContentArea";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import useUserStore from "@/stores/useUserStore";
@@ -38,8 +44,6 @@ import {
 import { getMobilePlatform } from "@/utils/getMobilePlatform";
 import { mixpanelTrack } from "@/utils/mixpanel";
 import { colors, typography } from "@/styles/tokens";
-
-const SINGLE_DORM_BADGES = new Set(["1기숙사", "2기숙사", "3기숙사"]);
 
 const FULL_BLEED_LOGOS: Partial<Record<GuideVisualKey, string>> = {
   metaclub: metaclubLogo,
@@ -108,6 +112,7 @@ export default function DormitoryGuidePage() {
   const [selectedFilter, setSelectedFilter] = useState<DormitoryFilter>(() =>
     resolveDormitoryFilter(dormType),
   );
+  const [searchQuery, setSearchQuery] = useState("");
   const hasManualFilterChange = useRef(false);
 
   useEffect(() => {
@@ -125,8 +130,8 @@ export default function DormitoryGuidePage() {
   useSetHeader(headerConfig);
 
   const sections = useMemo(
-    () => filterGuideSections(selectedFilter),
-    [selectedFilter],
+    () => filterGuideSections(selectedFilter, searchQuery),
+    [selectedFilter, searchQuery],
   );
 
   const handleFilterSelect = (filter: DormitoryFilter) => {
@@ -217,86 +222,128 @@ export default function DormitoryGuidePage() {
       </IntroArea>
 
       <SectionList>
-        {sections.map((section) => (
-          <TitleContentArea
-            key={section.category}
-            title={section.category}
-            gap="10px"
-          >
-            <CardList>
-              {section.items.map((item) => {
-                const isInteractive = item.type !== "info";
-                const isExternalAction =
-                  item.type === "external" || item.type === "app";
-                const isSingleDormBadge = Boolean(
-                  item.badge && SINGLE_DORM_BADGES.has(item.badge),
-                );
+        {sections.length === 0 ? (
+          <EmptyResultContainer>
+            <EmptyState padding="24px 0 8px">
+              <EmptyResultText>
+                <EmptyResultTitle>검색 결과가 없어요.</EmptyResultTitle>
+                <EmptyResultDescription>
+                  다른 키워드로 검색하거나 기숙사 필터를 변경해 보세요.
+                </EmptyResultDescription>
+              </EmptyResultText>
+            </EmptyState>
+            <EmptyResultActions>
+              {selectedFilter !== "all" && (
+                <SquareButton
+                  variant="primary"
+                  text="전체 기숙사에서 보기"
+                  onClick={() => handleFilterSelect("all")}
+                />
+              )}
+              <SquareButton
+                variant={selectedFilter === "all" ? "primary" : "secondary"}
+                text="검색어 지우기"
+                onClick={() => setSearchQuery("")}
+              />
+            </EmptyResultActions>
+          </EmptyResultContainer>
+        ) : (
+          sections.map((section) => (
+            <TitleContentArea
+              key={section.category}
+              title={section.category}
+              gap="10px"
+            >
+              <CardList>
+                {section.items.map((item) => {
+                  const isInteractive = item.type !== "info";
+                  const isExternalAction =
+                    item.type === "external" || item.type === "app";
+                  const dormBadges = item.dorms.filter(
+                    (dorm): dorm is Exclude<DormitoryFilter, "all"> =>
+                      dorm !== "all",
+                  );
 
-                return (
-                  <GuideCard
-                    key={item.id}
-                    $interactive={isInteractive}
-                    role={isInteractive ? "button" : undefined}
-                    tabIndex={isInteractive ? 0 : undefined}
-                    onClick={
-                      isInteractive ? () => handleItemClick(item) : undefined
-                    }
-                    onKeyDown={
-                      isInteractive
-                        ? (event) => {
-                            if (event.key === "Enter" || event.key === " ") {
-                              event.preventDefault();
-                              handleItemClick(item);
+                  return (
+                    <GuideCard
+                      key={item.id}
+                      $interactive={isInteractive}
+                      role={isInteractive ? "button" : undefined}
+                      tabIndex={isInteractive ? 0 : undefined}
+                      onClick={
+                        isInteractive ? () => handleItemClick(item) : undefined
+                      }
+                      onKeyDown={
+                        isInteractive
+                          ? (event) => {
+                              if (event.key === "Enter" || event.key === " ") {
+                                event.preventDefault();
+                                handleItemClick(item);
+                              }
                             }
-                          }
-                        : undefined
-                    }
-                  >
-                    {renderGuideVisual(item.visual, isExternalAction)}
+                          : undefined
+                      }
+                    >
+                      {renderGuideVisual(item.visual, isExternalAction)}
 
-                    <CardBody>
-                      <TitleRow>
-                        <CardTitle>{item.title}</CardTitle>
-                        {item.badge && (
-                          <DormitoryBadge
-                            dormType={isSingleDormBadge ? item.badge : ""}
-                            variant="subtle"
-                            size="sm"
-                          >
-                            {item.badge}
-                          </DormitoryBadge>
+                      <CardBody>
+                        <TitleRow>
+                          <CardTitle>{item.title}</CardTitle>
+                          {dormBadges.map((dorm) => (
+                            <DormitoryBadge
+                              key={dorm}
+                              dormType={dorm}
+                              variant="subtle"
+                              size="sm"
+                            />
+                          ))}
+                        </TitleRow>
+                        <CardDescription>{item.description}</CardDescription>
+                        {item.secondaryApp && (
+                          <SecondaryActionRow>
+                            <SecondaryButton
+                              type="button"
+                              onClick={(event) =>
+                                handleSecondaryAppClick(event, item)
+                              }
+                            >
+                              <span>{item.secondaryApp.label} 설치</span>
+                              <ExternalLink size={12} strokeWidth={2.2} />
+                            </SecondaryButton>
+                          </SecondaryActionRow>
                         )}
-                      </TitleRow>
-                      <CardDescription>{item.description}</CardDescription>
-                      {item.secondaryApp && (
-                        <SecondaryActionRow>
-                          <SecondaryButton
-                            type="button"
-                            onClick={(event) =>
-                              handleSecondaryAppClick(event, item)
-                            }
-                          >
-                            <span>{item.secondaryApp.label} 설치</span>
-                            <ExternalLink size={12} strokeWidth={2.2} />
-                          </SecondaryButton>
-                        </SecondaryActionRow>
-                      )}
-                    </CardBody>
+                      </CardBody>
 
-                    {isInteractive && (
-                      <CardChevron
-                        size={16}
-                        strokeWidth={2}
-                        aria-hidden="true"
-                      />
-                    )}
-                  </GuideCard>
-                );
-              })}
-            </CardList>
-          </TitleContentArea>
-        ))}
+                      {isInteractive && (
+                        <CardChevron
+                          size={16}
+                          strokeWidth={2}
+                          aria-hidden="true"
+                        />
+                      )}
+                    </GuideCard>
+                  );
+                })}
+              </CardList>
+            </TitleContentArea>
+          ))
+        )}
       </SectionList>
+
+      <FloatingSearchBar
+        value={searchQuery}
+        onChange={setSearchQuery}
+        onSearch={(query) => {
+          setSearchQuery(query);
+          const normalized = normalizeSearchQuery(query);
+          if (normalized) {
+            mixpanelTrack.searchPerformed(normalized, "기숙사_생활안내");
+          }
+        }}
+        onClear={() => setSearchQuery("")}
+        placeholder="세탁기, 시설 고장, 학식, 통금 검색"
+        ariaLabel="기숙사 생활 안내 검색"
+      />
     </PageWrapper>
   );
 }
@@ -305,11 +352,52 @@ const PageWrapper = styled.div`
   width: 100%;
   max-width: 840px;
   margin: 0 auto;
-  padding: 12px 20px calc(48px + var(--safe-area-bottom, 0px));
+  padding: 12px 20px
+    calc(${FLOATING_SEARCH_BAR_CLEARANCE} + 24px + var(--safe-area-bottom, 0px));
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: 20px;
+`;
+
+const EmptyResultContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 16px;
+  background: ${colors.bg.bg1};
+  border: 1px solid ${colors.gray.gray200};
+  border-radius: 16px;
+`;
+
+const EmptyResultText = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+`;
+
+const EmptyResultTitle = styled.p`
+  ${typography.body1Normal}
+  color: ${colors.text.text1};
+  margin: 0;
+  word-break: keep-all;
+`;
+
+const EmptyResultDescription = styled.p`
+  ${typography.label1Normal}
+  color: ${colors.text.text2};
+  margin: 0;
+  word-break: keep-all;
+`;
+
+const EmptyResultActions = styled.div`
+  width: 100%;
+  max-width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 `;
 
 const IntroArea = styled.div`

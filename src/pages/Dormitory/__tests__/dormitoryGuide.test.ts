@@ -32,8 +32,11 @@ describe("dormitoryGuide - 기숙사 생활 안내 상수 및 유틸리티 검�
   });
 
   describe("filterGuideSections", () => {
-    const flattenIds = (filter: Parameters<typeof filterGuideSections>[0]) =>
-      filterGuideSections(filter).flatMap((section) =>
+    const flattenIds = (
+      filter: Parameters<typeof filterGuideSections>[0],
+      query?: string,
+    ) =>
+      filterGuideSections(filter, query).flatMap((section) =>
         section.items.map((item) => item.id),
       );
 
@@ -107,6 +110,15 @@ describe("dormitoryGuide - 기숙사 생활 안내 상수 및 유틸리티 검�
       expect(intipItem?.type).toBe("iframe");
       expect(intipItem?.url).toBe("https://intip.inuappcenter.kr/home/menu");
       expect(intipItem?.secondaryApp?.appLinks).toEqual(INTIP_STORE_LINKS);
+    });
+
+    it("검색어를 전달하면 제목·설명·동의어 키워드 기준으로 대소문자 구분 없이 필터링한다", () => {
+      expect(flattenIds("all", "유니룩스")).toEqual(["laundry-metaclub"]);
+      expect(flattenIds("all", "intip")).toEqual(["intip-menu"]);
+      expect(flattenIds("3기숙사", "세탁기")).toEqual(["laundry-dorm3"]);
+      expect(flattenIds("1기숙사", "세탁기 현금")).toEqual([]);
+      expect(flattenIds("3기숙사", "세탁기 현금")).toEqual(["laundry-dorm3"]);
+      expect(flattenIds("all", "존재하지않는검색어")).toEqual([]);
     });
   });
 
