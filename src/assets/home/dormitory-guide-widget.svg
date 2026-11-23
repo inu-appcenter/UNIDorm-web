@@ -1,0 +1,22 @@
+<svg width="88" height="88" viewBox="0 0 88 88" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="14" y="16" width="54" height="62" rx="12" transform="rotate(-6 14 16)" fill="#0958D9"/>
+  <rect x="13" y="12" width="54" height="62" rx="12" transform="rotate(-6 13 12)" fill="url(#guide_blue_grad)"/>
+  <path d="M47 10L57 9L58.5 23L52.8 19.8L48 24L47 10Z" fill="#FFC53D"/>
+  <path d="M24 30L46 27.6" stroke="#E6F4FF" stroke-width="4" stroke-linecap="round"/>
+  <path d="M25.5 41L50 38.4" stroke="#C6DFFF" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M26.8 51.5L43 49.8" stroke="#C6DFFF" stroke-width="3.5" stroke-linecap="round"/>
+  <circle cx="63" cy="61" r="15" fill="url(#guide_mint_grad)"/>
+  <path d="M56.5 61L61 65.5L69.5 56.5" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <defs>
+    <linearGradient id="guide_blue_grad" x1="13" y1="12" x2="67" y2="74" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#A8DCFF"/>
+      <stop offset="0.45" stop-color="#568EFF"/>
+      <stop offset="1" stop-color="#2048BD"/>
+    </linearGradient>
+    <linearGradient id="guide_mint_grad" x1="48" y1="46" x2="75" y2="76" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#DCFFF1"/>
+      <stop offset="0.55" stop-color="#77DBC3"/>
+      <stop offset="1" stop-color="#2C9E9A"/>
+    </linearGradient>
+  </defs>
+</svg>
