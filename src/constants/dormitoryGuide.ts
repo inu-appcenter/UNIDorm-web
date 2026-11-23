@@ -39,6 +39,12 @@ export interface AppStoreLinks {
   ios: string;
 }
 
+export interface DormitoryGuideInfoModal {
+  title: string;
+  subtitle?: string;
+  points: string[];
+}
+
 export interface DormitoryGuideItem {
   id: string;
   category: DormitoryGuideCategory;
@@ -46,13 +52,13 @@ export interface DormitoryGuideItem {
   description: string;
   dorms: DormitoryFilter[];
   visual: GuideVisualKey;
-  badge?: string;
   type: GuideActionType;
   url?: string;
   path?: string;
   tel?: string;
   appLinks?: AppStoreLinks;
   actionLabel?: string;
+  infoModal?: DormitoryGuideInfoModal;
   secondaryApp?: {
     label: string;
     appLinks: AppStoreLinks;
@@ -100,7 +106,6 @@ export const DORMITORY_GUIDE_ITEMS: readonly DormitoryGuideItem[] = [
     description: "1·2기숙사 세탁기·건조기 현황 확인과 결제에 사용해요.",
     dorms: ["1기숙사", "2기숙사"],
     visual: "metaclub",
-    badge: "1·2기숙사",
     type: "app",
     appLinks: METACLUB_STORE_LINKS,
     actionLabel: "앱 열기",
@@ -109,11 +114,19 @@ export const DORMITORY_GUIDE_ITEMS: readonly DormitoryGuideItem[] = [
     id: "laundry-dorm3",
     category: "생활·시설",
     title: "3기숙사 세탁실",
-    description: "전용 앱이 없어 세탁실에서 현금 또는 충전카드로 이용해요.",
+    description: "전용 앱 없이 현금·충전카드로 이용해요. 눌러서 안내를 확인해 주세요.",
     dorms: ["3기숙사"],
     visual: "washing",
-    badge: "앱 미지원",
     type: "info",
+    infoModal: {
+      title: "3기숙사 세탁실 이용 안내",
+      subtitle: "전용 앱 미지원 · 현장 결제 이용",
+      points: [
+        "3기숙사 세탁실은 메타클럽 등 전용 앱을 지원하지 않아요.",
+        "세탁실 내 결제 단말기에서 현금 또는 충전카드로 이용할 수 있어요.",
+        "기기 고장이나 이용 중 문제가 생기면 에듀맥 시설 고장 신청 또는 제3기숙사 관리사무실(032-858-7222)로 문의해 주세요.",
+      ],
+    },
   },
   {
     id: "facility-dorm1",
@@ -122,7 +135,6 @@ export const DORMITORY_GUIDE_ITEMS: readonly DormitoryGuideItem[] = [
     description: "제1기숙사 시설 불편은 INU 포털 통합정보시스템에서 접수해요.",
     dorms: ["1기숙사"],
     visual: "inu",
-    badge: "1기숙사",
     type: "external",
     url: "https://portal.inu.ac.kr:444/enview/",
     actionLabel: "포털 열기",
@@ -134,7 +146,6 @@ export const DORMITORY_GUIDE_ITEMS: readonly DormitoryGuideItem[] = [
     description: "제2·3기숙사(BTL) 고장·수리는 에듀맥 시설관리시스템에서 접수해요.",
     dorms: ["2기숙사", "3기숙사"],
     visual: "wrench",
-    badge: "2·3기숙사",
     type: "external",
     url: "https://edumac.kr/mon/index.do?schlType=Univ",
     actionLabel: "에듀맥 열기",
@@ -281,7 +292,6 @@ export const DORMITORY_GUIDE_ITEMS: readonly DormitoryGuideItem[] = [
     description: "제2기숙사 시설·생활 문의 (032-858-7233)",
     dorms: ["2기숙사"],
     visual: "phone",
-    badge: "2기숙사",
     type: "tel",
     tel: "032-858-7233",
     actionLabel: "전화 걸기",
@@ -293,7 +303,6 @@ export const DORMITORY_GUIDE_ITEMS: readonly DormitoryGuideItem[] = [
     description: "제3기숙사 시설·생활 문의 (032-858-7222)",
     dorms: ["3기숙사"],
     visual: "phone",
-    badge: "3기숙사",
     type: "tel",
     tel: "032-858-7222",
     actionLabel: "전화 걸기",
