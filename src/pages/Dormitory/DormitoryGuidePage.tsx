@@ -22,6 +22,7 @@ import unidormLogo from "@/assets/unidorm-logo.webp";
 import ChipButton from "@/components/button/ChipButton";
 import DormitoryBadge from "@/components/common/DormitoryBadge";
 import TitleContentArea from "@/components/common/TitleContentArea";
+import Modal from "@/components/modal/Modal";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import useUserStore from "@/stores/useUserStore";
 import useAIChatStore from "@/stores/useAIChatStore";
@@ -38,8 +39,6 @@ import {
 import { getMobilePlatform } from "@/utils/getMobilePlatform";
 import { mixpanelTrack } from "@/utils/mixpanel";
 import { colors, typography } from "@/styles/tokens";
-
-const SINGLE_DORM_BADGES = new Set(["1기숙사", "2기숙사", "3기숙사"]);
 
 const FULL_BLEED_LOGOS: Partial<Record<GuideVisualKey, string>> = {
   metaclub: metaclubLogo,
@@ -108,6 +107,8 @@ export default function DormitoryGuidePage() {
   const [selectedFilter, setSelectedFilter] = useState<DormitoryFilter>(() =>
     resolveDormitoryFilter(dormType),
   );
+  const [activeInfoItem, setActiveInfoItem] =
+    useState<DormitoryGuideItem | null>(null);
   const hasManualFilterChange = useRef(false);
 
   useEffect(() => {
@@ -141,7 +142,13 @@ export default function DormitoryGuidePage() {
   };
 
   const handleItemClick = (item: DormitoryGuideItem) => {
-    if (item.type === "info") return;
+    if (item.type === "info") {
+      if (item.infoModal) {
+        mixpanelTrack.featureClicked(item.title, "기숙사_생활안내");
+        setActiveInfoItem(item);
+      }
+      return;
+    }
 
     if (item.type === "iframe") {
       mixpanelTrack.featureClicked(item.title, "기숙사_생활안내");
@@ -225,11 +232,13 @@ export default function DormitoryGuidePage() {
           >
             <CardList>
               {section.items.map((item) => {
-                const isInteractive = item.type !== "info";
+                const isInteractive =
+                  item.type !== "info" || Boolean(item.infoModal);
                 const isExternalAction =
                   item.type === "external" || item.type === "app";
-                const isSingleDormBadge = Boolean(
-                  item.badge && SINGLE_DORM_BADGES.has(item.badge),
+                const dormBadges = item.dorms.filter(
+                  (dorm): dorm is Exclude<DormitoryFilter, "all"> =>
+                    dorm !== "all",
                 );
 
                 return (
@@ -257,15 +266,14 @@ export default function DormitoryGuidePage() {
                     <CardBody>
                       <TitleRow>
                         <CardTitle>{item.title}</CardTitle>
-                        {item.badge && (
+                        {dormBadges.map((dorm) => (
                           <DormitoryBadge
-                            dormType={isSingleDormBadge ? item.badge : ""}
-                            variant="subtle"
+                            key={dorm}
+                            dormType={dorm}
+                            variant="outline"
                             size="sm"
-                          >
-                            {item.badge}
-                          </DormitoryBadge>
-                        )}
+                          />
+                        ))}
                       </TitleRow>
                       <CardDescription>{item.description}</CardDescription>
                       {item.secondaryApp && (
@@ -297,6 +305,21 @@ export default function DormitoryGuidePage() {
           </TitleContentArea>
         ))}
       </SectionList>
+
+      <Modal
+        show={Boolean(activeInfoItem?.infoModal)}
+        onClose={() => setActiveInfoItem(null)}
+        title={activeInfoItem?.infoModal?.title ?? ""}
+        subtitle={activeInfoItem?.infoModal?.subtitle}
+        closeButtonText="확인했어요"
+        content={
+          <InfoModalList>
+            {activeInfoItem?.infoModal?.points.map((point) => (
+              <InfoModalItem key={point}>{point}</InfoModalItem>
+            ))}
+          </InfoModalList>
+        }
+      />
     </PageWrapper>
   );
 }
@@ -528,4 +551,20 @@ const SecondaryButton = styled.button`
 const CardChevron = styled(ChevronRight)`
   flex-shrink: 0;
   color: ${colors.gray.gray400};
+`;
+
+const InfoModalList = styled.ul`
+  margin: 0;
+  padding: 6px 0 4px 18px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  list-style: disc;
+`;
+
+const InfoModalItem = styled.li`
+  ${typography.body2Normal}
+  color: ${colors.text.text1};
+  word-break: keep-all;
 `;
