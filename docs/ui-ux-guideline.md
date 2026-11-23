@@ -117,6 +117,7 @@
 | 레이어 수준 | z-index | 해당 컴포넌트 / 영역 |
 | :--- | :--- | :--- |
 | 본문 플로팅 CTA / 준비중 오버레이 | `10` | `AuthButtonWrapper`(`src/styles/auth.ts`), `ComingSoonOverlay` |
+| 하단 플로팅 검색바 | `990` | `FloatingSearchBar`(`src/components/common/FloatingSearchBar.tsx`) |
 | 하단 탭바 | `1000` | `BottomBar` |
 | 홈 AI 챗봇 플로팅 버튼 | `1002` | `AIChatFloatingButton` (버튼) |
 | 말풍선 툴팁 | `2000` | `TooltipMessage` |
@@ -203,9 +204,10 @@
 | `TermOfUse` | `@/components/TermOfUse` | - | 온보딩 하단 앱센터·생활원 안내 문구 |
 | 공용 스타일 조각 | `@/styles/header`, `@/styles/auth`, `@/styles/common`, `@/styles/announcement` | `CategoryWrapper`, `CategoryItem`, `AuthFormWrapper`, `AuthButtonWrapper`, `TypeBadge`, `SearchBar` 등 | 상단 탭바, 인증 폼 레이아웃, 검색창, 공지 배지 |
 
-#### 입력·스위치·에디터·뷰어
+#### 입력·검색·스위치·에디터·뷰어
 | 컴포넌트 | 경로 | 주요 Props | 용도 |
 | :--- | :--- | :--- | :--- |
+| `FloatingSearchBar` | `@/components/common/FloatingSearchBar` | `value`, `onChange`, `onSearch`, `onClear`, `floating`, `hasBottomBar`, `rightAction` | 반투명 블러 알약형 하단 플로팅(또는 인라인) 검색바 |
 | `StyledInput` | `@/components/common/StyledInput` | input attrs | 기본 단일 줄 입력창(`height: 50px`) |
 | `StyledTextInput` / `StyledTextArea` | `@/components/roommate/StyledTextInput`, `StyledTextArea` | input / textarea attrs | 블루 포커스 테두리가 적용된 폼 입력·장문 입력 |
 | `FormField` / `LabeledField` | `@/components/complain/FormField`, `LabeledField` | `label`, `required`, `description`, `descriptionGray`, `children` | 필수 표시·안내문 포함 입력 필드 래퍼 |

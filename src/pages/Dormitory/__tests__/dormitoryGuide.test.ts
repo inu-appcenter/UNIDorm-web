@@ -7,6 +7,7 @@ import {
   getIframeGuideServiceById,
   resolveAppStoreUrl,
   resolveDormitoryFilter,
+  searchGuideItems,
 } from "../../../constants/dormitoryGuide";
 import { PATHS } from "../../../constants/paths";
 
@@ -32,8 +33,11 @@ describe("dormitoryGuide - 기숙사 생활 안내 상수 및 유틸리티 검�
   });
 
   describe("filterGuideSections", () => {
-    const flattenIds = (filter: Parameters<typeof filterGuideSections>[0]) =>
-      filterGuideSections(filter).flatMap((section) =>
+    const flattenIds = (
+      filter: Parameters<typeof filterGuideSections>[0],
+      query?: string,
+    ) =>
+      filterGuideSections(filter, query).flatMap((section) =>
         section.items.map((item) => item.id),
       );
 
@@ -107,6 +111,22 @@ describe("dormitoryGuide - 기숙사 생활 안내 상수 및 유틸리티 검�
       expect(intipItem?.type).toBe("iframe");
       expect(intipItem?.url).toBe("https://intip.inuappcenter.kr/home/menu");
       expect(intipItem?.secondaryApp?.appLinks).toEqual(INTIP_STORE_LINKS);
+    });
+
+    it("검색어를 전달하면 제목·설명·동의어 키워드 기준으로 대소문자 구분 없이 필터링한다", () => {
+      expect(flattenIds("all", "유니룩스")).toContain("laundry-metaclub");
+      expect(searchGuideItems("all", "유니룩스")[0]?.id).toBe(
+        "laundry-metaclub",
+      );
+      expect(searchGuideItems("all", "intip")[0]?.id).toBe("intip-menu");
+      expect(searchGuideItems("3기숙사", "세탁기")[0]?.id).toBe(
+        "laundry-dorm3",
+      );
+      expect(searchGuideItems("1기숙사", "현금")).toEqual([]);
+      expect(searchGuideItems("3기숙사", "세탁기 현금")[0]?.id).toBe(
+        "laundry-dorm3",
+      );
+      expect(flattenIds("all", "존재하지않는검색어")).toEqual([]);
     });
 
     it("복수 기숙사 항목은 개별 기숙사 배열을 갖고, 3기숙사 세탁실은 infoModal 상세 안내를 갖는다", () => {
