@@ -51,12 +51,17 @@ const TitleLineWrapper = styled.div`
 
   .title {
     ${typography.heading2}
+    flex: 1;
+    min-width: 0;
     color: ${colors.gray.gray800};
+    word-break: keep-all;
     cursor: pointer;
   }
 
   .more {
     ${typography.label1Normal}
+    flex-shrink: 0;
+    white-space: nowrap;
     color: ${colors.gray.gray500};
     display: flex;
     flex-direction: row;
