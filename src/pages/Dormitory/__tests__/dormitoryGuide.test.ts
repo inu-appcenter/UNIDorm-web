@@ -128,6 +128,26 @@ describe("dormitoryGuide - 기숙사 생활 안내 상수 및 유틸리티 검�
       );
       expect(flattenIds("all", "존재하지않는검색어")).toEqual([]);
     });
+
+    it("복수 기숙사 항목은 개별 기숙사 배열을 갖고, 3기숙사 세탁실은 infoModal 상세 안내를 갖는다", () => {
+      const metaclubItem = DORMITORY_GUIDE_ITEMS.find(
+        (item) => item.id === "laundry-metaclub",
+      );
+      expect(metaclubItem?.dorms).toEqual(["1기숙사", "2기숙사"]);
+
+      const facilityDorm23 = DORMITORY_GUIDE_ITEMS.find(
+        (item) => item.id === "facility-dorm23",
+      );
+      expect(facilityDorm23?.dorms).toEqual(["2기숙사", "3기숙사"]);
+
+      const dorm3Laundry = DORMITORY_GUIDE_ITEMS.find(
+        (item) => item.id === "laundry-dorm3",
+      );
+      expect(dorm3Laundry?.dorms).toEqual(["3기숙사"]);
+      expect(dorm3Laundry?.type).toBe("info");
+      expect(dorm3Laundry?.infoModal?.title).toBe("3기숙사 세탁실 이용 안내");
+      expect(dorm3Laundry?.infoModal?.points.length).toBeGreaterThanOrEqual(3);
+    });
   });
 
   describe("getIframeGuideServiceById", () => {

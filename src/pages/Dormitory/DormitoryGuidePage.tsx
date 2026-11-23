@@ -28,6 +28,7 @@ import FloatingSearchBar, {
 } from "@/components/common/FloatingSearchBar";
 import SquareButton from "@/components/common/SquareButton";
 import TitleContentArea from "@/components/common/TitleContentArea";
+import Modal from "@/components/modal/Modal";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import useUserStore from "@/stores/useUserStore";
 import useAIChatStore from "@/stores/useAIChatStore";
@@ -89,7 +90,7 @@ function renderGuideVisual(visual: GuideVisualKey, isExternal: boolean) {
   } else {
     slotContent = (
       <IconSlot>
-        <IconComponent size={19} strokeWidth={1.9} aria-hidden="true" />
+        <IconComponent size={22} strokeWidth={1.8} aria-hidden="true" />
       </IconSlot>
     );
   }
@@ -114,6 +115,8 @@ export default function DormitoryGuidePage() {
     resolveDormitoryFilter(dormType),
   );
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeInfoItem, setActiveInfoItem] =
+    useState<DormitoryGuideItem | null>(null);
   const hasManualFilterChange = useRef(false);
 
   useEffect(() => {
@@ -156,7 +159,13 @@ export default function DormitoryGuidePage() {
   };
 
   const handleItemClick = (item: DormitoryGuideItem) => {
-    if (item.type === "info") return;
+    if (item.type === "info") {
+      if (item.infoModal) {
+        mixpanelTrack.featureClicked(item.title, "기숙사_생활안내");
+        setActiveInfoItem(item);
+      }
+      return;
+    }
 
     if (item.type === "iframe") {
       mixpanelTrack.featureClicked(item.title, "기숙사_생활안내");
@@ -213,7 +222,7 @@ export default function DormitoryGuidePage() {
   };
 
   const renderGuideCard = (item: DormitoryGuideItem) => {
-    const isInteractive = item.type !== "info";
+    const isInteractive = item.type !== "info" || Boolean(item.infoModal);
     const isExternalAction = item.type === "external" || item.type === "app";
     const dormBadges = item.dorms.filter(
       (dorm): dorm is Exclude<DormitoryFilter, "all"> => dorm !== "all",
@@ -246,7 +255,7 @@ export default function DormitoryGuidePage() {
               <DormitoryBadge
                 key={dorm}
                 dormType={dorm}
-                variant="subtle"
+                variant="outline"
                 size="sm"
               />
             ))}
@@ -362,6 +371,21 @@ export default function DormitoryGuidePage() {
         onClear={() => setSearchQuery("")}
         placeholder="세탁기, 시설 고장, 학식, 통금 검색"
         ariaLabel="기숙사 생활 안내 검색"
+      />
+
+      <Modal
+        show={Boolean(activeInfoItem?.infoModal)}
+        onClose={() => setActiveInfoItem(null)}
+        title={activeInfoItem?.infoModal?.title ?? ""}
+        subtitle={activeInfoItem?.infoModal?.subtitle}
+        closeButtonText="확인했어요"
+        content={
+          <InfoModalList>
+            {activeInfoItem?.infoModal?.points.map((point) => (
+              <InfoModalItem key={point}>{point}</InfoModalItem>
+            ))}
+          </InfoModalList>
+        }
       />
     </PageWrapper>
   );
@@ -539,7 +563,6 @@ const visualSlotBase = css`
 const AppIconSlot = styled.div`
   ${visualSlotBase}
   overflow: hidden;
-  border: 1px solid ${colors.gray.gray100};
 `;
 
 const AppIconImage = styled.img`
@@ -551,9 +574,7 @@ const AppIconImage = styled.img`
 
 const LogoSlot = styled.div`
   ${visualSlotBase}
-  padding: 4px;
-  background: ${colors.bg.bg1};
-  border: 1px solid ${colors.gray.gray200};
+  padding: 2px;
 `;
 
 const LogoImage = styled.img`
@@ -565,8 +586,6 @@ const LogoImage = styled.img`
 
 const IconSlot = styled.div`
   ${visualSlotBase}
-  background: ${colors.gray.gray50};
-  border: 1px solid ${colors.gray.gray200};
   color: ${colors.gray.gray700};
 `;
 
@@ -635,4 +654,20 @@ const SecondaryButton = styled.button`
 const CardChevron = styled(ChevronRight)`
   flex-shrink: 0;
   color: ${colors.gray.gray400};
+`;
+
+const InfoModalList = styled.ul`
+  margin: 0;
+  padding: 6px 0 4px 18px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  list-style: disc;
+`;
+
+const InfoModalItem = styled.li`
+  ${typography.body2Normal}
+  color: ${colors.text.text1};
+  word-break: keep-all;
 `;

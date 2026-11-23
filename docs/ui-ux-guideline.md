@@ -185,6 +185,18 @@
 | `Box` | `@/components/common/Box` | `children`, `onClick`, `style` | 기본 흰색 라운드 카드(`border-radius: 20px`) |
 | `Divider` / `GrayDivider` | `@/components/common/Divider`, `GrayDivider` | `margin`, `thickness`, `color` | 수평 구분선 |
 | `DormitoryBadge` | `@/components/common/DormitoryBadge` | `dormType`, `variant` (`"outline" \| "subtle"`), `size` (`"sm" \| "md"`), `parseDormitoryKind` | 1·2·3기숙사 자동 정규화 배지 |
+
+##### 기숙사별 고유 컬러 기준 (`DormitoryBadge` SSOT)
+
+| 기숙사 | `outline` (기본) | `subtle` (소프트 배경) |
+| :--- | :--- | :--- |
+| `1기숙사` | 흰 배경, 테두리 `#8e8e93`, 글자 `#6f6f6f` (회색) | 배경 `#f2f4f6`, 테두리 `#e5e8eb`, 글자 `#4e5968` (회색) |
+| `2기숙사` | 흰 배경, 테두리 `#1677ff`, 글자 `#0958d9` (파란색) | 배경 `#e8f3ff`, 테두리 `#bae0ff`, 글자 `#0958d9` (파란색) |
+| `3기숙사` | 흰 배경, 테두리 `#ff6b6b`, 글자 `#e03131` (빨간색) | 배경 `#fff1f0`, 테두리 `#ffa39e`, 글자 `#cf1322` (빨간색) |
+
+- 기숙사를 표기하는 모든 UI에서는 `DormitoryBadge`를 사용해 위 고유 컬러를 지킨다.
+- 복수 기숙사(`1·2기숙사`, `2·3기숙사`)를 임의 단일 색상 배지로 합치지 않고, 대상 기숙사별 `DormitoryBadge`를 나란히 배치한다.
+- 기숙사와 무관한 상태 라벨(`앱 미지원` 등)에는 `DormitoryBadge`를 사용하지 않는다.
 | `TagIconBlueBackground` / `TagIconWhiteBackground` | `@/components/common/TagIconBlueBackground`, `@/components/common/TagIconWhiteBackground` | `tagTitle` | 채움형·테두리형 소형 카테고리 태그 |
 | `UserInfo` | `@/components/common/UserInfo` | `authorImagePath`, `username`, `createDate`, `groupOrderType` | 작성자 프로필·닉네임·작성일시 행 |
 | `SortDropBox` | `@/components/common/SortDropBox` | `sort`, `setSort` | 최신순/인기순 정렬 토글 |
@@ -307,7 +319,7 @@ UI 문구, 빈 상태 안내, 모달, 에러 메시지, 버튼 라벨에는 AI �
 
 ### 자가 점검 체크리스트 (12항목)
 
-1. [ ] `src/components/`와 `src/assets/`를 먼저 확인해 기존 공용 컴포넌트와 에셋을 재사용했는가?
+1. [ ] `src/components/`와 `src/assets/`를 먼저 확인해 기존 공용 컴포넌트와 에셋을 재사용했는가? (기숙사 표기 시 `DormitoryBadge` 고유 컬러 기준 준수 포함)
 2. [ ] `styled-components`와 `@/styles/tokens`(포털·사생증 도메인은 `portalVariables.css`)를 사용해 임의 HEX·폰트 하드코딩을 피했는가?
 3. [ ] `Router.tsx`에 `handle: { bg: "white" | "gray" }`를 선언하고, 페이지 루트 래퍼의 `background` 선언을 피했는가?
 4. [ ] `Header`/`BottomBar` 중복 렌더링 없이 `useSetHeader`, `useSetAIChat`을 사용했는가?
