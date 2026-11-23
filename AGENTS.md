@@ -46,7 +46,7 @@
 - **버튼·칩**: `SquareButton` (`@/components/common/SquareButton`), `RoundSquareButton` / `RoundSquareWhiteButton` (`@/components/button/*`), `ChipButton` (`@/components/button/ChipButton`), `CapsuleButton` / `CapsuleButton.Group` (`@/components/common/CapsuleButton`), `ActionButton`, `HeartToggleButton`, `SelectableChipGroup`
 - **모달·시트·알림**: `PortalConfirmModal` (`@/components/portal/PortalConfirmModal`), `CommonBottomSheet` (`@/components/modal/CommonBottomSheet`), `Modal` (`@/components/modal/Modal`), `TopPopupNotification`, `TooltipMessage`, `TopRightDropdownMenu`
 - **섹션·배지·목록**: `TitleContentArea`, `TitleLine`, `Box`, `Divider`, `GrayDivider`, `DormitoryBadge`, `TagIconBlueBackground`, `TagIconWhiteBackground`, `UserInfo`, `SortDropBox`, `MenuGroup`
-- **입력·에디터·업로드**: `StyledInput`, `StyledTextInput`, `StyledTextArea`, `FormField`, `LabeledField`, `Switch`, `ToggleLine`, `FileUploader` + `useFileHandler` (`@/hooks/useFileHandler`), `RichTextEditor`, `RichTextViewer`
+- **입력·검색·에디터·업로드**: `FloatingSearchBar` (`@/components/common/FloatingSearchBar`), `StyledInput`, `StyledTextInput`, `StyledTextArea`, `FormField`, `LabeledField`, `Switch`, `ToggleLine`, `FileUploader` + `useFileHandler` (`@/hooks/useFileHandler`), `RichTextEditor`, `RichTextViewer`
 - **상태·모션**: `Skeleton`, `LoadingSpinner`, `EmptyState`, `RoommateEmptyState`, `OpenChatEmptyState`, `EmptyMessage`, `ComingSoonOverlay`, `Ripple`, `useCountUp`
 - **에셋·아이콘 정책**: `src/assets/`(로고, 횃불이 마스코트, `header/*`, `bottombar/*`, `roommate/*`, `chat/*`, `onboarding/*`, `groupPurchase/default-image/*`)를 먼저 확인하고, 없는 아이콘만 `lucide-react`를 쓴다. `@mui/icons-material` 신규 도입 금지, `react-icons` 신규 추가 지양.
 
