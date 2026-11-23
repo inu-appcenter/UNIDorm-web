@@ -40,6 +40,7 @@ import {
   filterGuideSections,
   resolveAppStoreUrl,
   resolveDormitoryFilter,
+  searchGuideItems,
 } from "@/constants/dormitoryGuide";
 import { getMobilePlatform } from "@/utils/getMobilePlatform";
 import { mixpanelTrack } from "@/utils/mixpanel";
@@ -129,9 +130,18 @@ export default function DormitoryGuidePage() {
   );
   useSetHeader(headerConfig);
 
+  const normalizedQuery = normalizeSearchQuery(searchQuery);
+  const isSearching = normalizedQuery.length > 0;
+
+  const searchResults = useMemo(
+    () =>
+      isSearching ? searchGuideItems(selectedFilter, normalizedQuery) : [],
+    [isSearching, selectedFilter, normalizedQuery],
+  );
+
   const sections = useMemo(
-    () => filterGuideSections(selectedFilter, searchQuery),
-    [selectedFilter, searchQuery],
+    () => (isSearching ? [] : filterGuideSections(selectedFilter)),
+    [isSearching, selectedFilter],
   );
 
   const handleFilterSelect = (filter: DormitoryFilter) => {
@@ -197,6 +207,71 @@ export default function DormitoryGuidePage() {
     openExternalUrl(item.secondaryApp.label, storeUrl);
   };
 
+  const handleOpenChatBuli = () => {
+    mixpanelTrack.featureClicked("챗불이", "기숙사_생활안내_검색없음");
+    useAIChatStore.getState().openChat();
+  };
+
+  const renderGuideCard = (item: DormitoryGuideItem) => {
+    const isInteractive = item.type !== "info";
+    const isExternalAction = item.type === "external" || item.type === "app";
+    const dormBadges = item.dorms.filter(
+      (dorm): dorm is Exclude<DormitoryFilter, "all"> => dorm !== "all",
+    );
+
+    return (
+      <GuideCard
+        key={item.id}
+        $interactive={isInteractive}
+        role={isInteractive ? "button" : undefined}
+        tabIndex={isInteractive ? 0 : undefined}
+        onClick={isInteractive ? () => handleItemClick(item) : undefined}
+        onKeyDown={
+          isInteractive
+            ? (event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  handleItemClick(item);
+                }
+              }
+            : undefined
+        }
+      >
+        {renderGuideVisual(item.visual, isExternalAction)}
+
+        <CardBody>
+          <TitleRow>
+            <CardTitle>{item.title}</CardTitle>
+            {dormBadges.map((dorm) => (
+              <DormitoryBadge
+                key={dorm}
+                dormType={dorm}
+                variant="subtle"
+                size="sm"
+              />
+            ))}
+          </TitleRow>
+          <CardDescription>{item.description}</CardDescription>
+          {item.secondaryApp && (
+            <SecondaryActionRow>
+              <SecondaryButton
+                type="button"
+                onClick={(event) => handleSecondaryAppClick(event, item)}
+              >
+                <span>{item.secondaryApp.label} 설치</span>
+                <ExternalLink size={12} strokeWidth={2.2} />
+              </SecondaryButton>
+            </SecondaryActionRow>
+          )}
+        </CardBody>
+
+        {isInteractive && (
+          <CardChevron size={16} strokeWidth={2} aria-hidden="true" />
+        )}
+      </GuideCard>
+    );
+  };
+
   return (
     <PageWrapper>
       <IntroArea>
@@ -222,31 +297,45 @@ export default function DormitoryGuidePage() {
       </IntroArea>
 
       <SectionList>
-        {sections.length === 0 ? (
-          <EmptyResultContainer>
-            <EmptyState padding="24px 0 8px">
-              <EmptyResultText>
-                <EmptyResultTitle>검색 결과가 없어요.</EmptyResultTitle>
-                <EmptyResultDescription>
-                  다른 키워드로 검색하거나 기숙사 필터를 변경해 보세요.
-                </EmptyResultDescription>
-              </EmptyResultText>
-            </EmptyState>
-            <EmptyResultActions>
-              {selectedFilter !== "all" && (
+        {isSearching ? (
+          searchResults.length === 0 ? (
+            <EmptyResultContainer>
+              <EmptyState padding="24px 0 8px">
+                <EmptyResultText>
+                  <EmptyResultTitle>검색 결과가 없어요.</EmptyResultTitle>
+                  <EmptyResultDescription>
+                    안내 목록에서 찾지 못했다면 챗불이에게 바로 질문해 보세요.
+                  </EmptyResultDescription>
+                </EmptyResultText>
+              </EmptyState>
+              <EmptyResultActions>
                 <SquareButton
                   variant="primary"
-                  text="전체 기숙사에서 보기"
-                  onClick={() => handleFilterSelect("all")}
+                  text="챗불이에게 물어보기"
+                  onClick={handleOpenChatBuli}
                 />
-              )}
-              <SquareButton
-                variant={selectedFilter === "all" ? "primary" : "secondary"}
-                text="검색어 지우기"
-                onClick={() => setSearchQuery("")}
-              />
-            </EmptyResultActions>
-          </EmptyResultContainer>
+                {selectedFilter !== "all" && (
+                  <SquareButton
+                    variant="secondary"
+                    text="전체 기숙사에서 보기"
+                    onClick={() => handleFilterSelect("all")}
+                  />
+                )}
+                <SquareButton
+                  variant="secondary"
+                  text="검색어 지우기"
+                  onClick={() => setSearchQuery("")}
+                />
+              </EmptyResultActions>
+            </EmptyResultContainer>
+          ) : (
+            <TitleContentArea
+              title={`검색 결과 ${searchResults.length}건`}
+              gap="10px"
+            >
+              <CardList>{searchResults.map(renderGuideCard)}</CardList>
+            </TitleContentArea>
+          )
         ) : (
           sections.map((section) => (
             <TitleContentArea
@@ -254,77 +343,7 @@ export default function DormitoryGuidePage() {
               title={section.category}
               gap="10px"
             >
-              <CardList>
-                {section.items.map((item) => {
-                  const isInteractive = item.type !== "info";
-                  const isExternalAction =
-                    item.type === "external" || item.type === "app";
-                  const dormBadges = item.dorms.filter(
-                    (dorm): dorm is Exclude<DormitoryFilter, "all"> =>
-                      dorm !== "all",
-                  );
-
-                  return (
-                    <GuideCard
-                      key={item.id}
-                      $interactive={isInteractive}
-                      role={isInteractive ? "button" : undefined}
-                      tabIndex={isInteractive ? 0 : undefined}
-                      onClick={
-                        isInteractive ? () => handleItemClick(item) : undefined
-                      }
-                      onKeyDown={
-                        isInteractive
-                          ? (event) => {
-                              if (event.key === "Enter" || event.key === " ") {
-                                event.preventDefault();
-                                handleItemClick(item);
-                              }
-                            }
-                          : undefined
-                      }
-                    >
-                      {renderGuideVisual(item.visual, isExternalAction)}
-
-                      <CardBody>
-                        <TitleRow>
-                          <CardTitle>{item.title}</CardTitle>
-                          {dormBadges.map((dorm) => (
-                            <DormitoryBadge
-                              key={dorm}
-                              dormType={dorm}
-                              variant="subtle"
-                              size="sm"
-                            />
-                          ))}
-                        </TitleRow>
-                        <CardDescription>{item.description}</CardDescription>
-                        {item.secondaryApp && (
-                          <SecondaryActionRow>
-                            <SecondaryButton
-                              type="button"
-                              onClick={(event) =>
-                                handleSecondaryAppClick(event, item)
-                              }
-                            >
-                              <span>{item.secondaryApp.label} 설치</span>
-                              <ExternalLink size={12} strokeWidth={2.2} />
-                            </SecondaryButton>
-                          </SecondaryActionRow>
-                        )}
-                      </CardBody>
-
-                      {isInteractive && (
-                        <CardChevron
-                          size={16}
-                          strokeWidth={2}
-                          aria-hidden="true"
-                        />
-                      )}
-                    </GuideCard>
-                  );
-                })}
-              </CardList>
+              <CardList>{section.items.map(renderGuideCard)}</CardList>
             </TitleContentArea>
           ))
         )}

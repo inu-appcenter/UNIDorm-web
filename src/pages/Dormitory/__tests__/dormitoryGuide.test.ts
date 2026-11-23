@@ -7,6 +7,7 @@ import {
   getIframeGuideServiceById,
   resolveAppStoreUrl,
   resolveDormitoryFilter,
+  searchGuideItems,
 } from "../../../constants/dormitoryGuide";
 import { PATHS } from "../../../constants/paths";
 
@@ -113,11 +114,18 @@ describe("dormitoryGuide - 기숙사 생활 안내 상수 및 유틸리티 검�
     });
 
     it("검색어를 전달하면 제목·설명·동의어 키워드 기준으로 대소문자 구분 없이 필터링한다", () => {
-      expect(flattenIds("all", "유니룩스")).toEqual(["laundry-metaclub"]);
-      expect(flattenIds("all", "intip")).toEqual(["intip-menu"]);
-      expect(flattenIds("3기숙사", "세탁기")).toEqual(["laundry-dorm3"]);
-      expect(flattenIds("1기숙사", "세탁기 현금")).toEqual([]);
-      expect(flattenIds("3기숙사", "세탁기 현금")).toEqual(["laundry-dorm3"]);
+      expect(flattenIds("all", "유니룩스")).toContain("laundry-metaclub");
+      expect(searchGuideItems("all", "유니룩스")[0]?.id).toBe(
+        "laundry-metaclub",
+      );
+      expect(searchGuideItems("all", "intip")[0]?.id).toBe("intip-menu");
+      expect(searchGuideItems("3기숙사", "세탁기")[0]?.id).toBe(
+        "laundry-dorm3",
+      );
+      expect(searchGuideItems("1기숙사", "현금")).toEqual([]);
+      expect(searchGuideItems("3기숙사", "세탁기 현금")[0]?.id).toBe(
+        "laundry-dorm3",
+      );
       expect(flattenIds("all", "존재하지않는검색어")).toEqual([]);
     });
   });

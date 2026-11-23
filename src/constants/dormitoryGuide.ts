@@ -1,5 +1,6 @@
 import { PATHS } from "@/constants/paths";
 import { MobilePlatform } from "@/utils/getMobilePlatform";
+import { scoreGuideItem } from "@/utils/koreanGuideSearch";
 
 export type DormitoryFilter = "all" | "1기숙사" | "2기숙사" | "3기숙사";
 
@@ -333,6 +334,44 @@ export function resolveDormitoryFilter(dormType?: string | null): DormitoryFilte
   return "all";
 }
 
+function matchesDormitoryFilter(
+  item: DormitoryGuideItem,
+  filter: DormitoryFilter,
+): boolean {
+  return (
+    filter === "all" ||
+    item.dorms.includes("all") ||
+    item.dorms.includes(filter)
+  );
+}
+
+/**
+ * 선택한 기숙사 필터와 검색어에 맞는 안내 항목을 관련도 순으로 반환합니다.
+ */
+export function searchGuideItems(
+  filter: DormitoryFilter,
+  query: string,
+): DormitoryGuideItem[] {
+  const trimmed = query.trim();
+  if (!trimmed) {
+    return DORMITORY_GUIDE_ITEMS.filter((item) =>
+      matchesDormitoryFilter(item, filter),
+    );
+  }
+
+  return DORMITORY_GUIDE_ITEMS.filter((item) =>
+    matchesDormitoryFilter(item, filter),
+  )
+    .map((item, index) => ({
+      item,
+      index,
+      score: scoreGuideItem(item, trimmed),
+    }))
+    .filter((entry) => entry.score > 0)
+    .sort((a, b) => b.score - a.score || a.index - b.index)
+    .map((entry) => entry.item);
+}
+
 /**
  * 선택한 기숙사 필터와 검색어에 맞는 안내 항목을 카테고리별로 묶어 반환합니다.
  */
@@ -340,30 +379,11 @@ export function filterGuideSections(
   filter: DormitoryFilter,
   query = "",
 ): DormitoryGuideSection[] {
-  const trimmedQuery = query.trim().toLowerCase();
-  const tokens = trimmedQuery.length > 0 ? trimmedQuery.split(/\s+/) : [];
-
-  const matched = DORMITORY_GUIDE_ITEMS.filter((item) => {
-    const matchesDorm =
-      filter === "all" ||
-      item.dorms.includes("all") ||
-      item.dorms.includes(filter);
-    if (!matchesDorm) return false;
-
-    if (tokens.length === 0) return true;
-
-    const searchableText = [
-      item.title,
-      item.description,
-      item.category,
-      ...item.dorms,
-      ...(item.keywords ?? []),
-    ]
-      .join(" ")
-      .toLowerCase();
-
-    return tokens.every((token) => searchableText.includes(token));
-  });
+  const matched = query.trim()
+    ? searchGuideItems(filter, query)
+    : DORMITORY_GUIDE_ITEMS.filter((item) =>
+        matchesDormitoryFilter(item, filter),
+      );
 
   return DORMITORY_GUIDE_CATEGORIES.map((category) => ({
     category,
