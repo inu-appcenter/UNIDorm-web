@@ -18,7 +18,7 @@ import {
   isExtensionAgentEnvironment,
   isPortalAgentAvailable,
 } from "@/apis/mobileAgentBridge";
-import { guardAppOnly, guardPortalAgent } from "@/utils/guard";
+import { guardPortalAgent } from "@/utils/guard";
 import {
   DormitoryStudentInfo,
   DormitoryAddressItem,
@@ -932,7 +932,7 @@ export default function PortalDormitoryPage() {
               variant="primary"
               onClick={() => {
                 mixpanelTrack.dormitoryCardEntryClicked("사생정보조회");
-                if (!guardAppOnly({ navigate })) return;
+                if (!guardPortalAgent({ navigate })) return;
                 navigate(PATHS.DORMITORY_CARD);
               }}
               style={{ flex: 1 }}

@@ -39,7 +39,7 @@ import { mixpanelTrack } from "@/utils/mixpanel"; // 추가
 import useUserStore from "@/stores/useUserStore";
 import { PATHS } from "@/constants/paths";
 import HomeDormitoryPromptModal from "@/components/home/HomeDormitoryPromptModal";
-import { isLatestUnidormApp } from "@/utils/getMobilePlatform";
+import { isPortalAgentAvailable } from "@/apis/mobileAgentBridge";
 import {
   isDormitorySemesterExpired,
   getCurrentAcademicCycleKey,
@@ -112,7 +112,7 @@ export default function HomePage() {
       (new URLSearchParams(window.location.search).get("preview_dorm_prompt") === "true" ||
         localStorage.getItem("preview_dorm_prompt") === "true");
 
-    if (!isLatestUnidormApp() && !isPreview) return;
+    if (!isPortalAgentAvailable() && !isPreview) return;
 
     const currentCycle = getCurrentAcademicCycleKey();
 

@@ -26,8 +26,8 @@ import {
 import CapsuleButton from "@/components/common/CapsuleButton";
 import Skeleton from "@/components/common/Skeleton";
 import DormitoryBadge from "@/components/common/DormitoryBadge";
-import { guardAppOnly } from "@/utils/guard";
-import { isLatestUnidormApp } from "@/utils/getMobilePlatform";
+import { guardPortalAgent } from "@/utils/guard";
+import { isPortalAgentAvailable } from "@/apis/mobileAgentBridge";
 
 const STORAGE_KEY_DORMITORY_DATA = "portal_dormitory_student_info";
 
@@ -631,11 +631,11 @@ export default function MobileDormitoryCardPage() {
     title: "모바일 사생증",
   });
 
-  // 우리 앱 환경이 아니거나 구버전 앱인 경우 스토어 설치/업데이트 유도
+  // 로컬 포털 에이전트(모바일 앱 또는 PC 크롬 확장) 환경이 아니면 안내 표시
   useEffect(() => {
     if (isPreviewMode) return;
-    if (!isLatestUnidormApp()) {
-      guardAppOnly({
+    if (!isPortalAgentAvailable()) {
+      guardPortalAgent({
         onCancelNavigateBack: true,
         navigate,
       });
