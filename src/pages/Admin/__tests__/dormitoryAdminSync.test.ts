@@ -287,40 +287,41 @@ describe("dormitoryAdminParser - 관리자 사생/입사신청 목록 파싱 및
     expect(emptyResult.meta.totalCount).toBe(0);
   });
 
-  it("8자리 숫자 domstuNo 파싱, '.' 플레이스홀더 정제, tab03InOut 입퇴사 병합 및 완전 중복 행 제거를 처리한다", () => {
+  it("8자리 숫자 domstuNo 파싱, '.' 플레이스홀더 정제, ardScr3/우선입사대상 파싱 및 완전 중복 행 제거를 처리한다", () => {
     const mainList = buildSsvDataset(
       "DS_DMTY209",
       [
         "persNo",
         "nm",
         "genGbn",
+        "natGbn",
         "deptCd",
         "yy",
         "tmGbn",
         "dormGbn",
         "dormBdNm",
         "domstuNo",
-        "roomNo",
-        "bedNo",
-        "joinCoDt",
-        "dormLeavdormGbn",
+        "ardScr1",
+        "ardScr2",
+        "ardScr3",
+        "dormPrefSltObjGbn",
       ],
       [
-        // 완전 동일 행이 3번 중복 내려오고, roomNo/bedNo/joinCoDt가 비어있거나 "."인 케이스
-        ["202201111", "최사생", "M", "0000077", "2026", "20", "", ".", "03205052", ".", ".", ".", "."],
-        ["202201111", "최사생", "M", "0000077", "2026", "20", "", ".", "03205052", ".", ".", ".", "."],
-        ["202201111", "최사생", "M", "0000077", "2026", "20", "", ".", "03205052", ".", ".", ".", "."],
+        // 완전 동일 행이 3번 중복 내려오고, dormBdNm이 "."인 케이스
+        ["202201111", "최사생", "M", "KR", "0000077", "2026", "20", "", ".", "03205052", "2", "1", "3", "PREF01"],
+        ["202201111", "최사생", "M", "KR", "0000077", "2026", "20", "", ".", "03205052", "2", "1", "3", "PREF01"],
+        ["202201111", "최사생", "M", "KR", "0000077", "2026", "20", "", ".", "03205052", "2", "1", "3", "PREF01"],
       ],
     );
 
-    const tab03InOut = buildSsvDataset(
-      "DS_DMTY209_TAB03",
-      ["persNo", "yy", "tmGbn", "dormGbn", "domstuNo", "joinCoDt", "dormLeavdormDt", "dormLeavdormGbn"],
-      [["202201111", "2026", "20", "03", "03205052", "20260829", "20261219", "01"]],
+    const groupCodes = buildSsvDataset(
+      "DS_DORM_PREF_SLT_OBJ_GBN",
+      ["code", "korCdNm"],
+      [["PREF01", "기초생활수급자"]],
     );
 
     const result = parseAdminDormitoryBatchPayload(
-      { mainList, tab03InOut },
+      { mainList, groupCodes },
       {
         datasetType: "RESIDENT",
         year: "2026",
@@ -332,14 +333,16 @@ describe("dormitoryAdminParser - 관리자 사생/입사신청 목록 파싱 및
     expect(result.records).toHaveLength(1);
     expect(result.records[0]).toMatchObject({
       studentId: "202201111",
+      nationality: "KR",
       dormitoryType: "03",
       dormitoryTypeName: "제2기숙사(BTL)",
       dormitoryBuilding: "B동",
       roomNumber: "505호",
       bedNumber: "2",
-      checkInDate: "2026-08-29",
-      checkOutDate: "2026-12-19",
-      residentStatus: "정규입사",
+      meritPoints: 2,
+      demeritPoints: 1,
+      nonOffsetDemeritPoints: 3,
+      priorityTarget: "기초생활수급자",
     });
   });
 });
