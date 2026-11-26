@@ -1,4 +1,5 @@
 import { PATHS } from "@/constants/paths";
+import { isPortalAgentAvailable } from "@/apis/mobileAgentBridge";
 import {
   getMobilePlatform,
   getStoreUrl,
@@ -85,4 +86,25 @@ export const guardAppOnly = (options?: GuardAppOnlyOptions): boolean => {
     options.navigate(-1);
   }
   return false;
+};
+
+/**
+ * 로컬 포털 에이전트(모바일 앱 웹뷰 또는 PC Chrome 확장) 전용 기능 가드.
+ * - 최신 유니돔 앱 또는 UNIDorm 크롬 확장이 활성화되어 있으면 통과
+ * - 미설치 환경에서는 기존 guardAppOnly 안내로 폴백
+ */
+export const guardPortalAgent = (options?: GuardAppOnlyOptions): boolean => {
+  if (typeof window === "undefined") return false;
+  if (isPortalAgentAvailable()) {
+    return true;
+  }
+  if (isLegacyUnidormApp()) {
+    return guardAppOnly(options);
+  }
+  return guardAppOnly({
+    ...options,
+    customMessage:
+      options?.customMessage ||
+      "유니돔 모바일 앱 또는 PC 크롬 확장에서 이용할 수 있는 기능이에요.\n유니돔 앱 스토어 페이지로 이동할까요?",
+  });
 };

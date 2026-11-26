@@ -15,9 +15,10 @@ import {
   fetchDormitoryTabSpecificFromApp,
   resolveCurrentStudentId,
   isMobileAppEnvironment,
+  isExtensionAgentEnvironment,
+  isPortalAgentAvailable,
 } from "@/apis/mobileAgentBridge";
-import { isLatestUnidormApp } from "@/utils/getMobilePlatform";
-import { guardAppOnly } from "@/utils/guard";
+import { guardAppOnly, guardPortalAgent } from "@/utils/guard";
 import {
   DormitoryStudentInfo,
   DormitoryAddressItem,
@@ -420,7 +421,7 @@ export default function PortalDormitoryPage() {
     const header =
       `[포털 기숙사 조회 진단 로그]\n` +
       `- 생성시각: ${new Date().toLocaleString()}\n` +
-      `- 접속환경: ${isMobileAppEnvironment() ? "모바일 앱 (ReactNativeWebView)" : "일반 웹 브라우저"}\n` +
+      `- 접속환경: ${isMobileAppEnvironment() ? "모바일 앱 (ReactNativeWebView)" : isExtensionAgentEnvironment() ? "PC Chrome 확장 (UNIDorm Extension)" : "일반 웹 브라우저"}\n` +
       `- 기록수: ${logs.length}건\n` +
       `--------------------------------------------------\n`;
     const body = logs
@@ -508,11 +509,17 @@ export default function PortalDormitoryPage() {
     setLogs([]);
     addLog("INIT", "사생정보 조회 프로세스 시작", "info");
 
-    if (!guardAppOnly({ navigate })) {
-      addLog("ENV_CHECK", "최신 모바일 앱 환경이 아닙니다. (웹 또는 구버전 앱 감지)", "warn");
+    if (!guardPortalAgent({ navigate })) {
+      addLog("ENV_CHECK", "로컬 포털 에이전트(모바일 앱 또는 크롬 확장) 환경이 아닙니다.", "warn");
       return;
     }
-    addLog("ENV_CHECK", "모바일 앱 브릿지 환경 확인 완료 (ReactNativeWebView)", "info");
+    addLog(
+      "ENV_CHECK",
+      isMobileAppEnvironment()
+        ? "모바일 앱 브릿지 환경 확인 완료 (ReactNativeWebView)"
+        : "PC Chrome 확장 브릿지 환경 확인 완료 (UNIDorm Extension)",
+      "info",
+    );
 
     try {
       setIsLoading(true);
@@ -659,8 +666,8 @@ export default function PortalDormitoryPage() {
       startTimeRef.current = Date.now();
       addLog("TAB_INIT", `[${tabName}] 단독 상세 탭 조회 시작`, "info");
 
-      if (!guardAppOnly({ navigate })) {
-        addLog("ENV_CHECK", "최신 모바일 앱 환경이 아닙니다. (웹 또는 구버전 앱 감지)", "warn");
+      if (!guardPortalAgent({ navigate })) {
+        addLog("ENV_CHECK", "로컬 포털 에이전트(모바일 앱 또는 크롬 확장) 환경이 아닙니다.", "warn");
         return;
       }
 
@@ -894,16 +901,16 @@ export default function PortalDormitoryPage() {
         title="사생정보조회"
         description="생활원 사생정보 및 상벌점, 입퇴사, 공공요금 등 세부 내역을 조회합니다."
       >
-        {!isLatestUnidormApp() && (
+        {!isPortalAgentAvailable() && (
           <WebFallbackCard>
             <Smartphone size={28} color="var(--interactive-primary)" />
-            <div className="title">모바일 앱 전용 기능</div>
+            <div className="title">모바일 앱 또는 PC 크롬 확장 전용 기능</div>
             <div className="desc">
-              학교 포털 ERP 연동은 유니돔 앱 내부의 보안 세션을 통해 안전하게 조회됩니다.
+              학교 포털 ERP 연동은 유니돔 앱 또는 PC 크롬 확장의 로컬 세션에서 직접 조회됩니다.
             </div>
             <CapsuleButton
               variant="brand"
-              onClick={() => guardAppOnly({ navigate })}
+              onClick={() => guardPortalAgent({ navigate })}
             >
               앱 열기 / 설치
             </CapsuleButton>

@@ -5,7 +5,7 @@ import useUserStore from "../stores/useUserStore.ts";
 import { TokenInfo } from "@/types/members";
 import { mixpanelTrack } from "@/utils/mixpanel";
 import { unlinkFcmToken } from "@/apis/fcm";
-import { deletePortalAccount, isMobileAppEnvironment } from "@/apis/mobileAgentBridge";
+import { deletePortalAccount, isPortalAgentAvailable } from "@/apis/mobileAgentBridge";
 import { secureStorage } from "@/utils/secureStorage";
 import { safeLocalStorage } from "@/utils/safeStorage";
 
@@ -33,8 +33,8 @@ const LogoutPage = () => {
         }
       }
 
-      // 2. 모바일 앱 환경인 경우 OS KeyStore/SecureStore에 저장된 포털 계정(학번/비밀번호) 연동 해제
-      if (isMobileAppEnvironment()) {
+      // 2. 로컬 포털 에이전트(모바일 앱 또는 크롬 확장) 환경인 경우 저장된 포털 계정 연동 해제
+      if (isPortalAgentAvailable()) {
         try {
           await deletePortalAccount();
         } catch (e) {

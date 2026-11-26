@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { isAxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
 import { login, loginFreshman } from "@/apis/members";
-import { savePortalAccount, isMobileAppEnvironment } from "@/apis/mobileAgentBridge";
+import { savePortalAccount, isPortalAgentAvailable } from "@/apis/mobileAgentBridge";
 import StyledInput from "@/components/common/StyledInput.tsx";
 import SquareButton from "@/components/common/SquareButton.tsx";
 import LoadingSpinner from "@/components/common/LoadingSpinner.tsx";
@@ -49,7 +49,7 @@ export default function LoginPage() {
       try {
         const response = await login(studentNumber, password);
         setTokenInfo(response.data);
-        if (isMobileAppEnvironment()) {
+        if (isPortalAgentAvailable()) {
           try {
             await savePortalAccount(studentNumber.trim(), password.trim());
             localStorage.setItem("portal_student_id", studentNumber.trim());
