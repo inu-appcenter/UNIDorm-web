@@ -8,10 +8,9 @@ import {
   savePortalAccount,
   deletePortalAccount,
   fetchAcademicInfoFromApp,
-  isMobileAppEnvironment,
+  isPortalAgentAvailable,
 } from "@/apis/mobileAgentBridge";
-import { isLatestUnidormApp } from "@/utils/getMobilePlatform";
-import { guardAppOnly } from "@/utils/guard";
+import { guardPortalAgent } from "@/utils/guard";
 import { StudentInfo } from "@/types/portal";
 import { secureStorage } from "@/utils/secureStorage";
 import { adaptAcademicInfoToStudentInfo } from "@/apis/portalAdapter";
@@ -78,8 +77,8 @@ export default function MobilePortalAccountPage() {
         setStudentInfo(savedInfo);
       }
 
-      // 2. 최신 모바일 앱 환경이면 기기 KeyStore에 계정 등록 여부만 빠르게 확인
-      if (isLatestUnidormApp()) {
+      // 2. 로컬 포털 에이전트(모바일 앱 또는 PC 크롬 확장) 환경이면 계정 등록 여부 확인
+      if (isPortalAgentAvailable()) {
         const res = await checkPortalAccountLinked().catch(() => ({ linked: false, studentId: undefined }));
         const isLinkedBool = Boolean(res?.linked);
         setIsLinked(isLinkedBool);
@@ -109,7 +108,7 @@ export default function MobilePortalAccountPage() {
 
   // 포털 실제 접속 여부 테스트 핸들러
   const handleTestConnection = async () => {
-    if (!guardAppOnly({ navigate })) return;
+    if (!guardPortalAgent({ navigate })) return;
 
     setConnectionStatus("testing");
     setConnectionError("");
@@ -144,8 +143,8 @@ export default function MobilePortalAccountPage() {
       return;
     }
 
-    if (!guardAppOnly({ navigate })) {
-      setErrorMessage("포털 계정 연동은 최신 유니돔 모바일 앱 환경에서만 지원돼요.");
+    if (!guardPortalAgent({ navigate })) {
+      setErrorMessage("포털 계정 연동은 유니돔 모바일 앱 또는 PC 크롬 확장 환경에서만 지원돼요.");
       return;
     }
 
@@ -177,7 +176,7 @@ export default function MobilePortalAccountPage() {
   const handleUnlink = async () => {
     setIsUnlinkModalOpen(false);
     try {
-      if (isMobileAppEnvironment()) {
+      if (isPortalAgentAvailable()) {
         await deletePortalAccount().catch(() => {});
       }
       secureStorage.clearAllPortalCaches();
@@ -204,14 +203,14 @@ export default function MobilePortalAccountPage() {
           <Skeleton width="100%" height="160px" style={{ borderRadius: "16px" }} />
           <Skeleton width="100%" height="220px" style={{ borderRadius: "16px" }} />
         </ContentContainer>
-      ) : !isLatestUnidormApp() ? (
-        /* 0. 모바일 앱 환경 아닐 때 안내 화면 */
+      ) : !isPortalAgentAvailable() ? (
+        /* 0. 로컬 포털 에이전트(모바일 앱 또는 크롬 확장) 환경 아닐 때 안내 화면 */
         <ContentContainer>
           <NotAppCard>
             <Smartphone size={36} color="var(--interactive-primary)" />
-            <NotAppTitle>유니돔 앱 전용 기능이에요</NotAppTitle>
+            <NotAppTitle>유니돔 앱 또는 PC 크롬 확장이 필요해요</NotAppTitle>
             <NotAppDesc>
-              포털 계정 연동은 기기 보안 저장소(KeyStore)를 이용하므로 유니돔 모바일 앱 환경에서 등록하고 이용할 수 있어요.
+              포털 계정 연동은 기기 보안 저장소(KeyStore) 또는 PC 크롬 확장 세션에서 로컬로 동작해요.
             </NotAppDesc>
 
             <UsageGuideBox>
@@ -219,13 +218,13 @@ export default function MobilePortalAccountPage() {
               <UsageGuideList>
                 <li>기숙사 사생정보 및 배정 호실, 외박, 상벌점 내역 조회</li>
                 <li>모바일 사생증 바코드 및 출입 카드 확인</li>
-                <li>기본 학적 정보 (소속, 학년, 학적 상태) 실시간 확인</li>
+                <li>기본 학적 정보 (소속, 학년, 학적 상태) 확인</li>
               </UsageGuideList>
             </UsageGuideBox>
 
             <CapsuleButton
               variant="brand"
-              onClick={() => guardAppOnly({ navigate })}
+              onClick={() => guardPortalAgent({ navigate })}
               style={{ width: "100%", marginTop: "8px" }}
             >
               유니돔 앱 열기 / 설치
