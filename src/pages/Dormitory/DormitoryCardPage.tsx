@@ -18,7 +18,7 @@ import { isDormitorySemesterExpired } from "@/utils/semesterGuard";
 import PortalSyncOnboarding from "@/components/portal/PortalSyncOnboarding";
 import {
   setScreenCapturePrevented,
-  isMobileAppEnvironment,
+  isPortalAgentAvailable,
   checkPortalAccountLinked,
   fetchDormitoryStudentInfoFromApp,
   resolveCurrentStudentId,
@@ -27,7 +27,6 @@ import CapsuleButton from "@/components/common/CapsuleButton";
 import Skeleton from "@/components/common/Skeleton";
 import DormitoryBadge from "@/components/common/DormitoryBadge";
 import { guardPortalAgent } from "@/utils/guard";
-import { isPortalAgentAvailable } from "@/apis/mobileAgentBridge";
 
 const STORAGE_KEY_DORMITORY_DATA = "portal_dormitory_student_info";
 
@@ -599,7 +598,7 @@ export default function MobileDormitoryCardPage() {
         }
         return;
       }
-      if (isMobileAppEnvironment()) {
+      if (isPortalAgentAvailable()) {
         const accountStatus = await checkPortalAccountLinked().catch(() => ({
           linked: false,
           studentId: undefined,
