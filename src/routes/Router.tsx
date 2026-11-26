@@ -99,6 +99,7 @@ const StatisticsPage = lazy(() => import("@/pages/Admin/StatisticsPage"));
 const OpenChatReportAdminPage = lazy(() => import("@/pages/Admin/OpenChatReportAdminPage"));
 const OpenChatBotPage = lazy(() => import("@/pages/Admin/OpenChatBotPage"));
 const OpenChatAdminPage = lazy(() => import("@/pages/Admin/OpenChatAdminPage"));
+const DormitoryResidentAdminPage = lazy(() => import("@/pages/Admin/DormitoryResidentAdminPage"));
 
 function ChattingPageRoute() {
   const { chatType, id } = useParams();
@@ -378,6 +379,11 @@ export const router = createBrowserRouter([
               },
               { path: "open-chat-bot", element: <OpenChatBotPage />, handle: { bg: "gray" } },
               { path: "open-chat-rooms", element: <OpenChatAdminPage />, handle: { bg: "gray" } },
+              {
+                path: "dormitory-residents",
+                element: <DormitoryResidentAdminPage />,
+                handle: { bg: "gray" },
+              },
             ],
           },
         ],
