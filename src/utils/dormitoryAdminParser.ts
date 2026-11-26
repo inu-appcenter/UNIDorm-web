@@ -61,6 +61,7 @@ export interface DormitoryAdminRecord {
   residentStatus: string;
   meritPoints: number;
   demeritPoints: number;
+  nonOffsetDemeritPoints: number;
 
   // 입사신청(DS_DMTY101) 전용 필드
   seq: string;
@@ -450,42 +451,6 @@ export function parseAdminDormitoryBatchPayload(
   const mainDatasets = parseNexacroDatasets(mainSsv);
   const rawRows = pickPrimaryRows(mainDatasets, options.datasetType);
 
-  // 탭 3(입퇴사이력: DS_DMTY209_TAB03) 병합용 인덱스 구축
-  const tab03Ssv = typeof obj.tab03InOut === "string" ? obj.tab03InOut : "";
-  const tab03Datasets = parseNexacroDatasets(tab03Ssv);
-  const tab03Rows = tab03Datasets["DS_DMTY209_TAB03"] || [];
-  const tab03ByKey = new Map<string, Record<string, string>>();
-  const tab03ByDormNo = new Map<string, Record<string, string>>();
-  const tab03ByStudent = new Map<string, Record<string, string>>();
-
-  for (const tRow of tab03Rows) {
-    const sid = cleanField(tRow["persNo"] || tRow["stuno"]);
-    if (!sid) continue;
-    const tYy = cleanField(tRow["yy"]);
-    const tTm = cleanField(tRow["tmGbn"]);
-    const tDormNo = cleanField(tRow["domstuNo"] || tRow["domStuNo"]);
-
-    if (tYy && tTm) {
-      tab03ByKey.set(`${sid}_${tYy}_${tTm}`, tRow);
-    }
-    if (tDormNo) {
-      tab03ByDormNo.set(`${sid}_${tDormNo}`, tRow);
-    }
-    const prev = tab03ByStudent.get(sid);
-    if (!prev) {
-      tab03ByStudent.set(sid, tRow);
-    } else {
-      const prevScore =
-        (parseInt(cleanField(prev["yy"]), 10) || 0) * 10 +
-        getTermSortWeight(cleanField(prev["tmGbn"]));
-      const currScore =
-        (parseInt(tYy, 10) || 0) * 10 + getTermSortWeight(tTm);
-      if (currScore >= prevScore) {
-        tab03ByStudent.set(sid, tRow);
-      }
-    }
-  }
-
   const syncedAt = options.syncedAt || new Date().toISOString();
   const snapshotId = buildDormitorySnapshotId(
     options.datasetType,
@@ -507,28 +472,12 @@ export function parseAdminDormitoryBatchPayload(
 
     const rowYear = cleanField(row["yy"]) || options.year.trim();
     const rowTerm = cleanField(row["tmGbn"]) || options.term.trim();
-    const rawDormNo = cleanField(row["domstuNo"] || row["domStuNo"]);
-
-    // 탭 3 입퇴사 이력 매칭 (학번+년도+학기 > 학번+사생번호 > 학번 최신)
-    const matchedTab03 =
-      (studentId && rowYear && rowTerm
-        ? tab03ByKey.get(`${studentId}_${rowYear}_${rowTerm}`)
-        : undefined) ||
-      (studentId && rawDormNo
-        ? tab03ByDormNo.get(`${studentId}_${rawDormNo}`)
-        : undefined) ||
-      (studentId ? tab03ByStudent.get(studentId) : undefined);
+    const studentDormNo = cleanField(row["domstuNo"] || row["domStuNo"]);
 
     const { departmentName, collegeName } = resolveDepartmentName(row);
-    const studentDormNo =
-      rawDormNo ||
-      cleanField(matchedTab03?.["domstuNo"] || matchedTab03?.["domStuNo"]);
     const fallbackRoom = parseRoomAndBedFallback(studentDormNo);
 
-    const dormCode =
-      cleanField(row["dormGbn"]) ||
-      cleanField(matchedTab03?.["dormGbn"]) ||
-      fallbackRoom.dormCode;
+    const dormCode = cleanField(row["dormGbn"]) || fallbackRoom.dormCode;
     const dormName = dormTypeMap[dormCode] || dormCode;
 
     const roomNumber =
@@ -540,18 +489,14 @@ export function parseAdminDormitoryBatchPayload(
       cleanField(row["dormBdNm"] || row["dormBdCd"] || row["dmtyNm"]) ||
       fallbackRoom.buildingName;
 
-    const rawResStatus =
-      cleanField(row["dormLeavdormGbn"]) ||
-      cleanField(matchedTab03?.["dormLeavdormGbn"]);
+    const rawResStatus = cleanField(row["dormLeavdormGbn"]);
     const residentStatus = DEFAULT_RESIDENT_STATUS_MAP[rawResStatus] || rawResStatus;
 
     const checkInDate = formatDate(
-      cleanField(row["joinCoDt"] || row["entyDt"] || row["inDt"]) ||
-        matchedTab03?.["joinCoDt"],
+      cleanField(row["joinCoDt"] || row["entyDt"] || row["inDt"]),
     );
     const checkOutDate = formatDate(
-      cleanField(row["dormLeavdormDt"] || row["leavDt"] || row["outDt"]) ||
-        matchedTab03?.["dormLeavdormDt"],
+      cleanField(row["dormLeavdormDt"] || row["leavDt"] || row["outDt"]),
     );
 
     const rawApplyType = cleanField(row["dormJoinGbn"] || row["dormAplyGbn"]);
@@ -571,6 +516,7 @@ export function parseAdminDormitoryBatchPayload(
 
     const meritPoints = Number(cleanField(row["ardScr1"] || row["rwrdScore"]) || 0) || 0;
     const demeritPoints = Number(cleanField(row["ardScr2"] || row["pnshScore"]) || 0) || 0;
+    const nonOffsetDemeritPoints = Number(cleanField(row["ardScr3"]) || 0) || 0;
     const applyDate = formatDate(row["aplyDt"]);
 
     // ERP 내부 조인으로 완전히 동일한 행이 중복 내려올 때 1건만 유지
@@ -579,6 +525,7 @@ export function parseAdminDormitoryBatchPayload(
       rowYear,
       rowTerm,
       dormCode,
+      dormitoryBuilding,
       studentDormNo,
       roomNumber,
       bedNumber,
@@ -631,6 +578,7 @@ export function parseAdminDormitoryBatchPayload(
       residentStatus,
       meritPoints,
       demeritPoints,
+      nonOffsetDemeritPoints,
 
       seq,
       applyType,
