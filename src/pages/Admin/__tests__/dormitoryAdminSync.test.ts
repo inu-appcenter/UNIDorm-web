@@ -286,4 +286,60 @@ describe("dormitoryAdminParser - 관리자 사생/입사신청 목록 파싱 및
     expect(emptyResult.records).toEqual([]);
     expect(emptyResult.meta.totalCount).toBe(0);
   });
+
+  it("8자리 숫자 domstuNo 파싱, '.' 플레이스홀더 정제, tab03InOut 입퇴사 병합 및 완전 중복 행 제거를 처리한다", () => {
+    const mainList = buildSsvDataset(
+      "DS_DMTY209",
+      [
+        "persNo",
+        "nm",
+        "genGbn",
+        "deptCd",
+        "yy",
+        "tmGbn",
+        "dormGbn",
+        "dormBdNm",
+        "domstuNo",
+        "roomNo",
+        "bedNo",
+        "joinCoDt",
+        "dormLeavdormGbn",
+      ],
+      [
+        // 완전 동일 행이 3번 중복 내려오고, roomNo/bedNo/joinCoDt가 비어있거나 "."인 케이스
+        ["202201111", "최사생", "M", "0000077", "2026", "20", "", ".", "03205052", ".", ".", ".", "."],
+        ["202201111", "최사생", "M", "0000077", "2026", "20", "", ".", "03205052", ".", ".", ".", "."],
+        ["202201111", "최사생", "M", "0000077", "2026", "20", "", ".", "03205052", ".", ".", ".", "."],
+      ],
+    );
+
+    const tab03InOut = buildSsvDataset(
+      "DS_DMTY209_TAB03",
+      ["persNo", "yy", "tmGbn", "dormGbn", "domstuNo", "joinCoDt", "dormLeavdormDt", "dormLeavdormGbn"],
+      [["202201111", "2026", "20", "03", "03205052", "20260829", "20261219", "01"]],
+    );
+
+    const result = parseAdminDormitoryBatchPayload(
+      { mainList, tab03InOut },
+      {
+        datasetType: "RESIDENT",
+        year: "2026",
+        term: "20",
+        endpoint: "/aff/dmty/Dmsm0120Ctr/findDmty209List.do",
+      },
+    );
+
+    expect(result.records).toHaveLength(1);
+    expect(result.records[0]).toMatchObject({
+      studentId: "202201111",
+      dormitoryType: "03",
+      dormitoryTypeName: "제2기숙사(BTL)",
+      dormitoryBuilding: "B동",
+      roomNumber: "505호",
+      bedNumber: "2",
+      checkInDate: "2026-08-29",
+      checkOutDate: "2026-12-19",
+      residentStatus: "정규입사",
+    });
+  });
 });

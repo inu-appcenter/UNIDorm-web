@@ -862,6 +862,17 @@ export async function fetchAdminDormitoryListFromExtension(params: {
           pgmId: preset.pgmId,
           body: mainCondBody,
         },
+        ...(params.datasetType === "RESIDENT"
+          ? [
+              {
+                key: "tab03InOut",
+                url: "/aff/dmty/Dmsm0010Ctr/findDmty209ListTab03.do",
+                menuId: preset.menuId,
+                pgmId: preset.pgmId,
+                body: mainCondBody,
+              },
+            ]
+          : []),
         {
           key: "commonCodes",
           url: "/com/CodeCtr/findCodeComboList.do",

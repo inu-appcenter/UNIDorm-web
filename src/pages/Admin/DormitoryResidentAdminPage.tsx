@@ -16,6 +16,7 @@ import {
   PortalExtensionStatus,
 } from "@/apis/mobileAgentBridge";
 import {
+  compareDormitoryAdminRecordsDesc,
   DormitoryAdminDatasetType,
   DormitoryAdminRecord,
   DormitoryAdminSnapshotMeta,
@@ -147,6 +148,7 @@ export default function DormitoryResidentAdminPage() {
   const [searchKeyword, setSearchKeyword] = useState("");
   const [dormKindFilter, setDormKindFilter] = useState<string>("ALL");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [deduplicateStudent, setDeduplicateStudent] = useState<boolean>(true);
   const [currentPage, setCurrentPage] = useState(1);
 
   // 모달 상태
@@ -372,7 +374,7 @@ export default function DormitoryResidentAdminPage() {
 
   const filteredRecords = useMemo(() => {
     const kw = searchKeyword.trim().toLowerCase();
-    return records.filter((item) => {
+    const matched = records.filter((item) => {
       if (dormKindFilter !== "ALL") {
         const kind = parseDormitoryKind(item.dormitoryTypeName || item.dormitoryType);
         if (kind !== dormKindFilter) return false;
@@ -396,6 +398,8 @@ export default function DormitoryResidentAdminPage() {
           item.studentDormNo,
           item.dormitoryTypeName,
           item.phoneNumber,
+          item.year,
+          formatDormTermLabel(item.term),
         ]
           .join(" ")
           .toLowerCase();
@@ -404,7 +408,29 @@ export default function DormitoryResidentAdminPage() {
 
       return true;
     });
-  }, [records, searchKeyword, dormKindFilter, statusFilter, activeSnapshot?.datasetType]);
+
+    if (!deduplicateStudent) {
+      return matched;
+    }
+
+    const sorted = matched.slice().sort(compareDormitoryAdminRecordsDesc);
+    const seen = new Set<string>();
+    const unique: DormitoryAdminRecord[] = [];
+    for (const item of sorted) {
+      const key = item.studentId || item.uid;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      unique.push(item);
+    }
+    return unique;
+  }, [
+    records,
+    searchKeyword,
+    dormKindFilter,
+    statusFilter,
+    deduplicateStudent,
+    activeSnapshot?.datasetType,
+  ]);
 
   const totalPages = Math.max(1, Math.ceil(filteredRecords.length / PAGE_SIZE));
   const safePage = Math.min(currentPage, totalPages);
@@ -705,10 +731,23 @@ export default function DormitoryResidentAdminPage() {
                 </FilterSelects>
               </FilterToolbar>
 
-              <ResultSummary>
-                검색 결과 <strong>{filteredRecords.length.toLocaleString()}건</strong> / 전체{" "}
-                {records.length.toLocaleString()}건 (행을 누르면 상세 정보를 볼 수 있어요)
-              </ResultSummary>
+              <ResultSummaryRow>
+                <ResultSummary>
+                  표시 중 <strong>{filteredRecords.length.toLocaleString()}건</strong> / 원본{" "}
+                  {records.length.toLocaleString()}건 (행을 누르면 상세 정보를 볼 수 있어요)
+                </ResultSummary>
+                <DedupToggleLabel>
+                  <input
+                    type="checkbox"
+                    checked={deduplicateStudent}
+                    onChange={(e) => {
+                      setDeduplicateStudent(e.target.checked);
+                      setCurrentPage(1);
+                    }}
+                  />
+                  <span>학번별 최신 1건만 보기</span>
+                </DedupToggleLabel>
+              </ResultSummaryRow>
 
               {filteredRecords.length === 0 ? (
                 <AdminEmptyState>
@@ -738,6 +777,7 @@ export default function DormitoryResidentAdminPage() {
                           <th>학번</th>
                           <th>성명</th>
                           <th>학과</th>
+                          <th>년도/학기</th>
                           <th>기숙사</th>
                           {activeSnapshot?.datasetType === "APPLICATION" ? (
                             <>
@@ -770,6 +810,11 @@ export default function DormitoryResidentAdminPage() {
                             <EllipsisCell title={row.departmentName}>
                               {row.departmentName || "-"}
                             </EllipsisCell>
+                            <MonoCell>
+                              {row.year
+                                ? `${row.year} ${formatDormTermLabel(row.term)}`
+                                : "-"}
+                            </MonoCell>
                             <td>
                               {row.dormitoryTypeName ? (
                                 <DormitoryBadge
@@ -1139,6 +1184,14 @@ const FilterSelects = styled.div`
   }
 `;
 
+const ResultSummaryRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+`;
+
 const ResultSummary = styled.p`
   margin: 0;
   font-size: 0.86rem;
@@ -1146,6 +1199,24 @@ const ResultSummary = styled.p`
 
   strong {
     color: #191f28;
+  }
+`;
+
+const DedupToggleLabel = styled.label`
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: #333d4b;
+  cursor: pointer;
+  user-select: none;
+
+  input {
+    width: 16px;
+    height: 16px;
+    accent-color: #1677ff;
+    cursor: pointer;
   }
 `;
 
