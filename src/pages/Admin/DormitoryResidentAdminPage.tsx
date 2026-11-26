@@ -366,11 +366,21 @@ export default function DormitoryResidentAdminPage() {
       const value =
         activeSnapshot?.datasetType === "APPLICATION"
           ? r.applyStatus
-          : r.residentStatus;
+          : r.dormitoryBuilding;
       if (value) set.add(value);
     }
     return Array.from(set).sort();
   }, [records, activeSnapshot?.datasetType]);
+
+  const hasDuplicateStudents = useMemo(() => {
+    const seen = new Set<string>();
+    for (const r of records) {
+      if (!r.studentId) continue;
+      if (seen.has(r.studentId)) return true;
+      seen.add(r.studentId);
+    }
+    return false;
+  }, [records]);
 
   const filteredRecords = useMemo(() => {
     const kw = searchKeyword.trim().toLowerCase();
@@ -381,11 +391,11 @@ export default function DormitoryResidentAdminPage() {
       }
 
       if (statusFilter !== "ALL") {
-        const currentStatus =
+        const currentVal =
           activeSnapshot?.datasetType === "APPLICATION"
             ? item.applyStatus
-            : item.residentStatus;
-        if (currentStatus !== statusFilter) return false;
+            : item.dormitoryBuilding;
+        if (currentVal !== statusFilter) return false;
       }
 
       if (kw) {
@@ -394,6 +404,7 @@ export default function DormitoryResidentAdminPage() {
           item.name,
           item.departmentName,
           item.collegeName,
+          item.dormitoryBuilding,
           item.roomNumber,
           item.studentDormNo,
           item.dormitoryTypeName,
@@ -409,7 +420,7 @@ export default function DormitoryResidentAdminPage() {
       return true;
     });
 
-    if (!deduplicateStudent) {
+    if (!hasDuplicateStudents || !deduplicateStudent) {
       return matched;
     }
 
@@ -428,6 +439,7 @@ export default function DormitoryResidentAdminPage() {
     searchKeyword,
     dormKindFilter,
     statusFilter,
+    hasDuplicateStudents,
     deduplicateStudent,
     activeSnapshot?.datasetType,
   ]);
@@ -714,14 +726,22 @@ export default function DormitoryResidentAdminPage() {
                   </AdminSelect>
 
                   <AdminSelect
-                    aria-label="상태 필터"
+                    aria-label={
+                      activeSnapshot?.datasetType === "APPLICATION"
+                        ? "신청상태 필터"
+                        : "동 필터"
+                    }
                     value={statusFilter}
                     onChange={(e) => {
                       setStatusFilter(e.target.value);
                       setCurrentPage(1);
                     }}
                   >
-                    <option value="ALL">상태 전체</option>
+                    <option value="ALL">
+                      {activeSnapshot?.datasetType === "APPLICATION"
+                        ? "상태 전체"
+                        : "동 전체"}
+                    </option>
                     {statusOptions.map((st) => (
                       <option key={st} value={st}>
                         {st}
@@ -733,20 +753,22 @@ export default function DormitoryResidentAdminPage() {
 
               <ResultSummaryRow>
                 <ResultSummary>
-                  표시 중 <strong>{filteredRecords.length.toLocaleString()}건</strong> / 원본{" "}
+                  표시 중 <strong>{filteredRecords.length.toLocaleString()}건</strong> / 전체{" "}
                   {records.length.toLocaleString()}건 (행을 누르면 상세 정보를 볼 수 있어요)
                 </ResultSummary>
-                <DedupToggleLabel>
-                  <input
-                    type="checkbox"
-                    checked={deduplicateStudent}
-                    onChange={(e) => {
-                      setDeduplicateStudent(e.target.checked);
-                      setCurrentPage(1);
-                    }}
-                  />
-                  <span>학번별 최신 1건만 보기</span>
-                </DedupToggleLabel>
+                {hasDuplicateStudents && (
+                  <DedupToggleLabel>
+                    <input
+                      type="checkbox"
+                      checked={deduplicateStudent}
+                      onChange={(e) => {
+                        setDeduplicateStudent(e.target.checked);
+                        setCurrentPage(1);
+                      }}
+                    />
+                    <span>학번별 최신 1건만 보기</span>
+                  </DedupToggleLabel>
+                )}
               </ResultSummaryRow>
 
               {filteredRecords.length === 0 ? (
@@ -788,9 +810,9 @@ export default function DormitoryResidentAdminPage() {
                             </>
                           ) : (
                             <>
+                              <th>동</th>
                               <th>호실/침대</th>
                               <th>사생번호</th>
-                              <th>상태</th>
                               <th>상점/벌점</th>
                             </>
                           )}
@@ -843,27 +865,13 @@ export default function DormitoryResidentAdminPage() {
                               </>
                             ) : (
                               <>
+                                <MonoCell>{row.dormitoryBuilding || "-"}</MonoCell>
                                 <MonoCell>
                                   {row.roomNumber
                                     ? `${row.roomNumber}${row.bedNumber ? `-${row.bedNumber}` : ""}`
                                     : "-"}
                                 </MonoCell>
                                 <MonoCell>{row.studentDormNo || "-"}</MonoCell>
-                                <td>
-                                  {row.residentStatus ? (
-                                    <AdminBadge
-                                      $tone={
-                                        row.residentStatus.includes("퇴사")
-                                          ? "slate"
-                                          : "green"
-                                      }
-                                    >
-                                      {row.residentStatus}
-                                    </AdminBadge>
-                                  ) : (
-                                    "-"
-                                  )}
-                                </td>
                                 <MonoCell>
                                   +{row.meritPoints} / -{row.demeritPoints}
                                 </MonoCell>
@@ -1015,20 +1023,27 @@ export default function DormitoryResidentAdminPage() {
                   <DetailVal>{selectedRecord.studentDormNo || "-"}</DetailVal>
                 </DetailRow>
                 <DetailRow>
-                  <DetailKey>입사일 · 퇴사일</DetailKey>
+                  <DetailKey>상점 · 벌점 · 미상쇄</DetailKey>
                   <DetailVal>
-                    {[selectedRecord.checkInDate, selectedRecord.checkOutDate]
-                      .filter(Boolean)
-                      .join(" ~ ") || "-"}
+                    상점 {selectedRecord.meritPoints} / 벌점{" "}
+                    {selectedRecord.demeritPoints} / 미상쇄{" "}
+                    {selectedRecord.nonOffsetDemeritPoints ?? 0}
                   </DetailVal>
                 </DetailRow>
                 <DetailRow>
-                  <DetailKey>상점 · 벌점</DetailKey>
-                  <DetailVal>
-                    상점 {selectedRecord.meritPoints} / 벌점{" "}
-                    {selectedRecord.demeritPoints}
-                  </DetailVal>
+                  <DetailKey>우선입사대상</DetailKey>
+                  <DetailVal>{selectedRecord.priorityTarget || "-"}</DetailVal>
                 </DetailRow>
+                <DetailRow>
+                  <DetailKey>국적</DetailKey>
+                  <DetailVal>{selectedRecord.nationality || "-"}</DetailVal>
+                </DetailRow>
+                {selectedRecord.remark && (
+                  <DetailRow>
+                    <DetailKey>비고</DetailKey>
+                    <DetailVal>{selectedRecord.remark}</DetailVal>
+                  </DetailRow>
+                )}
               </>
             )}
           </DetailList>
