@@ -123,6 +123,8 @@ declare global {
   }
 }
 
+const EXTENSION_BRIDGE_CHANNEL = 'unidorm-portal-agent';
+
 /**
  * 모바일 앱(React Native) 웹뷰 환경인지 확인
  */
@@ -131,32 +133,44 @@ export function isMobileAppEnvironment(): boolean {
 }
 
 /**
- * 모바일 네이티브 브릿지로 액션 요청을 전송하고 응답을 기다리는 헬퍼
+ * PC 브라우저에 UNIDorm 포털 연동 Chrome Extension이 설치·활성화되어 있는지 확인
+ */
+export function isExtensionAgentEnvironment(): boolean {
+  return (
+    typeof document !== 'undefined' &&
+    document.documentElement?.dataset?.unidormExtension === '1'
+  );
+}
+
+/**
+ * 로컬 포털 에이전트(모바일 앱 웹뷰 또는 PC Chrome 확장)를 사용할 수 있는지 확인
+ */
+export function isPortalAgentAvailable(): boolean {
+  return isMobileAppEnvironment() || isExtensionAgentEnvironment();
+}
+
+/**
+ * 로컬 에이전트 브릿지(모바일 네이티브 웹뷰 또는 Chrome Extension)로 액션 요청을 전송하고 응답을 기다리는 헬퍼
  */
 function sendBridgeAction<T = any>(type: string, payload?: any, timeoutMs = 15000): Promise<AgentActionResult<T>> {
   return new Promise((resolve) => {
-    if (!isMobileAppEnvironment()) {
+    const useMobileApp = isMobileAppEnvironment();
+    const useExtension = !useMobileApp && isExtensionAgentEnvironment();
+
+    if (!useMobileApp && !useExtension) {
       resolve({
         success: false,
         errorCode: 'NOT_IN_MOBILE_APP',
-        errorMessage: '모바일 앱(유니돔 앱) 환경에서만 학교 시스템 직접 연동이 가능합니다.',
+        errorMessage: '유니돔 모바일 앱 또는 PC 크롬 확장 환경에서만 학교 시스템 직접 연동이 가능합니다.',
       });
       return;
     }
 
     const expectedResultType = `${type}Result`;
     const requestId = `req_${type}_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
-    let timer: NodeJS.Timeout;
+    let timer: ReturnType<typeof setTimeout>;
 
-    const handler = (event: Event) => {
-      const customEvent = event as CustomEvent;
-      const detail = customEvent.detail;
-      if (!detail) return;
-
-      // detail에 requestId가 있으면 requestId로 매칭, 없으면(하위 호환) type으로 매칭
-      const isMatch = detail.requestId ? detail.requestId === requestId : detail.type === expectedResultType;
-      if (!isMatch) return;
-
+    const resolveFromDetail = (detail: any) => {
       console.log(`[Bridge Action] Received response for ${type} (reqId: ${requestId}):`, detail);
       clearTimeout(timer);
       removeListeners();
@@ -173,22 +187,60 @@ function sendBridgeAction<T = any>(type: string, payload?: any, timeoutMs = 1500
       }
 
       resolve({
-        success: detail.success,
+        success: Boolean(detail.success),
         data: resolvedData,
         errorCode: resolvedErrorCode,
         errorMessage: resolvedErrorMessage,
       });
     };
 
+    const nativeHandler = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const detail = customEvent.detail;
+      if (!detail) return;
+
+      // detail에 requestId가 있으면 requestId로 매칭, 없으면(하위 호환) type으로 매칭
+      const isMatch = detail.requestId ? detail.requestId === requestId : detail.type === expectedResultType;
+      if (!isMatch) return;
+
+      resolveFromDetail(detail);
+    };
+
+    const extensionHandler = (event: MessageEvent) => {
+      if (event.source !== window || event.origin !== window.location.origin) return;
+      const data = event.data;
+      if (
+        !data ||
+        typeof data !== 'object' ||
+        data.channel !== EXTENSION_BRIDGE_CHANNEL ||
+        data.direction !== 'ext-to-web'
+      ) {
+        return;
+      }
+
+      const isMatch = data.requestId ? data.requestId === requestId : data.type === expectedResultType;
+      if (!isMatch) return;
+
+      resolveFromDetail(data);
+    };
+
     // 이미 설치된 구버전 앱은 intipAgentResult로만 보낸다. 새 앱은 두 이름으로 모두
     // 보내지만 첫 수신에서 리스너를 모두 떼므로 한 번만 처리된다.
-    // 사용자 기기의 앱이 모두 새 버전(OTA 포함)으로 바뀐 뒤 intip 쪽을 지운다.
     const removeListeners = () => {
-      window.removeEventListener('unidormAgentResult', handler);
-      window.removeEventListener('intipAgentResult', handler);
+      if (useMobileApp) {
+        window.removeEventListener('unidormAgentResult', nativeHandler);
+        window.removeEventListener('intipAgentResult', nativeHandler);
+      } else {
+        window.removeEventListener('message', extensionHandler);
+      }
     };
-    window.addEventListener('unidormAgentResult', handler);
-    window.addEventListener('intipAgentResult', handler);
+
+    if (useMobileApp) {
+      window.addEventListener('unidormAgentResult', nativeHandler);
+      window.addEventListener('intipAgentResult', nativeHandler);
+    } else {
+      window.addEventListener('message', extensionHandler);
+    }
 
     timer = setTimeout(() => {
       console.warn(`[Bridge Action] Request timed out for ${type} (reqId: ${requestId}, ${timeoutMs}ms)`);
@@ -205,14 +257,28 @@ function sendBridgeAction<T = any>(type: string, payload?: any, timeoutMs = 1500
       });
     }, timeoutMs);
 
-    console.log(`[Bridge Action] Sending ${type} (reqId: ${requestId}) to React Native`);
-    window.ReactNativeWebView?.postMessage(
-      JSON.stringify({
-        type,
-        requestId,
-        payload,
-      })
-    );
+    if (useMobileApp) {
+      console.log(`[Bridge Action] Sending ${type} (reqId: ${requestId}) to React Native`);
+      window.ReactNativeWebView?.postMessage(
+        JSON.stringify({
+          type,
+          requestId,
+          payload,
+        })
+      );
+    } else {
+      console.log(`[Bridge Action] Sending ${type} (reqId: ${requestId}) to Chrome Extension`);
+      window.postMessage(
+        {
+          channel: EXTENSION_BRIDGE_CHANNEL,
+          direction: 'web-to-ext',
+          type,
+          requestId,
+          payload,
+        },
+        window.location.origin
+      );
+    }
   });
 }
 
@@ -855,9 +921,10 @@ export async function cancelLmsDeadlineOngoingBridge(): Promise<AgentActionResul
  */
 export async function resolveClientContext(): Promise<Record<string, any>> {
   const isApp = isMobileAppEnvironment();
-  const context: Record<string, any> = { isApp };
+  const isExtension = isExtensionAgentEnvironment();
+  const context: Record<string, any> = { isApp, isExtension };
 
-  if (!isApp) {
+  if (!isPortalAgentAvailable()) {
     return context;
   }
 
