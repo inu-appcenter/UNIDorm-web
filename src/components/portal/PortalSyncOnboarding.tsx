@@ -12,7 +12,7 @@ import {
   fetchDormitoryStudentInfoFromApp,
   fetchAcademicInfoFromApp,
   resolveCurrentStudentId,
-  isMobileAppEnvironment,
+  isPortalAgentAvailable,
 } from "@/apis/mobileAgentBridge";
 import { secureStorage } from "@/utils/secureStorage";
 import { openUnidormAppOrStore } from "@/utils/portalAppLauncher";
@@ -45,7 +45,7 @@ export default function PortalSyncOnboarding({
   const checkStatus = useCallback(async () => {
     setIsCheckingLinked(true);
     try {
-      if (isMobileAppEnvironment()) {
+      if (isPortalAgentAvailable()) {
         const res = await checkPortalAccountLinked().catch(() => ({
           linked: false,
           studentId: undefined,
@@ -211,8 +211,8 @@ export default function PortalSyncOnboarding({
       return;
     }
 
-    if (!isMobileAppEnvironment()) {
-      setErrorMessage("포털 연동은 유니돔 모바일 앱 환경에서만 지원돼요.");
+    if (!isPortalAgentAvailable()) {
+      setErrorMessage("포털 연동은 유니돔 모바일 앱 또는 PC 크롬 확장 환경에서만 지원돼요.");
       return;
     }
 
@@ -265,8 +265,8 @@ export default function PortalSyncOnboarding({
     );
   }
 
-  // 모바일 앱 환경이 아닌 경우
-  if (!isMobileAppEnvironment()) {
+  // 로컬 포털 에이전트(모바일 앱 또는 PC 크롬 확장) 환경이 아닌 경우
+  if (!isPortalAgentAvailable()) {
     return (
       <Container>
         <ContentArea>

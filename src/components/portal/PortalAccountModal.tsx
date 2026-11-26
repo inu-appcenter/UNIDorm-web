@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { X, ShieldCheck, Lock, User } from "lucide-react";
-import { savePortalAccount, isMobileAppEnvironment } from "@/apis/mobileAgentBridge";
+import { savePortalAccount, isPortalAgentAvailable } from "@/apis/mobileAgentBridge";
 import CapsuleButton from "@/components/common/CapsuleButton";
 
 
@@ -40,8 +40,8 @@ export const PortalAccountModal: React.FC<Props> = ({
       return;
     }
 
-    if (!isMobileAppEnvironment()) {
-      setErrorMessage("포털 계정 연동은 유니돔 모바일 앱 환경에서만 지원됩니다.");
+    if (!isPortalAgentAvailable()) {
+      setErrorMessage("포털 계정 연동은 유니돔 모바일 앱 또는 PC 크롬 확장 환경에서만 지원됩니다.");
       return;
     }
 
