@@ -108,6 +108,12 @@ export default function AdminMainPage() {
       category: "운영 및 시스템",
     },
     {
+      label: "기숙사 사생 목록",
+      path: "/admin/dormitory-residents",
+      description: "포털 ERP에서 사생정보와 입사신청 목록을 로컬 IndexedDB로 불러와 조회해요.",
+      category: "운영 및 시스템",
+    },
+    {
       label: "사생증 시뮬레이션 (정상)",
       path: "/dormitory/card?preview=true",
       description: "모바일 사생증 카드와 동기화 동작을 확인해요.",
