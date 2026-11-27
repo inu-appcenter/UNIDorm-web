@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import styled from "styled-components";
 import Divider from "@/components/common/Divider";
@@ -84,6 +85,7 @@ const fetchYoutubeVideos = async (sort: string): Promise<VideoData[]> => {
 };
 
 const YoutubeListWidget = () => {
+  const { t } = useTranslation("home");
   const [sort, setSort] = useState("date");
 
   // 리액트 쿼리 설정 및 에러 상태 추출
@@ -101,8 +103,12 @@ const YoutubeListWidget = () => {
 
   const formatViewCount = (count: string) => {
     const num = parseInt(count, 10);
-    if (num >= 10000) return `${(num / 10000).toFixed(1)}만회`;
-    return `${num.toLocaleString()}회`;
+    if (num >= 10000) {
+      return t("youtubeSection.viewsTenThousand", {
+        count: (num / 10000).toFixed(1),
+      });
+    }
+    return t("youtubeSection.viewsCount", { count: num.toLocaleString() });
   };
 
   const handleVideoClick = (videoId: string, order: number) => {
@@ -162,7 +168,9 @@ const YoutubeListWidget = () => {
                   />
                   <MetaInfo>
                     <InfoText>
-                      조회수 {formatViewCount(video.viewCount)}
+                      {t("youtubeSection.views", {
+                        count: formatViewCount(video.viewCount),
+                      })}
                     </InfoText>
                     <DividerDot>•</DividerDot>
                     <InfoText className="date">

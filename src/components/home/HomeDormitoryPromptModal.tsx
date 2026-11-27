@@ -1,4 +1,5 @@
 import styled, { keyframes } from "styled-components";
+import { useTranslation } from "react-i18next";
 import * as Dialog from "@radix-ui/react-dialog";
 import { GraduationCap, X } from "lucide-react";
 import CapsuleButton from "@/components/common/CapsuleButton";
@@ -16,6 +17,7 @@ export default function HomeDormitoryPromptModal({
   onConfirm,
   mode = "issue",
 }: HomeDormitoryPromptModalProps) {
+  const { t } = useTranslation(["home", "common"]);
   const isRenew = mode === "renew";
 
   return (
@@ -23,7 +25,7 @@ export default function HomeDormitoryPromptModal({
       <Dialog.Portal>
         <Overlay />
         <Container onPointerDownOutside={onClose}>
-          <CloseButton onClick={onClose} aria-label="닫기">
+          <CloseButton onClick={onClose} aria-label={t("common:actions.close")}>
             <X size={20} color="#8B95A1" />
           </CloseButton>
 
@@ -34,16 +36,16 @@ export default function HomeDormitoryPromptModal({
           <Dialog.Title asChild>
             <Title>
               {isRenew
-                ? "새 학기 사생증을 갱신할까요?"
-                : "모바일 사생증을 발급할까요?"}
+                ? t("home:dormPrompt.renewTitle")
+                : t("home:dormPrompt.issueTitle")}
             </Title>
           </Dialog.Title>
 
           <Dialog.Description asChild>
             <Description>
               {isRenew
-                ? "지난 학기 사생증이 만료되었어요. 이번 학기 사생 정보를 새로 가져올게요."
-                : "기숙사에 살고 있다면 모바일 사생증을 바로 이용할 수 있어요. 간식나눔 등 사생 확인이 필요한 행사 등에서 사용돼요."}
+                ? t("home:dormPrompt.renewDescription")
+                : t("home:dormPrompt.issueDescription")}
             </Description>
           </Dialog.Description>
 
@@ -53,14 +55,16 @@ export default function HomeDormitoryPromptModal({
               fullWidth
               onClick={onClose}
             >
-              다음에 하기
+              {t("home:dormPrompt.later")}
             </CapsuleButton>
             <CapsuleButton
               variant="primary"
               fullWidth
               onClick={onConfirm}
             >
-              {isRenew ? "사생증 갱신하기" : "사생증 발급하기"}
+              {isRenew
+                ? t("home:dormPrompt.renewConfirm")
+                : t("home:dormPrompt.issueConfirm")}
             </CapsuleButton>
           </ButtonGroup>
         </Container>

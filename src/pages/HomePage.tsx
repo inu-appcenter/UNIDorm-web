@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { useTranslation } from "react-i18next";
 import { colors, typography } from "@/styles/tokens";
 import TitleContentArea from "../components/common/TitleContentArea.tsx";
 import HomeNoticeCard from "../components/home/HomeNoticeCard.tsx";
@@ -49,13 +50,14 @@ import { secureStorage } from "@/utils/secureStorage";
 import dormitoryGuideSvg from "@/assets/home/dormitory-guide-widget.svg";
 
 const GUIDE_KEYWORDS = [
-  { label: "세탁기 예약", query: "세탁" },
-  { label: "시설 고장", query: "고장" },
-  { label: "학식·식단", query: "식단" },
-  { label: "생활 수칙", query: "수칙" },
+  { key: "laundry", query: "세탁" },
+  { key: "facility", query: "고장" },
+  { key: "meal", query: "식단" },
+  { key: "rules", query: "수칙" },
 ] as const;
 
 export default function HomePage() {
+  const { t } = useTranslation(["home", "common"]);
   useSetAIChat({ isVisible: true, shouldAnimate: true });
   const { data: matchingStatus, isOpen: isMatchingOpen } =
     useRoommateMatchingStatus();
@@ -191,7 +193,7 @@ export default function HomePage() {
     mixpanelTrack.dormitoryCardEntryClicked("홈");
     if (!isLoggedIn) {
       const shouldLogin = window.confirm(
-        "포털 아이디를 통한 로그인이 필요해요. 로그인 페이지로 이동할까요?",
+        t("home:dormPrompt.loginRequiredConfirm"),
       );
       if (shouldLogin) {
         navigate(PATHS.LOGIN);
@@ -248,9 +250,7 @@ export default function HomePage() {
     if (shouldShowMigrationBanner && !hasSeenMigrationAlert) {
       sessionStorage.setItem("hasSeenFreshmanMigrationAlert", "true");
       mixpanelTrack.migrationAlertShown("freshman");
-      alert(
-        "지금 바로 신입생 임시 계정을 학교 포털 계정으로 통합하세요!!!\n곧 통합하지 않은 임시 계정은 삭제될 예정입니다.\n홈 중앙의 [포털 계정 통합] 배너를 클릭하세요.",
-      );
+      alert(t("home:migrationConfirm"));
       // navigate(PATHS.FRESHMAN_MIGRATION); //강제이동은 안하기..
       return;
     }
@@ -347,8 +347,8 @@ export default function HomePage() {
   useEffect(() => {
     if (isNetworkError) {
       setNotification({
-        title: "서비스 장애 안내",
-        message: `학교 인터넷에 문제가 발생했거나, 서버 점검 중입니다. 이용에 불편을 드려 죄송합니다.`,
+        title: t("home:networkError.title"),
+        message: t("home:networkError.message"),
       });
     } else {
       setNotification(null);
@@ -438,18 +438,19 @@ export default function HomePage() {
               <TitleContentArea
                 title={
                   matchingStatus
-                    ? `${matchingStatus.year}년 ${formatSemesterName(matchingStatus.semester)} 룸메이트 모집`
-                    : "룸메이트 모집"
+                    ? t("home:roommateSection.titleWithSemester", {
+                        year: matchingStatus.year,
+                        semester: formatSemesterName(matchingStatus.semester),
+                      })
+                    : t("home:roommateSection.title")
                 }
-                description={
-                  "룸메이트를 구하고 있는 다양한 UNI들을 찾아보세요!"
-                }
+                description={t("home:roommateSection.description")}
                 link={"/roommate"}
                 location="홈"
               >
                 <>
                   {isRoommateLoading ? (
-                    <LoadingSpinner message="최신 목록을 불러오는 중..." />
+                    <LoadingSpinner message={t("home:roommateSection.loading")} />
                   ) : roommates && roommates.length > 0 ? (
                     roommates
                       .slice(0, 2)
@@ -480,7 +481,7 @@ export default function HomePage() {
 
         <WidgetContainer>
           <TitleContentArea
-            title={"기숙사 생활 안내"}
+            title={t("home:guideWidget.title")}
             link={PATHS.DORMITORY_GUIDE}
             location="홈"
             gap={"12px"}
@@ -504,7 +505,7 @@ export default function HomePage() {
               />
               <GuideWidgetContent>
                 <GuideWidgetSummary>
-                  자주 찾는 기숙사 정보를 모았어요
+                  {t("home:guideWidget.summary")}
                 </GuideWidgetSummary>
                 <GuideChipRow>
                   {GUIDE_KEYWORDS.map((chip) => (
@@ -515,7 +516,7 @@ export default function HomePage() {
                         handleDormitoryGuideKeywordClick(e, chip.query)
                       }
                     >
-                      {chip.label}
+                      {t(`home:guideWidget.keywords.${chip.key}`)}
                     </GuideKeywordChip>
                   ))}
                 </GuideChipRow>
@@ -526,13 +527,13 @@ export default function HomePage() {
 
         <WidgetContainer>
             <TitleContentArea
-              title={"공지사항"}
+              title={t("home:noticeSection.title")}
               link={"/announcements"}
               location="홈"
               gap={"16px"}
             >
               {isAnnounceLoading ? (
-                <LoadingSpinner message={"공지사항을 불러오고 있어요!"} />
+                <LoadingSpinner message={t("home:noticeSection.loading")} />
               ) : notices.length > 0 ? (
                 <NoticeListContainer>
                   {notices
@@ -553,14 +554,14 @@ export default function HomePage() {
                     ))}
                 </NoticeListContainer>
               ) : (
-                <EmptyMessage message={"공지사항이 없습니다."} />
+                <EmptyMessage message={t("home:noticeSection.empty")} />
               )}
             </TitleContentArea>
           </WidgetContainer>
           <FormSectionWrapper>
-            <TitleContentArea title={"INU 폼"} link={"/form"} location="홈">
+            <TitleContentArea title={t("home:formSection.title")} link={"/form"} location="홈">
               {isSurveysLoading ? (
-                <LoadingSpinner message={"폼 목록을 불러오고 있어요!"} />
+                <LoadingSpinner message={t("home:formSection.loading")} />
               ) : (
                 <FormArea>
                   <FormWrapper>
@@ -578,7 +579,7 @@ export default function HomePage() {
                           />
                         ))
                     ) : (
-                      <EmptyMessage message={"조회된 폼이 없습니다."} />
+                      <EmptyMessage message={t("home:formSection.empty")} />
                     )}
                   </FormWrapper>
                   <FormGradientRight />
@@ -589,7 +590,7 @@ export default function HomePage() {
 
         <WidgetContainer>
             <TitleContentArea
-              title={"생활원 YouTube"}
+              title={t("home:youtubeSection.title")}
               externalLink={`https://www.youtube.com/channel/${CHANNEL_ID}`}
               location="홈"
             >
@@ -600,13 +601,13 @@ export default function HomePage() {
         <GridContainer>
           <WidgetContainer>
               <TitleContentArea
-                title="오늘의 Best 꿀팁"
+                title={t("home:tipsSection.title")}
                 link={"/tips"}
                 location="홈"
                 gap={"16px"}
               >
                 {isTipsLoading ? (
-                  <LoadingSpinner message={"꿀팁을 불러오고 있어요!"} />
+                  <LoadingSpinner message={t("home:tipsSection.loading")} />
                 ) : dailyTips.length > 0 ? (
                   <TipsListContainer>
                     {dailyTips.slice(0, 3).map((tip, key) => (
@@ -619,13 +620,13 @@ export default function HomePage() {
                     ))}
                   </TipsListContainer>
                 ) : (
-                  <EmptyMessage message={"오늘의 꿀팁이 없습니다."} />
+                  <EmptyMessage message={t("home:tipsSection.empty")} />
                 )}
               </TitleContentArea>
             </WidgetContainer>
           <WidgetContainer>
             <TitleContentArea
-                title={"생활원 일정"}
+                title={t("home:calendarSection.title")}
                 children={<Calendar mode={"week"} location="홈" />}
                 link={"/calendar"}
                 location="홈"
@@ -636,16 +637,16 @@ export default function HomePage() {
         {isOpenGroupPurchase && (
             <WidgetContainer>
               <TitleContentArea
-                title={"임박한 공동구매"}
+                title={t("home:groupPurchaseSection.title")}
                 link={"/groupPurchase"}
                 location="홈"
               >
                 {isGroupOrdersLoading ? (
-                  <LoadingSpinner message={"공동구매를 불러오고 있어요!"} />
+                  <LoadingSpinner message={t("home:groupPurchaseSection.loading")} />
                 ) : groupOrders.length > 0 ? (
                   <GroupPurchaseList groupOrders={groupOrders.slice(0, 4)} />
                 ) : (
-                  <EmptyMessage message={"임박한 공동구매가 없습니다."} />
+                  <EmptyMessage message={t("home:groupPurchaseSection.empty")} />
                 )}
               </TitleContentArea>
             </WidgetContainer>

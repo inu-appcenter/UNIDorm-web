@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { useTranslation } from "react-i18next";
 import NotiItem from "../components/notification/NotiItem.tsx";
 import { useEffect, useRef, useState } from "react";
 import { useNotificationScroll } from "@/queries/notifications";
@@ -20,6 +21,7 @@ import { PATHS } from "@/constants/paths";
 const PAGE_SIZE = 20;
 
 const NotificationPage = () => {
+  const { t } = useTranslation(["home", "common"]);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { tokenInfo, userInfo, clearUnreadNotifications } = useUserStore();
@@ -83,7 +85,7 @@ const NotificationPage = () => {
 
   // 수락 핸들러
   const handleAccept = async () => {
-    if (!window.confirm("정말 매칭을 수락할까요?")) {
+    if (!window.confirm(t("home:notification.acceptConfirm"))) {
       return;
     }
 
@@ -91,10 +93,8 @@ const NotificationPage = () => {
     try {
       await acceptRoommateMatching(selectedMatching.id);
       queryClient.invalidateQueries({ queryKey: roommateKeys.myInfo() });
-      alert("매칭 요청이 수락되었습니다.");
-      alert(
-        "UNI Dorm에서의 룸메이트 매칭은 실제 기숙사 룸메이트 지정과 무관하며, 룸메이트와의 편리한 생활을 위한 서비스를 제공하기 위함입니다.\n반드시 룸메이트 사전 지정 기간에 인천대학교 포털에서 신청해주세요!!!!",
-      );
+      alert(t("home:notification.acceptSuccess"));
+      alert(t("home:notification.acceptPortalNotice"));
       refetch();
     } catch (e: any) {
       handleError(e);
@@ -105,13 +105,13 @@ const NotificationPage = () => {
 
   // 거절 핸들러
   const handleReject = async () => {
-    if (!window.confirm("정말 매칭을 거절할까요?")) {
+    if (!window.confirm(t("home:notification.rejectConfirm"))) {
       return;
     }
     if (!selectedMatching) return;
     try {
       await rejectRoommateMatching(selectedMatching.id);
-      alert("매칭 요청이 거절되었습니다.");
+      alert(t("home:notification.rejectSuccess"));
       refetch();
     } catch (e: any) {
       handleError(e);
@@ -123,26 +123,26 @@ const NotificationPage = () => {
   // 에러 처리 핸들러
   const handleError = (e: any) => {
     if (isAxiosError(e) && e.response?.status === 409) {
-      alert("이미 처리된 매칭 요청입니다.");
+      alert(t("home:notification.alreadyProcessed"));
       refetch();
       return;
     }
-    alert("처리 중 오류가 발생했습니다.");
+    alert(t("common:states.error"));
   };
 
   // 헤더 설정
   useSetHeader({
-    title: "알림",
+    title: t("home:notification.title"),
     menuItems: [
       {
-        label: "알림 수신 설정",
+        label: t("home:notification.settingsMenu"),
         onClick: () => navigate("/notification-setting"),
       },
     ],
   });
 
   if (isLoading && !isFetchingNextPage) {
-    return <LoadingSpinner message="알림을 불러오는 중입니다..." />;
+    return <LoadingSpinner message={t("home:notification.loading")} />;
   }
 
   return (
@@ -162,13 +162,13 @@ const NotificationPage = () => {
             {isFetchingNextPage && <LoadingSpinner message="" />}
           </>
         ) : isLoggedIn ? (
-          <EmptyMessage>알림이 없습니다.</EmptyMessage>
+          <EmptyMessage>{t("home:notification.empty")}</EmptyMessage>
         ) : (
           <EmptyMessage>
-            로그인 후 알림을 확인할 수 있습니다.
+            {t("home:notification.loginPrompt")}
             <br />
             <br />
-            <LoginLink to={PATHS.LOGIN}>로그인 하기</LoginLink>
+            <LoginLink to={PATHS.LOGIN}>{t("home:notification.loginAction")}</LoginLink>
           </EmptyMessage>
         )}
       </ContentWrapper>
@@ -176,12 +176,12 @@ const NotificationPage = () => {
       <Modal
         show={isMatchModalOpen}
         onClose={() => setIsMatchModalOpen(false)}
-        title={"룸메이트 매칭 요청"}
+        title={t("home:notification.matchModalTitle")}
         headerImageId={1}
         content={selectedMatching ? selectedMatching.message : ""}
-        closeButtonText="수락"
+        closeButtonText={t("home:notification.accept")}
         onCloseClick={handleAccept}
-        secondaryButtonText="거절"
+        secondaryButtonText={t("home:notification.reject")}
         onSecondaryButtonClick={handleReject}
       />
     </NotificationPageWrapper>
