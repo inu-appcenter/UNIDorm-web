@@ -1,0 +1,80 @@
+{
+  "complain": {
+    "title": "Dormitory Reports",
+    "writeTitle": "New Report",
+    "editTitle": "Edit Report",
+    "detailTitle": "Report Details",
+    "myComplaints": "My Reports",
+    "allComplaints": "All Reports",
+    "empty": "No reports found.",
+    "deleteConfirm": "Delete this report?",
+    "deleted": "Deleted.",
+    "titlePlaceholder": "Title",
+    "contentPlaceholder": "Enter details",
+    "locationPlaceholder": "Enter exact location (e.g., in front of restroom, end of hallway)",
+    "writeSuccess": "Report submitted!",
+    "editSuccess": "Report updated!",
+    "validation": {
+      "selectTypeDorm": "Please select type, dormitory, and building.",
+      "selectRoom": "Please select floor, room, and bed.",
+      "enterLocation": "Please enter the detailed location.",
+      "selectDate": "Please select the date.",
+      "selectTime": "Please select the time.",
+      "enterTitle": "Please enter a title.",
+      "enterContent": "Please enter details.",
+      "agreePrivacy": "Please agree to the privacy policy."
+    }
+  },
+  "announcement": {
+    "title": "Announcements",
+    "detailTitle": "Announcement",
+    "searchPlaceholder": "Enter search keyword",
+    "loadError": "Failed to load announcements.",
+    "deleteConfirm": "Delete this announcement?",
+    "deleted": "Deleted.",
+    "deleteFailed": "Failed to delete.",
+    "empty": "No announcements."
+  },
+  "groupPurchase": {
+    "title": "Group Buy",
+    "writeTitle": "New Group Buy",
+    "keywordSettingTitle": "Keyword Alerts",
+    "appRequired": "Available after installing the app.",
+    "loginRequired": "Sign in to use this feature.",
+    "empty": "No group buys found."
+  },
+  "tip": {
+    "title": "Dorm Tips",
+    "writeTitle": "Write / Edit Tip",
+    "titlePlaceholder": "Title",
+    "contentPlaceholder": "Enter content",
+    "deleteConfirm": "Delete this post?",
+    "deleted": "Deleted.",
+    "deleteFailed": "Failed to delete.",
+    "loginRequired": "Please sign in to use this feature.",
+    "likeFailed": "Failed to like.",
+    "commentFailed": "Failed to post comment.",
+    "replyFailed": "Failed to post reply.",
+    "writeSuccess": "Tip posted!",
+    "editSuccess": "Tip updated!",
+    "validation": {
+      "enterBoth": "Please enter both title and content.",
+      "titleMax": "Title must be 100 characters or less.",
+      "contentMax": "Content must be 2000 characters or less."
+    }
+  },
+  "form": {
+    "title": "INU Forms",
+    "searchPlaceholder": "Search form titles",
+    "answerPlaceholder": "Enter your answer",
+    "unavailable": "This form is closed or you have already submitted it.",
+    "requiredMissing": "Please answer all required questions.",
+    "submitted": "Submitted successfully!",
+    "submitError": "Failed to submit. Please try again.",
+    "closed": "Form closed.",
+    "closeFailed": "Failed to close form.",
+    "deleteConfirm": "Delete this form?\nThis action cannot be undone.",
+    "deleted": "Deleted.",
+    "deleteFailed": "Failed to delete."
+  }
+}

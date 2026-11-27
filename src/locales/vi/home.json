@@ -1,0 +1,84 @@
+{
+  "roommateSection": {
+    "titleWithSemester": "Tìm bạn phòng {{semester}} {{year}}",
+    "title": "Tìm bạn phòng",
+    "description": "Tìm các sinh viên UNI đang tìm bạn cùng phòng!",
+    "loading": "Đang tải danh sách mới nhất..."
+  },
+  "guideWidget": {
+    "title": "Hướng dẫn KTX",
+    "summary": "Tổng hợp thông tin KTX hay tìm kiếm",
+    "keywords": {
+      "laundry": "Đặt máy giặt",
+      "facility": "Báo hỏng",
+      "meal": "Thực đơn",
+      "rules": "Nội quy"
+    }
+  },
+  "noticeSection": {
+    "title": "Thông báo",
+    "loading": "Đang tải thông báo...",
+    "empty": "Không có thông báo."
+  },
+  "formSection": {
+    "title": "Biểu mẫu INU",
+    "loading": "Đang tải biểu mẫu...",
+    "empty": "Không có biểu mẫu nào."
+  },
+  "youtubeSection": {
+    "title": "YouTube KTX",
+    "views": "{{count}} lượt xem",
+    "viewsTenThousand": "{{count}}0N",
+    "viewsCount": "{{count}}"
+  },
+  "tipsSection": {
+    "title": "Mẹo hay hôm nay",
+    "loading": "Đang tải mẹo hay...",
+    "empty": "Chưa có mẹo hay hôm nay."
+  },
+  "calendarSection": {
+    "title": "Lịch trình KTX",
+    "pageTitle": "Lịch trình KTX",
+    "pageDescription": "Lịch sự kiện của KTX Đại học Incheon. Một số lịch do AI tạo từ thông báo, vui lòng kiểm tra trực tiếp các lịch quan trọng.",
+    "weekdays": ["CN", "T2", "T3", "T4", "T5", "T6", "T7"],
+    "emptyForDate": "Không có lịch trình vào ngày này.",
+    "aiGenerated": "Nội dung được tạo bởi Torch AI."
+  },
+  "groupPurchaseSection": {
+    "title": "Mua chung sắp đóng",
+    "loading": "Đang tải mua chung...",
+    "empty": "Không có bài mua chung sắp đóng."
+  },
+  "dormPrompt": {
+    "loginRequiredConfirm": "Cần đăng nhập bằng tài khoản Portal. Chuyển đến trang đăng nhập?",
+    "renewTitle": "Gia hạn Thẻ KTX học kỳ mới?",
+    "issueTitle": "Cấp Thẻ KTX di động?",
+    "renewDescription": "Thẻ KTX học kỳ trước đã hết hạn. Chúng tôi sẽ cập nhật thông tin học kỳ này.",
+    "issueDescription": "Nếu đang ở KTX, bạn có thể dùng Thẻ KTX di động cho các sự kiện phát đồ ăn nhẹ và xác minh nội trú.",
+    "later": "Để sau",
+    "renewConfirm": "Gia hạn thẻ",
+    "issueConfirm": "Cấp thẻ ngay"
+  },
+  "notification": {
+    "title": "Thông báo",
+    "settingsMenu": "Cài đặt nhận thông báo",
+    "loading": "Đang tải thông báo...",
+    "empty": "Không có thông báo.",
+    "loginPrompt": "Đăng nhập để xem thông báo.",
+    "loginAction": "Đăng nhập",
+    "matchModalTitle": "Yêu cầu ghép bạn phòng",
+    "accept": "Chấp nhận",
+    "reject": "Từ chối",
+    "acceptConfirm": "Bạn có muốn chấp nhận ghép bạn phòng không?",
+    "acceptSuccess": "Đã chấp nhận yêu cầu.",
+    "acceptPortalNotice": "Việc ghép bạn phòng trên UNI Dorm không tự động xếp phòng KTX chính thức.\nVui lòng đăng ký chính thức trên Portal Đại học Incheon trong thời gian quy định.",
+    "rejectConfirm": "Bạn có muốn từ chối yêu cầu này không?",
+    "rejectSuccess": "Đã từ chối yêu cầu.",
+    "alreadyProcessed": "Yêu cầu này đã được xử lý."
+  },
+  "networkError": {
+    "title": "Thông báo sự cố dịch vụ",
+    "message": "Mạng trường đang gặp sự cố hoặc máy chủ đang bảo trì. Xin lỗi vì sự bất tiện này."
+  },
+  "migrationConfirm": "Hãy liên kết tài khoản tân sinh viên tạm thời với tài khoản Portal trường ngay.\nCác tài khoản chưa liên kết sẽ sớm bị xóa."
+}

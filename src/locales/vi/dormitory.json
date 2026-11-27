@@ -1,0 +1,202 @@
+{
+  "guide": {
+    "pageTitle": "Hướng dẫn KTX",
+    "intro": "Tổng hợp các ứng dụng và trang web trường hay dùng khi ở KTX theo từng mục đích.",
+    "filterAriaLabel": "Lọc theo tòa KTX",
+    "filters": {
+      "all": "Tất cả",
+      "1기숙사": "KTX 1",
+      "2기숙사": "KTX 2",
+      "3기숙사": "KTX 3"
+    },
+    "categories": {
+      "생활·시설": "Sinh hoạt & Cơ sở",
+      "식단·캠퍼스": "Ăn uống & Campus",
+      "입·퇴사·행정": "Nhập/Xuất KTX & Hành chính",
+      "생활 정보": "Thông tin đời sống",
+      "질문·문의": "Hỏi đáp & Liên hệ"
+    },
+    "searchPlaceholder": "Tìm máy giặt, báo hỏng, thực đơn, giờ giới nghiêm",
+    "searchAriaLabel": "Tìm kiếm hướng dẫn KTX",
+    "searchResultTitle": "{{count}} kết quả",
+    "emptyTitle": "Không tìm thấy kết quả.",
+    "emptyDescription": "Nếu không thấy trong danh sách, hãy hỏi trực tiếp Torch AI nhé.",
+    "askChatbuli": "Hỏi Torch AI",
+    "showAllDorms": "Xem tất cả KTX",
+    "clearSearch": "Xóa từ khóa",
+    "infoConfirm": "Đã hiểu",
+    "installApp": "Cài đặt {{label}}",
+    "items": {
+      "laundry-metaclub": {
+        "title": "Máy giặt & Máy sấy (MetaClub)",
+        "description": "Xem tình trạng máy giặt/sấy và thanh toán tại KTX 1 & 2.",
+        "actionLabel": "Mở app"
+      },
+      "laundry-dorm3": {
+        "title": "Phòng giặt KTX 3",
+        "description": "Không dùng app riêng, thanh toán bằng tiền mặt hoặc thẻ nạp. Nhấn để xem hướng dẫn.",
+        "infoModal": {
+          "title": "Hướng dẫn phòng giặt KTX 3",
+          "subtitle": "Không hỗ trợ app · Thanh toán tại chỗ",
+          "points": [
+            "Phòng giặt KTX 3 không hỗ trợ ứng dụng MetaClub.",
+            "Bạn có thể thanh toán bằng tiền mặt hoặc thẻ nạp tại máy thanh toán trong phòng giặt.",
+            "Nếu máy hỏng hoặc gặp sự cố, vui lòng báo hỏng qua Edumac hoặc liên hệ Văn phòng KTX 3 (032-858-7222)."
+          ]
+        }
+      },
+      "facility-dorm1": {
+        "title": "Báo hỏng & Sửa chữa",
+        "description": "Báo cáo sự cố cơ sở vật chất KTX 1 trên hệ thống INU Portal.",
+        "actionLabel": "Mở Portal"
+      },
+      "facility-dorm23": {
+        "title": "Báo hỏng & Sửa chữa",
+        "description": "Báo hỏng & sửa chữa KTX 2·3 (BTL) trên hệ thống Edumac.",
+        "actionLabel": "Mở Edumac"
+      },
+      "unidorm-complain": {
+        "title": "Phản ánh sinh hoạt khác",
+        "description": "Gửi phản ánh ngoài sự cố kỹ thuật và theo dõi xử lý trên UNIDorm.",
+        "actionLabel": "Đến Phản ánh"
+      },
+      "intip-menu": {
+        "title": "Thực đơn KTX & Canteen",
+        "description": "Xem thực đơn nhà ăn KTX 1 và canteen trường trên INTIP.",
+        "actionLabel": "Xem thực đơn",
+        "secondaryAppLabel": "App INTIP"
+      },
+      "portal-apply": {
+        "title": "Đăng ký vào/ra KTX (SV hiện tại)",
+        "description": "Đăng ký ở KTX và xin ra KTX định kỳ/giữa kỳ trên INU Portal.",
+        "actionLabel": "Mở Portal"
+      },
+      "erp-freshman-apply": {
+        "title": "Đăng ký KTX (Tân SV / Chuyển tiếp)",
+        "description": "Trang đăng ký dành cho tân sinh viên chưa có ID Portal.",
+        "actionLabel": "Đăng ký ngay"
+      },
+      "dorm-lecture": {
+        "title": "Đăng ký lớp chuyên đề KTX",
+        "description": "Xem lịch và hướng dẫn đăng ký các lớp miễn phí cho sinh viên KTX.",
+        "actionLabel": "Xem hướng dẫn"
+      },
+      "dorm-rules": {
+        "title": "Nội quy sinh hoạt",
+        "description": "Giờ giới nghiêm (05:00–02:00), quy định xin ra ngoài, phòng bưu phẩm & khu chung.",
+        "actionLabel": "Xem"
+      },
+      "dorm-facilities": {
+        "title": "Tiện ích theo từng KTX",
+        "description": "Xem vị trí cửa hàng tiện lợi, phòng bưu phẩm, phòng gym, bếp nhỏ.",
+        "actionLabel": "Xem"
+      },
+      "dorm-archive": {
+        "title": "Bảng điểm thưởng/phạt & Tài liệu",
+        "description": "Bảng tiêu chí điểm thưởng/phạt mới nhất và kho tài liệu hướng dẫn.",
+        "actionLabel": "Xem"
+      },
+      "dorm-home": {
+        "title": "Trang chủ Ban Quản lý KTX INU",
+        "description": "Chuyển đến trang web chính thức của KTX Đại học Incheon.",
+        "actionLabel": "Mở"
+      },
+      "chatbuli": {
+        "title": "Hỏi Torch AI",
+        "description": "Hỏi chatbot AI về giờ giới nghiêm, điểm thưởng/phạt, thủ tục vào/ra KTX.",
+        "actionLabel": "Hỏi ngay"
+      },
+      "dorm-qna": {
+        "title": "Hỏi đáp KTX (Q&A)",
+        "description": "Bảng hỏi đáp 1:1 chính thức với Văn phòng KTX.",
+        "actionLabel": "Mở"
+      },
+      "tel-admin": {
+        "title": "Văn phòng hành chính tổng hợp",
+        "description": "Hỏi đáp vào/ra KTX & hành chính chung (032-835-9810)",
+        "actionLabel": "Gọi điện"
+      },
+      "tel-dorm2": {
+        "title": "Văn phòng quản lý KTX 2",
+        "description": "Hỏi đáp cơ sở vật chất & đời sống KTX 2 (032-858-7233)",
+        "actionLabel": "Gọi điện"
+      },
+      "tel-dorm3": {
+        "title": "Văn phòng quản lý KTX 3",
+        "description": "Hỏi đáp cơ sở vật chất & đời sống KTX 3 (032-858-7222)",
+        "actionLabel": "Gọi điện"
+      }
+    }
+  },
+  "viewer": {
+    "defaultTitle": "Xem hướng dẫn",
+    "openExternalAriaLabel": "Mở bằng trình duyệt ngoài",
+    "openExternal": "Mở ngoài",
+    "notFoundTitle": "Không tìm thấy trang hướng dẫn.",
+    "notFoundDescription": "Đường dẫn không hợp lệ hoặc chưa được hỗ trợ.",
+    "backToGuide": "Quay lại Hướng dẫn KTX",
+    "loading": "Đang tải trang..."
+  },
+  "card": {
+    "pageTitle": "Thẻ KTX di động",
+    "subHeading": "Ban Quản lý KTX ĐH Incheon",
+    "mainTitle": "Thẻ KTX di động",
+    "studentId": "Mã SV",
+    "department": "Khoa",
+    "grade": "Năm học",
+    "dormitory": "KTX",
+    "dormNo": "Số nội trú",
+    "assignedRoom": "Phòng được xếp",
+    "status": "Trạng thái",
+    "photoAlt": "Ảnh thẻ nội trú của {{name}}",
+    "yearSuffix": "Năm {{year}}",
+    "refreshButton": "Làm mới",
+    "detailButton": "Chi tiết thông tin nội trú",
+    "refreshing": "Đang làm mới thông tin Thẻ KTX..."
+  },
+  "portalSync": {
+    "progressTitle": "Đang tải thông tin nội trú",
+    "steps": [
+      "Đang kết nối an toàn với hệ thống Portal trường...",
+      "Đang kiểm tra xếp phòng và thông tin KTX...",
+      "Đang đồng bộ thông tin học vụ và ảnh thẻ sinh viên...",
+      "Đang lưu an toàn thông tin Thẻ KTX vào thiết bị..."
+    ],
+    "doNotClose": "Vui lòng <strong>không rời màn hình hoặc đóng ứng dụng</strong> cho đến khi hoàn tất",
+    "secureChannel": "Đang truyền dữ liệu mã hóa đầu cuối với INU Portal",
+    "accountModalTitle": "Liên kết Portal 1 lần",
+    "accountModalNotice": "<strong>Yên tâm nhé!</strong> Portal INU, LMS và Thư viện dùng chung ID/mật khẩu. Chỉ cần đăng ký 1 lần để lưu mã hóa trong KeyStore thiết bị và tự động đồng bộ.",
+    "studentIdLabel": "Mã sinh viên Portal",
+    "studentIdPlaceholder": "VD: 202600000",
+    "passwordLabel": "Mật khẩu Portal",
+    "passwordPlaceholder": "Nhập mật khẩu Portal",
+    "missingCredentials": "Vui lòng nhập đầy đủ mã sinh viên và mật khẩu.",
+    "appOnly": "Liên kết Portal chỉ hỗ trợ trên ứng dụng di động UNIDorm.",
+    "saving": "Đang lưu vào vùng bảo mật...",
+    "linkFailed": "Liên kết tài khoản thất bại.",
+    "genericError": "Đã xảy ra lỗi.",
+    "fetchTitle": "Cần lấy thông tin\ntừ trang Portal",
+    "fetchSubtitle": "Để cấp Thẻ KTX di động, chúng tôi sẽ tải an toàn thông tin nội trú từ Portal Đại học Incheon.",
+    "securityTitle": "Quá trình chỉ thực hiện trên thiết bị này",
+    "securityDesc": "ID, mật khẩu Portal và thông tin nội trú không gửi ra máy chủ ngoài mà chỉ lưu mã hóa trong vùng bảo mật điện thoại.",
+    "savedStudentIdLabel": "Mã SV Portal đã lưu",
+    "savedStudentIdFallback": "Đã liên kết",
+    "savedAccountReady": "Tài khoản đã được lưu an toàn trên thiết bị, có thể tải thông tin ngay.",
+    "fetchDormCardBtn": "Tải thông tin Thẻ KTX",
+    "useOtherAccount": "Đăng nhập bằng tài khoản Portal khác",
+    "fetchInfoBtn": "Tải thông tin",
+    "useSavedAccount": "Dùng tài khoản đã lưu"
+  },
+  "portalInfo": {
+    "pageTitle": "Tra cứu thông tin nội trú",
+    "tabs": {
+      "basic": "Thông tin chung",
+      "stay": "Vào/Ra KTX",
+      "points": "Điểm thưởng/phạt",
+      "overnight": "Xin ra ngoài",
+      "fee": "Phí sinh hoạt"
+    },
+    "refresh": "Làm mới",
+    "empty": "Không có dữ liệu hiển thị."
+  }
+}

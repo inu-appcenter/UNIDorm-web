@@ -18,7 +18,7 @@ describe("useLanguageStore 및 i18n 연동 검증", () => {
     expect(useLanguageStore.getState().language).toBe("en");
     expect(safeLocalStorage.getItem(LANGUAGE_STORAGE_KEY)).toBe("en");
     expect(i18n.language).toBe("en");
-    expect(i18n.t("step1.cta")).toBe("Continue");
+    expect(i18n.t("onboarding:step1.cta")).toBe("Continue");
   });
 
   it("zh(중국어)와 vi(베트남어)로 변경 시 storage와 온보딩 리소스가 갱신된다", () => {
@@ -26,13 +26,13 @@ describe("useLanguageStore 및 i18n 연동 검증", () => {
     expect(useLanguageStore.getState().language).toBe("zh");
     expect(safeLocalStorage.getItem(LANGUAGE_STORAGE_KEY)).toBe("zh");
     expect(i18n.language).toBe("zh");
-    expect(i18n.t("step1.cta")).toBe("继续");
+    expect(i18n.t("onboarding:step1.cta")).toBe("继续");
 
     useLanguageStore.getState().setLanguage("vi");
     expect(useLanguageStore.getState().language).toBe("vi");
     expect(safeLocalStorage.getItem(LANGUAGE_STORAGE_KEY)).toBe("vi");
     expect(i18n.language).toBe("vi");
-    expect(i18n.t("step1.cta")).toBe("Tiếp tục");
+    expect(i18n.t("onboarding:step1.cta")).toBe("Tiếp tục");
   });
 
   it("ko로 되돌리면 온보딩 리소스도 한국어로 반환된다", () => {
@@ -40,6 +40,6 @@ describe("useLanguageStore 및 i18n 연동 검증", () => {
     useLanguageStore.getState().setLanguage("ko");
 
     expect(i18n.language).toBe("ko");
-    expect(i18n.t("step3.cta")).toBe("유니돔 시작하기");
+    expect(i18n.t("onboarding:step3.cta")).toBe("유니돔 시작하기");
   });
 });

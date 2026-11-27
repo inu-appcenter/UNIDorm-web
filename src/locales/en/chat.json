@@ -1,0 +1,72 @@
+{
+  "title": "Chat",
+  "tabs": {
+    "open": "Open Chat",
+    "roommate": "Roommate Chat",
+    "my": "Joined"
+  },
+  "openChat": {
+    "searchPlaceholder": "Search room name or description",
+    "cannotJoin": "Cannot join this chat room.",
+    "loginRequired": "Sign-in is required.",
+    "notFound": "Chat room not found.",
+    "full": "This chat room is full.",
+    "joinFailed": "Failed to join chat room. Please try again.",
+    "unknownError": "An unknown error occurred.",
+    "emptyTitle": "No open chat rooms yet.",
+    "emptyDescription": "Create a new open chat room to start a conversation."
+  },
+  "create": {
+    "title": "Create Open Chat",
+    "namePlaceholder": "e.g., Dorm 1 food delivery group",
+    "descPlaceholder": "e.g., Briefly describe the topic such as delivery, group buy, or dorm info"
+  },
+  "edit": {
+    "title": "Edit Open Chat",
+    "invalidRoom": "Invalid chat room.",
+    "success": "Chat room updated.",
+    "ownerOnly": "Only the host can edit chat room info.",
+    "checkInput": "Please check your input.",
+    "failed": "Failed to update chat room info."
+  },
+  "members": {
+    "title": "Members",
+    "statusChangeFailed": "Failed to update recruitment status. Please try again.",
+    "delegateAndLeaveFailed": "Failed to transfer host and leave.",
+    "directChatFailed": "Failed to create 1:1 chat. Please try again shortly.",
+    "blockedSuccess": "Blocked {{name}}.",
+    "loginRequired": "Sign-in is required.",
+    "userNotFound": "User not found.",
+    "alreadyBlocked": "User is already blocked.",
+    "blockFailed": "Failed to block user. Please try again.",
+    "blockError": "An error occurred while blocking user.",
+    "requestStudentIdConfirm": "Request student ID from {{name}}?",
+    "delegateConfirm": "Transfer host role to {{name}}?",
+    "delegateFailed": "Failed to transfer host role.",
+    "kickConfirm": "Remove {{name}} from this chat room?",
+    "kickSuccess": "Member removed.",
+    "kickFailed": "Failed to remove member.",
+    "leaveConfirm": "Leave this chat room?",
+    "leaveFailed": "Failed to leave chat room."
+  },
+  "blockList": {
+    "title": "Blocked Users",
+    "unblockError": "An error occurred while unblocking.",
+    "empty": "No blocked users."
+  },
+  "notiSettings": {
+    "title": "Chat Notification Settings"
+  },
+  "room": {
+    "cannotEnterGroup": "Could not enter the group chat.",
+    "deletedPost": "This post has been deleted.",
+    "maxPhotosAlert": "You can send up to 5 photos at a time."
+  },
+  "info": {
+    "requestRoommateConfirm": "Send a roommate request to {{name}}?",
+    "requestError": "An error occurred while sending the request.",
+    "roomOrUserNotFound": "Chat room or user not found.",
+    "alreadyRequested": "Match request already sent.",
+    "blockedUserError": "Cannot send a roommate request to a blocked user."
+  }
+}

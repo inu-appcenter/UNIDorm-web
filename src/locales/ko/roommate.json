@@ -1,0 +1,78 @@
+{
+  "title": "룸메이트",
+  "titleWithSemester": "{{year}}년 {{semester}} 룸메이트",
+  "customRoommate": "맞춤 룸메이트",
+  "allList": "전체 목록",
+  "searchPlaceholder": "검색어를 입력하세요",
+  "totalSaved": "총 {{count}}개 저장됨",
+  "noChecklistAlert": "작성된 룸메이트 게시글이 없어요. 체크리스트를 작성해 주세요.",
+  "loadChecklistError": "내 체크리스트 게시글을 불러오지 못했어요.",
+  "list": {
+    "latest": "최신순"
+  },
+  "my": {
+    "title": "내 룸메이트",
+    "unmatchFailed": "룸메이트 관계 끊기에 실패했어요.",
+    "deleteRulesConfirm": "정말 방 규칙을 삭제할까요?",
+    "deleteRulesSuccess": "방 규칙이 삭제되었어요.",
+    "deleteRulesFailed": "규칙 삭제에 실패했어요.",
+    "timetableUploaded": "시간표 이미지가 업로드되었어요.",
+    "uploadFailed": "이미지 업로드에 실패했어요.",
+    "uploadError": "이미지 업로드 중 오류가 발생했어요.",
+    "sent": "전송되었어요.",
+    "sendFailed": "전송에 실패했어요.",
+    "rulesSaved": "규칙이 저장되었어요.",
+    "rulesSaveFailed": "규칙 저장에 실패했어요."
+  },
+  "add": {
+    "title": "룸메이트 추가",
+    "emptyStudentId": "학번을 입력해 주세요.",
+    "studentIdPlaceholder": "학번 입력",
+    "sentSuccess": "매칭 요청을 보냈어요!",
+    "userNotFound": "사용자를 찾을 수 없어요.",
+    "alreadySent": "이미 매칭 요청을 보낸 상태예요.",
+    "unknownError": "알 수 없는 오류가 발생했어요."
+  },
+  "detail": {
+    "deleteConfirm": "정말로 이 게시글을 삭제할까요?",
+    "deleteSuccess": "게시글이 삭제되었어요.",
+    "deleteError": "삭제 중 오류가 발생했어요."
+  },
+  "checklist": {
+    "title": "사전 체크리스트 작성/수정",
+    "resetConfirm": "모든 내용이 초기화돼요. 정말 초기화할까요?",
+    "noBoardId": "수정할 게시글 식별자가 없어요.",
+    "created": "체크리스트 등록 완료!",
+    "updated": "체크리스트 수정 완료!",
+    "saveFailed": "저장에 실패했어요."
+  },
+  "filter": {
+    "title": "필터"
+  },
+  "findSetting": {
+    "title": "맞춤 룸메이트 설정",
+    "resetSuccess": "필터가 초기화되었어요.",
+    "actionFailed": "처리에 실패했어요.",
+    "resetConfirm": "설정한 모든 필터가 삭제돼요. 정말 초기화할까요?",
+    "disableConfirm": "필터를 비활성화하면 설정이 초기화돼요. 진행할까요?",
+    "saveFailed": "저장에 실패했어요."
+  },
+  "bottomBar": {
+    "loginRequired": "로그인 후 이용해 주세요.",
+    "notCurrentSemester": "이번 학기 모집 게시물이 아니에요.",
+    "differentDorm": "나와 같은 기숙사생이 아니에요.\n기숙사 정보를 확인해 주세요.",
+    "alreadyLiked": "이미 좋아요를 누른 상태예요.",
+    "notFound": "게시글이나 유저 정보를 찾을 수 없어요.",
+    "error": "오류가 발생했어요.",
+    "networkError": "서버와 통신할 수 없어요.",
+    "blockedByOther": "상대방의 차단으로 메시지를 보낼 수 없어요.",
+    "blockedByMe": "차단한 사람과는 대화할 수 없어요.",
+    "pastSemester": "지난 학기 게시글에는 메시지를 보낼 수 없어요.",
+    "writeChecklistFirst": "먼저 체크리스트를 작성해 주세요!",
+    "chatCreateFailed": "채팅방을 생성할 수 없어요."
+  },
+  "empty": {
+    "title": "아직 등록된 룸메이트 글이 없어요.",
+    "description": "체크리스트를 작성하면 나와 맞는 룸메이트를 찾을 수 있어요."
+  }
+}

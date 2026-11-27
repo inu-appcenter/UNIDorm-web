@@ -1,0 +1,84 @@
+{
+  "roommateSection": {
+    "titleWithSemester": "{{year}}年{{semester}} 室友招募",
+    "title": "室友招募",
+    "description": "寻找正在找室友的仁川大同学吧！",
+    "loading": "正在加载最新列表..."
+  },
+  "guideWidget": {
+    "title": "宿舍生活指南",
+    "summary": "汇总了大家常查的宿舍生活信息",
+    "keywords": {
+      "laundry": "洗衣机预约",
+      "facility": "设施报修",
+      "meal": "食堂菜单",
+      "rules": "生活守则"
+    }
+  },
+  "noticeSection": {
+    "title": "公告事项",
+    "loading": "正在加载公告...",
+    "empty": "暂无公告。"
+  },
+  "formSection": {
+    "title": "INU 问卷",
+    "loading": "正在加载问卷列表...",
+    "empty": "暂无问卷。"
+  },
+  "youtubeSection": {
+    "title": "宿舍管理处 YouTube",
+    "views": "观看 {{count}}",
+    "viewsTenThousand": "{{count}}万次",
+    "viewsCount": "{{count}}次"
+  },
+  "tipsSection": {
+    "title": "今日最佳贴士",
+    "loading": "正在加载贴士...",
+    "empty": "今日暂无贴士。"
+  },
+  "calendarSection": {
+    "title": "宿舍日程",
+    "pageTitle": "宿舍日程",
+    "pageDescription": "仁川大学宿舍管理处各项活动日程。部分日程由火炬 AI 基于公告生成，重要日程请直接核对原公告。",
+    "weekdays": ["日", "一", "二", "三", "四", "五", "六"],
+    "emptyForDate": "该日期暂无日程。",
+    "aiGenerated": "本内容由火炬 AI 生成。"
+  },
+  "groupPurchaseSection": {
+    "title": "即将截止的拼单",
+    "loading": "正在加载拼单...",
+    "empty": "暂无即将截止的拼单。"
+  },
+  "dormPrompt": {
+    "loginRequiredConfirm": "需要使用门户账号登录。是否前往登录页面？",
+    "renewTitle": "要更新新学期的宿舍证吗？",
+    "issueTitle": "要申领电子宿舍证吗？",
+    "renewDescription": "上学期的宿舍证已过期。我们将为您重新获取本学期住宿信息。",
+    "issueDescription": "如果您住在宿舍，可立即使用电子宿舍证参加零食发放等需要验证住宿身份的活动。",
+    "later": "下次再说",
+    "renewConfirm": "更新宿舍证",
+    "issueConfirm": "申领宿舍证"
+  },
+  "notification": {
+    "title": "通知",
+    "settingsMenu": "通知接收设置",
+    "loading": "正在加载通知...",
+    "empty": "暂无通知。",
+    "loginPrompt": "登录后可查看通知。",
+    "loginAction": "前往登录",
+    "matchModalTitle": "室友匹配请求",
+    "accept": "接受",
+    "reject": "拒绝",
+    "acceptConfirm": "确定接受该室友匹配吗？",
+    "acceptSuccess": "已接受匹配请求。",
+    "acceptPortalNotice": "UNI Dorm 中的室友匹配与实际宿舍房间分配无关，仅用于方便室友共同生活。\n请务必在室友预选期间前往仁川大学门户提交正式申请。",
+    "rejectConfirm": "确定拒绝该室友匹配吗？",
+    "rejectSuccess": "已拒绝匹配请求。",
+    "alreadyProcessed": "该匹配请求已处理。"
+  },
+  "networkError": {
+    "title": "服务故障通知",
+    "message": "校园网络可能出现异常或服务器正在维护，敬请谅解。"
+  },
+  "migrationConfirm": "请立即将新生临时账号绑定至学校门户账号。\n未绑定的临时账号将在不久后被删除。"
+}

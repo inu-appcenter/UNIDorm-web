@@ -1,0 +1,78 @@
+{
+  "title": "Bạn cùng phòng",
+  "titleWithSemester": "Bạn phòng {{semester}} {{year}}",
+  "customRoommate": "Bạn phòng phù hợp",
+  "allList": "Tất cả",
+  "searchPlaceholder": "Nhập từ khóa tìm kiếm",
+  "totalSaved": "Đã lưu {{count}} bài",
+  "noChecklistAlert": "Bạn chưa tạo bài đăng tìm bạn phòng. Vui lòng điền bảng khảo sát trước.",
+  "loadChecklistError": "Không thể tải bài đăng khảo sát của bạn.",
+  "list": {
+    "latest": "Mới nhất"
+  },
+  "my": {
+    "title": "Bạn phòng của tôi",
+    "unmatchFailed": "Hủy ghép bạn phòng thất bại.",
+    "deleteRulesConfirm": "Bạn có chắc muốn xóa nội quy phòng?",
+    "deleteRulesSuccess": "Đã xóa nội quy phòng.",
+    "deleteRulesFailed": "Xóa nội quy thất bại.",
+    "timetableUploaded": "Đã tải lên ảnh thời khóa biểu.",
+    "uploadFailed": "Tải ảnh lên thất bại.",
+    "uploadError": "Lỗi khi tải ảnh lên.",
+    "sent": "Đã gửi.",
+    "sendFailed": "Gửi thất bại.",
+    "rulesSaved": "Đã lưu nội quy.",
+    "rulesSaveFailed": "Lưu nội quy thất bại."
+  },
+  "add": {
+    "title": "Thêm bạn phòng",
+    "emptyStudentId": "Vui lòng nhập mã sinh viên.",
+    "studentIdPlaceholder": "Nhập mã sinh viên",
+    "sentSuccess": "Đã gửi yêu cầu ghép bạn phòng!",
+    "userNotFound": "Không tìm thấy người dùng.",
+    "alreadySent": "Bạn đã gửi yêu cầu trước đó rồi.",
+    "unknownError": "Đã xảy ra lỗi không xác định."
+  },
+  "detail": {
+    "deleteConfirm": "Bạn có chắc muốn xóa bài viết này?",
+    "deleteSuccess": "Đã xóa bài viết.",
+    "deleteError": "Lỗi khi xóa bài viết."
+  },
+  "checklist": {
+    "title": "Bảng khảo sát bạn phòng",
+    "resetConfirm": "Toàn bộ nội dung sẽ bị đặt lại. Tiếp tục?",
+    "noBoardId": "Thiếu ID bài viết cần sửa.",
+    "created": "Đã tạo bảng khảo sát!",
+    "updated": "Đã cập nhật bảng khảo sát!",
+    "saveFailed": "Lưu thất bại."
+  },
+  "filter": {
+    "title": "Bộ lọc"
+  },
+  "findSetting": {
+    "title": "Cài đặt tìm bạn phòng",
+    "resetSuccess": "Đã đặt lại bộ lọc.",
+    "actionFailed": "Xử lý thất bại.",
+    "resetConfirm": "Tất cả bộ lọc đã cài đặt sẽ bị xóa. Đặt lại?",
+    "disableConfirm": "Tắt bộ lọc sẽ đặt lại cài đặt hiện tại. Tiếp tục?",
+    "saveFailed": "Lưu thất bại."
+  },
+  "bottomBar": {
+    "loginRequired": "Vui lòng đăng nhập trước.",
+    "notCurrentSemester": "Bài đăng này không thuộc học kỳ hiện tại.",
+    "differentDorm": "Không cùng ký túc xá với bạn.\nVui lòng kiểm tra lại thông tin KTX.",
+    "alreadyLiked": "Bạn đã thích bài viết này rồi.",
+    "notFound": "Không tìm thấy bài viết hoặc người dùng.",
+    "error": "Đã xảy ra lỗi.",
+    "networkError": "Không thể kết nối máy chủ.",
+    "blockedByOther": "Không thể gửi tin nhắn vì đối phương đã chặn bạn.",
+    "blockedByMe": "Không thể trò chuyện với người đã chặn.",
+    "pastSemester": "Không thể nhắn tin cho bài viết từ học kỳ trước.",
+    "writeChecklistFirst": "Vui lòng hoàn thành bảng khảo sát trước!",
+    "chatCreateFailed": "Không thể tạo phòng chat."
+  },
+  "empty": {
+    "title": "Chưa có bài đăng tìm bạn phòng.",
+    "description": "Hãy điền bảng khảo sát để tìm bạn cùng phòng phù hợp với bạn."
+  }
+}

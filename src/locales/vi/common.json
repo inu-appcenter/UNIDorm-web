@@ -1,0 +1,109 @@
+{
+  "languageOptions": {
+    "ko": "한국어",
+    "en": "English",
+    "zh": "中文",
+    "vi": "Tiếng Việt"
+  },
+  "actions": {
+    "confirm": "Xác nhận",
+    "cancel": "Hủy",
+    "save": "Lưu",
+    "delete": "Xóa",
+    "edit": "Sửa",
+    "close": "Đóng",
+    "retry": "Thử lại",
+    "apply": "Áp dụng",
+    "reset": "Đặt lại",
+    "search": "Tìm kiếm",
+    "back": "Quay lại",
+    "more": "Xem thêm",
+    "submit": "Gửi",
+    "register": "Đăng ký",
+    "viewAll": "Xem tất cả",
+    "install": "Cài đặt",
+    "refresh": "Làm mới",
+    "write": "Viết bài"
+  },
+  "header": {
+    "backAlt": "Quay lại",
+    "logoAlt": "Logo UNIDorm",
+    "installApp": "Tải app",
+    "openDormitoryCard": "Mở thẻ KTX di động",
+    "dormitoryCardShort": "Thẻ KTX",
+    "keywordSettingTooltip": "Thiết lập thông báo\ntừ khóa / danh mục."
+  },
+  "bottomBar": {
+    "home": "Trang chủ",
+    "roommate": "Bạn phòng",
+    "chat": "Chat",
+    "complain": "Phản ánh",
+    "mypage": "Tôi",
+    "roommateMatchingTooltip": "Đang ghép bạn phòng!",
+    "roommateMatchingTooltipWithSemester": "{{semester}} '{{year}}\nĐang ghép bạn phòng!"
+  },
+  "dormitory": {
+    "dorm1": "KTX 1",
+    "dorm2": "KTX 2",
+    "dorm3": "KTX 3"
+  },
+  "semester": {
+    "first": "Học kỳ 1",
+    "second": "Học kỳ 2",
+    "summer": "Kỳ hè",
+    "winter": "Kỳ đông",
+    "other": "Kỳ {{value}}"
+  },
+  "states": {
+    "loading": "Đang tải...",
+    "processing": "Đang xử lý...",
+    "empty": "Không có dữ liệu.",
+    "error": "Đã xảy ra lỗi.",
+    "errorRetry": "Không thể tải dữ liệu. Vui lòng thử lại.",
+    "noData": "Không có nội dung hiển thị.",
+    "loginRequired": "Vui lòng đăng nhập để sử dụng.",
+    "networkError": "Vui lòng kiểm tra kết nối mạng."
+  },
+  "guard": {
+    "loginRequiredConfirm": "Cần đăng nhập. Chuyển đến trang đăng nhập?",
+    "appUpdateConfirm": "Cần cập nhật ứng dụng UNIDorm để dùng tính năng mới.\nMở cửa hàng để cập nhật?",
+    "appInstallConfirm": "Tính năng này khả dụng trên ứng dụng UNIDorm.\nMở cửa hàng để cài đặt?",
+    "pcAppOnlyConfirm": "Tính năng này chỉ dành cho ứng dụng di động UNIDorm.\nMở trang cửa hàng để xem?"
+  },
+  "terms": {
+    "notice": "UNIDorm được phát triển bởi <strong>INU App Center</strong> (IT Innovation Lab) hợp tác cùng Ban Quản lý KTX."
+  },
+  "migrationBanner": {
+    "freshman": {
+      "title": "Liên kết tài khoản Portal",
+      "description": "Hãy liên kết tài khoản tân sinh viên tạm thời với tài khoản Portal trường ngay."
+    },
+    "portal": {
+      "title": "Hướng dẫn liên kết tài khoản tạm thời",
+      "description": "Vui lòng thực hiện <strong>chỉ khi bạn đã tạo tài khoản tân sinh viên tạm thời trước đó</strong>.\nCác tài khoản tạm thời chưa liên kết sẽ bị xóa sau một thời gian."
+    }
+  },
+  "time": {
+    "justNow": "Vừa xong",
+    "minutesAgo": "{{count}} phút trước",
+    "hoursAgo": "{{count}} giờ trước",
+    "daysAgo": "{{count}} ngày trước",
+    "closed": "Đã đóng",
+    "daysLeft": "D-{{count}}",
+    "hoursLeft": "Còn {{count}} giờ",
+    "minutesLeft": "Còn {{count}} phút"
+  },
+  "notificationType": {
+    "ROOMMATE": "Bạn phòng",
+    "GROUP_ORDER": "Mua chung",
+    "DORMITORY": "KTX",
+    "UNI_DORM": "UNIDorm",
+    "SUPPORTERS": "Supporters",
+    "COMPLAINT": "Phản ánh",
+    "COUPON": "Phiếu ưu đãi",
+    "CHAT": "Chat"
+  },
+  "badges": {
+    "emergency": "Khẩn"
+  }
+}

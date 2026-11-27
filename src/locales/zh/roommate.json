@@ -1,0 +1,78 @@
+{
+  "title": "室友",
+  "titleWithSemester": "{{year}}年{{semester}} 室友",
+  "customRoommate": "专属推荐室友",
+  "allList": "全部列表",
+  "searchPlaceholder": "请输入搜索关键词",
+  "totalSaved": "共保存 {{count}} 个",
+  "noChecklistAlert": "您还没有发布室友帖，请先填写生活习惯问卷。",
+  "loadChecklistError": "无法加载我的问卷帖子。",
+  "list": {
+    "latest": "最新"
+  },
+  "my": {
+    "title": "我的室友",
+    "unmatchFailed": "解除室友关系失败。",
+    "deleteRulesConfirm": "确定要删除宿舍规则吗？",
+    "deleteRulesSuccess": "宿舍规则已删除。",
+    "deleteRulesFailed": "删除规则失败。",
+    "timetableUploaded": "课表图片已上传。",
+    "uploadFailed": "图片上传失败。",
+    "uploadError": "上传图片时出错。",
+    "sent": "已发送。",
+    "sendFailed": "发送失败。",
+    "rulesSaved": "规则已保存。",
+    "rulesSaveFailed": "保存规则失败。"
+  },
+  "add": {
+    "title": "添加室友",
+    "emptyStudentId": "请输入学号。",
+    "studentIdPlaceholder": "输入学号",
+    "sentSuccess": "已发送匹配请求！",
+    "userNotFound": "未找到该用户。",
+    "alreadySent": "已发送过匹配请求。",
+    "unknownError": "发生未知错误。"
+  },
+  "detail": {
+    "deleteConfirm": "确定要删除这篇帖子吗？",
+    "deleteSuccess": "帖子已删除。",
+    "deleteError": "删除时发生错误。"
+  },
+  "checklist": {
+    "title": "填写/修改室友习惯问卷",
+    "resetConfirm": "所有内容将被重置，确定重置吗？",
+    "noBoardId": "缺少要修改的帖子标识。",
+    "created": "问卷登记完成！",
+    "updated": "问卷修改完成！",
+    "saveFailed": "保存失败。"
+  },
+  "filter": {
+    "title": "筛选"
+  },
+  "findSetting": {
+    "title": "专属室友设置",
+    "resetSuccess": "筛选条件已重置。",
+    "actionFailed": "处理失败。",
+    "resetConfirm": "已设置的所有筛选条件将被删除，确定重置吗？",
+    "disableConfirm": "停用筛选将重置当前设置，是否继续？",
+    "saveFailed": "保存失败。"
+  },
+  "bottomBar": {
+    "loginRequired": "请先登录。",
+    "notCurrentSemester": "这不是本学期的招募帖。",
+    "differentDorm": "对方与您不在同一栋宿舍。\n请检查宿舍信息。",
+    "alreadyLiked": "您已经点赞过了。",
+    "notFound": "未找到帖子或用户信息。",
+    "error": "发生错误。",
+    "networkError": "无法连接服务器。",
+    "blockedByOther": "由于对方屏蔽了您，无法发送消息。",
+    "blockedByMe": "无法与已屏蔽的用户聊天。",
+    "pastSemester": "无法向往期学期的帖子发送消息。",
+    "writeChecklistFirst": "请先填写习惯问卷！",
+    "chatCreateFailed": "无法创建聊天室。"
+  },
+  "empty": {
+    "title": "暂无已发布的室友帖。",
+    "description": "填写生活习惯问卷即可找到合拍的室友。"
+  }
+}

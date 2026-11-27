@@ -1,0 +1,202 @@
+{
+  "guide": {
+    "pageTitle": "宿舍生活指南",
+    "intro": "按用途整理了宿舍生活中常用的应用和学校网站。",
+    "filterAriaLabel": "宿舍楼筛选",
+    "filters": {
+      "all": "全部",
+      "1기숙사": "1号宿舍",
+      "2기숙사": "2号宿舍",
+      "3기숙사": "3号宿舍"
+    },
+    "categories": {
+      "생활·시설": "生活·设施",
+      "식단·캠퍼스": "餐饮·校园",
+      "입·퇴사·행정": "入住·退宿·行政",
+      "생활 정보": "生活信息",
+      "질문·문의": "咨询·联系"
+    },
+    "searchPlaceholder": "搜索洗衣机、报修、食堂、门禁",
+    "searchAriaLabel": "搜索宿舍生活指南",
+    "searchResultTitle": "搜索结果 {{count}} 条",
+    "emptyTitle": "暂无搜索结果。",
+    "emptyDescription": "如果列表中没有找到，可以直接向火炬 AI 提问。",
+    "askChatbuli": "向火炬 AI 提问",
+    "showAllDorms": "在全部宿舍中查看",
+    "clearSearch": "清除搜索词",
+    "infoConfirm": "知道了",
+    "installApp": "安装 {{label}}",
+    "items": {
+      "laundry-metaclub": {
+        "title": "洗衣机·烘干机 (MetaClub)",
+        "description": "用于查看1·2号宿舍洗衣机/烘干机状态及支付。",
+        "actionLabel": "打开应用"
+      },
+      "laundry-dorm3": {
+        "title": "3号宿舍洗衣房",
+        "description": "无需专用应用，使用现金或充值卡支付。点击查看说明。",
+        "infoModal": {
+          "title": "3号宿舍洗衣房使用指南",
+          "subtitle": "不支持专用应用 · 现场支付",
+          "points": [
+            "3号宿舍洗衣房不支持 MetaClub 等专用应用。",
+            "可在洗衣房内的支付终端使用现金或充值卡。",
+            "如遇设备故障或使用问题，请通过 Edumac 提交报修或联系第3宿舍管理室 (032-858-7222)。"
+          ]
+        }
+      },
+      "facility-dorm1": {
+        "title": "设施故障·报修申请",
+        "description": "第1宿舍设施问题请通过 INU 门户综合信息系统提交。",
+        "actionLabel": "打开门户"
+      },
+      "facility-dorm23": {
+        "title": "设施故障·报修申请",
+        "description": "第2·3宿舍 (BTL) 故障报修请通过 Edumac 设施管理系统提交。",
+        "actionLabel": "打开 Edumac"
+      },
+      "unidorm-complain": {
+        "title": "其他生活报修/投诉",
+        "description": "除设施故障外的生活不便可在 UNIDorm 报修中提交并查看进度。",
+        "actionLabel": "前往报修"
+      },
+      "intip-menu": {
+        "title": "宿舍食堂·校内菜单",
+        "description": "在 INTIP 查看第1宿舍食堂及校内餐厅菜单。",
+        "actionLabel": "查看菜单",
+        "secondaryAppLabel": "INTIP 应用"
+      },
+      "portal-apply": {
+        "title": "在校生入住·退宿申请",
+        "description": "在 INU 门户申请在校生入住以及定期/中途退宿。",
+        "actionLabel": "打开门户"
+      },
+      "erp-freshman-apply": {
+        "title": "新生·插班生入住申请",
+        "description": "适用于尚未获得门户账号的新生及插班生。",
+        "actionLabel": "前往申请"
+      },
+      "dorm-lecture": {
+        "title": "宿舍教养讲座申请",
+        "description": "查看宿舍生免费教养讲座日程与报名指南。",
+        "actionLabel": "查看指南"
+      },
+      "dorm-rules": {
+        "title": "宿舍生活守则",
+        "description": "门禁时间（05:00~02:00）、外宿、快递室及公共设施使用规定。",
+        "actionLabel": "查看"
+      },
+      "dorm-facilities": {
+        "title": "各宿舍便利设施位置",
+        "description": "查看便利店、快递室、健身房、简易厨房等楼层位置。",
+        "actionLabel": "查看"
+      },
+      "dorm-archive": {
+        "title": "奖惩分标准表与资料室",
+        "description": "最新宿舍奖惩分标准及生活指南文件资料室。",
+        "actionLabel": "查看"
+      },
+      "dorm-home": {
+        "title": "仁川大学宿舍管理处官网",
+        "description": "前往仁川大学宿舍管理处官方网站。",
+        "actionLabel": "打开"
+      },
+      "chatbuli": {
+        "title": "向火炬 AI 提问",
+        "description": "门禁、奖惩分、入住退宿等宿舍问题都可以询问 AI 助手。",
+        "actionLabel": "立即提问"
+      },
+      "dorm-qna": {
+        "title": "宿舍问答 (Q&A)",
+        "description": "宿舍行政室官方 1:1 咨询留言板。",
+        "actionLabel": "打开"
+      },
+      "tel-admin": {
+        "title": "综合行政室",
+        "description": "入住·退宿及一般行政咨询 (032-835-9810)",
+        "actionLabel": "拨打电话"
+      },
+      "tel-dorm2": {
+        "title": "第2宿舍管理室",
+        "description": "第2宿舍设施与生活咨询 (032-858-7233)",
+        "actionLabel": "拨打电话"
+      },
+      "tel-dorm3": {
+        "title": "第3宿舍管理室",
+        "description": "第3宿舍设施与生活咨询 (032-858-7222)",
+        "actionLabel": "拨打电话"
+      }
+    }
+  },
+  "viewer": {
+    "defaultTitle": "生活指南浏览",
+    "openExternalAriaLabel": "在外部浏览器中打开",
+    "openExternal": "外部打开",
+    "notFoundTitle": "未找到指南页面。",
+    "notFoundDescription": "链接有误或暂不支持该页面。",
+    "backToGuide": "返回宿舍生活指南",
+    "loading": "正在加载页面..."
+  },
+  "card": {
+    "pageTitle": "电子宿舍证",
+    "subHeading": "仁川大学宿舍管理处",
+    "mainTitle": "电子宿舍证",
+    "studentId": "学号",
+    "department": "院系",
+    "grade": "年级",
+    "dormitory": "宿舍",
+    "dormNo": "住宿编号",
+    "assignedRoom": "分配房间",
+    "status": "入住类别",
+    "photoAlt": "{{name}} 住宿证件照",
+    "yearSuffix": "{{year}}学年",
+    "refreshButton": "刷新",
+    "detailButton": "我的住宿详细信息",
+    "refreshing": "正在刷新宿舍证信息..."
+  },
+  "portalSync": {
+    "progressTitle": "正在获取住宿信息",
+    "steps": [
+      "正在安全连接学校门户系统...",
+      "正在确认宿舍分配与房间信息...",
+      "正在同步学籍信息与学生证照片...",
+      "正在将宿舍证信息安全保存至设备..."
+    ],
+    "doNotClose": "完成前请勿<strong>离开页面或关闭应用</strong>",
+    "secureChannel": "正在与仁川大学门户进行安全端到端通信",
+    "accountModalTitle": "一次性绑定门户账号",
+    "accountModalNotice": "<strong>请放心！</strong> 仁川大门户、LMS 与图书馆使用相同的学号/密码。只需登记一次即可加密保存在设备安全区（KeyStore），并自动同步学籍、作业与图书馆座位。",
+    "studentIdLabel": "门户学号",
+    "studentIdPlaceholder": "例：202600000",
+    "passwordLabel": "门户密码",
+    "passwordPlaceholder": "输入门户密码",
+    "missingCredentials": "请输入学号和密码。",
+    "appOnly": "门户账号绑定仅支持 UNIDorm 手机应用环境。",
+    "saving": "正在保存至安全区域...",
+    "linkFailed": "账号绑定失败。",
+    "genericError": "发生错误。",
+    "fetchTitle": "需要从学校门户\n获取您的信息",
+    "fetchSubtitle": "为签发电子宿舍证，我们将安全地从仁川大学门户获取您的住宿信息。",
+    "securityTitle": "获取操作仅在本设备执行",
+    "securityDesc": "您的门户账号、密码及住宿信息不会发送至外部服务器，仅加密保存在本手机的安全区域。",
+    "savedStudentIdLabel": "已登记的门户学号",
+    "savedStudentIdFallback": "已绑定学号",
+    "savedAccountReady": "您的账号已安全保存在设备中，可直接获取信息。",
+    "fetchDormCardBtn": "获取宿舍证信息",
+    "useOtherAccount": "使用其他门户账号登录",
+    "fetchInfoBtn": "获取信息",
+    "useSavedAccount": "使用已登记的账号"
+  },
+  "portalInfo": {
+    "pageTitle": "入住信息查询（学生）",
+    "tabs": {
+      "basic": "基本信息",
+      "stay": "入住·退宿",
+      "points": "奖惩分",
+      "overnight": "外宿申请",
+      "fee": "公共费用"
+    },
+    "refresh": "刷新",
+    "empty": "暂无记录。"
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "title": "聊天",
+  "tabs": {
+    "open": "公开群聊",
+    "roommate": "室友聊天",
+    "my": "已加入"
+  },
+  "openChat": {
+    "searchPlaceholder": "搜索聊天室名称/简介",
+    "cannotJoin": "无法加入该聊天室。",
+    "loginRequired": "需要登录。",
+    "notFound": "未找到该聊天室。",
+    "full": "参与人数已满（超过上限）。",
+    "joinFailed": "进入聊天室失败，请重试。",
+    "unknownError": "发生未知错误。",
+    "emptyTitle": "暂无公开聊天室。",
+    "emptyDescription": "创建一个新的公开聊天室开始交流吧。"
+  },
+  "create": {
+    "title": "创建公开聊天室",
+    "namePlaceholder": "例：1号宿舍一起拼外卖",
+    "descPlaceholder": "例：简短写下拼外卖、拼单或生活信息等\n交流主题"
+  },
+  "edit": {
+    "title": "修改公开聊天室",
+    "invalidRoom": "无效的聊天室。",
+    "success": "聊天室信息已修改。",
+    "ownerOnly": "仅群主可以修改聊天室信息。",
+    "checkInput": "请重新核对输入的聊天室信息。",
+    "failed": "修改聊天室信息失败。"
+  },
+  "members": {
+    "title": "成员列表",
+    "statusChangeFailed": "更改招募状态失败，请重试。",
+    "delegateAndLeaveFailed": "转让群主并退出失败。",
+    "directChatFailed": "创建 1:1 聊天室失败，请稍后重试。",
+    "blockedSuccess": "已屏蔽 {{name}}。",
+    "loginRequired": "需要登录。",
+    "userNotFound": "未找到要屏蔽的用户。",
+    "alreadyBlocked": "已屏蔽该用户。",
+    "blockFailed": "屏蔽用户失败，请重试。",
+    "blockError": "屏蔽用户时发生错误。",
+    "requestStudentIdConfirm": "要向 {{name}} 请求分享学号吗？",
+    "delegateConfirm": "要将群主转让给 {{name}} 吗？",
+    "delegateFailed": "转让群主失败。",
+    "kickConfirm": "要将 {{name}} 移出该聊天室吗？",
+    "kickSuccess": "已移出该成员。",
+    "kickFailed": "移出成员失败。",
+    "leaveConfirm": "确定要退出聊天室吗？",
+    "leaveFailed": "退出聊天室失败。"
+  },
+  "blockList": {
+    "title": "屏蔽列表",
+    "unblockError": "取消屏蔽时发生错误。",
+    "empty": "暂无屏蔽的用户。"
+  },
+  "notiSettings": {
+    "title": "聊天通知设置"
+  },
+  "room": {
+    "cannotEnterGroup": "无法进入群聊。",
+    "deletedPost": "该帖子已被删除。",
+    "maxPhotosAlert": "一次最多可发送 5 张照片。"
+  },
+  "info": {
+    "requestRoommateConfirm": "要向 {{name}} 发送室友请求吗？",
+    "requestError": "发送请求时发生错误。",
+    "roomOrUserNotFound": "未找到聊天室或用户。",
+    "alreadyRequested": "已发送过匹配请求。",
+    "blockedUserError": "无法向已屏蔽的用户申请室友。"
+  }
+}

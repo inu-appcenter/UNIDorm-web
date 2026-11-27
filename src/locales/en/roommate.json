@@ -1,0 +1,78 @@
+{
+  "title": "Roommate",
+  "titleWithSemester": "{{year}} {{semester}} Roommate",
+  "customRoommate": "Matched for You",
+  "allList": "All Listings",
+  "searchPlaceholder": "Enter search keyword",
+  "totalSaved": "{{count}} saved",
+  "noChecklistAlert": "You haven't created a roommate post yet. Please fill out the checklist first.",
+  "loadChecklistError": "Couldn't load your checklist post.",
+  "list": {
+    "latest": "Latest"
+  },
+  "my": {
+    "title": "My Roommate",
+    "unmatchFailed": "Failed to unmatch roommate.",
+    "deleteRulesConfirm": "Are you sure you want to delete the room rules?",
+    "deleteRulesSuccess": "Room rules deleted.",
+    "deleteRulesFailed": "Failed to delete room rules.",
+    "timetableUploaded": "Timetable image uploaded.",
+    "uploadFailed": "Failed to upload image.",
+    "uploadError": "An error occurred while uploading the image.",
+    "sent": "Sent.",
+    "sendFailed": "Failed to send.",
+    "rulesSaved": "Room rules saved.",
+    "rulesSaveFailed": "Failed to save room rules."
+  },
+  "add": {
+    "title": "Add Roommate",
+    "emptyStudentId": "Please enter a student ID.",
+    "studentIdPlaceholder": "Enter student ID",
+    "sentSuccess": "Match request sent!",
+    "userNotFound": "User not found.",
+    "alreadySent": "Match request already sent.",
+    "unknownError": "An unknown error occurred."
+  },
+  "detail": {
+    "deleteConfirm": "Are you sure you want to delete this post?",
+    "deleteSuccess": "Post deleted.",
+    "deleteError": "An error occurred while deleting."
+  },
+  "checklist": {
+    "title": "Roommate Checklist",
+    "resetConfirm": "All fields will be reset. Continue?",
+    "noBoardId": "Missing post ID to edit.",
+    "created": "Checklist created!",
+    "updated": "Checklist updated!",
+    "saveFailed": "Failed to save."
+  },
+  "filter": {
+    "title": "Filters"
+  },
+  "findSetting": {
+    "title": "Custom Roommate Settings",
+    "resetSuccess": "Filters reset.",
+    "actionFailed": "Action failed.",
+    "resetConfirm": "All configured filters will be deleted. Reset anyway?",
+    "disableConfirm": "Disabling filters will reset your settings. Continue?",
+    "saveFailed": "Failed to save."
+  },
+  "bottomBar": {
+    "loginRequired": "Please sign in first.",
+    "notCurrentSemester": "This post is not for the current semester.",
+    "differentDorm": "This user is in a different dormitory.\nPlease check your dormitory info.",
+    "alreadyLiked": "You already liked this post.",
+    "notFound": "Post or user not found.",
+    "error": "An error occurred.",
+    "networkError": "Could not connect to the server.",
+    "blockedByOther": "Cannot send message because the user blocked you.",
+    "blockedByMe": "Cannot chat with a blocked user.",
+    "pastSemester": "Cannot message posts from past semesters.",
+    "writeChecklistFirst": "Please complete your checklist first!",
+    "chatCreateFailed": "Failed to create chat room."
+  },
+  "empty": {
+    "title": "No roommate posts yet.",
+    "description": "Complete your checklist to find roommates who match your lifestyle."
+  }
+}

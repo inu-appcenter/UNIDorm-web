@@ -1,0 +1,84 @@
+{
+  "roommateSection": {
+    "titleWithSemester": "{{year}}년 {{semester}} 룸메이트 모집",
+    "title": "룸메이트 모집",
+    "description": "룸메이트를 구하고 있는 다양한 UNI들을 찾아보세요!",
+    "loading": "최신 목록을 불러오는 중..."
+  },
+  "guideWidget": {
+    "title": "기숙사 생활 안내",
+    "summary": "자주 찾는 기숙사 정보를 모았어요",
+    "keywords": {
+      "laundry": "세탁기 예약",
+      "facility": "시설 고장",
+      "meal": "학식·식단",
+      "rules": "생활 수칙"
+    }
+  },
+  "noticeSection": {
+    "title": "공지사항",
+    "loading": "공지사항을 불러오고 있어요!",
+    "empty": "공지사항이 없어요."
+  },
+  "formSection": {
+    "title": "INU 폼",
+    "loading": "폼 목록을 불러오고 있어요!",
+    "empty": "조회된 폼이 없어요."
+  },
+  "youtubeSection": {
+    "title": "생활원 YouTube",
+    "views": "조회수 {{count}}",
+    "viewsTenThousand": "{{count}}만회",
+    "viewsCount": "{{count}}회"
+  },
+  "tipsSection": {
+    "title": "오늘의 Best 꿀팁",
+    "loading": "꿀팁을 불러오고 있어요!",
+    "empty": "오늘의 꿀팁이 없어요."
+  },
+  "calendarSection": {
+    "title": "생활원 일정",
+    "pageTitle": "생활원 일정",
+    "pageDescription": "인천대학교 생활원 각종 행사 일정이에요. 일부 일정은 횃불이 AI를 통해 공지사항을 기반으로 생성되었어요. 중요한 일정은 직접 확인해 주세요.",
+    "weekdays": ["일", "월", "화", "수", "목", "금", "토"],
+    "emptyForDate": "해당 날짜에 일정이 없어요.",
+    "aiGenerated": "횃불이 AI로 생성된 콘텐츠예요."
+  },
+  "groupPurchaseSection": {
+    "title": "임박한 공동구매",
+    "loading": "공동구매를 불러오고 있어요!",
+    "empty": "임박한 공동구매가 없어요."
+  },
+  "dormPrompt": {
+    "loginRequiredConfirm": "포털 아이디로 로그인이 필요해요. 로그인 페이지로 이동할까요?",
+    "renewTitle": "새 학기 사생증을 갱신할까요?",
+    "issueTitle": "모바일 사생증을 발급할까요?",
+    "renewDescription": "지난 학기 사생증이 만료되었어요. 이번 학기 사생 정보를 새로 가져올게요.",
+    "issueDescription": "기숙사에 살고 있다면 모바일 사생증을 바로 이용할 수 있어요. 간식나눔 등 사생 확인이 필요한 행사 등에서 사용돼요.",
+    "later": "다음에 하기",
+    "renewConfirm": "사생증 갱신하기",
+    "issueConfirm": "사생증 발급하기"
+  },
+  "notification": {
+    "title": "알림",
+    "settingsMenu": "알림 수신 설정",
+    "loading": "알림을 불러오는 중...",
+    "empty": "알림이 없어요.",
+    "loginPrompt": "로그인 후 알림을 확인할 수 있어요.",
+    "loginAction": "로그인 하기",
+    "matchModalTitle": "룸메이트 매칭 요청",
+    "accept": "수락",
+    "reject": "거절",
+    "acceptConfirm": "정말 매칭을 수락할까요?",
+    "acceptSuccess": "매칭 요청이 수락되었어요.",
+    "acceptPortalNotice": "UNI Dorm에서의 룸메이트 매칭은 실제 기숙사 룸메이트 지정과 무관하며, 룸메이트와의 편리한 생활을 위한 서비스예요.\n반드시 룸메이트 사전 지정 기간에 인천대학교 포털에서 신청해 주세요.",
+    "rejectConfirm": "정말 매칭을 거절할까요?",
+    "rejectSuccess": "매칭 요청이 거절되었어요.",
+    "alreadyProcessed": "이미 처리된 매칭 요청이에요."
+  },
+  "networkError": {
+    "title": "서비스 장애 안내",
+    "message": "학교 인터넷에 문제가 발생했거나 서버 점검 중이에요. 이용에 불편을 드려 죄송해요."
+  },
+  "migrationConfirm": "지금 바로 신입생 임시 계정을 학교 포털 계정으로 통합하세요.\n곧 통합하지 않은 임시 계정은 삭제될 예정이에요."
+}
