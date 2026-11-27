@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import styled, { keyframes } from "styled-components";
 import { useSetHeader } from "@/hooks/useSetHeader";
@@ -371,6 +372,7 @@ export function resolveNonResidentReasonDetail(
 }
 
 export default function MobileDormitoryCardPage() {
+  const { t } = useTranslation("dormitory");
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const modeParam = searchParams.get("mode");
@@ -628,7 +630,7 @@ export default function MobileDormitoryCardPage() {
   }, [fetchCached, isPreviewMode, isRefreshing, previewSimulatedStatus, updateLastSyncTime]);
 
   useSetHeader({
-    title: "모바일 사생증",
+    title: t("card.pageTitle"),
   });
 
   // 우리 앱 환경이 아니거나 구버전 앱인 경우 스토어 설치/업데이트 유도

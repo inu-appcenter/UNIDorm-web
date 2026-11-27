@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { useSetHeader } from "@/hooks/useSetHeader";
@@ -357,10 +358,11 @@ interface FallbackAcademicData extends Partial<DormitoryStudentInfo> {
 const SHOW_DEBUG_PANEL = false;
 
 export default function PortalDormitoryPage() {
+  const { t } = useTranslation("dormitory");
   const navigate = useNavigate();
 
   useSetHeader({
-    title: "사생정보조회",
+    title: t("portalInfo.pageTitle"),
   });
 
   const [dormInfo, setDormInfo] = useState<DormitoryStudentInfo | null>(null);

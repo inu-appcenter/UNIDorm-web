@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import styled, { css } from "styled-components";
 import {
@@ -108,6 +109,7 @@ function renderGuideVisual(visual: GuideVisualKey, isExternal: boolean) {
 }
 
 export default function DormitoryGuidePage() {
+  const { t, i18n } = useTranslation("dormitory");
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const initialQuery = searchParams.get("q") ?? "";
@@ -134,20 +136,33 @@ export default function DormitoryGuidePage() {
 
   const headerConfig = useMemo(
     () => ({
-      title: "기숙사 생활 안내",
+      title: t("guide.pageTitle"),
     }),
-    [],
+    [t],
   );
   useSetHeader(headerConfig);
 
   const normalizedQuery = normalizeSearchQuery(searchQuery);
   const isSearching = normalizedQuery.length > 0;
 
-  const searchResults = useMemo(
-    () =>
-      isSearching ? searchGuideItems(selectedFilter, normalizedQuery) : [],
-    [isSearching, selectedFilter, normalizedQuery],
-  );
+  const searchResults = useMemo(() => {
+    if (!isSearching) return [];
+    const baseResults = searchGuideItems(selectedFilter, normalizedQuery);
+    if (i18n.language === "ko") return baseResults;
+
+    const lowerQuery = normalizedQuery.toLowerCase();
+    const allFiltered = searchGuideItems(selectedFilter, "");
+    const existingIds = new Set(baseResults.map((item) => item.id));
+    const localizedMatches = allFiltered.filter((item) => {
+      if (existingIds.has(item.id)) return false;
+      const localizedTitle = t(`guide.items.${item.id}.title`).toLowerCase();
+      const localizedDesc = t(`guide.items.${item.id}.description`).toLowerCase();
+      return (
+        localizedTitle.includes(lowerQuery) || localizedDesc.includes(lowerQuery)
+      );
+    });
+    return [...baseResults, ...localizedMatches];
+  }, [isSearching, selectedFilter, normalizedQuery, i18n.language, t]);
 
   const sections = useMemo(
     () => (isSearching ? [] : filterGuideSections(selectedFilter)),
@@ -257,7 +272,7 @@ export default function DormitoryGuidePage() {
 
         <CardBody>
           <TitleRow>
-            <CardTitle>{item.title}</CardTitle>
+            <CardTitle>{t(`guide.items.${item.id}.title`, { defaultValue: item.title })}</CardTitle>
             {dormBadges.map((dorm) => (
               <DormitoryBadge
                 key={dorm}
@@ -267,14 +282,22 @@ export default function DormitoryGuidePage() {
               />
             ))}
           </TitleRow>
-          <CardDescription>{item.description}</CardDescription>
+          <CardDescription>
+            {t(`guide.items.${item.id}.description`, { defaultValue: item.description })}
+          </CardDescription>
           {item.secondaryApp && (
             <SecondaryActionRow>
               <SecondaryButton
                 type="button"
                 onClick={(event) => handleSecondaryAppClick(event, item)}
               >
-                <span>{item.secondaryApp.label} 설치</span>
+                <span>
+                  {t("guide.installApp", {
+                    label: t(`guide.items.${item.id}.secondaryAppLabel`, {
+                      defaultValue: item.secondaryApp.label,
+                    }),
+                  })}
+                </span>
                 <ExternalLink size={12} strokeWidth={2.2} />
               </SecondaryButton>
             </SecondaryActionRow>
@@ -291,10 +314,8 @@ export default function DormitoryGuidePage() {
   return (
     <PageWrapper>
       <IntroArea>
-        <IntroDescription>
-          기숙사 생활에 자주 쓰는 앱과 학교 사이트를 용도별로 정리했어요.
-        </IntroDescription>
-        <FilterChipRow role="tablist" aria-label="기숙사 구분 필터">
+        <IntroDescription>{t("guide.intro")}</IntroDescription>
+        <FilterChipRow role="tablist" aria-label={t("guide.filterAriaLabel")}>
           {DORMITORY_FILTER_OPTIONS.map((option) => {
             const isActive = selectedFilter === option.value;
             return (
@@ -305,7 +326,7 @@ export default function DormitoryGuidePage() {
                 active={isActive}
                 onClick={() => handleFilterSelect(option.value)}
               >
-                {option.label}
+                {t(`guide.filters.${option.value}`, { defaultValue: option.label })}
               </GuideFilterChip>
             );
           })}
@@ -318,35 +339,35 @@ export default function DormitoryGuidePage() {
             <EmptyResultContainer>
               <EmptyState padding="24px 0 8px">
                 <EmptyResultText>
-                  <EmptyResultTitle>검색 결과가 없어요.</EmptyResultTitle>
+                  <EmptyResultTitle>{t("guide.emptyTitle")}</EmptyResultTitle>
                   <EmptyResultDescription>
-                    안내 목록에서 찾지 못했다면 챗불이에게 바로 질문해 보세요.
+                    {t("guide.emptyDescription")}
                   </EmptyResultDescription>
                 </EmptyResultText>
               </EmptyState>
               <EmptyResultActions>
                 <SquareButton
                   variant="primary"
-                  text="챗불이에게 물어보기"
+                  text={t("guide.askChatbuli")}
                   onClick={handleOpenChatBuli}
                 />
                 {selectedFilter !== "all" && (
                   <SquareButton
                     variant="secondary"
-                    text="전체 기숙사에서 보기"
+                    text={t("guide.showAllDorms")}
                     onClick={() => handleFilterSelect("all")}
                   />
                 )}
                 <SquareButton
                   variant="secondary"
-                  text="검색어 지우기"
+                  text={t("guide.clearSearch")}
                   onClick={() => setSearchQuery("")}
                 />
               </EmptyResultActions>
             </EmptyResultContainer>
           ) : (
             <TitleContentArea
-              title={`검색 결과 ${searchResults.length}건`}
+              title={t("guide.searchResultTitle", { count: searchResults.length })}
               gap="10px"
             >
               <CardList>{searchResults.map(renderGuideCard)}</CardList>
@@ -356,7 +377,9 @@ export default function DormitoryGuidePage() {
           sections.map((section) => (
             <TitleContentArea
               key={section.category}
-              title={section.category}
+              title={t(`guide.categories.${section.category}`, {
+                defaultValue: section.category,
+              })}
               gap="10px"
             >
               <CardList>{section.items.map(renderGuideCard)}</CardList>
@@ -376,19 +399,37 @@ export default function DormitoryGuidePage() {
           }
         }}
         onClear={() => setSearchQuery("")}
-        placeholder="세탁기, 시설 고장, 학식, 통금 검색"
-        ariaLabel="기숙사 생활 안내 검색"
+        placeholder={t("guide.searchPlaceholder")}
+        ariaLabel={t("guide.searchAriaLabel")}
       />
 
       <Modal
         show={Boolean(activeInfoItem?.infoModal)}
         onClose={() => setActiveInfoItem(null)}
-        title={activeInfoItem?.infoModal?.title ?? ""}
-        subtitle={activeInfoItem?.infoModal?.subtitle}
-        closeButtonText="확인했어요"
+        title={
+          activeInfoItem
+            ? t(`guide.items.${activeInfoItem.id}.infoModal.title`, {
+                defaultValue: activeInfoItem.infoModal?.title ?? "",
+              })
+            : ""
+        }
+        subtitle={
+          activeInfoItem?.infoModal?.subtitle
+            ? t(`guide.items.${activeInfoItem.id}.infoModal.subtitle`, {
+                defaultValue: activeInfoItem.infoModal.subtitle,
+              })
+            : undefined
+        }
+        closeButtonText={t("guide.infoConfirm")}
         content={
           <InfoModalList>
-            {activeInfoItem?.infoModal?.points.map((point) => (
+            {(activeInfoItem
+              ? (t(`guide.items.${activeInfoItem.id}.infoModal.points`, {
+                  returnObjects: true,
+                  defaultValue: activeInfoItem.infoModal?.points ?? [],
+                }) as string[])
+              : []
+            ).map((point) => (
               <InfoModalItem key={point}>{point}</InfoModalItem>
             ))}
           </InfoModalList>

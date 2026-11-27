@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import styled from "styled-components";
 import { ExternalLink } from "lucide-react";
@@ -12,6 +13,7 @@ import { mixpanelTrack } from "@/utils/mixpanel";
 import { colors, typography } from "@/styles/tokens";
 
 export default function DormitoryWebViewerPage() {
+  const { t } = useTranslation("dormitory");
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const serviceId = searchParams.get("id");
@@ -36,27 +38,31 @@ export default function DormitoryWebViewerPage() {
     window.open(service.url, "_blank", "noopener,noreferrer");
   }, [service]);
 
+  const localizedTitle = service
+    ? t(`guide.items.${service.id}.title`, { defaultValue: service.title })
+    : t("viewer.defaultTitle");
+
   const headerRightElement = useMemo(
     () =>
       service?.url ? (
         <ExternalOpenButton
           type="button"
           onClick={handleOpenExternal}
-          aria-label="외부 브라우저로 열기"
+          aria-label={t("viewer.openExternalAriaLabel")}
         >
-          <span>외부 열기</span>
+          <span>{t("viewer.openExternal")}</span>
           <ExternalLink size={14} strokeWidth={2.2} />
         </ExternalOpenButton>
       ) : null,
-    [service?.url, handleOpenExternal],
+    [service?.url, handleOpenExternal, t],
   );
 
   const headerConfig = useMemo(
     () => ({
-      title: service?.title ?? "생활 안내 뷰어",
+      title: localizedTitle,
       headerRightElement,
     }),
-    [service?.title, headerRightElement],
+    [localizedTitle, headerRightElement],
   );
   useSetHeader(headerConfig);
 
@@ -65,16 +71,16 @@ export default function DormitoryWebViewerPage() {
       <FallbackContainer>
         <EmptyState padding="12px 0">
           <FallbackTextGroup>
-            <FallbackTitle>안내 페이지를 찾을 수 없어요.</FallbackTitle>
+            <FallbackTitle>{t("viewer.notFoundTitle")}</FallbackTitle>
             <FallbackDescription>
-              잘못된 경로이거나 지원하지 않는 페이지예요.
+              {t("viewer.notFoundDescription")}
             </FallbackDescription>
           </FallbackTextGroup>
         </EmptyState>
         <FallbackActionArea>
           <SquareButton
             variant="primary"
-            text="기숙사 생활 안내로 돌아가기"
+            text={t("viewer.backToGuide")}
             onClick={() => navigate(PATHS.DORMITORY_GUIDE, { replace: true })}
           />
         </FallbackActionArea>
@@ -86,13 +92,13 @@ export default function DormitoryWebViewerPage() {
     <ViewerContainer>
       {!isLoaded && (
         <LoadingOverlay>
-          <LoadingSpinner message="화면을 불러오고 있어요..." />
+          <LoadingSpinner message={t("viewer.loading")} />
         </LoadingOverlay>
       )}
       <StyledIframe
         key={service.id}
         src={service.url}
-        title={service.title}
+        title={localizedTitle}
         onLoad={() => setIsLoaded(true)}
         allow="clipboard-write"
       />
