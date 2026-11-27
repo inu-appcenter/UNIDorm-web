@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import StyledInput from "../../components/common/StyledInput.tsx";
 import SquareButton from "../../components/common/SquareButton.tsx";
@@ -25,6 +26,7 @@ import { useFreshmanMigrationBanner } from "@/hooks/useFreshmanMigrationBanner";
 import { PATHS } from "@/constants/paths";
 
 export default function MyInfoEditPage() {
+  const { t } = useTranslation("mypage");
   const queryClient = useQueryClient();
   const { userInfo, setUserInfo } = useUserStore();
   const { data: memberImage } = useMemberImage();
@@ -74,15 +76,15 @@ export default function MyInfoEditPage() {
     const missingFields: string[] = [];
 
     if (typeof nickname !== "string" || nickname.trim() === "") {
-      missingFields.push("닉네임");
+      missingFields.push(t("myInfoEdit.fields.nickname"));
     }
 
     if (!isValidSelectionIndex(selectedDomitoryIndex, dormitory)) {
-      missingFields.push("기숙사 종류");
+      missingFields.push(t("myInfoEdit.fields.dormitory"));
     }
 
     if (!isValidSelectionIndex(selectedCollegeIndex, colleges)) {
-      missingFields.push("단과대학");
+      missingFields.push(t("myInfoEdit.fields.college"));
     }
 
     return missingFields;
@@ -90,33 +92,31 @@ export default function MyInfoEditPage() {
 
   const menuItems = [
     {
-      label: "회원탈퇴",
+      label: t("myInfoEdit.withdraw"),
       onClick: async () => {
         try {
-          const confirmed = window.confirm(
-            "정말 탈퇴하시겠어요? 탈퇴 후에는 모든 회원 정보를 되돌릴 수 없어요.",
-          );
+          const confirmed = window.confirm(t("myInfoEdit.withdrawConfirm"));
           if (!confirmed) return;
 
           const status = await deleteMembers();
 
           switch (status) {
             case 204:
-              alert("회원 탈퇴에 성공했어요.");
+              alert(t("myInfoEdit.withdrawSuccess"));
               navigate(PATHS.LOGOUT, { replace: true });
               break;
             case 403:
-              alert("인증되지 않은 사용자입니다. 다시 로그인해 주세요.");
+              alert(t("myInfoEdit.withdraw403"));
               break;
             case 404:
-              alert("사용자를 찾을 수 없습니다. 이미 탈퇴되었을 수 있어요.");
+              alert(t("myInfoEdit.withdraw404"));
               break;
             default:
-              alert("알 수 없는 오류가 발생했습니다.");
+              alert(t("myInfoEdit.withdrawUnknownError"));
           }
         } catch (error) {
           console.error("회원 탈퇴 중 예외 발생:", error);
-          alert("회원 탈퇴 중 네트워크 오류가 발생했습니다.");
+          alert(t("myInfoEdit.withdrawNetworkError"));
         }
       },
     },
@@ -132,7 +132,7 @@ export default function MyInfoEditPage() {
       const missingFields = getMissingFields();
 
       if (missingFields.length > 0) {
-        alert(`${missingFields.join(", ")} 항목을 입력해주세요!`);
+        alert(t("myInfoEdit.missingFields", { fields: missingFields.join(", ") }));
         return;
       }
 
@@ -144,7 +144,7 @@ export default function MyInfoEditPage() {
       }
 
       if (trimmedNickname.length < 2 || trimmedNickname.length > 10) {
-        alert("닉네임은 2자 이상 10자 이하로 입력해주세요!");
+        alert(t("myInfoEdit.nicknameLengthError"));
         return;
       }
 
@@ -157,11 +157,9 @@ export default function MyInfoEditPage() {
 
       if (response.status === 200) {
         if (isFirstVisit) {
-          alert(
-            "회원정보 저장을 성공하였습니다.\nUNI Dorm에 오신 것을 환영합니다!",
-          );
+          alert(t("myInfoEdit.saveSuccessFirst"));
         } else {
-          alert("회원정보 수정을 성공하였습니다.");
+          alert(t("myInfoEdit.saveSuccess"));
         }
         try {
           const updated = await queryClient.fetchQuery({
@@ -174,19 +172,17 @@ export default function MyInfoEditPage() {
         }
         navigate("/mypage");
       } else {
-        alert("회원정보 수정 중 오류가 발생하였습니다.");
+        alert(t("myInfoEdit.saveError"));
       }
     } catch (error) {
       if (isAxiosError(error) && error.response) {
         if (error.response.status === 409) {
-          alert(
-            "이미 사용 중인 닉네임입니다. 다른 닉네임을 입력해주세요." + error,
-          );
+          alert(t("myInfoEdit.nicknameConflict"));
         } else {
-          alert("회원정보 수정 중 오류가 발생하였습니다." + error);
+          alert(t("myInfoEdit.saveError"));
         }
       } else {
-        alert("회원정보 수정 중 알 수 없는 오류가 발생하였습니다." + error);
+        alert(t("myInfoEdit.unknownError"));
       }
       console.error(error);
     }
@@ -207,14 +203,14 @@ export default function MyInfoEditPage() {
     // 1. 허용된 이미지 형식
     const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
     if (!allowedTypes.includes(file.type)) {
-      alert("이미지 파일(jpeg, png, webp, gif)만 업로드 가능합니다.");
+      alert(t("myInfoEdit.invalidImageType"));
       return;
     }
 
     // 2. 3MB 이하 용량 제한
     const maxSizeInBytes = 2 * 1024 * 1024; // 3MB
     if (file.size > maxSizeInBytes) {
-      alert("파일 크기는 2MB 이하만 업로드 가능합니다.");
+      alert(t("myInfoEdit.imageSizeLimit"));
       return;
     }
 
@@ -231,17 +227,17 @@ export default function MyInfoEditPage() {
     try {
       const response = await putUserImage(imageFile);
       if (response.status === 200) {
-        alert("프로필 이미지가 변경되었습니다.");
+        alert(t("myInfoEdit.imageSuccess"));
       } else {
-        alert("이미지 업로드에 실패했습니다.");
+        alert(t("myInfoEdit.imageFailed"));
       }
     } catch (error) {
-      alert("이미지 업로드 중 오류가 발생했습니다.");
+      alert(t("myInfoEdit.imageError"));
       console.error(error);
     }
   };
 
-  useSetHeader({ title: "내 정보 수정", menuItems });
+  useSetHeader({ title: t("myInfoEdit.title"), menuItems });
 
   return (
     <MyInfoEditPageWrapper>
@@ -249,22 +245,20 @@ export default function MyInfoEditPage() {
         {/* 프로필 이미지 업로드 */}
         {!isFirstVisit && (
           <TitleContentArea
-            title={"프로필 사진"}
-            description={
-              "프로필 이미지 변경을 원하시는 경우에만 이미지 선택 후 변경하기 버튼을 눌러주세요."
-            }
+            title={t("myInfoEdit.profilePhotoTitle")}
+            description={t("myInfoEdit.profilePhotoDesc")}
             children={
               <ImageUploadContainer>
                 <ImageSelectRow>
                   <ProfileImageWrapper>
                     <ProfileImage
                       src={previewUrl || profile}
-                      alt="프로필 미리보기"
+                      alt={t("myInfoEdit.profileAlt")}
                     />
                   </ProfileImageWrapper>
 
                   <FileInputLabel htmlFor="profileImageInput">
-                    이미지 선택
+                    {t("myInfoEdit.selectImage")}
                   </FileInputLabel>
                   <HiddenFileInput
                     id="profileImageInput"
@@ -276,7 +270,7 @@ export default function MyInfoEditPage() {
 
                 <UploadButtonWrapper>
                   <SquareButton
-                    text="이미지 변경하기"
+                    text={t("myInfoEdit.changeImage")}
                     onClick={handleUploadImage}
                     disabled={!imageFile}
                   />
@@ -288,20 +282,17 @@ export default function MyInfoEditPage() {
         {isFirstVisit && (
           <TitleContentArea
             title={""}
-            description={
-              "서비스 이용에 반드시 필요한 정보입니다! " +
-              "이 페이지를 나가지 마시고 아래 정보를 꼭 입력해주세요."
-            }
+            description={t("myInfoEdit.firstVisitGuide")}
             children={<></>}
           />
         )}
 
         <TitleContentArea
-          title={"학번 정보(아이디)"}
+          title={t("myInfoEdit.studentIdTitle")}
           children={
             <>
               <StyledInput
-                placeholder="학번이 표시되는 자리입니다."
+                placeholder={t("myInfoEdit.studentIdPlaceholder")}
                 value={studentNumber}
                 disabled={true}
               />
@@ -316,10 +307,10 @@ export default function MyInfoEditPage() {
         />
 
         <TitleContentArea
-          title={"닉네임"}
+          title={t("myInfoEdit.nicknameTitle")}
           children={
             <StyledInput
-              placeholder="닉네임은 2자~8자 이내로 입력해주세요."
+              placeholder={t("myInfoEdit.nicknamePlaceholder")}
               value={nickname}
               onChange={(e) => {
                 setNickname(e.target.value);
@@ -329,7 +320,7 @@ export default function MyInfoEditPage() {
         />
 
         <TitleContentArea
-          title={"기숙사 종류"}
+          title={t("myInfoEdit.dormitoryTitle")}
           children={
             <ToggleGroup
               Groups={dormitory}
@@ -339,7 +330,7 @@ export default function MyInfoEditPage() {
           }
         />
         <TitleContentArea
-          title={"단과대"}
+          title={t("myInfoEdit.collegeTitle")}
           children={
             <SelectableChipGroup
               Groups={colleges}
@@ -352,7 +343,7 @@ export default function MyInfoEditPage() {
 
       <ButtonWrapper>
         <SquareButton
-          text={isFirstVisit ? "저장하기" : "수정하기"}
+          text={isFirstVisit ? t("myInfoEdit.saveButton") : t("myInfoEdit.editButton")}
           disabled={!isFilled()}
           onClick={handleSubmit}
         />

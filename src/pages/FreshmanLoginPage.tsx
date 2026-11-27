@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { isAxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
 import { loginFreshman } from "@/apis/members";
@@ -22,6 +23,7 @@ const freshmanIdRegex = /^[a-zA-Z0-9]{5,}$/;
 const freshmanPasswordRegex = /^(?=.*[a-zA-Z])(?=.*[0-9]).{5,}$/;
 
 export default function FreshmanLoginPage() {
+  const { t } = useTranslation("mypage");
   const navigate = useNavigate();
   const { setTokenInfo } = useUserStore();
 
@@ -48,21 +50,21 @@ export default function FreshmanLoginPage() {
 
       alert(
         isFreshmanMigrationEnabled
-          ? "신입생 임시 계정으로 로그인했어요.\n\n홈 화면 배너에서 포털 계정 통합을 진행해 주세요."
-          : "신입생 임시 계정으로 로그인했어요.",
+          ? t("freshmanLogin.successWithMigration")
+          : t("freshmanLogin.success"),
       );
       navigate(PATHS.HOME, { replace: true });
     } catch (error) {
       const status = isAxiosError(error) ? error.response?.status : undefined;
 
       if (status === 401) {
-        alert("비밀번호가 일치하지 않습니다.");
+        alert(t("freshmanLogin.errors.wrongPassword"));
       } else if (status === 404) {
-        alert("등록되지 않은 신입생 계정입니다.");
+        alert(t("freshmanLogin.errors.notFound"));
       } else if (status === 400) {
-        alert("입력값을 다시 확인해 주세요.");
+        alert(t("freshmanLogin.errors.invalidInput"));
       } else {
-        alert("로그인에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+        alert(t("freshmanLogin.errors.failed"));
       }
 
       console.error(error);
@@ -71,48 +73,46 @@ export default function FreshmanLoginPage() {
     }
   };
 
-  useSetHeader({ title: "신입생 임시계정 로그인" });
+  useSetHeader({ title: t("freshmanLogin.title") });
 
   return (
     <AuthFormWrapper onSubmit={handleLogin}>
-      {isLoading && <LoadingSpinner overlay message="로그인 중..." />}
+      {isLoading && <LoadingSpinner overlay message={t("freshmanLogin.loading")} />}
 
       <div>
         <AuthDescription>
-          회원가입으로 만든 신입생 임시 계정으로 로그인할 수 있어요.
+          {t("freshmanLogin.description")}
           {isFreshmanMigrationEnabled && (
             <>
               <br />
-              임시 계정 로그인 후 홈 화면 배너에서 계정 통합을 진행해 주세요.
+              {t("freshmanLogin.migrationHint")}
             </>
           )}
         </AuthDescription>
 
         <AuthInputGroup>
-          <h3>임시 계정 아이디</h3>
+          <h3>{t("freshmanLogin.idLabel")}</h3>
           <StyledInput
-            placeholder="영문 또는 영문+숫자 5자 이상"
+            placeholder={t("freshmanLogin.idPlaceholder")}
             value={studentNumber}
             onChange={(e) => setStudentNumber(e.target.value)}
           />
           {studentNumber.length > 0 && !isValidId && (
-            <AuthErrorMessage>
-              영문 또는 숫자를 포함하여 5자 이상 입력해 주세요.
-            </AuthErrorMessage>
+            <AuthErrorMessage>{t("freshmanLogin.idError")}</AuthErrorMessage>
           )}
         </AuthInputGroup>
 
         <AuthInputGroup>
-          <h3>비밀번호</h3>
+          <h3>{t("freshmanLogin.passwordLabel")}</h3>
           <StyledInput
             type="password"
-            placeholder="영문과 숫자를 포함해 5자 이상"
+            placeholder={t("freshmanLogin.passwordPlaceholder")}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
           {password.length > 0 && !isValidPassword && (
             <AuthErrorMessage>
-              영문과 숫자를 함께 포함해 5자 이상 입력해 주세요.
+              {t("freshmanLogin.passwordError")}
             </AuthErrorMessage>
           )}
         </AuthInputGroup>
@@ -120,7 +120,7 @@ export default function FreshmanLoginPage() {
 
       <AuthButtonWrapper>
         <SquareButton
-          text="신입생 임시계정 로그인"
+          text={t("freshmanLogin.submit")}
           type="submit"
           disabled={!isSubmittable}
         />

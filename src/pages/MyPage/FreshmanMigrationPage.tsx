@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { PATHS } from "@/constants/paths";
 import StyledInput from "../../components/common/StyledInput.tsx";
@@ -10,6 +11,7 @@ import LoadingSpinner from "../../components/common/LoadingSpinner.tsx";
 import { useSetHeader } from "@/hooks/useSetHeader";
 
 export default function FreshmanMigrationPage() {
+  const { t } = useTranslation("mypage");
   const navigate = useNavigate();
   const { setTokenInfo } = useUserStore();
 
@@ -29,8 +31,7 @@ export default function FreshmanMigrationPage() {
 
     if (
       !window.confirm(
-        `입력하신 학번(${studentNumber})으로 계정 통합을 진행할까요?
-통합 후에는 기존 임시 아이디로는 로그인이 불가하며, 학교 포털 계정으로 로그인해야 합니다.`,
+        t("migration.confirmMessage", { studentNumber }),
       )
     ) {
       return;
@@ -43,51 +44,47 @@ export default function FreshmanMigrationPage() {
       if (response.status === 200) {
         setTokenInfo(response.data);
 
-        alert("계정 통합이 완료되었습니다. 바로 로그인됩니다.");
+        alert(t("migration.success"));
         navigate(PATHS.HOME, { replace: true });
       } else {
-        alert("계정 통합에 실패했습니다. 학번과 포털 비밀번호를 확인해주세요.");
+        alert(t("migration.failed"));
       }
     } catch (error) {
-      alert("계정 통합 중 오류가 발생했습니다. 학번과 포털 비밀번호를 확인해주세요.");
+      alert(t("migration.error"));
       console.error(error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  useSetHeader({ title: "학번 계정 통합" });
+  useSetHeader({ title: t("migration.title") });
 
   return (
     <FormWrapper onSubmit={handleMigration}>
-      {isLoading && <LoadingSpinner overlay message="처리 중..." />}
+      {isLoading && <LoadingSpinner overlay message={t("migration.loading")} />}
 
       <div>
-        <span className="description">
-          신입생 임시 계정을 학교 포털 계정(학번)으로 통합합니다. <br />
-          통합 후에는 기존에 작성한 게시글, 설정 등이 유지되며 <br />
-          로그인 시에는 통합된 학번 계정을 사용해야 합니다.
+        <span className="description" style={{ whiteSpace: "pre-line" }}>
+          {t("migration.description")}
         </span>
 
         <InputGroup>
-          <h3>학교 학번</h3>
+          <h3>{t("migration.studentIdLabel")}</h3>
           <StyledInput
-            placeholder="부여받은 학번을 입력해주세요."
+            placeholder={t("migration.studentIdPlaceholder")}
             value={studentNumber}
             onChange={(e) => setStudentNumber(e.target.value)}
           />
           {studentNumber.length > 0 && !isValidStudentNumber && (
-            <ErrorMessage>
-              올바른 학번 형식을 입력해주세요. (8~10자리 숫자)
-            </ErrorMessage>
+            <ErrorMessage>{t("migration.studentIdError")}</ErrorMessage>
           )}
         </InputGroup>
 
         <InputGroup>
-          <h3>포털 비밀번호</h3>
+          <h3>{t("migration.passwordLabel")}</h3>
           <StyledInput
             type="password"
-            placeholder="학교 포털 비밀번호를 입력해주세요."
+            placeholder={t("migration.passwordPlaceholder")}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
@@ -96,7 +93,7 @@ export default function FreshmanMigrationPage() {
 
       <ButtonWrapper>
         <SquareButton
-          text="계정 통합하기"
+          text={t("migration.submit")}
           type="submit"
           disabled={!isValidStudentNumber || !isValidPw || isLoading}
         />

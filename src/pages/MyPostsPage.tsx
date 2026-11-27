@@ -1,11 +1,13 @@
 // src/pages/Tip/TipListPage.tsx
 
 import styled from "styled-components";
+import { useTranslation } from "react-i18next";
 import TitleContentArea from "../components/common/TitleContentArea.tsx";
 import MyPostLikeCard from "../components/mypage/MyPostLikeCard.tsx";
 import { useMemberPosts } from "@/queries/members";
 
 export default function MyPostsPage() {
+  const { t } = useTranslation("mypage");
   const { data: posts = [] } = useMemberPosts();
 
   return (
@@ -20,7 +22,7 @@ export default function MyPostsPage() {
               </>
             ))
           ) : (
-            <EmptyMessage>내가 작성한 게시글이 없습니다.</EmptyMessage>
+            <EmptyMessage>{t("myPosts.empty")}</EmptyMessage>
           )}
         </CardList>
       </TitleContentArea>

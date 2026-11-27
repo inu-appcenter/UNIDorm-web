@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { useTranslation } from "react-i18next";
 import useUserStore from "../../stores/useUserStore.ts";
 import { useMemberImage } from "@/queries/members";
 import profile from "../../assets/profileimg.png";
@@ -8,6 +9,7 @@ import { PATHS } from "@/constants/paths";
 import { mixpanelTrack } from "@/utils/mixpanel";
 
 const MyInfoArea = () => {
+  const { t } = useTranslation("mypage");
   const navigate = useNavigate();
   const userInfo = useUserStore((state) => state.userInfo);
   const { data: imageResult } = useMemberImage();
@@ -32,9 +34,9 @@ const MyInfoArea = () => {
           />
         </div>
         <div className="description">
-          <div className="name">{userInfo.name || "이름 정보 없음"}</div>
+          <div className="name">{userInfo.name || t("myInfoArea.noName")}</div>
           <div className="college">
-            {userInfo.college || "단과대 정보 없음"}
+            {userInfo.college || t("myInfoArea.noCollege")}
           </div>
         </div>
       </LeftArea>

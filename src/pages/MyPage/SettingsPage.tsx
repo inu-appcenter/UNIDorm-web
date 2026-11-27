@@ -1,25 +1,36 @@
 import { useEffect, useState } from "react";
+import { Check } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import CommonBottomSheet from "@/components/modal/CommonBottomSheet";
 import MenuGroup from "@/components/mypage/MenuGroup";
 import { PATHS } from "@/constants/paths";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import { useUserRole } from "@/hooks/useUserRole";
+import { SUPPORTED_LANGUAGES } from "@/i18n";
 import { createSettingsMenuGroups } from "@/stores/menuGroupsFactory";
+import { useLanguageStore } from "@/stores/useLanguageStore";
+import { colors, typography } from "@/styles/tokens";
 import { appBridge } from "@/utils/appBridgeAdapter";
 
 const APP_VERSION = "1.8.0";
 
 const SettingsPage = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation(["mypage", "common"]);
   const { isLoggedIn, isAdmin } = useUserRole();
+  const language = useLanguageStore((state) => state.language);
+  const setLanguage = useLanguageStore((state) => state.setLanguage);
+
   const [showHiddenMenu, setShowHiddenMenu] = useState(false);
   const [clickCount, setClickCount] = useState(0);
+  const [isLanguageSheetOpen, setIsLanguageSheetOpen] = useState(false);
 
-  const menuGroups = createSettingsMenuGroups(navigate, isLoggedIn);
+  const menuGroups = createSettingsMenuGroups(navigate, isLoggedIn, t);
 
   useSetHeader({
-    title: "설정",
+    title: t("mypage:settings.title"),
   });
 
   useEffect(() => {
@@ -34,7 +45,7 @@ const SettingsPage = () => {
       return;
     }
 
-    if (window.confirm("페이지를 새로고침하시겠습니까?")) {
+    if (window.confirm(t("mypage:settings.reloadConfirm"))) {
       window.location.reload();
     }
   };
@@ -42,18 +53,30 @@ const SettingsPage = () => {
   return (
     <SettingsWrapper>
       <MenuGroupsWrapper>
+        <MenuGroup
+          title={t("mypage:settings.languageSection")}
+          menus={[
+            {
+              label: t("mypage:settings.languageLabel"),
+              description: t(`common:languageOptions.${language}`),
+              onClick: () => setIsLanguageSheetOpen(true),
+            },
+          ]}
+        />
+        <Divider />
+
         <MenuGroup title={menuGroups[0].title} menus={menuGroups[0].menus} />
         <Divider />
 
         <MenuGroup
-          title="앱 정보"
+          title={t("mypage:settings.appInfoSection")}
           menus={[
             {
-              label: `버전 v ${APP_VERSION}`,
+              label: t("mypage:settings.version", { version: APP_VERSION }),
               onClick: () => setClickCount((prev) => prev + 1),
             },
             {
-              label: "업데이트 하기",
+              label: t("mypage:settings.updateApp"),
               onClick: handleAppUpdate,
             },
           ]}
@@ -63,14 +86,14 @@ const SettingsPage = () => {
           <>
             <Divider />
             <MenuGroup
-              title="히든 메뉴"
+              title={t("mypage:settings.hiddenMenuSection")}
               menus={[
                 {
-                  label: "로그 확인",
+                  label: t("mypage:settings.viewLogs"),
                   onClick: () => navigate(PATHS.SETTINGS_LOGS),
                 },
                 {
-                  label: "FCM 토큰 확인",
+                  label: t("mypage:settings.viewFcmToken"),
                   onClick: () => navigate(PATHS.ADMIN.FCM),
                 },
               ]}
@@ -82,10 +105,10 @@ const SettingsPage = () => {
           <>
             <Divider />
             <MenuGroup
-              title="관리자 전용"
+              title={t("mypage:settings.adminSection")}
               menus={[
                 {
-                  label: "관리자 페이지",
+                  label: t("mypage:settings.adminPage"),
                   onClick: () => navigate(PATHS.ADMIN.ROOT),
                 },
               ]}
@@ -93,6 +116,35 @@ const SettingsPage = () => {
           </>
         )}
       </MenuGroupsWrapper>
+
+      <CommonBottomSheet
+        id="settings-language-sheet"
+        isOpen={isLanguageSheetOpen}
+        setIsOpen={setIsLanguageSheetOpen}
+        title={t("mypage:settings.languageSheetTitle")}
+        subtitle={t("mypage:settings.languageSheetSubtitle")}
+        closeButtonText={t("common:actions.close")}
+      >
+        <LanguageOptionList>
+          {SUPPORTED_LANGUAGES.map((lang) => {
+            const isSelected = language === lang;
+            return (
+              <LanguageOptionButton
+                key={lang}
+                type="button"
+                $selected={isSelected}
+                onClick={() => {
+                  setLanguage(lang);
+                  setIsLanguageSheetOpen(false);
+                }}
+              >
+                <LanguageLabel>{t(`common:languageOptions.${lang}`)}</LanguageLabel>
+                {isSelected && <Check size={18} strokeWidth={2.5} />}
+              </LanguageOptionButton>
+            );
+          })}
+        </LanguageOptionList>
+      </CommonBottomSheet>
     </SettingsWrapper>
   );
 };
@@ -124,4 +176,45 @@ const Divider = styled.div`
   height: 1px;
   margin: 0 -16px;
   background: #0000001a;
+`;
+
+const LanguageOptionList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+`;
+
+const LanguageOptionButton = styled.button<{ $selected: boolean }>`
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1.5px solid
+    ${({ $selected }) => ($selected ? colors.main.main1 : colors.gray.gray200)};
+  background-color: ${({ $selected }) =>
+    $selected ? colors.blue.blue100 : colors.bg.bg1};
+  color: ${({ $selected }) =>
+    $selected ? colors.main.main2 : colors.text.text1};
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition:
+    background-color 0.16s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.16s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);
+
+  &:active {
+    transform: scale(0.985);
+  }
+`;
+
+const LanguageLabel = styled.span`
+  ${typography.body1Normal};
+  color: inherit;
+  min-width: 0;
+  text-align: left;
 `;
