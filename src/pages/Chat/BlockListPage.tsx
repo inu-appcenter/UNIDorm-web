@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import styled from "styled-components";
 import { User } from "lucide-react";
 import { useSetHeader } from "@/hooks/useSetHeader";
@@ -8,6 +9,7 @@ import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { motion } from "framer-motion";
 
 export default function BlockListPage() {
+  const { t } = useTranslation("chat");
   const { data: serverBlockedUsers = [], isLoading } = useBlockedUsers();
   const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
 
@@ -23,12 +25,12 @@ export default function BlockListPage() {
       );
     } catch (err) {
       console.error("차단 해제 실패", err);
-      alert("차단 해제 중 오류가 발생했습니다.");
+      alert(t("blockList.unblockError"));
     }
   };
 
   useSetHeader({
-    title: "차단 목록",
+    title: t("blockList.title"),
     showAlarm: false,
     headerRightElement: (
       <HeaderRightCount>
@@ -61,7 +63,7 @@ export default function BlockListPage() {
           ))}
         </CardList>
       ) : (
-        <EmptyMessage>차단한 사용자가 없습니다.</EmptyMessage>
+        <EmptyMessage>{t("blockList.empty")}</EmptyMessage>
       )}
     </PageWrapper>
   );

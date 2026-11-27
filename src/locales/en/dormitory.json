@@ -1,0 +1,202 @@
+{
+  "guide": {
+    "pageTitle": "Dormitory Guide",
+    "intro": "Essential apps and university links organized by purpose for dorm life.",
+    "filterAriaLabel": "Dormitory filter",
+    "filters": {
+      "all": "All",
+      "1기숙사": "Dorm 1",
+      "2기숙사": "Dorm 2",
+      "3기숙사": "Dorm 3"
+    },
+    "categories": {
+      "생활·시설": "Living & Facilities",
+      "식단·캠퍼스": "Dining & Campus",
+      "입·퇴사·행정": "Move-in/out & Admin",
+      "생활 정보": "Dorm Info",
+      "질문·문의": "Q&A & Contact"
+    },
+    "searchPlaceholder": "Search laundry, repairs, dining, curfew...",
+    "searchAriaLabel": "Search dormitory guide",
+    "searchResultTitle": "{{count}} results",
+    "emptyTitle": "No matching results.",
+    "emptyDescription": "If you couldn't find it here, try asking Torch AI directly.",
+    "askChatbuli": "Ask Torch AI",
+    "showAllDorms": "Show all dorms",
+    "clearSearch": "Clear search",
+    "infoConfirm": "Got it",
+    "installApp": "Get {{label}}",
+    "items": {
+      "laundry-metaclub": {
+        "title": "Washer & Dryer (MetaClub)",
+        "description": "Check washer/dryer availability and pay for Dorm 1 & 2.",
+        "actionLabel": "Open App"
+      },
+      "laundry-dorm3": {
+        "title": "Dorm 3 Laundry Room",
+        "description": "No app required—pay by cash or prepaid card. Tap for details.",
+        "infoModal": {
+          "title": "Dorm 3 Laundry Guide",
+          "subtitle": "No app supported · On-site payment",
+          "points": [
+            "Dorm 3 laundry machines do not support apps like MetaClub.",
+            "You can pay with cash or a rechargeable card at the kiosk in the laundry room.",
+            "For malfunctions or issues, submit a repair request via Edumac or contact Dorm 3 Office (032-858-7222)."
+          ]
+        }
+      },
+      "facility-dorm1": {
+        "title": "Facility Repair Request",
+        "description": "Report Dorm 1 facility issues on the INU Portal system.",
+        "actionLabel": "Open Portal"
+      },
+      "facility-dorm23": {
+        "title": "Facility Repair Request",
+        "description": "Report Dorm 2 & 3 (BTL) repairs on the Edumac facility system.",
+        "actionLabel": "Open Edumac"
+      },
+      "unidorm-complain": {
+        "title": "Other Dorm Reports",
+        "description": "Submit non-facility complaints and track progress on UNIDorm.",
+        "actionLabel": "Go to Reports"
+      },
+      "intip-menu": {
+        "title": "Dorm & Campus Dining",
+        "description": "Check Dorm 1 cafeteria and campus meal menus on INTIP.",
+        "actionLabel": "View Menu",
+        "secondaryAppLabel": "INTIP App"
+      },
+      "portal-apply": {
+        "title": "Current Student Application",
+        "description": "Apply for dorm residence, regular or mid-term move-out via INU Portal.",
+        "actionLabel": "Open Portal"
+      },
+      "erp-freshman-apply": {
+        "title": "Freshman / Transfer Application",
+        "description": "Dorm application page for new/transfer students without a portal ID.",
+        "actionLabel": "Go to Apply"
+      },
+      "dorm-lecture": {
+        "title": "Dormitory Liberal Arts Lectures",
+        "description": "View schedules and apply for free resident lectures.",
+        "actionLabel": "View Guide"
+      },
+      "dorm-rules": {
+        "title": "Dormitory Rules",
+        "description": "Curfew hours (05:00–02:00), overnight stay, parcel & shared facility rules.",
+        "actionLabel": "View"
+      },
+      "dorm-facilities": {
+        "title": "Amenities by Dormitory",
+        "description": "Check floor locations of convenience stores, parcel rooms, gym & kitchenettes.",
+        "actionLabel": "View"
+      },
+      "dorm-archive": {
+        "title": "Points Table & Archive",
+        "description": "Latest reward/penalty point criteria and resident guide documents.",
+        "actionLabel": "View"
+      },
+      "dorm-home": {
+        "title": "INU Dormitory Website",
+        "description": "Go to the official INU Dormitory website.",
+        "actionLabel": "Open"
+      },
+      "chatbuli": {
+        "title": "Ask Torch AI",
+        "description": "Ask our AI chatbot about curfew, points, move-in/out, and more.",
+        "actionLabel": "Ask Now"
+      },
+      "dorm-qna": {
+        "title": "Dormitory Q&A Board",
+        "description": "Official 1:1 inquiry board for the Dormitory Office.",
+        "actionLabel": "Open"
+      },
+      "tel-admin": {
+        "title": "Main Dormitory Office",
+        "description": "Move-in/out & general inquiries (032-835-9810)",
+        "actionLabel": "Call"
+      },
+      "tel-dorm2": {
+        "title": "Dorm 2 Management Office",
+        "description": "Dorm 2 facility & living inquiries (032-858-7233)",
+        "actionLabel": "Call"
+      },
+      "tel-dorm3": {
+        "title": "Dorm 3 Management Office",
+        "description": "Dorm 3 facility & living inquiries (032-858-7222)",
+        "actionLabel": "Call"
+      }
+    }
+  },
+  "viewer": {
+    "defaultTitle": "Guide Viewer",
+    "openExternalAriaLabel": "Open in external browser",
+    "openExternal": "Open",
+    "notFoundTitle": "Guide page not found.",
+    "notFoundDescription": "The link is invalid or not supported.",
+    "backToGuide": "Back to Dormitory Guide",
+    "loading": "Loading page..."
+  },
+  "card": {
+    "pageTitle": "Mobile Dorm ID",
+    "subHeading": "INU Dormitory",
+    "mainTitle": "Mobile Dorm ID",
+    "studentId": "Student ID",
+    "department": "Department",
+    "grade": "Year",
+    "dormitory": "Dormitory",
+    "dormNo": "Resident No.",
+    "assignedRoom": "Assigned Room",
+    "status": "Status",
+    "photoAlt": "{{name}}'s resident photo",
+    "yearSuffix": "{{year}}",
+    "refreshButton": "Refresh",
+    "detailButton": "My Resident Details",
+    "refreshing": "Refreshing Dorm ID info..."
+  },
+  "portalSync": {
+    "progressTitle": "Fetching your resident info",
+    "steps": [
+      "Connecting securely to INU Portal...",
+      "Checking dorm assignment and room info...",
+      "Syncing academic info and student photo...",
+      "Saving Dorm ID securely to your device..."
+    ],
+    "doNotClose": "Please <strong>do not leave this screen or close the app</strong> until finished",
+    "secureChannel": "End-to-end encrypted communication with INU Portal",
+    "accountModalTitle": "Link Portal Account",
+    "accountModalNotice": "<strong>Rest assured!</strong> INU Portal, LMS, and Library share the same ID/password. Register once to store them encrypted in your device KeyStore and auto-sync all services.",
+    "studentIdLabel": "Portal Student ID",
+    "studentIdPlaceholder": "e.g., 202600000",
+    "passwordLabel": "Portal Password",
+    "passwordPlaceholder": "Enter portal password",
+    "missingCredentials": "Please enter both student ID and password.",
+    "appOnly": "Portal linking is only supported in the UNIDorm mobile app.",
+    "saving": "Saving to KeyStore...",
+    "linkFailed": "Failed to link account.",
+    "genericError": "An error occurred.",
+    "fetchTitle": "Fetch info from\nINU Portal",
+    "fetchSubtitle": "We'll safely fetch your resident info from INU Portal to issue your Mobile Dorm ID.",
+    "securityTitle": "Processed only on this device",
+    "securityDesc": "Your portal credentials and resident info are never sent to external servers and stay encrypted in your phone's KeyStore.",
+    "savedStudentIdLabel": "Saved Student ID",
+    "savedStudentIdFallback": "Linked",
+    "savedAccountReady": "Your account is already saved on this device. You can fetch info right away.",
+    "fetchDormCardBtn": "Fetch Dorm ID Info",
+    "useOtherAccount": "Sign in with another portal account",
+    "fetchInfoBtn": "Fetch Info",
+    "useSavedAccount": "Use saved account"
+  },
+  "portalInfo": {
+    "pageTitle": "Resident Info (Student)",
+    "tabs": {
+      "basic": "Basic",
+      "stay": "Move-in/out",
+      "points": "Points",
+      "overnight": "Overnight",
+      "fee": "Utilities"
+    },
+    "refresh": "Refresh",
+    "empty": "No records to display."
+  }
+}

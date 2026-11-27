@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { useTranslation } from "react-i18next";
 import { Drawer } from "vaul";
 import { format, parseISO } from "date-fns";
 import { CalendarItem } from "@/types/calendar";
@@ -22,6 +23,8 @@ export default function CalendarEventBottomSheet({
   getCalendarColor,
   onClickEvent,
 }: Props) {
+  const { t } = useTranslation(["home", "common"]);
+
   return (
     <Drawer.Root open={isOpen} onOpenChange={setIsOpen}>
       <Drawer.Portal>
@@ -38,7 +41,7 @@ export default function CalendarEventBottomSheet({
 
           <EventList>
             {events.length === 0 ? (
-              <EmptyText>해당 날짜에 일정이 없습니다.</EmptyText>
+              <EmptyText>{t("home:calendarSection.emptyForDate")}</EmptyText>
             ) : (
               events.map((event) => {
                 const isAnnouncement =
@@ -66,7 +69,7 @@ export default function CalendarEventBottomSheet({
                     {isAnnouncement && (
                       <AiBadge>
                         <img src={챗불이로고} />
-                        <span>횃불이 AI로 생성된 콘텐츠입니다.</span>
+                        <span>{t("home:calendarSection.aiGenerated")}</span>
                       </AiBadge>
                     )}
 
@@ -83,7 +86,7 @@ export default function CalendarEventBottomSheet({
 
           <Footer>
             <button type="button" onClick={() => setIsOpen(false)}>
-              닫기
+              {t("common:actions.close")}
             </button>
           </Footer>
         </Content>

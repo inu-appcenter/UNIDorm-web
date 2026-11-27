@@ -1,0 +1,80 @@
+{
+  "complain": {
+    "title": "宿舍报修与投诉",
+    "writeTitle": "提交宿舍报修/投诉",
+    "editTitle": "修改宿舍报修/投诉",
+    "detailTitle": "报修详情",
+    "myComplaints": "我的报修",
+    "allComplaints": "全部报修",
+    "empty": "暂无报修记录。",
+    "deleteConfirm": "确定要删除吗？",
+    "deleted": "已删除。",
+    "titlePlaceholder": "帖子标题",
+    "contentPlaceholder": "请输入内容",
+    "locationPlaceholder": "请输入具体位置（例：卫生间前、走廊尽头等）",
+    "writeSuccess": "报修/投诉已提交！",
+    "editSuccess": "报修/投诉已修改！",
+    "validation": {
+      "selectTypeDorm": "请选择类型、宿舍和楼栋。",
+      "selectRoom": "请选择楼层、房间号和床位。",
+      "enterLocation": "请输入具体位置。",
+      "selectDate": "请选择发生日期。",
+      "selectTime": "请选择发生时间。",
+      "enterTitle": "请输入标题。",
+      "enterContent": "请输入内容。",
+      "agreePrivacy": "请同意收集和使用个人信息。"
+    }
+  },
+  "announcement": {
+    "title": "公告事项",
+    "detailTitle": "公告事项",
+    "searchPlaceholder": "请输入搜索关键词",
+    "loadError": "加载公告失败。",
+    "deleteConfirm": "确定要删除吗？",
+    "deleted": "已删除。",
+    "deleteFailed": "删除失败。",
+    "empty": "暂无公告。"
+  },
+  "groupPurchase": {
+    "title": "拼单",
+    "writeTitle": "发布拼单",
+    "keywordSettingTitle": "关键词通知设置",
+    "appRequired": "安装应用后即可使用。",
+    "loginRequired": "登录后即可使用。",
+    "empty": "暂无拼单。"
+  },
+  "tip": {
+    "title": "宿舍贴士",
+    "writeTitle": "发布/修改贴士",
+    "titlePlaceholder": "帖子标题",
+    "contentPlaceholder": "请输入内容",
+    "deleteConfirm": "确定要删除吗？",
+    "deleted": "已删除。",
+    "deleteFailed": "删除失败。",
+    "loginRequired": "登录后即可使用。",
+    "likeFailed": "点赞失败！",
+    "commentFailed": "发表评论失败。",
+    "replyFailed": "发表回复失败。",
+    "writeSuccess": "贴士已发布！",
+    "editSuccess": "贴士已修改！",
+    "validation": {
+      "enterBoth": "请输入标题和内容。",
+      "titleMax": "标题请控制在 100 字以内。",
+      "contentMax": "内容请控制在 2000 字以内。"
+    }
+  },
+  "form": {
+    "title": "INU 问卷",
+    "searchPlaceholder": "搜索问卷标题",
+    "answerPlaceholder": "请输入回答",
+    "unavailable": "不在问卷进行期间或您已提交过该问卷。",
+    "requiredMissing": "请填写所有必答问题。",
+    "submitted": "提交成功！",
+    "submitError": "提交时发生错误，请重试。",
+    "closed": "已截止。",
+    "closeFailed": "截止处理失败。",
+    "deleteConfirm": "确定删除吗？\n此操作无法撤销。",
+    "deleted": "已删除。",
+    "deleteFailed": "删除失败。"
+  }
+}

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import styled from "styled-components";
 import { colors } from "@/styles/tokens";
 
@@ -8,11 +9,13 @@ interface HeaderDormitoryCardButtonProps {
 export default function HeaderDormitoryCardButton({
   onClick,
 }: HeaderDormitoryCardButtonProps) {
+  const { t } = useTranslation("common");
+
   return (
     <FrameButton
       type="button"
       onClick={onClick}
-      aria-label="모바일 사생증 열기"
+      aria-label={t("header.openDormitoryCard")}
       role="button"
     >
       {/* 좌측 스캐너 브래킷 [ */}
@@ -33,7 +36,7 @@ export default function HeaderDormitoryCardButton({
         />
       </CornerSvg>
 
-      <LabelText>사생증</LabelText>
+      <LabelText>{t("header.dormitoryCardShort")}</LabelText>
 
       {/* 우측 스캐너 브래킷 ] */}
       <CornerSvg

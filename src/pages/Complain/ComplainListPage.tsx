@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { useTranslation } from "react-i18next";
 import SearchInput from "../../components/complain/SearchInput.tsx";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import StepFlow from "../../components/complain/StepFlow.tsx";
@@ -21,6 +22,7 @@ import { AlertCircle, RotateCw, X } from "lucide-react";
 const PERIOD_MENUS = ["전체", "최근 1개월", "최근 3개월", "올해"];
 
 const ComplainListPage = () => {
+  const { t } = useTranslation("board");
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const openChat = useAIChatStore((state) => state.openChat);
@@ -161,7 +163,7 @@ const ComplainListPage = () => {
   };
 
   useSetHeader({
-    title: "생활원 민원",
+    title: t("complain.title"),
   });
 
   const hasActiveFilters = Boolean(appliedKeyword || selectedFilterIndex !== 0);

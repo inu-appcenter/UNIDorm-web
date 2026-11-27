@@ -1,0 +1,72 @@
+{
+  "title": "Chat",
+  "tabs": {
+    "open": "Chat mở",
+    "roommate": "Chat bạn phòng",
+    "my": "Đã tham gia"
+  },
+  "openChat": {
+    "searchPlaceholder": "Tìm tên / mô tả phòng chat",
+    "cannotJoin": "Không thể tham gia phòng chat.",
+    "loginRequired": "Cần đăng nhập.",
+    "notFound": "Không tìm thấy phòng chat.",
+    "full": "Phòng chat đã đủ người.",
+    "joinFailed": "Vào phòng chat thất bại. Vui lòng thử lại.",
+    "unknownError": "Đã xảy ra lỗi không xác định.",
+    "emptyTitle": "Chưa có phòng chat mở nào.",
+    "emptyDescription": "Hãy tạo phòng chat mở mới để bắt đầu trò chuyện."
+  },
+  "create": {
+    "title": "Tạo phòng chat mở",
+    "namePlaceholder": "VD: KTX 1 đặt đồ ăn chung",
+    "descPlaceholder": "VD: Viết ngắn gọn chủ đề cùng trò chuyện\nnhư giao đồ ăn, mua chung, thông tin KTX"
+  },
+  "edit": {
+    "title": "Chỉnh sửa phòng chat mở",
+    "invalidRoom": "Phòng chat không hợp lệ.",
+    "success": "Đã cập nhật thông tin phòng chat.",
+    "ownerOnly": "Chỉ trưởng phòng mới có thể chỉnh sửa thông tin.",
+    "checkInput": "Vui lòng kiểm tra lại thông tin đã nhập.",
+    "failed": "Cập nhật thông tin phòng chat thất bại."
+  },
+  "members": {
+    "title": "Danh sách thành viên",
+    "statusChangeFailed": "Đổi trạng thái tuyển thành viên thất bại. Vui lòng thử lại.",
+    "delegateAndLeaveFailed": "Chuyển quyền trưởng phòng và rời phòng thất bại.",
+    "directChatFailed": "Tạo phòng chat 1:1 thất bại. Vui lòng thử lại sau.",
+    "blockedSuccess": "Đã chặn {{name}}.",
+    "loginRequired": "Cần đăng nhập.",
+    "userNotFound": "Không tìm thấy người dùng để chặn.",
+    "alreadyBlocked": "Người dùng đã bị chặn trước đó.",
+    "blockFailed": "Chặn người dùng thất bại. Vui lòng thử lại.",
+    "blockError": "Lỗi khi chặn người dùng.",
+    "requestStudentIdConfirm": "Yêu cầu {{name}} chia sẻ mã sinh viên?",
+    "delegateConfirm": "Chuyển quyền trưởng phòng cho {{name}}?",
+    "delegateFailed": "Chuyển quyền trưởng phòng thất bại.",
+    "kickConfirm": "Mời {{name}} ra khỏi phòng chat này?",
+    "kickSuccess": "Đã mời thành viên ra khỏi phòng.",
+    "kickFailed": "Mời thành viên ra khỏi phòng thất bại.",
+    "leaveConfirm": "Bạn có chắc muốn rời phòng chat?",
+    "leaveFailed": "Rời phòng chat thất bại."
+  },
+  "blockList": {
+    "title": "Danh sách chặn",
+    "unblockError": "Lỗi khi bỏ chặn.",
+    "empty": "Không có người dùng nào bị chặn."
+  },
+  "notiSettings": {
+    "title": "Cài đặt thông báo chat"
+  },
+  "room": {
+    "cannotEnterGroup": "Không thể vào phòng chat nhóm.",
+    "deletedPost": "Bài viết đã bị xóa.",
+    "maxPhotosAlert": "Chỉ có thể gửi tối đa 5 ảnh mỗi lần."
+  },
+  "info": {
+    "requestRoommateConfirm": "Gửi yêu cầu ghép bạn phòng tới {{name}}?",
+    "requestError": "Lỗi khi gửi yêu cầu.",
+    "roomOrUserNotFound": "Không tìm thấy phòng chat hoặc người dùng.",
+    "alreadyRequested": "Đã gửi yêu cầu trước đó rồi.",
+    "blockedUserError": "Không thể gửi yêu cầu bạn phòng cho người đã chặn."
+  }
+}

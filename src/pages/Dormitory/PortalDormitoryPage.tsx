@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { useSetHeader } from "@/hooks/useSetHeader";
@@ -358,10 +359,11 @@ interface FallbackAcademicData extends Partial<DormitoryStudentInfo> {
 const SHOW_DEBUG_PANEL = false;
 
 export default function PortalDormitoryPage() {
+  const { t } = useTranslation("dormitory");
   const navigate = useNavigate();
 
   useSetHeader({
-    title: "사생정보조회",
+    title: t("portalInfo.pageTitle"),
   });
 
   const [dormInfo, setDormInfo] = useState<DormitoryStudentInfo | null>(null);
@@ -510,16 +512,10 @@ export default function PortalDormitoryPage() {
     addLog("INIT", "사생정보 조회 프로세스 시작", "info");
 
     if (!guardPortalAgent({ navigate })) {
-      addLog("ENV_CHECK", "로컬 포털 에이전트(모바일 앱 또는 크롬 확장) 환경이 아닙니다.", "warn");
+      addLog("ENV_CHECK", "최신 모바일 앱 환경이 아닙니다. (웹 또는 구버전 앱 감지)", "warn");
       return;
     }
-    addLog(
-      "ENV_CHECK",
-      isMobileAppEnvironment()
-        ? "모바일 앱 브릿지 환경 확인 완료 (ReactNativeWebView)"
-        : "PC Chrome 확장 브릿지 환경 확인 완료 (UNIDorm Extension)",
-      "info",
-    );
+    addLog("ENV_CHECK", "모바일 앱 브릿지 환경 확인 완료 (ReactNativeWebView)", "info");
 
     try {
       setIsLoading(true);
@@ -667,7 +663,7 @@ export default function PortalDormitoryPage() {
       addLog("TAB_INIT", `[${tabName}] 단독 상세 탭 조회 시작`, "info");
 
       if (!guardPortalAgent({ navigate })) {
-        addLog("ENV_CHECK", "로컬 포털 에이전트(모바일 앱 또는 크롬 확장) 환경이 아닙니다.", "warn");
+        addLog("ENV_CHECK", "최신 모바일 앱 환경이 아닙니다. (웹 또는 구버전 앱 감지)", "warn");
         return;
       }
 
@@ -904,9 +900,9 @@ export default function PortalDormitoryPage() {
         {!isPortalAgentAvailable() && (
           <WebFallbackCard>
             <Smartphone size={28} color="var(--interactive-primary)" />
-            <div className="title">모바일 앱 또는 PC 크롬 확장 전용 기능</div>
+            <div className="title">모바일 앱 전용 기능</div>
             <div className="desc">
-              학교 포털 ERP 연동은 유니돔 앱 또는 PC 크롬 확장의 로컬 세션에서 직접 조회됩니다.
+              학교 포털 ERP 연동은 유니돔 앱 내부의 보안 세션을 통해 안전하게 조회됩니다.
             </div>
             <CapsuleButton
               variant="brand"

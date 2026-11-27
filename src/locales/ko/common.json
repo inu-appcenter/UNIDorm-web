@@ -1,0 +1,110 @@
+{
+  "languageOptions": {
+    "ko": "한국어",
+    "en": "English",
+    "zh": "中文",
+    "vi": "Tiếng Việt"
+  },
+  "actions": {
+    "confirm": "확인",
+    "cancel": "취소",
+    "save": "저장",
+    "delete": "삭제",
+    "edit": "수정",
+    "close": "닫기",
+    "retry": "다시 시도",
+    "apply": "적용",
+    "reset": "초기화",
+    "search": "검색",
+    "back": "뒤로가기",
+    "more": "더보기",
+    "submit": "제출",
+    "register": "등록",
+    "viewAll": "전체보기",
+    "install": "설치",
+    "refresh": "새로고침",
+    "write": "작성하기"
+  },
+  "header": {
+    "backAlt": "뒤로가기",
+    "logoAlt": "유니돔 로고",
+    "installApp": "앱 설치",
+    "openDormitoryCard": "모바일 사생증 열기",
+    "dormitoryCardShort": "사생증",
+    "keywordSettingTooltip": "키워드 / 카테고리\n알림을 설정해보세요."
+  },
+  "bottomBar": {
+    "home": "홈",
+    "roommate": "룸메이트",
+    "chat": "채팅",
+    "complain": "민원",
+    "mypage": "마이페이지",
+    "roommateMatchingTooltip": "룸메이트 매칭 중!",
+    "roommateMatchingTooltipWithSemester": "{{year}}년 {{semester}}\n룸메이트 매칭 중!"
+  },
+  "dormitory": {
+    "dorm1": "1기숙사",
+    "dorm2": "2기숙사",
+    "dorm3": "3기숙사"
+  },
+  "semester": {
+    "first": "1학기",
+    "second": "2학기",
+    "summer": "여름계절학기",
+    "winter": "겨울계절학기",
+    "other": "{{value}}학기"
+  },
+  "states": {
+    "loading": "불러오는 중...",
+    "processing": "처리 중...",
+    "empty": "데이터가 없습니다.",
+    "error": "문제가 발생했어요.",
+    "errorRetry": "불러오지 못했어요. 다시 시도해 주세요.",
+    "noData": "표시할 내용이 없어요.",
+    "loginRequired": "로그인 후 사용할 수 있어요.",
+    "networkError": "네트워크 연결을 확인해 주세요."
+  },
+  "guard": {
+    "loginRequiredConfirm": "로그인이 필요합니다. 로그인 페이지로 이동할까요?",
+    "appUpdateConfirm": "새로운 기능 이용을 위해 유니돔 앱 업데이트가 필요해요.\n스토어로 이동하여 최신 버전으로 업데이트할까요?",
+    "appInstallConfirm": "유니돔 앱에서 이용할 수 있는 기능이에요.\n스토어로 이동하여 앱을 설치할까요?",
+    "pcAppOnlyConfirm": "유니돔 모바일 앱 전용 기능이에요.\n스토어 페이지로 이동하여 앱을 확인하시겠어요?",
+    "portalAgentConfirm": "유니돔 모바일 앱 또는 PC 크롬 확장에서 이용할 수 있는 기능이에요.\n유니돔 앱 스토어 페이지로 이동할까요?"
+  },
+  "terms": {
+    "notice": "유니돔은 <strong>인천대학교 앱센터</strong>(IT이노베이션랩)에서 생활원과 협력하여 개발하는 서비스입니다."
+  },
+  "migrationBanner": {
+    "freshman": {
+      "title": "포털 계정으로 통합하세요",
+      "description": "지금 바로 신입생 임시 계정을 학교 포털 계정으로 통합하세요!"
+    },
+    "portal": {
+      "title": "신입생 임시 계정 통합 안내",
+      "description": "<strong>이전에 만드셨던 신입생 임시 계정이 있는 경우에만</strong> 통합을 진행해 주세요.\n일정 기간 이후에는 통합하지 않은 임시 계정은 삭제될 예정입니다."
+    }
+  },
+  "time": {
+    "justNow": "방금 전",
+    "minutesAgo": "{{count}}분 전",
+    "hoursAgo": "{{count}}시간 전",
+    "daysAgo": "{{count}}일 전",
+    "closed": "마감",
+    "daysLeft": "D-{{count}}",
+    "hoursLeft": "마감 {{count}}시간 전",
+    "minutesLeft": "마감 {{count}}분 전"
+  },
+  "notificationType": {
+    "ROOMMATE": "룸메이트",
+    "GROUP_ORDER": "공동구매",
+    "DORMITORY": "생활원",
+    "UNI_DORM": "유니돔",
+    "SUPPORTERS": "서포터즈",
+    "COMPLAINT": "민원",
+    "COUPON": "쿠폰",
+    "CHAT": "채팅"
+  },
+  "badges": {
+    "emergency": "긴급"
+  }
+}

@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { useTranslation } from "react-i18next";
 import { OpenChatTab as OpenChatTabType } from "@/types/openchat";
 import useUserStore from "@/stores/useUserStore.ts";
 
@@ -13,12 +14,13 @@ export default function OpenChatTab({
   onChangeTab,
   unreadCount = 0,
 }: Props) {
+  const { t } = useTranslation(["chat", "common"]);
   const dormType = useUserStore((state) => state.userInfo.dormType);
 
   const tabs: { label: string; value: OpenChatTabType }[] = [
-    { label: "내 채팅", value: "MY" },
-    { label: dormType ? dormType : "기숙사", value: "DORMITORY" },
-    { label: "전체 방", value: "ALL" },
+    { label: t("chat:tabs.my"), value: "MY" },
+    { label: dormType ? dormType : t("chat:room.dormFallback", { defaultValue: "기숙사" }), value: "DORMITORY" },
+    { label: t("chat:tabs.open"), value: "ALL" },
   ];
 
   return (

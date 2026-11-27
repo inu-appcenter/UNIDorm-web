@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import styled from "styled-components";
+import { useTranslation } from "react-i18next";
 import {
   User,
   Lock,
@@ -27,6 +28,7 @@ interface PortalSyncOnboardingProps {
 export default function PortalSyncOnboarding({
   onSuccess,
 }: PortalSyncOnboardingProps) {
+  const { t } = useTranslation("dormitory");
   const [isCheckingLinked, setIsCheckingLinked] = useState<boolean>(true);
   const [isLinked, setIsLinked] = useState<boolean>(false);
   const [savedStudentId, setSavedStudentId] = useState<string>("");
@@ -212,7 +214,7 @@ export default function PortalSyncOnboarding({
     }
 
     if (!isPortalAgentAvailable()) {
-      setErrorMessage("포털 연동은 유니돔 모바일 앱 또는 PC 크롬 확장 환경에서만 지원돼요.");
+      setErrorMessage("포털 연동은 유니돔 모바일 앱 환경에서만 지원돼요.");
       return;
     }
 
@@ -265,7 +267,7 @@ export default function PortalSyncOnboarding({
     );
   }
 
-  // 로컬 포털 에이전트(모바일 앱 또는 PC 크롬 확장) 환경이 아닌 경우
+  // 모바일 앱 환경이 아닌 경우
   if (!isPortalAgentAvailable()) {
     return (
       <Container>
@@ -301,31 +303,23 @@ export default function PortalSyncOnboarding({
         <>
           <ContentArea>
             <HeaderSection>
-              <Title>
-                포털 사이트에서{"\n"}정보를 가져와야 해요
-              </Title>
-              <Subtitle>
-                모바일 사생증 발급을 위해 인천대학교 포털에서 사생 정보를 안전하게 불러올게요.
-              </Subtitle>
+              <Title>{t("portalSync.fetchTitle")}</Title>
+              <Subtitle>{t("portalSync.fetchSubtitle")}</Subtitle>
             </HeaderSection>
 
             {/* 기기 로컬 처리 및 외부 전송 배제 안심 보안 안내 */}
             <SecurityCard>
-              <SecurityTitle>가져오는 작업은 이 기기에서만 수행돼요</SecurityTitle>
-              <SecurityDesc>
-                포털 아이디와 비밀번호, 사생 정보는 외부 서버로 전송되지 않으며 이 스마트폰의 보안 영역에만 안전하게 보관돼요.
-              </SecurityDesc>
+              <SecurityTitle>{t("portalSync.securityTitle")}</SecurityTitle>
+              <SecurityDesc>{t("portalSync.securityDesc")}</SecurityDesc>
             </SecurityCard>
 
             <SavedAccountBox>
               <AccountInfoRow>
                 <User size={18} color="#4E5968" />
-                <AccountLabel>등록된 포털 학번</AccountLabel>
-                <AccountStudentId>{savedStudentId || "학번 연동됨"}</AccountStudentId>
+                <AccountLabel>{t("portalSync.savedStudentIdLabel")}</AccountLabel>
+                <AccountStudentId>{savedStudentId || t("portalSync.savedStudentIdFallback")}</AccountStudentId>
               </AccountInfoRow>
-              <AccountSubHint>
-                이미 기기에 안전하게 등록되어 있어 바로 정보를 가져올 수 있어요.
-              </AccountSubHint>
+              <AccountSubHint>{t("portalSync.savedAccountReady")}</AccountSubHint>
             </SavedAccountBox>
 
             {errorMessage && (
@@ -344,7 +338,7 @@ export default function PortalSyncOnboarding({
               onClick={handleSyncWithSavedAccount}
               disabled={isLoading}
             >
-              사생증 정보 가져오기
+              {t("portalSync.fetchDormCardBtn")}
             </CapsuleButton>
 
             {!isLoading && (
@@ -355,7 +349,7 @@ export default function PortalSyncOnboarding({
                   setIsRelinkMode(true);
                 }}
               >
-                다른 포털 계정으로 입력하기
+                {t("portalSync.useOtherAccount")}
               </SecondaryTextButton>
             )}
           </BottomActionArea>
@@ -365,30 +359,24 @@ export default function PortalSyncOnboarding({
         <Form onSubmit={handleSubmitNewAccount}>
           <ContentArea>
             <HeaderSection>
-              <Title>
-                포털 사이트에서{"\n"}정보를 가져와야 해요
-              </Title>
-              <Subtitle>
-                모바일 사생증 발급을 위해 인천대학교 포털에서 사생 정보를 안전하게 불러올게요.
-              </Subtitle>
+              <Title>{t("portalSync.fetchTitle")}</Title>
+              <Subtitle>{t("portalSync.fetchSubtitle")}</Subtitle>
             </HeaderSection>
 
             <SecurityCard>
-              <SecurityTitle>가져오는 작업은 이 기기에서만 수행돼요</SecurityTitle>
-              <SecurityDesc>
-                포털 아이디와 비밀번호, 사생 정보는 외부 서버로 전송되지 않으며 이 스마트폰의 보안 영역에만 안전하게 보관돼요.
-              </SecurityDesc>
+              <SecurityTitle>{t("portalSync.securityTitle")}</SecurityTitle>
+              <SecurityDesc>{t("portalSync.securityDesc")}</SecurityDesc>
             </SecurityCard>
 
             <InputGroup>
-              <InputLabel htmlFor="portal-student-id">포털 학번</InputLabel>
+              <InputLabel htmlFor="portal-student-id">{t("portalSync.studentIdLabel")}</InputLabel>
               <InputWrap>
                 <User size={18} color="#8B95A1" />
                 <StyledInput
                   id="portal-student-id"
                   type="text"
                   inputMode="numeric"
-                  placeholder="예: 202600000"
+                  placeholder={t("portalSync.studentIdPlaceholder")}
                   value={studentIdInput}
                   onChange={(e) => setStudentIdInput(e.target.value)}
                   disabled={isLoading}
@@ -397,13 +385,13 @@ export default function PortalSyncOnboarding({
             </InputGroup>
 
             <InputGroup>
-              <InputLabel htmlFor="portal-password">포털 비밀번호</InputLabel>
+              <InputLabel htmlFor="portal-password">{t("portalSync.passwordLabel")}</InputLabel>
               <InputWrap>
                 <Lock size={18} color="#8B95A1" />
                 <StyledInput
                   id="portal-password"
                   type="password"
-                  placeholder="포털 비밀번호 입력"
+                  placeholder={t("portalSync.passwordPlaceholder")}
                   value={passwordInput}
                   onChange={(e) => setPasswordInput(e.target.value)}
                   disabled={isLoading}
@@ -428,7 +416,7 @@ export default function PortalSyncOnboarding({
                 isLoading || !studentIdInput.trim() || !passwordInput.trim()
               }
             >
-              정보 가져오기
+              {t("portalSync.fetchInfoBtn")}
             </CapsuleButton>
 
             {isLinked && !isLoading && (
@@ -439,7 +427,7 @@ export default function PortalSyncOnboarding({
                   setIsRelinkMode(false);
                 }}
               >
-                기존에 등록된 계정 사용하기
+                {t("portalSync.useSavedAccount")}
               </SecondaryTextButton>
             )}
           </BottomActionArea>
@@ -448,7 +436,7 @@ export default function PortalSyncOnboarding({
 
       <PortalSyncProgressModal
         isOpen={isLoading}
-        title="사생 정보를 불러오고 있어요"
+        title={t("portalSync.progressTitle")}
         currentMessage={loadingMessage}
       />
     </Container>

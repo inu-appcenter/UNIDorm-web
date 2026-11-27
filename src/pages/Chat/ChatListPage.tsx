@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import { useTranslation } from "react-i18next";
 import { RoommateChatRoom } from "@/types/chats";
 import { patchRoommateChatRead } from "@/apis/chat";
 import ChatListItem from "../../components/chat/ChatListItem.tsx";
@@ -16,6 +17,7 @@ import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { formatChatMessagePreview } from "@/utils/chatMessagePreview";
 
 export default function ChatListPage() {
+  const { t } = useTranslation(["chat", "common"]);
   const navigate = useNavigate();
   const { tokenInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo?.accessToken ?? "");
@@ -68,7 +70,7 @@ export default function ChatListPage() {
   };
 
   useSetHeader({
-    title: "채팅",
+    title: t("chat:title"),
     showAlarm: true,
   });
 
@@ -86,7 +88,7 @@ export default function ChatListPage() {
     >
       <ContentWrapper>
         {isLoading ? (
-          <LoadingSpinner message="채팅방 목록을 불러오는 중입니다..." />
+          <LoadingSpinner message={t("common:states.loading")} />
         ) : (
           <AnimatePresence>
             {selectedTab === "공동구매" ? (

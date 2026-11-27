@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { BsEye } from "react-icons/bs";
 import { Bell } from "lucide-react";
@@ -49,6 +50,7 @@ import { colors, typography } from "@/styles/tokens";
 import { streamUnidormChat } from "@/apis/unidormChat";
 
 export default function AnnouncementPage() {
+  const { t } = useTranslation("board");
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { isLoggedIn, isAdmin } = useUserRole();
@@ -347,7 +349,7 @@ export default function AnnouncementPage() {
           </SearchSubmitButton>
           <AnnouncementSearchInput
             type="search"
-            placeholder="검색어를 입력하세요"
+            placeholder={t("announcement.searchPlaceholder")}
             value={searchDraft}
             onChange={(e) => setSearchDraft(e.target.value)}
             onKeyDown={(e) => {

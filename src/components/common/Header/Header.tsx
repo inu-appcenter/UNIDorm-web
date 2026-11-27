@@ -12,6 +12,7 @@ import { getMobilePlatform } from "@/utils/getMobilePlatform";
 import TooltipMessage from "src/components/common/TooltipMessage";
 import TopRightDropdownMenu from "../TopRightDropdownMenu";
 import { PATHS } from "@/constants/paths";
+import { useTranslation } from "react-i18next";
 import HeaderDormitoryCardButton from "./HeaderDormitoryCardButton";
 
 interface HeaderProps {
@@ -20,6 +21,7 @@ interface HeaderProps {
 }
 
 export default function Header({ hasBack = false, backPath }: HeaderProps) {
+  const { t } = useTranslation("common");
   const navigate = useNavigate();
   const location = useLocation();
   const { isAdmin, roleName } = useUserRole();
@@ -76,13 +78,13 @@ export default function Header({ hasBack = false, backPath }: HeaderProps) {
           {hasBack && (
             <img
               src={back}
-              alt="뒤로가기"
+              alt={t("header.backAlt")}
               onClick={() => (backPath ? navigate(backPath) : navigate(-1))}
             />
           )}
           <div className="Title">
             {isHome ? (
-              <img className="logo" src={logo} alt="로고" />
+              <img className="logo" src={logo} alt={t("header.logoAlt")} />
             ) : (
               <>
                 <TitleText>{title}</TitleText>
@@ -96,7 +98,9 @@ export default function Header({ hasBack = false, backPath }: HeaderProps) {
           {/* 앱 설치 버튼: 비관리자 및 모바일 브라우저 */}
           {!isAdmin &&
             (platform === "ios_browser" || platform === "android_browser") && (
-              <RoundButton onClick={handleInstallClick}>앱 설치</RoundButton>
+              <RoundButton onClick={handleInstallClick}>
+                {t("header.installApp")}
+              </RoundButton>
             )}
 
           {/* 관리자 버튼 */}
@@ -143,7 +147,7 @@ export default function Header({ hasBack = false, backPath }: HeaderProps) {
               <Settings size={24} onClick={settingOnClick} />
               {showSettingTooltip && isGroupPurchase && (
                 <TooltipMessage
-                  message={"키워드 / 카테고리\n알림을 설정해보세요."}
+                  message={t("header.keywordSettingTooltip")}
                   onClose={() => {
                     setShowSettingTooltip(false);
                     localStorage.setItem("showKeywordSettingTooltip", "false");

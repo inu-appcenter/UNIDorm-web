@@ -1,0 +1,80 @@
+{
+  "complain": {
+    "title": "Phản ánh KTX",
+    "writeTitle": "Viết phản ánh KTX",
+    "editTitle": "Sửa phản ánh KTX",
+    "detailTitle": "Chi tiết phản ánh",
+    "myComplaints": "Phản ánh của tôi",
+    "allComplaints": "Tất cả phản ánh",
+    "empty": "Không có phản ánh nào.",
+    "deleteConfirm": "Bạn có chắc muốn xóa?",
+    "deleted": "Đã xóa.",
+    "titlePlaceholder": "Tiêu đề bài viết",
+    "contentPlaceholder": "Vui lòng nhập nội dung",
+    "locationPlaceholder": "Nhập vị trí chính xác (VD: trước nhà vệ sinh, cuối hành lang)",
+    "writeSuccess": "Đã gửi phản ánh thành công!",
+    "editSuccess": "Đã cập nhật phản ánh!",
+    "validation": {
+      "selectTypeDorm": "Vui lòng chọn đầy đủ loại, ký túc xá và tòa.",
+      "selectRoom": "Vui lòng chọn đầy đủ tầng, phòng và giường.",
+      "enterLocation": "Vui lòng nhập vị trí chi tiết.",
+      "selectDate": "Vui lòng chọn ngày xảy ra.",
+      "selectTime": "Vui lòng chọn thời gian xảy ra.",
+      "enterTitle": "Vui lòng nhập tiêu đề.",
+      "enterContent": "Vui lòng nhập nội dung.",
+      "agreePrivacy": "Vui lòng đồng ý thu thập và sử dụng thông tin cá nhân."
+    }
+  },
+  "announcement": {
+    "title": "Thông báo",
+    "detailTitle": "Thông báo",
+    "searchPlaceholder": "Nhập từ khóa tìm kiếm",
+    "loadError": "Không thể tải thông báo.",
+    "deleteConfirm": "Bạn có chắc muốn xóa?",
+    "deleted": "Đã xóa.",
+    "deleteFailed": "Xóa thất bại.",
+    "empty": "Không có thông báo."
+  },
+  "groupPurchase": {
+    "title": "Mua chung",
+    "writeTitle": "Đăng bài mua chung",
+    "keywordSettingTitle": "Cài đặt thông báo từ khóa",
+    "appRequired": "Cần cài đặt ứng dụng để sử dụng.",
+    "loginRequired": "Vui lòng đăng nhập để sử dụng.",
+    "empty": "Chưa có bài mua chung nào."
+  },
+  "tip": {
+    "title": "Mẹo hay KTX",
+    "writeTitle": "Đăng / Sửa mẹo hay",
+    "titlePlaceholder": "Tiêu đề bài viết",
+    "contentPlaceholder": "Vui lòng nhập nội dung",
+    "deleteConfirm": "Bạn có chắc muốn xóa?",
+    "deleted": "Đã xóa.",
+    "deleteFailed": "Xóa thất bại.",
+    "loginRequired": "Vui lòng đăng nhập để sử dụng.",
+    "likeFailed": "Thích bài viết thất bại!",
+    "commentFailed": "Gửi bình luận thất bại.",
+    "replyFailed": "Gửi trả lời thất bại.",
+    "writeSuccess": "Đã đăng mẹo hay!",
+    "editSuccess": "Đã cập nhật mẹo hay!",
+    "validation": {
+      "enterBoth": "Vui lòng nhập đầy đủ tiêu đề và nội dung.",
+      "titleMax": "Tiêu đề tối đa 100 ký tự.",
+      "contentMax": "Nội dung tối đa 2000 ký tự."
+    }
+  },
+  "form": {
+    "title": "Biểu mẫu INU",
+    "searchPlaceholder": "Tìm kiếm tiêu đề biểu mẫu",
+    "answerPlaceholder": "Nhập câu trả lời",
+    "unavailable": "Biểu mẫu đã đóng hoặc bạn đã gửi trước đó.",
+    "requiredMissing": "Vui lòng trả lời tất cả câu hỏi bắt buộc.",
+    "submitted": "Đã gửi thành công!",
+    "submitError": "Lỗi khi gửi. Vui lòng thử lại.",
+    "closed": "Đã đóng biểu mẫu.",
+    "closeFailed": "Đóng biểu mẫu thất bại.",
+    "deleteConfirm": "Bạn có chắc muốn xóa?\nHành động này không thể hoàn tác.",
+    "deleted": "Đã xóa.",
+    "deleteFailed": "Xóa thất bại."
+  }
+}

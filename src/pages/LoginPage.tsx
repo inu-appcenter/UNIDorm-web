@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { isAxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
 import { login, loginFreshman } from "@/apis/members";
@@ -23,6 +24,7 @@ import {
 } from "@/styles/auth";
 
 export default function LoginPage() {
+  const { t } = useTranslation("mypage");
   const navigate = useNavigate();
   const { setTokenInfo } = useUserStore();
   const { flag: isFreshmanLoginEnabled } = useFeatureFlag(
@@ -77,17 +79,17 @@ export default function LoginPage() {
       const status = isAxiosError(error) ? error.response?.status : undefined;
 
       if (status === 401) {
-        alert("비밀번호가 일치하지 않습니다.");
+        alert(t("login.errors.wrongPassword"));
       } else if (status === 404) {
         alert(
           isFreshmanLoginEnabled
-            ? "포털 계정 또는 신입생 임시 계정을 찾을 수 없습니다. 회원가입 여부를 확인해 주세요."
-            : "아이디 또는 비밀번호를 확인해 주세요.",
+            ? t("login.errors.notFoundWithFreshman")
+            : t("login.errors.invalidCredentials"),
         );
       } else if (status === 400) {
-        alert("아이디 또는 비밀번호를 확인해 주세요.");
+        alert(t("login.errors.invalidCredentials"));
       } else {
-        alert("로그인에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+        alert(t("login.errors.failed"));
       }
 
       console.error(error);
@@ -96,23 +98,21 @@ export default function LoginPage() {
     }
   };
 
-  useSetHeader({ title: "로그인" });
+  useSetHeader({ title: t("login.title") });
 
   return (
     <AuthFormWrapper onSubmit={handleLogin}>
-      {isLoading && <LoadingSpinner overlay message="로그인 중..." />}
+      {isLoading && <LoadingSpinner overlay message={t("login.loading")} />}
 
       <div>
         <AuthDescription>
-          인천대학교 포털 계정으로 로그인할 수 있어요.
+          {t("login.description")}
           <br />
-          {isFreshmanLoginEnabled
-            ? "신입생 임시 계정이 있다면, 신입생 계정으로도 로그인할 수 있습니다."
-            : null}
+          {isFreshmanLoginEnabled ? t("login.freshmanHint") : null}
         </AuthDescription>
 
         <AuthInputGroup>
-          <h3>아이디</h3>
+          <h3>{t("login.idLabel")}</h3>
           <StyledInput
             value={studentNumber}
             onChange={(e) => setStudentNumber(e.target.value)}
@@ -120,7 +120,7 @@ export default function LoginPage() {
         </AuthInputGroup>
 
         <AuthInputGroup>
-          <h3>비밀번호</h3>
+          <h3>{t("login.passwordLabel")}</h3>
           <StyledInput
             type="password"
             value={password}
@@ -131,7 +131,7 @@ export default function LoginPage() {
 
       <AuthButtonWrapper>
         <SquareButton
-          text="로그인"
+          text={t("login.submit")}
           type="submit"
           disabled={!isFilled || isLoading}
         />
@@ -150,12 +150,12 @@ export default function LoginPage() {
 
         {isFreshmanSignupEnabled && (
           <AuthLinkRow>
-            <span>포털 계정이 아직 발급되지 않으셨나요?</span>
+            <span>{t("login.noPortalAccount")}</span>
             <button
               type="button"
               onClick={() => navigate(PATHS.FRESHMAN_SIGNUP)}
             >
-              신입생 회원가입
+              {t("login.goFreshmanSignup")}
             </button>
           </AuthLinkRow>
         )}

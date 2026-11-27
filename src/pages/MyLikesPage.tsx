@@ -1,9 +1,11 @@
 import styled from "styled-components";
+import { useTranslation } from "react-i18next";
 import TitleContentArea from "../components/common/TitleContentArea.tsx";
 import MyPostLikeCard from "../components/mypage/MyPostLikeCard.tsx";
 import { useMemberLikePosts } from "@/queries/members";
 
 export default function MyLikesPage() {
+  const { t } = useTranslation("mypage");
   const { data: posts = [] } = useMemberLikePosts();
 
   return (
@@ -18,7 +20,7 @@ export default function MyLikesPage() {
               </>
             ))
           ) : (
-            <EmptyMessage>내가 좋아요한 글이 없습니다.</EmptyMessage>
+            <EmptyMessage>{t("myLikes.empty")}</EmptyMessage>
           )}
         </CardList>
       </TitleContentArea>

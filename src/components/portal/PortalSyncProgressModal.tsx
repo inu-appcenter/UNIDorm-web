@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Trans, useTranslation } from "react-i18next";
 import styled, { keyframes } from "styled-components";
 import { Loader2, AlertTriangle, ShieldCheck } from "lucide-react";
 
@@ -8,19 +9,15 @@ export interface PortalSyncProgressModalProps {
   currentMessage?: string;
 }
 
-const DEFAULT_STEPS = [
-  "학교 포털 시스템에 안전하게 연결하고 있어요...",
-  "기숙사 사생 배정 및 호실 정보를 확인하고 있어요...",
-  "학적 정보와 학생증 사진을 동기화하고 있어요...",
-  "사생증 정보를 안전하게 기기에 저장하고 있어요...",
-];
-
 export default function PortalSyncProgressModal({
   isOpen,
-  title = "사생 정보를 불러오고 있어요",
+  title,
   currentMessage,
 }: PortalSyncProgressModalProps) {
+  const { t } = useTranslation("dormitory");
   const [stepIndex, setStepIndex] = useState(0);
+  const steps = t("portalSync.steps", { returnObjects: true }) as string[];
+  const resolvedTitle = title ?? t("portalSync.progressTitle");
 
   // 메시지 자동 순환 (약 2.5초 간격으로 진행 상황을 사용자에게 단계별로 안내)
   useEffect(() => {
@@ -30,15 +27,15 @@ export default function PortalSyncProgressModal({
     }
 
     const interval = setInterval(() => {
-      setStepIndex((prev) => (prev + 1) % DEFAULT_STEPS.length);
+      setStepIndex((prev) => (prev + 1) % steps.length);
     }, 2400);
 
     return () => clearInterval(interval);
-  }, [isOpen]);
+  }, [isOpen, steps.length]);
 
   if (!isOpen) return null;
 
-  const displayMessage = currentMessage || DEFAULT_STEPS[stepIndex];
+  const displayMessage = currentMessage || steps[stepIndex];
 
   return (
     <Overlay role="dialog" aria-modal="true" aria-labelledby="sync-modal-title">
@@ -47,17 +44,23 @@ export default function PortalSyncProgressModal({
           <Loader2 size={38} color="var(--interactive-primary, #3182F6)" />
         </SpinnerWrapper>
 
-        <Title id="sync-modal-title">{title}</Title>
+        <Title id="sync-modal-title">{resolvedTitle}</Title>
         <StepMessage>{displayMessage}</StepMessage>
 
         <WarningBanner>
           <AlertTriangle size={16} color="#D97706" strokeWidth={2.2} />
-          <span>완료될 때까지 <strong>화면을 벗어나거나 앱을 닫지 마세요</strong></span>
+          <span>
+            <Trans
+              i18nKey="portalSync.doNotClose"
+              ns="dormitory"
+              components={{ strong: <strong /> }}
+            />
+          </span>
         </WarningBanner>
 
         <SecurityFooter>
           <ShieldCheck size={14} color="#8B95A1" />
-          <span>인천대학교 포털과 안전한 종단간 통신 중</span>
+          <span>{t("portalSync.secureChannel")}</span>
         </SecurityFooter>
       </ModalCard>
     </Overlay>

@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { useTranslation } from "react-i18next";
 import {
   addDays,
   addMonths,
@@ -68,6 +69,7 @@ const ChevronRight = () => (
 );
 
 export default function Calendar({ mode = "month", location }: CalendarProps) {
+  const { t } = useTranslation("home");
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const today = new Date();
@@ -373,8 +375,8 @@ export default function Calendar({ mode = "month", location }: CalendarProps) {
         )}
 
         <Weekdays>
-          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day, i) => (
-            <WeekdayCell key={day} $index={i}>
+          {(t("calendarSection.weekdays", { returnObjects: true }) as string[]).map((day, i) => (
+            <WeekdayCell key={`${day}-${i}`} $index={i}>
               {day}
             </WeekdayCell>
           ))}

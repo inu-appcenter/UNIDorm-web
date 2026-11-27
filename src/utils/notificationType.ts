@@ -1,3 +1,4 @@
+import i18n from "@/i18n";
 import type { NotificationType } from "@/types/notifications";
 
 export interface NotificationTypeOption {
@@ -113,11 +114,11 @@ export const isKnownNotificationType = (
 
 export const getNotificationTypeLabel = (value?: string | null): string => {
   if (!value) {
-    return NOTIFICATION_TYPE_LABELS.UNI_DORM;
+    return i18n.t("common:notificationType.UNI_DORM");
   }
 
   const normalizedType = normalizeNotificationType(value);
   return isKnownNotificationType(normalizedType)
-    ? NOTIFICATION_TYPE_LABELS[normalizedType]
+    ? i18n.t(`common:notificationType.${normalizedType}`)
     : value;
 };

@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { useTranslation } from "react-i18next";
 import MenuGroup from "../../components/mypage/MenuGroup.tsx";
 import {
   addNotificationPreferences,
@@ -17,47 +18,42 @@ import { useUserRole } from "@/hooks/useUserRole";
 // 알림 항목 목록
 const notificationSettingMenus = [
   {
-    label: "유니돔 앱 알림",
+    key: "unidorm",
     type: "유니돔",
     apiKey: "unidormNotification" as keyof NotificationPreferences,
-    description: "유니돔 공지사항",
   },
   {
-    label: "생활원 공지사항 알림",
+    key: "dormitory",
     type: "생활원",
     apiKey: "dormitoryNotification" as keyof NotificationPreferences,
-    description: "생활원 공지사항",
   },
   {
-    label: "서포터즈 공지사항 알림",
+    key: "supporters",
     type: "서포터즈",
     apiKey: "supportersNotification" as keyof NotificationPreferences,
-    description: "서포터즈 공지사항",
   },
   {
-    label: "룸메이트 알림",
+    key: "roommate",
     type: "룸메이트",
     apiKey: "roommateNotification" as keyof NotificationPreferences,
-    description: "퀵 메시지",
   },
   {
-    label: "공동구매 알림",
+    key: "groupPurchase",
     type: "공동구매",
     apiKey: "groupOrderNotification" as keyof NotificationPreferences,
-    description: "키워드 및 카테고리 새 글 알림 / 좋아요한 글 마감 임박 알림",
   },
 ];
 
 const adminNotificationSettingMenus = [
   {
-    label: "새 민원 알림",
+    key: "adminComplaint",
     type: "민원",
     apiKey: "complaintNotification" as keyof NotificationPreferences,
-    description: "새 민원 등록 알림을 켜고 끌 수 있습니다.",
   },
 ];
 
 const NotificationSettingPage = () => {
+  const { t } = useTranslation("mypage");
   const { isMainAdmin, isDormAdmin } = useUserRole();
   const { data: preferences, isLoading } = useNotificationPreferences();
 
@@ -115,7 +111,7 @@ const NotificationSettingPage = () => {
   // 일반 토글 변경 로직
   const handleToggleChange = (type: string, enabled: boolean) => {
     if (type !== "유니돔" && !notificationStatus["유니돔"]) {
-      alert("유니돔 앱 알림을 먼저 켜주세요.");
+      alert(t("notiSetting.enableMainFirst"));
       return;
     }
 
@@ -125,9 +121,7 @@ const NotificationSettingPage = () => {
     };
 
     if (type === "유니돔" && !enabled) {
-      const confirmed = window.confirm(
-        "유니돔 앱 알림을 끄면 모든 알림을 받을 수 없습니다. 진행하시겠습니까?",
-      );
+      const confirmed = window.confirm(t("notiSetting.disableMainConfirm"));
       if (!confirmed) return;
 
       notificationSettingMenus.forEach((menu) => {
@@ -164,23 +158,27 @@ const NotificationSettingPage = () => {
   };
 
   const menusWithStatus = notificationSettingMenus.map((menu) => ({
-    ...menu,
+    label: t(`notiSetting.menus.${menu.key}.label`),
+    description: t(`notiSetting.menus.${menu.key}.description`),
+    type: menu.type,
     checked: notificationStatus[menu.type] ?? false,
   }));
 
   const adminMenusWithStatus = adminNotificationSettingMenus.map((menu) => ({
-    ...menu,
+    label: t(`notiSetting.menus.${menu.key}.label`),
+    description: t(`notiSetting.menus.${menu.key}.description`),
+    type: menu.type,
     checked: notificationStatus[menu.type] ?? false,
   }));
 
-  useSetHeader({ title: "앱 알림 설정" });
+  useSetHeader({ title: t("notiSetting.title") });
 
   return (
     <Wrapper>
       {isLoading ? (
         <LoadingSpinner
           overlay={true}
-          message={"알림 설정 상태를 불러오는 중"}
+          message={t("notiSetting.loading")}
         />
       ) : (
         <Box>
@@ -195,8 +193,8 @@ const NotificationSettingPage = () => {
 
       {(isMainAdmin || isDormAdmin) && (
         <TitleContentArea
-          title={"관리자 알림 설정"}
-          description={"관리자 권한인 경우에만 표시됩니다."}
+          title={t("notiSetting.adminTitle")}
+          description={t("notiSetting.adminDescription")}
         >
           <Box>
             <MenuGroup

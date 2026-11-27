@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { useTranslation } from "react-i18next";
 import { colors, typography } from "@/styles/tokens";
 import { AiOutlineClockCircle } from "react-icons/ai";
 import { useNavigate } from "react-router-dom";
@@ -30,6 +31,7 @@ const HomeNoticeCard = ({
   order = 0,
   layoutType = "목록형",
 }: HomeCardProps) => {
+  const { t } = useTranslation("common");
   const navigate = useNavigate();
 
   return (
@@ -48,7 +50,7 @@ const HomeNoticeCard = ({
       <MetaRow>
         <BadgeGroup>
           {type && <TypeBadge type={type}>{getLabelByValue(type)}</TypeBadge>}
-          {isEmergency && <EmergencyBadge>긴급</EmergencyBadge>}
+          {isEmergency && <EmergencyBadge>{t("badges.emergency")}</EmergencyBadge>}
         </BadgeGroup>
         <TimeGroup>
           <AiOutlineClockCircle className="clock-icon" />

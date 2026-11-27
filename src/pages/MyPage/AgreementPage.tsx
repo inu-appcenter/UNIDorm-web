@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import styled from "styled-components";
 import SquareButton from "../../components/common/SquareButton.tsx";
 import { putUserAgreement } from "@/apis/members";
@@ -22,7 +23,23 @@ const agreements = [
 
 // --- React Component ---
 const AgreementPage: React.FC = () => {
+  const { t } = useTranslation("mypage");
   const navigate = useNavigate();
+
+  const agreementItems = [
+    {
+      id: "terms",
+      label: t("agreement.termsRequired"),
+      url: "https://unidorm.inuappcenter.kr/terms-of-use.html",
+      required: true,
+    },
+    {
+      id: "privacy",
+      label: t("agreement.privacyRequired"),
+      url: "https://unidorm.inuappcenter.kr/privacy-policy.html",
+      required: true,
+    },
+  ];
 
   const [agreementsState, setAgreementsState] = useState<{
     [key: string]: boolean;
@@ -67,7 +84,7 @@ const AgreementPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!allRequiredAgreed) {
-      alert("필수 약관에 모두 동의해주셔야 합니다.");
+      alert(t("agreement.requiredAlert"));
       return;
     }
 
@@ -82,7 +99,7 @@ const AgreementPage: React.FC = () => {
       navigate("/home");
     } catch (error) {
       console.error("동의 처리 중 오류 발생:", error);
-      alert("동의 처리 중 오류가 발생했습니다. 다시 시도해주세요.");
+      alert(t("agreement.errorAlert"));
     } finally {
       setLoading(false);
     }
@@ -94,9 +111,7 @@ const AgreementPage: React.FC = () => {
 
   return (
     <Container>
-      <span className="description">
-        유니돔 서비스 약관이 개정되어 재동의가 필요합니다.
-      </span>
+      <span className="description">{t("agreement.description")}</span>
       <form onSubmit={handleSubmit}>
         <AllAgreeContainer>
           <CheckboxLabel>
@@ -105,12 +120,12 @@ const AgreementPage: React.FC = () => {
               checked={allAgreed}
               onChange={handleAllAgreeChange}
             />
-            전체 약관에 모두 동의합니다.
+            {t("agreement.agreeAll")}
           </CheckboxLabel>
         </AllAgreeContainer>
 
         <AgreementList>
-          {agreements.map(({ id, label, url }) => (
+          {agreementItems.map(({ id, label, url }) => (
             <AgreementRow key={id} onClick={() => handleRowClick(url)}>
               <CheckboxLabel onClick={(e) => e.stopPropagation()}>
                 <CheckboxInput
@@ -127,7 +142,7 @@ const AgreementPage: React.FC = () => {
 
         <ButtonWrapper>
           <SquareButton
-            text={loading ? "처리 중..." : "동의"}
+            text={loading ? t("agreement.submitting") : t("agreement.submit")}
             type="submit"
             disabled={!allRequiredAgreed || loading}
           />

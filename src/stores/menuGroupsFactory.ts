@@ -1,3 +1,4 @@
+import { TFunction } from "i18next";
 import { MenuGroup } from "@/types/mypage";
 import { PATHS } from "@/constants/paths";
 import { guardAppOnly, guardLogin } from "@/utils/guard";
@@ -6,51 +7,64 @@ import { guardAppOnly, guardLogin } from "@/utils/guard";
 export const createMyPageMenuGroups = (
   isLoggedIn: boolean,
   navigate: (path: string) => void,
+  t: TFunction<["mypage", "common"]>,
 ): MenuGroup[] => [
   {
-    title: "내 계정",
+    title: t("mypage:menuGroups.account.title"),
     menus: [
-      { label: "내 정보 수정", onClick: () => navigate(PATHS.MYINFO_EDIT) },
       {
-        label: "사전 체크리스트 등록/수정",
+        label: t("mypage:menuGroups.account.editInfo"),
+        onClick: () => navigate(PATHS.MYINFO_EDIT),
+      },
+      {
+        label: t("mypage:menuGroups.account.checklist"),
         onClick: () => navigate(PATHS.ROOMMATE.CHECKLIST),
       },
       {
-        label: "포털 계정 관리",
+        label: t("mypage:menuGroups.account.portalAccount"),
         onClick: () => navigate(PATHS.PORTAL_ACCOUNT),
       },
     ],
   },
   {
-    title: "커뮤니티",
+    title: t("mypage:menuGroups.community.title"),
     menus: [
-      { label: "내 게시글 보기", onClick: () => navigate(PATHS.MY_POSTS) },
-      { label: "좋아요한 글 보기", onClick: () => navigate(PATHS.MY_LIKES) },
+      {
+        label: t("mypage:menuGroups.community.myPosts"),
+        onClick: () => navigate(PATHS.MY_POSTS),
+      },
+      {
+        label: t("mypage:menuGroups.community.myLikes"),
+        onClick: () => navigate(PATHS.MY_LIKES),
+      },
     ],
   },
   {
-    title: "고객지원",
+    title: t("mypage:menuGroups.support.title"),
     menus: [
       {
-        label: "기숙사 생활 안내",
+        label: t("mypage:menuGroups.support.dormitoryGuide"),
         onClick: () => navigate(PATHS.DORMITORY_GUIDE),
       },
       {
-        label: "1:1 문의",
+        label: t("mypage:menuGroups.support.inquiry"),
         onClick: () =>
           window.open("https://forms.gle/PGkiDutmmT8gzddF7", "_blank"),
       },
-      { label: "서비스 정보", onClick: () => navigate(PATHS.ONBOARDING) },
       {
-        label: "인천대학교 앱센터(IT이노베이션랩)",
+        label: t("mypage:menuGroups.support.serviceInfo"),
+        onClick: () => navigate(PATHS.ONBOARDING),
+      },
+      {
+        label: t("mypage:menuGroups.support.appCenter"),
         onClick: () => window.open("https://home.inuappcenter.kr", "_blank"),
       },
       ...(isLoggedIn
         ? [
             {
-              label: "로그아웃",
+              label: t("mypage:menuGroups.support.logout"),
               onClick: () => {
-                if (window.confirm("정말 로그아웃하시겠어요?")) {
+                if (window.confirm(t("mypage:menuGroups.support.logoutConfirm"))) {
                   navigate(PATHS.LOGOUT);
                 }
               },
@@ -65,12 +79,13 @@ export const createMyPageMenuGroups = (
 export const createSettingsMenuGroups = (
   navigate: (path: string) => void,
   isLoggedIn: boolean,
+  t: TFunction<["mypage", "common"]>,
 ): MenuGroup[] => [
   {
-    title: "알림 설정",
+    title: t("mypage:menuGroups.notiSettings.title"),
     menus: [
       {
-        label: "알림 수신 설정",
+        label: t("mypage:menuGroups.notiSettings.push"),
         onClick: () => {
           if (!guardLogin(isLoggedIn, navigate)) return;
           if (!guardAppOnly()) return;
@@ -79,7 +94,7 @@ export const createSettingsMenuGroups = (
         },
       },
       {
-        label: "공동구매 키워드 알림 설정",
+        label: t("mypage:menuGroups.notiSettings.groupPurchaseKeyword"),
         onClick: () => {
           if (!guardLogin(isLoggedIn, navigate)) return;
           if (!guardAppOnly()) return;

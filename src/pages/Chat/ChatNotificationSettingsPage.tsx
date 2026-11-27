@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import { useSetHeader } from "@/hooks/useSetHeader";
@@ -34,6 +35,7 @@ const NOTIFICATION_OPTIONS: NotificationOption[] = [
 ];
 
 export default function ChatNotificationSettingsPage() {
+  const { t } = useTranslation("chat");
   const { id } = useParams();
   const roomId = Number(id);
 
@@ -49,7 +51,7 @@ export default function ChatNotificationSettingsPage() {
 
   /* 공용 헤더 설정 */
   useSetHeader({
-    title: "채팅방 알림 설정",
+    title: t("notiSettings.title"),
   });
 
   const handleSelectOption = async (option: NotificationOption) => {

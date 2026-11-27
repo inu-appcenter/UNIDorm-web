@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { useTranslation } from "react-i18next";
 import { colors, typography } from "@/styles/tokens";
 import { useNavigate } from "react-router-dom";
 import FaRight from "../../assets/FaRight.svg";
@@ -12,6 +13,7 @@ interface TitleLineProps {
 }
 
 const TitleLine = ({ title, link, externalLink, location }: TitleLineProps) => {
+  const { t } = useTranslation("common");
   const navigate = useNavigate();
 
   const handleClickMore = () => {
@@ -30,7 +32,7 @@ const TitleLine = ({ title, link, externalLink, location }: TitleLineProps) => {
       </div>
       {(link || externalLink) && (
         <div className="more" onClick={handleClickMore}>
-          더보기 <img src={FaRight} />
+          {t("actions.more")} <img src={FaRight} />
         </div>
       )}
     </TitleLineWrapper>

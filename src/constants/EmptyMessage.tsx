@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import styled from "styled-components";
 
 const EmptyMessageWrapper = styled.div`
@@ -16,10 +17,15 @@ interface EmptyMessageProps {
 }
 
 const EmptyMessage: React.FC<EmptyMessageProps> = ({
-  message = "데이터가 없습니다.",
+  message,
   children,
 }) => {
-  return <EmptyMessageWrapper>{message || children}</EmptyMessageWrapper>;
+  const { t } = useTranslation("common");
+  const displayMessage = message ?? t("states.empty");
+
+  return (
+    <EmptyMessageWrapper>{children || displayMessage}</EmptyMessageWrapper>
+  );
 };
 
 export default EmptyMessage;

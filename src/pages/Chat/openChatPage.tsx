@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styled from "styled-components";
+import { useTranslation } from "react-i18next";
 import { isAxiosError } from "axios";
 import {
   joinOpenChatRoom,
@@ -140,6 +141,7 @@ const MY_CHAT_ROOM_FILTERS: {
 ];
 
 export default function OpenChatPage() {
+  const { t } = useTranslation("chat");
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { tokenInfo } = useUserStore();
@@ -330,19 +332,19 @@ export default function OpenChatPage() {
       if (isAxiosError(error)) {
         const status = error.response?.status;
         if (status === 400) {
-          alert("채팅방에 참여할 수 없습니다.");
+          alert(t("openChat.cannotJoin"));
         } else if (status === 401) {
-          alert("로그인이 필요합니다.");
+          alert(t("openChat.loginRequired"));
           navigate("/login");
         } else if (status === 404) {
-          alert("채팅방을 찾을 수 없습니다.");
+          alert(t("openChat.notFound"));
         } else if (status === 409) {
-          alert("참여 인원이 가득 찼습니다. (최대 인원 초과)");
+          alert(t("openChat.full"));
         } else {
-          alert("채팅방 입장에 실패했습니다. 다시 시도해 주세요.");
+          alert(t("openChat.joinFailed"));
         }
       } else {
-        alert("알 수 없는 오류가 발생했습니다.");
+        alert(t("openChat.unknownError"));
       }
       return false;
     } finally {
@@ -383,11 +385,11 @@ export default function OpenChatPage() {
   const displayPublicRooms = filteredRooms;
 
   useSetHeader({
-    title: "채팅",
+    title: t("title"),
     showAlarm: false,
     menuItems: [
       {
-        label: "차단 목록",
+        label: t("blockList.title"),
         onClick: () => navigate("/chat/blocked"),
       },
     ],
@@ -416,7 +418,7 @@ export default function OpenChatPage() {
           <SearchInput
             ref={searchInputRef}
             type="text"
-            placeholder="방 이름/설명 검색"
+            placeholder={t("openChat.searchPlaceholder")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />

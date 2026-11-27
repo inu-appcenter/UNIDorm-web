@@ -1,0 +1,202 @@
+{
+  "guide": {
+    "pageTitle": "기숙사 생활 안내",
+    "intro": "기숙사 생활에 자주 쓰는 앱과 학교 사이트를 용도별로 정리했어요.",
+    "filterAriaLabel": "기숙사 구분 필터",
+    "filters": {
+      "all": "전체",
+      "1기숙사": "1기숙사",
+      "2기숙사": "2기숙사",
+      "3기숙사": "3기숙사"
+    },
+    "categories": {
+      "생활·시설": "생활·시설",
+      "식단·캠퍼스": "식단·캠퍼스",
+      "입·퇴사·행정": "입·퇴사·행정",
+      "생활 정보": "생활 정보",
+      "질문·문의": "질문·문의"
+    },
+    "searchPlaceholder": "세탁기, 시설 고장, 학식, 통금 검색",
+    "searchAriaLabel": "기숙사 생활 안내 검색",
+    "searchResultTitle": "검색 결과 {{count}}건",
+    "emptyTitle": "검색 결과가 없어요.",
+    "emptyDescription": "안내 목록에서 찾지 못했다면 챗불이에게 바로 질문해 보세요.",
+    "askChatbuli": "챗불이에게 물어보기",
+    "showAllDorms": "전체 기숙사에서 보기",
+    "clearSearch": "검색어 지우기",
+    "infoConfirm": "확인했어요",
+    "installApp": "{{label}} 설치",
+    "items": {
+      "laundry-metaclub": {
+        "title": "세탁·건조기 (메타클럽)",
+        "description": "1·2기숙사 세탁기·건조기 현황 확인과 결제에 사용해요.",
+        "actionLabel": "앱 열기"
+      },
+      "laundry-dorm3": {
+        "title": "3기숙사 세탁실",
+        "description": "전용 앱 없이 현금·충전카드로 이용해요. 눌러서 안내를 확인해 주세요.",
+        "infoModal": {
+          "title": "3기숙사 세탁실 이용 안내",
+          "subtitle": "전용 앱 미지원 · 현장 결제 이용",
+          "points": [
+            "3기숙사 세탁실은 메타클럽 등 전용 앱을 지원하지 않아요.",
+            "세탁실 내 결제 단말기에서 현금 또는 충전카드로 이용할 수 있어요.",
+            "기기 고장이나 이용 중 문제가 생기면 에듀맥 시설 고장 신청 또는 제3기숙사 관리사무실(032-858-7222)로 문의해 주세요."
+          ]
+        }
+      },
+      "facility-dorm1": {
+        "title": "시설 고장·보수 신청",
+        "description": "제1기숙사 시설 불편은 INU 포털 통합정보시스템에서 접수해요.",
+        "actionLabel": "포털 열기"
+      },
+      "facility-dorm23": {
+        "title": "시설 고장·보수 신청",
+        "description": "제2·3기숙사(BTL) 고장·수리는 에듀맥 시설관리시스템에서 접수해요.",
+        "actionLabel": "에듀맥 열기"
+      },
+      "unidorm-complain": {
+        "title": "기타 생활 민원",
+        "description": "시설 고장 외 생활 불편은 유니돔 민원에서 접수하고 처리 현황을 볼 수 있어요.",
+        "actionLabel": "민원 이동"
+      },
+      "intip-menu": {
+        "title": "기숙사 식당·학식 메뉴",
+        "description": "제1기숙사 식당과 교내 학식 메뉴를 INTIP에서 확인해요.",
+        "actionLabel": "식단 보기",
+        "secondaryAppLabel": "INTIP 앱"
+      },
+      "portal-apply": {
+        "title": "재학생 입·퇴사 신청",
+        "description": "INU 포털에서 재학생 입사신청과 정기·중도퇴사를 신청해요.",
+        "actionLabel": "포털 열기"
+      },
+      "erp-freshman-apply": {
+        "title": "신·편입생 입사 신청",
+        "description": "포털 아이디가 없는 신·편입생 전용 입사신청 페이지예요.",
+        "actionLabel": "신청 이동"
+      },
+      "dorm-lecture": {
+        "title": "생활원 교양강좌 신청",
+        "description": "기숙사생 무료 교양강좌 일정 확인과 신청 안내예요.",
+        "actionLabel": "안내 보기"
+      },
+      "dorm-rules": {
+        "title": "생활 수칙",
+        "description": "출입 통제 시간(05:00~02:00), 외박·택배실·공용시설 이용 규정이에요.",
+        "actionLabel": "보기"
+      },
+      "dorm-facilities": {
+        "title": "기숙사별 편의시설 현황",
+        "description": "편의점, 택배실, 체력단련실, 간이취사실 등 층별 위치를 확인해요.",
+        "actionLabel": "보기"
+      },
+      "dorm-archive": {
+        "title": "상·벌점표 및 자료실",
+        "description": "최신 기숙사 상·벌점 기준표와 생활 안내문 자료실이에요.",
+        "actionLabel": "보기"
+      },
+      "dorm-home": {
+        "title": "인천대학교 생활원 홈페이지",
+        "description": "생활원 공식 홈페이지로 이동해요.",
+        "actionLabel": "열기"
+      },
+      "chatbuli": {
+        "title": "챗불이에게 물어보기",
+        "description": "통금, 상·벌점, 입퇴사 등 기숙사 궁금증을 AI 챗봇에게 물어보세요.",
+        "actionLabel": "질문하기"
+      },
+      "dorm-qna": {
+        "title": "생활원 질문과 답변 (Q&A)",
+        "description": "생활원 행정실 공식 1:1 문의 게시판이에요.",
+        "actionLabel": "열기"
+      },
+      "tel-admin": {
+        "title": "통합행정실",
+        "description": "입·퇴사 및 일반 행정 문의 (032-835-9810)",
+        "actionLabel": "전화 걸기"
+      },
+      "tel-dorm2": {
+        "title": "제2기숙사 관리사무실",
+        "description": "제2기숙사 시설·생활 문의 (032-858-7233)",
+        "actionLabel": "전화 걸기"
+      },
+      "tel-dorm3": {
+        "title": "제3기숙사 관리사무실",
+        "description": "제3기숙사 시설·생활 문의 (032-858-7222)",
+        "actionLabel": "전화 걸기"
+      }
+    }
+  },
+  "viewer": {
+    "defaultTitle": "생활 안내 뷰어",
+    "openExternalAriaLabel": "외부 브라우저로 열기",
+    "openExternal": "외부 열기",
+    "notFoundTitle": "안내 페이지를 찾을 수 없어요.",
+    "notFoundDescription": "잘못된 경로이거나 지원하지 않는 페이지예요.",
+    "backToGuide": "기숙사 생활 안내로 돌아가기",
+    "loading": "화면을 불러오고 있어요..."
+  },
+  "card": {
+    "pageTitle": "모바일 사생증",
+    "subHeading": "인천대학교 생활원",
+    "mainTitle": "모바일 사생증",
+    "studentId": "학번",
+    "department": "학과",
+    "grade": "학년",
+    "dormitory": "기숙사",
+    "dormNo": "사생번호",
+    "assignedRoom": "배정 호실",
+    "status": "입사 구분",
+    "photoAlt": "{{name}} 사생 증명사진",
+    "yearSuffix": "{{year}}학년도",
+    "refreshButton": "새로고침",
+    "detailButton": "내 사생 정보 상세",
+    "refreshing": "사생증 정보를 새로 불러오는 중..."
+  },
+  "portalSync": {
+    "progressTitle": "사생 정보를 불러오고 있어요",
+    "steps": [
+      "학교 포털 시스템에 안전하게 연결하고 있어요...",
+      "기숙사 사생 배정 및 호실 정보를 확인하고 있어요...",
+      "학적 정보와 학생증 사진을 동기화하고 있어요...",
+      "사생증 정보를 안전하게 기기에 저장하고 있어요..."
+    ],
+    "doNotClose": "완료될 때까지 <strong>화면을 벗어나거나 앱을 닫지 마세요</strong>",
+    "secureChannel": "인천대학교 포털과 안전한 종단간 통신 중",
+    "accountModalTitle": "포털 계정 1회 연동",
+    "accountModalNotice": "<strong>안심하세요!</strong> 인천대 포털, LMS, 도서관은 동일한 학번/비밀번호를 사용합니다. 1회만 등록하시면 기기 보안 영역(KeyStore)에만 암호화 보관되며, 포털 학적·LMS 과제·도서관 좌석이 한 번에 자동 연동됩니다.",
+    "studentIdLabel": "포털 학번",
+    "studentIdPlaceholder": "예: 202600000",
+    "passwordLabel": "포털 비밀번호",
+    "passwordPlaceholder": "포털 비밀번호 입력",
+    "missingCredentials": "학번과 비밀번호를 모두 입력해 주세요.",
+    "appOnly": "포털 계정 연동은 유니돔 모바일 앱 환경에서만 지원돼요.",
+    "saving": "기기 보안 영역에 저장 중...",
+    "linkFailed": "계정 연동에 실패했어요.",
+    "genericError": "오류가 발생했어요.",
+    "fetchTitle": "포털 사이트에서\n정보를 가져와야 해요",
+    "fetchSubtitle": "모바일 사생증 발급을 위해 인천대학교 포털에서 사생 정보를 안전하게 불러올게요.",
+    "securityTitle": "가져오는 작업은 이 기기에서만 수행돼요",
+    "securityDesc": "포털 아이디와 비밀번호, 사생 정보는 외부 서버로 전송되지 않으며 이 스마트폰의 보안 영역에만 안전하게 보관돼요.",
+    "savedStudentIdLabel": "등록된 포털 학번",
+    "savedStudentIdFallback": "학번 연동됨",
+    "savedAccountReady": "이미 기기에 안전하게 등록되어 있어 바로 정보를 가져올 수 있어요.",
+    "fetchDormCardBtn": "사생증 정보 가져오기",
+    "useOtherAccount": "다른 포털 계정으로 입력하기",
+    "fetchInfoBtn": "정보 가져오기",
+    "useSavedAccount": "기존에 등록된 계정 사용하기"
+  },
+  "portalInfo": {
+    "pageTitle": "사생정보조회 (학생)",
+    "tabs": {
+      "basic": "기본 정보",
+      "stay": "입·퇴사",
+      "points": "상·벌점",
+      "overnight": "외박 신청",
+      "fee": "공공요금"
+    },
+    "refresh": "새로고침",
+    "empty": "표시할 내역이 없어요."
+  }
+}

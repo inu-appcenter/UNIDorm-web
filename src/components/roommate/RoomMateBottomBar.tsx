@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { createRoommateChatRoom } from "@/apis/chat";
@@ -36,6 +37,7 @@ const RoomMateBottomBar = ({
   postSemester?: string | number;
 }) => {
   const { boardId } = useParams<{ boardId: string }>();
+  const { t } = useTranslation("roommate");
   const { tokenInfo, userInfo } = useUserStore();
   const { data: matchingStatus } = useRoommateMatchingStatus();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
@@ -83,18 +85,18 @@ const RoomMateBottomBar = ({
     if (isLikeSubmitting) return;
 
     if (!isLoggedIn) {
-      alert("로그인 후 이용해주세요.");
+      alert(t("bottomBar.loginRequired"));
       navigate("/login");
       return;
     }
 
     if (!isCurrentMatchingPeriod) {
-      alert("이번 학기 모집 게시물이 아니에요.");
+      alert(t("bottomBar.notCurrentSemester"));
       return;
     }
 
     if (!isSameDorm) {
-      alert("나와 같은 기숙사생이 아니에요.\n기숙사 정보를 확인해주세요.");
+      alert(t("bottomBar.differentDorm"));
       return;
     }
 
@@ -123,14 +125,14 @@ const RoomMateBottomBar = ({
       if (isAxiosError(error) && error.response) {
         const code = error.response.status;
         if (code === 401) {
-          alert("이미 좋아요를 누른 상태입니다.");
+          alert(t("bottomBar.alreadyLiked"));
         } else if (code === 404) {
-          alert("게시글이나 유저 정보를 찾을 수 없습니다.");
+          alert(t("bottomBar.notFound"));
         } else {
-          alert("오류가 발생했습니다.");
+          alert(t("bottomBar.error"));
         }
       } else {
-        alert("서버와 통신할 수 없습니다.");
+        alert(t("bottomBar.networkError"));
       }
       console.error(error);
     } finally {
@@ -142,33 +144,33 @@ const RoomMateBottomBar = ({
     if (isBlockStatusLoading) return;
 
     if (isBlockedByAuthor) {
-      alert("상대방의 차단으로 메시지를 보낼 수 없습니다.");
+      alert(t("bottomBar.blockedByOther"));
       return;
     }
 
     if (isBlockedPartner) {
-      alert("차단한 사람과는 대화할 수 없습니다.");
+      alert(t("bottomBar.blockedByMe"));
       return;
     }
 
     if (!isCurrentPeriod) {
-      alert("지난 학기 게시글에는 메시지를 보낼 수 없어요.");
+      alert(t("bottomBar.pastSemester"));
       return;
     }
 
     if (!isLoggedIn) {
-      alert("로그인 후 이용해주세요.");
+      alert(t("bottomBar.loginRequired"));
       navigate("/login");
       return;
     }
 
     if (!isCurrentMatchingPeriod) {
-      alert("이번 학기 모집 게시물이 아니에요.");
+      alert(t("bottomBar.notCurrentSemester"));
       return;
     }
 
     if (!isSameDorm) {
-      alert("나와 같은 기숙사생이 아니에요.\n기숙사 정보를 확인해주세요.");
+      alert(t("bottomBar.differentDorm"));
       return;
     }
 
@@ -195,7 +197,7 @@ const RoomMateBottomBar = ({
       });
     } catch (error) {
       console.error("채팅방 생성 실패", error);
-      alert("채팅방을 생성할 수 없습니다.");
+      alert(t("bottomBar.chatCreateFailed"));
     }
   };
 

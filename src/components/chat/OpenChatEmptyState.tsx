@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { useTranslation } from "react-i18next";
 import { OpenChatTab } from "@/types/openchat";
 
 interface Props {
@@ -10,6 +11,7 @@ export default function OpenChatEmptyState({
   tab,
   onClickMoveDormitory,
 }: Props) {
+  const { t } = useTranslation("chat");
   const isMyChat = tab === "MY";
 
   return (
@@ -17,26 +19,18 @@ export default function OpenChatEmptyState({
       {isMyChat ? (
         <>
           <TextGroup>
-            <Title>아직 참여한 채팅방이 없어요</Title>
-            <Description>
-              내 기숙사 방이나 전체 방에서
-              <br />
-              설명을 보고 참여해보세요
-            </Description>
+            <Title>{t("openChat.emptyTitle")}</Title>
+            <Description>{t("openChat.emptyDescription")}</Description>
           </TextGroup>
 
           <MoveButton type="button" onClick={onClickMoveDormitory}>
-            참여하기
+            {t("tabs.open")}
           </MoveButton>
         </>
       ) : (
         <TextGroup>
-          <Title>지금 참여 가능한 방이 없어요</Title>
-          <Description>
-            나중에 다시 확인하거나
-            <br />
-            전체 방 탭으로 이동해 보세요
-          </Description>
+          <Title>{t("openChat.emptyTitle")}</Title>
+          <Description>{t("openChat.emptyDescription")}</Description>
         </TextGroup>
       )}
     </Container>

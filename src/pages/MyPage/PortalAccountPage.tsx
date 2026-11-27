@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { useSetHeader } from "@/hooks/useSetHeader";
@@ -37,6 +38,7 @@ import {
 } from "lucide-react";
 
 export default function MobilePortalAccountPage() {
+  const { t } = useTranslation(["mypage", "common"]);
   const navigate = useNavigate();
   const { userInfo } = useUserStore();
 
@@ -60,7 +62,7 @@ export default function MobilePortalAccountPage() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   useSetHeader({
-    title: "포털 계정 관리",
+    title: t("mypage:portalAccount.title"),
   });
 
   const showToast = (msg: string) => {
@@ -88,7 +90,7 @@ export default function MobilePortalAccountPage() {
           setStudentInfo((prev) => ({
             ...prev,
             studentId: sid,
-            koreanName: prev?.koreanName || userInfo?.name || "학우",
+            koreanName: prev?.koreanName || userInfo?.name || t("mypage:portalAccount.defaultStudentName"),
             departmentName: prev?.departmentName || "",
             enrollmentStatusName: prev?.enrollmentStatusName || "",
           }));
@@ -121,16 +123,16 @@ export default function MobilePortalAccountPage() {
         await secureStorage.setItem("portal_student_info", student);
         localStorage.setItem("portal_info_last_updated", new Date().toISOString());
         setConnectionStatus("success");
-        showToast("포털 접속 성공: 최신 학적 정보가 확인되었어요.");
+        showToast(t("mypage:portalAccount.testSuccess"));
       } else {
         setConnectionStatus("error");
-        const errMsg = academicRes.errorMessage || "포털 로그인에 실패했어요. 비밀번호를 확인해주세요.";
+        const errMsg = academicRes.errorMessage || t("mypage:portalAccount.testLoginFail");
         setConnectionError(errMsg);
-        showToast(`포털 접속 실패: ${errMsg}`);
+        showToast(t("mypage:portalAccount.testFail", { message: errMsg }));
       }
     } catch (err: any) {
       setConnectionStatus("error");
-      const errMsg = err?.message || "네트워크 오류로 포털에 접속하지 못했습니다.";
+      const errMsg = err?.message || t("mypage:portalAccount.networkError");
       setConnectionError(errMsg);
       showToast(errMsg);
     }
@@ -139,12 +141,12 @@ export default function MobilePortalAccountPage() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!studentIdInput.trim() || !passwordInput.trim()) {
-      setErrorMessage("학번과 비밀번호를 모두 입력해 주세요.");
+      setErrorMessage(t("mypage:portalAccount.missingCredentials"));
       return;
     }
 
     if (!guardPortalAgent({ navigate })) {
-      setErrorMessage("포털 계정 연동은 유니돔 모바일 앱 또는 PC 크롬 확장 환경에서만 지원돼요.");
+      setErrorMessage(t("mypage:portalAccount.appOnlyError"));
       return;
     }
 
@@ -159,15 +161,15 @@ export default function MobilePortalAccountPage() {
         setIsRelinkMode(false);
         setStudentIdInput("");
         setPasswordInput("");
-        showToast("포털 계정이 기기 보안 저장소에 등록되었어요.");
+        showToast(t("mypage:portalAccount.saveSuccess"));
 
         // 등록 후 바로 연결 상태도 검증 진행
         handleTestConnection();
       } else {
-        setErrorMessage(saveRes.errorMessage || "계정 등록에 실패했어요.");
+        setErrorMessage(saveRes.errorMessage || t("mypage:portalAccount.saveFail"));
       }
     } catch (err: any) {
-      setErrorMessage(err?.message || "오류가 발생했어요.");
+      setErrorMessage(err?.message || t("mypage:portalAccount.genericError"));
     } finally {
       setIsSubmitting(false);
     }
@@ -183,9 +185,9 @@ export default function MobilePortalAccountPage() {
       setStudentInfo(null);
       setIsLinked(false);
       setIsRelinkMode(false);
-      showToast("포털 계정 연동이 해제되었어요.");
+      showToast(t("mypage:portalAccount.unlinkSuccess"));
     } catch (e: any) {
-      alert(e?.message || "연동 해제 중 오류가 발생했어요.");
+      alert(e?.message || t("mypage:portalAccount.unlinkError"));
     }
   };
 
@@ -204,21 +206,21 @@ export default function MobilePortalAccountPage() {
           <Skeleton width="100%" height="220px" style={{ borderRadius: "16px" }} />
         </ContentContainer>
       ) : !isPortalAgentAvailable() ? (
-        /* 0. 로컬 포털 에이전트(모바일 앱 또는 크롬 확장) 환경 아닐 때 안내 화면 */
+        /* 0. 모바일 앱 환경 아닐 때 안내 화면 */
         <ContentContainer>
           <NotAppCard>
             <Smartphone size={36} color="var(--interactive-primary)" />
-            <NotAppTitle>유니돔 앱 또는 PC 크롬 확장이 필요해요</NotAppTitle>
+            <NotAppTitle>{t("mypage:portalAccount.notAppTitle")}</NotAppTitle>
             <NotAppDesc>
-              포털 계정 연동은 기기 보안 저장소(KeyStore) 또는 PC 크롬 확장 세션에서 로컬로 동작해요.
+              {t("mypage:portalAccount.notAppDesc")}
             </NotAppDesc>
 
             <UsageGuideBox>
-              <UsageGuideTitle>연동 시 이용 가능한 기능</UsageGuideTitle>
+              <UsageGuideTitle>{t("mypage:portalAccount.usageGuideTitle")}</UsageGuideTitle>
               <UsageGuideList>
-                <li>기숙사 사생정보 및 배정 호실, 외박, 상벌점 내역 조회</li>
-                <li>모바일 사생증 바코드 및 출입 카드 확인</li>
-                <li>기본 학적 정보 (소속, 학년, 학적 상태) 확인</li>
+                <li>{t("mypage:portalAccount.feature1")}</li>
+                <li>{t("mypage:portalAccount.feature2")}</li>
+                <li>{t("mypage:portalAccount.feature3")}</li>
               </UsageGuideList>
             </UsageGuideBox>
 
@@ -227,10 +229,10 @@ export default function MobilePortalAccountPage() {
               onClick={() => guardPortalAgent({ navigate })}
               style={{ width: "100%", marginTop: "8px" }}
             >
-              유니돔 앱 열기 / 설치
+              {t("mypage:portalAccount.openInstallApp")}
             </CapsuleButton>
 
-            <FootnoteText>모바일 기기 보안 영역에서 직접 수행돼요.</FootnoteText>
+            <FootnoteText>{t("mypage:portalAccount.appFootnote")}</FootnoteText>
           </NotAppCard>
         </ContentContainer>
       ) : isLinked && !isRelinkMode ? (
@@ -240,32 +242,34 @@ export default function MobilePortalAccountPage() {
             <StatusHeader>
               <StatusBadge>
                 <CheckCircle2 size={15} />
-                <span>계정 등록됨</span>
+                <span>{t("mypage:portalAccount.linkedBadge")}</span>
               </StatusBadge>
               <SecurityTag>
                 <ShieldCheck size={14} />
-                <span>기기 보안 저장소 (KeyStore)</span>
+                <span>{t("mypage:portalAccount.keystoreLabel")}</span>
               </SecurityTag>
             </StatusHeader>
 
             <AccountInfoSection>
               <StudentTitle>
-                {studentInfo?.koreanName || userInfo.name || "학우"}님의 포털 계정
+                {t("mypage:portalAccount.linkedTitle", {
+                  name: studentInfo?.koreanName || userInfo.name || t("mypage:portalAccount.defaultStudentName"),
+                })}
               </StudentTitle>
               <StudentDetailGrid>
                 <DetailItem>
-                  <span className="label">학번</span>
-                  <span className="value">{studentInfo?.studentId || "등록됨"}</span>
+                  <span className="label">{t("mypage:portalAccount.studentIdLabel")}</span>
+                  <span className="value">{studentInfo?.studentId || t("mypage:portalAccount.registeredFallback")}</span>
                 </DetailItem>
                 {studentInfo?.departmentName && (
                   <DetailItem>
-                    <span className="label">소속</span>
+                    <span className="label">{t("mypage:portalAccount.departmentLabel")}</span>
                     <span className="value">{studentInfo.departmentName}</span>
                   </DetailItem>
                 )}
                 {studentInfo?.enrollmentStatusName && (
                   <DetailItem>
-                    <span className="label">학적 상태</span>
+                    <span className="label">{t("mypage:portalAccount.enrollmentStatusLabel")}</span>
                     <span className="value">{studentInfo.enrollmentStatusName}</span>
                   </DetailItem>
                 )}
@@ -277,25 +281,22 @@ export default function MobilePortalAccountPage() {
               <ConnectionHeader>
                 <ConnectionTitleRow>
                   <Globe size={15} color="var(--interactive-primary)" />
-                  <span className="title">포털 실제 연결 확인</span>
+                  <span className="title">{t("mypage:portalAccount.connectionTitle")}</span>
                 </ConnectionTitleRow>
                 <ConnectionStatusBadge $status={connectionStatus}>
-                  {connectionStatus === "idle" && <span>연결 미확인</span>}
-                  {connectionStatus === "testing" && <span>접속 테스트 중...</span>}
-                  {connectionStatus === "success" && <span>✓ 포털 정상 연결</span>}
-                  {connectionStatus === "error" && <span>✕ 접속 실패</span>}
+                  {connectionStatus === "idle" && <span>{t("mypage:portalAccount.statusIdle")}</span>}
+                  {connectionStatus === "testing" && <span>{t("mypage:portalAccount.statusTesting")}</span>}
+                  {connectionStatus === "success" && <span>{t("mypage:portalAccount.statusSuccess")}</span>}
+                  {connectionStatus === "error" && <span>{t("mypage:portalAccount.statusError")}</span>}
                 </ConnectionStatusBadge>
               </ConnectionHeader>
 
               <ConnectionDesc>
-                {connectionStatus === "idle" &&
-                  "아이디와 비밀번호가 기기에 안전하게 등록되어 있어요. 포털에 실제로 접속되는지 테스트해보세요."}
-                {connectionStatus === "testing" &&
-                  "포털에 접속하여 로그인 및 최신 학적 정보를 확인하고 있어요. 잠시만 기다려주세요..."}
-                {connectionStatus === "success" &&
-                  "포털 시스템 로그인 및 학적 정보 조회가 정상 확인되었어요."}
+                {connectionStatus === "idle" && t("mypage:portalAccount.idleDesc")}
+                {connectionStatus === "testing" && t("mypage:portalAccount.testingMessage")}
+                {connectionStatus === "success" && t("mypage:portalAccount.testOkMessage")}
                 {connectionStatus === "error" &&
-                  (connectionError || "포털 접속에 실패했습니다. 비밀번호를 다시 확인해주세요.")}
+                  (connectionError || t("mypage:portalAccount.testLoginFail"))}
               </ConnectionDesc>
 
               <ConnectionBtnWrapper>
@@ -307,7 +308,7 @@ export default function MobilePortalAccountPage() {
                   fullWidth
                 >
                   <RefreshCw size={13} className={connectionStatus === "testing" ? "spin" : ""} style={{ marginRight: 6 }} />
-                  {connectionStatus === "testing" ? "포털 접속 확인 중..." : "포털 실제 접속 확인"}
+                  {connectionStatus === "testing" ? t("mypage:portalAccount.testButtonLoading") : t("mypage:portalAccount.testButton")}
                 </CapsuleButton>
               </ConnectionBtnWrapper>
             </ConnectionBox>
@@ -315,18 +316,18 @@ export default function MobilePortalAccountPage() {
             <ActionButtonsRow>
               <SubActionBtn onClick={() => setIsRelinkMode(true)}>
                 <RotateCcw size={14} />
-                <span>계정 재등록</span>
+                <span>{t("mypage:portalAccount.relink")}</span>
               </SubActionBtn>
               <DangerActionBtn onClick={() => setIsUnlinkModalOpen(true)}>
                 <Trash2 size={14} />
-                <span>등록 해제</span>
+                <span>{t("mypage:portalAccount.unlink")}</span>
               </DangerActionBtn>
             </ActionButtonsRow>
           </StatusCard>
 
           {/* 원클릭 연동 서비스 안내 */}
           <SectionHeaderRow>
-            <SectionTitle>자동 연동 서비스</SectionTitle>
+            <SectionTitle>{t("mypage:portalAccount.autoSyncTitle")}</SectionTitle>
           </SectionHeaderRow>
           <ServiceListCard as="section">
             <ServiceItem onClick={() => navigate(PATHS.DORMITORY_INFO)} role="button" tabIndex={0}>
@@ -335,8 +336,8 @@ export default function MobilePortalAccountPage() {
                   <FileText size={18} color="var(--interactive-primary)" />
                 </ServiceIcon>
                 <ServiceText>
-                  <strong>사생정보조회 (학생)</strong>
-                  <span>기숙사 배정 내역, 상벌점, 공공요금 및 외박 내역</span>
+                  <strong>{t("mypage:portalAccount.dormInfoTitle")}</strong>
+                  <span>{t("mypage:portalAccount.dormInfoDesc")}</span>
                 </ServiceText>
               </ServiceLeft>
               <ChevronRight size={18} color="var(--text-disabled)" />
@@ -357,33 +358,33 @@ export default function MobilePortalAccountPage() {
                   <GraduationCap size={18} color="var(--green-500)" />
                 </ServiceIcon>
                 <ServiceText>
-                  <strong>모바일 사생증</strong>
-                  <span>실시간 모바일 사생증 및 바코드 출입 카드</span>
+                  <strong>{t("mypage:portalAccount.dormCardTitle")}</strong>
+                  <span>{t("mypage:portalAccount.dormCardDesc")}</span>
                 </ServiceText>
               </ServiceLeft>
               <ChevronRight size={18} color="var(--text-disabled)" />
             </ServiceItem>
           </ServiceListCard>
 
-          <FootnoteText>이 기기에서 직접 작업이 수행되며, 계정 정보는 외부 서버로 전송되지 않아요.</FootnoteText>
+          <FootnoteText>{t("mypage:portalAccount.securityFootnote")}</FootnoteText>
         </ContentContainer>
       ) : (
         /* 2. 미연동 또는 재등록 폼 화면 */
         <ContentContainer>
           <HeroCard as="section">
             <HeroTitle>
-              {isRelinkMode ? "포털 계정 다시 등록" : "포털 계정을 등록해 주세요"}
+              {isRelinkMode ? t("mypage:portalAccount.relinkTitle") : t("mypage:portalAccount.linkTitle")}
             </HeroTitle>
             <HeroSubtitle>
-              인천대학교 포털 계정(학번/비밀번호)을 등록하면 기숙사 및 사생증 기능을 바로 이용할 수 있어요.
+              {t("mypage:portalAccount.linkDesc")}
             </HeroSubtitle>
 
             <UsageGuideBox>
-              <UsageGuideTitle>연동 시 이용 가능한 기능</UsageGuideTitle>
+              <UsageGuideTitle>{t("mypage:portalAccount.usageGuideTitle")}</UsageGuideTitle>
               <UsageGuideList>
-                <li>기숙사 사생정보 및 배정 호실, 외박, 상벌점 내역 조회</li>
-                <li>모바일 사생증 바코드 및 증명사진 확인</li>
-                <li>기본 학적 정보 (소속, 학년, 학적 상태) 연동</li>
+                <li>{t("mypage:portalAccount.feature1")}</li>
+                <li>{t("mypage:portalAccount.feature2Alt")}</li>
+                <li>{t("mypage:portalAccount.feature3")}</li>
               </UsageGuideList>
             </UsageGuideBox>
           </HeroCard>
@@ -394,23 +395,23 @@ export default function MobilePortalAccountPage() {
               <ShieldCheck size={20} color="var(--interactive-primary)" />
             </SecurityNoticeIcon>
             <SecurityNoticeContent>
-              <strong>유니돔 서버로 전송되지 않아요</strong>
+              <strong>{t("mypage:portalAccount.noServerTitle")}</strong>
               <p>
-                입력하신 학번과 비밀번호는 외부 서버를 거치지 않고, 내 스마트폰의 보안 영역(KeyStore)에만 암호화되어 안전하게 보관돼요.
+                {t("mypage:portalAccount.noServerDesc")}
               </p>
             </SecurityNoticeContent>
           </SecurityNoticeCard>
 
           <FormCard onSubmit={handleRegister}>
             <InputGroup>
-              <InputLabel htmlFor="portal-student-id">포털 학번</InputLabel>
+              <InputLabel htmlFor="portal-student-id">{t("mypage:portalAccount.inputStudentId")}</InputLabel>
               <InputWrap>
                 <User size={18} color="var(--text-tertiary)" />
                 <StyledInput
                   id="portal-student-id"
                   type="text"
                   inputMode="numeric"
-                  placeholder="예: 202600000"
+                  placeholder={t("mypage:portalAccount.inputStudentIdPlaceholder")}
                   value={studentIdInput}
                   onChange={(e) => setStudentIdInput(e.target.value)}
                   disabled={isSubmitting}
@@ -419,13 +420,13 @@ export default function MobilePortalAccountPage() {
             </InputGroup>
 
             <InputGroup>
-              <InputLabel htmlFor="portal-password">포털 비밀번호</InputLabel>
+              <InputLabel htmlFor="portal-password">{t("mypage:portalAccount.inputPassword")}</InputLabel>
               <InputWrap>
                 <Lock size={18} color="var(--text-tertiary)" />
                 <StyledInput
                   id="portal-password"
                   type="password"
-                  placeholder="포털 비밀번호 입력"
+                  placeholder={t("mypage:portalAccount.inputPasswordPlaceholder")}
                   value={passwordInput}
                   onChange={(e) => setPasswordInput(e.target.value)}
                   disabled={isSubmitting}
@@ -448,18 +449,18 @@ export default function MobilePortalAccountPage() {
                 loading={isSubmitting}
                 disabled={!studentIdInput.trim() || !passwordInput.trim()}
               >
-                {isSubmitting ? "기기 보안 영역에 저장 중..." : "포털 계정 등록하기"}
+                {isSubmitting ? t("mypage:portalAccount.submitting") : t("mypage:portalAccount.submitButton")}
               </CapsuleButton>
 
               {isRelinkMode && (
                 <CancelTextBtn type="button" onClick={() => setIsRelinkMode(false)}>
-                  취소하고 돌아가기
+                  {t("mypage:portalAccount.cancelRelink")}
                 </CancelTextBtn>
               )}
             </ButtonGroupWrapper>
           </FormCard>
 
-          <FootnoteText>이 기기에서 직접 작업이 수행되며, 계정 정보는 외부 서버로 전송되지 않아요.</FootnoteText>
+          <FootnoteText>{t("mypage:portalAccount.securityFootnote")}</FootnoteText>
         </ContentContainer>
       )}
 
@@ -467,15 +468,15 @@ export default function MobilePortalAccountPage() {
       <Modal
         isOpen={isUnlinkModalOpen}
         onClose={() => setIsUnlinkModalOpen(false)}
-        title="포털 계정 연동을 해제할까요?"
-        description="연동을 해제하면 이 기기에 저장된 로그인 정보와 학적 데이터가 삭제되고, 사생정보 및 모바일 사생증 자동 연동이 중단돼요."
+        title={t("mypage:portalAccount.unlinkModalTitle")}
+        description={t("mypage:portalAccount.unlinkModalDesc")}
         primaryButton={{
-          text: "연동 해제",
+          text: t("mypage:portalAccount.unlink"),
           variant: "danger",
           onClick: handleUnlink,
         }}
         secondaryButton={{
-          text: "취소",
+          text: t("common:actions.cancel"),
           onClick: () => setIsUnlinkModalOpen(false),
         }}
       />

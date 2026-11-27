@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { useTranslation } from "react-i18next";
 import SearchInput from "../../components/complain/SearchInput.tsx";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import { useNavigate } from "react-router-dom";
@@ -12,6 +13,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { useSetHeader } from "@/hooks/useSetHeader";
 
 const FormListPage = () => {
+  const { t } = useTranslation("board");
   const navigate = useNavigate();
   const { isAdmin } = useUserRole();
 
@@ -53,7 +55,7 @@ const FormListPage = () => {
     }
   }, [forms, selectedFilterIndex, searchTerm]);
 
-  useSetHeader({ title: "폼" });
+  useSetHeader({ title: t("form.title") });
 
   return (
     <PageWrapper>
@@ -63,7 +65,7 @@ const FormListPage = () => {
             <SearchInput
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder={"폼 제목을 검색해보세요"}
+              placeholder={t("form.searchPlaceholder")}
             />
             <SelectableChipGroup
               Groups={filter}

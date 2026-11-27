@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { Trans, useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import styled from "styled-components";
@@ -14,9 +15,11 @@ import useUserStore from "../stores/useUserStore.ts";
 import { createMyPageMenuGroups } from "@/stores/menuGroupsFactory";
 import { mixpanelTrack } from "@/utils/mixpanel";
 
-const overlayText = "로그인 후 사용 가능해요.";
+
 
 const MyPage = () => {
+  const { t } = useTranslation(["mypage", "common"]);
+  const overlayText = t("mypage:loginRequiredOverlay");
   const { tokenInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo?.accessToken ?? "");
   const navigate = useNavigate();
@@ -26,7 +29,7 @@ const MyPage = () => {
   const notFound = Boolean(isLoggedIn && isSuccess && !roommateInfo);
   const hasTrackedRoommate = useRef(false);
 
-  const menuGroups = createMyPageMenuGroups(isLoggedIn, navigate);
+  const menuGroups = createMyPageMenuGroups(isLoggedIn, navigate, t);
 
   //마이페이지 진입 (믹스패널)
   useEffect(() => {
@@ -48,7 +51,7 @@ const MyPage = () => {
   const isProtected = !isLoggedIn;
 
   useSetHeader({
-    title: "마이페이지",
+    title: t("mypage:title"),
     showAlarm: true,
     settingOnClick: () => {
       mixpanelTrack.myPageSettingClicked(); //마이페이지 설정
@@ -74,7 +77,17 @@ const MyPage = () => {
             as={motion.button}
             whileTap={{ scale: 0.98 }}
           >
-            인천대학교 포털로 <span className="login">로그인</span>하세요
+            <Trans
+              i18nKey="loginPrompt"
+              ns="mypage"
+              defaults="{{prefix}}<1>{{highlight}}</1>{{suffix}}"
+              values={{
+                prefix: t("mypage:loginPrompt.prefix"),
+                highlight: t("mypage:loginPrompt.highlight"),
+                suffix: t("mypage:loginPrompt.suffix"),
+              }}
+              components={{ 1: <span className="login" /> }}
+            />
             <span className="go">{">"}</span>
           </LoginButton>
         )}
@@ -84,7 +97,7 @@ const MyPage = () => {
         <ProtectedMenuWrapper disabled={isProtected}>
           <ProtectedContent disabled={isProtected}>
             <TitleContentArea
-              title="내 룸메이트"
+              title={t("mypage:myRoommate")}
               children={
                 <RoomMateInfoArea
                   roommateInfo={roommateInfo}

@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import useUserStore from "../../../stores/useUserStore.ts";
 import { getAllRoommateChatUnreadCount } from "@/apis/chat";
@@ -163,6 +164,7 @@ const Button = ({
 };
 
 export default function BottomBar() {
+  const { t } = useTranslation("common");
   const location = useLocation();
   const navigate = useNavigate();
   const pathname = location.pathname;
@@ -175,8 +177,8 @@ export default function BottomBar() {
   });
 
   const formattedTooltipMessage = matchingStatus
-    ? `${matchingStatus.year % 100}년 ${formatSemesterName(matchingStatus.semester)}\n룸메이트 매칭 중!`
-    : "룸메이트 매칭 중!";
+    ? t("bottomBar.roommateMatchingTooltipWithSemester", { year: matchingStatus.year % 100, semester: formatSemesterName(matchingStatus.semester) })
+    : t("bottomBar.roommateMatchingTooltip");
 
   const currentSemesterKey = matchingStatus
     ? `${matchingStatus.year}_${matchingStatus.semester}`
@@ -243,7 +245,7 @@ export default function BottomBar() {
       <PillContainer>
         <Button
           icon={(active) => <HomeIcon isActive={active} />}
-          buttonName="홈"
+          buttonName={t("bottomBar.home")}
           isActive={pathname === "/home" || pathname === "/"}
           onClick={() => {
             mixpanelTrack.featureClicked("홈", "BottomBar");
@@ -252,7 +254,7 @@ export default function BottomBar() {
         />
         <Button
           icon={(active) => <RoommateIcon isActive={active} />}
-          buttonName="룸메이트"
+          buttonName={t("bottomBar.roommate")}
           isActive={
             pathname === "/roommate" || pathname.startsWith("/roommate")
           }
@@ -276,7 +278,7 @@ export default function BottomBar() {
         />
         <Button
           icon={(active) => <ChatIcon isActive={active} />}
-          buttonName="채팅"
+          buttonName={t("bottomBar.chat")}
           isActive={pathname === "/chat" || pathname.startsWith("/chat")}
           onClick={() => {
             mixpanelTrack.featureClicked("채팅", "BottomBar");
@@ -286,14 +288,14 @@ export default function BottomBar() {
         />
         <Button
           icon={(active) => <ComplainIcon isActive={active} />}
-          buttonName="민원"
+          buttonName={t("bottomBar.complain")}
           isActive={
             pathname === "/complain" || pathname.startsWith("/complain")
           }
           onClick={() => {
             mixpanelTrack.featureClicked("민원", "BottomBar");
             if (!isLoggedIn) {
-              alert("로그인 후 사용할 수 있습니다.");
+              alert(t("states.loginRequired"));
               navigate("/login");
               return;
             }
@@ -302,7 +304,7 @@ export default function BottomBar() {
         />
         <Button
           icon={(active) => <MyPageIcon isActive={active} />}
-          buttonName="마이페이지"
+          buttonName={t("bottomBar.mypage")}
           isActive={pathname === "/mypage"}
           onClick={() => {
             mixpanelTrack.featureClicked("마이페이지", "BottomBar");
@@ -320,7 +322,8 @@ const ButtonWrapper = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 44px;
+  flex: 1;
+  min-width: 44px;
   gap: 4px;
   cursor: pointer;
   user-select: none;
@@ -341,6 +344,9 @@ const ButtonWrapper = styled.div`
     color: #6f6f6f;
     text-align: center;
     white-space: nowrap;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .BtnName.active {

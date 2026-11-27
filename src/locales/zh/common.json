@@ -1,0 +1,110 @@
+{
+  "languageOptions": {
+    "ko": "한국어",
+    "en": "English",
+    "zh": "中文",
+    "vi": "Tiếng Việt"
+  },
+  "actions": {
+    "confirm": "确认",
+    "cancel": "取消",
+    "save": "保存",
+    "delete": "删除",
+    "edit": "编辑",
+    "close": "关闭",
+    "retry": "重试",
+    "apply": "应用",
+    "reset": "重置",
+    "search": "搜索",
+    "back": "返回",
+    "more": "查看更多",
+    "submit": "提交",
+    "register": "登记",
+    "viewAll": "查看全部",
+    "install": "安装",
+    "refresh": "刷新",
+    "write": "写帖"
+  },
+  "header": {
+    "backAlt": "返回",
+    "logoAlt": "UNIDorm 徽标",
+    "installApp": "安装应用",
+    "openDormitoryCard": "打开电子宿舍证",
+    "dormitoryCardShort": "宿舍证",
+    "keywordSettingTooltip": "设置关键词 / 分类\n通知提醒吧。"
+  },
+  "bottomBar": {
+    "home": "首页",
+    "roommate": "室友",
+    "chat": "聊天",
+    "complain": "报修",
+    "mypage": "我的",
+    "roommateMatchingTooltip": "室友匹配进行中！",
+    "roommateMatchingTooltipWithSemester": "{{year}}年{{semester}}\n室友匹配进行中！"
+  },
+  "dormitory": {
+    "dorm1": "1号宿舍",
+    "dorm2": "2号宿舍",
+    "dorm3": "3号宿舍"
+  },
+  "semester": {
+    "first": "第1学期",
+    "second": "第2学期",
+    "summer": "夏季学期",
+    "winter": "冬季学期",
+    "other": "第{{value}}学期"
+  },
+  "states": {
+    "loading": "加载中...",
+    "processing": "处理中...",
+    "empty": "暂无数据。",
+    "error": "出现了一些问题。",
+    "errorRetry": "加载失败，请重试。",
+    "noData": "暂无内容。",
+    "loginRequired": "登录后即可使用。",
+    "networkError": "请检查网络连接。"
+  },
+  "guard": {
+    "loginRequiredConfirm": "需要登录。是否前往登录页面？",
+    "appUpdateConfirm": "使用新功能需要更新 UNIDorm 应用。\n是否前往商店更新？",
+    "appInstallConfirm": "该功能仅可在 UNIDorm 应用中使用。\n是否前往商店安装应用？",
+    "pcAppOnlyConfirm": "该功能为 UNIDorm 手机应用专用功能。\n是否前往商店页面查看？",
+    "portalAgentConfirm": "该功能可在 UNIDorm 手机应用或 PC Chrome 扩展中使用。\n是否前往 UNIDorm 应用商店页面？"
+  },
+  "terms": {
+    "notice": "UNIDorm 是由 <strong>仁川大学 App Center</strong>（IT创新实验室）与宿舍管理处合作开发的服务。"
+  },
+  "migrationBanner": {
+    "freshman": {
+      "title": "请绑定学校门户账号",
+      "description": "立即将新生临时账号与学校门户账号进行绑定吧。"
+    },
+    "portal": {
+      "title": "新生临时账号绑定指南",
+      "description": "<strong>仅限此前创建过新生临时账号的用户</strong>进行绑定。\n超过一定期限后，未绑定的临时账号将被删除。"
+    }
+  },
+  "time": {
+    "justNow": "刚刚",
+    "minutesAgo": "{{count}}分钟前",
+    "hoursAgo": "{{count}}小时前",
+    "daysAgo": "{{count}}天前",
+    "closed": "已截止",
+    "daysLeft": "D-{{count}}",
+    "hoursLeft": "距截止{{count}}小时",
+    "minutesLeft": "距截止{{count}}分钟"
+  },
+  "notificationType": {
+    "ROOMMATE": "室友",
+    "GROUP_ORDER": "拼单",
+    "DORMITORY": "宿舍管理处",
+    "UNI_DORM": "UNIDorm",
+    "SUPPORTERS": "支持团",
+    "COMPLAINT": "报修",
+    "COUPON": "优惠券",
+    "CHAT": "聊天"
+  },
+  "badges": {
+    "emergency": "紧急"
+  }
+}

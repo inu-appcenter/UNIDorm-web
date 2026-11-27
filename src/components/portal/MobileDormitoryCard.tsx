@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import styled, { keyframes } from "styled-components";
+import { useTranslation } from "react-i18next";
 import { User } from "lucide-react";
 import DormitoryBadge from "@/components/common/DormitoryBadge";
 
@@ -126,6 +127,7 @@ export const MobileDormitoryCard: React.FC<MobileDormitoryCardProps> = ({
   status = "-",
   fullscreen = true,
 }) => {
+  const { t } = useTranslation("dormitory");
   const [clockText, setClockText] = useState<string>("");
 
   useEffect(() => {
@@ -239,8 +241,8 @@ export const MobileDormitoryCard: React.FC<MobileDormitoryCardProps> = ({
       {/* 상단 헤더: 대학/생활원 명칭 & 학기 */}
       <HeaderSection>
         <HeaderLeft>
-          <SubHeading>인천대학교 생활원</SubHeading>
-          <MainTitle>모바일 사생증</MainTitle>
+          <SubHeading>{t("card.subHeading")}</SubHeading>
+          <MainTitle>{t("card.mainTitle")}</MainTitle>
         </HeaderLeft>
         {termDisplay ? <TermBadge>{termDisplay}</TermBadge> : null}
       </HeaderSection>
@@ -250,7 +252,10 @@ export const MobileDormitoryCard: React.FC<MobileDormitoryCardProps> = ({
         <ProfileSection>
           <PhotoWrapper>
             {photoSrc ? (
-              <PhotoImg src={photoSrc} alt={`${studentName} 사생 증명사진`} />
+              <PhotoImg
+                src={photoSrc}
+                alt={t("card.photoAlt", { name: studentName })}
+              />
             ) : (
               <PlaceholderPhoto>
                 <User size={40} strokeWidth={1.5} color="var(--text-tertiary)" />
@@ -266,15 +271,15 @@ export const MobileDormitoryCard: React.FC<MobileDormitoryCardProps> = ({
 
             <MetaList>
               <MetaItem>
-                <MetaKey>학번</MetaKey>
+                <MetaKey>{t("card.studentId")}</MetaKey>
                 <MetaVal className="font-mono">{studentId}</MetaVal>
               </MetaItem>
               <MetaItem>
-                <MetaKey>학과</MetaKey>
+                <MetaKey>{t("card.department")}</MetaKey>
                 <MetaVal>{department}</MetaVal>
               </MetaItem>
               <MetaItem>
-                <MetaKey>학년</MetaKey>
+                <MetaKey>{t("card.grade")}</MetaKey>
                 <MetaVal>{grade}</MetaVal>
               </MetaItem>
             </MetaList>
@@ -284,19 +289,19 @@ export const MobileDormitoryCard: React.FC<MobileDormitoryCardProps> = ({
         {/* 핵심 사생 정보 박스: 기숙사 + 사생번호 + 배정 호실/침대 + 입사 구분 */}
         <DetailBox $boxBg={theme.boxBg} $boxBorder={theme.boxBorder}>
           <DetailHeader>
-            <DetailLabel>기숙사</DetailLabel>
+            <DetailLabel>{t("card.dormitory")}</DetailLabel>
             <DormitoryBadge dormType={dormitoryDisplayName} size="md">
               {dormitoryDisplayName}
             </DormitoryBadge>
           </DetailHeader>
 
           <DormNoRow>
-            <DormNoLabel>사생번호</DormNoLabel>
+            <DormNoLabel>{t("card.dormNo")}</DormNoLabel>
             <DormNoValue>{studentDormNo}</DormNoValue>
           </DormNoRow>
 
           <RoomBedRow>
-            <RoomBedLabel>배정 호실</RoomBedLabel>
+            <RoomBedLabel>{t("card.assignedRoom")}</RoomBedLabel>
             {roomBedInfo ? (
               <RoomBedValue>
                 <RoomBadge>{roomBedInfo.room}</RoomBadge>
@@ -308,7 +313,7 @@ export const MobileDormitoryCard: React.FC<MobileDormitoryCardProps> = ({
           </RoomBedRow>
 
           <StatusRow>
-            <StatusLabel>입사 구분</StatusLabel>
+            <StatusLabel>{t("card.status")}</StatusLabel>
             <StatusValue>{status || "-"}</StatusValue>
           </StatusRow>
         </DetailBox>

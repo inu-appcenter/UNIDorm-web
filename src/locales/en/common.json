@@ -1,0 +1,110 @@
+{
+  "languageOptions": {
+    "ko": "한국어",
+    "en": "English",
+    "zh": "中文",
+    "vi": "Tiếng Việt"
+  },
+  "actions": {
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "retry": "Retry",
+    "apply": "Apply",
+    "reset": "Reset",
+    "search": "Search",
+    "back": "Back",
+    "more": "More",
+    "submit": "Submit",
+    "register": "Register",
+    "viewAll": "View all",
+    "install": "Install",
+    "refresh": "Refresh",
+    "write": "Write"
+  },
+  "header": {
+    "backAlt": "Back",
+    "logoAlt": "UNIDorm Logo",
+    "installApp": "Get App",
+    "openDormitoryCard": "Open Mobile Dorm ID",
+    "dormitoryCardShort": "Dorm ID",
+    "keywordSettingTooltip": "Set up keyword &\ncategory alerts."
+  },
+  "bottomBar": {
+    "home": "Home",
+    "roommate": "Roommate",
+    "chat": "Chat",
+    "complain": "Report",
+    "mypage": "My Page",
+    "roommateMatchingTooltip": "Matching open!",
+    "roommateMatchingTooltipWithSemester": "{{semester}} '{{year}}\nMatching open!"
+  },
+  "dormitory": {
+    "dorm1": "Dorm 1",
+    "dorm2": "Dorm 2",
+    "dorm3": "Dorm 3"
+  },
+  "semester": {
+    "first": "Spring",
+    "second": "Fall",
+    "summer": "Summer",
+    "winter": "Winter",
+    "other": "Term {{value}}"
+  },
+  "states": {
+    "loading": "Loading...",
+    "processing": "Processing...",
+    "empty": "No data available.",
+    "error": "Something went wrong.",
+    "errorRetry": "Couldn't load data. Please try again.",
+    "noData": "Nothing to display.",
+    "loginRequired": "Please sign in to use this feature.",
+    "networkError": "Please check your network connection."
+  },
+  "guard": {
+    "loginRequiredConfirm": "Sign-in is required. Go to the login page?",
+    "appUpdateConfirm": "Please update the UNIDorm app to use this feature.\nOpen the store to update?",
+    "appInstallConfirm": "This feature is available in the UNIDorm app.\nOpen the store to install?",
+    "pcAppOnlyConfirm": "This feature is only available in the UNIDorm mobile app.\nOpen the store page?",
+    "portalAgentConfirm": "This feature is available in the UNIDorm mobile app or PC Chrome extension.\nOpen the UNIDorm store page?"
+  },
+  "terms": {
+    "notice": "UNIDorm is developed by <strong>INU App Center</strong> (IT Innovation Lab) in collaboration with the Dormitory Office."
+  },
+  "migrationBanner": {
+    "freshman": {
+      "title": "Link your portal account",
+      "description": "Link your freshman temporary account with your INU portal account now."
+    },
+    "portal": {
+      "title": "Freshman Account Linking Notice",
+      "description": "Please proceed <strong>only if you previously created a freshman temporary account</strong>.\nUnlinked temporary accounts will be deleted after a certain period."
+    }
+  },
+  "time": {
+    "justNow": "Just now",
+    "minutesAgo": "{{count}}m ago",
+    "hoursAgo": "{{count}}h ago",
+    "daysAgo": "{{count}}d ago",
+    "closed": "Closed",
+    "daysLeft": "D-{{count}}",
+    "hoursLeft": "{{count}}h left",
+    "minutesLeft": "{{count}}m left"
+  },
+  "notificationType": {
+    "ROOMMATE": "Roommate",
+    "GROUP_ORDER": "Group Buy",
+    "DORMITORY": "Dormitory",
+    "UNI_DORM": "UNIDorm",
+    "SUPPORTERS": "Supporters",
+    "COMPLAINT": "Report",
+    "COUPON": "Coupon",
+    "CHAT": "Chat"
+  },
+  "badges": {
+    "emergency": "Urgent"
+  }
+}

@@ -1,19 +1,21 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import styled from "styled-components";
+import { useTranslation } from "react-i18next";
 import { createDerivedOpenChatRoom, createOpenChatRoom } from "@/apis/openchat";
 import { OpenChatScope } from "@/types/openchat";
 import { useSetHeader } from "@/hooks/useSetHeader";
 import ChipButton from "@/components/button/ChipButton";
 
 export default function OpenChatCreatePage() {
+  const { t } = useTranslation("chat");
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const originRoomId = Number(searchParams.get("originRoomId"));
   const isDerivedRoom = Number.isInteger(originRoomId) && originRoomId > 0;
 
   useSetHeader({
-    title: isDerivedRoom ? "단체 톡방 만들기" : "방 만들기",
+    title: t("create.title"),
     showAlarm: false,
   });
 

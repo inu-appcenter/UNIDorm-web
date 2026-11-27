@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
+import { useTranslation } from "react-i18next";
 import GroupPurchaseList from "../../components/GroupPurchase/GroupPurchaseList";
 import { useNavigate } from "react-router-dom";
 import { FaSearch } from "react-icons/fa";
@@ -120,6 +121,7 @@ interface NotificationData {
 }
 
 export default function GroupPurchaseMainPage() {
+  const { t } = useTranslation("board");
   const navigate = useNavigate();
   const { tokenInfo } = useUserStore();
   const isLoggedIn = Boolean(tokenInfo.accessToken);
@@ -186,12 +188,12 @@ export default function GroupPurchaseMainPage() {
   const handleKeywordSettingButton = () => {
     const platform = getMobilePlatform();
     if (platform === "android_browser" || platform === "ios_browser") {
-      alert("앱 설치 후 사용할 수 있습니다.");
+      alert(t("groupPurchase.appRequired"));
       return;
     }
 
     if (!isLoggedIn) {
-      alert("로그인 후 사용 가능해요");
+      alert(t("groupPurchase.loginRequired"));
       return;
     }
 
