@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import styled, { css } from "styled-components";
 
 export type DormitoryTypeKind = "1기숙사" | "2기숙사" | "3기숙사" | "other";
@@ -49,8 +50,17 @@ export const DormitoryBadge: React.FC<DormitoryBadgeProps> = ({
   className,
   ...rest
 }) => {
+  const { t } = useTranslation("common");
   const kind = parseDormitoryKind(dormType);
-  const displayText = children ?? (dormType || "-");
+  const translatedDorm =
+    kind === "1기숙사"
+      ? t("dormitory.dorm1")
+      : kind === "2기숙사"
+        ? t("dormitory.dorm2")
+        : kind === "3기숙사"
+          ? t("dormitory.dorm3")
+          : dormType || "-";
+  const displayText = children ?? translatedDorm;
 
   return (
     <StyledBadge

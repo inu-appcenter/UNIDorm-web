@@ -1,3 +1,4 @@
+import i18n from "@/i18n";
 import { PATHS } from "@/constants/paths";
 import {
   getMobilePlatform,
@@ -11,7 +12,7 @@ export const guardLogin = (
   navigate: (path: string) => void,
 ): boolean => {
   if (!isLoggedIn) {
-    if (window.confirm("로그인이 필요합니다. 로그인 페이지로 이동할까요?"))
+    if (window.confirm(i18n.t("common:guard.loginRequiredConfirm")))
       navigate(PATHS.LOGIN);
     return false;
   }
@@ -45,8 +46,7 @@ export const guardAppOnly = (options?: GuardAppOnlyOptions): boolean => {
   // 2. 이전 버전의 유니돔 앱을 사용 중인 경우 -> 업데이트 안내
   if (isLegacyUnidormApp()) {
     const message =
-      options?.customMessage ||
-      "새로운 기능 이용을 위해 유니돔 앱 업데이트가 필요해요.\n스토어로 이동하여 최신 버전으로 업데이트할까요?";
+      options?.customMessage || i18n.t("common:guard.appUpdateConfirm");
 
     const shouldUpdate = window.confirm(message);
     if (shouldUpdate) {
@@ -61,8 +61,7 @@ export const guardAppOnly = (options?: GuardAppOnlyOptions): boolean => {
   const platform = getMobilePlatform();
   if (platform === "ios_browser" || platform === "android_browser") {
     const message =
-      options?.customMessage ||
-      "유니돔 앱에서 이용할 수 있는 기능이에요.\n스토어로 이동하여 앱을 설치할까요?";
+      options?.customMessage || i18n.t("common:guard.appInstallConfirm");
 
     const shouldInstall = window.confirm(message);
     if (shouldInstall) {
@@ -75,8 +74,7 @@ export const guardAppOnly = (options?: GuardAppOnlyOptions): boolean => {
 
   // 4. PC 및 기타 브라우저 환경인 경우 -> 스토어 페이지 이동 안내
   const pcMessage =
-    options?.customMessage ||
-    "유니돔 모바일 앱 전용 기능이에요.\n스토어 페이지로 이동하여 앱을 확인하시겠어요?";
+    options?.customMessage || i18n.t("common:guard.pcAppOnlyConfirm");
 
   const shouldOpenStore = window.confirm(pcMessage);
   if (shouldOpenStore) {

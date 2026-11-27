@@ -1,6 +1,7 @@
 import { Drawer } from "vaul";
 import styled from "styled-components";
 import React, { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import RoundSquareButton from "../button/RoundSquareButton.tsx";
 import Friends from "../../assets/roommate/Friends.svg";
 import 눈물닦아주는횃불이 from "../../assets/눈물 닦아주는 횃불이.webp";
@@ -32,12 +33,14 @@ export default function CommonBottomSheet({
   children,
   isOpen,
   setIsOpen,
-  closeButtonText = "닫기",
+  closeButtonText,
   onCloseClick,
   headerImageId = null,
   title,
   subtitle,
 }: Props) {
+  const { t } = useTranslation("common");
+  const resolvedCloseText = closeButtonText ?? t("actions.close");
   const initialized = useRef(false);
 
   useEffect(() => {
@@ -72,7 +75,7 @@ export default function CommonBottomSheet({
           <ScrollContent>{children}</ScrollContent>
           <CloseMenus>
             <RoundSquareButton
-              btnName={closeButtonText}
+              btnName={resolvedCloseText}
               onClick={() => {
                 // 커스텀 클릭 이벤트가 있으면 먼저 실행
                 if (onCloseClick) {

@@ -1,28 +1,8 @@
+import { Trans, useTranslation } from "react-i18next";
 import styled from "styled-components";
 import ArrowRight from "@/assets/arrow-right.svg";
 
 export type MigrationBannerVariant = "freshman" | "portal";
-
-const MIGRATION_BANNER_COPY: Record<
-  MigrationBannerVariant,
-  { title: string; description: React.ReactNode }
-> = {
-  freshman: {
-    title: "포털 계정으로 통합하세요",
-    description:
-      "지금 바로 신입생 임시 계정을 학교 포털 계정으로 통합하세요!!!",
-  },
-  portal: {
-    title: "신입생 임시 계정 통합 안내",
-    description: (
-      <>
-        <strong>이전에 만드셨던 신입생 임시 계정이 있는 경우에만</strong> 통합을
-        진행해 주세요.
-        {"\n"}일정 기간 이후에는 통합하지 않은 임시 계정은 삭제될 예정입니다.
-      </>
-    ),
-  },
-};
 
 interface MigrationBannerProps {
   className?: string;
@@ -35,7 +15,9 @@ const MigrationBanner = ({
   onClick,
   variant,
 }: MigrationBannerProps) => {
-  const copy = MIGRATION_BANNER_COPY[variant];
+  const { t } = useTranslation("common");
+
+  const title = t(`migrationBanner.${variant}.title`);
 
   return (
     <BannerWrapper
@@ -45,10 +27,20 @@ const MigrationBanner = ({
       $variant={variant}
     >
       <MigrationText>
-        <h3>{copy.title}</h3>
-        <p>{copy.description}</p>
+        <h3>{title}</h3>
+        <p>
+          {variant === "portal" ? (
+            <Trans
+              i18nKey={`migrationBanner.portal.description`}
+              ns="common"
+              components={{ strong: <strong /> }}
+            />
+          ) : (
+            t("migrationBanner.freshman.description")
+          )}
+        </p>
       </MigrationText>
-      <img src={ArrowRight} alt="이동" />
+      <img src={ArrowRight} alt="" aria-hidden="true" />
     </BannerWrapper>
   );
 };
