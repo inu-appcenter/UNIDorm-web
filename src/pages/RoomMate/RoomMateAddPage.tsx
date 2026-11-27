@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { useTranslation } from "react-i18next";
 import RoundSquareButton from "../../components/button/RoundSquareButton.tsx";
 import friends from "../../assets/roommate/Friends.svg";
 import { useNavigate } from "react-router-dom";
@@ -7,6 +8,7 @@ import { RoommateMatchingRequest } from "@/types/roommates";
 import { requestRoommateMatching } from "@/apis/roommate";
 
 export default function RoomMateAddPage() {
+  const { t } = useTranslation("roommate");
   const navigate = useNavigate();
   const [isRegistering, setIsRegistering] = useState(false);
   const [studentId, setStudentId] = useState("");
@@ -14,7 +16,7 @@ export default function RoomMateAddPage() {
 
   const handleSubmit = async () => {
     if (!studentId.trim()) {
-      alert("학번을 입력해주세요.");
+      alert(t("add.emptyStudentId"));
       return;
     }
 
@@ -34,15 +36,15 @@ export default function RoomMateAddPage() {
       setIsLoading(true);
       const res = await requestRoommateMatching(requestData);
       console.log(res);
-      alert("매칭 요청을 보냈습니다!");
+      alert(t("add.sentSuccess"));
       navigate("/roommate");
     } catch (error: any) {
       if (error.response?.status === 404) {
-        alert("사용자를 찾을 수 없습니다.");
+        alert(t("add.userNotFound"));
       } else if (error.response?.status === 409) {
-        alert("이미 매칭 요청을 보낸 상태입니다.");
+        alert(t("add.alreadySent"));
       } else {
-        alert("알 수 없는 오류가 발생했습니다.");
+        alert(t("add.unknownError"));
       }
     } finally {
       setIsLoading(false);
@@ -63,7 +65,7 @@ export default function RoomMateAddPage() {
             <input
               type="text"
               className="student-input"
-              placeholder="학번 입력"
+              placeholder={t("add.studentIdPlaceholder")}
               value={studentId}
               onChange={(e) => setStudentId(e.target.value)}
               disabled={isLoading}

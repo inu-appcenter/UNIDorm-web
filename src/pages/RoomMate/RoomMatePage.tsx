@@ -1,5 +1,6 @@
 import { isAxiosError } from "axios";
 import styled from "styled-components";
+import { useTranslation } from "react-i18next";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import RoomMateCard from "../../components/roommate/RoomMateCard.tsx";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
@@ -70,6 +71,7 @@ function FilterTags({
 }
 
 export default function RoomMatePage() {
+  const { t } = useTranslation("roommate");
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const location = useLocation();
@@ -190,7 +192,7 @@ export default function RoomMatePage() {
   };
 
   useSetHeader({
-    title: "룸메이트",
+    title: t("title"),
     secondHeader: (
       <CategoryWrapper>
         {CATEGORY_LIST.map((category) => (
@@ -408,13 +410,13 @@ export default function RoomMatePage() {
         error.response?.status === 404 &&
         error.response.data?.errorCode === "ROOMMATE_BOARD_NOT_FOUND"
       ) {
-        alert("작성된 룸메이트 게시글이 없습니다. 체크리스트를 작성해주세요.");
+        alert(t("noChecklistAlert"));
         navigate(PATHS.ROOMMATE.CHECKLIST);
         return;
       }
 
       console.error("내 체크리스트 게시글 조회 실패:", error);
-      alert("내 체크리스트 게시글을 불러오지 못했습니다.");
+      alert(t("loadChecklistError"));
     } finally {
       setIsOpeningMyPost(false);
     }
@@ -460,7 +462,7 @@ export default function RoomMatePage() {
           )}
 
           <TitleContentArea
-            title={"맞춤 룸메이트"}
+            title={t("customRoommate")}
             description={"조건에 맞는 글이 올라오면 알림을 받을 수 있어요."}
             location="룸메이트_홈"
           >
@@ -612,7 +614,7 @@ export default function RoomMatePage() {
           </TitleContentArea>
 
           <TitleContentArea
-            title={"전체 목록"}
+            title={t("allList")}
             location="룸메이트_홈"
             rightAction={
               <SemesterSelect
@@ -642,7 +644,7 @@ export default function RoomMatePage() {
                   type="search"
                   value={searchKeyword}
                   onChange={(event) => setSearchKeyword(event.target.value)}
-                  placeholder="검색어를 입력하세요"
+                  placeholder={t("searchPlaceholder")}
                   aria-label="룸메이트 게시글 검색"
                 />
                 <SettingsIconButton
@@ -705,7 +707,7 @@ export default function RoomMatePage() {
 
       {selectedCategory === CATEGORY_LIST[1] && (
         <TitleContentArea
-          title={`총 ${likedRoommates.length}개 저장됨`}
+          title={t("totalSaved", { count: likedRoommates.length })}
           description={isLoggedIn ? `모집중 ${recruitingCount}개` : undefined}
           location="룸메이트_좋아요"
         >

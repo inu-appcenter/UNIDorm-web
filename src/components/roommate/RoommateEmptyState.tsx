@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import hwatbuliImg from "@/assets/roommate/hwatbuli-first-post.webp";
 import { PATHS } from "@/constants/paths";
@@ -14,13 +15,17 @@ interface RoommateEmptyStateProps {
 }
 
 export default function RoommateEmptyState({
-  title = "이번 학기 첫 번째 룸메이트 게시글의 주인공이 되세요!",
-  description = "아직 등록된 모집 글이 없어요.\n가장 먼저 글을 올려 룸메이트를 찾아보세요.",
-  buttonText = "첫 글 작성하러 가기",
+  title,
+  description,
+  buttonText,
   onAction,
   className,
 }: RoommateEmptyStateProps) {
+  const { t } = useTranslation(["roommate", "common"]);
   const navigate = useNavigate();
+  const resolvedTitle = title ?? t("roommate:empty.title");
+  const resolvedDescription = description ?? t("roommate:empty.description");
+  const resolvedButtonText = buttonText ?? t("common:actions.write");
   const { tokenInfo } = useUserStore();
 
   const handleAction = () => {
@@ -45,10 +50,10 @@ export default function RoommateEmptyState({
       </IllustWrapper>
 
       <ContentArea>
-        <TitleText>{title}</TitleText>
-        <DescriptionText>{description}</DescriptionText>
+        <TitleText>{resolvedTitle}</TitleText>
+        <DescriptionText>{resolvedDescription}</DescriptionText>
         <ActionButton type="button" onClick={handleAction}>
-          {buttonText}
+          {resolvedButtonText}
         </ActionButton>
       </ContentArea>
     </CardContainer>

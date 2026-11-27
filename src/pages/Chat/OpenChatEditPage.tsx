@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import styled from "styled-components";
+import { useTranslation } from "react-i18next";
 import { isAxiosError } from "axios";
 import { updateOpenChatRoom } from "@/apis/openchat";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
@@ -18,6 +19,7 @@ type EditRouteState = {
 };
 
 export default function OpenChatEditPage() {
+  const { t } = useTranslation("chat");
   const { id } = useParams();
   const roomId = Number(id);
   const navigate = useNavigate();
@@ -32,7 +34,7 @@ export default function OpenChatEditPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useSetHeader({
-    title: "채팅방 수정",
+    title: t("edit.title"),
     showAlarm: false,
   });
 

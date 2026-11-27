@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { useTranslation } from "react-i18next";
 import TitleContentArea from "../../components/common/TitleContentArea.tsx";
 import TipCard from "../../components/tip/TipCard";
 import { useNavigate } from "react-router-dom";
@@ -10,12 +11,13 @@ import { useSetHeader } from "@/hooks/useSetHeader";
 import { mixpanelTrack } from "@/utils/mixpanel";
 
 export default function TipListPage() {
+  const { t } = useTranslation(["board", "common"]);
   const navigate = useNavigate();
   const { isAdmin } = useUserRole();
 
   const { data: tips = [], isLoading } = useTips();
 
-  useSetHeader({ title: "기숙사 꿀팁" });
+  useSetHeader({ title: t("board:tip.title") });
 
   return (
     <TipPageWrapper>
@@ -24,7 +26,7 @@ export default function TipListPage() {
         margin={"16px"}
       >
         {isLoading ? (
-          <LoadingSpinner message="꿀팁 목록을 불러오는 중..." />
+          <LoadingSpinner message={t("common:states.loading")} />
         ) : tips.length > 0 ? (
           <CardList>
             {tips.map((tip) => {
