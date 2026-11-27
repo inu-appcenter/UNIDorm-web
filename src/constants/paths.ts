@@ -81,6 +81,7 @@ export const PATHS = {
     OPEN_CHAT_REPORTS: "/admin/open-chat-reports",
     OPEN_CHAT_ROOMS: "/admin/open-chat-rooms",
     OPEN_CHAT_BOT: "/admin/open-chat-bot",
+    DORMITORY_RESIDENTS: "/admin/dormitory-residents",
   },
 } as const;
 

@@ -68,7 +68,8 @@
     "loginRequiredConfirm": "Sign-in is required. Go to the login page?",
     "appUpdateConfirm": "Please update the UNIDorm app to use this feature.\nOpen the store to update?",
     "appInstallConfirm": "This feature is available in the UNIDorm app.\nOpen the store to install?",
-    "pcAppOnlyConfirm": "This feature is only available in the UNIDorm mobile app.\nOpen the store page?"
+    "pcAppOnlyConfirm": "This feature is only available in the UNIDorm mobile app.\nOpen the store page?",
+    "portalAgentConfirm": "This feature is available in the UNIDorm mobile app or PC Chrome extension.\nOpen the UNIDorm store page?"
   },
   "terms": {
     "notice": "UNIDorm is developed by <strong>INU App Center</strong> (IT Innovation Lab) in collaboration with the Dormitory Office."

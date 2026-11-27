@@ -16,9 +16,10 @@ import {
   fetchDormitoryTabSpecificFromApp,
   resolveCurrentStudentId,
   isMobileAppEnvironment,
+  isExtensionAgentEnvironment,
+  isPortalAgentAvailable,
 } from "@/apis/mobileAgentBridge";
-import { isLatestUnidormApp } from "@/utils/getMobilePlatform";
-import { guardAppOnly } from "@/utils/guard";
+import { guardPortalAgent } from "@/utils/guard";
 import {
   DormitoryStudentInfo,
   DormitoryAddressItem,
@@ -422,7 +423,7 @@ export default function PortalDormitoryPage() {
     const header =
       `[포털 기숙사 조회 진단 로그]\n` +
       `- 생성시각: ${new Date().toLocaleString()}\n` +
-      `- 접속환경: ${isMobileAppEnvironment() ? "모바일 앱 (ReactNativeWebView)" : "일반 웹 브라우저"}\n` +
+      `- 접속환경: ${isMobileAppEnvironment() ? "모바일 앱 (ReactNativeWebView)" : isExtensionAgentEnvironment() ? "PC Chrome 확장 (UNIDorm Extension)" : "일반 웹 브라우저"}\n` +
       `- 기록수: ${logs.length}건\n` +
       `--------------------------------------------------\n`;
     const body = logs
@@ -510,7 +511,7 @@ export default function PortalDormitoryPage() {
     setLogs([]);
     addLog("INIT", "사생정보 조회 프로세스 시작", "info");
 
-    if (!guardAppOnly({ navigate })) {
+    if (!guardPortalAgent({ navigate })) {
       addLog("ENV_CHECK", "최신 모바일 앱 환경이 아닙니다. (웹 또는 구버전 앱 감지)", "warn");
       return;
     }
@@ -661,7 +662,7 @@ export default function PortalDormitoryPage() {
       startTimeRef.current = Date.now();
       addLog("TAB_INIT", `[${tabName}] 단독 상세 탭 조회 시작`, "info");
 
-      if (!guardAppOnly({ navigate })) {
+      if (!guardPortalAgent({ navigate })) {
         addLog("ENV_CHECK", "최신 모바일 앱 환경이 아닙니다. (웹 또는 구버전 앱 감지)", "warn");
         return;
       }
@@ -896,7 +897,7 @@ export default function PortalDormitoryPage() {
         title="사생정보조회"
         description="생활원 사생정보 및 상벌점, 입퇴사, 공공요금 등 세부 내역을 조회합니다."
       >
-        {!isLatestUnidormApp() && (
+        {!isPortalAgentAvailable() && (
           <WebFallbackCard>
             <Smartphone size={28} color="var(--interactive-primary)" />
             <div className="title">모바일 앱 전용 기능</div>
@@ -905,7 +906,7 @@ export default function PortalDormitoryPage() {
             </div>
             <CapsuleButton
               variant="brand"
-              onClick={() => guardAppOnly({ navigate })}
+              onClick={() => guardPortalAgent({ navigate })}
             >
               앱 열기 / 설치
             </CapsuleButton>
@@ -927,7 +928,7 @@ export default function PortalDormitoryPage() {
               variant="primary"
               onClick={() => {
                 mixpanelTrack.dormitoryCardEntryClicked("사생정보조회");
-                if (!guardAppOnly({ navigate })) return;
+                if (!guardPortalAgent({ navigate })) return;
                 navigate(PATHS.DORMITORY_CARD);
               }}
               style={{ flex: 1 }}

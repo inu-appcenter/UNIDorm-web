@@ -9,10 +9,9 @@ import {
   savePortalAccount,
   deletePortalAccount,
   fetchAcademicInfoFromApp,
-  isMobileAppEnvironment,
+  isPortalAgentAvailable,
 } from "@/apis/mobileAgentBridge";
-import { isLatestUnidormApp } from "@/utils/getMobilePlatform";
-import { guardAppOnly } from "@/utils/guard";
+import { guardPortalAgent } from "@/utils/guard";
 import { StudentInfo } from "@/types/portal";
 import { secureStorage } from "@/utils/secureStorage";
 import { adaptAcademicInfoToStudentInfo } from "@/apis/portalAdapter";
@@ -80,8 +79,8 @@ export default function MobilePortalAccountPage() {
         setStudentInfo(savedInfo);
       }
 
-      // 2. 최신 모바일 앱 환경이면 기기 KeyStore에 계정 등록 여부만 빠르게 확인
-      if (isLatestUnidormApp()) {
+      // 2. 로컬 포털 에이전트(모바일 앱 또는 PC 크롬 확장) 환경이면 계정 등록 여부 확인
+      if (isPortalAgentAvailable()) {
         const res = await checkPortalAccountLinked().catch(() => ({ linked: false, studentId: undefined }));
         const isLinkedBool = Boolean(res?.linked);
         setIsLinked(isLinkedBool);
@@ -111,7 +110,7 @@ export default function MobilePortalAccountPage() {
 
   // 포털 실제 접속 여부 테스트 핸들러
   const handleTestConnection = async () => {
-    if (!guardAppOnly({ navigate })) return;
+    if (!guardPortalAgent({ navigate })) return;
 
     setConnectionStatus("testing");
     setConnectionError("");
@@ -146,7 +145,7 @@ export default function MobilePortalAccountPage() {
       return;
     }
 
-    if (!guardAppOnly({ navigate })) {
+    if (!guardPortalAgent({ navigate })) {
       setErrorMessage(t("mypage:portalAccount.appOnlyError"));
       return;
     }
@@ -179,7 +178,7 @@ export default function MobilePortalAccountPage() {
   const handleUnlink = async () => {
     setIsUnlinkModalOpen(false);
     try {
-      if (isMobileAppEnvironment()) {
+      if (isPortalAgentAvailable()) {
         await deletePortalAccount().catch(() => {});
       }
       secureStorage.clearAllPortalCaches();
@@ -206,7 +205,7 @@ export default function MobilePortalAccountPage() {
           <Skeleton width="100%" height="160px" style={{ borderRadius: "16px" }} />
           <Skeleton width="100%" height="220px" style={{ borderRadius: "16px" }} />
         </ContentContainer>
-      ) : !isLatestUnidormApp() ? (
+      ) : !isPortalAgentAvailable() ? (
         /* 0. 모바일 앱 환경 아닐 때 안내 화면 */
         <ContentContainer>
           <NotAppCard>
@@ -227,7 +226,7 @@ export default function MobilePortalAccountPage() {
 
             <CapsuleButton
               variant="brand"
-              onClick={() => guardAppOnly({ navigate })}
+              onClick={() => guardPortalAgent({ navigate })}
               style={{ width: "100%", marginTop: "8px" }}
             >
               {t("mypage:portalAccount.openInstallApp")}

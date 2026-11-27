@@ -68,7 +68,8 @@
     "loginRequiredConfirm": "需要登录。是否前往登录页面？",
     "appUpdateConfirm": "使用新功能需要更新 UNIDorm 应用。\n是否前往商店更新？",
     "appInstallConfirm": "该功能仅可在 UNIDorm 应用中使用。\n是否前往商店安装应用？",
-    "pcAppOnlyConfirm": "该功能为 UNIDorm 手机应用专用功能。\n是否前往商店页面查看？"
+    "pcAppOnlyConfirm": "该功能为 UNIDorm 手机应用专用功能。\n是否前往商店页面查看？",
+    "portalAgentConfirm": "该功能可在 UNIDorm 手机应用或 PC Chrome 扩展中使用。\n是否前往 UNIDorm 应用商店页面？"
   },
   "terms": {
     "notice": "UNIDorm 是由 <strong>仁川大学 App Center</strong>（IT创新实验室）与宿舍管理处合作开发的服务。"

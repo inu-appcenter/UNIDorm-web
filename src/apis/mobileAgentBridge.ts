@@ -11,6 +11,11 @@ import {
   FullAcademicReport,
   DormitoryStudentInfo,
 } from "@/utils/ssvParser";
+import {
+  DormitoryAdminDatasetType,
+  ParsedAdminDormitoryResult,
+  parseAdminDormitoryBatchPayload,
+} from "@/utils/dormitoryAdminParser";
 
 /**
  * 로그인 세션 또는 로컬 스토리지에서 현재 사용자 학번을 안전하게 추출
@@ -123,6 +128,8 @@ declare global {
   }
 }
 
+const EXTENSION_BRIDGE_CHANNEL = 'unidorm-portal-agent';
+
 /**
  * 모바일 앱(React Native) 웹뷰 환경인지 확인
  */
@@ -131,32 +138,44 @@ export function isMobileAppEnvironment(): boolean {
 }
 
 /**
- * 모바일 네이티브 브릿지로 액션 요청을 전송하고 응답을 기다리는 헬퍼
+ * PC 브라우저에 UNIDorm 포털 연동 Chrome Extension이 설치·활성화되어 있는지 확인
+ */
+export function isExtensionAgentEnvironment(): boolean {
+  return (
+    typeof document !== 'undefined' &&
+    document.documentElement?.dataset?.unidormExtension === '1'
+  );
+}
+
+/**
+ * 로컬 포털 에이전트(모바일 앱 웹뷰 또는 PC Chrome 확장)를 사용할 수 있는지 확인
+ */
+export function isPortalAgentAvailable(): boolean {
+  return isMobileAppEnvironment() || isExtensionAgentEnvironment();
+}
+
+/**
+ * 로컬 에이전트 브릿지(모바일 네이티브 웹뷰 또는 Chrome Extension)로 액션 요청을 전송하고 응답을 기다리는 헬퍼
  */
 function sendBridgeAction<T = any>(type: string, payload?: any, timeoutMs = 15000): Promise<AgentActionResult<T>> {
   return new Promise((resolve) => {
-    if (!isMobileAppEnvironment()) {
+    const useMobileApp = isMobileAppEnvironment();
+    const useExtension = !useMobileApp && isExtensionAgentEnvironment();
+
+    if (!useMobileApp && !useExtension) {
       resolve({
         success: false,
         errorCode: 'NOT_IN_MOBILE_APP',
-        errorMessage: '모바일 앱(유니돔 앱) 환경에서만 학교 시스템 직접 연동이 가능합니다.',
+        errorMessage: '유니돔 모바일 앱 또는 PC 크롬 확장 환경에서만 학교 시스템 직접 연동이 가능합니다.',
       });
       return;
     }
 
     const expectedResultType = `${type}Result`;
     const requestId = `req_${type}_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
-    let timer: NodeJS.Timeout;
+    let timer: ReturnType<typeof setTimeout>;
 
-    const handler = (event: Event) => {
-      const customEvent = event as CustomEvent;
-      const detail = customEvent.detail;
-      if (!detail) return;
-
-      // detail에 requestId가 있으면 requestId로 매칭, 없으면(하위 호환) type으로 매칭
-      const isMatch = detail.requestId ? detail.requestId === requestId : detail.type === expectedResultType;
-      if (!isMatch) return;
-
+    const resolveFromDetail = (detail: any) => {
       console.log(`[Bridge Action] Received response for ${type} (reqId: ${requestId}):`, detail);
       clearTimeout(timer);
       removeListeners();
@@ -173,22 +192,60 @@ function sendBridgeAction<T = any>(type: string, payload?: any, timeoutMs = 1500
       }
 
       resolve({
-        success: detail.success,
+        success: Boolean(detail.success),
         data: resolvedData,
         errorCode: resolvedErrorCode,
         errorMessage: resolvedErrorMessage,
       });
     };
 
+    const nativeHandler = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const detail = customEvent.detail;
+      if (!detail) return;
+
+      // detail에 requestId가 있으면 requestId로 매칭, 없으면(하위 호환) type으로 매칭
+      const isMatch = detail.requestId ? detail.requestId === requestId : detail.type === expectedResultType;
+      if (!isMatch) return;
+
+      resolveFromDetail(detail);
+    };
+
+    const extensionHandler = (event: MessageEvent) => {
+      if (event.source !== window || event.origin !== window.location.origin) return;
+      const data = event.data;
+      if (
+        !data ||
+        typeof data !== 'object' ||
+        data.channel !== EXTENSION_BRIDGE_CHANNEL ||
+        data.direction !== 'ext-to-web'
+      ) {
+        return;
+      }
+
+      const isMatch = data.requestId ? data.requestId === requestId : data.type === expectedResultType;
+      if (!isMatch) return;
+
+      resolveFromDetail(data);
+    };
+
     // 이미 설치된 구버전 앱은 intipAgentResult로만 보낸다. 새 앱은 두 이름으로 모두
     // 보내지만 첫 수신에서 리스너를 모두 떼므로 한 번만 처리된다.
-    // 사용자 기기의 앱이 모두 새 버전(OTA 포함)으로 바뀐 뒤 intip 쪽을 지운다.
     const removeListeners = () => {
-      window.removeEventListener('unidormAgentResult', handler);
-      window.removeEventListener('intipAgentResult', handler);
+      if (useMobileApp) {
+        window.removeEventListener('unidormAgentResult', nativeHandler);
+        window.removeEventListener('intipAgentResult', nativeHandler);
+      } else {
+        window.removeEventListener('message', extensionHandler);
+      }
     };
-    window.addEventListener('unidormAgentResult', handler);
-    window.addEventListener('intipAgentResult', handler);
+
+    if (useMobileApp) {
+      window.addEventListener('unidormAgentResult', nativeHandler);
+      window.addEventListener('intipAgentResult', nativeHandler);
+    } else {
+      window.addEventListener('message', extensionHandler);
+    }
 
     timer = setTimeout(() => {
       console.warn(`[Bridge Action] Request timed out for ${type} (reqId: ${requestId}, ${timeoutMs}ms)`);
@@ -205,14 +262,28 @@ function sendBridgeAction<T = any>(type: string, payload?: any, timeoutMs = 1500
       });
     }, timeoutMs);
 
-    console.log(`[Bridge Action] Sending ${type} (reqId: ${requestId}) to React Native`);
-    window.ReactNativeWebView?.postMessage(
-      JSON.stringify({
-        type,
-        requestId,
-        payload,
-      })
-    );
+    if (useMobileApp) {
+      console.log(`[Bridge Action] Sending ${type} (reqId: ${requestId}) to React Native`);
+      window.ReactNativeWebView?.postMessage(
+        JSON.stringify({
+          type,
+          requestId,
+          payload,
+        })
+      );
+    } else {
+      console.log(`[Bridge Action] Sending ${type} (reqId: ${requestId}) to Chrome Extension`);
+      window.postMessage(
+        {
+          channel: EXTENSION_BRIDGE_CHANNEL,
+          direction: 'web-to-ext',
+          type,
+          requestId,
+          payload,
+        },
+        window.location.origin
+      );
+    }
   });
 }
 
@@ -654,6 +725,198 @@ export async function fetchDormitoryTabSpecificFromApp(
   }
 }
 
+export interface PortalExtensionStatus {
+  linked: boolean;
+  hasCredentials: boolean;
+  hasBrowserSession: boolean;
+  studentId?: string;
+}
+
+/**
+ * PC 크롬 확장 프로그램의 포털 세션/연동 상태를 조회합니다.
+ */
+export async function getPortalExtensionStatusFromBridge(): Promise<
+  AgentActionResult<PortalExtensionStatus>
+> {
+  if (!isExtensionAgentEnvironment()) {
+    return {
+      success: false,
+      errorCode: "EXTENSION_NOT_INSTALLED",
+      errorMessage: "PC 크롬 확장 프로그램이 설치되어 있지 않아요.",
+    };
+  }
+  return sendBridgeAction<PortalExtensionStatus>("getExtensionStatus", null, 8000);
+}
+
+/**
+ * PC 크롬 확장 프로그램을 통해 인천대 포털 로그인 새 탭을 엽니다.
+ */
+export async function openPortalLoginTabFromBridge(): Promise<AgentActionResult> {
+  if (!isExtensionAgentEnvironment()) {
+    return {
+      success: false,
+      errorCode: "EXTENSION_NOT_INSTALLED",
+      errorMessage: "PC 크롬 확장 프로그램이 설치되어 있지 않아요.",
+    };
+  }
+  return sendBridgeAction("openPortalLoginTab", null, 8000);
+}
+
+const ADMIN_DORM_PRESETS: Record<
+  DormitoryAdminDatasetType,
+  {
+    url: string;
+    menuId: string;
+    pgmId: string;
+  }
+> = {
+  RESIDENT: {
+    url: "/aff/dmty/Dmsm0120Ctr/findDmty209List.do",
+    menuId: "M001035",
+    pgmId: "P000886",
+  },
+  APPLICATION: {
+    url: "/aff/dmty/Dmmi0010Ctr/findDmty101List.do",
+    menuId: "M001069",
+    pgmId: "P000886",
+  },
+};
+
+/**
+ * 관리자 PC 브라우저의 크롬 확장 프로그램 세션으로 기숙사 사생정보(findDmty209List.do) 또는
+ * 입사신청 목록(findDmty101List.do)을 조회하고 정제된 결과를 반환합니다.
+ */
+export async function fetchAdminDormitoryListFromExtension(params: {
+  datasetType: DormitoryAdminDatasetType;
+  yy: string;
+  tmGbn: string;
+  dormGbn?: string;
+}): Promise<AgentActionResult<ParsedAdminDormitoryResult>> {
+  if (!isExtensionAgentEnvironment()) {
+    return {
+      success: false,
+      errorCode: "EXTENSION_NOT_INSTALLED",
+      errorMessage:
+        "UNIDorm 포털 연동 크롬 확장 프로그램이 설치된 PC 크롬 브라우저에서만 조회할 수 있어요.",
+    };
+  }
+
+  const preset = ADMIN_DORM_PRESETS[params.datasetType];
+  const yy = params.yy.trim();
+  const tmGbn = params.tmGbn.trim();
+  const dormGbn = (params.dormGbn || "").trim();
+
+  const RS = String.fromCharCode(30);
+  const US = String.fromCharCode(31);
+  const NULL_CHAR = String.fromCharCode(3);
+
+  const mainCondBody =
+    params.datasetType === "APPLICATION"
+      ? `Dataset:DS_COND${RS}_RowType_${US}persNo:STRING(256)${US}userNm:STRING(256)${US}yy:STRING(256)${US}tmGbn:STRING(256)${US}queryGbn:STRING(256)${RS}N${US}${NULL_CHAR}${US}${NULL_CHAR}${US}${yy}${US}${tmGbn}${US}0${RS}${RS}`
+      : `Dataset:DS_COND${RS}_RowType_${US}yy:STRING(256)${US}tmGbn:STRING(256)${US}dormGbn:STRING(256)${RS}N${US}${yy}${US}${tmGbn}${US}${dormGbn || NULL_CHAR}${RS}${RS}`;
+
+  const commonCodeBody =
+    `rpstCd=BE004|UB011|BE033|BE002${RS}` +
+    `useYn=1|1|1|1${RS}` +
+    `textMode=N|N|N|N${RS}` +
+    `dataSet=DS_APLY_DORM_MVIN_TERM_GBN|DS_TM_GBN|DS_DORM_APLY_ST_GBN|DS_DORM_GBN${RS}`;
+
+  const groupCodeBody =
+    `rpstGrpCd=BE01800|BE00301|BE00600${RS}` +
+    `grpCd=1|01|20${RS}` +
+    `useYn=1|1|1${RS}` +
+    `textMode=N|N|N${RS}` +
+    `dataSet=DS_APLY_DORM_ROOM_TYPE_GBN|DS_DORM_JOIN_GBN|DS_DORM_PREF_SLT_OBJ_GBN${RS}`;
+
+  const instruction = {
+    actionId: "PORTAL_GET_FULL_ACADEMIC_RECORD",
+    authDomain: "PORTAL",
+    request: {
+      url: `https://erp.inu.ac.kr:8443${preset.url}?menuId=${preset.menuId}&pgmId=${preset.pgmId}`,
+      method: "POST",
+      datasetName: "DS_COND",
+      params: {
+        menuId: preset.menuId,
+        pgmId: preset.pgmId,
+        yy,
+        tmGbn,
+        ...(dormGbn ? { dormGbn } : {}),
+      },
+      data: {
+        yy,
+        tmGbn,
+        ...(dormGbn ? { dormGbn } : {}),
+      },
+      batchRequests: [
+        {
+          key: "userRole",
+          url: "/com/UserCtr/findUserGbList.do",
+          menuId: "edu",
+          pgmId: "edu",
+          body: "",
+        },
+        {
+          key: "mainList",
+          url: preset.url,
+          menuId: preset.menuId,
+          pgmId: preset.pgmId,
+          body: mainCondBody,
+        },
+        {
+          key: "commonCodes",
+          url: "/com/CodeCtr/findCodeComboList.do",
+          menuId: preset.menuId,
+          pgmId: preset.pgmId,
+          body: commonCodeBody,
+        },
+        {
+          key: "groupCodes",
+          url: "/com/CodeCtr/findGroupCodeComboList.do",
+          menuId: preset.menuId,
+          pgmId: preset.pgmId,
+          body: groupCodeBody,
+        },
+      ],
+    },
+  };
+
+  const res = await sendBridgeAction<unknown>(
+    "executeAgentAction",
+    { instruction },
+    60000,
+  );
+  if (!res.success) {
+    return {
+      success: false,
+      errorCode: res.errorCode,
+      errorMessage: res.errorMessage,
+    };
+  }
+
+  try {
+    const parsed = parseAdminDormitoryBatchPayload(res.data, {
+      datasetType: params.datasetType,
+      year: yy,
+      term: tmGbn,
+      dormGbn,
+      endpoint: preset.url,
+    });
+    return {
+      success: true,
+      data: parsed,
+    };
+  } catch (err: unknown) {
+    return {
+      success: false,
+      errorCode: "PARSE_ERROR",
+      errorMessage:
+        err instanceof Error
+          ? err.message
+          : "기숙사 목록 데이터를 해석하는 중 오류가 발생했어요.",
+    };
+  }
+}
+
 
 /**
  * 모바일 앱 백그라운드 SSO를 통해 개인학적조회(M002043) 종합 데이터(시간표, 학기별성적, 과목별성적, 이수학점, 장학금 등) 조회
@@ -855,9 +1118,10 @@ export async function cancelLmsDeadlineOngoingBridge(): Promise<AgentActionResul
  */
 export async function resolveClientContext(): Promise<Record<string, any>> {
   const isApp = isMobileAppEnvironment();
-  const context: Record<string, any> = { isApp };
+  const isExtension = isExtensionAgentEnvironment();
+  const context: Record<string, any> = { isApp, isExtension };
 
-  if (!isApp) {
+  if (!isPortalAgentAvailable()) {
     return context;
   }
 

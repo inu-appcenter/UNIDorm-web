@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import styled from "styled-components";
 import { X, ShieldCheck, Lock, User } from "lucide-react";
-import { savePortalAccount, isMobileAppEnvironment } from "@/apis/mobileAgentBridge";
+import { savePortalAccount, isPortalAgentAvailable } from "@/apis/mobileAgentBridge";
 import CapsuleButton from "@/components/common/CapsuleButton";
 
 
@@ -42,7 +42,7 @@ export const PortalAccountModal: React.FC<Props> = ({
       return;
     }
 
-    if (!isMobileAppEnvironment()) {
+    if (!isPortalAgentAvailable()) {
       setErrorMessage(t("portalSync.appOnly"));
       return;
     }

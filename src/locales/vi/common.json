@@ -68,7 +68,8 @@
     "loginRequiredConfirm": "Cần đăng nhập. Chuyển đến trang đăng nhập?",
     "appUpdateConfirm": "Cần cập nhật ứng dụng UNIDorm để dùng tính năng mới.\nMở cửa hàng để cập nhật?",
     "appInstallConfirm": "Tính năng này khả dụng trên ứng dụng UNIDorm.\nMở cửa hàng để cài đặt?",
-    "pcAppOnlyConfirm": "Tính năng này chỉ dành cho ứng dụng di động UNIDorm.\nMở trang cửa hàng để xem?"
+    "pcAppOnlyConfirm": "Tính năng này chỉ dành cho ứng dụng di động UNIDorm.\nMở trang cửa hàng để xem?",
+    "portalAgentConfirm": "Tính năng này khả dụng trên ứng dụng UNIDorm hoặc tiện ích Chrome trên PC.\nMở trang cửa hàng UNIDorm?"
   },
   "terms": {
     "notice": "UNIDorm được phát triển bởi <strong>INU App Center</strong> (IT Innovation Lab) hợp tác cùng Ban Quản lý KTX."
